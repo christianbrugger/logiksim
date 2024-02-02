@@ -509,16 +509,6 @@ auto ConnectionIndex<Content, Direction>::is_colliding(
     }
 }
 
-template <connection_index::ContentType Content,
-          connection_index::DirectionType Direction>
-auto ConnectionIndex<Content, Direction>::validate(const Layout& layout) const -> void {
-    auto cache = ConnectionIndex<Content, Direction> {layout};
-
-    if (cache.map_ != this->map_) [[unlikely]] {
-        throw std::runtime_error("current cache state doesn't match circuit");
-    }
-}
-
 template class ConnectionIndex<connection_index::ContentType::LogicItem,
                                connection_index::DirectionType::Input>;
 template class ConnectionIndex<connection_index::ContentType::LogicItem,

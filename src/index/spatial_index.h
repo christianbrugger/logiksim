@@ -67,7 +67,7 @@ class SpatialIndex {
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
-    [[nodiscard]] auto operator==(const SpatialIndex &) const -> bool = default;
+    [[nodiscard]] auto operator==(const SpatialIndex &) const -> bool;
 
     auto query_selection(rect_fine_t rect) const -> std::vector<value_t>;
     auto has_element(point_fine_t point) const -> bool;
@@ -76,7 +76,6 @@ class SpatialIndex {
     auto rects() const -> std::vector<rect_fine_t>;
 
     auto submit(const editable_circuit::InfoMessage &message) -> void;
-    auto validate(const Layout &layout) const -> void;
 
    private:
     auto handle(const editable_circuit::info_message::LogicItemInserted &message) -> void;

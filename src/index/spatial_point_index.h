@@ -32,7 +32,6 @@ class SpatialPointIndex {
     auto operator=(SpatialPointIndex &&) -> SpatialPointIndex &;
 
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const SpatialPointIndex &) const -> bool = default;
 
     auto add_split_point(point_t point) -> void;
 
@@ -43,7 +42,7 @@ class SpatialPointIndex {
     std::unique_ptr<spatial_point_index::tree_container> tree_;
 };
 
-static_assert(std::regular<SpatialPointIndex>);
+static_assert(std::semiregular<SpatialPointIndex>);
 
 }  // namespace logicsim
 

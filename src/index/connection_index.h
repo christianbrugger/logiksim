@@ -82,7 +82,6 @@ class ConnectionIndex {
     }
 
     auto submit(const editable_circuit::InfoMessage& message) -> void;
-    auto validate(const Layout& layout) const -> void;
 
    private:
     auto handle(const editable_circuit::info_message::LogicItemInserted& message) -> void;

@@ -69,8 +69,35 @@ struct HandlerSetup {
         validate();
     }
 
-    auto validate() -> void {
-        cache.validate(layout);
+    auto validate() const -> void {
+        // if (LayoutIndex {layout} != cache) [[unlikely]] {
+        //     throw std::runtime_error("layout index is out of sync");
+        // }
+
+        const auto index = LayoutIndex {layout};
+
+        if (index != cache) [[unlikely]] {
+            if (index.logicitem_input_index() != cache.logicitem_input_index()) {
+                throw std::runtime_error("logicitem_input_index is out of sync");
+            }
+            if (index.logicitem_output_index() != cache.logicitem_output_index()) {
+                throw std::runtime_error("logicitem_output_index is out of sync");
+            }
+            if (index.wire_input_index() != cache.wire_input_index()) {
+                throw std::runtime_error("wire_input_index is out of sync");
+            }
+            if (index.wire_output_index() != cache.wire_output_index()) {
+                throw std::runtime_error("wire_output_index is out of sync");
+            }
+            if (index.collision_index() != cache.collision_index()) {
+                throw std::runtime_error("collision_index is out of sync");
+            }
+            if (index.selection_index() != cache.selection_index()) {
+                throw std::runtime_error("selection_index is out of sync");
+            }
+
+            throw std::runtime_error("WARNING Index is out of sync");
+        }
     }
 };
 

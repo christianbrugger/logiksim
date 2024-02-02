@@ -41,7 +41,10 @@ auto EditableCircuit::extract_layout() -> Layout {
 }
 
 auto EditableCircuit::validate() -> void {
-    layout_index_.validate(layout_);
+    if (LayoutIndex {layout_} != layout_index_) [[unlikely]] {
+        throw std::runtime_error("layout index is out of sync");
+    }
+
     selection_builder_.validate(layout_, layout_index_);
 
     for (const auto& item : selection_store_) {

@@ -681,12 +681,4 @@ auto CollisionIndex::query(point_t point) const -> collision_index::collision_da
     return it->second;
 }
 
-auto CollisionIndex::validate(const Layout& layout) const -> void {
-    auto cache = CollisionIndex {layout};
-
-    if (cache.map_ != this->map_) [[unlikely]] {
-        throw std::runtime_error("current cache state doesn't match circuit");
-    }
-}
-
 }  // namespace logicsim

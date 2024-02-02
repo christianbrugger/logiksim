@@ -27,7 +27,6 @@ class LayoutIndex {
     [[nodiscard]] auto selection_index() const -> const SpatialIndex&;
 
     auto submit(const editable_circuit::InfoMessage& message) -> void;
-    auto validate(const Layout& layout) -> void;
 
    private:
     LogicItemInputIndex logicitems_inputs_ {};

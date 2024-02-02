@@ -83,6 +83,7 @@ template <typename T>
 auto operator==(box<T> a, box<T> b) -> bool {
     return equals(a, b);
 }
+
 }  // namespace boost::geometry::model
 
 template <>
@@ -282,12 +283,15 @@ SpatialIndex::SpatialIndex(SpatialIndex&&) = default;
 auto SpatialIndex::operator=(SpatialIndex&&) -> SpatialIndex& = default;
 
 auto SpatialIndex::format() const -> std::string {
-    auto it = tree_->value.begin();
     return fmt::format("SpatialIndex = {}", tree_->value);
 }
 
 auto SpatialIndex::allocated_size() const -> std::size_t {
     return tree_->resource.allocated_size();
+}
+
+auto SpatialIndex::operator==(const SpatialIndex& other) const -> bool {
+    return *tree_ == *other.tree_;
 }
 
 auto SpatialIndex::handle(
@@ -427,9 +431,10 @@ using index_map_t = ankerl::unordered_dense::map<tree_payload_t, tree_box_t>;
 
 auto to_reverse_index(const tree_t& tree) -> index_map_t {
     auto index = index_map_t {};
+    index.reserve(tree.size());
 
     for (auto&& item : tree) {
-        const auto inserted = index.try_emplace(item.second, item.first).second;
+        const bool inserted = index.try_emplace(item.second, item.first).second;
         if (!inserted) [[unlikely]] {
             throw std::runtime_error("found duplicate item in cache");
         }
@@ -449,16 +454,6 @@ auto operator!=(const tree_t& a, const tree_t& b) -> bool {
 }
 
 }  // namespace spatial_index
-
-auto SpatialIndex::validate(const Layout& layout) const -> void {
-    using namespace spatial_index;
-
-    auto cache = SpatialIndex {layout};
-
-    if (cache.tree_->value != this->tree_->value) [[unlikely]] {
-        throw std::runtime_error("current cache state doesn't match circuit");
-    }
-}
 
 auto get_segment_count(SpatialIndex::queried_segments_t result) -> int {
     return gsl::narrow_cast<int>(std::ranges::count_if(

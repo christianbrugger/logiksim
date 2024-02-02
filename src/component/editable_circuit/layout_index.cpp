@@ -1,7 +1,5 @@
 #include "component/editable_circuit/layout_index.h"
 
-#include "timer.h"
-
 #include <fmt/core.h>
 
 namespace logicsim {
@@ -36,16 +34,6 @@ auto LayoutIndex::allocated_size() const -> std::size_t {
 
            collision_index_.allocated_size() +  //
            spatial_index_.allocated_size();
-}
-
-auto LayoutIndex::validate(const Layout& layout) -> void {
-    logicitems_inputs_.validate(layout);
-    logicitems_outputs_.validate(layout);
-    wire_inputs_.validate(layout);
-    wire_outputs_.validate(layout);
-
-    spatial_index_.validate(layout);
-    collision_index_.validate(layout);
 }
 
 auto LayoutIndex::submit(const editable_circuit::InfoMessage& message) -> void {
