@@ -59,6 +59,9 @@ class ConnectionIndex {
     using map_type = connection_index::map_type<Content>;
 
    public:
+    [[nodiscard]] explicit ConnectionIndex() = default;
+    [[nodiscard]] explicit ConnectionIndex(const Layout &layout);
+
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 

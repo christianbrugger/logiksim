@@ -66,6 +66,7 @@ set(LS_CORE_SOURCES
     src/component/editable_circuit/handler.cpp
     src/component/editable_circuit/layout_index.cpp
     src/component/editable_circuit/message_sender.cpp
+    src/component/editable_circuit/placeholder.cpp
     src/component/editable_circuit/selection_store.cpp
     src/component/editable_circuit/visible_selection.cpp
     src/component/interactive_simulation/interaction_cache.cpp
@@ -133,7 +134,7 @@ set(LS_CORE_SOURCES
 
     src/index/collision_index.cpp
     src/index/connection_index.cpp
-    src/index/selection_index.cpp
+    src/index/spatial_index.cpp
     src/index/spatial_point_index.cpp
 
     src/iterator_adaptor/enumerate.cpp

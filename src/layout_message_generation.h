@@ -6,36 +6,40 @@
 
 namespace logicsim {
 
-auto add_logic_item_to_cache(auto &&cache, const Layout &layout,
+auto generate_logicitem_messages(auto &&obj, const Layout &layout,
                              logicitem_id_t logicitem_id) -> void {
     const auto data = to_layout_calculation_data(layout, logicitem_id);
-    cache.submit(editable_circuit::info_message::LogicItemInserted {logicitem_id, data});
+    obj.submit(editable_circuit::info_message::LogicItemInserted {logicitem_id, data});
 }
 
-auto add_wire_to_cache(auto &&cache, const Layout &layout, wire_id_t wire_id) -> void {
+auto generate_wire_messages(auto &&obj, const Layout &layout, wire_id_t wire_id)
+    -> void {
     const auto &segment_tree = layout.wires().segment_tree(wire_id);
 
     for (const auto segment_index : segment_tree.indices()) {
-        cache.submit(editable_circuit::info_message::SegmentInserted {
+        obj.submit(editable_circuit::info_message::SegmentInserted {
             .segment = segment_t {wire_id, segment_index},
             .segment_info = segment_tree.info(segment_index)});
     }
 }
 
-auto add_logic_items_to_cache(auto &&cache, const Layout &layout) -> void {
+auto generate_logicitem_messages(auto &&obj, const Layout &layout) -> void {
     for (const auto logicitem_id : logicitem_ids(layout)) {
         if (is_inserted(layout, logicitem_id)) {
-            add_logic_item_to_cache(cache, layout, logicitem_id);
+            generate_logicitem_messages(obj, layout, logicitem_id);
         }
     }
 }
 
-auto add_layout_to_cache(auto &&cache, const Layout &layout) -> void {
-    add_logic_items_to_cache(cache, layout);
-
+auto generate_wire_messages(auto &&obj, const Layout &layout) -> void {
     for (const auto wire_id : inserted_wire_ids(layout)) {
-        add_wire_to_cache(cache, layout, wire_id);
+        generate_wire_messages(obj, layout, wire_id);
     }
+}
+
+auto generate_layout_messages(auto &&obj, const Layout &layout) -> void {
+    generate_logicitem_messages(obj, layout);
+    generate_wire_messages(obj, layout);
 }
 
 }  // namespace logicsim

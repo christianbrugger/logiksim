@@ -155,6 +155,9 @@ class CollisionIndex {
     using map_type = collision_index::map_type;
 
    public:
+    [[nodiscard]] explicit CollisionIndex() = default;
+    [[nodiscard]] explicit CollisionIndex(const Layout& layout);
+
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 

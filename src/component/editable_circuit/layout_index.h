@@ -4,15 +4,15 @@
 #include "format/struct.h"
 #include "index/collision_index.h"
 #include "index/connection_index.h"
-#include "index/selection_index.h"
+#include "index/spatial_index.h"
 #include "layout_message_forward.h"
 
 namespace logicsim {
 
 class LayoutIndex {
    public:
-    LayoutIndex() = default;
-    explicit LayoutIndex(const Layout& layout);
+    [[nodiscard]] explicit LayoutIndex() = default;
+    [[nodiscard]] explicit LayoutIndex(const Layout& layout);
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
@@ -24,7 +24,7 @@ class LayoutIndex {
     [[nodiscard]] auto wire_output_index() const -> const WireOutputIndex&;
 
     [[nodiscard]] auto collision_index() const -> const CollisionIndex&;
-    [[nodiscard]] auto selection_index() const -> const SelectionIndex&;
+    [[nodiscard]] auto selection_index() const -> const SpatialIndex&;
 
     auto submit(const editable_circuit::InfoMessage& message) -> void;
     auto validate(const Layout& layout) -> void;
@@ -36,7 +36,7 @@ class LayoutIndex {
     WireOutputIndex wire_outputs_ {};
 
     CollisionIndex collision_index_ {};
-    SelectionIndex spatial_index_ {};
+    SpatialIndex spatial_index_ {};
 };
 
 static_assert(std::regular<LayoutIndex>);

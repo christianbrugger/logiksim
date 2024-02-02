@@ -1,6 +1,6 @@
 #include "component/editable_circuit/layout_index.h"
 
-#include "layout_message_generation.h"
+#include "timer.h"
 
 #include <fmt/core.h>
 
@@ -11,14 +11,26 @@ namespace logicsim {
 //
 
 LayoutIndex::LayoutIndex(const Layout& layout) {
-    // TODO consider bulk insertion, especially for spatial_index_
-    add_layout_to_cache(logicitems_inputs_, layout);
-    add_layout_to_cache(logicitems_outputs_, layout);
-    add_layout_to_cache(wire_inputs_, layout);
-    add_layout_to_cache(wire_outputs_, layout);
+    const auto _ = Timer {"Layout Index"};
 
-    add_layout_to_cache(collision_index_, layout);
-    add_layout_to_cache(spatial_index_, layout);
+    // TODO consider bulk insertion, especially for spatial_index_
+    {
+        const auto _1 = Timer {"  Connection Index"};
+
+        logicitems_inputs_ = LogicItemInputIndex {layout};
+        logicitems_outputs_ = LogicItemOutputIndex {layout};
+        wire_inputs_ = WireInputIndex {layout};
+        wire_outputs_ = WireOutputIndex {layout};
+    }
+
+    {
+        const auto _2 = Timer {"  Collision Index"};
+        collision_index_ = CollisionIndex {layout};
+    }
+    {
+        const auto _3 = Timer {"  Spatial Index"};
+        spatial_index_ = SpatialIndex {layout};
+    }
 }
 
 auto LayoutIndex::format() const -> std::string {
@@ -80,7 +92,7 @@ auto LayoutIndex::collision_index() const -> const CollisionIndex& {
     return collision_index_;
 }
 
-auto LayoutIndex::selection_index() const -> const SelectionIndex& {
+auto LayoutIndex::selection_index() const -> const SpatialIndex& {
     return spatial_index_;
 }
 

@@ -1,10 +1,11 @@
-#include "index/connection_index.h"
+#include "connection_index.h"
 
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "allocated_size/trait.h"
 #include "format/container.h"
 #include "format/std_type.h"
 #include "geometry/orientation.h"
+#include "index/connection_index.h"
 #include "layout_info.h"
 #include "layout_message.h"
 #include "layout_message_generation.h"
@@ -24,6 +25,38 @@ auto wire_value_t::format() const -> std::string {
 
 //
 // ConnectionIndex
+//
+
+template <>
+ConnectionIndex<connection_index::ContentType::LogicItem,
+                connection_index::DirectionType::Input>::ConnectionIndex(
+    const Layout& layout) {
+    generate_logicitem_messages(*this, layout);
+}
+
+template <>
+ConnectionIndex<connection_index::ContentType::LogicItem,
+                connection_index::DirectionType::Output>::ConnectionIndex(
+    const Layout& layout) {
+    generate_logicitem_messages(*this, layout);
+}
+
+template <>
+ConnectionIndex<connection_index::ContentType::Wire,
+                connection_index::DirectionType::Input>::ConnectionIndex(
+    const Layout& layout) {
+    generate_wire_messages(*this, layout);
+}
+
+template <>
+ConnectionIndex<connection_index::ContentType::Wire,
+                connection_index::DirectionType::Output>::ConnectionIndex(
+    const Layout& layout) {
+    generate_wire_messages(*this, layout);
+}
+
+//
+// Format
 //
 
 template <>
@@ -479,8 +512,7 @@ auto ConnectionIndex<Content, Direction>::is_colliding(
 template <connection_index::ContentType Content,
           connection_index::DirectionType Direction>
 auto ConnectionIndex<Content, Direction>::validate(const Layout& layout) const -> void {
-    auto cache = ConnectionIndex<Content, Direction> {};
-    add_layout_to_cache(cache, layout);
+    auto cache = ConnectionIndex<Content, Direction> {layout};
 
     if (cache.map_ != this->map_) [[unlikely]] {
         throw std::runtime_error("current cache state doesn't match circuit");

@@ -12,7 +12,7 @@ namespace circuit_widget {
 namespace {
 
 auto anything_selected(const Selection& selection, const Layout& layout,
-                       std::span<const SelectionIndex::value_t> items, point_fine_t point)
+                       std::span<const SpatialIndex::value_t> items, point_fine_t point)
     -> bool {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
@@ -29,7 +29,7 @@ auto anything_selected(const Selection& selection, const Layout& layout,
 }
 
 auto add_to_selection(Selection& selection, const Layout& layout,
-                      std::span<const SelectionIndex::value_t> items, bool whole_tree)
+                      std::span<const SpatialIndex::value_t> items, bool whole_tree)
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {

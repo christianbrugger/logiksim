@@ -1,3 +1,4 @@
+#include "collision_index.h"
 #include "index/collision_index.h"
 
 #include "algorithm/fmt_join.h"
@@ -440,6 +441,10 @@ auto set_wire_state(CollisionIndex::map_type& map, point_t position,
 
 }  // namespace collision_index
 
+CollisionIndex::CollisionIndex(const Layout& layout) {
+    generate_layout_messages(*this, layout);
+}
+
 auto CollisionIndex::format() const -> std::string {
     if (map_.empty()) {
         return std::string("CollisionIndex = []\n");
@@ -677,8 +682,7 @@ auto CollisionIndex::query(point_t point) const -> collision_index::collision_da
 }
 
 auto CollisionIndex::validate(const Layout& layout) const -> void {
-    auto cache = CollisionIndex {};
-    add_layout_to_cache(cache, layout);
+    auto cache = CollisionIndex {layout};
 
     if (cache.map_ != this->map_) [[unlikely]] {
         throw std::runtime_error("current cache state doesn't match circuit");

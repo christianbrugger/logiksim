@@ -1,4 +1,4 @@
-#include "index/selection_index.h"
+#include "index/spatial_index.h"
 
 #include "allocated_size/tracked_resource.h"
 #include "iterator_adaptor/output_callable.h"
@@ -16,7 +16,7 @@
 
 #include <memory_resource>
 
-namespace logicsim::selection_index {
+namespace logicsim::spatial_index {
 
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -74,7 +74,7 @@ auto tree_container::operator==(const tree_container& other) const -> bool {
     return value == other.value;
 }
 
-}  // namespace logicsim::selection_index
+}  // namespace logicsim::spatial_index
 
 namespace boost::geometry::model {
 template <typename T>
@@ -84,9 +84,9 @@ auto operator==(box<T> a, box<T> b) -> bool {
 }  // namespace boost::geometry::model
 
 template <>
-struct ankerl::unordered_dense::hash<logicsim::selection_index::tree_payload_t> {
+struct ankerl::unordered_dense::hash<logicsim::spatial_index::tree_payload_t> {
     using is_avalanching = void;
-    using type = logicsim::selection_index::tree_payload_t;
+    using type = logicsim::spatial_index::tree_payload_t;
 
     [[nodiscard]] auto operator()(const type& obj) const noexcept -> uint64_t {
         return obj.hash();
@@ -98,36 +98,36 @@ struct ankerl::unordered_dense::hash<logicsim::selection_index::tree_payload_t> 
 //
 
 template <>
-struct fmt::formatter<logicsim::selection_index::tree_point_t> {
+struct fmt::formatter<logicsim::spatial_index::tree_point_t> {
     static constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::selection_index::tree_point_t& obj,
+    static auto format(const logicsim::spatial_index::tree_point_t& obj,
                        fmt::format_context& ctx) {
         return fmt::format_to(ctx.out(), "[{}, {}]", obj.x(), obj.y());
     }
 };
 
 template <>
-struct fmt::formatter<logicsim::selection_index::tree_box_t> {
+struct fmt::formatter<logicsim::spatial_index::tree_box_t> {
     static constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::selection_index::tree_box_t& obj,
+    static auto format(const logicsim::spatial_index::tree_box_t& obj,
                        fmt::format_context& ctx) {
         return fmt::format_to(ctx.out(), "[{}, {}]", obj.min_corner(), obj.max_corner());
     }
 };
 
 template <>
-struct fmt::formatter<logicsim::selection_index::tree_value_t> {
+struct fmt::formatter<logicsim::spatial_index::tree_value_t> {
     static constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::selection_index::tree_value_t& obj,
+    static auto format(const logicsim::spatial_index::tree_value_t& obj,
                        fmt::format_context& ctx) {
         return fmt::format_to(ctx.out(), "{}: {}", obj.first, obj.second);
     }
@@ -136,10 +136,10 @@ struct fmt::formatter<logicsim::selection_index::tree_value_t> {
 namespace logicsim {
 
 //
-// SelectionIndex
+// SpatialIndex
 //
 
-namespace selection_index {
+namespace spatial_index {
 
 auto tree_payload_t::format() const -> std::string {
     if (is_logicitem()) {
@@ -227,45 +227,49 @@ auto to_box(rect_fine_t rect) -> tree_box_t {
     return tree_box_t {p0, p1};
 }
 
-}  // namespace selection_index
+}  // namespace spatial_index
 
-SelectionIndex::SelectionIndex()
-    : tree_ {std::make_unique<selection_index::tree_container>()} {}
+SpatialIndex::SpatialIndex(const Layout& layout) : SpatialIndex {} {
+    generate_layout_messages(*this, layout);
+}
 
-SelectionIndex::~SelectionIndex() = default;
+SpatialIndex::SpatialIndex()
+    : tree_ {std::make_unique<spatial_index::tree_container>()} {}
 
-SelectionIndex::SelectionIndex(const SelectionIndex& other) : tree_ {
-    std::make_unique<selection_index::tree_container>(other.tree_->value)} {}
+SpatialIndex::~SpatialIndex() = default;
 
-auto SelectionIndex::operator=(const SelectionIndex& other) -> SelectionIndex& {
+SpatialIndex::SpatialIndex(const SpatialIndex& other) : tree_ {
+    std::make_unique<spatial_index::tree_container>(other.tree_->value)} {}
+
+auto SpatialIndex::operator=(const SpatialIndex& other) -> SpatialIndex& {
     using std::swap;
-    auto tmp = SelectionIndex {other};
+    auto tmp = SpatialIndex {other};
     swap(*this, tmp);
     return *this;
 }
 
-SelectionIndex::SelectionIndex(SelectionIndex&&) = default;
+SpatialIndex::SpatialIndex(SpatialIndex&&) = default;
 
-auto SelectionIndex::operator=(SelectionIndex&&) -> SelectionIndex& = default;
+auto SpatialIndex::operator=(SpatialIndex&&) -> SpatialIndex& = default;
 
-auto SelectionIndex::format() const -> std::string {
+auto SpatialIndex::format() const -> std::string {
     auto it = tree_->value.begin();
-    return fmt::format("SelectionIndex = {}", tree_->value);
+    return fmt::format("SpatialIndex = {}", tree_->value);
 }
 
-auto SelectionIndex::allocated_size() const -> std::size_t {
+auto SpatialIndex::allocated_size() const -> std::size_t {
     return tree_->resource.allocated_size();
 }
 
-auto SelectionIndex::handle(
+auto SpatialIndex::handle(
     const editable_circuit::info_message::LogicItemInserted& message) -> void {
-    const auto box = selection_index::get_selection_box(message.data);
+    const auto box = spatial_index::get_selection_box(message.data);
     tree_->value.insert({box, value_t {message.logicitem_id}});
 }
 
-auto SelectionIndex::handle(
+auto SpatialIndex::handle(
     const editable_circuit::info_message::LogicItemUninserted& message) -> void {
-    const auto box = selection_index::get_selection_box(message.data);
+    const auto box = spatial_index::get_selection_box(message.data);
     const auto remove_count = tree_->value.remove({box, value_t {message.logicitem_id}});
 
     if (remove_count != 1) [[unlikely]] {
@@ -273,7 +277,7 @@ auto SelectionIndex::handle(
     }
 }
 
-auto SelectionIndex::handle(
+auto SpatialIndex::handle(
     const editable_circuit::info_message::InsertedLogicItemIdUpdated& message) -> void {
     using namespace editable_circuit::info_message;
 
@@ -282,15 +286,15 @@ auto SelectionIndex::handle(
     handle(LogicItemInserted {message.new_logicitem_id, message.data});
 }
 
-auto SelectionIndex::handle(
+auto SpatialIndex::handle(
     const editable_circuit::info_message::SegmentInserted& message) -> void {
-    const auto box = selection_index::get_selection_box(message.segment_info.line);
+    const auto box = spatial_index::get_selection_box(message.segment_info.line);
     tree_->value.insert({box, value_t {message.segment}});
 }
 
-auto SelectionIndex::handle(
+auto SpatialIndex::handle(
     const editable_circuit::info_message::SegmentUninserted& message) -> void {
-    const auto box = selection_index::get_selection_box(message.segment_info.line);
+    const auto box = spatial_index::get_selection_box(message.segment_info.line);
     const auto remove_count = tree_->value.remove({box, value_t {message.segment}});
 
     if (remove_count != 1) [[unlikely]] {
@@ -298,7 +302,7 @@ auto SelectionIndex::handle(
     }
 }
 
-auto SelectionIndex::handle(
+auto SpatialIndex::handle(
     const editable_circuit::info_message::InsertedSegmentIdUpdated& message) -> void {
     using namespace editable_circuit::info_message;
 
@@ -310,7 +314,7 @@ auto SelectionIndex::handle(
     // 1975 ms (this) vs 1927 ms (using query & const_cast) overall performance.
 }
 
-auto SelectionIndex::submit(const editable_circuit::InfoMessage& message) -> void {
+auto SpatialIndex::submit(const editable_circuit::InfoMessage& message) -> void {
     using namespace editable_circuit::info_message;
 
     // logic items
@@ -342,8 +346,8 @@ auto SelectionIndex::submit(const editable_circuit::InfoMessage& message) -> voi
     }
 }
 
-auto SelectionIndex::query_selection(rect_fine_t rect) const -> std::vector<value_t> {
-    using namespace selection_index;
+auto SpatialIndex::query_selection(rect_fine_t rect) const -> std::vector<value_t> {
+    using namespace spatial_index;
     auto result = std::vector<value_t> {};
 
     std::ranges::transform(tree_->value.qbegin(bgi::intersects(to_box(rect))),
@@ -352,15 +356,15 @@ auto SelectionIndex::query_selection(rect_fine_t rect) const -> std::vector<valu
     return result;
 }
 
-auto SelectionIndex::has_element(point_fine_t point) const -> bool {
-    using namespace selection_index;
+auto SpatialIndex::has_element(point_fine_t point) const -> bool {
+    using namespace spatial_index;
 
     return tree_->value.qbegin(bgi::intersects(to_tree_point(point))) !=
            tree_->value.qend();
 }
 
-auto SelectionIndex::query_line_segments(point_t grid_point) const -> queried_segments_t {
-    using namespace selection_index;
+auto SpatialIndex::query_line_segments(point_t grid_point) const -> queried_segments_t {
+    using namespace spatial_index;
 
     const auto tree_point = to_tree_point(point_fine_t {grid_point});
 
@@ -377,18 +381,18 @@ auto SelectionIndex::query_line_segments(point_t grid_point) const -> queried_se
     return result;
 }
 
-auto SelectionIndex::rects() const -> std::vector<rect_fine_t> {
+auto SpatialIndex::rects() const -> std::vector<rect_fine_t> {
     auto result = std::vector<rect_fine_t> {};
     result.reserve(tree_->value.size());
 
     for (auto& value : tree_->value) {
-        result.push_back(selection_index::to_rect(value.first));
+        result.push_back(spatial_index::to_rect(value.first));
     }
 
     return result;
 }
 
-namespace selection_index {
+namespace spatial_index {
 
 using index_map_t = ankerl::unordered_dense::map<tree_payload_t, tree_box_t>;
 
@@ -415,25 +419,24 @@ auto operator!=(const tree_t& a, const tree_t& b) -> bool {
     return !(a == b);
 }
 
-}  // namespace selection_index
+}  // namespace spatial_index
 
-auto SelectionIndex::validate(const Layout& layout) const -> void {
-    using namespace selection_index;
+auto SpatialIndex::validate(const Layout& layout) const -> void {
+    using namespace spatial_index;
 
-    auto cache = SelectionIndex {};
-    add_layout_to_cache(cache, layout);
+    auto cache = SpatialIndex {layout};
 
     if (cache.tree_->value != this->tree_->value) [[unlikely]] {
         throw std::runtime_error("current cache state doesn't match circuit");
     }
 }
 
-auto get_segment_count(SelectionIndex::queried_segments_t result) -> int {
+auto get_segment_count(SpatialIndex::queried_segments_t result) -> int {
     return gsl::narrow_cast<int>(std::ranges::count_if(
         result, [](segment_t segment) { return bool {segment.wire_id}; }));
 }
 
-auto all_same_wire_id(SelectionIndex::queried_segments_t result) -> bool {
+auto all_same_wire_id(SpatialIndex::queried_segments_t result) -> bool {
     const auto first_id = result.at(0).wire_id;
 
     if (!first_id) {
@@ -445,7 +448,7 @@ auto all_same_wire_id(SelectionIndex::queried_segments_t result) -> bool {
     });
 }
 
-auto get_segment_indices(SelectionIndex::queried_segments_t result)
+auto get_segment_indices(SpatialIndex::queried_segments_t result)
     -> std::array<segment_index_t, 4> {
     static_assert(result.size() == 4);
     return std::array {
@@ -456,7 +459,7 @@ auto get_segment_indices(SelectionIndex::queried_segments_t result)
     };
 }
 
-auto get_unique_wire_id(SelectionIndex::queried_segments_t result) -> wire_id_t {
+auto get_unique_wire_id(SpatialIndex::queried_segments_t result) -> wire_id_t {
     if (!result.at(0).wire_id) {
         throw std::runtime_error("result has not segments");
     }

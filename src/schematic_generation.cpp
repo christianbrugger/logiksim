@@ -3,7 +3,7 @@
 #include "algorithm/transform_to_container.h"
 #include "geometry/orientation.h"
 #include "index/connection_index.h"
-#include "layout_message_generation.h"
+#include "layout.h"
 #include "line_tree.h"
 #include "line_tree_generation.h"
 #include "logic_item/schematic_info.h"
@@ -166,13 +166,10 @@ auto add_layout_elements(Schematic& schematic, const Layout& layout,
 //
 
 struct GenerationCache {
-    GenerationCache(const Layout& layout) {
-        add_logic_items_to_cache(inputs, layout);
-        add_logic_items_to_cache(outputs, layout);
-    }
+    explicit GenerationCache(const Layout& layout) : inputs {layout}, outputs {layout} {}
 
-    LogicItemInputIndex inputs {};
-    LogicItemOutputIndex outputs {};
+    LogicItemInputIndex inputs;
+    LogicItemOutputIndex outputs;
 };
 
 auto connect_line_tree(Schematic& schematic, const Layout& layout,

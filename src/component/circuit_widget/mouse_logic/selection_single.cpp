@@ -10,7 +10,7 @@ namespace circuit_widget {
 namespace {
 
 auto all_selected(const Selection& selection, const Layout& layout,
-                  std::span<const SelectionIndex::value_t> items, point_fine_t point)
+                  std::span<const SpatialIndex::value_t> items, point_fine_t point)
     -> bool {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
@@ -27,7 +27,7 @@ auto all_selected(const Selection& selection, const Layout& layout,
 }
 
 auto add_selection(Selection& selection, const Layout& layout,
-                   std::span<const SelectionIndex::value_t> items, point_fine_t point)
+                   std::span<const SpatialIndex::value_t> items, point_fine_t point)
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
@@ -39,7 +39,7 @@ auto add_selection(Selection& selection, const Layout& layout,
 }
 
 auto remove_selection(Selection& selection, const Layout& layout,
-                      std::span<const SelectionIndex::value_t> items, point_fine_t point)
+                      std::span<const SpatialIndex::value_t> items, point_fine_t point)
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
@@ -51,7 +51,7 @@ auto remove_selection(Selection& selection, const Layout& layout,
 }
 
 auto add_whole_trees(Selection& selection, const Layout& layout,
-                     std::span<const SelectionIndex::value_t> items) -> void {
+                     std::span<const SpatialIndex::value_t> items) -> void {
     for (const auto& item : items) {
         if (item.is_segment()) {
             add_segment_tree(selection, item.segment().wire_id, layout);
@@ -60,7 +60,7 @@ auto add_whole_trees(Selection& selection, const Layout& layout,
 }
 
 auto remove_whole_trees(Selection& selection, const Layout& layout,
-                        std::span<const SelectionIndex::value_t> items) -> void {
+                        std::span<const SpatialIndex::value_t> items) -> void {
     for (const auto& item : items) {
         if (item.is_segment()) {
             remove_segment_tree(selection, item.segment().wire_id, layout);

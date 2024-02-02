@@ -12,7 +12,7 @@
 namespace logicsim {
 
 class Layout;
-class SelectionIndex;
+class SpatialIndex;
 class LayoutIndex;
 
 enum class SelectionFunction {

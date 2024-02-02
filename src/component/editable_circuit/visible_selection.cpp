@@ -7,7 +7,6 @@
 #include "format/std_type.h"
 #include "layout.h"
 #include "layout_message.h"
-#include "layout_message_generation.h"
 #include "selection.h"
 #include "selection_normalization.h"
 
@@ -179,7 +178,7 @@ auto add_segment_to_selection(segment_t segment, VisibleSelection::operation_t o
     std::terminate();
 }
 
-auto apply_function(Selection& selection, const SelectionIndex& selection_index,
+auto apply_function(Selection& selection, const SpatialIndex& selection_index,
                     const Layout& layout, VisibleSelection::operation_t operation)
     -> void {
     const auto selected_elements = selection_index.query_selection(operation.rect);
