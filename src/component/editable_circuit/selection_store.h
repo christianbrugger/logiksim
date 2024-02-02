@@ -2,6 +2,7 @@
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_SELECTION_STORE_H
 
 #include "format/struct.h"
+#include "layout_message_forward.h"
 #include "selection.h"
 #include "vocabulary/selection_id.h"
 
@@ -51,6 +52,8 @@ class SelectionStore {
 
     [[nodiscard]] auto create() -> selection_id_t;
     auto destroy(selection_id_t selection_id) -> void;
+
+    auto submit(const editable_circuit::InfoMessage& message) -> void;
 
    private:
     selection_id_t next_selection_key_;

@@ -83,8 +83,8 @@ struct convertible_inputs_result_t {
     }
 };
 
-auto find_convertible_wire_input_candiates(const LayoutIndex& cache,
-                                           const layout_calculation_data_t& data)
+auto find_convertible_wire_input_candidates(const LayoutIndex& cache,
+                                            const layout_calculation_data_t& data)
     -> convertible_inputs_result_t {
     auto result = convertible_inputs_result_t {};
 
@@ -105,7 +105,7 @@ auto find_convertible_wire_input_candiates(const LayoutIndex& cache,
 auto find_convertible_wire_inputs(const Layout& layout, const LayoutIndex& cache,
                                   const layout_calculation_data_t& data)
     -> convertible_inputs_result_t {
-    auto candidates = find_convertible_wire_input_candiates(cache, data);
+    auto candidates = find_convertible_wire_input_candidates(cache, data);
 
     if (candidates.any_collisions ||
         has_duplicate_wire_ids(candidates.convertible_inputs) ||

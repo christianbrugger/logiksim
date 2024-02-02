@@ -63,11 +63,16 @@ set(LS_CORE_SOURCES
     src/component/circuit_widget/render_surface.cpp
     src/component/circuit_widget/simulation_runner.cpp
     src/component/circuit_widget/zoom.cpp
+    src/component/editable_circuit/circuit_data.cpp
+    src/component/editable_circuit/edit_logicitem.cpp
+    src/component/editable_circuit/edit_wire.cpp
+    src/component/editable_circuit/edit_wires.cpp
     src/component/editable_circuit/handler.cpp
     src/component/editable_circuit/layout_index.cpp
+    src/component/editable_circuit/layout_modifier.cpp
     src/component/editable_circuit/message_sender.cpp
-    src/component/editable_circuit/placeholder.cpp
     src/component/editable_circuit/selection_store.cpp
+    src/component/editable_circuit/tracked_selection.cpp
     src/component/editable_circuit/visible_selection.cpp
     src/component/interactive_simulation/interaction_cache.cpp
     src/component/layout/logicitem_store.cpp
@@ -274,6 +279,7 @@ set(LS_CORE_SOURCES
     src/circuit_widget_base.cpp
     src/copy_paste_clipboard.cpp
     src/default_element_definition.cpp
+    src/editable_circuit2.cpp
     src/editable_circuit.cpp
     src/event_counter.cpp
     src/event_counter_multi.cpp

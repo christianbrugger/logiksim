@@ -41,7 +41,7 @@ class EditableCircuit {
     auto add_example() -> void;
 
     // TODO remove duplicate methods, always require handle ?
-    auto add_logic_item(LogicItemDefinition definition, point_t position,
+    auto add_logic_item(const LogicItemDefinition& definition, point_t position,
                         InsertionMode insertion_mode,
                         selection_id_t selection_id = null_selection_id) -> void;
     auto add_line_segment(line_t line, InsertionMode insertion_mode,

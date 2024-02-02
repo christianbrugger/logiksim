@@ -1,8 +1,9 @@
-#include "component/editable_circuit/selection_store.h"
+#include "selection_store.h"
 
 #include "algorithm/fmt_join.h"
 #include "algorithm/uniform_int_distribution.h"
 #include "allocated_size/ankerl_unordered_dense.h"
+#include "component/editable_circuit/selection_store.h"
 #include "format/container.h"
 #include "format/std_type.h"
 
@@ -109,6 +110,12 @@ auto SelectionStore::destroy(selection_id_t selection_id) -> void {
         return;
     }
     throw std::runtime_error("Selection not found in selection store remove.");
+}
+
+auto SelectionStore::submit(const editable_circuit::InfoMessage& message) -> void {
+    for (auto& item : selections_) {
+        item.second.submit(message);
+    }
 }
 
 }  // namespace editable_circuit

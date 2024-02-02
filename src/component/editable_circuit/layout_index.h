@@ -9,6 +9,18 @@
 
 namespace logicsim {
 
+/**
+ * @brief: Efficiently stores connection, collision info and selections of the Layout.
+ *
+ * Pre-conditions:
+ *   + inserted wire segments need to have the correct SegmentPointType
+ *   + requires a correct history of messages of element changes
+ *
+ * Class-invariants:
+ *   + There are no duplicate connections of the same type for inserted elements.
+ *   + Inserted wires & logicitems are not colliding.
+ *
+ */
 class LayoutIndex {
    public:
     [[nodiscard]] explicit LayoutIndex() = default;

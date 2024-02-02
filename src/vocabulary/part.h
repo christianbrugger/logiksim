@@ -14,7 +14,7 @@ namespace logicsim {
  * @brief: Part defines a sub-segment of an ordered line from [p0 + begin, p1 + end].
  *
  * Class invariants:
- *     * begin and end are ordered & length is positive: end > begin
+ *     * begin and end are ordered & length is positive: begin < end
  */
 struct part_t {
     offset_t begin;
@@ -38,7 +38,7 @@ static_assert(std::is_trivially_copy_assignable_v<part_t>);
 
 constexpr part_t::part_t(offset_like auto begin_, offset_like auto end_)
     : begin {offset_t {begin_}}, end {offset_t {end_}} {
-    if (!(begin_ < end_)) [[unlikely]] {
+    if (!(begin < end)) [[unlikely]] {
         throw std::runtime_error("begin needs to be smaller than end.");
     }
 };

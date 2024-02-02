@@ -55,6 +55,13 @@ class Selection;
 [[nodiscard]] auto is_selected(const Selection &selection, const Layout &layout,
                                segment_t segment, point_fine_t point) -> bool;
 
+/**
+ * @brief: A selection of logicitems and segment parts of a Layout.
+ *
+ * Class-invariants:
+ *   + stored logicitem_ids and segments are positive
+ *   + Selected segments have a non-empty PartSelection
+ */
 class Selection {
    public:
     using segment_pair_t = detail::selection::map_pair_t;
@@ -86,6 +93,7 @@ class Selection {
         -> const PartSelection &;
 
     auto submit(const editable_circuit::InfoMessage &message) -> void;
+    // TODO remove
     auto validate(const Layout &layout) const -> void;
 
    private:
@@ -110,6 +118,9 @@ template <>
 auto std::swap(logicsim::Selection &a, logicsim::Selection &b) noexcept -> void;
 
 namespace logicsim {
+
+[[nodiscard]] auto is_selection_valid(const Selection &selection, const Layout &layout)
+    -> bool;
 
 auto add_segment(Selection &selection, segment_t segment, const Layout &layout) -> void;
 auto add_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)

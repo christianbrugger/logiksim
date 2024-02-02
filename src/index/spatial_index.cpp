@@ -233,7 +233,7 @@ auto to_box(rect_fine_t rect) -> tree_box_t {
 }  // namespace spatial_index
 
 SpatialIndex::SpatialIndex(const Layout& layout) : SpatialIndex {} {
-    // Using RTree bulk insertion is 6x faster than through generate_layout_messages
+    // Using RTree bulk insertion is 6x faster than generate_layout_messages
     using namespace spatial_index;
 
     const auto count =

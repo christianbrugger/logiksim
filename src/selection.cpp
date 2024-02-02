@@ -480,58 +480,29 @@ auto Selection::submit(const editable_circuit::InfoMessage &message) -> void {
     }
 }
 
-//
-// validation
-//
-
-namespace {
-
-using namespace detail::selection;
-
-auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
-                               const wire_id_t wire_id, const SegmentTree &segment_tree)
-    -> void {
-    for (const auto segment_index : segment_tree.indices()) {
-        const auto key = segment_t {wire_id, segment_index};
-        const auto it = segment_map.find(key);
-
-        if (it != segment_map.end()) {
-            const auto line = segment_tree.line(segment_index);
-
-            if (it->second.max_offset() > to_part(line).end) [[unlikely]] {
-                throw std::runtime_error("parts are not part of line");
-            }
-
-            segment_map.erase(it);
-        }
-    }
-}
-
-}  // namespace
-
 auto Selection::validate(const Layout &layout) const -> void {
-    auto logicitems_set = detail::selection::logicitems_set_t {selected_logicitems_};
-    auto segment_map = detail::selection::segment_map_t {selected_segments_};
-
-    // logic items
-    for (const auto logicitem_id : logicitem_ids(layout)) {
-        logicitems_set.erase(logicitem_id);
-    }
-    if (!logicitems_set.empty()) [[unlikely]] {
-        throw std::runtime_error("selection contains elements that don't exist anymore");
-    }
-
-    // segments
-    for (const auto wire_id : wire_ids(layout)) {
-        check_and_remove_segments(segment_map, wire_id,
-                                  layout.wires().segment_tree(wire_id));
-    }
-    if (!segment_map.empty()) [[unlikely]] {
-        throw std::runtime_error("selection contains segments that don't exist anymore");
+    if (!is_selection_valid(*this, layout)) {
+        throw std::runtime_error("selection contains elements that don't exist");
     }
 }
 
 // Section
+
+auto is_selection_valid(const Selection &selection, const Layout &layout) -> bool {
+    const auto logicitem_valid = [&](const logicitem_id_t &logicitem_id) -> bool {
+        return is_id_valid(logicitem_id, layout);
+    };
+
+    const auto segment_valid = [&](const Selection::segment_pair_t &entry) -> bool {
+        const auto &[segment, parts] = entry;
+        const auto segment_part =
+            segment_part_t {segment, part_t {0, parts.max_offset()}};
+        return is_segment_part_valid(segment_part, layout);
+    };
+
+    return std::ranges::all_of(selection.selected_logic_items(), logicitem_valid) &&
+           std::ranges::all_of(selection.selected_segments(), segment_valid);
+}
 
 auto add_segment(Selection &selection, segment_t segment, const Layout &layout) -> void {
     const auto part = to_part(get_line(layout, segment));

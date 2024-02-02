@@ -101,6 +101,32 @@ auto inserted_wire_ids(const Layout &layout) -> range_extended_t<wire_id_t> {
     return range_extended<wire_id_t>(first, std::max(first, layout.wires().size()));
 }
 
+auto is_id_valid(logicitem_id_t logicitem_id, const Layout &layout) -> bool {
+    return logicitem_id >= logicitem_id_t {0} &&
+           size_t {logicitem_id} < layout.logic_items().size();
+}
+
+auto is_id_valid(wire_id_t wire_id, const Layout &layout) -> bool {
+    return wire_id >= wire_id_t {0} && size_t {wire_id} < layout.wires().size();
+}
+
+auto is_segment_valid(segment_t segment, const Layout &layout) -> bool {
+    if (!is_id_valid(segment.wire_id, layout)) {
+        return false;
+    };
+
+    assert(segment.segment_index >= segment_index_t {0});
+    return std::size_t {segment.segment_index} <
+           layout.wires().segment_tree(segment.wire_id).size();
+}
+
+auto is_segment_part_valid(segment_part_t segment_part, const Layout &layout) -> bool {
+    if (!is_segment_valid(segment_part.segment, layout)) {
+        return false;
+    }
+    return segment_part.part.end <= to_part(get_line(layout, segment_part.segment)).end;
+}
+
 auto get_segment_count(const Layout &layout) -> std::size_t {
     return accumulate(wire_ids(layout), std::size_t {0}, [&](wire_id_t wire_id) {
         return layout.wires().segment_tree(wire_id).size();

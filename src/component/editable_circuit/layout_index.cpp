@@ -20,7 +20,12 @@ LayoutIndex::LayoutIndex(const Layout& layout)
 auto LayoutIndex::format() const -> std::string {
     return fmt::format(
         "EditableCircuit::LayoutIndex{{\n"
-        "{}\n{}\n{}\n{}\n{}\n{}\n"
+        "{}\n"
+        "{}\n"
+        "{}\n"
+        "{}\n"
+        "{}\n"
+        "{}\n"
         "}}\n",
         logicitems_inputs_, logicitems_outputs_, wire_inputs_, wire_outputs_,
         collision_index_, spatial_index_);

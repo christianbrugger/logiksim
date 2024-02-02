@@ -150,6 +150,16 @@ auto format(collision_index::ItemType type) -> std::string;
 template <>
 auto format(collision_index::CacheState state) -> std::string;
 
+/**
+ * @brief: Efficiently store collision information of the Layout
+ *
+ * Pre-conditions:
+ *   + inserted wire segments need to have the correct SegmentPointType
+ *   + requires a correct history of messages of element changes
+ *
+ * Class-invariants:
+ *   + inserted wires & logicitems are not colliding
+ */
 class CollisionIndex {
    public:
     using map_type = collision_index::map_type;

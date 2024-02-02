@@ -48,6 +48,16 @@ static_assert(sizeof(value_t<ContentType::Wire>) == 12);
 
 }  // namespace connection_index
 
+/**
+ * @brief: Efficiently stores connector positions of Layout elements.
+ *
+ * Pre-conditions:
+ *   + inserted wire segments need to have the correct SegmentPointType
+ *   + requires a correct history of messages of element changes
+ *
+ * Class-invariants:
+ *   + The index does not contain duplicate connections of a single type.
+ */
 template <connection_index::ContentType Content,
           connection_index::DirectionType Direction>
 class ConnectionIndex {
@@ -60,7 +70,7 @@ class ConnectionIndex {
 
    public:
     [[nodiscard]] explicit ConnectionIndex() = default;
-    [[nodiscard]] explicit ConnectionIndex(const Layout &layout);
+    [[nodiscard]] explicit ConnectionIndex(const Layout& layout);
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
@@ -109,7 +119,6 @@ using WireInputIndex = ConnectionIndex<connection_index::ContentType::Wire,
                                        connection_index::DirectionType::Input>;
 using WireOutputIndex = ConnectionIndex<connection_index::ContentType::Wire,
                                         connection_index::DirectionType::Output>;
-
 
 static_assert(std::regular<LogicItemInputIndex>);
 static_assert(std::regular<LogicItemOutputIndex>);

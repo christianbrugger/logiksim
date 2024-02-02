@@ -51,6 +51,12 @@ struct tree_container;
 
 }  // namespace spatial_index
 
+/**
+ * brief: Efficiently stores selection-boxes of inserted Layout elements.
+ *
+ *  * Pre-conditions:
+ *   + requires a correct history of messages of element changes
+ */
 class SpatialIndex {
    public:
     using value_t = spatial_index::tree_payload_t;

@@ -1,0 +1,146 @@
+#ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_LAYOUT_MODIFIER_H
+#define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_LAYOUT_MODIFIER_H
+
+#include "circuit_data.h"
+#include "vocabulary/insertion_mode.h"
+
+namespace logicsim {
+
+struct logicitem_id_t;
+struct LogicItemDefinition;
+struct point_t;
+class Layout;
+
+namespace editable_circuit {
+
+/**
+ * @brief: Low level circuit editing that maintains a valid layout.
+ *
+ * Class-invariants:
+ *   Logic Items:
+ *      + Body is fully representable within the grid.
+ *   Inserted Logic Items:
+ *      + Are not colliding with anything.
+ *      + All connections with wires are compatible (type & orientation).
+ *   Inserted Wires:
+ *      + Segments are not colliding with anything.
+ *      + Segments form a flat tree. With input at the root.
+ *      + Have either zero or one input.
+ *      + Input corresponds to logicitem output and has correct orientation / position.
+ *      + Have correctly set SegmentPointTypes (input, output, corner, cross, shadow).
+ *   Uninserted Wires:
+ *      + Have no valid parts.
+ *      + Have no inputs or outputs.
+ *      + All SegmentPointTypes are shadow_point
+ *
+ *   Layout Index:
+ *      + LayoutIndex is always in sync with Layout.
+ *   Selections:
+ *      + All Elements in all Selections of the SelectionStore are present in Layout.
+ *      + Elements in Visible Selection are present in Layout.
+ **/
+class LayoutModifier {
+   public:
+    [[nodiscard]] explicit LayoutModifier() = default;
+    [[nodiscard]] explicit LayoutModifier(Layout&& layout);
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    //
+    // Circuit Data
+    //
+
+    [[nodiscard]] auto circuit_data() const -> const CircuitData&;
+
+    //
+    // Logic Items
+    //
+
+    auto delete_temporary_logic_item(logicitem_id_t& logicitem_id,
+                                     logicitem_id_t* preserve_element = nullptr) -> void;
+
+    auto move_logic_item_unchecked(const logicitem_id_t logicitem_id, int dx, int dy)
+        -> void;
+
+    auto move_or_delete_logic_item(logicitem_id_t& logicitem_id, int dx, int dy) -> void;
+
+    auto change_logic_item_insertion_mode(logicitem_id_t& logicitem_id,
+                                          InsertionMode new_insertion_mode) -> void;
+
+    auto add_logic_item(const LogicItemDefinition& definition, point_t position,
+                        InsertionMode insertion_mode) -> logicitem_id_t;
+
+    auto toggle_inverter(point_t point) -> void;
+
+    auto set_attributes(logicitem_id_t logicitem_id, attributes_clock_generator_t attrs)
+        -> void;
+
+    //
+    // Wires
+    //
+
+    auto delete_temporary_wire_segment(segment_part_t& segment_part) -> void;
+
+    auto add_wire_segment(ordered_line_t line, InsertionMode insertion_mode) -> segment_t;
+
+    auto change_wire_insertion_mode(segment_part_t& segment_part,
+                                    InsertionMode new_insertion_mode) -> void;
+
+    auto move_wire_unchecked(segment_t segment, part_t verify_full_part, int dx, int dy)
+        -> void;
+
+    auto move_or_delete_wire(segment_part_t& segment_part, int dx, int dy) -> void;
+
+    auto toggle_inserted_wire_crosspoint(point_t point) -> void;
+
+    //
+    // Wire Normalization
+    //
+
+    auto regularize_temporary_selection(
+        const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
+        -> std::vector<point_t>;
+
+    auto split_temporary_segments(std::span<const point_t> split_points,
+                                  const Selection& selection) -> void;
+
+    //
+    // Selections
+    //
+
+    [[nodiscard]] auto create_selection() -> selection_id_t;
+    auto destroy_selection(selection_id_t selection_id) -> void;
+
+    auto selection_add(selection_id_t selection_id, logicitem_id_t logicitem_id) -> void;
+
+    //
+    // Visible Selection
+    //
+
+   private:
+    CircuitData circuit_ {};
+};
+
+//
+// Selection Based Methods
+//
+
+auto change_insertion_mode(LayoutModifier& modifier, selection_id_t selection_id,
+                           InsertionMode new_insertion_mode) -> void;
+
+auto new_positions_representable(const Layout& Layout, const Selection& selection,
+                                 int delta_x, int delta_y) -> bool;
+
+auto move_unchecked(LayoutModifier& modifier, const Selection& selection, int delta_x,
+                    int delta_y) -> void;
+
+auto move_or_delete_elements(LayoutModifier& modifier, selection_id_t selection_id,
+                             int delta_x, int delta_y) -> void;
+
+auto delete_all(LayoutModifier& modifier, selection_id_t selection_id) -> void;
+
+}  // namespace editable_circuit
+
+}  // namespace logicsim
+
+#endif
