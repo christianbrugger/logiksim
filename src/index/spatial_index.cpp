@@ -1,5 +1,6 @@
 #include "index/spatial_index.h"
 
+#include "algorithm/accumulate.h"
 #include "allocated_size/tracked_resource.h"
 #include "iterator_adaptor/output_callable.h"
 #include "layout.h"
@@ -52,7 +53,7 @@ struct tree_container {
     tree_t value;
 
     tree_container();
-    explicit tree_container(const tree_t &);
+    explicit tree_container(const tree_t&);
 
     [[nodiscard]] auto operator==(const tree_container& other) const -> bool;
 
@@ -67,8 +68,9 @@ tree_container::tree_container()
     : resource {},
       value {tree_t {}, std::pmr::polymorphic_allocator<tree_value_t> {&resource}} {}
 
-tree_container::tree_container(const tree_t& other) : resource {}, 
-value {other, std::pmr::polymorphic_allocator<tree_value_t> {&resource}} {}
+tree_container::tree_container(const tree_t& other)
+    : resource {},
+      value {other, std::pmr::polymorphic_allocator<tree_value_t> {&resource}} {}
 
 auto tree_container::operator==(const tree_container& other) const -> bool {
     return value == other.value;
@@ -230,7 +232,34 @@ auto to_box(rect_fine_t rect) -> tree_box_t {
 }  // namespace spatial_index
 
 SpatialIndex::SpatialIndex(const Layout& layout) : SpatialIndex {} {
-    generate_layout_messages(*this, layout);
+    // Using RTree bulk insertion is 6x faster than through generate_layout_messages
+    using namespace spatial_index;
+
+    const auto count =
+        get_inserted_logicitem_count(layout) + get_inserted_segment_count(layout);
+    auto values = std::vector<tree_value_t> {};
+    values.reserve(count);
+
+    for (const auto& logicitem_id : logicitem_ids(layout)) {
+        if (is_inserted(layout, logicitem_id)) {
+            const auto data = to_layout_calculation_data(layout, logicitem_id);
+            const auto box = get_selection_box(data);
+            values.push_back({box, value_t {logicitem_id}});
+        }
+    }
+
+    for (const auto& wire_id : inserted_wire_ids(layout)) {
+        const auto& tree = layout.wires().segment_tree(wire_id);
+        for (const auto& segment_index : tree.indices()) {
+            const auto box = get_selection_box(tree.line(segment_index));
+            values.push_back({box, value_t {segment_t {wire_id, segment_index}}});
+        }
+    }
+
+    Expects(values.size() == count);
+    tree_->value =
+        tree_t {values.begin(), values.end(),
+                std::pmr::polymorphic_allocator<tree_value_t> {&tree_->resource}};
 }
 
 SpatialIndex::SpatialIndex()
@@ -238,8 +267,8 @@ SpatialIndex::SpatialIndex()
 
 SpatialIndex::~SpatialIndex() = default;
 
-SpatialIndex::SpatialIndex(const SpatialIndex& other) : tree_ {
-    std::make_unique<spatial_index::tree_container>(other.tree_->value)} {}
+SpatialIndex::SpatialIndex(const SpatialIndex& other)
+    : tree_ {std::make_unique<spatial_index::tree_container>(other.tree_->value)} {}
 
 auto SpatialIndex::operator=(const SpatialIndex& other) -> SpatialIndex& {
     using std::swap;
@@ -286,8 +315,8 @@ auto SpatialIndex::handle(
     handle(LogicItemInserted {message.new_logicitem_id, message.data});
 }
 
-auto SpatialIndex::handle(
-    const editable_circuit::info_message::SegmentInserted& message) -> void {
+auto SpatialIndex::handle(const editable_circuit::info_message::SegmentInserted& message)
+    -> void {
     const auto box = spatial_index::get_selection_box(message.segment_info.line);
     tree_->value.insert({box, value_t {message.segment}});
 }

@@ -10,28 +10,14 @@ namespace logicsim {
 // LayoutIndex
 //
 
-LayoutIndex::LayoutIndex(const Layout& layout) {
-    const auto _ = Timer {"Layout Index"};
+LayoutIndex::LayoutIndex(const Layout& layout)
+    : logicitems_inputs_ {layout},
+      logicitems_outputs_ {layout},
+      wire_inputs_ {layout},
+      wire_outputs_ {layout},
 
-    // TODO consider bulk insertion, especially for spatial_index_
-    {
-        const auto _1 = Timer {"  Connection Index"};
-
-        logicitems_inputs_ = LogicItemInputIndex {layout};
-        logicitems_outputs_ = LogicItemOutputIndex {layout};
-        wire_inputs_ = WireInputIndex {layout};
-        wire_outputs_ = WireOutputIndex {layout};
-    }
-
-    {
-        const auto _2 = Timer {"  Collision Index"};
-        collision_index_ = CollisionIndex {layout};
-    }
-    {
-        const auto _3 = Timer {"  Spatial Index"};
-        spatial_index_ = SpatialIndex {layout};
-    }
-}
+      collision_index_ {layout},
+      spatial_index_ {layout} {}
 
 auto LayoutIndex::format() const -> std::string {
     return fmt::format(

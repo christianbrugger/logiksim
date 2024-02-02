@@ -64,6 +64,10 @@ class Layout {
 
 [[nodiscard]] auto get_segment_count(const Layout &layout) -> std::size_t;
 
+[[nodiscard]] auto get_inserted_segment_count(const Layout &layout) -> std::size_t;
+
+[[nodiscard]] auto get_inserted_logicitem_count(const Layout &layout) -> std::size_t;
+
 [[nodiscard]] auto format_stats(const Layout &layout) -> std::string;
 
 [[nodiscard]] auto format_logic_item(const Layout &layout, logicitem_id_t logicitem_id)
