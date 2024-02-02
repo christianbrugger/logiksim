@@ -307,17 +307,17 @@ auto LogicItemStore::set_display_state(logicitem_id_t logicitem_id,
 }
 
 auto LogicItemStore::set_attributes(logicitem_id_t logicitem_id,
-                                    attributes_clock_generator_t attrs) -> void {
+                                    attributes_clock_generator_t attrs__) -> void {
     const auto it = map_clock_generator_.find(logicitem_id);
 
     if (it == map_clock_generator_.end()) [[unlikely]] {
         throw std::runtime_error("could not find attribute");
     }
-    if (!is_valid(attrs)) [[unlikely]] {
+    if (!is_valid(attrs__)) [[unlikely]] {
         throw std::runtime_error("attributes not valid");
     }
 
-    it->second = std::move(attrs);
+    it->second = std::move(attrs__);
 }
 
 auto LogicItemStore::set_input_inverter(logicitem_id_t logicitem_id,

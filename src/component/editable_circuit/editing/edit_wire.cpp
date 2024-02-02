@@ -1,8 +1,11 @@
-#include "component/editable_circuit/edit_wire.h"
+#include "component/editable_circuit/editing/edit_wire.h"
 
+#include "algorithm/sort_pair.h"
+#include "algorithm/transform_to_vector.h"
 #include "component/editable_circuit/circuit_data.h"
 #include "geometry/line.h"
 #include "geometry/orientation.h"
+#include "index/spatial_point_index.h"
 #include "layout.h"
 #include "tree_normalization.h"
 
@@ -11,6 +14,8 @@
 namespace logicsim {
 
 namespace editable_circuit {
+
+namespace editing {
 
 //
 // Move Segment Between Tree
@@ -435,6 +440,23 @@ auto is_wire_position_representable(const Layout& layout,
 
     const auto line = get_line(layout, segment_part);
     return is_representable(line, dx, dy);
+}
+
+auto new_wire_positions_representable(const Layout& layout, const Selection& selection,
+                                      int delta_x, int delta_y) -> bool {
+    for (const auto& [segment, parts] : selection.selected_segments()) {
+        const auto full_line = get_line(layout, segment);
+
+        for (const auto& part : parts) {
+            const auto line = to_line(full_line, part);
+
+            if (!is_representable(line, delta_x, delta_y)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 auto move_temporary_wire_unchecked(Layout& layout, segment_t segment,
@@ -1327,6 +1349,340 @@ auto toggle_inserted_wire_crosspoint(CircuitData& circuit, point_t point) -> voi
         remove_wire_crosspoint(circuit, point);
     }
 }
+
+//
+// Regularization
+//
+
+namespace {
+
+class SegmentEndpointMap {
+   public:
+    // orientation: right, left, up, down
+    using value_t = std::array<segment_t, 4>;
+    using map_t = ankerl::unordered_dense::map<point_t, value_t>;
+
+    using mergable_t = std::pair<segment_t, segment_t>;
+
+   public:
+    [[nodiscard]] static auto index(const orientation_t orientation) {
+        return static_cast<std::underlying_type<orientation_t>::type>(orientation);
+    }
+
+    [[nodiscard]] static auto get(const value_t& segments,
+                                  const orientation_t orientation) {
+        return segments.at(index(orientation));
+    }
+
+    [[nodiscard]] static auto has(const value_t& segments,
+                                  const orientation_t orientation) {
+        return get(segments, orientation) != null_segment;
+    }
+
+   private:
+    [[nodiscard]] static auto count_points(const value_t& segments) {
+        return std::ranges::count_if(
+            segments, [](segment_t value) { return value != null_segment; });
+    }
+
+    [[nodiscard]] static auto to_adcacent_segment(const value_t& segments)
+        -> std::optional<mergable_t> {
+        using enum orientation_t;
+
+        if (count_points(segments) != 2) {
+            return std::nullopt;
+        }
+
+        const auto to_segment = [&](orientation_t orientation) {
+            return get(segments, orientation);
+        };
+        const auto has_segment = [&](orientation_t orientation) {
+            return has(segments, orientation);
+        };
+
+        if (has_segment(left) && has_segment(right)) {
+            return mergable_t {to_segment(left), to_segment(right)};
+        }
+
+        else if (has_segment(up) && has_segment(down)) {
+            return mergable_t {to_segment(up), to_segment(down)};
+        }
+
+        return std::nullopt;
+    }
+
+   public:
+    auto add_segment(segment_t segment, ordered_line_t line) -> void {
+        add_point(line.p0, segment, to_orientation_p0(line));
+        add_point(line.p1, segment, to_orientation_p1(line));
+    }
+
+    // [](point_t point, std::array<segment_t,4> segments, int count) {}
+    template <typename Func>
+    auto iter_crosspoints(Func callback) const -> void {
+        for (const auto& [point, segments] : map_.values()) {
+            const auto count = count_points(segments);
+
+            if (count >= 3) {
+                callback(point, segments, count);
+            }
+        }
+    }
+
+    [[nodiscard]] auto adjacent_segments() const -> std::vector<mergable_t> {
+        auto result = std::vector<mergable_t> {};
+
+        for (const auto& [point, segments] : map_.values()) {
+            if (const auto adjacent = to_adcacent_segment(segments)) {
+                result.push_back(*adjacent);
+            }
+        }
+
+        return result;
+    }
+
+   private:
+    auto add_point(point_t point, segment_t segment, orientation_t orientation) -> void {
+        const auto index = this->index(orientation);
+
+        const auto it = map_.find(point);
+
+        if (it != map_.end()) {
+            if (it->second.at(index) != null_segment) [[unlikely]] {
+                throw std::runtime_error("entry already exists in SegmentEndpointMap");
+            }
+
+            it->second.at(index) = segment;
+        } else {
+            auto value = value_t {null_segment, null_segment, null_segment, null_segment};
+            value.at(index) = segment;
+
+            map_.emplace(point, value);
+        }
+    }
+
+   private:
+    map_t map_ {};
+};
+
+auto build_endpoint_map(const Layout& layout, const Selection& selection)
+    -> SegmentEndpointMap {
+    auto map = SegmentEndpointMap {};
+
+    for (const auto& [segment, parts] : selection.selected_segments()) {
+        const auto full_line = get_line(layout, segment);
+
+        if (!is_temporary(segment.wire_id)) {
+            throw std::runtime_error("can only merge temporary segments");
+        }
+        if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
+            throw std::runtime_error("selection cannot contain partially selected lines");
+        }
+
+        map.add_segment(segment, full_line);
+    }
+
+    return map;
+}
+
+auto set_segment_crosspoint(Layout& layout, const segment_t segment, point_t point) {
+    if (is_inserted(segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("cannot set endpoints of inserted wire segment");
+    }
+    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
+
+    auto info = m_tree.info(segment.segment_index);
+
+    if (info.line.p0 == point) {
+        info.p0_type = SegmentPointType::cross_point;
+    } else if (info.line.p1 == point) {
+        info.p1_type = SegmentPointType::cross_point;
+    } else [[unlikely]] {
+        throw std::runtime_error("point is not part of line.");
+    }
+
+    m_tree.update_segment(segment.segment_index, info);
+}
+
+auto merge_all_line_segments(CircuitData& circuit,
+                             std::vector<std::pair<segment_t, segment_t>>& pairs) {
+    // merging deletes the segment with highest segment index,
+    // so for this to work with multiple segments
+    // we need to be sort them in descendant order
+    for (auto& pair : pairs) {
+        sort_inplace(pair.first, pair.second, std::ranges::greater {});
+    }
+    std::ranges::sort(pairs, std::ranges::greater {});
+
+    // Sorted pairs example:
+    //  (<Element 0, Segment 6>, <Element 0, Segment 5>)
+    //  (<Element 0, Segment 5>, <Element 0, Segment 3>)
+    //  (<Element 0, Segment 4>, <Element 0, Segment 2>)
+    //  (<Element 0, Segment 4>, <Element 0, Segment 0>)  <-- 4 needs to become 2
+    //  (<Element 0, Segment 3>, <Element 0, Segment 1>)
+    //  (<Element 0, Segment 2>, <Element 0, Segment 1>)
+    //                                                    <-- move here & become 1
+
+    for (auto it = pairs.begin(); it != pairs.end(); ++it) {
+        merge_line_segments(circuit, it->first, it->second, nullptr);
+
+        const auto other = std::ranges::lower_bound(
+            std::next(it), pairs.end(), it->first, std::ranges::greater {},
+            [](std::pair<segment_t, segment_t> pair) { return pair.first; });
+
+        if (other != pairs.end() && other->first == it->first) {
+            other->first = it->second;
+
+            sort_inplace(other->first, other->second, std::ranges::greater {});
+            std::ranges::sort(std::next(it), pairs.end(), std::ranges::greater {});
+        }
+    }
+}
+
+}  // namespace
+
+auto regularize_temporary_selection(CircuitData& circuit, const Selection& selection,
+                                    std::optional<std::vector<point_t>> true_cross_points)
+    -> std::vector<point_t> {
+    if (true_cross_points) {
+        split_temporary_segments(circuit, *true_cross_points, selection);
+        std::ranges::sort(*true_cross_points);
+    }
+
+    const auto map = build_endpoint_map(circuit.layout, selection);
+    auto mergable_segments = map.adjacent_segments();
+    auto cross_points = std::vector<point_t> {};
+
+    map.iter_crosspoints(
+        [&](point_t point, std::array<segment_t, 4> segments, int count) {
+            if (count == 3 || !true_cross_points ||
+                std::ranges::binary_search(*true_cross_points, point)) {
+                cross_points.push_back(point);
+
+                const auto segment = segments.at(0) ? segments.at(0) : segments.at(1);
+                set_segment_crosspoint(circuit.layout, segment, point);
+            } else {
+                using enum orientation_t;
+
+                mergable_segments.push_back({
+                    SegmentEndpointMap::get(segments, left),
+                    SegmentEndpointMap::get(segments, right),
+                });
+                mergable_segments.push_back({
+                    SegmentEndpointMap::get(segments, up),
+                    SegmentEndpointMap::get(segments, down),
+                });
+            }
+        });
+
+    merge_all_line_segments(circuit, mergable_segments);
+
+    return cross_points;
+}
+
+auto get_inserted_selection_cross_points(const CircuitData& circuit,
+                                         const Selection& selection)
+    -> std::vector<point_t> {
+    auto cross_points = std::vector<point_t> {};
+
+    for (const auto& [segment, parts] : selection.selected_segments()) {
+        for (const auto& part : parts) {
+            const auto line = get_line(circuit.layout, segment_part_t {segment, part});
+
+            if (circuit.index.collision_index().is_wire_cross_point(line.p0)) {
+                cross_points.push_back(line.p0);
+            }
+            if (circuit.index.collision_index().is_wire_cross_point(line.p1)) {
+                cross_points.push_back(line.p1);
+            }
+        }
+    }
+
+    std::ranges::sort(cross_points);
+    cross_points.erase(std::ranges::unique(cross_points).begin(), cross_points.end());
+
+    return cross_points;
+}
+
+auto split_temporary_segments(CircuitData& circuit, std::span<const point_t> split_points,
+                              const Selection& selection) -> void {
+    const auto cache = SpatialPointIndex {split_points};
+
+    const auto segments = transform_to_vector(
+        selection.selected_segments(), [&](Selection::segment_pair_t value) {
+            const auto& [segment, parts] = value;
+
+            const auto full_line = get_line(circuit.layout, segment);
+
+            if (!is_temporary(segment.wire_id)) {
+                throw std::runtime_error("can only split temporary segments");
+            }
+            if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
+                throw std::runtime_error(
+                    "selection cannot contain partially selected lines");
+            }
+
+            return segment;
+        });
+
+    for (const auto& segment : segments) {
+        const auto full_line = get_line(circuit.layout, segment);
+
+        auto query_result = cache.query_intersects(full_line);
+        std::ranges::sort(query_result, std::greater<point_t>());
+        query_result.erase(std::ranges::unique(query_result).begin(), query_result.end());
+
+        // splitting puts the second half into a new segment
+        // so for this to work with multiple point, cross_points
+        // need to be sorted in descendant order
+        for (const auto& point : query_result) {
+            if (is_inside(point, full_line)) {
+                split_line_segment(circuit, segment, point);
+            }
+        }
+    }
+}
+
+auto get_temporary_selection_splitpoints(const CircuitData& circuit,
+                                         const Selection& selection)
+    -> std::vector<point_t> {
+    auto result = std::vector<point_t> {};
+
+    const auto add_candidate = [&](point_t point) {
+        const auto state = circuit.index.collision_index().query(point);
+        if (collision_index::is_wire_corner_point(state) ||
+            collision_index::is_wire_connection(state) ||
+            collision_index::is_wire_cross_point(state)) {
+            result.push_back(point);
+        }
+    };
+
+    for (const auto& [segment, parts] : selection.selected_segments()) {
+        const auto full_line = get_line(circuit.layout, segment);
+
+        if (!is_temporary(segment.wire_id)) {
+            throw std::runtime_error(
+                "can only find new split-points for temporary segments");
+        }
+        if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
+            throw std::runtime_error("selection cannot contain partially selected lines");
+        }
+
+        if (is_horizontal(full_line)) {
+            for (auto x : range(full_line.p0.x + grid_t {1}, full_line.p1.x)) {
+                add_candidate(point_t {x, full_line.p0.y});
+            }
+        } else {
+            for (auto y : range(full_line.p0.y + grid_t {1}, full_line.p1.y)) {
+                add_candidate(point_t {full_line.p0.x, y});
+            }
+        }
+    }
+
+    return result;
+}
+
+}  // namespace editing
 
 }  // namespace editable_circuit
 

@@ -1,7 +1,8 @@
-#ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_LAYOUT_MODIFIER_H
-#define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_LAYOUT_MODIFIER_H
+#ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_MODIFIER_H
+#define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_MODIFIER_H
 
 #include "circuit_data.h"
+#include "format/struct.h"
 #include "vocabulary/insertion_mode.h"
 
 namespace logicsim {
@@ -39,16 +40,12 @@ namespace editable_circuit {
  *      + All Elements in all Selections of the SelectionStore are present in Layout.
  *      + Elements in Visible Selection are present in Layout.
  **/
-class LayoutModifier {
+class Modifier {
    public:
-    [[nodiscard]] explicit LayoutModifier() = default;
-    [[nodiscard]] explicit LayoutModifier(Layout&& layout);
+    [[nodiscard]] explicit Modifier() = default;
+    [[nodiscard]] explicit Modifier(Layout&& layout);
 
     [[nodiscard]] auto format() const -> std::string;
-
-    //
-    // Circuit Data
-    //
 
     [[nodiscard]] auto circuit_data() const -> const CircuitData&;
 
@@ -59,10 +56,11 @@ class LayoutModifier {
     auto delete_temporary_logic_item(logicitem_id_t& logicitem_id,
                                      logicitem_id_t* preserve_element = nullptr) -> void;
 
-    auto move_logic_item_unchecked(const logicitem_id_t logicitem_id, int dx, int dy)
-        -> void;
+    auto move_temporary_logic_item_unchecked(const logicitem_id_t logicitem_id, int dx,
+                                             int dy) -> void;
 
-    auto move_or_delete_logic_item(logicitem_id_t& logicitem_id, int dx, int dy) -> void;
+    auto move_or_delete_temporary_logic_item(logicitem_id_t& logicitem_id, int dx, int dy)
+        -> void;
 
     auto change_logic_item_insertion_mode(logicitem_id_t& logicitem_id,
                                           InsertionMode new_insertion_mode) -> void;
@@ -81,15 +79,17 @@ class LayoutModifier {
 
     auto delete_temporary_wire_segment(segment_part_t& segment_part) -> void;
 
-    auto add_wire_segment(ordered_line_t line, InsertionMode insertion_mode) -> segment_t;
+    auto add_wire_segment(ordered_line_t line, InsertionMode insertion_mode)
+        -> segment_part_t;
 
     auto change_wire_insertion_mode(segment_part_t& segment_part,
                                     InsertionMode new_insertion_mode) -> void;
 
-    auto move_wire_unchecked(segment_t segment, part_t verify_full_part, int dx, int dy)
-        -> void;
+    auto move_temporary_wire_unchecked(segment_t segment, part_t verify_full_part, int dx,
+                                       int dy) -> void;
 
-    auto move_or_delete_wire(segment_part_t& segment_part, int dx, int dy) -> void;
+    auto move_or_delete_temporary_wire(segment_part_t& segment_part, int dx, int dy)
+        -> void;
 
     auto toggle_inserted_wire_crosspoint(point_t point) -> void;
 
@@ -108,36 +108,55 @@ class LayoutModifier {
     // Selections
     //
 
-    [[nodiscard]] auto create_selection() -> selection_id_t;
-    auto destroy_selection(selection_id_t selection_id) -> void;
+    [[nodiscard]] auto selection_create() -> selection_id_t;
+    auto selection_destroy(selection_id_t selection_id) -> void;
 
-    auto selection_add(selection_id_t selection_id, logicitem_id_t logicitem_id) -> void;
+    auto selection_remove(selection_id_t selection_id, logicitem_id_t logicitem_id)
+        -> void;
+    auto selection_remove(selection_id_t selection_id, segment_part_t segment_part)
+        -> void;
 
     //
     // Visible Selection
     //
 
    private:
-    CircuitData circuit_ {};
+    CircuitData circuit_data_ {};
 };
 
 //
-// Selection Based Methods
+// Free Methods
 //
 
-auto change_insertion_mode(LayoutModifier& modifier, selection_id_t selection_id,
+[[nodiscard]] auto get_inserted_selection_cross_points(const Modifier& modifier,
+                                                       const Selection& selection)
+    -> std::vector<point_t>;
+
+[[nodiscard]] auto get_temporary_selection_splitpoints(const Modifier& modifier,
+                                                       const Selection& selection)
+    -> std::vector<point_t>;
+
+//
+// Selection Based
+//
+
+// TODO consumes selection
+auto change_insertion_mode(Modifier& modifier, selection_id_t selection_id,
                            InsertionMode new_insertion_mode) -> void;
 
 auto new_positions_representable(const Layout& Layout, const Selection& selection,
                                  int delta_x, int delta_y) -> bool;
 
-auto move_unchecked(LayoutModifier& modifier, const Selection& selection, int delta_x,
-                    int delta_y) -> void;
+// TODO move checks to low-level method
+auto move_temporary_unchecked(Modifier& modifier, const Selection& selection, int delta_x,
+                              int delta_y) -> void;
 
-auto move_or_delete_elements(LayoutModifier& modifier, selection_id_t selection_id,
-                             int delta_x, int delta_y) -> void;
+// TODO consumes selection
+auto move_or_delete_temporary_elements(Modifier& modifier, selection_id_t selection_id,
+                                       int delta_x, int delta_y) -> void;
 
-auto delete_all(LayoutModifier& modifier, selection_id_t selection_id) -> void;
+// TODO consumes selection
+auto delete_all(Modifier& modifier, selection_id_t selection_id) -> void;
 
 }  // namespace editable_circuit
 

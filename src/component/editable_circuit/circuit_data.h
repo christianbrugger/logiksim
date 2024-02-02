@@ -4,6 +4,7 @@
 #include "component/editable_circuit/layout_index.h"
 #include "component/editable_circuit/selection_store.h"
 #include "component/editable_circuit/visible_selection.h"
+#include "format/struct.h"
 #include "layout.h"
 #include "layout_message_forward.h"
 

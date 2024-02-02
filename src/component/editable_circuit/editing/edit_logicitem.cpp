@@ -1,18 +1,22 @@
-#include "component/editable_circuit/edit_logicitem.h"
+#include "component/editable_circuit/editing/edit_logicitem.h"
 
 #include "component/editable_circuit/circuit_data.h"
 #include "format/struct.h"
 #include "geometry/orientation.h"
 #include "geometry/point.h"
 #include "layout_info.h"
+#include "selection.h"
 #include "vocabulary/logicitem_id.h"
 
+#include <algorithm>
 #include <cassert>
 #include <stdexcept>
 
 namespace logicsim {
 
 namespace editable_circuit {
+
+namespace editing {
 
 namespace {
 
@@ -93,6 +97,17 @@ auto is_logic_item_position_representable(const Layout& layout,
     data.position = add_unchecked(position, dx, dy);
 
     return is_representable(data);
+}
+
+auto new_logic_item_positions_representable(const Layout& layout,
+                                            const Selection& selection, int delta_x,
+                                            int delta_y) -> bool {
+    const auto logic_item_valid = [&](logicitem_id_t logicitem_id) {
+        return is_logic_item_position_representable(layout, logicitem_id, delta_x,
+                                                    delta_y);
+    };
+
+    return std::ranges::all_of(selection.selected_logic_items(), logic_item_valid);
 }
 
 auto move_temporary_logic_item_unchecked(Layout& layout,
@@ -485,6 +500,8 @@ auto toggle_inverter(CircuitData& circuit, point_t point) -> void {
         }
     }
 }
+
+}  // namespace editing
 
 }  // namespace editable_circuit
 

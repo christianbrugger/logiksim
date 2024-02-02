@@ -1,11 +1,13 @@
 #ifndef LOGICSIM_EDITABLE_CIRCUIT2_H
 #define LOGICSIM_EDITABLE_CIRCUIT2_H
 
-#include "component/editable_circuit/layout_modifier.h"
+#include "component/editable_circuit/modifier.h"
 #include "vocabulary/insertion_mode.h"
 #include "vocabulary/line_insertion_type.h"
 
 namespace logicsim {
+
+class Layout;
 
 class EditableCircuit2 {
    public:
@@ -77,7 +79,7 @@ class EditableCircuit2 {
     //
 
    private:
-    editable_circuit::LayoutModifier modifier_ {};
+    editable_circuit::Modifier modifier_ {};
 };
 
 auto add_example(EditableCircuit2& editable_circuit) -> void;
