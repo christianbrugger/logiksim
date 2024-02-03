@@ -440,7 +440,7 @@ auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selectio
 
 auto new_positions_representable(const Layout& layout, const Selection& selection,
                                  int delta_x, int delta_y) -> bool {
-    return editing::new_logicitem_positions_representable(layout, selection, delta_x,
+    return editing::are_logicitem_positions_representable(layout, selection, delta_x,
                                                           delta_y) &&
            editing::new_wire_positions_representable(layout, selection, delta_x, delta_y);
 }

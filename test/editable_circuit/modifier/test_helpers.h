@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_TEST_EDITABLE_CIRCUIT_HANDLERS_TEST_HELPERS_H
 #define LOGIKSIM_TEST_EDITABLE_CIRCUIT_HANDLERS_TEST_HELPERS_H
 
+#include "component/editable_circuit/modifier.h"
 #include "layout.h"
 #include "vocabulary/logicitem_definition.h"
 
@@ -33,6 +34,27 @@ inline auto assert_logicitem_equal(
     ASSERT_EQ(layout.logic_items().input_count(logicitem_id), input_count);
     ASSERT_EQ(layout.logic_items().position(logicitem_id), position);
 }
+
+namespace editable_circuit {
+
+inline auto assert_logicitem_count(const Modifier &modifier, std::size_t count) -> void {
+    assert_logicitem_count(modifier.circuit_data().layout, count);
+}
+
+inline auto assert_logicitem_equal(
+    const Modifier &modifier, logicitem_id_t logicitem_id,
+    connection_count_t input_count = connection_count_t {3},
+    point_t position = point_t {0, 0}) -> void {
+    assert_logicitem_equal(modifier.circuit_data().layout, logicitem_id, input_count,
+                           position);
+}
+
+inline auto get_display_state(const Modifier &modifier, logicitem_id_t logicitem_id)
+    -> display_state_t {
+    return modifier.circuit_data().layout.logic_items().display_state(logicitem_id);
+}
+
+}  // namespace editable_circuit
 
 }  // namespace logicsim
 

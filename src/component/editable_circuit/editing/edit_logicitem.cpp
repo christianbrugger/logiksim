@@ -99,7 +99,7 @@ auto is_logicitem_position_representable(const Layout& layout,
     return is_representable(data);
 }
 
-auto new_logicitem_positions_representable(const Layout& layout,
+auto are_logicitem_positions_representable(const Layout& layout,
                                            const Selection& selection, int delta_x,
                                            int delta_y) -> bool {
     const auto logic_item_valid = [&](logicitem_id_t logicitem_id) {

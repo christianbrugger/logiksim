@@ -24,7 +24,7 @@ auto delete_temporary_logicitem(CircuitData& circuit, logicitem_id_t& logicitem_
                                                        const logicitem_id_t logicitem_id,
                                                        int dx, int dy) -> bool;
 
-[[nodiscard]] auto new_logicitem_positions_representable(const Layout& layout,
+[[nodiscard]] auto are_logicitem_positions_representable(const Layout& layout,
                                                          const Selection& selection,
                                                          int delta_x, int delta_y)
     -> bool;
