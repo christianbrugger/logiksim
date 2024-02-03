@@ -8,8 +8,6 @@ namespace logicsim {
 
 class EditableCircuit;
 
-namespace editable_circuit {
-
 auto add_random_wire(Rng& rng, EditableCircuit& editable_circuit, grid_t min, grid_t max,
                      grid_t max_length, bool random_modes) -> void;
 
@@ -30,8 +28,6 @@ struct WiresButtonsParams {
 
 auto add_many_wires_and_buttons(Rng& rng, EditableCircuit& editable_circuit,
                                 WiresButtonsParams params = {}) -> void;
-
-}  // namespace editable_circuit
 
 }  // namespace logicsim
 

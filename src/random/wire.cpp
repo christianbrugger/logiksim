@@ -19,7 +19,7 @@
 
 #include <exception>
 
-namespace logicsim::editable_circuit {
+namespace logicsim {
 
 auto add_random_wire(Rng& rng, EditableCircuit& editable_circuit, grid_t min, grid_t max,
                      grid_t max_length, bool random_modes) -> void {
@@ -79,4 +79,4 @@ auto add_many_wires_and_buttons(Rng& rng, EditableCircuit& editable_circuit,
     }
 }
 
-}  // namespace logicsim::editable_circuit
+}  // namespace logicsim

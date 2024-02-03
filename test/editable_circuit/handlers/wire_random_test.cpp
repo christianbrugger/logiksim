@@ -28,8 +28,7 @@ namespace logicsim {
 namespace {
 auto test_add_many_wires(Rng& rng, bool random_modes) {
     auto editable_circuit = EditableCircuit {};
-
-    editable_circuit::add_many_wires(rng, editable_circuit, random_modes);
+    add_many_wires(rng, editable_circuit, random_modes);
 }
 }  // namespace
 
@@ -239,35 +238,38 @@ TEST(HandlerWireFuzz, AddWireStatesCorrect) {
 namespace {
 auto test_remove_many_wires(Rng& rng, bool random_modes) {
     auto editable_circuit = EditableCircuit {};
-
-    editable_circuit::add_many_wires(rng, editable_circuit, random_modes);
+    add_many_wires(rng, editable_circuit, random_modes);
 
     while (true) {
-        const auto segment = get_random_segment(rng, layout);
+        const auto segment = get_random_segment(rng, editable_circuit.layout());
         if (!segment) {
             break;
         }
-        const auto part = to_part(get_line(layout, segment));
+        const auto part = to_part(get_line(editable_circuit.layout(), segment));
         auto segment_part = segment_part_t {segment, part};
 
-        change_wire_insertion_mode(setup.state, segment_part, InsertionMode::temporary);
-        if (!segment_part || segment_part.part != part) {
-            throw_exception("unexpected segment state");
+        const auto guard = SelectionGuard {editable_circuit};
+        editable_circuit.add_to_selection(guard.selection_id(), segment_part);
+        editable_circuit.change_insertion_mode(guard.selection_id(),
+                                               InsertionMode::temporary);
+        {
+            const auto& selection = editable_circuit.selection(guard.selection_id());
+            if (selection.selected_segments().size() != 1 ||
+                selection.selected_segments().front().second.size() != 1 ||
+                selection.selected_segments().front().second.front() != part) {
+                throw_exception("unexpected segment state");
+            }
         }
 
-        delete_wire_segment(setup.layout, setup.sender, segment_part);
-        if (segment_part) {
-            throw_exception("segment should be invalid");
+        editable_circuit.delete_all(guard.selection_id());
+        if (!editable_circuit.selection(guard.selection_id()).empty()) {
+            throw_exception("selection should be empty");
         }
-
-        setup.validate();
     }
 
-    if (has_segments(layout)) {
+    if (has_segments(editable_circuit.layout())) {
         throw_exception("layout should be empty at this point");
     }
-
-    setup.validate();
 }
 }  // namespace
 
@@ -293,41 +295,49 @@ TEST(HandlerWireFuzz, RemoveManyWiresDifferentModes) {
 
 namespace {
 auto test_remove_partial_wires(Rng& rng, bool random_modes) {
-    auto layout = Layout {};
-    auto setup = HandlerSetup {layout};
-
-    editable_circuit::add_many_wires(rng, setup.state, random_modes);
+    auto editable_circuit = EditableCircuit {};
+    add_many_wires(rng, editable_circuit, random_modes);
 
     while (true) {
-        auto segment_part = get_random_segment_part(rng, layout);
+        auto segment_part = get_random_segment_part(rng, editable_circuit.layout());
         if (!segment_part) {
             break;
         }
-        segment_part = sanitize_part(segment_part, layout, setup.cache.collision_index(),
-                                     SanitizeMode::expand);
+        segment_part = [&]() {
+            const auto& circuit = editable_circuit.modifier().circuit_data();
+            return sanitize_part(segment_part, circuit.layout,
+                                 circuit.index.collision_index(), SanitizeMode::expand);
+        }();
+
         if (!segment_part) {
             throw_exception("invalid segment part");
         }
-
         const auto orig_distance = distance(segment_part.part);
-        change_wire_insertion_mode(setup.state, segment_part, InsertionMode::temporary);
-        if (!segment_part || orig_distance != distance(segment_part.part)) {
-            throw_exception("invalid segment part");
+
+        const auto guard = SelectionGuard {editable_circuit};
+        editable_circuit.add_to_selection(guard.selection_id(), segment_part);
+        editable_circuit.change_insertion_mode(guard.selection_id(),
+                                               InsertionMode::temporary);
+
+        {
+            const auto& selection = editable_circuit.selection(guard.selection_id());
+            if (selection.selected_segments().size() != 1 ||
+                selection.selected_segments().front().second.size() != 1 ||
+                distance(selection.selected_segments().front().second.front()) !=
+                    orig_distance) {
+                throw_exception("unexpected segment state");
+            }
         }
 
-        delete_wire_segment(setup.layout, setup.sender, segment_part);
-        if (segment_part) {
-            throw_exception("segment should be invalid");
+        editable_circuit.delete_all(guard.selection_id());
+        if (!editable_circuit.selection(guard.selection_id()).empty()) {
+            throw_exception("selection should be empty");
         }
-
-        setup.validate();
     }
 
-    if (has_segments(layout)) {
+    if (has_segments(editable_circuit.layout())) {
         throw_exception("layout should be empty at this point");
     }
-
-    setup.validate();
 }
 }  // namespace
 
@@ -345,14 +355,10 @@ TEST(HandlerWireFuzz, RemovePartialInsertedWires) {
 
 namespace {
 auto test_add_wires_buttons(Rng& rng, bool random_modes) {
-    auto layout = Layout {};
-    auto setup = HandlerSetup {layout};
+    auto editable_circuit = EditableCircuit {};
 
-    editable_circuit::add_many_wires_and_buttons(
-        rng, setup.state,
-        editable_circuit::WiresButtonsParams {.random_modes = random_modes});
-
-    setup.validate();
+    add_many_wires_and_buttons(rng, editable_circuit,
+                               WiresButtonsParams {.random_modes = random_modes});
 }
 }  // namespace
 
