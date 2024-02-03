@@ -21,8 +21,6 @@
 
 namespace logicsim {
 
-/*
-
 //
 // Add lines simple
 //
@@ -72,20 +70,18 @@ auto format(InsertionResult value) -> std::string {
 
 namespace {
 auto get_insertion_result(std::span<const ordered_line_t> lines) {
-    auto layout = Layout {};
-    auto setup = HandlerSetup {layout};
+    auto modifier = editable_circuit::Modifier {};
 
     auto result = std::vector<InsertionResult> {};
 
     for (const auto line : lines) {
-        const auto segment_part = editable_circuit::add_wire_segment(
-            setup.state, line, InsertionMode::insert_or_discard);
+        const auto segment_part =
+            modifier.add_wire_segment(line, InsertionMode::insert_or_discard);
 
         result.push_back(segment_part ? InsertionResult::valid
                                       : InsertionResult::colliding);
     }
 
-    setup.validate();
     return result;
 }
 
@@ -186,15 +182,14 @@ auto get_all_lines(const Layout& layout, display_state_t state)
 }
 
 auto test_add_wire_states_correct(Rng& rng) {
-    auto layout = Layout {};
-    auto setup = HandlerSetup {layout};
+    auto modifier = editable_circuit::Modifier {};
 
     auto data = generate_insertable_line_data(rng);
 
     // insert data with new modes
     for (const auto entry : data) {
-        const auto segment_part = editable_circuit::add_wire_segment(
-            setup.state, entry.line, entry.new_insertion_mode);
+        const auto segment_part =
+            modifier.add_wire_segment(entry.line, entry.new_insertion_mode);
 
         if (!segment_part) [[unlikely]] {
             throw_exception("wasn't able to insert line that should be insertable");
@@ -202,11 +197,11 @@ auto test_add_wire_states_correct(Rng& rng) {
         if (distance(segment_part.part) != distance(entry.line)) [[unlikely]] {
             throw_exception("returned segment has different size than given line");
         }
-        if (get_line(layout, segment_part) != entry.line) [[unlikely]] {
+        if (get_line(modifier.circuit_data().layout, segment_part) != entry.line)
+            [[unlikely]] {
             throw_exception("the line the segment points to is different");
         }
     }
-    setup.validate();
 
     // compare result
     for (const auto state : {
@@ -216,7 +211,8 @@ auto test_add_wire_states_correct(Rng& rng) {
              display_state_t::normal,
          }) {
         const auto expected_lines = merge_split_segments(get_expected_lines(data, state));
-        const auto result_lines = merge_split_segments(get_all_lines(layout, state));
+        const auto result_lines =
+            merge_split_segments(get_all_lines(modifier.circuit_data().layout, state));
 
         if (expected_lines != result_lines) [[unlikely]] {
             throw std::runtime_error("expected different lines with this state");
@@ -378,7 +374,5 @@ TEST(HandlerWireFuzz, AddWiresAndButtonsNormal) {
         test_add_wires_buttons(rng, false);
     }
 }
-
-*/
 
 }  // namespace logicsim
