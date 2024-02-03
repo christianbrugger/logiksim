@@ -3,12 +3,20 @@
 #include "component/editable_circuit/editing/edit_logicitem.h"
 #include "component/editable_circuit/editing/edit_wire.h"
 #include "component/editable_circuit/modifier.h"
+#include "format/pointer.h"
+#include "logging.h"
 
 #include <fmt/core.h>
 
 namespace logicsim {
 
 namespace editable_circuit {
+
+constexpr static inline auto DEBUG_PRINT_MODIFIER_METHODS = false;
+
+//
+// Modifier
+//
 
 Modifier::Modifier(Layout&& layout__) : circuit_data_ {std::move(layout__)} {}
 
@@ -32,37 +40,94 @@ auto Modifier::extract_layout() -> Layout {
 
 auto Modifier::delete_temporary_logicitem(logicitem_id_t& logicitem_id,
                                           logicitem_id_t* preserve_element) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "delete_temporary_logicitem(logicitem_id = {}, preserve_element = "
+            "{});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, logicitem_id, fmt_ptr(preserve_element));
+    }
+
     editing::delete_temporary_logicitem(circuit_data_, logicitem_id, preserve_element);
 }
 
 auto Modifier::move_temporary_logicitem_unchecked(const logicitem_id_t logicitem_id,
                                                   int dx, int dy) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "move_temporary_logicitem_unchecked(logicitem_id = {}, dx = {}, dy = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, logicitem_id, dx, dy);
+    }
+
     editing::move_temporary_logicitem_unchecked(circuit_data_.layout, logicitem_id, dx,
                                                 dy);
 }
 
 auto Modifier::move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, int dx,
                                                   int dy) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "move_or_delete_temporary_logicitem(logicitem_id = {}, dx = {}, dy = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, logicitem_id, dx, dy);
+    }
+
     editing::move_or_delete_temporary_logicitem(circuit_data_, logicitem_id, dx, dy);
 }
 
 auto Modifier::change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
                                                InsertionMode new_insertion_mode) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "change_logicitem_insertion_mode(logicitem_id = {}, new_mode = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, logicitem_id, new_insertion_mode);
+    }
+
     editing::change_logicitem_insertion_mode(circuit_data_, logicitem_id,
                                              new_insertion_mode);
 }
 
 auto Modifier::add_logicitem(const LogicItemDefinition& definition, point_t position,
                              InsertionMode insertion_mode) -> logicitem_id_t {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "add_logicitem(definition = {}, position = {}, insertion_mode = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, definition, position, insertion_mode);
+    }
+
     return editing::add_logicitem(circuit_data_, definition, position, insertion_mode);
 }
 
 auto Modifier::toggle_inverter(point_t point) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "toggle_inverter(point = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, point);
+    }
+
     editing::toggle_inverter(circuit_data_, point);
 }
 
 auto Modifier::set_attributes(logicitem_id_t logicitem_id,
                               attributes_clock_generator_t attrs__) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "set_attributes(logicitem_id = {}, attrs_ = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, logicitem_id, attrs__);
+    }
+
     circuit_data_.layout.logic_items().set_attributes(logicitem_id, std::move(attrs__));
 }
 
@@ -71,31 +136,80 @@ auto Modifier::set_attributes(logicitem_id_t logicitem_id,
 //
 
 auto Modifier::delete_temporary_wire_segment(segment_part_t& segment_part) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "delete_temporary_wire_segment(segment_part = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, segment_part);
+    }
+
     editing::delete_temporary_wire_segment(circuit_data_, segment_part);
 }
 
 auto Modifier::add_wire_segment(ordered_line_t line, InsertionMode insertion_mode)
     -> segment_part_t {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "add_wire_segment(line = {}, new_mode = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, line, insertion_mode);
+    }
+
     return editing::add_wire_segment(circuit_data_, line, insertion_mode);
 }
 
 auto Modifier::change_wire_insertion_mode(segment_part_t& segment_part,
                                           InsertionMode new_insertion_mode) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "change_wire_insertion_mode(segment_part = {}, new_mode = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, segment_part, new_insertion_mode);
+    }
+
     editing::change_wire_insertion_mode(circuit_data_, segment_part, new_insertion_mode);
 }
 
 auto Modifier::move_temporary_wire_unchecked(segment_t segment, part_t verify_full_part,
                                              int dx, int dy) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "move_temporary_wire_unchecked(segment = {}, verify_full_part = {}, "
+            "dx = {}, dy = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, segment, verify_full_part, dx, dy);
+    }
+
     editing::move_temporary_wire_unchecked(circuit_data_.layout, segment,
                                            verify_full_part, dx, dy);
 }
 
 auto Modifier::move_or_delete_temporary_wire(segment_part_t& segment_part, int dx, int dy)
     -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "move_or_delete_temporary_wire(segment_part = {}, dx = {}, dy = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, segment_part, dx, dy);
+    }
+
     editing::move_or_delete_temporary_wire(circuit_data_, segment_part, dx, dy);
 }
 
 auto Modifier::toggle_wire_crosspoint(point_t point) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "toggle_wire_crosspoint(point = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, point);
+    }
+
     editing::toggle_wire_crosspoint(circuit_data_, point);
 }
 
@@ -106,12 +220,28 @@ auto Modifier::toggle_wire_crosspoint(point_t point) -> void {
 auto Modifier::regularize_temporary_selection(
     const Selection& selection, std::optional<std::vector<point_t>> true_cross_points__)
     -> std::vector<point_t> {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "regularize_temporary_selection(selection = {}, true_cross_points = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, selection, true_cross_points__);
+    }
+
     return editing::regularize_temporary_selection(circuit_data_, selection,
                                                    std::move(true_cross_points__));
 }
 
 auto Modifier::split_temporary_segments(const Selection& selection,
                                         std::span<const point_t> split_points) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "split_temporary_segments(selection = {}, split_points = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, selection, split_points);
+    }
+
     editing::split_temporary_segments(circuit_data_, selection, split_points);
 }
 
