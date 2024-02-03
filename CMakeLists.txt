@@ -66,9 +66,7 @@ set(LS_CORE_SOURCES
     src/component/editable_circuit/editing/edit_logicitem.cpp
     src/component/editable_circuit/editing/edit_wire.cpp
     src/component/editable_circuit/circuit_data.cpp
-    src/component/editable_circuit/handler.cpp
     src/component/editable_circuit/layout_index.cpp
-    src/component/editable_circuit/message_sender.cpp
     src/component/editable_circuit/modifier.cpp
     src/component/editable_circuit/selection_guard.cpp
     src/component/editable_circuit/selection_store.cpp
@@ -352,9 +350,9 @@ set(LS_TEST_SOURCES
     test/container/circular_buffer_test.cpp
     test/container/static_vector_test.cpp
 
-    test/editable_circuit/handlers/circuit_item_test.cpp
-    test/editable_circuit/handlers/wire_random_test.cpp
-    test/editable_circuit/handlers/wire_test.cpp
+    test/editable_circuit/modifier/logic_item_test.cpp
+    test/editable_circuit/modifier/wire_random_test.cpp
+    test/editable_circuit/modifier/wire_test.cpp
     test/editable_circuit/editable_circuit_random_test.cpp
 
     test/format/container_test.cpp

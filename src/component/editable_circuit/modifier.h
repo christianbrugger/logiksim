@@ -18,6 +18,11 @@ class Layout;
 
 namespace editable_circuit {
 
+enum class ModifierLogging {
+    disabled,
+    enabled,
+};
+
 /**
  * @brief: Low level circuit editing that maintains a valid layout.
  *
@@ -47,7 +52,9 @@ namespace editable_circuit {
 class Modifier {
    public:
     [[nodiscard]] explicit Modifier() = default;
+    [[nodiscard]] explicit Modifier(ModifierLogging logging);
     [[nodiscard]] explicit Modifier(Layout&& layout);
+    [[nodiscard]] explicit Modifier(Layout&& layout, ModifierLogging logging);
 
     [[nodiscard]] auto format() const -> std::string;
 

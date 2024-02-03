@@ -5,6 +5,7 @@
 #include "component/editable_circuit/modifier.h"
 #include "format/pointer.h"
 #include "logging.h"
+#include "modifier.h"
 
 #include <fmt/core.h>
 
@@ -18,7 +19,15 @@ constexpr static inline auto DEBUG_PRINT_MODIFIER_METHODS = false;
 // Modifier
 //
 
-Modifier::Modifier(Layout&& layout__) : circuit_data_ {std::move(layout__)} {}
+Modifier::Modifier(ModifierLogging logging) : Modifier(Layout {}, logging) {}
+
+Modifier::Modifier(Layout&& layout__)
+    : Modifier {std::move(layout__), ModifierLogging::disabled} {}
+
+Modifier::Modifier(Layout&& layout__, ModifierLogging logging)
+    : circuit_data_ {std::move(layout__)} {
+    circuit_data_.log_messages = logging == ModifierLogging::enabled;
+}
 
 auto Modifier::format() const -> std::string {
     return fmt::format("Modifier-{}", circuit_data_);

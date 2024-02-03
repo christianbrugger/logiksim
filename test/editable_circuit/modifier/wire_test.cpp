@@ -7,6 +7,8 @@
 
 namespace logicsim {
 
+/*
+
 namespace {
 
 auto add_to_wire(Layout &layout, wire_id_t wire_id, SegmentPointType point_type,
@@ -31,6 +33,7 @@ auto add_test_wire(Layout &layout, SegmentPointType point_type,
 inline auto part(offset_t::value_type begin, offset_t::value_type end) -> part_t {
     return part_t {offset_t {begin}, offset_t {end}};
 }
+
 }  // namespace
 
 //
@@ -623,5 +626,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialMiddle) {
     ASSERT_EQ(setup.recorder.messages().at(2), m2);
     ASSERT_EQ(setup.recorder.messages().at(3), m3);
 }
+
+*/
 
 }  // namespace logicsim

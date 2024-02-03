@@ -8,6 +8,8 @@
 #include "layout.h"
 #include "layout_message_forward.h"
 
+#include <vector>
+
 namespace logicsim {
 
 namespace editable_circuit {
@@ -30,6 +32,9 @@ struct CircuitData {
     LayoutIndex index;
     SelectionStore selection_store;
     VisibleSelection visible_selection;
+
+    message_vector_t messages;
+    bool log_messages;
 };
 
 }  // namespace editable_circuit

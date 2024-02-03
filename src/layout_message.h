@@ -8,6 +8,7 @@
 #include "vocabulary/segment.h"
 #include "vocabulary/segment_info.h"
 #include "vocabulary/segment_part.h"
+#include "algorithm/fmt_join.h"
 
 #include <fmt/core.h>
 
@@ -175,6 +176,18 @@ struct fmt::formatter<logicsim::editable_circuit::InfoMessage> {
                 fmt::format_context &ctx) const {
         const auto str = std::visit([](auto &&v) { return v.format(); }, obj);
         return fmt::format_to(ctx.out(), "{}", str);
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::editable_circuit::message_vector_t> {
+    constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const logicsim::editable_circuit::message_vector_t &obj,
+                fmt::format_context &ctx) const {
+        return fmt::format_to(ctx.out(), "{}", logicsim::fmt_join("\n", obj));
     }
 };
 

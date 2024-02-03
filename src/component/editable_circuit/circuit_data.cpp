@@ -1,8 +1,16 @@
 #include "component/editable_circuit/circuit_data.h"
+#include "format/container.h"
+#include "logging.h"
 
 namespace logicsim {
 
 namespace editable_circuit {
+
+constexpr static inline auto DEBUG_PRINT_MESSAGES = false;
+
+//
+// Circuit Data
+//
 
 CircuitData::CircuitData() : CircuitData {Layout {}} {}
 
@@ -10,17 +18,21 @@ CircuitData::CircuitData(Layout&& layout__)
     : layout {std::move(layout__)},
       index {layout},
       selection_store {},
-      visible_selection {} {}
+      visible_selection {},
+      messages {},
+      log_messages {false} {}
 
 auto CircuitData::format() const -> std::string {
     return fmt::format(
         "CircuitStore{{\n"
-        "{}\n"
-        "{}\n"
-        "{}\n"
-        "{}\n"
+        "layout = {}\n"
+        "index = {}\n"
+        "selection_store = {}\n"
+        "visible_selection = {}\n"
+        "messages = {}\n"
+        "log_messages = {}\n"
         "}}\n",
-        layout, index, selection_store, visible_selection);
+        layout, index, selection_store, visible_selection, messages, log_messages);
 }
 
 auto CircuitData::allocated_size() const -> std::size_t {
@@ -31,9 +43,17 @@ auto CircuitData::allocated_size() const -> std::size_t {
 }
 
 auto CircuitData::submit(const editable_circuit::InfoMessage& message) -> void {
+    if constexpr (DEBUG_PRINT_MESSAGES) {
+        print(message);
+    }
+
     index.submit(message);
     selection_store.submit(message);
     visible_selection.submit(message);
+
+    if (log_messages) {
+        messages.push_back(message);
+    }
 }
 
 }  // namespace editable_circuit

@@ -2,6 +2,7 @@
 #define LOGIKSIM_LAYOUT_MESSAGE_FORWARD_H
 
 #include <variant>
+#include <vector>
 
 namespace logicsim {
 namespace editable_circuit {
@@ -36,6 +37,8 @@ using Message = std::variant<                                                //
 }  // namespace info_message
 
 using InfoMessage = info_message::Message;
+
+using message_vector_t = std::vector<editable_circuit::InfoMessage>;
 
 }  // namespace editable_circuit
 }  // namespace logicsim

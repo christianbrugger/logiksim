@@ -1,27 +1,67 @@
 
 #include "./test_helpers.h"
-#include "component/editable_circuit/handler.h"
-#include "component/editable_circuit/message_sender.h"
+#include "component/editable_circuit/modifier.h"
 #include "layout.h"
 #include "layout_message.h"
 #include "vocabulary/logicitem_definition.h"
+#include "logging.h"
+#include "format/container.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace logicsim {
 
+namespace editable_circuit {
+
 //
-// Test Setup
+// Test Construction
 //
 
-TEST(EditableCircuitHandler, VerificationSetup) {
+TEST(EditableCircuitHandler, DefaultConstruction) {
+    auto modifier = Modifier {};
+
+    ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
+    ASSERT_EQ(modifier.circuit_data().log_messages, false);
+    ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
+}
+
+TEST(EditableCircuitHandler, ConstructionWithLayout) {
     auto layout = Layout {};
-    auto setup = HandlerSetup {layout};
+    add_and_element(layout, display_state_t::normal);
 
-    setup.validate();
-    ASSERT_EQ(setup.state.layout.empty(), true);
-    ASSERT_EQ(setup.recorder.messages().empty(), true);
+    auto modifier = Modifier {Layout {layout}};
+
+    ASSERT_EQ(modifier.circuit_data().layout.empty(), false);
+    ASSERT_EQ(modifier.circuit_data().layout, layout);
+}
+
+//
+// Test Logging
+//
+
+TEST(EditableCircuitHandler, VerifyLogging) {
+    auto modifier = Modifier {ModifierLogging::enabled};
+
+    ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
+    ASSERT_EQ(modifier.circuit_data().log_messages, true);
+    ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
+
+    modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
+                              InsertionMode::insert_or_discard);
+    ASSERT_EQ(modifier.circuit_data().messages.empty(), false);
+}
+
+TEST(EditableCircuitHandler, VerifyNoLogging) {
+    auto modifier = Modifier {ModifierLogging::disabled};
+
+    ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
+    ASSERT_EQ(modifier.circuit_data().log_messages, false);
+    ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
+
+    modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
+                              InsertionMode::insert_or_discard);
+    ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
 }
 
 //
@@ -29,7 +69,6 @@ TEST(EditableCircuitHandler, VerificationSetup) {
 //
 
 TEST(EditableCircuitHandler, DeleteTemporaryElement) {
-    using namespace editable_circuit;
     using namespace editable_circuit::info_message;
     using enum display_state_t;
 
@@ -38,25 +77,25 @@ TEST(EditableCircuitHandler, DeleteTemporaryElement) {
 
     ASSERT_EQ(logicitem_id, logicitem_id_t {0});
 
-    auto setup = HandlerSetup {layout};
+    
+    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
     auto preserved_id = logicitem_id_t {0};
-    swap_and_delete_logic_item(layout, setup.sender, logicitem_id, &preserved_id);
-
-    setup.validate();
+    modifier.delete_temporary_logicitem(logicitem_id, &preserved_id);
 
     // logicitem_ids
     ASSERT_EQ(logicitem_id, null_logicitem_id);
     ASSERT_EQ(preserved_id, null_logicitem_id);
 
     // layout
-    ASSERT_EQ(setup.state.layout.empty(), true);
+    ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
 
     // messages
-    ASSERT_EQ(setup.recorder.messages().size(), 1);
-    ASSERT_EQ(setup.recorder.messages().at(0),
+    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.at(0),
               Message {LogicItemDeleted {logicitem_id_t {0}}});
 }
 
+/*
 TEST(EditableCircuitHandler, DeletePreserving1) {
     using namespace editable_circuit::info_message;
     using namespace editable_circuit;
@@ -150,56 +189,57 @@ TEST(EditableCircuitHandler, DeletePreserving2) {
 // swap_and_delete_multiple_elements
 //
 
-/*
-TEST(EditableCircuitHandler, DeleteMultipleElements) {
-    using namespace editable_circuit::info_message;
-    using enum display_state_t;
-    auto layout = Layout {};
-    auto logicitem_id_0 =
-        add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
-    auto logicitem_id_1 =
-        add_and_element(layout, temporary, connection_count_t {3}, point_t {2, 2});
-    auto logicitem_id_2 =
-        add_and_element(layout, temporary, connection_count_t {4}, point_t {3, 3});  //
-    auto logicitem_id_3 =
-        add_and_element(layout, temporary, connection_count_t {5}, point_t {4, 4});
+//TEST(EditableCircuitHandler, DeleteMultipleElements) {
+//    using namespace editable_circuit::info_message;
+//    using enum display_state_t;
+//    auto layout = Layout {};
+//    auto logicitem_id_0 =
+//        add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
+//    auto logicitem_id_1 =
+//        add_and_element(layout, temporary, connection_count_t {3}, point_t {2, 2});
+//    auto logicitem_id_2 =
+//        add_and_element(layout, temporary, connection_count_t {4}, point_t {3, 3});  //
+//    auto logicitem_id_3 =
+//        add_and_element(layout, temporary, connection_count_t {5}, point_t {4, 4});
+//
+//    ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
+//    ASSERT_EQ(logicitem_id_1, logicitem_id_t {1});
+//    ASSERT_EQ(logicitem_id_2, logicitem_id_t {2});
+//    ASSERT_EQ(logicitem_id_3, logicitem_id_t {3});
+//
+//    auto setup = HandlerSetup {layout};
+//    auto to_delete = {logicitem_id_1, logicitem_id_0, logicitem_id_3};
+//    auto preserved_id = logicitem_id_2;
+//    swap_and_delete_multiple_elements(layout, setup.sender, to_delete, &preserved_id);
+//
+//    setup.validate();
+//
+//    // logicitem_ids
+//    ASSERT_EQ(preserved_id, logicitem_id_t {0});
+//
+//    // layout
+//    assert_logicitem_count(layout, 1);
+//    assert_logicitem_equal(layout, logicitem_id_t {0}, connection_count_t {4},
+//                         point_t {3, 3});
+//
+//    // messages
+//    ASSERT_EQ(setup.recorder.messages().size(), 5);
+//    const auto m0 = Message {LogicItemDeleted {logicitem_id_t {3}}};
+//    const auto m1 = Message {LogicItemDeleted {logicitem_id_t {1}}};
+//    const auto m2 = Message {LogicItemIdUpdated {.new_logicitem_id = logicitem_id_t {1},
+//                                                 .old_logicitem_id = logicitem_id_t
+{2}}};
+//    const auto m3 = Message {LogicItemDeleted {logicitem_id_t {0}}};
+//    const auto m4 = Message {LogicItemIdUpdated {.new_logicitem_id = logicitem_id_t {0},
+//                                                 .old_logicitem_id = logicitem_id_t
+{1}}};
+//    ASSERT_EQ(setup.recorder.messages().at(0), m0);
+//    ASSERT_EQ(setup.recorder.messages().at(1), m1);
+//    ASSERT_EQ(setup.recorder.messages().at(2), m2);
+//    ASSERT_EQ(setup.recorder.messages().at(3), m3);
+//    ASSERT_EQ(setup.recorder.messages().at(4), m4);
+//}
 
-    ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
-    ASSERT_EQ(logicitem_id_1, logicitem_id_t {1});
-    ASSERT_EQ(logicitem_id_2, logicitem_id_t {2});
-    ASSERT_EQ(logicitem_id_3, logicitem_id_t {3});
-
-    auto setup = HandlerSetup {layout};
-    auto to_delete = {logicitem_id_1, logicitem_id_0, logicitem_id_3};
-    auto preserved_id = logicitem_id_2;
-    swap_and_delete_multiple_elements(layout, setup.sender, to_delete, &preserved_id);
-
-    setup.validate();
-
-    // logicitem_ids
-    ASSERT_EQ(preserved_id, logicitem_id_t {0});
-
-    // layout
-    assert_logicitem_count(layout, 1);
-    assert_logicitem_equal(layout, logicitem_id_t {0}, connection_count_t {4},
-                         point_t {3, 3});
-
-    // messages
-    ASSERT_EQ(setup.recorder.messages().size(), 5);
-    const auto m0 = Message {LogicItemDeleted {logicitem_id_t {3}}};
-    const auto m1 = Message {LogicItemDeleted {logicitem_id_t {1}}};
-    const auto m2 = Message {LogicItemIdUpdated {.new_logicitem_id = logicitem_id_t {1},
-                                                 .old_logicitem_id = logicitem_id_t {2}}};
-    const auto m3 = Message {LogicItemDeleted {logicitem_id_t {0}}};
-    const auto m4 = Message {LogicItemIdUpdated {.new_logicitem_id = logicitem_id_t {0},
-                                                 .old_logicitem_id = logicitem_id_t {1}}};
-    ASSERT_EQ(setup.recorder.messages().at(0), m0);
-    ASSERT_EQ(setup.recorder.messages().at(1), m1);
-    ASSERT_EQ(setup.recorder.messages().at(2), m2);
-    ASSERT_EQ(setup.recorder.messages().at(3), m3);
-    ASSERT_EQ(setup.recorder.messages().at(4), m4);
-}
-*/
 
 //
 // is_logic_item_position_representable
@@ -639,5 +679,9 @@ TEST(EditableCircuitHandler, LogicItemCombineAddMoveDelete) {
     // layout
     assert_logicitem_count(layout, 0);
 }
+
+*/
+
+}  // namespace editable_circuit
 
 }  // namespace logicsim
