@@ -16,7 +16,6 @@ class SpatialIndex;
 class LayoutIndex;
 
 enum class SelectionFunction {
-    //    toggle,
     add,
     substract,
 };
@@ -38,6 +37,9 @@ struct operation_t {
 
 /**
  * @brief: Stores a visible selection, areas of positive and negative rectangles.
+ *
+ * Class-invariant:
+ *   + cached_selection_ is only set if operations are non-empty
  */
 class VisibleSelection {
    public:
@@ -66,10 +68,13 @@ class VisibleSelection {
     auto submit(const editable_circuit::InfoMessage &message) -> void;
 
    private:
-    auto calculate_selection(const Layout &layout, const LayoutIndex &layout_index) const
+    [[nodiscard]] auto calculate_selection(const Layout &layout,
+                                           const LayoutIndex &layout_index) const
         -> Selection;
-    auto clear_cache() const -> void;
 
+    [[nodiscard]] auto class_invariant_holds() const -> bool;
+
+   private:
     Selection initial_selection_ {};
 
     std::vector<operation_t> operations_ {};

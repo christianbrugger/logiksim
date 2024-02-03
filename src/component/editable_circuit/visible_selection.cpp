@@ -1,14 +1,17 @@
-#include "component/editable_circuit/visible_selection.h"
+#include "visible_selection.h"
 
 #include "allocated_size/std_vector.h"
 #include "allocated_size/trait.h"
 #include "component/editable_circuit/layout_index.h"
+#include "component/editable_circuit/visible_selection.h"
 #include "format/container.h"
 #include "format/std_type.h"
 #include "layout.h"
 #include "layout_message.h"
 #include "selection.h"
 #include "selection_normalization.h"
+
+#include <gsl/gsl>
 
 #include <exception>
 
@@ -19,8 +22,6 @@ auto format(SelectionFunction selection_function) -> std::string {
     switch (selection_function) {
         using enum SelectionFunction;
 
-        // case toggle:
-        //     return "toggle";
         case add:
             return "add";
         case substract:
@@ -38,11 +39,12 @@ auto operation_t::format() const -> std::string {
 }  // namespace visible_selection
 
 //
-// Selection Builder
+// Visible Selection
 //
 
 auto VisibleSelection::submit(const editable_circuit::InfoMessage& message) -> void {
     using namespace editable_circuit::info_message;
+    Expects(class_invariant_holds());
 
     // we only keep the inital selection updated
     initial_selection_.submit(message);
@@ -51,27 +53,35 @@ auto VisibleSelection::submit(const editable_circuit::InfoMessage& message) -> v
     if (std::holds_alternative<LogicItemCreated>(message) ||
         std::holds_alternative<LogicItemIdUpdated>(message) ||
         std::holds_alternative<LogicItemDeleted>(message)) {
-        clear_cache();
+        cached_selection_.reset();
     }
 
     if (std::holds_alternative<SegmentCreated>(message) ||
         std::holds_alternative<SegmentIdUpdated>(message) ||
         std::holds_alternative<SegmentPartMoved>(message) ||
         std::holds_alternative<SegmentPartDeleted>(message)) {
-        clear_cache();
+        cached_selection_.reset();
     }
+
+    Ensures(class_invariant_holds());
 }
 
 auto VisibleSelection::empty() const noexcept -> bool {
+    Expects(class_invariant_holds());
+
     return initial_selection_.empty() && operations_.empty();
 }
 
 auto VisibleSelection::allocated_size() const -> std::size_t {
+    Expects(class_invariant_holds());
+
     return get_allocated_size(initial_selection_) +  //
            get_allocated_size(operations_);
 }
 
 auto VisibleSelection::format() const -> std::string {
+    Expects(class_invariant_holds());
+
     return fmt::format(
         "VisibleSelection(\n"
         "  operations = {},\n"
@@ -81,23 +91,35 @@ auto VisibleSelection::format() const -> std::string {
 }
 
 auto VisibleSelection::operator==(const VisibleSelection& other) const -> bool {
+    Expects(class_invariant_holds());
+
     // cache is not part of value type
     return initial_selection_ == other.initial_selection_ &&
            operations_ == other.operations_;
 }
 
 auto VisibleSelection::clear() -> void {
+    Expects(class_invariant_holds());
+
     initial_selection_.clear();
     operations_.clear();
     cached_selection_.reset();
+
+    Ensures(class_invariant_holds());
 }
 
 auto VisibleSelection::add(SelectionFunction function, rect_fine_t rect) -> void {
+    Expects(class_invariant_holds());
+
     operations_.emplace_back(operation_t {function, rect});
     cached_selection_.reset();
+
+    Ensures(class_invariant_holds());
 }
 
 auto VisibleSelection::update_last(rect_fine_t rect) -> void {
+    Expects(class_invariant_holds());
+
     if (operations_.empty()) [[unlikely]] {
         throw std::runtime_error("Cannot update last with no operations.");
     }
@@ -107,23 +129,36 @@ auto VisibleSelection::update_last(rect_fine_t rect) -> void {
 
     operations_.back().rect = rect;
     cached_selection_.reset();
+
+    Ensures(class_invariant_holds());
 }
 
 auto VisibleSelection::pop_last() -> void {
+    Expects(class_invariant_holds());
+
     if (operations_.empty()) [[unlikely]] {
         throw std::runtime_error("Cannot remove last with no operations.");
     }
 
     operations_.pop_back();
     cached_selection_.reset();
+
+    Ensures(class_invariant_holds());
 }
 
 auto VisibleSelection::set_selection(Selection selection__) -> void {
+    Expects(class_invariant_holds());
+
     clear();
     initial_selection_ = std::move(selection__);
+
+    Ensures(operations_.empty());
+    Ensures(class_invariant_holds());
 }
 
 auto VisibleSelection::operation_count() const -> size_t {
+    Expects(class_invariant_holds());
+
     return operations_.size();
 }
 
@@ -190,6 +225,8 @@ auto apply_function(Selection& selection, const SpatialIndex& selection_index,
 auto VisibleSelection::calculate_selection(const Layout& layout,
                                            const LayoutIndex& layout_index) const
     -> Selection {
+    Expects(class_invariant_holds());
+
     auto selection = Selection {initial_selection_};
 
     for (auto&& operation : operations_) {
@@ -205,13 +242,18 @@ auto VisibleSelection::calculate_selection(const Layout& layout,
         }
     }
 
+    Ensures(class_invariant_holds());
     return selection;
 }
 
 auto VisibleSelection::selection(const Layout& layout,
                                  const LayoutIndex& layout_index) const
     -> const Selection& {
+    Expects(class_invariant_holds());
+
     if (cached_selection_) {
+        // check if our cache is up to date in debug
+        assert(cached_selection_ == calculate_selection(layout, layout_index));
         return *cached_selection_;
     }
     if (operations_.empty()) {
@@ -219,29 +261,35 @@ auto VisibleSelection::selection(const Layout& layout,
     }
 
     cached_selection_ = calculate_selection(layout, layout_index);
+
+    Ensures(class_invariant_holds());
     return *cached_selection_;
 }
 
 auto VisibleSelection::apply_all_operations(const Layout& layout,
                                             const LayoutIndex& layout_index) -> void {
-    if (operations_.empty()) {
-        return;
+    Expects(class_invariant_holds());
+
+    if (!operations_.empty()) {
+        // update cache
+        static_cast<void>(selection(layout, layout_index));
+
+        if (cached_selection_) {
+            initial_selection_ = std::move(*cached_selection_);
+            cached_selection_.reset();
+        }
+
+        operations_.clear();
     }
 
-    // update cache
-    static_cast<void>(selection(layout, layout_index));
-
-    if (cached_selection_) {
-        using std::swap;
-        swap(initial_selection_, *cached_selection_);
-    }
-
-    operations_.clear();
-    cached_selection_.reset();
+    Ensures(operations_.empty());
+    Ensures(class_invariant_holds());
 }
 
-auto VisibleSelection::clear_cache() const -> void {
-    cached_selection_.reset();
+auto VisibleSelection::class_invariant_holds() const -> bool {
+    Expects(!cached_selection_.has_value() || !operations_.empty());
+
+    return true;
 }
 
 }  // namespace logicsim

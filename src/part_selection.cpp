@@ -69,6 +69,16 @@ auto sort_and_merge_parts(part_vector_t& parts) -> void {
 
 }  // namespace part_selection
 
+PartSelection::PartSelection(part_t part) : parts_ {part} {
+    Ensures(class_invariant_holds());
+}
+
+PartSelection::PartSelection(part_vector_t&& parts__) : parts_ {std::move(parts__)} {
+    part_selection::sort_and_merge_parts(parts_);
+
+    Ensures(class_invariant_holds());
+}
+
 auto PartSelection::format() const -> std::string {
     Expects(class_invariant_holds());
 
@@ -106,16 +116,6 @@ auto PartSelection::max_offset() const -> offset_t {
         return offset_t {0};
     }
     return parts_.back().end;
-}
-
-PartSelection::PartSelection(part_t part) : parts_ {part} {}
-
-PartSelection::PartSelection(part_vector_t&& parts) : parts_ {std::move(parts)} {
-    Expects(class_invariant_holds());
-
-    part_selection::sort_and_merge_parts(parts_);
-
-    Ensures(class_invariant_holds());
 }
 
 auto PartSelection::inverted_selection(part_t part) const -> PartSelection {
