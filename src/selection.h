@@ -35,38 +35,18 @@ using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
 
 }  // namespace detail::selection
 
-// TODO rename to TrackedElements
-class Selection;
-
-[[nodiscard]] auto has_logic_items(const Selection &selection) -> bool;
-[[nodiscard]] auto get_lines(const Selection &selection, const Layout &layout)
-    -> std::vector<ordered_line_t>;
-[[nodiscard]] auto all_normal_display_state(const Selection &selection,
-                                            const Layout &layout) -> bool;
-[[nodiscard]] auto anything_colliding(const Selection &selection, const Layout &layout)
-    -> bool;
-[[nodiscard]] auto anything_temporary(const Selection &selection, const Layout &layout)
-    -> bool;
-[[nodiscard]] auto anything_valid(const Selection &selection, const Layout &layout)
-    -> bool;
-[[nodiscard]] auto display_states(const Selection &selection, const Layout &layout)
-    -> DisplayStateMap;
-
-[[nodiscard]] auto is_selected(const Selection &selection, const Layout &layout,
-                               segment_t segment, point_fine_t point) -> bool;
-
 /**
  * @brief: A selection of logicitems and segment parts of a Layout.
  *
  * Class-invariants:
- *   + stored logicitem_ids and segments are positive
- *   + Selected segments have a non-empty PartSelection
+ *   + stored logicitem_ids and segments are not null
+ *   + selected segments entries have at least one part in the PartSelection
  */
 class Selection {
    public:
     using segment_pair_t = detail::selection::map_pair_t;
 
-    auto swap(Selection &other) noexcept -> void;
+   public:
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_info(bool as_selection = true) const -> std::string;
 
@@ -93,8 +73,6 @@ class Selection {
         -> const PartSelection &;
 
     auto submit(const editable_circuit::InfoMessage &message) -> void;
-    // TODO remove
-    auto validate(const Layout &layout) const -> void;
 
    private:
     auto handle(const editable_circuit::info_message::LogicItemDeleted &message) -> void;
@@ -106,21 +84,44 @@ class Selection {
     auto handle(const editable_circuit::info_message::SegmentPartDeleted &message)
         -> void;
 
+    [[nodiscard]] auto class_invariant_holds() const -> bool;
+
+   private:
     detail::selection::logicitems_set_t selected_logicitems_ {};
     detail::selection::segment_map_t selected_segments_ {};
 };
 
-auto swap(Selection &a, Selection &b) noexcept -> void;
-
-}  // namespace logicsim
-
-template <>
-auto std::swap(logicsim::Selection &a, logicsim::Selection &b) noexcept -> void;
-
-namespace logicsim {
+//
+// Free Functions
+//
 
 [[nodiscard]] auto is_valid_selection(const Selection &selection, const Layout &layout)
     -> bool;
+
+//
+//
+//
+
+[[nodiscard]] auto has_logic_items(const Selection &selection) -> bool;
+[[nodiscard]] auto get_lines(const Selection &selection, const Layout &layout)
+    -> std::vector<ordered_line_t>;
+[[nodiscard]] auto all_normal_display_state(const Selection &selection,
+                                            const Layout &layout) -> bool;
+[[nodiscard]] auto anything_colliding(const Selection &selection, const Layout &layout)
+    -> bool;
+[[nodiscard]] auto anything_temporary(const Selection &selection, const Layout &layout)
+    -> bool;
+[[nodiscard]] auto anything_valid(const Selection &selection, const Layout &layout)
+    -> bool;
+[[nodiscard]] auto display_states(const Selection &selection, const Layout &layout)
+    -> DisplayStateMap;
+
+[[nodiscard]] auto is_selected(const Selection &selection, const Layout &layout,
+                               segment_t segment, point_fine_t point) -> bool;
+
+//
+//
+//
 
 auto add_segment(Selection &selection, segment_t segment, const Layout &layout) -> void;
 auto add_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)

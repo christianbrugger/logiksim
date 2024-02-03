@@ -26,8 +26,6 @@ namespace {
  * @brief: Returns false if parts are overlapping or touching.
  */
 [[nodiscard]] auto parts_not_touching(const part_vector_t& parts) -> bool {
-    Expects(std::ranges::is_sorted(parts));
-
     const auto part_overlapping = [](part_t part0, part_t part1) -> bool {
         return part0.end >= part1.begin;
     };
@@ -72,26 +70,38 @@ auto sort_and_merge_parts(part_vector_t& parts) -> void {
 }  // namespace part_selection
 
 auto PartSelection::format() const -> std::string {
+    Expects(class_invariant_holds());
+
     return fmt::format("<part-selection: {}>", parts_);
 }
 
 auto PartSelection::begin() const -> iterator {
+    Expects(class_invariant_holds());
+
     return parts_.begin();
 }
 
 auto PartSelection::end() const -> iterator {
+    Expects(class_invariant_holds());
+
     return parts_.end();
 }
 
 auto PartSelection::front() const -> part_t {
+    Expects(class_invariant_holds());
+
     return parts_.front();
 }
 
 auto PartSelection::back() const -> part_t {
+    Expects(class_invariant_holds());
+
     return parts_.back();
 }
 
 auto PartSelection::max_offset() const -> offset_t {
+    Expects(class_invariant_holds());
+
     if (empty()) {
         return offset_t {0};
     }
@@ -101,13 +111,16 @@ auto PartSelection::max_offset() const -> offset_t {
 PartSelection::PartSelection(part_t part) : parts_ {part} {}
 
 PartSelection::PartSelection(part_vector_t&& parts) : parts_ {std::move(parts)} {
+    Expects(class_invariant_holds());
+
     part_selection::sort_and_merge_parts(parts_);
 
-    assert(std::ranges::is_sorted(parts_));
-    assert(part_selection::parts_not_touching(parts_));
+    Ensures(class_invariant_holds());
 }
 
 auto PartSelection::inverted_selection(part_t part) const -> PartSelection {
+    Expects(class_invariant_holds());
+
     if (empty()) {
         return PartSelection {part};
     }
@@ -127,37 +140,39 @@ auto PartSelection::inverted_selection(part_t part) const -> PartSelection {
     }
     add_if_positive(back().end, part.end);
 
-    assert(std::ranges::is_sorted(result.parts_));
-    assert(part_selection::parts_not_touching(result.parts_));
+    Ensures(class_invariant_holds());
     return result;
 }
 
 auto PartSelection::empty() const noexcept -> bool {
+    Expects(class_invariant_holds());
+
     return parts_.empty();
 }
 
 auto PartSelection::size() const noexcept -> std::size_t {
+    Expects(class_invariant_holds());
+
     return parts_.size();
 }
 
 auto PartSelection::allocated_size() const -> std::size_t {
+    Expects(class_invariant_holds());
+
     return get_allocated_size(parts_);
 }
 
 auto PartSelection::add_part(part_t part) -> void {
-    assert(std::ranges::is_sorted(parts_));
-    assert(part_selection::parts_not_touching(parts_));
+    Expects(class_invariant_holds());
 
     parts_.push_back(part);
     part_selection::sort_and_merge_parts(parts_);
 
-    assert(std::ranges::is_sorted(parts_));
-    assert(part_selection::parts_not_touching(parts_));
+    Ensures(class_invariant_holds());
 }
 
 auto PartSelection::remove_part(part_t removing) -> void {
-    assert(std::ranges::is_sorted(parts_));
-    assert(part_selection::parts_not_touching(parts_));
+    Expects(class_invariant_holds());
 
     bool require_sort = false;
 
@@ -204,8 +219,7 @@ auto PartSelection::remove_part(part_t removing) -> void {
         std::ranges::sort(parts_);
     }
 
-    assert(std::ranges::is_sorted(parts_));
-    assert(part_selection::parts_not_touching(parts_));
+    Ensures(class_invariant_holds());
 }
 
 namespace part_selection {
@@ -253,8 +267,7 @@ auto copy_parts(part_vector_t& destination, const part_vector_t& source,
 
 auto PartSelection::copy_parts(const PartSelection& source,
                                part_copy_definition_t copy_definition) -> void {
-    assert(std::ranges::is_sorted(parts_));
-    assert(part_selection::parts_not_touching(parts_));
+    Expects(class_invariant_holds());
 
     const bool original_empty = empty();
     part_selection::copy_parts(parts_, source.parts_, copy_definition);
@@ -262,8 +275,17 @@ auto PartSelection::copy_parts(const PartSelection& source,
         part_selection::sort_and_merge_parts(parts_);
     }
 
+    Ensures(class_invariant_holds());
+}
+
+auto PartSelection::class_invariant_holds() const -> bool {
+    // parts_ are sorted ascending
     assert(std::ranges::is_sorted(parts_));
+
+    // adjacent parts do not touch
     assert(part_selection::parts_not_touching(parts_));
+
+    return true;
 }
 
 //

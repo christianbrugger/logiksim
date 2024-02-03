@@ -36,6 +36,9 @@ struct operation_t {
 
 }  // namespace visible_selection
 
+/**
+ * @brief: Stores a visible selection, areas of positive and negative rectangles.
+ */
 class VisibleSelection {
    public:
     using operation_t = visible_selection::operation_t;
@@ -61,9 +64,6 @@ class VisibleSelection {
         -> const Selection &;
 
     auto submit(const editable_circuit::InfoMessage &message) -> void;
-
-    // TODO remove
-    auto validate(const Layout &layout, const LayoutIndex &layout_index) const -> void;
 
    private:
     auto calculate_selection(const Layout &layout, const LayoutIndex &layout_index) const

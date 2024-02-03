@@ -66,6 +66,9 @@ class PartSelection {
     [[nodiscard]] auto max_offset() const -> offset_t;
 
    private:
+    [[nodiscard]] auto class_invariant_holds() const -> bool;
+
+   private:
     part_vector_t parts_ {};
 };
 

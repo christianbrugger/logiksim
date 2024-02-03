@@ -118,9 +118,9 @@ auto VisibleSelection::pop_last() -> void {
     cached_selection_.reset();
 }
 
-auto VisibleSelection::set_selection(Selection selection) -> void {
+auto VisibleSelection::set_selection(Selection selection__) -> void {
     clear();
-    initial_selection_.swap(selection);
+    initial_selection_ = std::move(selection__);
 }
 
 auto VisibleSelection::operation_count() const -> size_t {
@@ -142,10 +142,6 @@ auto add_element_to_selection(logicitem_id_t logicitem_id, SelectionFunction fun
             selection.remove_logicitem(logicitem_id);
             return;
         }
-            // case toggle: {
-            //     selection.toggle_logicitem(logicitem_id);
-            //     return;
-            // }
     }
     std::terminate();
 }
@@ -171,9 +167,6 @@ auto add_segment_to_selection(segment_t segment, VisibleSelection::operation_t o
             selection.remove_segment(segment_part);
             return;
         }
-            // case toggle: {
-            //     throw std::runtime_error("not implemented");
-            // }
     }
     std::terminate();
 }
@@ -183,7 +176,7 @@ auto apply_function(Selection& selection, const SpatialIndex& selection_index,
     -> void {
     const auto selected_elements = selection_index.query_selection(operation.rect);
 
-    for (auto&& element : selected_elements) {
+    for (const auto& element : selected_elements) {
         if (element.is_logicitem()) {
             add_element_to_selection(element.logicitem(), operation.function, selection);
         } else {
@@ -239,7 +232,8 @@ auto VisibleSelection::apply_all_operations(const Layout& layout,
     static_cast<void>(selection(layout, layout_index));
 
     if (cached_selection_) {
-        initial_selection_.swap(*cached_selection_);
+        using std::swap;
+        swap(initial_selection_, *cached_selection_);
     }
 
     operations_.clear();
@@ -248,17 +242,6 @@ auto VisibleSelection::apply_all_operations(const Layout& layout,
 
 auto VisibleSelection::clear_cache() const -> void {
     cached_selection_.reset();
-}
-
-auto VisibleSelection::validate(const Layout& layout,
-                                const LayoutIndex& layout_index) const -> void {
-    initial_selection_.validate(layout);
-
-    if (cached_selection_) {
-        cached_selection_->validate(layout);
-    }
-
-    calculate_selection(layout, layout_index).validate(layout);
 }
 
 }  // namespace logicsim

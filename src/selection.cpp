@@ -15,7 +15,405 @@
 #include "vocabulary/point_fine.h"
 #include "vocabulary/rect_fine.h"
 
+#include <algorithm>
+#include <cassert>
+
 namespace logicsim {
+
+//
+// Selection
+//
+
+auto Selection::format() const -> std::string {
+    Expects(class_invariant_holds());
+
+    return fmt::format(
+        "Slection(\n"
+        "  logic_items = {},\n"
+        "  segments = {},\n"
+        ")",
+        selected_logicitems_.values(), selected_segments_.values());
+}
+
+auto Selection::format_info(bool as_selection) const -> std::string {
+    Expects(class_invariant_holds());
+
+    if (as_selection) {
+        return fmt::format("Slection({} logic items, {} segments)",
+                           selected_logicitems_.size(), selected_segments_.size());
+    }
+    return fmt::format("{} logic items and {} segments", selected_logicitems_.size(),
+                       selected_segments_.size());
+}
+
+auto Selection::empty() const noexcept -> bool {
+    Expects(class_invariant_holds());
+
+    return selected_logicitems_.empty() && selected_segments_.empty();
+}
+
+auto Selection::clear() -> void {
+    Expects(class_invariant_holds());
+
+    selected_logicitems_.clear();
+    selected_segments_.clear();
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::allocated_size() const -> std::size_t {
+    Expects(class_invariant_holds());
+
+    return get_allocated_size(selected_logicitems_) +
+           get_allocated_size(selected_segments_);
+}
+
+auto Selection::add_logicitem(logicitem_id_t logicitem_id) -> void {
+    Expects(class_invariant_holds());
+
+    if (!logicitem_id) [[unlikely]] {
+        throw std::runtime_error("added element_id needs to be valid");
+    }
+
+    selected_logicitems_.insert(logicitem_id);
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::remove_logicitem(logicitem_id_t logicitem_id) -> void {
+    Expects(class_invariant_holds());
+
+    if (!logicitem_id) [[unlikely]] {
+        throw std::runtime_error("removed logicitem_id needs to be valid");
+    }
+
+    selected_logicitems_.erase(logicitem_id);
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::toggle_logicitem(logicitem_id_t logicitem_id) -> void {
+    Expects(class_invariant_holds());
+
+    if (!logicitem_id) [[unlikely]] {
+        throw std::runtime_error("toggled logicitem_id needs to be valid");
+    }
+
+    if (is_selected(logicitem_id)) {
+        remove_logicitem(logicitem_id);
+    } else {
+        add_logicitem(logicitem_id);
+    }
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::add_segment(segment_part_t segment_part) -> void {
+    Expects(class_invariant_holds());
+
+    const auto it = selected_segments_.find(segment_part.segment);
+
+    if (it == selected_segments_.end()) {
+        // not found
+        const auto value = detail::selection::map_value_t {segment_part.part};
+        bool inserted = selected_segments_.emplace(segment_part.segment, value).second;
+        Expects(inserted);
+    } else {
+        // found
+        auto &entries = it->second;
+        Expects(!entries.empty());
+
+        entries.add_part(segment_part.part);
+    }
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::remove_segment(segment_part_t segment_part) -> void {
+    Expects(class_invariant_holds());
+
+    const auto it = selected_segments_.find(segment_part.segment);
+
+    if (it != selected_segments_.end()) {
+        auto &entries = it->second;
+        Expects(!entries.empty());
+
+        entries.remove_part(segment_part.part);
+
+        if (entries.empty()) {
+            Expects(selected_segments_.erase(segment_part.segment));
+        }
+    }
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::set_selection(segment_t segment, PartSelection &&parts) -> void {
+    Expects(class_invariant_holds());
+
+    const auto it = selected_segments_.find(segment);
+
+    if (it == selected_segments_.end()) {
+        // not found
+        Expects(selected_segments_.emplace(segment, std::move(parts)).second);
+    } else {
+        // found
+        if (parts.empty()) {
+            selected_segments_.erase(it);
+        } else {
+            using std::swap;
+            swap(it->second, parts);
+        }
+    }
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::is_selected(logicitem_id_t logicitem_id) const -> bool {
+    Expects(class_invariant_holds());
+
+    return selected_logicitems_.contains(logicitem_id);
+}
+
+auto Selection::is_selected(segment_t segment) const -> bool {
+    Expects(class_invariant_holds());
+
+    return selected_segments_.contains(segment);
+}
+
+auto Selection::selected_logic_items() const -> std::span<const logicitem_id_t> {
+    Expects(class_invariant_holds());
+
+    return selected_logicitems_.values();
+}
+
+auto Selection::selected_segments() const -> std::span<const segment_pair_t> {
+    Expects(class_invariant_holds());
+
+    return selected_segments_.values();
+}
+
+auto Selection::selected_segments(segment_t segment) const -> const PartSelection & {
+    Expects(class_invariant_holds());
+
+    const static thread_local auto empty_selection = PartSelection {};
+
+    const auto it = selected_segments_.find(segment);
+    if (it == selected_segments_.end()) {
+        return empty_selection;
+    }
+
+    auto &entries = it->second;
+    Expects(!entries.empty());
+
+    return it->second;
+}
+
+//
+// Handle Methods
+//
+
+auto Selection::handle(const editable_circuit::info_message::LogicItemDeleted &message)
+    -> void {
+    Expects(class_invariant_holds());
+
+    remove_logicitem(message.logicitem_id);
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::handle(const editable_circuit::info_message::LogicItemIdUpdated &message)
+    -> void {
+    Expects(class_invariant_holds());
+
+    const auto found = selected_logicitems_.erase(message.old_logicitem_id);
+    if (found) {
+        const auto added = selected_logicitems_.insert(message.new_logicitem_id).second;
+        Expects(added);
+    }
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::handle(const editable_circuit::info_message::SegmentIdUpdated &message)
+    -> void {
+    Expects(class_invariant_holds());
+
+    const auto it = selected_segments_.find(message.old_segment);
+
+    if (it != selected_segments_.end()) {
+        auto parts = detail::selection::map_value_t {std::move(it->second)};
+        selected_segments_.erase(it);
+
+        const auto added =
+            selected_segments_.emplace(message.new_segment, std::move(parts)).second;
+        Expects(added);
+    }
+
+    Ensures(class_invariant_holds());
+}
+
+namespace {
+
+auto _handle_move_different_segment(
+    detail::selection::segment_map_t &map,
+    editable_circuit::info_message::SegmentPartMoved message) {
+    using namespace detail::selection;
+
+    if (message.segment_part_source.segment == message.segment_part_destination.segment)
+        [[unlikely]] {
+        throw std::runtime_error("source and destination need to be different");
+    }
+
+    // find source entries
+    const auto it_source = map.find(message.segment_part_source.segment);
+    if (it_source == map.end()) {
+        // nothing to copy
+        return;
+    }
+    auto &source_entries = it_source->second;
+
+    // find destination entries
+    auto destination_entries = [&]() {
+        const auto it_dest = map.find(message.segment_part_destination.segment);
+        return it_dest != map.end() ? it_dest->second : map_value_t {};
+    }();
+
+    // move
+    move_parts({
+        .destination = destination_entries,
+        .source = source_entries,
+        .copy_definition =
+            part_copy_definition_t {
+                .destination = message.segment_part_destination.part,
+                .source = message.segment_part_source.part,
+            },
+    });
+
+    // delete source
+    if (source_entries.empty()) {
+        map.erase(message.segment_part_source.segment);
+    }
+
+    // add destination
+    if (!destination_entries.empty()) {
+        map.insert_or_assign(message.segment_part_destination.segment,
+                             std::move(destination_entries));
+    }
+}
+
+auto _handle_move_same_segment(detail::selection::segment_map_t &map,
+                               editable_circuit::info_message::SegmentPartMoved message) {
+    if (message.segment_part_source.segment != message.segment_part_destination.segment)
+        [[unlikely]] {
+        throw std::runtime_error("source and destination need to the same");
+    }
+
+    // find entries
+    const auto it = map.find(message.segment_part_source.segment);
+    if (it == map.end()) {
+        // nothing to copy
+        return;
+    }
+    auto &entries = it->second;
+
+    move_parts(entries, part_copy_definition_t {
+                            .destination = message.segment_part_destination.part,
+                            .source = message.segment_part_source.part,
+                        });
+
+    Expects(!entries.empty());
+}
+
+}  // namespace
+
+auto Selection::handle(const editable_circuit::info_message::SegmentPartMoved &message)
+    -> void {
+    Expects(class_invariant_holds());
+
+    if (message.segment_part_source.segment == message.segment_part_destination.segment) {
+        _handle_move_same_segment(selected_segments_, message);
+    } else {
+        _handle_move_different_segment(selected_segments_, message);
+    }
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::handle(const editable_circuit::info_message::SegmentPartDeleted &message)
+    -> void {
+    Expects(class_invariant_holds());
+
+    remove_segment(message.segment_part);
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::submit(const editable_circuit::InfoMessage &message) -> void {
+    using namespace editable_circuit::info_message;
+
+    // logic item
+    if (const auto pointer = std::get_if<LogicItemDeleted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (const auto pointer = std::get_if<LogicItemIdUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
+
+    // segments
+    if (const auto pointer = std::get_if<SegmentIdUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (const auto pointer = std::get_if<SegmentPartMoved>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (const auto pointer = std::get_if<SegmentPartDeleted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+}
+
+auto Selection::class_invariant_holds() const -> bool {
+    // logicitem ids are not null
+    assert(std::ranges::all_of(selected_logicitems_, &logicitem_id_t::operator bool));
+    // segment ids are not null
+    assert(std::ranges::all_of(std::ranges::views::keys(selected_segments_),
+                               &segment_t::operator bool));
+
+    // part-selections are not empty
+    assert(std::ranges::none_of(std::ranges::views::values(selected_segments_),
+                                &PartSelection::empty));
+
+    return true;
+}
+
+//
+// Free Functions
+//
+
+auto is_valid_selection(const Selection &selection, const Layout &layout) -> bool {
+    const auto logicitem_valid = [&](const logicitem_id_t &logicitem_id) -> bool {
+        return is_id_valid(logicitem_id, layout);
+    };
+
+    const auto segment_valid = [&](const Selection::segment_pair_t &entry) -> bool {
+        const auto &[segment, parts] = entry;
+        const auto segment_part =
+            segment_part_t {segment, part_t {0, parts.max_offset()}};
+        return is_segment_part_valid(segment_part, layout);
+    };
+
+    return std::ranges::all_of(selection.selected_logic_items(), logicitem_valid) &&
+           std::ranges::all_of(selection.selected_segments(), segment_valid);
+}
+
+//
+//
+//
 
 auto has_logic_items(const Selection &selection) -> bool {
     return !selection.selected_logic_items().empty();
@@ -151,358 +549,8 @@ auto is_selected(const Selection &selection, const Layout &layout, segment_t seg
 }
 
 //
-// Selection
 //
-
-auto Selection::swap(Selection &other) noexcept -> void {
-    using std::swap;
-
-    selected_logicitems_.swap(other.selected_logicitems_);
-    selected_segments_.swap(other.selected_segments_);
-}
-
-auto Selection::clear() -> void {
-    selected_logicitems_.clear();
-    selected_segments_.clear();
-}
-
-auto Selection::allocated_size() const -> std::size_t {
-    return get_allocated_size(selected_logicitems_) +
-           get_allocated_size(selected_segments_);
-}
-
-auto Selection::format() const -> std::string {
-    return fmt::format(
-        "Slection(\n"
-        "  logic_items = {},\n"
-        "  segments = {},\n"
-        ")",
-        selected_logicitems_.values(), selected_segments_.values());
-}
-
-auto Selection::format_info(bool as_selection) const -> std::string {
-    if (as_selection) {
-        return fmt::format("Slection({} logic items, {} segments)",
-                           selected_logicitems_.size(), selected_segments_.size());
-    }
-    return fmt::format("{} logic items and {} segments", selected_logicitems_.size(),
-                       selected_segments_.size());
-}
-
-auto Selection::empty() const noexcept -> bool {
-    return selected_logicitems_.empty() && selected_segments_.empty();
-}
-
-auto Selection::add_logicitem(logicitem_id_t logicitem_id) -> void {
-    if (!logicitem_id) [[unlikely]] {
-        throw std::runtime_error("added element_id needs to be valid");
-    }
-
-    selected_logicitems_.insert(logicitem_id);
-}
-
-auto Selection::remove_logicitem(logicitem_id_t logicitem_id) -> void {
-    if (!logicitem_id) [[unlikely]] {
-        throw std::runtime_error("removed logicitem_id needs to be valid");
-    }
-
-    selected_logicitems_.erase(logicitem_id);
-}
-
-auto Selection::toggle_logicitem(logicitem_id_t logicitem_id) -> void {
-    if (!logicitem_id) [[unlikely]] {
-        throw std::runtime_error("toggled logicitem_id needs to be valid");
-    }
-
-    if (is_selected(logicitem_id)) {
-        remove_logicitem(logicitem_id);
-    } else {
-        add_logicitem(logicitem_id);
-    }
-}
-
-auto Selection::add_segment(segment_part_t segment_part) -> void {
-    const auto it = selected_segments_.find(segment_part.segment);
-    if (it == selected_segments_.end()) {
-        // insert new list
-        const auto value = detail::selection::map_value_t {segment_part.part};
-        bool inserted = selected_segments_.emplace(segment_part.segment, value).second;
-        if (!inserted) [[unlikely]] {
-            throw std::runtime_error("unable to insert value");
-        }
-        return;
-    }
-
-    auto &entries = it->second;
-    if (entries.size() == 0) [[unlikely]] {
-        throw std::runtime_error("found segment selection with zero selection entries");
-    }
-
-    entries.add_part(segment_part.part);
-}
-
-auto Selection::remove_segment(segment_part_t segment_part) -> void {
-    const auto it = selected_segments_.find(segment_part.segment);
-    if (it == selected_segments_.end()) {
-        return;
-    }
-
-    auto &entries = it->second;
-    if (entries.size() == 0) [[unlikely]] {
-        throw std::runtime_error("found segment selection with zero selection entries");
-    }
-
-    entries.remove_part(segment_part.part);
-
-    if (entries.empty()) {
-        if (!selected_segments_.erase(segment_part.segment)) {
-            throw std::runtime_error("unable to delete key");
-        }
-    }
-}
-
-auto Selection::set_selection(segment_t segment, PartSelection &&parts) -> void {
-    const auto it = selected_segments_.find(segment);
-
-    if (parts.empty()) {
-        if (it != selected_segments_.end()) {
-            selected_segments_.erase(it);
-        }
-        return;
-    }
-
-    if (it != selected_segments_.end()) {
-        using std::swap;
-        swap(it->second, parts);
-        return;
-    }
-
-    selected_segments_.emplace(segment, std::move(parts));
-}
-
-auto Selection::is_selected(logicitem_id_t logicitem_id) const -> bool {
-    return selected_logicitems_.contains(logicitem_id);
-}
-
-auto Selection::is_selected(segment_t segment) const -> bool {
-    return selected_segments_.contains(segment);
-}
-
-auto Selection::selected_logic_items() const -> std::span<const logicitem_id_t> {
-    return selected_logicitems_.values();
-}
-
-auto Selection::selected_segments() const -> std::span<const segment_pair_t> {
-    return selected_segments_.values();
-}
-
-auto Selection::selected_segments(segment_t segment) const -> const PartSelection & {
-    // constexpr static auto selection = part_selection::part_vector_t {};
-
-    // TODO !!! make constexpr
-    const static auto empty_selection = PartSelection {};
-
-    const auto it = selected_segments_.find(segment);
-    if (it == selected_segments_.end()) {
-        return empty_selection;
-    }
-
-    auto &entries = it->second;
-    if (entries.size() == 0) [[unlikely]] {
-        throw std::runtime_error("found segment selection with zero selection entries");
-    }
-
-    return it->second;
-}
-
-auto swap(Selection &a, Selection &b) noexcept -> void {
-    a.swap(b);
-}
-
-}  // namespace logicsim
-
-template <>
-auto std::swap(logicsim::Selection &a, logicsim::Selection &b) noexcept -> void {
-    a.swap(b);
-}
-
-namespace logicsim {
-
 //
-// Updates
-//
-
-auto Selection::handle(const editable_circuit::info_message::LogicItemDeleted &message)
-    -> void {
-    remove_logicitem(message.logicitem_id);
-}
-
-auto Selection::handle(const editable_circuit::info_message::LogicItemIdUpdated &message)
-    -> void {
-    const auto found = selected_logicitems_.erase(message.old_logicitem_id);
-    if (found) {
-        const auto inserted =
-            selected_logicitems_.insert(message.new_logicitem_id).second;
-
-        if (!inserted) [[unlikely]] {
-            throw std::runtime_error("element already existed");
-        }
-    }
-}
-
-auto Selection::handle(const editable_circuit::info_message::SegmentIdUpdated &message)
-    -> void {
-    const auto it = selected_segments_.find(message.old_segment);
-
-    if (it != selected_segments_.end()) {
-        auto parts = detail::selection::map_value_t {std::move(it->second)};
-        selected_segments_.erase(it);
-
-        const auto inserted =
-            selected_segments_.emplace(message.new_segment, std::move(parts)).second;
-
-        if (!inserted) [[unlikely]] {
-            throw std::runtime_error("line segment already existed");
-        }
-    }
-}
-
-auto handle_move_different_segment(
-    detail::selection::segment_map_t &map,
-    editable_circuit::info_message::SegmentPartMoved message) {
-    using namespace detail::selection;
-    if (message.segment_part_source.segment == message.segment_part_destination.segment)
-        [[unlikely]] {
-        throw std::runtime_error("source and destination need to be different");
-    }
-
-    // find source entries
-    const auto it_source = map.find(message.segment_part_source.segment);
-    if (it_source == map.end()) {
-        // nothing to copy
-        return;
-    }
-    auto &source_entries = it_source->second;
-
-    // find destination entries
-    auto destination_entries = [&]() {
-        const auto it_dest = map.find(message.segment_part_destination.segment);
-        return it_dest != map.end() ? it_dest->second : map_value_t {};
-    }();
-
-    // move
-    move_parts({
-        .destination = destination_entries,
-        .source = source_entries,
-        .copy_definition =
-            part_copy_definition_t {
-                .destination = message.segment_part_destination.part,
-                .source = message.segment_part_source.part,
-            },
-    });
-
-    // delete source
-    if (source_entries.empty()) {
-        map.erase(message.segment_part_source.segment);
-    }
-
-    // add destination
-    if (!destination_entries.empty()) {
-        map.insert_or_assign(message.segment_part_destination.segment,
-                             std::move(destination_entries));
-    }
-}
-
-auto handle_move_same_segment(detail::selection::segment_map_t &map,
-                              editable_circuit::info_message::SegmentPartMoved message) {
-    if (message.segment_part_source.segment != message.segment_part_destination.segment)
-        [[unlikely]] {
-        throw std::runtime_error("source and destination need to the same");
-    }
-
-    // find entries
-    const auto it = map.find(message.segment_part_source.segment);
-    if (it == map.end()) {
-        // nothing to copy
-        return;
-    }
-    auto &entries = it->second;
-
-    move_parts(entries, part_copy_definition_t {
-                            .destination = message.segment_part_destination.part,
-                            .source = message.segment_part_source.part,
-                        });
-
-    if (entries.empty()) [[unlikely]] {
-        throw std::runtime_error("result should never be empty");
-    }
-}
-
-auto Selection::handle(const editable_circuit::info_message::SegmentPartMoved &message)
-    -> void {
-    if (message.segment_part_source.segment == message.segment_part_destination.segment) {
-        handle_move_same_segment(selected_segments_, message);
-    } else {
-        handle_move_different_segment(selected_segments_, message);
-    }
-}
-
-auto Selection::handle(const editable_circuit::info_message::SegmentPartDeleted &message)
-    -> void {
-    remove_segment(message.segment_part);
-}
-
-auto Selection::submit(const editable_circuit::InfoMessage &message) -> void {
-    using namespace editable_circuit::info_message;
-
-    // logic item
-    if (const auto pointer = std::get_if<LogicItemDeleted>(&message)) {
-        handle(*pointer);
-        return;
-    }
-    if (const auto pointer = std::get_if<LogicItemIdUpdated>(&message)) {
-        handle(*pointer);
-        return;
-    }
-
-    // segments
-    if (const auto pointer = std::get_if<SegmentIdUpdated>(&message)) {
-        handle(*pointer);
-        return;
-    }
-    if (const auto pointer = std::get_if<SegmentPartMoved>(&message)) {
-        handle(*pointer);
-        return;
-    }
-    if (const auto pointer = std::get_if<SegmentPartDeleted>(&message)) {
-        handle(*pointer);
-        return;
-    }
-}
-
-auto Selection::validate(const Layout &layout) const -> void {
-    if (!is_valid_selection(*this, layout)) {
-        throw std::runtime_error("selection contains elements that don't exist");
-    }
-}
-
-// Section
-
-auto is_valid_selection(const Selection &selection, const Layout &layout) -> bool {
-    const auto logicitem_valid = [&](const logicitem_id_t &logicitem_id) -> bool {
-        return is_id_valid(logicitem_id, layout);
-    };
-
-    const auto segment_valid = [&](const Selection::segment_pair_t &entry) -> bool {
-        const auto &[segment, parts] = entry;
-        const auto segment_part =
-            segment_part_t {segment, part_t {0, parts.max_offset()}};
-        return is_segment_part_valid(segment_part, layout);
-    };
-
-    return std::ranges::all_of(selection.selected_logic_items(), logicitem_valid) &&
-           std::ranges::all_of(selection.selected_segments(), segment_valid);
-}
 
 auto add_segment(Selection &selection, segment_t segment, const Layout &layout) -> void {
     const auto part = to_part(get_line(layout, segment));
