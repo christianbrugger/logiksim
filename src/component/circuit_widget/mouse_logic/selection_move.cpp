@@ -3,6 +3,7 @@
 #include "algorithm/round.h"
 #include "editable_circuit.h"
 #include "geometry/display_state_map.h"
+#include "geometry/point.h"
 #include "timer.h"
 
 namespace logicsim {

@@ -3,6 +3,7 @@
 
 #include "component/editable_circuit/modifier.h"
 #include "component/editable_circuit/selection_guard.h"
+#include "format/struct.h"
 #include "vocabulary/insertion_mode.h"
 #include "vocabulary/line_insertion_type.h"
 
@@ -121,8 +122,19 @@ auto add_example(EditableCircuit2& editable_circuit) -> void;
                                                const Selection& selection, int delta_x,
                                                int delta_y) -> bool;
 
-auto get_inserted_cross_points(const EditableCircuit2& editable_circuit,
-                               const Selection& selection) -> std::vector<point_t>;
+[[nodiscard]] auto get_inserted_cross_points(const EditableCircuit2& editable_circuit,
+                                             const Selection& selection)
+    -> std::vector<point_t>;
+
+auto save_delete_all(EditableCircuit2& editable_circuit, selection_id_t selection_id)
+    -> void;
+
+auto save_destroy_selection(EditableCircuit2& editable_circuit,
+                            selection_id_t selection_id) -> void;
+
+auto visible_selection_select_all(EditableCircuit2& editable_circuit) -> void;
+
+auto visible_selection_delete_all(EditableCircuit2& editable_circuit) -> void;
 
 }  // namespace logicsim
 

@@ -206,7 +206,8 @@ auto Modifier::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool 
 }
 
 auto Modifier::apply_all_visible_selection_operations() -> void {
-    circuit_data_.visible_selection.apply_all_operations();
+    circuit_data_.visible_selection.apply_all_operations(circuit_data_.layout,
+                                                         circuit_data_.index);
 }
 
 //

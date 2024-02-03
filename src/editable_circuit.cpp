@@ -308,20 +308,6 @@ auto ScopedSelection::selection_id() const -> selection_id_t {
 // Free functions
 //
 
-auto move_or_delete_points(std::span<const point_t> points, int delta_x, int delta_y)
-    -> std::vector<point_t> {
-    auto result = std::vector<point_t> {};
-    result.reserve(points.size());
-
-    for (const auto& point : points) {
-        if (is_representable(point, delta_x, delta_y)) {
-            result.push_back(add_unchecked(point, delta_x, delta_y));
-        }
-    }
-
-    return result;
-}
-
 auto save_delete_all(EditableCircuit& editable_circuit, selection_id_t selection_id)
     -> void {
     if (editable_circuit.selection_exists(selection_id)) {

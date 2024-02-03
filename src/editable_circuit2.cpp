@@ -3,12 +3,14 @@
 #include "random/generator.h"
 #include "random/wire.h"
 
+#include <fmt/core.h>
+
 namespace logicsim {
 
 EditableCircuit2::EditableCircuit2(Layout&& layout__) : modifier_ {std::move(layout__)} {}
 
 auto EditableCircuit2::format() const -> std::string {
-    return modifier_.format();
+    return fmt::format("EditableCircuit{{\n{}}}", modifier_.circuit_data().layout);
 }
 
 auto EditableCircuit2::layout() const -> const Layout& {
@@ -204,7 +206,7 @@ auto EditableCircuit2::try_pop_last_visible_selection_rect() -> bool {
 }
 
 auto EditableCircuit2::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool {
-    return modifier_.try_update_last_visible_selection_rect();
+    return modifier_.try_update_last_visible_selection_rect(rect);
 }
 
 auto EditableCircuit2::apply_all_visible_selection_operations() -> void {
@@ -242,6 +244,37 @@ auto get_inserted_cross_points(const EditableCircuit2& editable_circuit,
                                const Selection& selection) -> std::vector<point_t> {
     return editable_circuit::get_inserted_cross_points(editable_circuit.modifier(),
                                                        selection);
+}
+
+auto save_delete_all(EditableCircuit2& editable_circuit, selection_id_t selection_id)
+    -> void {
+    if (editable_circuit.selection_exists(selection_id)) {
+        editable_circuit.delete_all(selection_id);
+    }
+}
+
+auto save_destroy_selection(EditableCircuit2& editable_circuit,
+                            selection_id_t selection_id) -> void {
+    if (editable_circuit.selection_exists(selection_id)) {
+        editable_circuit.destroy_selection(selection_id);
+    }
+}
+
+auto visible_selection_select_all(EditableCircuit2& editable_circuit) -> void {
+    const auto rect = rect_fine_t {point_fine_t {grid_t::min(), grid_t::min()},
+                                   point_fine_t {grid_t::max(), grid_t::max()}};
+
+    editable_circuit.clear_visible_selection();
+    editable_circuit.add_visible_selection_rect(SelectionFunction::add, rect);
+}
+
+auto visible_selection_delete_all(EditableCircuit2& editable_circuit) -> void {
+    // Clear the visible selection before deleting for optimization.
+    // So it is not tracked during deletion. (10% speedup)
+
+    auto selection__ = Selection {editable_circuit.visible_selection()};
+    editable_circuit.clear_visible_selection();
+    editable_circuit.delete_all(std::move(selection__));
 }
 
 }  // namespace logicsim
