@@ -84,7 +84,8 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
     Expects(selection_id);
 
     try {
-        editable_circuit.selection(selection_id).add(setting_handle.logicitem_id);
+        editable_circuit.selection(selection_id)
+            .add_logicitem(setting_handle.logicitem_id);
         const auto [it, inserted] = map_.emplace(selection_id, nullptr);
         Expects(inserted);
 

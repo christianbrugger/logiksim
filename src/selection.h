@@ -76,7 +76,7 @@ class Selection {
     auto clear() -> void;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
-    auto add(logicitem_id_t logicitem_id) -> void;
+    auto add_logicitem(logicitem_id_t logicitem_id) -> void;
     auto remove_logicitem(logicitem_id_t logicitem_id) -> void;
     auto toggle_logicitem(logicitem_id_t logicitem_id) -> void;
 
@@ -119,7 +119,7 @@ auto std::swap(logicsim::Selection &a, logicsim::Selection &b) noexcept -> void;
 
 namespace logicsim {
 
-[[nodiscard]] auto is_selection_valid(const Selection &selection, const Layout &layout)
+[[nodiscard]] auto is_valid_selection(const Selection &selection, const Layout &layout)
     -> bool;
 
 auto add_segment(Selection &selection, segment_t segment, const Layout &layout) -> void;

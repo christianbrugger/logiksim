@@ -31,7 +31,7 @@ auto add_selection(Selection& selection, const Layout& layout,
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
-            selection.add(item.logicitem());
+            selection.add_logicitem(item.logicitem());
         } else {
             add_segment_part(selection, layout, item.segment(), point);
         }

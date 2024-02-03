@@ -17,17 +17,6 @@ class EditableCircuit2 {
     [[nodiscard]] auto format() const -> std::string;
 
     //
-    // Sub-components
-    //
-
-    [[nodiscard]] auto layout() const -> const Layout&;
-    // TODO move LayoutIndex to editable_circuit namespace ?
-    [[nodiscard]] auto index() const -> const LayoutIndex&;
-    [[nodiscard]] auto selections() const -> const editable_circuit::SelectionStore&;
-    // TODO move VisibleSelection to editable_circuit namespace ?
-    [[nodiscard]] auto visible_selection() const -> const VisibleSelection&;
-
-    //
     // Logic Items
     //
 
@@ -35,20 +24,24 @@ class EditableCircuit2 {
                         InsertionMode insertion_mode,
                         selection_id_t selection_id = null_selection_id) -> void;
 
-    auto add_line_segments(point_t p0, point_t p1, LineInsertionType segment_type,
+    auto add_wire_segments(point_t p0, point_t p1, LineInsertionType segment_type,
                            InsertionMode insertion_mode,
                            selection_id_t selection_id = null_selection_id) -> void;
 
     auto change_insertion_mode(selection_id_t selection_id,
                                InsertionMode new_insertion_mode) -> void;
+    auto change_insertion_mode(Selection selection, InsertionMode new_insertion_mode)
+        -> void;
 
     auto move_or_delete_temporary(selection_id_t selection_id, int delta_x, int delta_y)
         -> void;
+    auto move_or_delete_temporary(Selection selection, int delta_x, int delta_y) -> void;
 
     auto move_temporary_unchecked(const Selection& selection, int delta_x, int delta_y)
         -> void;
 
     auto delete_all(selection_id_t selection_id) -> void;
+    auto delete_all(Selection selection) -> void;
 
     //
     // Attributes
@@ -73,6 +66,11 @@ class EditableCircuit2 {
     //
     // Selections
     //
+
+    [[nodiscard]] auto create_selection() -> selection_id_t;
+    [[nodiscard]] auto create_selection(Selection selection) -> selection_id_t;
+    [[nodiscard]] auto create_selection(selection_id_t copy_id) -> selection_id_t;
+    auto destroy_selection(selection_id_t selection_id) -> void;
 
     //
     // Visible Selections

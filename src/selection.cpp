@@ -193,7 +193,7 @@ auto Selection::empty() const noexcept -> bool {
     return selected_logicitems_.empty() && selected_segments_.empty();
 }
 
-auto Selection::add(logicitem_id_t logicitem_id) -> void {
+auto Selection::add_logicitem(logicitem_id_t logicitem_id) -> void {
     if (!logicitem_id) [[unlikely]] {
         throw std::runtime_error("added element_id needs to be valid");
     }
@@ -217,7 +217,7 @@ auto Selection::toggle_logicitem(logicitem_id_t logicitem_id) -> void {
     if (is_selected(logicitem_id)) {
         remove_logicitem(logicitem_id);
     } else {
-        add(logicitem_id);
+        add_logicitem(logicitem_id);
     }
 }
 
@@ -481,14 +481,14 @@ auto Selection::submit(const editable_circuit::InfoMessage &message) -> void {
 }
 
 auto Selection::validate(const Layout &layout) const -> void {
-    if (!is_selection_valid(*this, layout)) {
+    if (!is_valid_selection(*this, layout)) {
         throw std::runtime_error("selection contains elements that don't exist");
     }
 }
 
 // Section
 
-auto is_selection_valid(const Selection &selection, const Layout &layout) -> bool {
+auto is_valid_selection(const Selection &selection, const Layout &layout) -> bool {
     const auto logicitem_valid = [&](const logicitem_id_t &logicitem_id) -> bool {
         return is_id_valid(logicitem_id, layout);
     };

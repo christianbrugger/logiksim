@@ -109,21 +109,62 @@ auto Modifier::split_temporary_segments(std::span<const point_t> split_points,
     editing::split_temporary_segments(circuit_data_, split_points, selection);
 }
 
-auto Modifier::selection_create() -> selection_id_t {
+auto Modifier::create_selection() -> selection_id_t {
     return circuit_data_.selection_store.create();
 }
 
-auto Modifier::selection_destroy(selection_id_t selection_id) -> void {
+auto Modifier::create_selection(Selection selection__) -> selection_id_t {
+    if (!is_valid_selection(selection__, circuit_data_.layout)) {
+        throw std::runtime_error("Selection contains elements not in layout");
+    }
+
+    // we need to take selection as a copy, as create might invalidate the reference,
+    // if the underlying vector is resized and selections points to it.
+
+    const auto selection_id = circuit_data_.selection_store.create();
+    circuit_data_.selection_store.at(selection_id) = std::move(selection__);
+    return selection_id;
+}
+
+auto Modifier::create_selection(selection_id_t copy_id) -> selection_id_t {
+    const auto new_id = circuit_data_.selection_store.create();
+    circuit_data_.selection_store.at(new_id) = circuit_data_.selection_store.at(copy_id);
+    return new_id;
+}
+
+auto Modifier::destroy_selection(selection_id_t selection_id) -> void {
     circuit_data_.selection_store.destroy(selection_id);
 }
 
-auto Modifier::selection_remove(selection_id_t selection_id, logicitem_id_t logicitem_id)
+auto Modifier::selection(selection_id_t selection_id) const -> const Selection& {
+    return circuit_data_.selection_store.at(selection_id);
+}
+
+auto Modifier::add_to_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
     -> void {
+    if (!is_id_valid(logicitem_id, circuit_data_.layout)) {
+        throw std::runtime_error("Logicitem id is not part of layout");
+    }
+
+    circuit_data_.selection_store.at(selection_id).add_logicitem(logicitem_id);
+}
+
+auto Modifier::add_to_selection(selection_id_t selection_id, segment_part_t segment_part)
+    -> void {
+    if (!is_segment_part_valid(segment_part, circuit_data_.layout)) {
+        throw std::runtime_error("Segment part is not part of layout");
+    }
+
+    circuit_data_.selection_store.at(selection_id).add_segment(segment_part);
+}
+
+auto Modifier::remove_from_selection(selection_id_t selection_id,
+                                     logicitem_id_t logicitem_id) -> void {
     circuit_data_.selection_store.at(selection_id).remove_logicitem(logicitem_id);
 }
 
-auto Modifier::selection_remove(selection_id_t selection_id, segment_part_t segment_part)
-    -> void {
+auto Modifier::remove_from_selection(selection_id_t selection_id,
+                                     segment_part_t segment_part) -> void {
     circuit_data_.selection_store.at(selection_id).remove_segment(segment_part);
 }
 
@@ -193,20 +234,65 @@ namespace {
 
 }  // namespace
 
-auto change_insertion_mode(Modifier& modifier, selection_id_t selection_id,
-                           InsertionMode new_insertion_mode) -> void {
+namespace {
+
+auto add_wire_segment(Modifier& modifier, line_t segment, InsertionMode insertion_mode,
+                      selection_id_t selection_id = null_selection_id) -> void {
+    const auto segment_part =
+        modifier.add_wire_segment(ordered_line_t {segment}, insertion_mode);
+
+    if (selection_id && segment_part) {
+        modifier.add_to_selection(selection_id, segment_part);
+    }
+}
+}  // namespace
+
+auto add_wire_segments(Modifier& modifier, point_t p0, point_t p1,
+                       LineInsertionType segment_type, InsertionMode insertion_mode,
+                       selection_id_t selection_id) -> void {
+    const auto mode = insertion_mode;
+
+    switch (segment_type) {
+        using enum LineInsertionType;
+
+        case horizontal_first: {
+            const auto pm = point_t {p1.x, p0.y};
+            if (p0.x != pm.x) {
+                add_wire_segment(modifier, line_t {p0, pm}, mode, selection_id);
+            }
+            if (pm.y != p1.y) {
+                add_wire_segment(modifier, line_t {pm, p1}, mode, selection_id);
+            }
+            break;
+        }
+
+        case vertical_first: {
+            const auto pm = point_t {p0.x, p1.y};
+            if (p0.y != pm.y) {
+                add_wire_segment(modifier, line_t {p0, pm}, mode, selection_id);
+            }
+            if (pm.x != p1.x) {
+                add_wire_segment(modifier, line_t {pm, p1}, mode, selection_id);
+            }
+            break;
+        }
+    }
+}
+
+auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selection_id,
+                                     InsertionMode new_insertion_mode) -> void {
     // TODO store selection performance difference ?
 
     while (has_logicitem(modifier, selection_id)) {
         auto logicitem_id = get_first_logicitem(modifier, selection_id);
-        modifier.selection_remove(selection_id, logicitem_id);
+        modifier.remove_from_selection(selection_id, logicitem_id);
 
         modifier.change_logic_item_insertion_mode(logicitem_id, new_insertion_mode);
     }
 
     while (has_segment(modifier, selection_id)) {
         auto segment_part = get_first_segment(modifier, selection_id);
-        modifier.selection_remove(selection_id, segment_part);
+        modifier.remove_from_selection(selection_id, segment_part);
 
         modifier.change_wire_insertion_mode(segment_part, new_insertion_mode);
     }
@@ -244,18 +330,18 @@ auto move_temporary_unchecked(Modifier& modifier, const Selection& selection, in
     }
 }
 
-auto move_or_delete_temporary_elements(Modifier& modifier, selection_id_t selection_id,
-                                       int delta_x, int delta_y) -> void {
+auto move_or_delete_temporary_consuming(Modifier& modifier, selection_id_t selection_id,
+                                        int delta_x, int delta_y) -> void {
     while (has_logicitem(modifier, selection_id)) {
         auto logicitem_id = get_first_logicitem(modifier, selection_id);
-        modifier.selection_remove(selection_id, logicitem_id);
+        modifier.remove_from_selection(selection_id, logicitem_id);
 
         modifier.move_or_delete_temporary_logic_item(logicitem_id, delta_x, delta_y);
     }
 
     while (has_segment(modifier, selection_id)) {
         auto segment_part = get_first_segment(modifier, selection_id);
-        modifier.selection_remove(selection_id, segment_part);
+        modifier.remove_from_selection(selection_id, segment_part);
 
         modifier.move_or_delete_temporary_wire(segment_part, delta_x, delta_y);
     }
@@ -264,7 +350,7 @@ auto move_or_delete_temporary_elements(Modifier& modifier, selection_id_t select
 auto delete_all(Modifier& modifier, selection_id_t selection_id) -> void {
     while (has_logicitem(modifier, selection_id)) {
         auto logicitem_id = get_first_logicitem(modifier, selection_id);
-        modifier.selection_remove(selection_id, logicitem_id);
+        modifier.remove_from_selection(selection_id, logicitem_id);
 
         modifier.change_logic_item_insertion_mode(logicitem_id, InsertionMode::temporary);
         modifier.delete_temporary_logic_item(logicitem_id);
@@ -272,7 +358,7 @@ auto delete_all(Modifier& modifier, selection_id_t selection_id) -> void {
 
     while (has_segment(modifier, selection_id)) {
         auto segment_part = get_first_segment(modifier, selection_id);
-        modifier.selection_remove(selection_id, segment_part);
+        modifier.remove_from_selection(selection_id, segment_part);
 
         modifier.change_wire_insertion_mode(segment_part, InsertionMode::temporary);
         modifier.delete_temporary_wire_segment(segment_part);

@@ -74,7 +74,7 @@ auto EditableCircuit::add_logic_item(const LogicItemDefinition& definition,
                                                                position, insertion_mode);
 
     if (logicitem_id && selection_id) {
-        selection(selection_id).add(logicitem_id);
+        selection(selection_id).add_logicitem(logicitem_id);
     }
 }
 

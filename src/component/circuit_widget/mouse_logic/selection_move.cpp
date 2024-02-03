@@ -33,7 +33,7 @@ auto add_to_selection(Selection& selection, const Layout& layout,
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
-            selection.add(item.logicitem());
+            selection.add_logicitem(item.logicitem());
         } else {
             if (whole_tree) {
                 add_segment_tree(selection, item.segment().wire_id, layout);

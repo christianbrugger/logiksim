@@ -2,8 +2,12 @@
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_MODIFIER_H
 
 #include "circuit_data.h"
+#include "component/editable_circuit/selection_guard.h"
 #include "format/struct.h"
 #include "vocabulary/insertion_mode.h"
+#include "vocabulary/line_insertion_type.h"
+
+#include <gsl/gsl>
 
 namespace logicsim {
 
@@ -108,12 +112,21 @@ class Modifier {
     // Selections
     //
 
-    [[nodiscard]] auto selection_create() -> selection_id_t;
-    auto selection_destroy(selection_id_t selection_id) -> void;
+    [[nodiscard]] auto create_selection() -> selection_id_t;
+    [[nodiscard]] auto create_selection(Selection selection) -> selection_id_t;
+    [[nodiscard]] auto create_selection(selection_id_t copy_id) -> selection_id_t;
+    auto destroy_selection(selection_id_t selection_id) -> void;
 
-    auto selection_remove(selection_id_t selection_id, logicitem_id_t logicitem_id)
+    [[nodiscard]] auto selection(selection_id_t selection_id) const -> const Selection&;
+
+    auto add_to_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
         -> void;
-    auto selection_remove(selection_id_t selection_id, segment_part_t segment_part)
+    auto add_to_selection(selection_id_t selection_id, segment_part_t segment_part)
+        -> void;
+
+    auto remove_from_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
+        -> void;
+    auto remove_from_selection(selection_id_t selection_id, segment_part_t segment_part)
         -> void;
 
     //
@@ -123,6 +136,12 @@ class Modifier {
    private:
     CircuitData circuit_data_ {};
 };
+
+//
+// Selection Guard
+//
+
+using ModifierSelectionGuard = SelectionGuard<Modifier>;
 
 //
 // Free Methods
@@ -140,9 +159,12 @@ class Modifier {
 // Selection Based
 //
 
-// TODO consumes selection
-auto change_insertion_mode(Modifier& modifier, selection_id_t selection_id,
-                           InsertionMode new_insertion_mode) -> void;
+auto add_wire_segments(Modifier& modifier, point_t p0, point_t p1,
+                       LineInsertionType segment_type, InsertionMode insertion_mode,
+                       selection_id_t selection_id = null_selection_id) -> void;
+
+auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selection_id,
+                                     InsertionMode new_insertion_mode) -> void;
 
 auto new_positions_representable(const Layout& Layout, const Selection& selection,
                                  int delta_x, int delta_y) -> bool;
@@ -151,11 +173,9 @@ auto new_positions_representable(const Layout& Layout, const Selection& selectio
 auto move_temporary_unchecked(Modifier& modifier, const Selection& selection, int delta_x,
                               int delta_y) -> void;
 
-// TODO consumes selection
-auto move_or_delete_temporary_elements(Modifier& modifier, selection_id_t selection_id,
-                                       int delta_x, int delta_y) -> void;
+auto move_or_delete_temporary_consuming(Modifier& modifier, selection_id_t selection_id,
+                                        int delta_x, int delta_y) -> void;
 
-// TODO consumes selection
 auto delete_all(Modifier& modifier, selection_id_t selection_id) -> void;
 
 }  // namespace editable_circuit

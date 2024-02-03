@@ -70,6 +70,7 @@ set(LS_CORE_SOURCES
     src/component/editable_circuit/layout_index.cpp
     src/component/editable_circuit/message_sender.cpp
     src/component/editable_circuit/modifier.cpp
+    src/component/editable_circuit/selection_guard.cpp
     src/component/editable_circuit/selection_store.cpp
     src/component/editable_circuit/tracked_selection.cpp
     src/component/editable_circuit/visible_selection.cpp

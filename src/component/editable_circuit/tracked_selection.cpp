@@ -9,7 +9,7 @@ namespace editable_circuit {
 
 TrackedSelection::TrackedSelection(Selection&& selection__, const Layout& layout)
     : selection_ {std::move(selection__)} {
-    Expects(is_selection_valid(selection_, layout));
+    Expects(is_valid_selection(selection_, layout));
 }
 
 auto TrackedSelection::format() const -> std::string {

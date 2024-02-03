@@ -135,7 +135,7 @@ auto add_element_to_selection(logicitem_id_t logicitem_id, SelectionFunction fun
         using enum SelectionFunction;
 
         case add: {
-            selection.add(logicitem_id);
+            selection.add_logicitem(logicitem_id);
             return;
         }
         case substract: {
