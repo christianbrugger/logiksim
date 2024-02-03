@@ -54,6 +54,15 @@ inline auto get_display_state(const Modifier &modifier, logicitem_id_t logicitem
     return modifier.circuit_data().layout.logic_items().display_state(logicitem_id);
 }
 
+inline auto assert_wire_count(const Modifier &modifier, std::size_t count) -> void {
+    ASSERT_EQ(modifier.circuit_data().layout.wires().size(), count);
+}
+
+inline auto get_segment_tree(const Modifier &modifier, wire_id_t wire_id)
+    -> const SegmentTree & {
+    return modifier.circuit_data().layout.wires().segment_tree(wire_id);
+}
+
 }  // namespace editable_circuit
 
 }  // namespace logicsim
