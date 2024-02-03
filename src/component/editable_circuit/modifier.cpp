@@ -19,14 +19,14 @@ constexpr static inline auto DEBUG_PRINT_MODIFIER_METHODS = false;
 // Modifier
 //
 
-Modifier::Modifier(ModifierLogging logging) : Modifier(Layout {}, logging) {}
+Modifier::Modifier(ModifierConfig config) : Modifier(Layout {}, config) {}
 
 Modifier::Modifier(Layout&& layout__)
-    : Modifier {std::move(layout__), ModifierLogging::disabled} {}
+    : Modifier {std::move(layout__), ModifierConfig {}} {}
 
-Modifier::Modifier(Layout&& layout__, ModifierLogging logging)
+Modifier::Modifier(Layout&& layout__, ModifierConfig config)
     : circuit_data_ {std::move(layout__)} {
-    circuit_data_.log_messages = logging == ModifierLogging::enabled;
+    circuit_data_.store_messages = config.store_messages;
 }
 
 auto Modifier::format() const -> std::string {

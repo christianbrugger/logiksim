@@ -18,9 +18,8 @@ class Layout;
 
 namespace editable_circuit {
 
-enum class ModifierLogging {
-    disabled,
-    enabled,
+struct ModifierConfig {
+    bool store_messages {false};
 };
 
 /**
@@ -52,9 +51,9 @@ enum class ModifierLogging {
 class Modifier {
    public:
     [[nodiscard]] explicit Modifier() = default;
-    [[nodiscard]] explicit Modifier(ModifierLogging logging);
+    [[nodiscard]] explicit Modifier(ModifierConfig config);
     [[nodiscard]] explicit Modifier(Layout&& layout);
-    [[nodiscard]] explicit Modifier(Layout&& layout, ModifierLogging logging);
+    [[nodiscard]] explicit Modifier(Layout&& layout, ModifierConfig config);
 
     [[nodiscard]] auto format() const -> std::string;
 

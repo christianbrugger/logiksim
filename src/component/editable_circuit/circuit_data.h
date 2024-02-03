@@ -34,7 +34,7 @@ struct CircuitData {
     VisibleSelection visible_selection;
 
     message_vector_t messages;
-    bool log_messages;
+    bool store_messages;
 };
 
 }  // namespace editable_circuit

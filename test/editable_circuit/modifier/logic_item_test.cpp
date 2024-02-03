@@ -23,7 +23,7 @@ TEST(EditableCircuitModifierLogicItem, DefaultConstruction) {
     auto modifier = Modifier {};
 
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
-    ASSERT_EQ(modifier.circuit_data().log_messages, false);
+    ASSERT_EQ(modifier.circuit_data().store_messages, false);
     ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
 }
 
@@ -42,10 +42,10 @@ TEST(EditableCircuitModifierLogicItem, ConstructionWithLayout) {
 //
 
 TEST(EditableCircuitModifierLogicItem, VerifyLogging) {
-    auto modifier = Modifier {ModifierLogging::enabled};
+    auto modifier = Modifier {ModifierConfig {.store_messages = true}};
 
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
-    ASSERT_EQ(modifier.circuit_data().log_messages, true);
+    ASSERT_EQ(modifier.circuit_data().store_messages, true);
     ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
 
     modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
@@ -54,10 +54,10 @@ TEST(EditableCircuitModifierLogicItem, VerifyLogging) {
 }
 
 TEST(EditableCircuitModifierLogicItem, VerifyNoLogging) {
-    auto modifier = Modifier {ModifierLogging::disabled};
+    auto modifier = Modifier {};
 
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
-    ASSERT_EQ(modifier.circuit_data().log_messages, false);
+    ASSERT_EQ(modifier.circuit_data().store_messages, false);
     ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
 
     modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
@@ -78,7 +78,7 @@ TEST(EditableCircuitModifierLogicItem, DeleteTemporaryElement) {
 
     ASSERT_EQ(logicitem_id, logicitem_id_t {0});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     auto preserved_id = logicitem_id_t {0};
     modifier.delete_temporary_logicitem(logicitem_id, &preserved_id);
 
@@ -109,7 +109,7 @@ TEST(EditableCircuitModifierLogicItem, DeletePreserving1) {
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
     ASSERT_EQ(logicitem_id_1, logicitem_id_t {1});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.delete_temporary_logicitem(logicitem_id_0, &logicitem_id_1);
 
     // logicitem_ids
@@ -149,7 +149,7 @@ TEST(EditableCircuitModifierLogicItem, DeletePreserving2) {
     ASSERT_EQ(logicitem_id_1, logicitem_id_t {1});
     ASSERT_EQ(logicitem_id_2, logicitem_id_t {2});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.delete_temporary_logicitem(logicitem_id_1, &logicitem_id_0);
 
     //  logicitem_ids
@@ -228,7 +228,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemSuccess) {
         add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.move_or_delete_temporary_logicitem(logicitem_id_0, 9, -11);
 
     //  logicitem_ids
@@ -252,7 +252,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemUnchecked) {
         add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.move_temporary_logicitem_unchecked(logicitem_id_0, 9, -11);
 
     //  logicitem_ids
@@ -276,7 +276,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemDeleted) {
         add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     constexpr static auto overflow = int {grid_t::max()} + 100;
     modifier.move_or_delete_temporary_logicitem(logicitem_id_0, overflow, 0);
 
@@ -305,7 +305,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempValid) {
         add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.change_logicitem_insertion_mode(logicitem_id_0, InsertionMode::collisions);
 
     //  logicitem_ids
@@ -336,7 +336,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToInsert) {
         add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.change_logicitem_insertion_mode(logicitem_id_0,
                                              InsertionMode::insert_or_discard);
 
@@ -371,7 +371,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempColliding) {
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
     ASSERT_EQ(logicitem_id_1, logicitem_id_t {1});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.change_logicitem_insertion_mode(logicitem_id_1, InsertionMode::collisions);
 
     //  logicitem_ids
@@ -403,7 +403,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToDiscard) {
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
     ASSERT_EQ(logicitem_id_1, logicitem_id_t {1});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.change_logicitem_insertion_mode(logicitem_id_1,
                                              InsertionMode::insert_or_discard);
 
@@ -436,7 +436,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToValid) {
     assert_logicitem_count(layout, 1);
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.change_logicitem_insertion_mode(logicitem_id_0, InsertionMode::collisions);
 
     //  logicitem_ids
@@ -462,7 +462,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporary) {
     assert_logicitem_count(layout, 1);
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.change_logicitem_insertion_mode(logicitem_id_0, InsertionMode::temporary);
 
     //  logicitem_ids
@@ -495,7 +495,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporaryPreserving
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
     const auto data0 = to_layout_calculation_data(layout, logicitem_id_t {0});
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.change_logicitem_insertion_mode(logicitem_id_0, InsertionMode::temporary);
 
     //  logicitem_ids
@@ -526,7 +526,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemAddElement) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
 
     const auto definition = LogicItemDefinition {
         .logicitem_type = LogicItemType::xor_element,
@@ -575,7 +575,7 @@ auto add_xor_element(Modifier &modifier, point_t position, InsertionMode inserti
 TEST(EditableCircuitModifierLogicItem, LogicItemCombineAddMoveDelete) {
     using enum InsertionMode;
     auto layout = Layout {};
-    auto modifier = Modifier {Layout {layout}, ModifierLogging::enabled};
+    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
 
     auto id_0 = add_xor_element(modifier, point_t {1, 1}, temporary);
     auto id_1 = add_xor_element(modifier, point_t {10, 10}, insert_or_discard);

@@ -20,7 +20,7 @@ CircuitData::CircuitData(Layout&& layout__)
       selection_store {},
       visible_selection {},
       messages {},
-      log_messages {false} {}
+      store_messages {false} {}
 
 auto CircuitData::format() const -> std::string {
     return fmt::format(
@@ -30,9 +30,9 @@ auto CircuitData::format() const -> std::string {
         "selection_store = {}\n"
         "visible_selection = {}\n"
         "messages = {}\n"
-        "log_messages = {}\n"
+        "store_messages = {}\n"
         "}}\n",
-        layout, index, selection_store, visible_selection, messages, log_messages);
+        layout, index, selection_store, visible_selection, messages, store_messages);
 }
 
 auto CircuitData::allocated_size() const -> std::size_t {
@@ -51,7 +51,7 @@ auto CircuitData::submit(const editable_circuit::InfoMessage& message) -> void {
     selection_store.submit(message);
     visible_selection.submit(message);
 
-    if (log_messages) {
+    if (store_messages) {
         messages.push_back(message);
     }
 }
