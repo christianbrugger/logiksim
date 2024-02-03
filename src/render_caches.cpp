@@ -83,7 +83,7 @@ auto render_editable_circuit_connection_cache(Context& ctx,
                                               const EditableCircuit& editable_circuit)
     -> void {
     const auto scene_rect = get_scene_rect(ctx.settings.view_config);
-    const auto& caches = editable_circuit.caches();
+    const auto& index = editable_circuit.modifier().circuit_data().index;
 
     const auto logicitem_color = defaults::color_dark_blue;
     const auto wire_color = defaults::color_green;
@@ -93,13 +93,13 @@ auto render_editable_circuit_connection_cache(Context& ctx,
 
     // input
     for (const auto [position, orientation] :
-         caches.logicitem_input_index().positions_and_orientations()) {
+         index.logicitem_input_index().positions_and_orientations()) {
         if (is_colliding(position, scene_rect)) {
             render_input_marker(ctx, position, logicitem_color, orientation, input_size);
         }
     }
     for (const auto [position, orientation] :
-         caches.wire_input_index().positions_and_orientations()) {
+         index.wire_input_index().positions_and_orientations()) {
         if (is_colliding(position, scene_rect)) {
             render_input_marker(ctx, position, wire_color, orientation, input_size);
         }
@@ -107,14 +107,14 @@ auto render_editable_circuit_connection_cache(Context& ctx,
 
     // output
     for (const auto [position, orientation] :
-         caches.logicitem_output_index().positions_and_orientations()) {
+         index.logicitem_output_index().positions_and_orientations()) {
         if (is_colliding(position, scene_rect)) {
             render_output_marker(ctx, position, logicitem_color, orientation,
                                  output_size);
         }
     }
     for (const auto [position, orientation] :
-         caches.wire_output_index().positions_and_orientations()) {
+         index.wire_output_index().positions_and_orientations()) {
         if (is_colliding(position, scene_rect)) {
             render_output_marker(ctx, position, wire_color, orientation, output_size);
         }
@@ -128,8 +128,9 @@ auto render_editable_circuit_collision_cache(Context& ctx,
     constexpr static auto size = grid_fine_t {0.25};
 
     const auto scene_rect = get_scene_rect(ctx.settings.view_config);
+    const auto& index = editable_circuit.modifier().circuit_data().index;
 
-    for (auto [point, state] : editable_circuit.caches().collision_index().states()) {
+    for (auto [point, state] : index.collision_index().states()) {
         if (!is_colliding(point, scene_rect)) {
             continue;
         }
@@ -185,7 +186,9 @@ auto render_editable_circuit_selection_cache(Context& ctx,
                                              const EditableCircuit& editable_circuit)
     -> void {
     const auto scene_rect = get_scene_rect_fine(ctx.settings.view_config);
-    for (const rect_fine_t& rect : editable_circuit.caches().selection_index().rects()) {
+    const auto& index = editable_circuit.modifier().circuit_data().index;
+
+    for (const rect_fine_t& rect : index.selection_index().rects()) {
         // TODO introduce is_visible
         if (!is_colliding(rect, scene_rect)) {
             continue;

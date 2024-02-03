@@ -26,7 +26,7 @@ constexpr inline auto is_debug_build = true;
 constexpr inline auto max_grid_value = is_debug_build ? max_grid_debug : max_grid_release;
 
 auto load_circuit_example_1(EditableCircuit& editable_circuit) -> void {
-    editable_circuit.add_example();
+    add_example(editable_circuit);
 }
 
 auto load_circuit_example_2(EditableCircuit& editable_circuit) -> void {
@@ -40,18 +40,18 @@ auto load_circuit_example_2(EditableCircuit& editable_circuit) -> void {
 
     for (auto x : range(5, max_grid_value, 5)) {
         for (auto y : range(5, max_grid_value, 5)) {
-            editable_circuit.add_logic_item(definition, point_t {grid_t {x}, grid_t {y}},
-                                            InsertionMode::insert_or_discard);
+            editable_circuit.add_logicitem(definition, point_t {grid_t {x}, grid_t {y}},
+                                           InsertionMode::insert_or_discard);
 
-            editable_circuit.add_line_segments(point_t {grid_t {x + 2}, grid_t {y + 1}},
-                                               point_t {grid_t {x + 4}, grid_t {y - 1}},
-                                               LineInsertionType::horizontal_first,
-                                               InsertionMode::insert_or_discard);
+            add_wire_segments(editable_circuit, point_t {grid_t {x + 2}, grid_t {y + 1}},
+                              point_t {grid_t {x + 4}, grid_t {y - 1}},
+                              LineInsertionType::horizontal_first,
+                              InsertionMode::insert_or_discard);
 
-            editable_circuit.add_line_segments(point_t {grid_t {x + 3}, grid_t {y + 1}},
-                                               point_t {grid_t {x + 5}, grid_t {y + 2}},
-                                               LineInsertionType::vertical_first,
-                                               InsertionMode::insert_or_discard);
+            add_wire_segments(editable_circuit, point_t {grid_t {x + 3}, grid_t {y + 1}},
+                              point_t {grid_t {x + 5}, grid_t {y + 2}},
+                              LineInsertionType::vertical_first,
+                              InsertionMode::insert_or_discard);
         }
     }
 }
@@ -67,8 +67,8 @@ auto load_circuit_example_3(EditableCircuit& editable_circuit) -> void {
 
     for (auto x : range(5, max_grid_value, 5)) {
         for (auto y : range(5, max_grid_value, 5)) {
-            editable_circuit.add_logic_item(definition, point_t {grid_t {x}, grid_t {y}},
-                                            InsertionMode::insert_or_discard);
+            editable_circuit.add_logicitem(definition, point_t {grid_t {x}, grid_t {y}},
+                                           InsertionMode::insert_or_discard);
         }
     }
 }
@@ -76,15 +76,15 @@ auto load_circuit_example_3(EditableCircuit& editable_circuit) -> void {
 auto load_circuit_example_4(EditableCircuit& editable_circuit) -> void {
     for (auto x : range(5, max_grid_value, 5)) {
         for (auto y : range(5, max_grid_value, 5)) {
-            editable_circuit.add_line_segments(point_t {grid_t {x + 2}, grid_t {y + 1}},
-                                               point_t {grid_t {x + 4}, grid_t {y - 1}},
-                                               LineInsertionType::horizontal_first,
-                                               InsertionMode::insert_or_discard);
+            add_wire_segments(editable_circuit, point_t {grid_t {x + 2}, grid_t {y + 1}},
+                              point_t {grid_t {x + 4}, grid_t {y - 1}},
+                              LineInsertionType::horizontal_first,
+                              InsertionMode::insert_or_discard);
 
-            editable_circuit.add_line_segments(point_t {grid_t {x + 3}, grid_t {y + 1}},
-                                               point_t {grid_t {x + 5}, grid_t {y + 2}},
-                                               LineInsertionType::vertical_first,
-                                               InsertionMode::insert_or_discard);
+            add_wire_segments(editable_circuit, point_t {grid_t {x + 3}, grid_t {y + 1}},
+                              point_t {grid_t {x + 5}, grid_t {y + 2}},
+                              LineInsertionType::vertical_first,
+                              InsertionMode::insert_or_discard);
         }
     }
 }

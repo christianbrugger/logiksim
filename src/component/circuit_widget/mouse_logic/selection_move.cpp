@@ -65,8 +65,7 @@ SelectionMoveLogic::SelectionMoveLogic(const EditableCircuit& editable_circuit, 
 auto SelectionMoveLogic::mouse_press(EditableCircuit& editable_circuit,
                                      point_fine_t point, bool double_click) -> void {
     if (state_ == State::waiting_for_first_click) {
-        const auto items = editable_circuit.caches().selection_index().query_selection(
-            rect_fine_t {point, point});
+        const auto items = editable_circuit.query_selection(rect_fine_t {point, point});
 
         if (items.empty()) {
             editable_circuit.clear_visible_selection();
@@ -165,14 +164,14 @@ auto SelectionMoveLogic::move_selection(EditableCircuit& editable_circuit,
     const auto t [[maybe_unused]] =
         Timer {insertion_mode_ != InsertionMode::temporary ? "uninsert selection" : ""};
 
-    if (!editable_circuit.new_positions_representable(
-            editable_circuit.visible_selection(), delta_x, delta_y)) {
+    if (!new_positions_representable(
+            editable_circuit, editable_circuit.visible_selection(), delta_x, delta_y)) {
         return;
     }
 
     convert_selection_to(editable_circuit, InsertionMode::temporary);
-    editable_circuit.move_unchecked(editable_circuit.visible_selection(), delta_x,
-                                    delta_y);
+    editable_circuit.move_temporary_unchecked(editable_circuit.visible_selection(),
+                                              delta_x, delta_y);
     if (cross_points_) {
         cross_points_ = move_or_delete_points(cross_points_.value(), delta_x, delta_y);
     }
@@ -192,11 +191,12 @@ auto SelectionMoveLogic::convert_selection_to(EditableCircuit& editable_circuit,
         return;
     }
     if (insertion_mode_ == InsertionMode::insert_or_discard && !cross_points_) {
-        cross_points_.emplace(editable_circuit.capture_inserted_cross_points(
-            editable_circuit.visible_selection()));
+        cross_points_.emplace(get_inserted_cross_points(
+            editable_circuit, editable_circuit.visible_selection()));
     }
     if (insertion_mode_ == InsertionMode::temporary) {
-        editable_circuit.split_before_insert(editable_circuit.visible_selection());
+        editable_circuit.split_temporary_before_insert(
+            editable_circuit.visible_selection());
     }
 
     insertion_mode_ = new_mode;
@@ -221,8 +221,9 @@ auto SelectionMoveLogic::restore_original_positions(EditableCircuit& editable_ci
     }
 
     convert_selection_to(editable_circuit, InsertionMode::temporary);
-    editable_circuit.move_unchecked(editable_circuit.visible_selection(),
-                                    -total_offsets_.first, -total_offsets_.second);
+    editable_circuit.move_temporary_unchecked(editable_circuit.visible_selection(),
+                                              -total_offsets_.first,
+                                              -total_offsets_.second);
 }
 
 }  // namespace circuit_widget

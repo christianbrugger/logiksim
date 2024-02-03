@@ -1,6 +1,7 @@
 #include "./test_helpers.h"
 #include "algorithm/uniform_int_distribution.h"
 #include "component/editable_circuit/handler.h"
+#include "editable_circuit.h"
 #include "exception.h"
 #include "geometry/line.h"
 #include "line_tree.h"
@@ -26,12 +27,9 @@ namespace logicsim {
 
 namespace {
 auto test_add_many_wires(Rng& rng, bool random_modes) {
-    auto layout = Layout {};
-    auto setup = HandlerSetup {layout};
+    auto editable_circuit = EditableCircuit {};
 
-    editable_circuit::add_many_wires(rng, setup.state, random_modes);
-
-    setup.validate();
+    editable_circuit::add_many_wires(rng, editable_circuit, random_modes);
 }
 }  // namespace
 
@@ -240,10 +238,9 @@ TEST(HandlerWireFuzz, AddWireStatesCorrect) {
 
 namespace {
 auto test_remove_many_wires(Rng& rng, bool random_modes) {
-    auto layout = Layout {};
-    auto setup = HandlerSetup {layout};
+    auto editable_circuit = EditableCircuit {};
 
-    editable_circuit::add_many_wires(rng, setup.state, random_modes);
+    editable_circuit::add_many_wires(rng, editable_circuit, random_modes);
 
     while (true) {
         const auto segment = get_random_segment(rng, layout);

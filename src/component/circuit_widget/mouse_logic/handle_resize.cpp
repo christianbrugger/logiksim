@@ -69,12 +69,11 @@ auto resize_logic_item(EditableCircuit& editable_circuit, const PlacedElement or
     // add resized
     {
         const auto logic_item = get_resized_element(original, size_handle, new_delta);
-        const auto sel_handle = ScopedSelection {editable_circuit};
-        editable_circuit.add_logic_item(logic_item.definition, logic_item.position,
-                                        InsertionMode::collisions,
-                                        sel_handle.selection_id());
+        const auto guard = SelectionGuard {editable_circuit};
+        editable_circuit.add_logicitem(logic_item.definition, logic_item.position,
+                                       InsertionMode::collisions, guard.selection_id());
         editable_circuit.set_visible_selection(
-            editable_circuit.selection(sel_handle.selection_id()));
+            editable_circuit.selection(guard.selection_id()));
     }
 
     // check collisions

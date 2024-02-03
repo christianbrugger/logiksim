@@ -6,7 +6,6 @@
 #include "component/circuit_widget/simulation_runner.h"
 #include "component/circuit_widget/zoom.h"
 #include "copy_paste_clipboard.h"
-#include "editable_circuit2.h"  // TODO remove
 #include "geometry/scene.h"
 #include "load_save_file.h"
 #include "logging.h"
@@ -254,21 +253,6 @@ auto CircuitWidget::serialized_circuit() -> std::string {
 
 auto CircuitWidget::load_circuit_example(int number) -> void {
     Expects(class_invariant_holds());
-
-    // TODO remove
-    {
-        auto ec = EditableCircuit2 {};
-
-        const auto selection_id = ec.create_selection();
-
-        ec.add_wire_segments(point_t {0, 0}, point_t {1, 1},
-                             LineInsertionType::horizontal_first,
-                             InsertionMode::collisions, selection_id);
-
-        ec.change_insertion_mode(selection_id, InsertionMode::insert_or_discard);
-
-        print(ec);
-    }
 
     const auto default_view_point = ViewConfig {}.view_point();
     const auto default_simulation_config = SimulationConfig {};

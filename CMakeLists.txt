@@ -72,7 +72,6 @@ set(LS_CORE_SOURCES
     src/component/editable_circuit/modifier.cpp
     src/component/editable_circuit/selection_guard.cpp
     src/component/editable_circuit/selection_store.cpp
-    src/component/editable_circuit/tracked_selection.cpp
     src/component/editable_circuit/visible_selection.cpp
     src/component/interactive_simulation/interaction_cache.cpp
     src/component/layout/logicitem_store.cpp
@@ -279,7 +278,6 @@ set(LS_CORE_SOURCES
     src/circuit_widget_base.cpp
     src/copy_paste_clipboard.cpp
     src/default_element_definition.cpp
-    src/editable_circuit2.cpp
     src/editable_circuit.cpp
     src/event_counter.cpp
     src/event_counter_multi.cpp

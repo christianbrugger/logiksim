@@ -321,16 +321,17 @@ auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
     // logic items
     for (const auto& item : data_->logic_items) {
         if (const auto data = to_placed_element(item, delta)) {
-            editable_circuit.add_logic_item(data->definition, data->position,
-                                            parameters.insertion_mode,
-                                            parameters.selection_id);
+            editable_circuit.add_logicitem(data->definition, data->position,
+                                           parameters.insertion_mode,
+                                           parameters.selection_id);
         }
     }
 
     // wire segments
     for (const auto& entry : data_->wire_segments) {
         if (const auto line = to_line(entry, delta)) {
-            editable_circuit.add_line_segment(line.value(), parameters.insertion_mode,
+            editable_circuit.add_wire_segment(ordered_line_t {*line},
+                                              parameters.insertion_mode,
                                               parameters.selection_id);
         }
     }

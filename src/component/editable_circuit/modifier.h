@@ -52,25 +52,26 @@ class Modifier {
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto circuit_data() const -> const CircuitData&;
+    [[nodiscard]] auto extract_layout() -> Layout;
 
     //
     // Logic Items
     //
 
-    auto delete_temporary_logic_item(logicitem_id_t& logicitem_id,
-                                     logicitem_id_t* preserve_element = nullptr) -> void;
+    auto delete_temporary_logicitem(logicitem_id_t& logicitem_id,
+                                    logicitem_id_t* preserve_element = nullptr) -> void;
 
-    auto move_temporary_logic_item_unchecked(const logicitem_id_t logicitem_id, int dx,
-                                             int dy) -> void;
+    auto move_temporary_logicitem_unchecked(const logicitem_id_t logicitem_id, int dx,
+                                            int dy) -> void;
 
-    auto move_or_delete_temporary_logic_item(logicitem_id_t& logicitem_id, int dx, int dy)
+    auto move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, int dx, int dy)
         -> void;
 
-    auto change_logic_item_insertion_mode(logicitem_id_t& logicitem_id,
-                                          InsertionMode new_insertion_mode) -> void;
+    auto change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
+                                         InsertionMode new_insertion_mode) -> void;
 
-    auto add_logic_item(const LogicItemDefinition& definition, point_t position,
-                        InsertionMode insertion_mode) -> logicitem_id_t;
+    auto add_logicitem(const LogicItemDefinition& definition, point_t position,
+                       InsertionMode insertion_mode) -> logicitem_id_t;
 
     auto toggle_inverter(point_t point) -> void;
 

@@ -166,7 +166,7 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
             return HandleSettingLogic {*setting_handle};
         }
 
-        if (editable_circuit.caches().selection_index().has_element(grid_fine_position)) {
+        if (editable_circuit.has_element(grid_fine_position)) {
             if (modifiers == Qt::NoModifier) {
                 return SelectionMoveLogic {editable_circuit};
             }

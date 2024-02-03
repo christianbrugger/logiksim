@@ -22,8 +22,8 @@ auto remove_and_insert(EditableCircuit& editable_circuit, selection_id_t selecti
     }
 
     if (position) {
-        editable_circuit.add_logic_item(element_definition, position.value(), mode,
-                                        selection_id);
+        editable_circuit.add_logicitem(element_definition, position.value(), mode,
+                                       selection_id);
     }
 
     return selection_id;

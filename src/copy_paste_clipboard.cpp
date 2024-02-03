@@ -42,14 +42,14 @@ namespace {
 auto insert_clipboard_data_as_temporary(EditableCircuit& editable_circuit,
                                         serialize::LoadLayoutResult&& load_result,
                                         point_t paste_position) {
-    const auto sel_handle = ScopedSelection(editable_circuit);
+    const auto guard = SelectionGuard(editable_circuit);
     load_result.add(editable_circuit, serialize::AddParameters {
                                           .insertion_mode = InsertionMode::temporary,
-                                          .selection_id = sel_handle.selection_id(),
+                                          .selection_id = guard.selection_id(),
                                           .load_position = paste_position,
                                       });
     editable_circuit.set_visible_selection(
-        editable_circuit.selection(sel_handle.selection_id()));
+        editable_circuit.selection(guard.selection_id()));
 }
 
 }  // namespace
@@ -64,7 +64,7 @@ auto insert_clipboard_data(EditableCircuit& editable_circuit,
     // insert as collisions
     auto cross_points__ = editable_circuit.regularize_temporary_selection(
         editable_circuit.visible_selection());
-    editable_circuit.split_before_insert(editable_circuit.visible_selection());
+    editable_circuit.split_temporary_before_insert(editable_circuit.visible_selection());
     editable_circuit.change_insertion_mode(editable_circuit.visible_selection(),
                                            InsertionMode::collisions);
 

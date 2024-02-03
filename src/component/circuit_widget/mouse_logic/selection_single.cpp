@@ -74,8 +74,7 @@ auto SelectionSingleLogic::mouse_press(EditableCircuit& editable_circuit,
                                        point_fine_t point, bool double_click) -> void {
     const auto& layout = editable_circuit.layout();
 
-    const auto items = editable_circuit.caches().selection_index().query_selection(
-        rect_fine_t {point, point});
+    const auto items = editable_circuit.query_selection(rect_fine_t {point, point});
 
     if (items.empty()) {
         return;

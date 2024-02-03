@@ -98,7 +98,7 @@ auto add_random_line(Rng &rng, EditableCircuit &editable_circuit, bool random_mo
         random_modes ? get_random_insertion_mode(rng) : InsertionMode::insert_or_discard;
 
     const auto selection_id = editable_circuit.create_selection();
-    editable_circuit.add_line_segments(p0, p1, type, mode, selection_id);
+    add_wire_segments(editable_circuit, p0, p1, type, mode, selection_id);
 
     auto lines = get_sorted_lines(editable_circuit.selection(selection_id),
                                   editable_circuit.layout());
@@ -162,8 +162,6 @@ auto test_add_many_wires(Rng &rng, bool random_modes) {
     auto editable_circuit = EditableCircuit {Layout {}};
 
     add_many_wires(rng, editable_circuit, random_modes);
-
-    editable_circuit.validate();
 }
 
 }  // namespace
@@ -192,13 +190,6 @@ TEST(EditableCircuitRandom, AddRandomWiresRandomMode) {
 
 namespace {
 
-auto copy_selection(EditableCircuit &editable_circuit, const Selection &selection)
-    -> selection_id_t {
-    const auto selection_id = editable_circuit.create_selection();
-    editable_circuit.selection(selection_id) = selection;
-    return selection_id;
-}
-
 auto state_matches(const EditableCircuit &editable_circuit, selection_id_t selection_id,
                    InsertionMode insertion_mode) -> bool {
     return found_states_matches_insertion_mode(
@@ -222,7 +213,7 @@ class TrackedSelection {
     TrackedSelection(EditableCircuit &editable_circuit, const Selection &selection,
                      InsertionMode starting_mode,
                      std::optional<std::vector<point_t>> cross_points = {})
-        : TrackedSelection(editable_circuit, copy_selection(editable_circuit, selection),
+        : TrackedSelection(editable_circuit, editable_circuit.create_selection(selection),
                            starting_mode, cross_points) {}
 
     auto convert_to(InsertionMode new_mode) -> void {
@@ -232,11 +223,11 @@ class TrackedSelection {
             return;
         }
         if (insertion_mode_ == InsertionMode::insert_or_discard && !cross_points_) {
-            cross_points_.emplace(editable_circuit_.capture_inserted_cross_points(
-                editable_circuit_.selection(selection_id_)));
+            cross_points_.emplace(get_inserted_cross_points(
+                editable_circuit_, editable_circuit_.selection(selection_id_)));
         }
         if (insertion_mode_ == InsertionMode::temporary) {
-            editable_circuit_.split_before_insert(
+            editable_circuit_.split_temporary_before_insert(
                 editable_circuit_.selection(selection_id_));
         }
 
@@ -256,12 +247,12 @@ class TrackedSelection {
     }
 
     auto move_or_delete(int delta_x, int delta_y) -> void {
-        editable_circuit_.move_or_delete(selection_id_, delta_x, delta_y);
+        editable_circuit_.move_or_delete_temporary(selection_id_, delta_x, delta_y);
     }
 
     auto move_unchecked(int delta_x, int delta_y) -> void {
-        editable_circuit_.move_unchecked(editable_circuit_.selection(selection_id_),
-                                         delta_x, delta_y);
+        editable_circuit_.move_temporary_unchecked(
+            editable_circuit_.selection(selection_id_), delta_x, delta_y);
     }
 
    private:
@@ -275,8 +266,7 @@ namespace {
 auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render = false) {
     auto editable_circuit = EditableCircuit {Layout {}};
 
-    editable_circuit.add_example();
-    editable_circuit.validate();
+    add_example(editable_circuit);
 
     auto expected_layout = moved_layout(editable_circuit.layout(), 10, 10).value();
 
@@ -289,7 +279,6 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
     tracker_1.convert_to(InsertionMode::temporary);
     tracker_1.move_unchecked(10, 10);
     tracker_1.convert_to(InsertionMode::insert_or_discard);
-    editable_circuit.validate();
 
     // Mark rest as temporary
     editable_circuit.clear_visible_selection();
@@ -299,18 +288,15 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
         TrackedSelection {editable_circuit, editable_circuit.visible_selection(),
                           InsertionMode::insert_or_discard};
     tracker_2.convert_to(InsertionMode::temporary);
-    editable_circuit.validate();
 
     // Add example and colliding
-    editable_circuit.add_example();
+    add_example(editable_circuit);
     tracker_2.convert_to(InsertionMode::collisions);
-    editable_circuit.validate();
 
     // Move second part
     tracker_2.convert_to(InsertionMode::temporary);
     tracker_2.move_unchecked(10, 10);
     tracker_2.convert_to(InsertionMode::insert_or_discard);
-    editable_circuit.validate();
 
     // delete example
     editable_circuit.delete_all(editable_circuit.visible_selection());

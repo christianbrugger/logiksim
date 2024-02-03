@@ -1,7 +1,8 @@
-#include "component/editable_circuit/modifier.h"
+#include "modifier.h"
 
 #include "component/editable_circuit/editing/edit_logicitem.h"
 #include "component/editable_circuit/editing/edit_wire.h"
+#include "component/editable_circuit/modifier.h"
 
 #include <fmt/core.h>
 
@@ -19,36 +20,41 @@ auto Modifier::circuit_data() const -> const CircuitData& {
     return circuit_data_;
 }
 
+auto Modifier::extract_layout() -> Layout {
+    const auto layout = Layout {std::move(circuit_data_.layout)};
+    *this = Modifier {};
+    return layout;
+}
+
 //
 // Logic Items
 //
 
-auto Modifier::delete_temporary_logic_item(logicitem_id_t& logicitem_id,
-                                           logicitem_id_t* preserve_element) -> void {
-    editing::delete_temporary_logic_item(circuit_data_, logicitem_id, preserve_element);
+auto Modifier::delete_temporary_logicitem(logicitem_id_t& logicitem_id,
+                                          logicitem_id_t* preserve_element) -> void {
+    editing::delete_temporary_logicitem(circuit_data_, logicitem_id, preserve_element);
 }
 
-auto Modifier::move_temporary_logic_item_unchecked(const logicitem_id_t logicitem_id,
-                                                   int dx, int dy) -> void {
-    editing::move_temporary_logic_item_unchecked(circuit_data_.layout, logicitem_id, dx,
-                                                 dy);
+auto Modifier::move_temporary_logicitem_unchecked(const logicitem_id_t logicitem_id,
+                                                  int dx, int dy) -> void {
+    editing::move_temporary_logicitem_unchecked(circuit_data_.layout, logicitem_id, dx,
+                                                dy);
 }
 
-auto Modifier::move_or_delete_temporary_logic_item(logicitem_id_t& logicitem_id, int dx,
-                                                   int dy) -> void {
-    editing::move_or_delete_temporary_logic_item(circuit_data_, logicitem_id, dx, dy);
+auto Modifier::move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, int dx,
+                                                  int dy) -> void {
+    editing::move_or_delete_temporary_logicitem(circuit_data_, logicitem_id, dx, dy);
 }
 
-auto Modifier::change_logic_item_insertion_mode(logicitem_id_t& logicitem_id,
-                                                InsertionMode new_insertion_mode)
-    -> void {
-    editing::change_logic_item_insertion_mode(circuit_data_, logicitem_id,
-                                              new_insertion_mode);
+auto Modifier::change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
+                                               InsertionMode new_insertion_mode) -> void {
+    editing::change_logicitem_insertion_mode(circuit_data_, logicitem_id,
+                                             new_insertion_mode);
 }
 
-auto Modifier::add_logic_item(const LogicItemDefinition& definition, point_t position,
-                              InsertionMode insertion_mode) -> logicitem_id_t {
-    return editing::add_logic_item(circuit_data_, definition, position, insertion_mode);
+auto Modifier::add_logicitem(const LogicItemDefinition& definition, point_t position,
+                             InsertionMode insertion_mode) -> logicitem_id_t {
+    return editing::add_logicitem(circuit_data_, definition, position, insertion_mode);
 }
 
 auto Modifier::toggle_inverter(point_t point) -> void {
@@ -274,51 +280,6 @@ namespace {
 
 }  // namespace
 
-namespace {
-
-auto add_wire_segment(Modifier& modifier, line_t segment, InsertionMode insertion_mode,
-                      selection_id_t selection_id = null_selection_id) -> void {
-    const auto segment_part =
-        modifier.add_wire_segment(ordered_line_t {segment}, insertion_mode);
-
-    if (selection_id && segment_part) {
-        modifier.add_to_selection(selection_id, segment_part);
-    }
-}
-}  // namespace
-
-auto add_wire_segments(Modifier& modifier, point_t p0, point_t p1,
-                       LineInsertionType segment_type, InsertionMode insertion_mode,
-                       selection_id_t selection_id) -> void {
-    const auto mode = insertion_mode;
-
-    switch (segment_type) {
-        using enum LineInsertionType;
-
-        case horizontal_first: {
-            const auto pm = point_t {p1.x, p0.y};
-            if (p0.x != pm.x) {
-                add_wire_segment(modifier, line_t {p0, pm}, mode, selection_id);
-            }
-            if (pm.y != p1.y) {
-                add_wire_segment(modifier, line_t {pm, p1}, mode, selection_id);
-            }
-            break;
-        }
-
-        case vertical_first: {
-            const auto pm = point_t {p0.x, p1.y};
-            if (p0.y != pm.y) {
-                add_wire_segment(modifier, line_t {p0, pm}, mode, selection_id);
-            }
-            if (pm.x != p1.x) {
-                add_wire_segment(modifier, line_t {pm, p1}, mode, selection_id);
-            }
-            break;
-        }
-    }
-}
-
 auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selection_id,
                                      InsertionMode new_insertion_mode) -> void {
     // TODO store selection performance difference ?
@@ -327,7 +288,7 @@ auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selectio
         auto logicitem_id = get_first_logicitem(modifier, selection_id);
         modifier.remove_from_selection(selection_id, logicitem_id);
 
-        modifier.change_logic_item_insertion_mode(logicitem_id, new_insertion_mode);
+        modifier.change_logicitem_insertion_mode(logicitem_id, new_insertion_mode);
     }
 
     while (has_segment(modifier, selection_id)) {
@@ -340,8 +301,8 @@ auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selectio
 
 auto new_positions_representable(const Layout& layout, const Selection& selection,
                                  int delta_x, int delta_y) -> bool {
-    return editing::new_logic_item_positions_representable(layout, selection, delta_x,
-                                                           delta_y) &&
+    return editing::new_logicitem_positions_representable(layout, selection, delta_x,
+                                                          delta_y) &&
            editing::new_wire_positions_representable(layout, selection, delta_x, delta_y);
 }
 
@@ -354,7 +315,7 @@ auto move_temporary_unchecked(Modifier& modifier, const Selection& selection, in
             throw std::runtime_error("selected logic items need to be temporary");
         }
 
-        modifier.move_temporary_logic_item_unchecked(logicitem_id, delta_x, delta_y);
+        modifier.move_temporary_logicitem_unchecked(logicitem_id, delta_x, delta_y);
     }
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
@@ -376,7 +337,7 @@ auto move_or_delete_temporary_consuming(Modifier& modifier, selection_id_t selec
         auto logicitem_id = get_first_logicitem(modifier, selection_id);
         modifier.remove_from_selection(selection_id, logicitem_id);
 
-        modifier.move_or_delete_temporary_logic_item(logicitem_id, delta_x, delta_y);
+        modifier.move_or_delete_temporary_logicitem(logicitem_id, delta_x, delta_y);
     }
 
     while (has_segment(modifier, selection_id)) {
@@ -392,8 +353,8 @@ auto delete_all(Modifier& modifier, selection_id_t selection_id) -> void {
         auto logicitem_id = get_first_logicitem(modifier, selection_id);
         modifier.remove_from_selection(selection_id, logicitem_id);
 
-        modifier.change_logic_item_insertion_mode(logicitem_id, InsertionMode::temporary);
-        modifier.delete_temporary_logic_item(logicitem_id);
+        modifier.change_logicitem_insertion_mode(logicitem_id, InsertionMode::temporary);
+        modifier.delete_temporary_logicitem(logicitem_id);
     }
 
     while (has_segment(modifier, selection_id)) {

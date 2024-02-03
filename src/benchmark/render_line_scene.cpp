@@ -81,7 +81,7 @@ auto new_line_point(point_t origin, point_t previous, const RenderBenchmarkConfi
 auto insert_tree_from_points(EditableCircuit& editable_circuit,
                              const std::vector<point_t>& points) -> void {
     for (auto&& view : ranges::views::sliding(points, 2)) {
-        editable_circuit.add_line_segment(line_t {view[0], view[1]},
+        editable_circuit.add_wire_segment(ordered_line_t {line_t {view[0], view[1]}},
                                           InsertionMode::insert_or_discard);
     }
 }

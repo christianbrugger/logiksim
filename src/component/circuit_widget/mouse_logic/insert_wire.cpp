@@ -23,11 +23,11 @@ auto remove_and_insert(EditableCircuit& editable_circuit, selection_id_t selecti
 
     if (position && first_position && direction && position != first_position) {
         // do insert
-        editable_circuit.add_line_segments(*first_position, *position, *direction,
-                                           InsertionMode::temporary, selection_id);
+        add_wire_segments(editable_circuit, *first_position, *position, *direction,
+                          InsertionMode::temporary, selection_id);
 
         if (mode != InsertionMode::temporary) {
-            editable_circuit.split_before_insert(selection_id);
+            editable_circuit.split_temporary_before_insert(selection_id);
             editable_circuit.change_insertion_mode(selection_id, mode);
         }
     }
