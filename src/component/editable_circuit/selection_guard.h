@@ -26,12 +26,12 @@ concept is_selection_store = requires(T obj) {
  *   + selection_id is never null
  */
 template <is_selection_store T>
-class SelectionGuard {
+class SelectionGuardTemplate {
    public:
-    explicit SelectionGuard(T& store);
-    explicit SelectionGuard(T& store, Selection selection);
-    explicit SelectionGuard(T& store, selection_id_t copy_id);
-    ~SelectionGuard();
+    explicit SelectionGuardTemplate(T& store);
+    explicit SelectionGuardTemplate(T& store, Selection selection);
+    explicit SelectionGuardTemplate(T& store, selection_id_t copy_id);
+    ~SelectionGuardTemplate();
 
     [[nodiscard]] auto selection_id() const -> selection_id_t;
 
@@ -45,31 +45,31 @@ class SelectionGuard {
 //
 
 template <is_selection_store T>
-SelectionGuard<T>::SelectionGuard(T& store)
+SelectionGuardTemplate<T>::SelectionGuardTemplate(T& store)
     : store_ {&store}, selection_id_ {store.create_selection()} {
     Ensures(store_);
 }
 
 template <is_selection_store T>
-SelectionGuard<T>::SelectionGuard(T& store, Selection selection__)
+SelectionGuardTemplate<T>::SelectionGuardTemplate(T& store, Selection selection__)
     : store_ {&store}, selection_id_ {store.create_selection(std::move(selection__))} {
     Ensures(store_);
 }
 
 template <is_selection_store T>
-SelectionGuard<T>::SelectionGuard(T& store, selection_id_t copy_id)
+SelectionGuardTemplate<T>::SelectionGuardTemplate(T& store, selection_id_t copy_id)
     : store_ {&store}, selection_id_ {store.create_selection(copy_id)} {
     Ensures(store_);
 }
 
 template <is_selection_store T>
-SelectionGuard<T>::~SelectionGuard() {
+SelectionGuardTemplate<T>::~SelectionGuardTemplate() {
     Expects(selection_id_);
     store_->destroy_selection(selection_id_);
 }
 
 template <is_selection_store T>
-auto SelectionGuard<T>::selection_id() const -> selection_id_t {
+auto SelectionGuardTemplate<T>::selection_id() const -> selection_id_t {
     Expects(selection_id_);
     return selection_id_;
 }

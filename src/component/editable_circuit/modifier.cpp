@@ -89,8 +89,8 @@ auto Modifier::move_or_delete_temporary_wire(segment_part_t& segment_part, int d
     editing::move_or_delete_temporary_wire(circuit_data_, segment_part, dx, dy);
 }
 
-auto Modifier::toggle_inserted_wire_crosspoint(point_t point) -> void {
-    editing::toggle_inserted_wire_crosspoint(circuit_data_, point);
+auto Modifier::toggle_wire_crosspoint(point_t point) -> void {
+    editing::toggle_wire_crosspoint(circuit_data_, point);
 }
 
 //
@@ -98,15 +98,15 @@ auto Modifier::toggle_inserted_wire_crosspoint(point_t point) -> void {
 //
 
 auto Modifier::regularize_temporary_selection(
-    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
+    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points__)
     -> std::vector<point_t> {
     return editing::regularize_temporary_selection(circuit_data_, selection,
-                                                   true_cross_points);
+                                                   std::move(true_cross_points__));
 }
 
-auto Modifier::split_temporary_segments(std::span<const point_t> split_points,
-                                        const Selection& selection) -> void {
-    editing::split_temporary_segments(circuit_data_, split_points, selection);
+auto Modifier::split_temporary_segments(const Selection& selection,
+                                        std::span<const point_t> split_points) -> void {
+    editing::split_temporary_segments(circuit_data_, selection, split_points);
 }
 
 auto Modifier::create_selection() -> selection_id_t {
@@ -172,11 +172,9 @@ auto Modifier::remove_from_selection(selection_id_t selection_id,
 // Free Methods
 //
 
-auto get_inserted_selection_cross_points(const Modifier& modifier,
-                                         const Selection& selection)
+auto get_inserted_cross_points(const Modifier& modifier, const Selection& selection)
     -> std::vector<point_t> {
-    return editing::get_inserted_selection_cross_points(modifier.circuit_data(),
-                                                        selection);
+    return editing::get_inserted_cross_points(modifier.circuit_data(), selection);
 }
 
 auto get_temporary_selection_splitpoints(const Modifier& modifier,

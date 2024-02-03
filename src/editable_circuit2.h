@@ -2,6 +2,7 @@
 #define LOGICSIM_EDITABLE_CIRCUIT2_H
 
 #include "component/editable_circuit/modifier.h"
+#include "component/editable_circuit/selection_guard.h"
 #include "vocabulary/insertion_mode.h"
 #include "vocabulary/line_insertion_type.h"
 
@@ -16,8 +17,11 @@ class EditableCircuit2 {
 
     [[nodiscard]] auto format() const -> std::string;
 
+    [[nodiscard]] auto layout() const -> const Layout&;
+    [[nodiscard]] auto modifier() const -> const editable_circuit::Modifier&;
+
     //
-    // Logic Items
+    // Elements
     //
 
     auto add_logic_item(const LogicItemDefinition& definition, point_t position,
@@ -61,7 +65,7 @@ class EditableCircuit2 {
         std::optional<std::vector<point_t>> true_cross_points = {})
         -> std::vector<point_t>;
 
-    auto split_before_insert(const Selection& selection) -> void;
+    auto split_temporary_before_insert(const Selection& selection) -> void;
 
     //
     // Selections
@@ -80,22 +84,24 @@ class EditableCircuit2 {
     editable_circuit::Modifier modifier_ {};
 };
 
+//
+// Selection Guard
+//
+
+using SelectionGuard = editable_circuit::SelectionGuardTemplate<EditableCircuit2>;
+
+//
+// Free Methods
+//
+
 auto add_example(EditableCircuit2& editable_circuit) -> void;
 
 [[nodiscard]] auto new_positions_representable(const EditableCircuit2& editable_circuit,
                                                const Selection& selection, int delta_x,
                                                int delta_y) -> bool;
 
-auto change_insertion_mode(EditableCircuit2& editable_circuit, Selection selection,
-                           InsertionMode new_insertion_mode) -> void;
-
-auto move_or_delete_temporary(EditableCircuit2& editable_circuit, Selection selection,
-                              int delta_x, int delta_y) -> void;
-
-auto delete_all(EditableCircuit2& editable_circuit, Selection selection) -> void;
-
-auto capture_inserted_cross_points(const EditableCircuit2& editable_circuit,
-                                   const Selection& selection) -> std::vector<point_t>;
+auto get_inserted_cross_points(const EditableCircuit2& editable_circuit,
+                               const Selection& selection) -> std::vector<point_t>;
 
 }  // namespace logicsim
 

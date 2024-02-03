@@ -95,7 +95,7 @@ class Modifier {
     auto move_or_delete_temporary_wire(segment_part_t& segment_part, int dx, int dy)
         -> void;
 
-    auto toggle_inserted_wire_crosspoint(point_t point) -> void;
+    auto toggle_wire_crosspoint(point_t point) -> void;
 
     //
     // Wire Normalization
@@ -105,8 +105,8 @@ class Modifier {
         const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
         -> std::vector<point_t>;
 
-    auto split_temporary_segments(std::span<const point_t> split_points,
-                                  const Selection& selection) -> void;
+    auto split_temporary_segments(const Selection& selection,
+                                  std::span<const point_t> split_points) -> void;
 
     //
     // Selections
@@ -141,14 +141,14 @@ class Modifier {
 // Selection Guard
 //
 
-using ModifierSelectionGuard = SelectionGuard<Modifier>;
+using ModifierSelectionGuard = SelectionGuardTemplate<Modifier>;
 
 //
 // Free Methods
 //
 
-[[nodiscard]] auto get_inserted_selection_cross_points(const Modifier& modifier,
-                                                       const Selection& selection)
+[[nodiscard]] auto get_inserted_cross_points(const Modifier& modifier,
+                                             const Selection& selection)
     -> std::vector<point_t>;
 
 [[nodiscard]] auto get_temporary_selection_splitpoints(const Modifier& modifier,

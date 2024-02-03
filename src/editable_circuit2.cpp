@@ -1,5 +1,8 @@
 #include "editable_circuit2.h"
 
+#include "random/generator.h"
+#include "random/wire.h"
+
 namespace logicsim {
 
 EditableCircuit2::EditableCircuit2(Layout&& layout__) : modifier_ {std::move(layout__)} {}
@@ -7,6 +10,18 @@ EditableCircuit2::EditableCircuit2(Layout&& layout__) : modifier_ {std::move(lay
 auto EditableCircuit2::format() const -> std::string {
     return modifier_.format();
 }
+
+auto EditableCircuit2::layout() const -> const Layout& {
+    return modifier_.circuit_data().layout;
+}
+
+auto EditableCircuit2::modifier() const -> const editable_circuit::Modifier& {
+    return modifier_;
+}
+
+//
+// Elements
+//
 
 auto EditableCircuit2::add_logic_item(const LogicItemDefinition& definition,
                                       point_t position, InsertionMode insertion_mode,
@@ -76,11 +91,81 @@ auto EditableCircuit2::delete_all(Selection selection__) -> void {
 }
 
 //
+// Attributes
+//
+
+auto EditableCircuit2::toggle_inverter(point_t point) -> void {
+    modifier_.toggle_inverter(point);
+}
+
+auto EditableCircuit2::toggle_wire_crosspoint(point_t point) -> void {
+    modifier_.toggle_wire_crosspoint(point);
+}
+
+auto EditableCircuit2::set_attributes(logicitem_id_t logicitem_id,
+                                      attributes_clock_generator_t attrs__) -> void {
+    modifier_.set_attributes(logicitem_id, std::move(attrs__));
+}
+
+//
+// Wire Regularization
+//
+
+auto EditableCircuit2::regularize_temporary_selection(
+    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points__)
+    -> std::vector<point_t> {
+    return modifier_.regularize_temporary_selection(selection,
+                                                    std::move(true_cross_points__));
+}
+
+auto EditableCircuit2::split_temporary_before_insert(const Selection& selection) -> void {
+    using namespace editable_circuit;
+
+    const auto points = get_temporary_selection_splitpoints(modifier_, selection);
+    modifier_.split_temporary_segments(selection, points);
+}
+
+//
 // Selections
 //
 
 auto EditableCircuit2::create_selection() -> selection_id_t {
     return modifier_.create_selection();
+}
+
+auto EditableCircuit2::create_selection(Selection selection__) -> selection_id_t {
+    return modifier_.create_selection(std::move(selection__));
+}
+
+auto EditableCircuit2::create_selection(selection_id_t copy_id) -> selection_id_t {
+    return modifier_.create_selection(copy_id);
+}
+
+auto EditableCircuit2::destroy_selection(selection_id_t selection_id) -> void {
+    modifier_.destroy_selection(selection_id);
+}
+
+//
+// Free Methods
+//
+
+auto add_example(EditableCircuit2& editable_circuit) -> void {
+    // auto rng = get_random_number_generator();
+    // editable_circuit::add_many_wires_and_buttons(rng, get_state());
+    // TODO implement
+}
+
+auto new_positions_representable(const EditableCircuit2& editable_circuit,
+                                 const Selection& selection, int delta_x, int delta_y)
+    -> bool {
+    return editable_circuit::new_positions_representable(editable_circuit.layout(),
+                                                         selection, delta_x, delta_y);
+}
+
+auto get_inserted_cross_points(const EditableCircuit2& editable_circuit,
+                               const Selection& selection) -> std::vector<point_t> {
+    return editable_circuit::get_inserted_cross_points(editable_circuit.modifier(),
+                                                       selection);
 }
 
 }  // namespace logicsim

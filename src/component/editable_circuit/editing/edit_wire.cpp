@@ -1340,7 +1340,7 @@ auto add_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
 
 }  // namespace
 
-auto toggle_inserted_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
+auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     if (circuit.index.collision_index().is_wires_crossing(point)) {
         add_wire_crosspoint(circuit, point);
     }
@@ -1545,7 +1545,7 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
                                     std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t> {
     if (true_cross_points) {
-        split_temporary_segments(circuit, *true_cross_points, selection);
+        split_temporary_segments(circuit, selection, *true_cross_points);
         std::ranges::sort(*true_cross_points);
     }
 
@@ -1580,8 +1580,7 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
     return cross_points;
 }
 
-auto get_inserted_selection_cross_points(const CircuitData& circuit,
-                                         const Selection& selection)
+auto get_inserted_cross_points(const CircuitData& circuit, const Selection& selection)
     -> std::vector<point_t> {
     auto cross_points = std::vector<point_t> {};
 
@@ -1604,8 +1603,8 @@ auto get_inserted_selection_cross_points(const CircuitData& circuit,
     return cross_points;
 }
 
-auto split_temporary_segments(CircuitData& circuit, std::span<const point_t> split_points,
-                              const Selection& selection) -> void {
+auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
+                              std::span<const point_t> split_points) -> void {
     const auto cache = SpatialPointIndex {split_points};
 
     const auto segments = transform_to_vector(
