@@ -145,6 +145,82 @@ auto EditableCircuit2::destroy_selection(selection_id_t selection_id) -> void {
     modifier_.destroy_selection(selection_id);
 }
 
+auto EditableCircuit2::selection_count() const -> std::size_t {
+    return modifier_.circuit_data().selection_store.size();
+}
+
+auto EditableCircuit2::selection_exists(selection_id_t selection_id) const -> bool {
+    return modifier_.circuit_data().selection_store.contains(selection_id);
+}
+
+auto EditableCircuit2::selection(selection_id_t selection_id) const -> const Selection& {
+    return modifier_.circuit_data().selection_store.at(selection_id);
+}
+
+auto EditableCircuit2::set_selection(selection_id_t selection_id, Selection selection__)
+    -> void {
+    modifier_.set_selection(selection_id, std::move(selection__));
+}
+
+auto EditableCircuit2::add_to_selection(selection_id_t selection_id,
+                                        logicitem_id_t logicitem_id) -> void {
+    modifier_.add_to_selection(selection_id, logicitem_id);
+}
+
+auto EditableCircuit2::add_to_selection(selection_id_t selection_id,
+                                        segment_part_t segment_part) -> void {
+    modifier_.add_to_selection(selection_id, segment_part);
+}
+
+auto EditableCircuit2::remove_from_selection(selection_id_t selection_id,
+                                             logicitem_id_t logicitem_id) -> void {
+    modifier_.add_to_selection(selection_id, logicitem_id);
+}
+
+auto EditableCircuit2::remove_from_selection(selection_id_t selection_id,
+                                             segment_part_t segment_part) -> void {
+    modifier_.add_to_selection(selection_id, segment_part);
+}
+
+//
+// Visible Selections
+//
+
+auto EditableCircuit2::clear_visible_selection() -> void {
+    modifier_.clear_visible_selection();
+}
+
+auto EditableCircuit2::set_visible_selection(Selection selection__) -> void {
+    modifier_.set_visible_selection(std::move(selection__));
+}
+
+auto EditableCircuit2::add_visible_selection_rect(SelectionFunction function,
+                                                  rect_fine_t rect) -> void {
+    modifier_.add_visible_selection_rect(function, rect);
+}
+
+auto EditableCircuit2::try_pop_last_visible_selection_rect() -> bool {
+    return modifier_.try_pop_last_visible_selection_rect();
+}
+
+auto EditableCircuit2::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool {
+    return modifier_.try_update_last_visible_selection_rect();
+}
+
+auto EditableCircuit2::apply_all_visible_selection_operations() -> void {
+    modifier_.apply_all_visible_selection_operations();
+}
+
+auto EditableCircuit2::visible_selection() const -> const Selection& {
+    const auto& circuit = modifier_.circuit_data();
+
+    return circuit.visible_selection.selection(circuit.layout, circuit.index);
+}
+
+auto EditableCircuit2::visible_selection_empty() const -> bool {
+    return modifier_.circuit_data().visible_selection.empty();
+}
+
 //
 // Free Methods
 //

@@ -116,22 +116,24 @@ class Modifier {
     [[nodiscard]] auto create_selection(Selection selection) -> selection_id_t;
     [[nodiscard]] auto create_selection(selection_id_t copy_id) -> selection_id_t;
     auto destroy_selection(selection_id_t selection_id) -> void;
+    auto set_selection(selection_id_t selection_id, Selection selection) -> void;
 
-    [[nodiscard]] auto selection(selection_id_t selection_id) const -> const Selection&;
-
-    auto add_to_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
-        -> void;
-    auto add_to_selection(selection_id_t selection_id, segment_part_t segment_part)
-        -> void;
-
-    auto remove_from_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
-        -> void;
-    auto remove_from_selection(selection_id_t selection_id, segment_part_t segment_part)
-        -> void;
+    auto add_to_selection(selection_id_t, logicitem_id_t logicitem_id) -> void;
+    auto add_to_selection(selection_id_t, segment_part_t segment_part) -> void;
+    auto remove_from_selection(selection_id_t, logicitem_id_t logicitem_id) -> void;
+    auto remove_from_selection(selection_id_t, segment_part_t segment_part) -> void;
 
     //
     // Visible Selection
     //
+
+    auto clear_visible_selection() -> void;
+    auto set_visible_selection(Selection selection) -> void;
+
+    auto add_visible_selection_rect(SelectionFunction function, rect_fine_t rect) -> void;
+    auto try_pop_last_visible_selection_rect() -> bool;
+    auto try_update_last_visible_selection_rect(rect_fine_t rect) -> bool;
+    auto apply_all_visible_selection_operations() -> void;
 
    private:
     CircuitData circuit_data_ {};

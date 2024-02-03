@@ -114,12 +114,12 @@ auto Modifier::create_selection() -> selection_id_t {
 }
 
 auto Modifier::create_selection(Selection selection__) -> selection_id_t {
+    // this method needs to take selection as a copy, as create might invalidate the
+    // reference, if the underlying vector is resized and given selection points to it.
+
     if (!is_valid_selection(selection__, circuit_data_.layout)) {
         throw std::runtime_error("Selection contains elements not in layout");
     }
-
-    // we need to take selection as a copy, as create might invalidate the reference,
-    // if the underlying vector is resized and selections points to it.
 
     const auto selection_id = circuit_data_.selection_store.create();
     circuit_data_.selection_store.at(selection_id) = std::move(selection__);
@@ -136,8 +136,12 @@ auto Modifier::destroy_selection(selection_id_t selection_id) -> void {
     circuit_data_.selection_store.destroy(selection_id);
 }
 
-auto Modifier::selection(selection_id_t selection_id) const -> const Selection& {
-    return circuit_data_.selection_store.at(selection_id);
+auto Modifier::set_selection(selection_id_t selection_id, Selection selection__) -> void {
+    if (!is_valid_selection(selection__, circuit_data_.layout)) {
+        throw std::runtime_error("Selection contains elements not in layout");
+    }
+
+    circuit_data_.selection_store.at(selection_id) = std::move(selection__);
 }
 
 auto Modifier::add_to_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
@@ -166,6 +170,43 @@ auto Modifier::remove_from_selection(selection_id_t selection_id,
 auto Modifier::remove_from_selection(selection_id_t selection_id,
                                      segment_part_t segment_part) -> void {
     circuit_data_.selection_store.at(selection_id).remove_segment(segment_part);
+}
+
+auto Modifier::clear_visible_selection() -> void {
+    circuit_data_.visible_selection.clear();
+}
+
+auto Modifier::set_visible_selection(Selection selection__) -> void {
+    if (!is_valid_selection(selection__, circuit_data_.layout)) {
+        throw std::runtime_error("Selection contains elements not in layout");
+    }
+
+    circuit_data_.visible_selection.set_selection(std::move(selection__));
+}
+
+auto Modifier::add_visible_selection_rect(SelectionFunction function, rect_fine_t rect)
+    -> void {
+    circuit_data_.visible_selection.add(function, rect);
+}
+
+auto Modifier::try_pop_last_visible_selection_rect() -> bool {
+    if (circuit_data_.visible_selection.operation_count() == size_t {0}) {
+        return false;
+    }
+    circuit_data_.visible_selection.pop_last();
+    return true;
+}
+
+auto Modifier::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool {
+    if (circuit_data_.visible_selection.operation_count() == size_t {0}) {
+        return false;
+    }
+    circuit_data_.visible_selection.update_last(rect);
+    return true;
+}
+
+auto Modifier::apply_all_visible_selection_operations() -> void {
+    circuit_data_.visible_selection.apply_all_operations();
 }
 
 //
