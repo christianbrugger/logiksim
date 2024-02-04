@@ -15,6 +15,18 @@ namespace logicsim {
 namespace editable_circuit {
 
 constexpr static inline auto DEBUG_PRINT_MODIFIER_METHODS = false;
+constexpr static inline auto DEBUG_CHECK_CLASS_INVARIANTS = false;
+
+namespace {
+
+[[nodiscard]] auto debug_class_invariant_holds(const Modifier& modifier) -> bool {
+    if constexpr (DEBUG_CHECK_CLASS_INVARIANTS) {
+        assert(class_invariant_holds(modifier));
+    }
+    return true;
+}
+
+}  // namespace
 
 //
 // Modifier
@@ -28,6 +40,8 @@ Modifier::Modifier(Layout&& layout__)
 Modifier::Modifier(Layout&& layout__, ModifierConfig config)
     : circuit_data_ {std::move(layout__)} {
     circuit_data_.store_messages = config.store_messages;
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::format() const -> std::string {
@@ -61,6 +75,8 @@ auto Modifier::delete_temporary_logicitem(logicitem_id_t& logicitem_id,
     }
 
     editing::delete_temporary_logicitem(circuit_data_, logicitem_id, preserve_element);
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::move_temporary_logicitem_unchecked(const logicitem_id_t logicitem_id,
@@ -75,6 +91,7 @@ auto Modifier::move_temporary_logicitem_unchecked(const logicitem_id_t logicitem
 
     editing::move_temporary_logicitem_unchecked(circuit_data_.layout, logicitem_id, dx,
                                                 dy);
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, int dx,
@@ -88,6 +105,7 @@ auto Modifier::move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, 
     }
 
     editing::move_or_delete_temporary_logicitem(circuit_data_, logicitem_id, dx, dy);
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
@@ -102,6 +120,7 @@ auto Modifier::change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
 
     editing::change_logicitem_insertion_mode(circuit_data_, logicitem_id,
                                              new_insertion_mode);
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::add_logicitem(const LogicItemDefinition& definition, point_t position,
@@ -114,7 +133,11 @@ auto Modifier::add_logicitem(const LogicItemDefinition& definition, point_t posi
             circuit_data_.layout, definition, position, insertion_mode);
     }
 
-    return editing::add_logicitem(circuit_data_, definition, position, insertion_mode);
+    const auto logicitem_id =
+        editing::add_logicitem(circuit_data_, definition, position, insertion_mode);
+
+    Ensures(debug_class_invariant_holds(*this));
+    return logicitem_id;
 }
 
 auto Modifier::toggle_inverter(point_t point) -> void {
@@ -140,6 +163,7 @@ auto Modifier::set_attributes(logicitem_id_t logicitem_id,
     }
 
     circuit_data_.layout.logic_items().set_attributes(logicitem_id, std::move(attrs__));
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 //
@@ -156,6 +180,7 @@ auto Modifier::delete_temporary_wire_segment(segment_part_t& segment_part) -> vo
     }
 
     editing::delete_temporary_wire_segment(circuit_data_, segment_part);
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::add_wire_segment(ordered_line_t line, InsertionMode insertion_mode)
@@ -168,7 +193,10 @@ auto Modifier::add_wire_segment(ordered_line_t line, InsertionMode insertion_mod
             circuit_data_.layout, line, insertion_mode);
     }
 
-    return editing::add_wire_segment(circuit_data_, line, insertion_mode);
+    const auto segment = editing::add_wire_segment(circuit_data_, line, insertion_mode);
+
+    Ensures(debug_class_invariant_holds(*this));
+    return segment;
 }
 
 auto Modifier::change_wire_insertion_mode(segment_part_t& segment_part,
@@ -182,6 +210,7 @@ auto Modifier::change_wire_insertion_mode(segment_part_t& segment_part,
     }
 
     editing::change_wire_insertion_mode(circuit_data_, segment_part, new_insertion_mode);
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::move_temporary_wire_unchecked(segment_t segment, part_t verify_full_part,
@@ -197,6 +226,7 @@ auto Modifier::move_temporary_wire_unchecked(segment_t segment, part_t verify_fu
 
     editing::move_temporary_wire_unchecked(circuit_data_.layout, segment,
                                            verify_full_part, dx, dy);
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::move_or_delete_temporary_wire(segment_part_t& segment_part, int dx, int dy)
@@ -210,6 +240,7 @@ auto Modifier::move_or_delete_temporary_wire(segment_part_t& segment_part, int d
     }
 
     editing::move_or_delete_temporary_wire(circuit_data_, segment_part, dx, dy);
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::toggle_wire_crosspoint(point_t point) -> void {
@@ -222,6 +253,7 @@ auto Modifier::toggle_wire_crosspoint(point_t point) -> void {
     }
 
     editing::toggle_wire_crosspoint(circuit_data_, point);
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 //
@@ -239,8 +271,11 @@ auto Modifier::regularize_temporary_selection(
             circuit_data_.layout, selection, true_cross_points__);
     }
 
-    return editing::regularize_temporary_selection(circuit_data_, selection,
-                                                   std::move(true_cross_points__));
+    const auto points = editing::regularize_temporary_selection(
+        circuit_data_, selection, std::move(true_cross_points__));
+
+    Ensures(debug_class_invariant_holds(*this));
+    return points;
 }
 
 auto Modifier::split_temporary_segments(const Selection& selection,
@@ -254,10 +289,14 @@ auto Modifier::split_temporary_segments(const Selection& selection,
     }
 
     editing::split_temporary_segments(circuit_data_, selection, split_points);
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::create_selection() -> selection_id_t {
-    return circuit_data_.selection_store.create();
+    const auto selection_id = circuit_data_.selection_store.create();
+
+    Ensures(debug_class_invariant_holds(*this));
+    return selection_id;
 }
 
 auto Modifier::create_selection(Selection selection__) -> selection_id_t {
@@ -271,6 +310,7 @@ auto Modifier::create_selection(Selection selection__) -> selection_id_t {
     const auto selection_id = circuit_data_.selection_store.create();
     circuit_data_.selection_store.at(selection_id) = std::move(selection__);
 
+    Ensures(debug_class_invariant_holds(*this));
     return selection_id;
 }
 
@@ -278,11 +318,14 @@ auto Modifier::create_selection(selection_id_t copy_id) -> selection_id_t {
     const auto new_id = circuit_data_.selection_store.create();
     circuit_data_.selection_store.at(new_id) = circuit_data_.selection_store.at(copy_id);
 
+    Ensures(debug_class_invariant_holds(*this));
     return new_id;
 }
 
 auto Modifier::destroy_selection(selection_id_t selection_id) -> void {
     circuit_data_.selection_store.destroy(selection_id);
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::set_selection(selection_id_t selection_id, Selection selection__) -> void {
@@ -291,6 +334,8 @@ auto Modifier::set_selection(selection_id_t selection_id, Selection selection__)
     }
 
     circuit_data_.selection_store.at(selection_id) = std::move(selection__);
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::add_to_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
@@ -300,6 +345,8 @@ auto Modifier::add_to_selection(selection_id_t selection_id, logicitem_id_t logi
     }
 
     circuit_data_.selection_store.at(selection_id).add_logicitem(logicitem_id);
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::add_to_selection(selection_id_t selection_id, segment_part_t segment_part)
@@ -309,20 +356,28 @@ auto Modifier::add_to_selection(selection_id_t selection_id, segment_part_t segm
     }
 
     circuit_data_.selection_store.at(selection_id).add_segment(segment_part);
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::remove_from_selection(selection_id_t selection_id,
                                      logicitem_id_t logicitem_id) -> void {
     circuit_data_.selection_store.at(selection_id).remove_logicitem(logicitem_id);
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::remove_from_selection(selection_id_t selection_id,
                                      segment_part_t segment_part) -> void {
     circuit_data_.selection_store.at(selection_id).remove_segment(segment_part);
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::clear_visible_selection() -> void {
     circuit_data_.visible_selection.clear();
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::set_visible_selection(Selection selection__) -> void {
@@ -331,11 +386,15 @@ auto Modifier::set_visible_selection(Selection selection__) -> void {
     }
 
     circuit_data_.visible_selection.set_selection(std::move(selection__));
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::add_visible_selection_rect(SelectionFunction function, rect_fine_t rect)
     -> void {
     circuit_data_.visible_selection.add(function, rect);
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::try_pop_last_visible_selection_rect() -> bool {
@@ -344,6 +403,7 @@ auto Modifier::try_pop_last_visible_selection_rect() -> bool {
     }
     circuit_data_.visible_selection.pop_last();
 
+    Ensures(debug_class_invariant_holds(*this));
     return true;
 }
 
@@ -353,12 +413,15 @@ auto Modifier::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool 
     }
     circuit_data_.visible_selection.update_last(rect);
 
+    Ensures(debug_class_invariant_holds(*this));
     return true;
 }
 
 auto Modifier::apply_all_visible_selection_operations() -> void {
     circuit_data_.visible_selection.apply_all_operations(circuit_data_.layout,
                                                          circuit_data_.index);
+
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 //
