@@ -6,13 +6,17 @@
 
 namespace logicsim {
 
-auto generate_logicitem_messages(auto &&obj, const Layout &layout,
-                             logicitem_id_t logicitem_id) -> void {
+//
+// Inserted Messages Only
+//
+
+auto generate_inserted_logicitem_messages(auto &&obj, const Layout &layout,
+                                          logicitem_id_t logicitem_id) -> void {
     const auto data = to_layout_calculation_data(layout, logicitem_id);
     obj.submit(info_message::LogicItemInserted {logicitem_id, data});
 }
 
-auto generate_wire_messages(auto &&obj, const Layout &layout, wire_id_t wire_id)
+auto generate_inserted_wire_messages(auto &&obj, const Layout &layout, wire_id_t wire_id)
     -> void {
     const auto &segment_tree = layout.wires().segment_tree(wire_id);
 
@@ -23,23 +27,68 @@ auto generate_wire_messages(auto &&obj, const Layout &layout, wire_id_t wire_id)
     }
 }
 
-auto generate_logicitem_messages(auto &&obj, const Layout &layout) -> void {
+auto generate_inserted_logicitem_messages(auto &&obj, const Layout &layout) -> void {
     for (const auto logicitem_id : logicitem_ids(layout)) {
         if (is_inserted(layout, logicitem_id)) {
-            generate_logicitem_messages(obj, layout, logicitem_id);
+            generate_inserted_logicitem_messages(obj, layout, logicitem_id);
         }
     }
 }
 
-auto generate_wire_messages(auto &&obj, const Layout &layout) -> void {
+auto generate_inserted_wire_messages(auto &&obj, const Layout &layout) -> void {
     for (const auto wire_id : inserted_wire_ids(layout)) {
-        generate_wire_messages(obj, layout, wire_id);
+        generate_inserted_wire_messages(obj, layout, wire_id);
     }
 }
 
-auto generate_layout_messages(auto &&obj, const Layout &layout) -> void {
-    generate_logicitem_messages(obj, layout);
-    generate_wire_messages(obj, layout);
+auto generate_inserted_layout_messages(auto &&obj, const Layout &layout) -> void {
+    generate_inserted_logicitem_messages(obj, layout);
+    generate_inserted_wire_messages(obj, layout);
+}
+
+//
+// All Messages
+//
+
+auto generate_created_logicitem_messages(auto &&obj, const Layout &layout,
+                                         logicitem_id_t logicitem_id) -> void {
+    obj.submit(info_message::LogicItemCreated {logicitem_id});
+}
+
+auto generate_created_wire_messages(auto &&obj, const Layout &layout, wire_id_t wire_id)
+    -> void {
+    const auto &segment_tree = layout.wires().segment_tree(wire_id);
+
+    for (const auto segment_index : segment_tree.indices()) {
+        obj.submit(info_message::SegmentCreated {
+            .segment = segment_t {wire_id, segment_index},
+        });
+    }
+}
+
+auto generate_all_logicitem_messages(auto &&obj, const Layout &layout) -> void {
+    for (const auto logicitem_id : logicitem_ids(layout)) {
+        generate_created_logicitem_messages(obj, layout, logicitem_id);
+
+        if (is_inserted(layout, logicitem_id)) {
+            generate_inserted_logicitem_messages(obj, layout, logicitem_id);
+        }
+    }
+}
+
+auto generate_all_wire_messages(auto &&obj, const Layout &layout) -> void {
+    for (const auto wire_id : wire_ids(layout)) {
+        generate_created_wire_messages(obj, layout, wire_id);
+    }
+
+    for (const auto wire_id : inserted_wire_ids(layout)) {
+        generate_inserted_wire_messages(obj, layout, wire_id);
+    }
+}
+
+auto generate_all_layout_messages(auto &&obj, const Layout &layout) -> void {
+    generate_all_logicitem_messages(obj, layout);
+    generate_all_wire_messages(obj, layout);
 }
 
 }  // namespace logicsim

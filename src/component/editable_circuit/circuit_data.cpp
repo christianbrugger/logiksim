@@ -7,7 +7,7 @@ namespace logicsim {
 
 namespace editable_circuit {
 
-constexpr static inline auto DEBUG_PRINT_MESSAGES = true;
+constexpr static inline auto DEBUG_PRINT_MESSAGES = false;
 
 //
 // Circuit Data

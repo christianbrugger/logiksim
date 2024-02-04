@@ -31,28 +31,28 @@ template <>
 ConnectionIndex<connection_index::ContentType::LogicItem,
                 connection_index::DirectionType::Input>::ConnectionIndex(const Layout&
                                                                              layout) {
-    generate_logicitem_messages(*this, layout);
+    generate_inserted_logicitem_messages(*this, layout);
 }
 
 template <>
 ConnectionIndex<connection_index::ContentType::LogicItem,
                 connection_index::DirectionType::Output>::ConnectionIndex(const Layout&
                                                                               layout) {
-    generate_logicitem_messages(*this, layout);
+    generate_inserted_logicitem_messages(*this, layout);
 }
 
 template <>
 ConnectionIndex<connection_index::ContentType::Wire,
                 connection_index::DirectionType::Input>::ConnectionIndex(const Layout&
                                                                              layout) {
-    generate_wire_messages(*this, layout);
+    generate_inserted_wire_messages(*this, layout);
 }
 
 template <>
 ConnectionIndex<connection_index::ContentType::Wire,
                 connection_index::DirectionType::Output>::ConnectionIndex(const Layout&
                                                                               layout) {
-    generate_wire_messages(*this, layout);
+    generate_inserted_wire_messages(*this, layout);
 }
 
 //

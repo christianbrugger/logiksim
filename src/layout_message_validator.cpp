@@ -33,7 +33,7 @@ auto inserted_segment_value_t::format() const -> std::string {
 //
 
 MessageValidator::MessageValidator(const Layout &layout) {
-    generate_layout_messages(*this, layout);
+    generate_all_layout_messages(*this, layout);
 }
 
 auto MessageValidator::format() const -> std::string {

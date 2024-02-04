@@ -1,5 +1,4 @@
 #include "collision_index.h"
-#include "index/collision_index.h"
 
 #include "algorithm/fmt_join.h"
 #include "algorithm/range.h"
@@ -8,6 +7,7 @@
 #include "format/std_type.h"
 #include "geometry/line.h"
 #include "geometry/orientation.h"
+#include "index/collision_index.h"
 #include "layout_info.h"
 #include "layout_message.h"
 #include "layout_message_generation.h"
@@ -442,7 +442,7 @@ auto set_wire_state(CollisionIndex::map_type& map, point_t position,
 }  // namespace collision_index
 
 CollisionIndex::CollisionIndex(const Layout& layout) {
-    generate_layout_messages(*this, layout);
+    generate_inserted_layout_messages(*this, layout);
 }
 
 auto CollisionIndex::format() const -> std::string {
@@ -458,8 +458,7 @@ auto CollisionIndex::allocated_size() const -> std::size_t {
     return get_allocated_size(map_);
 }
 
-auto CollisionIndex::handle(
-    const info_message::LogicItemInserted& message) -> void {
+auto CollisionIndex::handle(const info_message::LogicItemInserted& message) -> void {
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
@@ -468,8 +467,8 @@ auto CollisionIndex::handle(
     }
 }
 
-auto CollisionIndex::handle(
-    const info_message::InsertedLogicItemIdUpdated& message) -> void {
+auto CollisionIndex::handle(const info_message::InsertedLogicItemIdUpdated& message)
+    -> void {
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
@@ -478,8 +477,7 @@ auto CollisionIndex::handle(
     }
 }
 
-auto CollisionIndex::handle(
-    const info_message::LogicItemUninserted& message) -> void {
+auto CollisionIndex::handle(const info_message::LogicItemUninserted& message) -> void {
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
@@ -488,8 +486,7 @@ auto CollisionIndex::handle(
     }
 }
 
-auto CollisionIndex::handle(
-    const info_message::SegmentInserted& message) -> void {
+auto CollisionIndex::handle(const info_message::SegmentInserted& message) -> void {
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.segment_info)) {
@@ -498,8 +495,8 @@ auto CollisionIndex::handle(
     }
 }
 
-auto CollisionIndex::handle(
-    const info_message::InsertedSegmentIdUpdated& message) -> void {
+auto CollisionIndex::handle(const info_message::InsertedSegmentIdUpdated& message)
+    -> void {
     using namespace collision_index;
 
     if (message.new_segment.wire_id == message.old_segment.wire_id) {
@@ -512,8 +509,8 @@ auto CollisionIndex::handle(
     }
 }
 
-auto CollisionIndex::handle(
-    const info_message::InsertedEndPointsUpdated& message) -> void {
+auto CollisionIndex::handle(const info_message::InsertedEndPointsUpdated& message)
+    -> void {
     using namespace collision_index;
 
     const auto wire_id = message.segment.wire_id;
@@ -526,8 +523,7 @@ auto CollisionIndex::handle(
     }
 }
 
-auto CollisionIndex::handle(
-    const info_message::SegmentUninserted& message) -> void {
+auto CollisionIndex::handle(const info_message::SegmentUninserted& message) -> void {
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.segment_info)) {
