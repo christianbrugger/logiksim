@@ -42,8 +42,8 @@ auto operation_t::format() const -> std::string {
 // Visible Selection
 //
 
-auto VisibleSelection::submit(const editable_circuit::InfoMessage& message) -> void {
-    using namespace editable_circuit::info_message;
+auto VisibleSelection::submit(const InfoMessage& message) -> void {
+    using namespace info_message;
     Expects(class_invariant_holds());
 
     // we only keep the inital selection updated

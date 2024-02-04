@@ -112,7 +112,7 @@ auto SelectionStore::destroy(selection_id_t selection_id) -> void {
     throw std::runtime_error("Selection not found in selection store remove.");
 }
 
-auto SelectionStore::submit(const editable_circuit::InfoMessage& message) -> void {
+auto SelectionStore::submit(const InfoMessage& message) -> void {
     for (auto& item : selections_) {
         item.second.submit(message);
     }

@@ -5,7 +5,6 @@
 #include <vector>
 
 namespace logicsim {
-namespace editable_circuit {
 
 namespace info_message {
 
@@ -38,9 +37,8 @@ using Message = std::variant<                                                //
 
 using InfoMessage = info_message::Message;
 
-using message_vector_t = std::vector<editable_circuit::InfoMessage>;
+using message_vector_t = std::vector<InfoMessage>;
 
-}  // namespace editable_circuit
 }  // namespace logicsim
 
 #endif

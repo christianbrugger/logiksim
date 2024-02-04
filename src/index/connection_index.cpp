@@ -29,29 +29,29 @@ auto wire_value_t::format() const -> std::string {
 
 template <>
 ConnectionIndex<connection_index::ContentType::LogicItem,
-                connection_index::DirectionType::Input>::ConnectionIndex(
-    const Layout& layout) {
+                connection_index::DirectionType::Input>::ConnectionIndex(const Layout&
+                                                                             layout) {
     generate_logicitem_messages(*this, layout);
 }
 
 template <>
 ConnectionIndex<connection_index::ContentType::LogicItem,
-                connection_index::DirectionType::Output>::ConnectionIndex(
-    const Layout& layout) {
+                connection_index::DirectionType::Output>::ConnectionIndex(const Layout&
+                                                                              layout) {
     generate_logicitem_messages(*this, layout);
 }
 
 template <>
 ConnectionIndex<connection_index::ContentType::Wire,
-                connection_index::DirectionType::Input>::ConnectionIndex(
-    const Layout& layout) {
+                connection_index::DirectionType::Input>::ConnectionIndex(const Layout&
+                                                                             layout) {
     generate_wire_messages(*this, layout);
 }
 
 template <>
 ConnectionIndex<connection_index::ContentType::Wire,
-                connection_index::DirectionType::Output>::ConnectionIndex(
-    const Layout& layout) {
+                connection_index::DirectionType::Output>::ConnectionIndex(const Layout&
+                                                                              layout) {
     generate_wire_messages(*this, layout);
 }
 
@@ -128,7 +128,7 @@ auto get_and_verify_cache_entry(map_type<ContentType::Wire>& map, point_t positi
 template <>
 auto ConnectionIndex<connection_index::ContentType::LogicItem,
                      connection_index::DirectionType::Input>::
-    handle(const editable_circuit::info_message::LogicItemInserted& message) -> void {
+    handle(const info_message::LogicItemInserted& message) -> void {
     using namespace connection_index;
 
     for (const auto info : input_locations_and_id(message.data)) {
@@ -148,7 +148,7 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::LogicItem,
                      connection_index::DirectionType::Output>::
-    handle(const editable_circuit::info_message::LogicItemInserted& message) -> void {
+    handle(const info_message::LogicItemInserted& message) -> void {
     using namespace connection_index;
 
     for (auto info : output_locations_and_id(message.data)) {
@@ -167,12 +167,12 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Input>::
-    handle(const editable_circuit::info_message::LogicItemInserted&) -> void {}
+    handle(const info_message::LogicItemInserted&) -> void {}
 
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Output>::
-    handle(const editable_circuit::info_message::LogicItemInserted&) -> void {}
+    handle(const info_message::LogicItemInserted&) -> void {}
 
 //
 // InsertedLogicItemIdUpdated
@@ -181,8 +181,7 @@ auto ConnectionIndex<connection_index::ContentType::Wire,
 template <>
 auto ConnectionIndex<connection_index::ContentType::LogicItem,
                      connection_index::DirectionType::Input>::
-    handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated& message)
-        -> void {
+    handle(const info_message::InsertedLogicItemIdUpdated& message) -> void {
     using namespace connection_index;
 
     for (auto info : input_locations_and_id(message.data)) {
@@ -200,8 +199,7 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::LogicItem,
                      connection_index::DirectionType::Output>::
-    handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated& message)
-        -> void {
+    handle(const info_message::InsertedLogicItemIdUpdated& message) -> void {
     using namespace connection_index;
 
     for (auto info : output_locations_and_id(message.data)) {
@@ -219,12 +217,12 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Input>::
-    handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated&) -> void {}
+    handle(const info_message::InsertedLogicItemIdUpdated&) -> void {}
 
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Output>::
-    handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated&) -> void {}
+    handle(const info_message::InsertedLogicItemIdUpdated&) -> void {}
 
 //
 // LogicItemUninserted
@@ -233,7 +231,7 @@ auto ConnectionIndex<connection_index::ContentType::Wire,
 template <>
 auto ConnectionIndex<connection_index::ContentType::LogicItem,
                      connection_index::DirectionType::Input>::
-    handle(const editable_circuit::info_message::LogicItemUninserted& message) -> void {
+    handle(const info_message::LogicItemUninserted& message) -> void {
     using namespace connection_index;
 
     for (auto info : input_locations_and_id(message.data)) {
@@ -251,7 +249,7 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::LogicItem,
                      connection_index::DirectionType::Output>::
-    handle(const editable_circuit::info_message::LogicItemUninserted& message) -> void {
+    handle(const info_message::LogicItemUninserted& message) -> void {
     using namespace connection_index;
 
     for (auto info : output_locations_and_id(message.data)) {
@@ -269,12 +267,12 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Input>::
-    handle(const editable_circuit::info_message::LogicItemUninserted&) -> void {}
+    handle(const info_message::LogicItemUninserted&) -> void {}
 
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Output>::
-    handle(const editable_circuit::info_message::LogicItemUninserted&) -> void {}
+    handle(const info_message::LogicItemUninserted&) -> void {}
 
 //
 // SegmentInserted
@@ -283,7 +281,7 @@ auto ConnectionIndex<connection_index::ContentType::Wire,
 namespace connection_index {
 namespace {
 
-using namespace editable_circuit::info_message;
+using namespace info_message;
 
 template <connection_index::DirectionType Direction>
 consteval auto point_type() -> SegmentPointType {
@@ -387,7 +385,7 @@ auto handle_wire(wire_map_t& map, SegmentPointType point_type,
 template <connection_index::ContentType Content,
           connection_index::DirectionType Direction>
 auto ConnectionIndex<Content, Direction>::handle(
-    const editable_circuit::info_message::SegmentInserted& message) -> void {
+    const info_message::SegmentInserted& message) -> void {
     if constexpr (Content == ContentType::Wire) {
         using namespace connection_index;
         handle_wire(map_, point_type<Direction>(), message);
@@ -397,7 +395,7 @@ auto ConnectionIndex<Content, Direction>::handle(
 template <connection_index::ContentType Content,
           connection_index::DirectionType Direction>
 auto ConnectionIndex<Content, Direction>::handle(
-    const editable_circuit::info_message::InsertedSegmentIdUpdated& message) -> void {
+    const info_message::InsertedSegmentIdUpdated& message) -> void {
     if constexpr (Content == ContentType::Wire) {
         using namespace connection_index;
         handle_wire(map_, point_type<Direction>(), message);
@@ -407,8 +405,8 @@ auto ConnectionIndex<Content, Direction>::handle(
 template <connection_index::ContentType Content,
           connection_index::DirectionType Direction>
 auto ConnectionIndex<Content, Direction>::handle(
-    const editable_circuit::info_message::InsertedEndPointsUpdated& message) -> void {
-    using namespace editable_circuit::info_message;
+    const info_message::InsertedEndPointsUpdated& message) -> void {
+    using namespace info_message;
 
     handle(SegmentUninserted {message.segment, message.old_segment_info});
     handle(SegmentInserted {message.segment, message.new_segment_info});
@@ -417,7 +415,7 @@ auto ConnectionIndex<Content, Direction>::handle(
 template <connection_index::ContentType Content,
           connection_index::DirectionType Direction>
 auto ConnectionIndex<Content, Direction>::handle(
-    const editable_circuit::info_message::SegmentUninserted& message) -> void {
+    const info_message::SegmentUninserted& message) -> void {
     if constexpr (Content == ContentType::Wire) {
         using namespace connection_index;
         handle_wire(map_, point_type<Direction>(), message);
@@ -430,9 +428,8 @@ auto ConnectionIndex<Content, Direction>::handle(
 
 template <connection_index::ContentType Content,
           connection_index::DirectionType Direction>
-auto ConnectionIndex<Content, Direction>::submit(
-    const editable_circuit::InfoMessage& message) -> void {
-    using namespace editable_circuit::info_message;
+auto ConnectionIndex<Content, Direction>::submit(const InfoMessage& message) -> void {
+    using namespace info_message;
 
     // logic items
     if constexpr (Content == ContentType::LogicItem) {

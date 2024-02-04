@@ -120,7 +120,7 @@ class OldEditableCircuit {
     [[nodiscard]] auto caches() const -> const LayoutIndex&;
 
    private:
-    auto submit(const editable_circuit::InfoMessage& message) -> void;
+    auto submit(const InfoMessage& message) -> void;
     auto get_sender() -> editable_circuit::MessageSender&;
     auto get_state() -> editable_circuit::State;
 

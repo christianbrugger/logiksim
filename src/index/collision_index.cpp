@@ -459,7 +459,7 @@ auto CollisionIndex::allocated_size() const -> std::size_t {
 }
 
 auto CollisionIndex::handle(
-    const editable_circuit::info_message::LogicItemInserted& message) -> void {
+    const info_message::LogicItemInserted& message) -> void {
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
@@ -469,7 +469,7 @@ auto CollisionIndex::handle(
 }
 
 auto CollisionIndex::handle(
-    const editable_circuit::info_message::InsertedLogicItemIdUpdated& message) -> void {
+    const info_message::InsertedLogicItemIdUpdated& message) -> void {
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
@@ -479,7 +479,7 @@ auto CollisionIndex::handle(
 }
 
 auto CollisionIndex::handle(
-    const editable_circuit::info_message::LogicItemUninserted& message) -> void {
+    const info_message::LogicItemUninserted& message) -> void {
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
@@ -489,7 +489,7 @@ auto CollisionIndex::handle(
 }
 
 auto CollisionIndex::handle(
-    const editable_circuit::info_message::SegmentInserted& message) -> void {
+    const info_message::SegmentInserted& message) -> void {
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.segment_info)) {
@@ -499,7 +499,7 @@ auto CollisionIndex::handle(
 }
 
 auto CollisionIndex::handle(
-    const editable_circuit::info_message::InsertedSegmentIdUpdated& message) -> void {
+    const info_message::InsertedSegmentIdUpdated& message) -> void {
     using namespace collision_index;
 
     if (message.new_segment.wire_id == message.old_segment.wire_id) {
@@ -513,7 +513,7 @@ auto CollisionIndex::handle(
 }
 
 auto CollisionIndex::handle(
-    const editable_circuit::info_message::InsertedEndPointsUpdated& message) -> void {
+    const info_message::InsertedEndPointsUpdated& message) -> void {
     using namespace collision_index;
 
     const auto wire_id = message.segment.wire_id;
@@ -527,7 +527,7 @@ auto CollisionIndex::handle(
 }
 
 auto CollisionIndex::handle(
-    const editable_circuit::info_message::SegmentUninserted& message) -> void {
+    const info_message::SegmentUninserted& message) -> void {
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.segment_info)) {
@@ -536,8 +536,8 @@ auto CollisionIndex::handle(
     }
 }
 
-auto CollisionIndex::submit(const editable_circuit::InfoMessage& message) -> void {
-    using namespace editable_circuit::info_message;
+auto CollisionIndex::submit(const InfoMessage& message) -> void {
+    using namespace info_message;
 
     // logic items
     if (auto pointer = std::get_if<LogicItemInserted>(&message)) {

@@ -8,6 +8,7 @@
 #include "container/graph/visitor/empty_visitor.h"
 #include "format/container.h"
 #include "geometry/segment_info.h"
+#include "segment_tree.h"
 #include "vocabulary/part_copy_definition.h"
 #include "vocabulary/rect.h"
 
@@ -495,11 +496,11 @@ auto SegmentTree::output_count() const -> connection_count_t {
 }
 
 auto SegmentTree::format() const -> std::string {
-    const auto valid_str = valid_parts_vector_.empty()
-                               ? std::string {}
-                               : fmt::format(", valid {}", valid_parts_vector_);
+    const auto valid_str = has_valid_parts(*this)
+                               ? fmt::format(", valid {}", valid_parts_vector_)
+                               : std::string {};
 
-    return fmt::format("SegmentTree({}x{}, {})", input_count(), output_count(),
+    return fmt::format("SegmentTree({}x{}, {}{})", input_count(), output_count(),
                        segments_, valid_str);
 }
 
@@ -543,6 +544,10 @@ auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)
     }
 
     return mask;
+}
+
+auto has_valid_parts(const SegmentTree& tree) -> bool {
+    return !std::ranges::all_of(tree.valid_parts(), &PartSelection::empty);
 }
 
 auto calculate_bounding_rect(const SegmentTree& tree) -> rect_t {

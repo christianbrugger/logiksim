@@ -2,7 +2,7 @@
 
 #include <fmt/core.h>
 
-namespace logicsim::editable_circuit {
+namespace logicsim {
 
 //
 // Info Messages
@@ -89,4 +89,4 @@ auto SegmentUninserted::format() const -> std::string {
 
 }  // namespace info_message
 
-}  // namespace logicsim::editable_circuit
+}  // namespace logicsim

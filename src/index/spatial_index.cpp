@@ -295,13 +295,13 @@ auto SpatialIndex::operator==(const SpatialIndex& other) const -> bool {
 }
 
 auto SpatialIndex::handle(
-    const editable_circuit::info_message::LogicItemInserted& message) -> void {
+    const info_message::LogicItemInserted& message) -> void {
     const auto box = spatial_index::get_selection_box(message.data);
     tree_->value.insert({box, value_t {message.logicitem_id}});
 }
 
 auto SpatialIndex::handle(
-    const editable_circuit::info_message::LogicItemUninserted& message) -> void {
+    const info_message::LogicItemUninserted& message) -> void {
     const auto box = spatial_index::get_selection_box(message.data);
     const auto remove_count = tree_->value.remove({box, value_t {message.logicitem_id}});
 
@@ -311,22 +311,22 @@ auto SpatialIndex::handle(
 }
 
 auto SpatialIndex::handle(
-    const editable_circuit::info_message::InsertedLogicItemIdUpdated& message) -> void {
-    using namespace editable_circuit::info_message;
+    const info_message::InsertedLogicItemIdUpdated& message) -> void {
+    using namespace info_message;
 
     // r-tree data is immutable
     handle(LogicItemUninserted {message.old_logicitem_id, message.data});
     handle(LogicItemInserted {message.new_logicitem_id, message.data});
 }
 
-auto SpatialIndex::handle(const editable_circuit::info_message::SegmentInserted& message)
+auto SpatialIndex::handle(const info_message::SegmentInserted& message)
     -> void {
     const auto box = spatial_index::get_selection_box(message.segment_info.line);
     tree_->value.insert({box, value_t {message.segment}});
 }
 
 auto SpatialIndex::handle(
-    const editable_circuit::info_message::SegmentUninserted& message) -> void {
+    const info_message::SegmentUninserted& message) -> void {
     const auto box = spatial_index::get_selection_box(message.segment_info.line);
     const auto remove_count = tree_->value.remove({box, value_t {message.segment}});
 
@@ -336,8 +336,8 @@ auto SpatialIndex::handle(
 }
 
 auto SpatialIndex::handle(
-    const editable_circuit::info_message::InsertedSegmentIdUpdated& message) -> void {
-    using namespace editable_circuit::info_message;
+    const info_message::InsertedSegmentIdUpdated& message) -> void {
+    using namespace info_message;
 
     // r-tree data is immutable
     handle(SegmentUninserted {message.old_segment, message.segment_info});
@@ -347,8 +347,8 @@ auto SpatialIndex::handle(
     // 1975 ms (this) vs 1927 ms (using query & const_cast) overall performance.
 }
 
-auto SpatialIndex::submit(const editable_circuit::InfoMessage& message) -> void {
-    using namespace editable_circuit::info_message;
+auto SpatialIndex::submit(const InfoMessage& message) -> void {
+    using namespace info_message;
 
     // logic items
     if (auto pointer = std::get_if<LogicItemInserted>(&message)) {

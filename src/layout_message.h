@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_LAYOUT_MESSAGE_H
 #define LOGIKSIM_LAYOUT_MESSAGE_H
 
+#include "algorithm/fmt_join.h"
 #include "format/struct.h"
 #include "layout_message_forward.h"
 #include "vocabulary/layout_calculation_data.h"
@@ -8,7 +9,6 @@
 #include "vocabulary/segment.h"
 #include "vocabulary/segment_info.h"
 #include "vocabulary/segment_part.h"
-#include "algorithm/fmt_join.h"
 
 #include <fmt/core.h>
 
@@ -16,8 +16,6 @@
 #include <variant>
 
 namespace logicsim {
-
-namespace editable_circuit {
 
 //
 // Info Messages
@@ -162,31 +160,27 @@ using Message = std::variant<                                                //
 
 using InfoMessage = info_message::Message;
 
-}  // namespace editable_circuit
-
 }  // namespace logicsim
 
 template <>
-struct fmt::formatter<logicsim::editable_circuit::InfoMessage> {
+struct fmt::formatter<logicsim::InfoMessage> {
     constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    auto format(const logicsim::editable_circuit::InfoMessage &obj,
-                fmt::format_context &ctx) const {
+    auto format(const logicsim::InfoMessage &obj, fmt::format_context &ctx) const {
         const auto str = std::visit([](auto &&v) { return v.format(); }, obj);
         return fmt::format_to(ctx.out(), "{}", str);
     }
 };
 
 template <>
-struct fmt::formatter<logicsim::editable_circuit::message_vector_t> {
+struct fmt::formatter<logicsim::message_vector_t> {
     constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    auto format(const logicsim::editable_circuit::message_vector_t &obj,
-                fmt::format_context &ctx) const {
+    auto format(const logicsim::message_vector_t &obj, fmt::format_context &ctx) const {
         return fmt::format_to(ctx.out(), "{}", logicsim::fmt_join("\n", obj));
     }
 };

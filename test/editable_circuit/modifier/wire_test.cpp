@@ -39,7 +39,7 @@ auto add_test_wire(Layout &layout, SegmentPointType point_type,
 //
 
 TEST(EditableCircuitModifierWire, AddTempSegment) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -79,7 +79,7 @@ TEST(EditableCircuitModifierWire, AddTempSegment) {
 //
 
 TEST(EditableCircuitModifierWire, TempToColliding) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -138,7 +138,7 @@ TEST(EditableCircuitModifierWire, TempToColliding) {
 }
 
 TEST(EditableCircuitModifierWire, TempToCollidingPartialOneSide) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -213,7 +213,7 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialOneSide) {
 }
 
 TEST(EditableCircuitModifierWire, TempToCollidingPartialMiddle) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -300,7 +300,7 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialMiddle) {
 //
 
 TEST(EditableCircuitModifierWire, TempToValid) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -440,7 +440,7 @@ TEST(EditableCircuitModifierWire, IsWirePositionRepresentablePart) {
 //
 
 TEST(EditableCircuitModifierWire, MoveOrDeleteWireMove) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     auto layout = Layout {};
 
     const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
@@ -475,7 +475,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMove) {
 }
 
 TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     auto layout = Layout {};
 
     const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
@@ -524,7 +524,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
 }
 
 TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialEnd) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     auto layout = Layout {};
 
     const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
@@ -566,7 +566,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialEnd) {
 }
 
 TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     auto layout = Layout {};
 
     const auto line = ordered_line_t {point_t {0, 0}, point_t {20, 0}};

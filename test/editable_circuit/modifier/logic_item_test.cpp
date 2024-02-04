@@ -70,7 +70,7 @@ TEST(EditableCircuitModifierLogicItem, VerifyNoLogging) {
 //
 
 TEST(EditableCircuitModifierLogicItem, DeleteTemporaryElement) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
 
     auto layout = Layout {};
@@ -96,7 +96,7 @@ TEST(EditableCircuitModifierLogicItem, DeleteTemporaryElement) {
 }
 
 TEST(EditableCircuitModifierLogicItem, DeletePreserving1) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
 
     auto layout = Layout {};
@@ -133,7 +133,7 @@ TEST(EditableCircuitModifierLogicItem, DeletePreserving1) {
 }
 
 TEST(EditableCircuitModifierLogicItem, DeletePreserving2) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
 
     auto layout = Layout {};
@@ -218,7 +218,7 @@ TEST(EditableCircuitModifierLogicItem, IsRepresentableAndElement) {
 //
 
 TEST(EditableCircuitModifierLogicItem, MoveLogicItemSuccess) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
 
     using enum display_state_t;
 
@@ -244,7 +244,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemSuccess) {
 }
 
 TEST(EditableCircuitModifierLogicItem, MoveLogicItemUnchecked) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -268,7 +268,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemUnchecked) {
 }
 
 TEST(EditableCircuitModifierLogicItem, MoveLogicItemDeleted) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -297,7 +297,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemDeleted) {
 //
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempValid) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -328,7 +328,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempValid) {
 }
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToInsert) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -359,7 +359,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToInsert) {
 }
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempColliding) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -391,7 +391,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempColliding) {
 }
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToDiscard) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -427,7 +427,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToDiscard) {
 //
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToValid) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -453,7 +453,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToValid) {
 }
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporary) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -484,7 +484,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporary) {
 }
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporaryPreserving) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 
@@ -522,7 +522,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporaryPreserving
 //
 
 TEST(EditableCircuitModifierLogicItem, LogicItemAddElement) {
-    using namespace editable_circuit::info_message;
+    using namespace info_message;
     using enum display_state_t;
     auto layout = Layout {};
 

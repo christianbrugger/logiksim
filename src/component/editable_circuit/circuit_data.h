@@ -25,7 +25,7 @@ struct CircuitData {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
-    auto submit(const editable_circuit::InfoMessage& message) -> void;
+    auto submit(const InfoMessage& message) -> void;
 
    public:
     Layout layout;

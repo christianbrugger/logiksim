@@ -41,7 +41,7 @@ auto LayoutIndex::allocated_size() const -> std::size_t {
            spatial_index_.allocated_size();
 }
 
-auto LayoutIndex::submit(const editable_circuit::InfoMessage& message) -> void {
+auto LayoutIndex::submit(const InfoMessage& message) -> void {
     logicitems_inputs_.submit(message);
     logicitems_outputs_.submit(message);
     wire_inputs_.submit(message);

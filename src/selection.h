@@ -72,16 +72,16 @@ class Selection {
     [[nodiscard]] auto selected_segments(segment_t segment) const
         -> const PartSelection &;
 
-    auto submit(const editable_circuit::InfoMessage &message) -> void;
+    auto submit(const InfoMessage &message) -> void;
 
    private:
-    auto handle(const editable_circuit::info_message::LogicItemDeleted &message) -> void;
-    auto handle(const editable_circuit::info_message::LogicItemIdUpdated &message)
+    auto handle(const info_message::LogicItemDeleted &message) -> void;
+    auto handle(const info_message::LogicItemIdUpdated &message)
         -> void;
 
-    auto handle(const editable_circuit::info_message::SegmentIdUpdated &message) -> void;
-    auto handle(const editable_circuit::info_message::SegmentPartMoved &message) -> void;
-    auto handle(const editable_circuit::info_message::SegmentPartDeleted &message)
+    auto handle(const info_message::SegmentIdUpdated &message) -> void;
+    auto handle(const info_message::SegmentPartMoved &message) -> void;
+    auto handle(const info_message::SegmentPartDeleted &message)
         -> void;
 
     [[nodiscard]] auto class_invariant_holds() const -> bool;

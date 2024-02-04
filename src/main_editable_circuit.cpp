@@ -68,8 +68,8 @@ auto OldEditableCircuit::add_example() -> void {
 }
 
 auto OldEditableCircuit::add_logic_item(const LogicItemDefinition& definition,
-                                     point_t position, InsertionMode insertion_mode,
-                                     selection_id_t selection_id) -> void {
+                                        point_t position, InsertionMode insertion_mode,
+                                        selection_id_t selection_id) -> void {
     const auto logicitem_id = editable_circuit::add_logic_item(get_state(), definition,
                                                                position, insertion_mode);
 
@@ -79,15 +79,15 @@ auto OldEditableCircuit::add_logic_item(const LogicItemDefinition& definition,
 }
 
 auto OldEditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode,
-                                       selection_id_t selection_id) -> void {
+                                          selection_id_t selection_id) -> void {
     auto* selection_ptr = selection_id ? &selection(selection_id) : nullptr;
     add_wire_segment(get_state(), selection_ptr, line, insertion_mode);
 }
 
 auto OldEditableCircuit::add_line_segments(point_t p0, point_t p1,
-                                        LineInsertionType segment_type,
-                                        InsertionMode insertion_mode,
-                                        selection_id_t selection_id) -> void {
+                                           LineInsertionType segment_type,
+                                           InsertionMode insertion_mode,
+                                           selection_id_t selection_id) -> void {
     auto* selection_ptr = selection_id ? &selection(selection_id) : nullptr;
     editable_circuit::add_wire(get_state(), p0, p1, segment_type, insertion_mode,
                                selection_ptr);
@@ -95,14 +95,15 @@ auto OldEditableCircuit::add_line_segments(point_t p0, point_t p1,
 
 namespace {}  // namespace
 
-auto OldEditableCircuit::new_positions_representable(const Selection& selection, int delta_x,
-                                                  int delta_y) const -> bool {
+auto OldEditableCircuit::new_positions_representable(const Selection& selection,
+                                                     int delta_x, int delta_y) const
+    -> bool {
     return editable_circuit::new_positions_representable(selection, layout_, delta_x,
                                                          delta_y);
 }
 
 auto OldEditableCircuit::move_or_delete(selection_id_t selection_id, int delta_x,
-                                     int delta_y) -> void {
+                                        int delta_y) -> void {
     move_or_delete(selection(selection_id), delta_x, delta_y);
 }
 
@@ -116,7 +117,7 @@ auto OldEditableCircuit::move_or_delete(Selection selection__, int delta_x, int 
 }
 
 auto OldEditableCircuit::change_insertion_mode(Selection selection__,
-                                            InsertionMode new_insertion_mode) -> void {
+                                               InsertionMode new_insertion_mode) -> void {
     const auto tracked_selection = ScopedSelection {*this, std::move(selection__)};
     auto& temp_selection = this->selection(tracked_selection.selection_id());
 
@@ -125,12 +126,12 @@ auto OldEditableCircuit::change_insertion_mode(Selection selection__,
 }
 
 auto OldEditableCircuit::change_insertion_mode(selection_id_t selection_id,
-                                            InsertionMode new_insertion_mode) -> void {
+                                               InsertionMode new_insertion_mode) -> void {
     change_insertion_mode(selection(selection_id), new_insertion_mode);
 }
 
-auto OldEditableCircuit::move_unchecked(const Selection& selection, int delta_x, int delta_y)
-    -> void {
+auto OldEditableCircuit::move_unchecked(const Selection& selection, int delta_x,
+                                        int delta_y) -> void {
     editable_circuit::move_unchecked(selection, layout_, delta_x, delta_y);
 }
 
@@ -154,7 +155,7 @@ auto OldEditableCircuit::toggle_wire_crosspoint(point_t point) -> void {
 }
 
 auto OldEditableCircuit::set_attributes(logicitem_id_t logicitem_id,
-                                     attributes_clock_generator_t attrs) -> void {
+                                        attributes_clock_generator_t attrs) -> void {
     layout_.logic_items().set_attributes(logicitem_id, std::move(attrs));
 }
 
@@ -191,7 +192,8 @@ auto OldEditableCircuit::selection(selection_id_t selection_id) -> Selection& {
     return selection_store_.at(selection_id);
 }
 
-auto OldEditableCircuit::selection(selection_id_t selection_id) const -> const Selection& {
+auto OldEditableCircuit::selection(selection_id_t selection_id) const
+    -> const Selection& {
     return selection_store_.at(selection_id);
 }
 
@@ -222,7 +224,7 @@ auto OldEditableCircuit::clear_visible_selection() -> void {
 }
 
 auto OldEditableCircuit::add_visible_selection_rect(SelectionFunction function,
-                                                 rect_fine_t rect) -> void {
+                                                    rect_fine_t rect) -> void {
     selection_builder_.add(function, rect);
 }
 
@@ -234,7 +236,8 @@ auto OldEditableCircuit::try_pop_last_visible_selection_rect() -> bool {
     return true;
 }
 
-auto OldEditableCircuit::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool {
+auto OldEditableCircuit::try_update_last_visible_selection_rect(rect_fine_t rect)
+    -> bool {
     if (selection_builder_.operation_count() == size_t {0}) {
         return false;
     }
@@ -258,7 +261,7 @@ auto OldEditableCircuit::caches() const -> const LayoutIndex& {
     return layout_index_;
 }
 
-auto OldEditableCircuit::submit(const editable_circuit::InfoMessage& message) -> void {
+auto OldEditableCircuit::submit(const InfoMessage& message) -> void {
     layout_index_.submit(message);
     selection_builder_.submit(message);
 
@@ -270,7 +273,7 @@ auto OldEditableCircuit::submit(const editable_circuit::InfoMessage& message) ->
 auto OldEditableCircuit::get_sender() -> editable_circuit::MessageSender& {
     // lambda contains the wrong 'this' pointer after copy or move
     sender_ = editable_circuit::MessageSender {
-        [this](const editable_circuit::InfoMessage& message) { this->submit(message); }};
+        [this](const InfoMessage& message) { this->submit(message); }};
     return sender_;
 }
 
@@ -288,7 +291,8 @@ ScopedSelection::ScopedSelection(OldEditableCircuit& editable_circuit)
     Ensures(selection_id_);
 }
 
-ScopedSelection::ScopedSelection(OldEditableCircuit& editable_circuit, Selection selection__)
+ScopedSelection::ScopedSelection(OldEditableCircuit& editable_circuit,
+                                 Selection selection__)
     : editable_circuit_ {&editable_circuit},
       selection_id_ {editable_circuit.create_selection(std::move(selection__))} {
     Ensures(selection_id_);

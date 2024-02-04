@@ -213,7 +213,7 @@ auto Selection::selected_segments(segment_t segment) const -> const PartSelectio
 // Handle Methods
 //
 
-auto Selection::handle(const editable_circuit::info_message::LogicItemDeleted &message)
+auto Selection::handle(const info_message::LogicItemDeleted &message)
     -> void {
     Expects(class_invariant_holds());
 
@@ -222,7 +222,7 @@ auto Selection::handle(const editable_circuit::info_message::LogicItemDeleted &m
     Ensures(class_invariant_holds());
 }
 
-auto Selection::handle(const editable_circuit::info_message::LogicItemIdUpdated &message)
+auto Selection::handle(const info_message::LogicItemIdUpdated &message)
     -> void {
     Expects(class_invariant_holds());
 
@@ -235,7 +235,7 @@ auto Selection::handle(const editable_circuit::info_message::LogicItemIdUpdated 
     Ensures(class_invariant_holds());
 }
 
-auto Selection::handle(const editable_circuit::info_message::SegmentIdUpdated &message)
+auto Selection::handle(const info_message::SegmentIdUpdated &message)
     -> void {
     Expects(class_invariant_holds());
 
@@ -257,7 +257,7 @@ namespace {
 
 auto _handle_move_different_segment(
     detail::selection::segment_map_t &map,
-    editable_circuit::info_message::SegmentPartMoved message) {
+    info_message::SegmentPartMoved message) {
     using namespace detail::selection;
 
     if (message.segment_part_source.segment == message.segment_part_destination.segment)
@@ -303,7 +303,7 @@ auto _handle_move_different_segment(
 }
 
 auto _handle_move_same_segment(detail::selection::segment_map_t &map,
-                               editable_circuit::info_message::SegmentPartMoved message) {
+                               info_message::SegmentPartMoved message) {
     if (message.segment_part_source.segment != message.segment_part_destination.segment)
         [[unlikely]] {
         throw std::runtime_error("source and destination need to the same");
@@ -327,7 +327,7 @@ auto _handle_move_same_segment(detail::selection::segment_map_t &map,
 
 }  // namespace
 
-auto Selection::handle(const editable_circuit::info_message::SegmentPartMoved &message)
+auto Selection::handle(const info_message::SegmentPartMoved &message)
     -> void {
     Expects(class_invariant_holds());
 
@@ -340,7 +340,7 @@ auto Selection::handle(const editable_circuit::info_message::SegmentPartMoved &m
     Ensures(class_invariant_holds());
 }
 
-auto Selection::handle(const editable_circuit::info_message::SegmentPartDeleted &message)
+auto Selection::handle(const info_message::SegmentPartDeleted &message)
     -> void {
     Expects(class_invariant_holds());
 
@@ -349,8 +349,8 @@ auto Selection::handle(const editable_circuit::info_message::SegmentPartDeleted 
     Ensures(class_invariant_holds());
 }
 
-auto Selection::submit(const editable_circuit::InfoMessage &message) -> void {
-    using namespace editable_circuit::info_message;
+auto Selection::submit(const InfoMessage &message) -> void {
+    using namespace info_message;
 
     // logic item
     if (const auto pointer = std::get_if<LogicItemDeleted>(&message)) {

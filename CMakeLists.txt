@@ -290,6 +290,7 @@ set(LS_CORE_SOURCES
     src/layout_message.cpp
     src/layout_message_forward.cpp
     src/layout_message_generation.cpp
+    src/layout_message_validator.cpp
     src/line_tree.cpp
     src/line_tree_generation.cpp
     src/load_save_file.cpp

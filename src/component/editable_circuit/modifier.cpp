@@ -21,7 +21,7 @@ namespace {
 
 [[nodiscard]] auto debug_class_invariant_holds(const Modifier& modifier) -> bool {
     if constexpr (DEBUG_CHECK_CLASS_INVARIANTS) {
-        assert(class_invariant_holds(modifier));
+        return class_invariant_holds(modifier);
     }
     return true;
 }
@@ -428,40 +428,71 @@ auto Modifier::apply_all_visible_selection_operations() -> void {
 // Free Methods
 //
 
+namespace {
+
+[[nodiscard]] auto inserted_wires_are_contiguous_tree_with_correct_endpoints(
+    const Layout& layout) {
+    const auto contiguous = [&](const wire_id_t& wire_id) {
+        return is_contiguous_tree_with_correct_endpoints(
+            layout.wires().segment_tree(wire_id));
+    };
+
+    return std::ranges::all_of(inserted_wire_ids(layout), contiguous);
+}
+
+[[nodiscard]] auto _temporary_point_types_valid(const Layout& layout) -> bool {
+    const auto& segment_tree = layout.wires().segment_tree(temporary_wire_id);
+
+    const auto is_valid = [](SegmentPointType type) -> bool {
+        return type == SegmentPointType::shadow_point ||
+               type == SegmentPointType::cross_point;
+    };
+
+    return std::ranges::all_of(segment_tree.segments(), [&](const segment_info_t& info) {
+        return is_valid(info.p0_type) && is_valid(info.p1_type);
+    });
+}
+
+[[nodiscard]] auto _colliding_point_types_valid(const Layout& layout) -> bool {
+    const auto& segment_tree = layout.wires().segment_tree(colliding_wire_id);
+
+    const auto is_valid = [](SegmentPointType type) -> bool {
+        return type == SegmentPointType::shadow_point;
+    };
+
+    return std::ranges::all_of(segment_tree.segments(), [&](const segment_info_t& info) {
+        return is_valid(info.p0_type) && is_valid(info.p1_type);
+    });
+}
+
+}  // namespace
+
 auto class_invariant_holds(const Modifier& modifier) -> bool {
     const auto& circuit = modifier.circuit_data();
 
     // NOT CHECKED:
+    //   Logic Items
+    //      + Body is fully representable within the grid.
     //   Inserted Logic Items:
     //      + Are not colliding with anything.
     //      + All connections with wires are compatible (type & orientation).
     //   Inserted Wires:
     //      + Segments are not colliding with anything.
     //      + Input corresponds to logicitem output and has correct orientation / position
-    //      + Segments form a flat tree. With input at the root.
-    //      + Have correctly set SegmentPointTypes (input, output, corner, cross, shadow).
-
-    // Logic Item
-    Expects(std::ranges::all_of(logicitem_ids(circuit.layout),
-                                [](const logicitem_id_t& logicitem_id) { return true; }));
 
     // Inserted Wires
+    Expects(inserted_wires_are_contiguous_tree_with_correct_endpoints(circuit.layout));
 
     // Uninserted Wires
     for (const auto wire_id : {temporary_wire_id, colliding_wire_id}) {
         const auto& segment_tree = circuit.layout.wires().segment_tree(wire_id);
 
-        Expects(segment_tree.valid_parts().empty());
+        Expects(!has_valid_parts(segment_tree));
         Expects(segment_tree.input_count() == connection_count_t {0});
         Expects(segment_tree.output_count() == connection_count_t {0});
-        Expects(
-            std::ranges::all_of(segment_tree.segments(), [](const segment_info_t& info) {
-                return info.p0_type == SegmentPointType::shadow_point &&
-                       info.p1_type == SegmentPointType::shadow_point;
-            }));
     }
-
-    // Inserted Logic Items
+    Expects(_temporary_point_types_valid(circuit.layout));
+    Expects(_colliding_point_types_valid(circuit.layout));
 
     // Layout Index
     Expects(circuit.index == LayoutIndex {circuit.layout});

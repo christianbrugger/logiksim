@@ -65,7 +65,7 @@ class VisibleSelection {
                                  const LayoutIndex &layout_index) const
         -> const Selection &;
 
-    auto submit(const editable_circuit::InfoMessage &message) -> void;
+    auto submit(const InfoMessage &message) -> void;
 
    private:
     [[nodiscard]] auto calculate_selection(const Layout &layout,

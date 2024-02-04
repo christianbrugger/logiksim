@@ -38,7 +38,7 @@ class LayoutIndex {
     [[nodiscard]] auto collision_index() const -> const CollisionIndex&;
     [[nodiscard]] auto selection_index() const -> const SpatialIndex&;
 
-    auto submit(const editable_circuit::InfoMessage& message) -> void;
+    auto submit(const InfoMessage& message) -> void;
 
    private:
     LogicItemInputIndex logicitems_inputs_ {};

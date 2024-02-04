@@ -37,6 +37,7 @@ class Layout {
     [[nodiscard]] auto allocated_size() const -> std::size_t;
     [[nodiscard]] auto format() const -> std::string;
 
+    // TODO make logic_items and wires simple attributes?
     [[nodiscard]] auto logic_items() -> layout::LogicItemStore &;
     [[nodiscard]] auto logic_items() const -> const layout::LogicItemStore &;
     [[nodiscard]] auto wires() -> layout::WireStore &;

@@ -56,7 +56,7 @@ class SelectionStore {
     [[nodiscard]] auto create() -> selection_id_t;
     auto destroy(selection_id_t selection_id) -> void;
 
-    auto submit(const editable_circuit::InfoMessage& message) -> void;
+    auto submit(const InfoMessage& message) -> void;
 
    private:
     selection_id_t next_selection_key_;

@@ -42,7 +42,7 @@ auto CircuitData::allocated_size() const -> std::size_t {
            visible_selection.allocated_size();
 }
 
-auto CircuitData::submit(const editable_circuit::InfoMessage& message) -> void {
+auto CircuitData::submit(const InfoMessage& message) -> void {
     if constexpr (DEBUG_PRINT_MESSAGES) {
         print(message);
     }

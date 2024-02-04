@@ -42,9 +42,9 @@ static_assert(sizeof(valid_vector_t) == 24);
  * @brief: A collection of lines with valid status.
  *
  * Note that the segment tree can never have more than one input.
- * 
+ *
  * Note that segments can overlap and be disjointed. Any set of ordered-lines is valid.
- * This later quality is used specifically to collect all temporary and colliding 
+ * This later quality is used specifically to collect all temporary and colliding
  * segments in one tree.
  *
  * Class invariants:
@@ -166,6 +166,7 @@ class SegmentTree {
         segment_index_t index_merge_to;
         segment_index_t index_deleted;
     };
+
     /**
      * @brief: Merge two touching segments and delete the second.
      *
@@ -206,6 +207,8 @@ class SegmentTree {
 };
 
 static_assert(sizeof(SegmentTree) == 56);  // 24 + 24 + 6 + 2
+
+[[nodiscard]] auto has_valid_parts(const SegmentTree &tree) -> bool;
 
 [[nodiscard]] auto calculate_bounding_rect(const SegmentTree &tree) -> rect_t;
 

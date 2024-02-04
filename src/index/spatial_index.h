@@ -81,19 +81,16 @@ class SpatialIndex {
 
     auto rects() const -> std::vector<rect_fine_t>;
 
-    auto submit(const editable_circuit::InfoMessage &message) -> void;
+    auto submit(const InfoMessage &message) -> void;
 
    private:
-    auto handle(const editable_circuit::info_message::LogicItemInserted &message) -> void;
-    auto handle(const editable_circuit::info_message::LogicItemUninserted &message)
-        -> void;
-    auto handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated &message)
-        -> void;
+    auto handle(const info_message::LogicItemInserted &message) -> void;
+    auto handle(const info_message::LogicItemUninserted &message) -> void;
+    auto handle(const info_message::InsertedLogicItemIdUpdated &message) -> void;
 
-    auto handle(const editable_circuit::info_message::SegmentInserted &message) -> void;
-    auto handle(const editable_circuit::info_message::SegmentUninserted &message) -> void;
-    auto handle(const editable_circuit::info_message::InsertedSegmentIdUpdated &message)
-        -> void;
+    auto handle(const info_message::SegmentInserted &message) -> void;
+    auto handle(const info_message::SegmentUninserted &message) -> void;
+    auto handle(const info_message::InsertedSegmentIdUpdated &message) -> void;
 
     // never null
     std::unique_ptr<spatial_index::tree_container> tree_;
