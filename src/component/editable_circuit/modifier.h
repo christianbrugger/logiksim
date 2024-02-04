@@ -18,9 +18,7 @@ class Layout;
 
 namespace editable_circuit {
 
-struct ModifierConfig {
-    bool store_messages {false};
-};
+using ModifierConfig = CircuitDataConfig;
 
 /**
  * @brief: Low level circuit editing that maintains a valid layout.
@@ -47,13 +45,13 @@ struct ModifierConfig {
  *   Selections:
  *      + All Elements in all Selections of the SelectionStore are present in Layout.
  *      + Elements in Visible Selection are present in Layout.
+ *   Message Validator:
+ *      + If present layout matches validator state.
  **/
 class Modifier {
    public:
     [[nodiscard]] explicit Modifier() = default;
-    [[nodiscard]] explicit Modifier(ModifierConfig config);
-    [[nodiscard]] explicit Modifier(Layout&& layout);
-    [[nodiscard]] explicit Modifier(Layout&& layout, ModifierConfig config);
+    [[nodiscard]] explicit Modifier(Layout&& layout, ModifierConfig config = {});
 
     [[nodiscard]] auto format() const -> std::string;
 

@@ -42,7 +42,7 @@ TEST(EditableCircuitModifierLogicItem, ConstructionWithLayout) {
 //
 
 TEST(EditableCircuitModifierLogicItem, VerifyLogging) {
-    auto modifier = Modifier {ModifierConfig {.store_messages = true}};
+    auto modifier = Modifier {Layout {}, ModifierConfig {.store_messages = true}};
 
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
     ASSERT_EQ(modifier.circuit_data().store_messages, true);

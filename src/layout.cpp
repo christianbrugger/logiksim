@@ -127,6 +127,22 @@ auto is_segment_part_valid(segment_part_t segment_part, const Layout &layout) ->
     return segment_part.part.end <= to_part(get_line(layout, segment_part.segment)).end;
 }
 
+auto get_uninserted_logicitem_count(const Layout &layout) -> std::size_t {
+    const auto count = std::ranges::count_if(
+        logicitem_ids(layout),
+        [&](const auto &logicitem_id) { return !is_inserted(layout, logicitem_id); });
+
+    return gsl::narrow_cast<std::size_t>(count);
+}
+
+auto get_inserted_logicitem_count(const Layout &layout) -> std::size_t {
+    const auto count = std::ranges::count_if(
+        logicitem_ids(layout),
+        [&](const auto &logicitem_id) { return is_inserted(layout, logicitem_id); });
+
+    return gsl::narrow_cast<std::size_t>(count);
+}
+
 auto get_segment_count(const Layout &layout) -> std::size_t {
     return accumulate(wire_ids(layout), std::size_t {0}, [&](wire_id_t wire_id) {
         return layout.wires().segment_tree(wire_id).size();
@@ -137,13 +153,6 @@ auto get_inserted_segment_count(const Layout &layout) -> std::size_t {
     return accumulate(inserted_wire_ids(layout), std::size_t {0}, [&](wire_id_t wire_id) {
         return layout.wires().segment_tree(wire_id).size();
     });
-}
-
-auto get_inserted_logicitem_count(const Layout &layout) -> std::size_t {
-    const auto count = std::ranges::count_if(
-        logicitem_ids(layout),
-        [&](const auto &logicitem_id) { return is_inserted(layout, logicitem_id); });
-    return gsl::narrow_cast<std::size_t>(count);
 }
 
 auto format_stats(const Layout &layout) -> std::string {

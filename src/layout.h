@@ -69,11 +69,13 @@ class Layout {
 [[nodiscard]] auto is_segment_part_valid(segment_part_t segment_part,
                                          const Layout &layout) -> bool;
 
+[[nodiscard]] auto get_uninserted_logicitem_count(const Layout &layout) -> std::size_t;
+
+[[nodiscard]] auto get_inserted_logicitem_count(const Layout &layout) -> std::size_t;
+
 [[nodiscard]] auto get_segment_count(const Layout &layout) -> std::size_t;
 
 [[nodiscard]] auto get_inserted_segment_count(const Layout &layout) -> std::size_t;
-
-[[nodiscard]] auto get_inserted_logicitem_count(const Layout &layout) -> std::size_t;
 
 [[nodiscard]] auto format_stats(const Layout &layout) -> std::string;
 

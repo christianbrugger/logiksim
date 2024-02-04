@@ -15,7 +15,7 @@ namespace logicsim {
 namespace editable_circuit {
 
 constexpr static inline auto DEBUG_PRINT_MODIFIER_METHODS = false;
-constexpr static inline auto DEBUG_CHECK_CLASS_INVARIANTS = false;
+constexpr static inline auto DEBUG_CHECK_CLASS_INVARIANTS = true;
 
 namespace {
 
@@ -32,15 +32,8 @@ namespace {
 // Modifier
 //
 
-Modifier::Modifier(ModifierConfig config) : Modifier(Layout {}, config) {}
-
-Modifier::Modifier(Layout&& layout__)
-    : Modifier {std::move(layout__), ModifierConfig {}} {}
-
 Modifier::Modifier(Layout&& layout__, ModifierConfig config)
-    : circuit_data_ {std::move(layout__)} {
-    circuit_data_.store_messages = config.store_messages;
-
+    : circuit_data_ {std::move(layout__), config} {
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -505,6 +498,11 @@ auto class_invariant_holds(const Modifier& modifier) -> bool {
                                 selection_valid));
     Expects(selection_valid(
         circuit.visible_selection.selection(circuit.layout, circuit.index)));
+
+    // Layout Validator
+    if (circuit.message_validator) {
+        Expects(circuit.message_validator->layout_matches_state(circuit.layout));
+    }
 
     return true;
 }
