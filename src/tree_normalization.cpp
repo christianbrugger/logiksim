@@ -1,10 +1,12 @@
 #include "tree_normalization.h"
 
+#include "algorithm/compare_sorted.h"
 #include "algorithm/transform_to_vector.h"
 #include "container/graph/adjacency_graph.h"
 #include "container/graph/depth_first_search.h"
 #include "container/graph/visitor/empty_visitor.h"
 #include "geometry/line.h"
+#include "geometry/segment_info.h"
 #include "geometry/to_points_sorted_unique.h"
 #include "geometry/to_points_with_both_orientation.h"
 #include "logging.h"
@@ -99,10 +101,8 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
 
 [[nodiscard]] auto find_root_index(const ValidationGraph& graph)
     -> std::optional<size_t> {
-    auto is_leaf = [&](size_t index) { return graph.neighbors()[index].size() == 1; };
-
     for (auto index : graph.indices()) {
-        if (is_leaf(index)) {
+        if (is_leaf(graph, index)) {
             return index;
         }
     }
@@ -123,6 +123,8 @@ auto merge_split_segments(std::span<const ordered_line_t> segments)
     return result;
 }
 
+namespace {
+
 auto normalize_segments(std::span<const ordered_line_t> segments)
     -> std::vector<ordered_line_t> {
     // merge
@@ -135,35 +137,172 @@ auto normalize_segments(std::span<const ordered_line_t> segments)
     return split_lines(segments_merged, points2);
 }
 
-auto segments_are_contiguous_tree(std::vector<ordered_line_t>&& segments) -> bool {
+}  // namespace
+
+auto segments_are_normalized(std::span<const ordered_line_t> segments) -> bool {
     if (segments.empty()) {
         return true;
     }
-    // normalize
+
     auto normalized_segments = normalize_segments(segments);
+    auto given_segments = std::vector<ordered_line_t> {segments.begin(), segments.end()};
 
-    // compare
-    std::ranges::sort(segments);
-    std::ranges::sort(normalized_segments);
-    if (segments != normalized_segments) {
-        return false;
-    }
+    return compare_sorted(given_segments, normalized_segments);
+};
 
-    // build graph
-    const auto graph = ValidationGraph {segments};
+namespace {
 
-    // find root
+/**
+ * @brief: check if graph is tree (detects loops && disconnected parts)
+ */
+auto graph_is_connected_tree(const ValidationGraph& graph) -> bool {
     const auto root_index = find_root_index(graph);
     if (!root_index) {
         return false;
     }
 
-    // check if graph is tree (detects loops && disconnected parts)
     return depth_first_search(graph, EmptyVisitor {}, *root_index) == DFSStatus::success;
 }
 
+auto segments_are_contiguous_tree(std::span<const ordered_line_t> segments,
+                                  const ValidationGraph& graph) -> bool {
+    return graph_is_connected_tree(graph) && segments_are_normalized(segments);
+}
+
+}  // namespace
+
+auto segments_are_contiguous_tree(std::span<const ordered_line_t> segments) -> bool {
+    const auto graph = ValidationGraph {segments};
+    return segments_are_contiguous_tree(segments, graph);
+}
+
 auto is_contiguous_tree(const SegmentTree& tree) -> bool {
-    return segments_are_contiguous_tree(transform_to_vector(all_lines(tree)));
+    const auto segments = transform_to_vector(all_lines(tree));
+    return segments_are_contiguous_tree(segments);
+}
+
+namespace {
+
+auto add_points_of_type(std::vector<point_t>& container, const SegmentTree& tree,
+                        SegmentPointType query_type) -> void {
+    for (const auto& info : tree.segments()) {
+        for (const auto& [point, type] : to_point_and_type(info)) {
+            if (type == query_type) {
+                container.push_back(point);
+            }
+        }
+    }
+}
+
+auto has_same_inputs_outputs(const SegmentTree& tree, const ValidationGraph& graph)
+    -> bool {
+    // tree
+    auto tree_points = std::vector<point_t> {};
+    add_points_of_type(tree_points, tree, SegmentPointType::input);
+    add_points_of_type(tree_points, tree, SegmentPointType::output);
+
+    assert(tree_points.size() ==
+           size_t {tree.input_count()} + size_t {tree.output_count()});
+
+    // graph
+    auto graph_points = std::vector<point_t> {};
+    for (const auto index : graph.indices()) {
+        if (graph.neighbors(index).size() == 1) {
+            graph_points.push_back(graph.point(index));
+        }
+    }
+
+    return compare_sorted(tree_points, graph_points);
+}
+
+auto has_same_cross_points(const SegmentTree& tree, const ValidationGraph& graph)
+    -> bool {
+    // tree
+    auto tree_points = std::vector<point_t> {};
+    add_points_of_type(tree_points, tree, SegmentPointType::cross_point);
+
+    // graph
+    auto graph_points = std::vector<point_t> {};
+    for (const auto index : graph.indices()) {
+        if (graph.neighbors(index).size() >= 3) {
+            graph_points.push_back(graph.point(index));
+        }
+    }
+
+    return compare_sorted(tree_points, graph_points);
+}
+
+auto has_same_corner_points(const SegmentTree& tree, const ValidationGraph& graph)
+    -> bool {
+    // tree
+    auto tree_points = std::vector<point_t> {};
+    add_points_of_type(tree_points, tree, SegmentPointType::corner_point);
+
+    // graph
+    auto graph_points = std::vector<point_t> {};
+    for (const auto index : graph.indices()) {
+        if (is_corner(graph, index)) {
+            graph_points.push_back(graph.point(index));
+        }
+    }
+
+    return compare_sorted(tree_points, graph_points);
+}
+
+auto has_same_shadow_points(const SegmentTree& tree, const ValidationGraph& graph)
+    -> bool {
+    const auto shadow_point_allowed = [&](point_t point) -> bool {
+        const auto index = graph.to_index(point).value();
+        // allowed for corners and cross_point
+        return is_corner(graph, index) || graph.neighbors(index).size() >= 3;
+    };
+
+    for (const auto& info : tree.segments()) {
+        for (const auto& [point, type] : to_point_and_type(info)) {
+            if (type == SegmentPointType::shadow_point && !shadow_point_allowed(point)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+auto has_no_unknown_points(const SegmentTree& tree) -> bool {
+    for (const auto& info : tree.segments()) {
+        for (const auto& [point, type] : to_point_and_type(info)) {
+            if (type == SegmentPointType::new_unknown) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+auto has_correct_endpoints(const SegmentTree& tree, const ValidationGraph& graph)
+    -> bool {
+    return has_same_inputs_outputs(tree, graph) &&  //
+           has_same_cross_points(tree, graph) &&    //
+           has_same_corner_points(tree, graph) &&   //
+           has_same_shadow_points(tree, graph) &&   //
+           has_no_unknown_points(tree);
+}
+
+}  // namespace
+
+auto has_correct_endpoints(const SegmentTree& tree) -> bool {
+    const auto graph = ValidationGraph {all_lines(tree)};
+
+    return has_correct_endpoints(tree, graph);
+}
+
+auto is_contiguous_tree_with_correct_endpoints(const SegmentTree& tree) -> bool {
+    const auto segments = transform_to_vector(all_lines(tree));
+    const auto graph = ValidationGraph {segments};
+
+    return segments_are_contiguous_tree(segments, graph) &&
+           has_correct_endpoints(tree, graph);
 }
 
 }  // namespace logicsim

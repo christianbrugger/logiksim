@@ -6,6 +6,7 @@
 #include "concept/input_range.h"
 #include "format/container.h"
 #include "format/struct.h"
+#include "geometry/line.h"
 #include "geometry/to_points_sorted_unique.h"
 #include "vocabulary/point.h"
 
@@ -54,6 +55,7 @@ class AdjacencyGraph {
     [[nodiscard]] auto indices() const noexcept -> forward_range_t<index_t>;
     // TODO add index_t vertex_id. Test at() performance impact
     [[nodiscard]] auto neighbors() const -> const neighbor_vector_t&;
+    [[nodiscard]] auto neighbors(index_t vertex_id) const -> const neighbor_t&;
     [[nodiscard]] auto to_index(point_t _point) const -> std::optional<index_t>;
 
    private:
@@ -67,6 +69,18 @@ class AdjacencyGraph {
     point_vector_t points_ {};
     neighbor_vector_t neighbors_ {};
 };
+
+//
+// Free Functions
+//
+
+template <typename index_t>
+[[nodiscard]] auto is_leaf(const AdjacencyGraph<index_t>& graph, index_t vertex_id)
+    -> bool;
+
+template <typename index_t>
+[[nodiscard]] auto is_corner(const AdjacencyGraph<index_t>& graph, index_t vertex_id)
+    -> bool;
 
 //
 // Implementation
@@ -120,6 +134,11 @@ auto AdjacencyGraph<index_t>::neighbors() const -> const neighbor_vector_t& {
 }
 
 template <typename index_t>
+auto AdjacencyGraph<index_t>::neighbors(index_t vertex_id) const -> const neighbor_t& {
+    return neighbors_.at(vertex_id);
+}
+
+template <typename index_t>
 auto AdjacencyGraph<index_t>::to_index(point_t _point) const -> std::optional<index_t> {
     const auto res = std::ranges::lower_bound(points_, _point);
     if (res != points_.end()) {
@@ -164,6 +183,28 @@ auto AdjacencyGraph<index_t>::sort_adjacency() -> void {
     for (auto& adjacency : neighbors_) {
         std::ranges::sort(adjacency, {}, [&](index_t index) { return points_[index]; });
     }
+}
+
+//
+// Free Functions
+//
+
+template <typename index_t>
+auto is_leaf(const AdjacencyGraph<index_t>& graph, index_t vertex_id) -> bool {
+    return graph.neighbors(vertex_id).size() == 1;
+}
+
+template <typename index_t>
+auto is_corner(const AdjacencyGraph<index_t>& graph, index_t vertex_id) -> bool {
+    const auto& neighbors = graph.neighbors(vertex_id);
+
+    if (neighbors.size() != 2) {
+        return false;
+    }
+
+    const auto point = graph.point(vertex_id);
+    return lines_orthogonal(line_t {point, graph.point(neighbors[0])},
+                            line_t {point, graph.point(neighbors[1])});
 }
 
 }  // namespace logicsim

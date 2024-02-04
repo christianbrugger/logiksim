@@ -20,6 +20,9 @@ using map_t = ankerl::unordered_dense::map<selection_id_t, Selection>;
 
 /**
  * @brief: Key-Value Store for EditableCircuit Selections.
+ *
+ * Class-invariants:
+ *   + next_selection_key_ is larger than largest key in selections_
  */
 class SelectionStore {
    public:

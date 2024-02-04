@@ -5,6 +5,7 @@ set(LS_CORE_SOURCES
     src/algorithm/adjacent_count_if.cpp
     src/algorithm/all_equal.cpp
     src/algorithm/checked_deref.cpp
+    src/algorithm/compare_sorted.cpp
     src/algorithm/contains.cpp
     src/algorithm/copy_adjacent_if.cpp
     src/algorithm/depth_first_visitor.cpp

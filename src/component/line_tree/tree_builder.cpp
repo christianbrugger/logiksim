@@ -58,8 +58,7 @@ auto create_line_store(point_t root, const LineGraph& graph) -> LineStore {
 
 auto create_line_store(std::span<const ordered_line_t> segments, point_t new_root)
     -> LineStore {
-    assert(segments_are_contiguous_tree(
-        std::vector<ordered_line_t> {segments.begin(), segments.end()}));
+    assert(segments_are_contiguous_tree(segments));
 
     const auto graph = LineGraph {segments};
     return create_line_store(new_root, graph);

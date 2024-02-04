@@ -34,13 +34,12 @@ struct ModifierConfig {
  *   Inserted Wires:
  *      + Segments are not colliding with anything.
  *      + Segments form a flat tree. With input at the root.
- *      + Have either zero or one input.
  *      + Input corresponds to logicitem output and has correct orientation / position.
  *      + Have correctly set SegmentPointTypes (input, output, corner, cross, shadow).
  *   Uninserted Wires:
  *      + Have no valid parts.
  *      + Have no inputs or outputs.
- *      + All SegmentPointTypes are shadow_point
+ *      + All SegmentPointTypes are shadow_point.
  *
  *   Layout Index:
  *      + LayoutIndex is always in sync with Layout.
@@ -155,6 +154,15 @@ using ModifierSelectionGuard = SelectionGuardTemplate<Modifier>;
 //
 // Free Methods
 //
+
+/**
+ * @brief: Ensures that the class-invariants are met.
+ *
+ * Checking the invariants is extremely expensive compared to how often the
+ * methods are called. Even in debug build its too much. This method
+ * checks all the class invariants manually.
+ */
+[[nodiscard]] auto class_invariant_holds(const Modifier& modifier) -> bool;
 
 [[nodiscard]] auto get_inserted_cross_points(const Modifier& modifier,
                                              const Selection& selection)

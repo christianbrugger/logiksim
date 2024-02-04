@@ -983,8 +983,9 @@ auto split_broken_tree(CircuitData& circuit, point_t p0, point_t p1) -> wire_id_
         }
     }
 
-    assert(is_contiguous_tree(tree_from));
-    assert(is_contiguous_tree(circuit.layout.wires().segment_tree(new_tree_id)));
+    assert(is_contiguous_tree_with_correct_endpoints(tree_from));
+    assert(is_contiguous_tree_with_correct_endpoints(
+        circuit.layout.wires().segment_tree(new_tree_id)));
 
     return new_tree_id;
 }
@@ -1097,7 +1098,8 @@ auto insert_wire(CircuitData& circuit, segment_part_t& segment_part) -> void {
     fix_and_merge_segments(circuit, line.p0, &segment_part);
     fix_and_merge_segments(circuit, line.p1, &segment_part);
 
-    assert(is_contiguous_tree(circuit.layout.wires().segment_tree(target_wire_id)));
+    assert(is_contiguous_tree_with_correct_endpoints(
+        circuit.layout.wires().segment_tree(target_wire_id)));
 }
 
 auto mark_valid(Layout& layout, const segment_part_t segment_part) {

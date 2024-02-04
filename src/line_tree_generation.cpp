@@ -6,6 +6,7 @@
 #include "line_tree.h"
 #include "logging.h"
 #include "segment_tree.h"
+#include "tree_normalization.h"
 
 #include <stdexcept>
 
@@ -45,10 +46,13 @@ auto generate_line_tree_impl(const SegmentTree& segment_tree) -> LineTree {
 }  // namespace
 
 auto generate_line_tree(const SegmentTree& segment_tree) -> LineTree {
+    // pre-condition
+    assert(is_contiguous_tree_with_correct_endpoints(segment_tree));
+
     const auto line_tree = generate_line_tree_impl(segment_tree);
 
+    // post-condition
     assert(is_equivalent(segment_tree, line_tree));
-
     return line_tree;
 }
 

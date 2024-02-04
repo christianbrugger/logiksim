@@ -39,6 +39,9 @@ struct ordered_line_t;
                                          ordered_line_t line1) noexcept -> bool;
 [[nodiscard]] auto line_points_colliding(line_t line0, line_t line1) noexcept -> bool;
 
+[[nodiscard]] auto lines_parallel(line_t line0, line_t line1) -> bool;
+[[nodiscard]] auto lines_orthogonal(line_t line0, line_t line1) -> bool;
+
 }  // namespace logicsim
 
 #endif

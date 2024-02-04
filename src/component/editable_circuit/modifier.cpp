@@ -6,6 +6,7 @@
 #include "format/pointer.h"
 #include "logging.h"
 #include "modifier.h"
+#include "tree_normalization.h"
 
 #include <fmt/core.h>
 
@@ -40,6 +41,7 @@ auto Modifier::circuit_data() const -> const CircuitData& {
 auto Modifier::extract_layout() -> Layout {
     const auto layout = Layout {std::move(circuit_data_.layout)};
     *this = Modifier {};
+
     return layout;
 }
 
@@ -268,12 +270,14 @@ auto Modifier::create_selection(Selection selection__) -> selection_id_t {
 
     const auto selection_id = circuit_data_.selection_store.create();
     circuit_data_.selection_store.at(selection_id) = std::move(selection__);
+
     return selection_id;
 }
 
 auto Modifier::create_selection(selection_id_t copy_id) -> selection_id_t {
     const auto new_id = circuit_data_.selection_store.create();
     circuit_data_.selection_store.at(new_id) = circuit_data_.selection_store.at(copy_id);
+
     return new_id;
 }
 
@@ -339,6 +343,7 @@ auto Modifier::try_pop_last_visible_selection_rect() -> bool {
         return false;
     }
     circuit_data_.visible_selection.pop_last();
+
     return true;
 }
 
@@ -347,6 +352,7 @@ auto Modifier::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool 
         return false;
     }
     circuit_data_.visible_selection.update_last(rect);
+
     return true;
 }
 
@@ -358,6 +364,56 @@ auto Modifier::apply_all_visible_selection_operations() -> void {
 //
 // Free Methods
 //
+
+auto class_invariant_holds(const Modifier& modifier) -> bool {
+    const auto& circuit = modifier.circuit_data();
+
+    // NOT CHECKED:
+    //   Inserted Logic Items:
+    //      + Are not colliding with anything.
+    //      + All connections with wires are compatible (type & orientation).
+    //   Inserted Wires:
+    //      + Segments are not colliding with anything.
+    //      + Input corresponds to logicitem output and has correct orientation / position
+    //      + Segments form a flat tree. With input at the root.
+    //      + Have correctly set SegmentPointTypes (input, output, corner, cross, shadow).
+
+    // Logic Item
+    Expects(std::ranges::all_of(logicitem_ids(circuit.layout),
+                                [](const logicitem_id_t& logicitem_id) { return true; }));
+
+    // Inserted Wires
+
+    // Uninserted Wires
+    for (const auto wire_id : {temporary_wire_id, colliding_wire_id}) {
+        const auto& segment_tree = circuit.layout.wires().segment_tree(wire_id);
+
+        Expects(segment_tree.valid_parts().empty());
+        Expects(segment_tree.input_count() == connection_count_t {0});
+        Expects(segment_tree.output_count() == connection_count_t {0});
+        Expects(
+            std::ranges::all_of(segment_tree.segments(), [](const segment_info_t& info) {
+                return info.p0_type == SegmentPointType::shadow_point &&
+                       info.p1_type == SegmentPointType::shadow_point;
+            }));
+    }
+
+    // Inserted Logic Items
+
+    // Layout Index
+    Expects(circuit.index == LayoutIndex {circuit.layout});
+
+    // Selections
+    const auto selection_valid = [&](const Selection& selection) {
+        return is_valid_selection(selection, circuit.layout);
+    };
+    Expects(std::ranges::all_of(std::ranges::views::values(circuit.selection_store),
+                                selection_valid));
+    Expects(selection_valid(
+        circuit.visible_selection.selection(circuit.layout, circuit.index)));
+
+    return true;
+}
 
 auto get_inserted_cross_points(const Modifier& modifier, const Selection& selection)
     -> std::vector<point_t> {
@@ -421,8 +477,6 @@ namespace {
 
 auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selection_id,
                                      InsertionMode new_insertion_mode) -> void {
-    // TODO store selection performance difference ?
-
     while (has_logicitem(modifier, selection_id)) {
         auto logicitem_id = get_first_logicitem(modifier, selection_id);
         modifier.remove_from_selection(selection_id, logicitem_id);

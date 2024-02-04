@@ -104,4 +104,12 @@ auto line_points_colliding(line_t line0, line_t line1) noexcept -> bool {
     return line_points_colliding(ordered_line_t {line0}, ordered_line_t {line1});
 }
 
+auto lines_parallel(line_t line0, line_t line1) -> bool {
+    return is_horizontal(line0) == is_horizontal(line1);
+}
+
+auto lines_orthogonal(line_t line0, line_t line1) -> bool {
+    return is_horizontal(line0) != is_horizontal(line1);
+}
+
 }  // namespace logicsim
