@@ -21,7 +21,7 @@ class Layout;
 
 namespace message_validator {
 
-struct uninserted_logicitem_value_t {
+struct all_logicitem_value_t {
     uint64_t unique_id;
 
     [[nodiscard]] auto format() const -> std::string;
@@ -34,7 +34,7 @@ struct inserted_logicitem_value_t {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-struct uninserted_segment_value_t {
+struct all_segment_value_t {
     uint64_t unique_id;
     part_t part;
 
@@ -49,13 +49,12 @@ struct inserted_segment_value_t {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-using uninserted_logicitem_map_t =
-    ankerl::unordered_dense::map<logicitem_id_t, uninserted_logicitem_value_t>;
+using all_logicitem_map_t =
+    ankerl::unordered_dense::map<logicitem_id_t, all_logicitem_value_t>;
 using inserted_logicitem_map_t =
     ankerl::unordered_dense::map<logicitem_id_t, inserted_logicitem_value_t>;
 
-using uninserted_segment_map_t =
-    ankerl::unordered_dense::map<segment_t, uninserted_segment_value_t>;
+using all_segment_map_t = ankerl::unordered_dense::map<segment_t, all_segment_value_t>;
 using inserted_segment_map_t =
     ankerl::unordered_dense::map<segment_t, inserted_segment_value_t>;
 
@@ -69,14 +68,14 @@ using inserted_segment_map_t =
  */
 class MessageValidator {
    public:
-    using uninserted_logicitem_value_t = message_validator::uninserted_logicitem_value_t;
-    using uninserted_logicitem_map_t = message_validator::uninserted_logicitem_map_t;
+    using all_logicitem_value_t = message_validator::all_logicitem_value_t;
+    using all_logicitem_map_t = message_validator::all_logicitem_map_t;
 
     using inserted_logicitem_value_t = message_validator::inserted_logicitem_value_t;
     using inserted_logicitem_map_t = message_validator::inserted_logicitem_map_t;
 
-    using uninserted_segment_value_t = message_validator::uninserted_segment_value_t;
-    using uninserted_segment_map_t = message_validator::uninserted_segment_map_t;
+    using all_segment_value_t = message_validator::all_segment_value_t;
+    using all_segment_map_t = message_validator::all_segment_map_t;
 
     using inserted_segment_value_t = message_validator::inserted_segment_value_t;
     using inserted_segment_map_t = message_validator::inserted_segment_map_t;
@@ -116,10 +115,10 @@ class MessageValidator {
    private:
     uint64_t next_unique_id_ {};
 
-    uninserted_logicitem_map_t uninserted_logicitems_ {};
+    all_logicitem_map_t all_logicitems_ {};
     inserted_logicitem_map_t inserted_logicitems_ {};
 
-    uninserted_segment_map_t uninserted_segments_ {};
+    all_segment_map_t all_segments_ {};
     inserted_segment_map_t inserted_segments_ {};
 };
 
