@@ -2,6 +2,7 @@
 #define LOGIKSIM_TEST_EDITABLE_CIRCUIT_HANDLERS_TEST_HELPERS_H
 
 #include "component/editable_circuit/modifier.h"
+#include "editable_circuit.h"
 #include "layout.h"
 #include "vocabulary/logicitem_definition.h"
 
@@ -9,6 +10,60 @@
 #include <gtest/gtest.h>
 
 namespace logicsim {
+
+//
+// Construction
+//
+
+namespace editable_circuit {
+
+[[nodiscard]] inline auto get_modifier(Layout layout__ = Layout {}) -> Modifier {
+    return Modifier {
+        std::move(layout__),
+        ModifierConfig {
+            .store_messages = false,
+            .validate_messages = true,
+        },
+    };
+}
+
+[[nodiscard]] inline auto get_logging_modifier(Layout layout__ = Layout {}) -> Modifier {
+    return Modifier {
+        std::move(layout__),
+        ModifierConfig {
+            .store_messages = true,
+            .validate_messages = true,
+        },
+    };
+}
+
+}  // namespace editable_circuit
+
+[[nodiscard]] inline auto get_editable_circuit(Layout layout__ = Layout {})
+    -> EditableCircuit {
+    return EditableCircuit {
+        std::move(layout__),
+        EditableCircuit::Config {
+            .store_messages = false,
+            .validate_messages = true,
+        },
+    };
+}
+
+[[nodiscard]] inline auto get_logging_editable_circuit(Layout layout__ = Layout {})
+    -> EditableCircuit {
+    return EditableCircuit {
+        std::move(layout__),
+        EditableCircuit::Config {
+            .store_messages = true,
+            .validate_messages = true,
+        },
+    };
+}
+
+//
+// Add Elements
+//
 
 inline auto add_and_element(Layout &layout, display_state_t display_type,
                             connection_count_t input_count = connection_count_t {3},

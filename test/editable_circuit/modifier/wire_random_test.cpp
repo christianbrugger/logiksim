@@ -27,7 +27,7 @@ namespace logicsim {
 
 namespace {
 auto test_add_many_wires(Rng& rng, bool random_modes) {
-    auto editable_circuit = EditableCircuit {};
+    auto editable_circuit = get_editable_circuit();
     add_many_wires(rng, editable_circuit, random_modes);
 }
 }  // namespace
@@ -70,7 +70,7 @@ auto format(InsertionResult value) -> std::string {
 
 namespace {
 auto get_insertion_result(std::span<const ordered_line_t> lines) {
-    auto modifier = editable_circuit::Modifier {};
+    auto modifier = editable_circuit::get_modifier();
 
     auto result = std::vector<InsertionResult> {};
 
@@ -182,7 +182,7 @@ auto get_all_lines(const Layout& layout, display_state_t state)
 }
 
 auto test_add_wire_states_correct(Rng& rng) {
-    auto modifier = editable_circuit::Modifier {};
+    auto modifier = editable_circuit::get_modifier();
 
     auto data = generate_insertable_line_data(rng);
 
@@ -235,7 +235,7 @@ TEST(HandlerWireFuzz, AddWireStatesCorrect) {
 
 namespace {
 auto test_remove_many_wires(Rng& rng, bool random_modes) {
-    auto editable_circuit = EditableCircuit {};
+    auto editable_circuit = get_editable_circuit();
     add_many_wires(rng, editable_circuit, random_modes);
 
     while (true) {
@@ -293,7 +293,7 @@ TEST(HandlerWireFuzz, RemoveManyWiresDifferentModes) {
 
 namespace {
 auto test_remove_partial_wires(Rng& rng, bool random_modes) {
-    auto editable_circuit = EditableCircuit {};
+    auto editable_circuit = get_editable_circuit();
     add_many_wires(rng, editable_circuit, random_modes);
 
     while (true) {
@@ -353,7 +353,7 @@ TEST(HandlerWireFuzz, RemovePartialInsertedWires) {
 
 namespace {
 auto test_add_wires_buttons(Rng& rng, bool random_modes) {
-    auto editable_circuit = EditableCircuit {};
+    auto editable_circuit = get_editable_circuit();
 
     add_many_wires_and_buttons(rng, editable_circuit,
                                WiresButtonsParams {.random_modes = random_modes});

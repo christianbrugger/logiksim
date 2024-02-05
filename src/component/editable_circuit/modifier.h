@@ -51,6 +51,7 @@ using ModifierConfig = CircuitDataConfig;
 class Modifier {
    public:
     [[nodiscard]] explicit Modifier() = default;
+    [[nodiscard]] explicit Modifier(ModifierConfig config);
     [[nodiscard]] explicit Modifier(Layout&& layout, ModifierConfig config = {});
 
     [[nodiscard]] auto format() const -> std::string;

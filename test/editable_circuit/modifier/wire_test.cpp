@@ -43,7 +43,7 @@ TEST(EditableCircuitModifierWire, AddTempSegment) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
+    auto modifier = get_logging_modifier(layout);
     modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
                               InsertionMode::temporary);
 
@@ -95,7 +95,7 @@ TEST(EditableCircuitModifierWire, TempToColliding) {
         part_t {offset_t {0}, offset_t {10}},
     };
 
-    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
+    auto modifier = get_logging_modifier(layout);
     modifier.change_wire_insertion_mode(segment_part, InsertionMode::collisions);
 
     // layout
@@ -153,7 +153,7 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialOneSide) {
         part_t {0, 5},
     };
 
-    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
+    auto modifier = get_logging_modifier(layout);
     modifier.change_wire_insertion_mode(segment_part, InsertionMode::collisions);
 
     // layout
@@ -234,7 +234,7 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialMiddle) {
         part_t {offset_t {2}, offset_t {5}},
     };
 
-    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
+    auto modifier = get_logging_modifier(layout);
     modifier.change_wire_insertion_mode(segment_part, InsertionMode::collisions);
 
     // layout
@@ -322,7 +322,7 @@ TEST(EditableCircuitModifierWire, TempToValid) {
 
     const auto info_0 = get_segment_info(layout, segment_part.segment);
 
-    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
+    auto modifier = get_logging_modifier(layout);
     modifier.change_wire_insertion_mode(segment_part, InsertionMode::collisions);
 
     // layout
@@ -462,7 +462,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMove) {
         part_t {0, 10},
     };
 
-    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
+    auto modifier = get_logging_modifier(layout);
 
     auto segment_part = segment_part_0;
     modifier.move_or_delete_temporary_wire(segment_part, 100, 200);
@@ -497,7 +497,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
     const auto segment_part_1 =
         segment_part_t {segment_t {wire_id, segment_index_t {1}}, part_t {0, 5}};
 
-    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
+    auto modifier = get_logging_modifier(layout);
 
     auto segment_part = segment_part_0;
     modifier.move_or_delete_temporary_wire(segment_part, 100, 200);
@@ -542,7 +542,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialEnd) {
     const auto segment_part_1 =
         segment_part_t {segment_t {wire_id, segment_index_t {1}}, part_t {0, 5}};
 
-    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
+    auto modifier = get_logging_modifier(layout);
 
     auto segment_part = segment_part_0;
     modifier.move_or_delete_temporary_wire(segment_part, 100, 200);
@@ -597,7 +597,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
         part_t {0, 5},
     };
 
-    auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
+    auto modifier = get_logging_modifier(layout);
 
     auto segment_part = segment_part_0;
     modifier.move_or_delete_temporary_wire(segment_part, 100, 200);

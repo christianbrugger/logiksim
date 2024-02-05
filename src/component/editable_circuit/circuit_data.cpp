@@ -1,7 +1,8 @@
-#include "component/editable_circuit/circuit_data.h"
+#include "circuit_data.h"
 
 #include "allocated_size/std_optional.h"
 #include "allocated_size/std_vector.h"
+#include "component/editable_circuit/circuit_data.h"
 #include "format/container.h"
 #include "logging.h"
 
@@ -11,17 +12,13 @@ namespace editable_circuit {
 
 constexpr static inline auto DEBUG_PRINT_MESSAGES = false;
 
-#ifdef NDEBUG
-constexpr static inline auto ENABLE_MESSAGE_VERIFICATION = false;
-#else
-constexpr static inline auto ENABLE_MESSAGE_VERIFICATION = true;
-#endif
-
 //
 // Circuit Data
 //
 
 CircuitData::CircuitData() : CircuitData {Layout {}} {}
+
+CircuitData::CircuitData(CircuitDataConfig config) : CircuitData {Layout {}, config} {}
 
 CircuitData::CircuitData(Layout&& layout__, CircuitDataConfig config)
     : layout {std::move(layout__)},
@@ -31,7 +28,7 @@ CircuitData::CircuitData(Layout&& layout__, CircuitDataConfig config)
 
       store_messages {config.store_messages},
       messages {},
-      message_validator {ENABLE_MESSAGE_VERIFICATION
+      message_validator {config.validate_messages
                              ? std::optional<MessageValidator> {layout}
                              : std::nullopt} {}
 

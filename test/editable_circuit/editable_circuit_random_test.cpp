@@ -2,6 +2,7 @@
 #include "algorithm/range.h"
 #include "algorithm/uniform_int_distribution.h"
 #include "editable_circuit.h"
+#include "editable_circuit/modifier/test_helpers.h"  // TODO different folder
 #include "format/container.h"
 #include "geometry/display_state_map.h"
 #include "logging.h"
@@ -159,7 +160,7 @@ auto add_many_wires(Rng &rng, EditableCircuit &editable_circuit, bool random_mod
 }
 
 auto test_add_many_wires(Rng &rng, bool random_modes) {
-    auto editable_circuit = EditableCircuit {Layout {}};
+    auto editable_circuit = get_editable_circuit();
 
     add_many_wires(rng, editable_circuit, random_modes);
 }
@@ -264,7 +265,7 @@ class TrackedSelection {
 
 namespace {
 auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render = false) {
-    auto editable_circuit = EditableCircuit {Layout {}};
+    auto editable_circuit = get_editable_circuit();
 
     add_example(rng, editable_circuit);
 

@@ -7,7 +7,10 @@
 
 namespace logicsim {
 
-EditableCircuit::EditableCircuit(Layout&& layout__) : modifier_ {std::move(layout__)} {}
+EditableCircuit::EditableCircuit(Config config) : modifier_ {config} {}
+
+EditableCircuit::EditableCircuit(Layout&& layout__, Config config)
+    : modifier_ {std::move(layout__), config} {}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", modifier_.circuit_data().layout);

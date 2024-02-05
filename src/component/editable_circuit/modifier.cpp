@@ -32,6 +32,10 @@ namespace {
 // Modifier
 //
 
+Modifier::Modifier(ModifierConfig config) : circuit_data_ {config} {
+    Ensures(debug_class_invariant_holds(*this));
+}
+
 Modifier::Modifier(Layout&& layout__, ModifierConfig config)
     : circuit_data_ {std::move(layout__), config} {
     Ensures(debug_class_invariant_holds(*this));

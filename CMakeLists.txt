@@ -353,6 +353,7 @@ set(LS_TEST_SOURCES
     test/container/static_vector_test.cpp
 
     test/editable_circuit/modifier/logic_item_test.cpp
+    test/editable_circuit/modifier/modifier_config_test.cpp
     test/editable_circuit/modifier/wire_random_test.cpp
     test/editable_circuit/modifier/wire_test.cpp
     test/editable_circuit/editable_circuit_random_test.cpp
@@ -829,6 +830,9 @@ target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
     GTest::gtest
     GTest::gmock
     GTest::gtest_main
+)
+target_include_directories(${MAIN_TEST_TARGET} PUBLIC
+    test
 )
 
 if (LS_ENABLE_COVERAGE)

@@ -15,8 +15,15 @@ namespace logicsim {
 
 namespace editable_circuit {
 
+#ifdef NDEBUG
+constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = false;
+#else
+constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = true;
+#endif
+
 struct CircuitDataConfig {
     bool store_messages {false};
+    bool validate_messages {VALIDATE_MESSAGES_DEFAULT};
 };
 
 /**
@@ -25,6 +32,7 @@ struct CircuitDataConfig {
 struct CircuitData {
    public:
     [[nodiscard]] explicit CircuitData();
+    [[nodiscard]] explicit CircuitData(CircuitDataConfig config);
     [[nodiscard]] explicit CircuitData(Layout&& layout, CircuitDataConfig config = {});
 
     [[nodiscard]] auto format() const -> std::string;
