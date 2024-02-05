@@ -43,7 +43,6 @@ struct all_segment_value_t {
 
 struct inserted_segment_value_t {
     uint64_t unique_id;
-    part_t part;
     segment_info_t segment_info;
 
     [[nodiscard]] auto format() const -> std::string;

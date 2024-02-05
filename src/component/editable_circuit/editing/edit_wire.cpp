@@ -23,27 +23,31 @@ namespace editing {
 
 namespace {
 
-// segment already moved
-auto notify_segment_insertion_status_changed(CircuitData& circuit,
-                                             const segment_t source_segment,
-                                             const segment_t destination_segment,
-                                             const segment_t last_segment) {
+// assuming segment already moved
+auto notify_segment_id_changed(CircuitData& circuit, const segment_t source_segment,
+                               const segment_t destination_segment,
+                               const segment_t last_segment) {
     const auto source_inserted = is_inserted(source_segment.wire_id);
     const auto destination_inserted = is_inserted(destination_segment.wire_id);
 
     const auto info = get_segment_info(circuit.layout, destination_segment);
 
-    // insertion / un-insertion
+    if (source_inserted && !destination_inserted) {
+        circuit.submit(info_message::SegmentUninserted({
+            .segment = source_segment,
+            .segment_info = info,
+        }));
+    }
+
+    circuit.submit(info_message::SegmentIdUpdated {
+        .new_segment = destination_segment,
+        .old_segment = source_segment,
+    });
+
     if (source_inserted && destination_inserted) {
         circuit.submit(info_message::InsertedSegmentIdUpdated({
             .new_segment = destination_segment,
             .old_segment = source_segment,
-            .segment_info = info,
-        }));
-    }
-    if (source_inserted && !destination_inserted) {
-        circuit.submit(info_message::SegmentUninserted({
-            .segment = source_segment,
             .segment_info = info,
         }));
     }
@@ -55,29 +59,17 @@ auto notify_segment_insertion_status_changed(CircuitData& circuit,
     }
 
     // another element swapped
+    if (last_segment != source_segment) {
+        circuit.submit(info_message::SegmentIdUpdated {
+            .new_segment = source_segment,
+            .old_segment = last_segment,
+        });
+    }
     if (last_segment != source_segment && source_inserted) {
         circuit.submit(info_message::InsertedSegmentIdUpdated {
             .new_segment = source_segment,
             .old_segment = last_segment,
             .segment_info = get_segment_info(circuit.layout, source_segment),
-        });
-    }
-}
-
-// segment already moved
-auto notify_segment_id_changed(CircuitData& circuit, const segment_t source_segment,
-                               const segment_t destination_segment,
-                               const segment_t last_segment) {
-    circuit.submit(info_message::SegmentIdUpdated {
-        .new_segment = destination_segment,
-        .old_segment = source_segment,
-    });
-
-    // another element swapped
-    if (last_segment != source_segment) {
-        circuit.submit(info_message::SegmentIdUpdated {
-            .new_segment = source_segment,
-            .old_segment = last_segment,
         });
     }
 }
@@ -105,8 +97,6 @@ auto _move_full_segment_between_trees(CircuitData& circuit, segment_t& source_se
     const auto last_segment = segment_t {source_segment.wire_id, last_index};
 
     notify_segment_id_changed(circuit, source_segment, destination_segment, last_segment);
-    notify_segment_insertion_status_changed(circuit, source_segment, destination_segment,
-                                            last_segment);
 
     source_segment = destination_segment;
 }
@@ -162,14 +152,6 @@ auto copy_segment(CircuitData& circuit, const segment_part_t source_segment_part
         }
     }
 
-    if (is_inserted(destination_id)) {
-        circuit.submit(info_message::SegmentInserted({
-            .segment = destination_segment_part.segment,
-            .segment_info =
-                get_segment_info(circuit.layout, destination_segment_part.segment),
-        }));
-    }
-
     return destination_segment_part;
 }
 
@@ -177,9 +159,10 @@ auto shrink_segment_begin(CircuitData& circuit, const segment_t segment) -> void
     using namespace info_message;
 
     if (is_inserted(segment.wire_id)) {
-        auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
-        const auto old_info = m_tree.info(segment.segment_index);
-        circuit.submit(SegmentUninserted({.segment = segment, .segment_info = old_info}));
+        circuit.submit(SegmentUninserted({
+            .segment = segment,
+            .segment_info = get_segment_info(circuit.layout, segment),
+        }));
     }
 }
 
@@ -188,11 +171,6 @@ auto shrink_segment_end(CircuitData& circuit, const segment_t segment,
     using namespace info_message;
     auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
     m_tree.shrink_segment(segment.segment_index, part_kept);
-
-    if (is_inserted(segment.wire_id)) {
-        const auto new_info = m_tree.info(segment.segment_index);
-        circuit.submit(SegmentInserted({.segment = segment, .segment_info = new_info}));
-    }
 
     return segment_part_t {
         .segment = segment,
@@ -230,6 +208,21 @@ auto _move_touching_segment_between_trees(CircuitData& circuit,
         });
     }
 
+    if (is_inserted(leftover_segment_part.segment.wire_id)) {
+        circuit.submit(info_message::SegmentInserted({
+            .segment = leftover_segment_part.segment,
+            .segment_info =
+                get_segment_info(circuit.layout, leftover_segment_part.segment),
+        }));
+    }
+    if (is_inserted(destination_id)) {
+        circuit.submit(info_message::SegmentInserted({
+            .segment = destination_segment_part.segment,
+            .segment_info =
+                get_segment_info(circuit.layout, destination_segment_part.segment),
+        }));
+    }
+
     source_segment_part = destination_segment_part;
 }
 
@@ -248,7 +241,8 @@ auto _move_splitting_segment_between_trees(CircuitData& circuit,
         move_segment::copy_segment(circuit, source_part1, source_part1.segment.wire_id);
     const auto destination_segment_part =
         move_segment::copy_segment(circuit, source_segment_part, destination_id);
-    move_segment::shrink_segment_end(circuit, source_segment_part.segment, part0);
+    const auto leftover_segment_part =
+        move_segment::shrink_segment_end(circuit, source_segment_part.segment, part0);
 
     // messages
     circuit.submit(info_message::SegmentPartMoved {
@@ -261,11 +255,32 @@ auto _move_splitting_segment_between_trees(CircuitData& circuit,
         .source = source_segment_part,
     });
 
+    if (is_inserted(leftover_segment_part.segment.wire_id)) {
+        circuit.submit(info_message::SegmentInserted({
+            .segment = leftover_segment_part.segment,
+            .segment_info =
+                get_segment_info(circuit.layout, leftover_segment_part.segment),
+        }));
+    }
+    if (is_inserted(destination_part1.segment.wire_id)) {
+        circuit.submit(info_message::SegmentInserted({
+            .segment = destination_part1.segment,
+            .segment_info = get_segment_info(circuit.layout, destination_part1.segment),
+        }));
+    }
+    if (is_inserted(destination_segment_part.segment.wire_id)) {
+        circuit.submit(info_message::SegmentInserted({
+            .segment = destination_segment_part.segment,
+            .segment_info =
+                get_segment_info(circuit.layout, destination_segment_part.segment),
+        }));
+    }
+
     source_segment_part = destination_segment_part;
 }
 
 //  * trees can become empty
-//  * inserts new endpoints as shaddow points
+//  * inserts new endpoints as shadow points
 auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_part,
                                 const wire_id_t destination_id) -> void {
     const auto moving_part = segment_part.part;
@@ -771,21 +786,31 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
     if (is_inserted) {
         circuit.submit(info_message::SegmentUninserted {segment_0, info_0});
         circuit.submit(info_message::SegmentUninserted {segment_1, info_1});
-        circuit.submit(info_message::SegmentInserted {segment_0, info_merged});
     }
 
     if (to_part(info_0.line) != to_part(info_merged.line, info_0.line)) {
         circuit.submit(info_message::SegmentPartMoved {
             .destination =
-                segment_part_t {segment_0, to_part(info_merged.line, info_0.line)},
+                segment_part_t {
+                    segment_0,
+                    to_part(info_merged.line, info_0.line),
+                },
             .source = segment_part_t {segment_0, to_part(info_0.line)},
         });
     }
 
     circuit.submit(info_message::SegmentPartMoved {
-        .destination = segment_part_t {segment_0, to_part(info_merged.line, info_1.line)},
+        .destination =
+            segment_part_t {
+                segment_0,
+                to_part(info_merged.line, info_1.line),
+            },
         .source = segment_part_t {segment_1, to_part(info_1.line)},
     });
+
+    if (is_inserted) {
+        circuit.submit(info_message::SegmentInserted {segment_0, info_merged});
+    }
 
     if (index_1 != index_last) {
         circuit.submit(info_message::SegmentIdUpdated {

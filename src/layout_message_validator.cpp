@@ -24,7 +24,7 @@ auto all_segment_value_t::format() const -> std::string {
 }
 
 auto inserted_segment_value_t::format() const -> std::string {
-    return fmt::format("(id = {}, TODO )", unique_id);
+    return fmt::format("(id = {}, segment_info = {} )", unique_id, segment_info);
 }
 
 }  // namespace message_validator
@@ -132,6 +132,9 @@ auto MessageValidator::handle(const info_message::LogicItemCreated &message) -> 
         .unique_id = get_next_unique_id(),
     };
     Expects(all_logicitems_.emplace(message.logicitem_id, value).second);
+
+    // not inserted yet
+    Expects(!inserted_logicitems_.contains(message.logicitem_id));
 }
 
 auto MessageValidator::handle(const info_message::LogicItemIdUpdated &message) -> void {
@@ -149,6 +152,9 @@ auto MessageValidator::handle(const info_message::LogicItemIdUpdated &message) -
 
 auto MessageValidator::handle(const info_message::LogicItemDeleted &message) -> void {
     Expects(all_logicitems_.erase(message.logicitem_id) == 1);
+
+    // not inserted anymore
+    Expects(!inserted_logicitems_.contains(message.logicitem_id));
 }
 
 //
@@ -192,6 +198,13 @@ auto MessageValidator::handle(const info_message::LogicItemUninserted &message) 
 //
 // Segment
 //
+
+// TODO check not inserted (created, delete, move)
+// TODO check uinserted exists (SegmentInserted, ...)
+// TODO check id if inserted exists (SegmentIdUpdated)
+
+// TODO match layout and inserted
+// TODO match ids between inserted & uninserted
 
 auto MessageValidator::handle(const info_message::SegmentCreated &message) -> void {
     Expects(message.size > offset_t {0});
@@ -279,14 +292,60 @@ auto MessageValidator::handle(const info_message::SegmentPartDeleted &message) -
 // Inserted Segment
 //
 
-auto MessageValidator::handle(const info_message::SegmentInserted &message) -> void {}
+auto MessageValidator::handle(const info_message::SegmentInserted &message) -> void {
+    const auto &uninserted = all_segments_.at(message.segment);
+    Expects(uninserted.part == to_part(message.segment_info.line));
+
+    const auto value = inserted_segment_value_t {
+        .unique_id = uninserted.unique_id,
+        .segment_info = message.segment_info,
+    };
+    Expects(inserted_segments_.emplace(message.segment, value).second);
+}
 
 auto MessageValidator::handle(const info_message::InsertedSegmentIdUpdated &message)
-    -> void {}
+    -> void {
+    const auto value = inserted_segments_.at(message.old_segment);
+    Expects(value.segment_info == message.segment_info);
+
+    Expects(inserted_segments_.erase(message.old_segment) == 1);
+    Expects(inserted_segments_.emplace(message.new_segment, value).second);
+
+    // check uninserted unique id
+    // const auto uninserted_unique_id =
+    //    all_logicitems_.at(message.new_logicitem_id).unique_id;
+    // Expects(value.unique_id == uninserted_unique_id);
+}
 
 auto MessageValidator::handle(const info_message::InsertedEndPointsUpdated &message)
-    -> void {}
+    -> void {
+    auto &value = inserted_segments_.at(message.segment);
+    Expects(value.segment_info == message.old_segment_info);
+    // can only change endpoints
+    Expects(value.segment_info.line == message.new_segment_info.line);
 
-auto MessageValidator::handle(const info_message::SegmentUninserted &message) -> void {}
+    // update endpoints
+    value.segment_info = segment_info_t {
+        .line = value.segment_info.line,
+        .p0_type = message.new_segment_info.p0_type,
+        .p1_type = message.new_segment_info.p1_type,
+    };
+    Expects(value.segment_info == message.new_segment_info);
+
+    // check uninserted unique id
+    // const auto uninserted_unique_id =
+    //    all_logicitems_.at(message.new_logicitem_id).unique_id;
+    // Expects(value.unique_id == uninserted_unique_id);
+}
+
+auto MessageValidator::handle(const info_message::SegmentUninserted &message) -> void {
+    const auto &uninserted = all_segments_.at(message.segment);
+
+    const auto &value = inserted_segments_.at(message.segment);
+    Expects(value.segment_info == message.segment_info);
+    Expects(value.unique_id == uninserted.unique_id);
+
+    Expects(inserted_segments_.erase(message.segment) == 1);
+}
 
 }  // namespace logicsim
