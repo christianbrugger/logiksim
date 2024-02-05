@@ -253,7 +253,7 @@ auto Selection::handle(const info_message::SegmentIdUpdated &message) -> void {
 namespace {
 
 auto _handle_move_different_segment(detail::selection::segment_map_t &map,
-                                    info_message::SegmentPartMoved message) {
+                                    info_message::SegmentPartMoved message) -> void {
     using namespace detail::selection;
 
     if (message.source.segment == message.destination.segment) [[unlikely]] {
@@ -297,7 +297,7 @@ auto _handle_move_different_segment(detail::selection::segment_map_t &map,
 }
 
 auto _handle_move_same_segment(detail::selection::segment_map_t &map,
-                               info_message::SegmentPartMoved message) {
+                               info_message::SegmentPartMoved message) -> void {
     if (message.source.segment != message.destination.segment) [[unlikely]] {
         throw std::runtime_error("source and destination need to the same");
     }

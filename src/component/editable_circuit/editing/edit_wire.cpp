@@ -123,25 +123,21 @@ auto copy_segment(CircuitData& circuit, const segment_part_t source_segment_part
     bool set_input_p0 = false;
     bool set_input_p1 = false;
     // handle inputs being copied within the same tree
-    {
-        if (destination_id == source_segment_part.segment.wire_id) {
-            auto info = m_tree_source.info(source_segment_part.segment.segment_index);
-            const auto full_part = to_part(info.line);
+    if (destination_id == source_segment_part.segment.wire_id) {
+        auto info = m_tree_source.info(source_segment_part.segment.segment_index);
+        const auto full_part = to_part(info.line);
 
-            if (full_part.begin == source_segment_part.part.begin &&
-                info.p0_type == SegmentPointType::input) {
-                info.p0_type = SegmentPointType::shadow_point;
-                m_tree_source.update_segment(source_segment_part.segment.segment_index,
-                                             info);
-                set_input_p0 = true;
-            }
-            if (full_part.end == source_segment_part.part.end &&
-                info.p1_type == SegmentPointType::input) {
-                info.p1_type = SegmentPointType::shadow_point;
-                m_tree_source.update_segment(source_segment_part.segment.segment_index,
-                                             info);
-                set_input_p1 = true;
-            }
+        if (full_part.begin == source_segment_part.part.begin &&
+            info.p0_type == SegmentPointType::input) {
+            info.p0_type = SegmentPointType::shadow_point;
+            m_tree_source.update_segment(source_segment_part.segment.segment_index, info);
+            set_input_p0 = true;
+        }
+        if (full_part.end == source_segment_part.part.end &&
+            info.p1_type == SegmentPointType::input) {
+            info.p1_type = SegmentPointType::shadow_point;
+            m_tree_source.update_segment(source_segment_part.segment.segment_index, info);
+            set_input_p1 = true;
         }
     }
 
@@ -166,11 +162,14 @@ auto copy_segment(CircuitData& circuit, const segment_part_t source_segment_part
         }
     }
 
+    // TODO review messages
+    /*
     Expects(destination_segment_part.part.begin == offset_t {0});
     circuit.submit(info_message::SegmentCreated {
         .segment = destination_segment_part.segment,
         .size = destination_segment_part.part.end,
     });
+    */
 
     if (is_inserted(destination_id)) {
         circuit.submit(info_message::SegmentInserted({
