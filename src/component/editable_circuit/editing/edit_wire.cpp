@@ -162,15 +162,6 @@ auto copy_segment(CircuitData& circuit, const segment_part_t source_segment_part
         }
     }
 
-    // TODO review messages
-    /*
-    Expects(destination_segment_part.part.begin == offset_t {0});
-    circuit.submit(info_message::SegmentCreated {
-        .segment = destination_segment_part.segment,
-        .size = destination_segment_part.part.end,
-    });
-    */
-
     if (is_inserted(destination_id)) {
         circuit.submit(info_message::SegmentInserted({
             .segment = destination_segment_part.segment,
@@ -370,12 +361,6 @@ auto _remove_splitting_segment_from_tree(CircuitData& circuit,
     const auto segment_part_1 =
         segment_part_t {segment_t {wire_id, index1}, m_tree.part(index1)};
 
-    Expects(segment_part_1.part.begin == offset_t {0});
-    circuit.submit(info_message::SegmentCreated {
-        .segment = segment_part_1.segment,
-        .size = segment_part_1.part.end,
-    });
-
     circuit.submit(info_message::SegmentPartMoved {
         .destination = segment_part_1,
         .source = segment_part_t {segment_part.segment, part1}});
@@ -515,15 +500,6 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
 
     // TODO bug missing moved messages for selection updates,
     //      maybe use a pre-build method for this?
-
-    // messages
-    if (full_line == part_line) {  // otherwise already sent in move_segment above
-        Expects(segment_part.part.begin == offset_t {0});
-        circuit.submit(info_message::SegmentCreated {
-            .segment = segment_part.segment,
-            .size = segment_part.part.end,
-        });
-    }
 }
 
 //

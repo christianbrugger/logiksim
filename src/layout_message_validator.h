@@ -7,7 +7,7 @@
 #include "layout_message_forward.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/logicitem_id.h"
-#include "vocabulary/offset.h"
+#include "vocabulary/part.h"
 #include "vocabulary/segment.h"
 #include "vocabulary/segment_info.h"
 
@@ -36,14 +36,14 @@ struct inserted_logicitem_value_t {
 
 struct uninserted_segment_value_t {
     uint64_t unique_id;
-    offset_t size;
+    part_t part;
 
     [[nodiscard]] auto format() const -> std::string;
 };
 
 struct inserted_segment_value_t {
     uint64_t unique_id;
-    offset_t size;
+    part_t part;
     segment_info_t segment_info;
 
     [[nodiscard]] auto format() const -> std::string;

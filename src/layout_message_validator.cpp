@@ -20,7 +20,7 @@ auto inserted_logicitem_value_t::format() const -> std::string {
 }
 
 auto uninserted_segment_value_t::format() const -> std::string {
-    return fmt::format("(id = {}, size = {})", unique_id, size);
+    return fmt::format("(id = {}, part = {})", unique_id, part);
 }
 
 auto inserted_segment_value_t::format() const -> std::string {
@@ -77,6 +77,29 @@ auto inserted_logicitems_match(const inserted_logicitem_map_t &map, const Layout
            std::ranges::all_of(logicitem_ids(layout), entry_matches);
 }
 
+auto logicitem_unique_ids_match(const uninserted_logicitem_map_t &uninserted,
+                                const inserted_logicitem_map_t &inserted) -> bool {
+    return std::ranges::all_of(
+        inserted, [&](const inserted_logicitem_map_t::value_type &item) {
+            return uninserted.at(item.first).unique_id == item.second.unique_id;
+        });
+}
+
+auto uninserted_segments_match(const uninserted_segment_map_t &uninserted,
+                               const Layout &layout) -> bool {
+    const auto segment_matches = [&](const segment_t &segment) {
+        return uninserted.at(segment).part ==
+               layout.wires().segment_tree(segment.wire_id).part(segment.segment_index);
+    };
+
+    const auto wire_matches = [&](const wire_id_t &wire_id) {
+        return std::ranges::all_of(layout.wires().segment_tree(wire_id).indices(wire_id),
+                                   segment_matches);
+    };
+
+    return std::ranges::all_of(wire_ids(layout), wire_matches);
+}
+
 }  // namespace
 
 // namespace
@@ -85,10 +108,11 @@ auto inserted_logicitems_match(const inserted_logicitem_map_t &map, const Layout
 auto MessageValidator::layout_matches_state(const Layout &layout) const -> bool {
     using namespace message_validator;
 
-    // TODO: make sure inserted and uninserted unique_ids match
-
     return uninserted_logicitems_match(uninserted_logicitems_, layout) &&
-           inserted_logicitems_match(inserted_logicitems_, layout);
+           inserted_logicitems_match(inserted_logicitems_, layout) &&
+           logicitem_unique_ids_match(uninserted_logicitems_, inserted_logicitems_) &&
+           // segments
+           uninserted_segments_match(uninserted_segments_, layout);
 }
 
 auto MessageValidator::get_next_unique_id() -> uint64_t {
@@ -96,7 +120,8 @@ auto MessageValidator::get_next_unique_id() -> uint64_t {
 }
 
 auto MessageValidator::submit(const InfoMessage &message) -> void {
-    print(*this);
+    // print("::", message);
+    // print(*this);
 
     std::visit([this](const auto &message_) { this->handle(message_); }, message);
 }
@@ -178,7 +203,7 @@ auto MessageValidator::handle(const info_message::SegmentCreated &message) -> vo
 
     const auto value = uninserted_segment_value_t {
         .unique_id = get_next_unique_id(),
-        .size = message.size,
+        .part = part_t {offset_t {0}, message.size},
     };
     Expects(uninserted_segments_.emplace(message.segment, value).second);
 }
@@ -200,47 +225,58 @@ auto MessageValidator::handle(const info_message::SegmentPartMoved &message) -> 
     // adapt source
     {
         auto &source = uninserted_segments_.at(message.source.segment);
-        // moving only allowed from the end
-        Expects(source.size == message.source.part.end);
 
-        if (message.source.part.begin == offset_t {0}) {
-            // source is completely deleted
+        if (message.source.part.begin == source.part.begin &&
+            message.source.part.end == source.part.end) {
+            // source completely deleted
             Expects(uninserted_segments_.erase(message.source.segment) == 1);
+        } else if (message.source.part.begin == source.part.begin) {
+            // shrinking front
+            source.part = part_t {message.source.part.end, source.part.end};
+        } else if (message.source.part.end == source.part.end) {
+            // shrinking back
+            source.part = part_t {source.part.begin, message.source.part.begin};
         } else {
-            // source is shrinking
-            source.size = message.source.part.begin;
+            std::terminate();
         }
     }
 
     // adapt destination
-    if (message.destination.part.begin == offset_t {0}) {
-        // destination is new
+    const auto it = uninserted_segments_.find(message.destination.segment);
+
+    if (it == uninserted_segments_.end()) {
+        // new destination
         const auto value = uninserted_segment_value_t {
             .unique_id = get_next_unique_id(),
-            .size = message.destination.part.end,
+            .part = message.destination.part,
         };
         Expects(uninserted_segments_.emplace(message.destination.segment, value).second);
+    } else if (it->second.part.begin == message.destination.part.end) {
+        // expanding front
+        it->second.part = part_t {message.destination.part.begin, it->second.part.end};
+    } else if (it->second.part.end == message.destination.part.begin) {
+        // expanding back
+        it->second.part = part_t {it->second.part.begin, message.destination.part.end};
     } else {
-        // destination is expanded
-        auto &destination = uninserted_segments_.at(message.destination.segment);
-        // expansion only allowed at the end
-        Expects(destination.size == message.destination.part.begin);
-        destination.size = message.destination.part.end;
+        std::terminate();
     }
 }
 
 auto MessageValidator::handle(const info_message::SegmentPartDeleted &message) -> void {
     auto &value = uninserted_segments_.at(message.segment_part.segment);
 
-    // deletion only allowed at the end
-    Expects(value.size == message.segment_part.part.end);
-
-    if (message.segment_part.part.begin == offset_t {0}) {
+    if (message.segment_part.part.begin == message.segment_part.part.begin &&
+        message.segment_part.part.end == message.segment_part.part.end) {
         // delete complete segment
         Expects(uninserted_segments_.erase(message.segment_part.segment) == 1);
+    } else if (message.segment_part.part.begin == message.segment_part.part.begin) {
+        // shrink front
+        value.part = part_t {message.segment_part.part.end, value.part.end};
+    } else if (message.segment_part.part.end == message.segment_part.part.end) {
+        // shrink back
+        value.part = part_t {value.part.begin, message.segment_part.part.begin};
     } else {
-        // shrink segment
-        value.size = message.segment_part.part.begin;
+        std::terminate();
     }
 }
 

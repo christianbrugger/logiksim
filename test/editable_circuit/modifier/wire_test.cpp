@@ -148,8 +148,10 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialOneSide) {
     add_test_wire(layout, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
-    auto segment_part =
-        segment_part_t {segment_t {wire_id_t {0}, segment_index_t {0}}, part_t {0, 5}};
+    auto segment_part = segment_part_t {
+        segment_t {wire_id_t {0}, segment_index_t {0}},
+        part_t {0, 5},
+    };
 
     auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
     modifier.change_wire_insertion_mode(segment_part, InsertionMode::collisions);
@@ -188,24 +190,31 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialOneSide) {
     }
 
     // messages
-    // const auto m0 = Message {SegmentCreated {
-    //    .segment = segment_t {wire_id_t {1}, segment_index_t {0}},
-    //    .size = offset_t {5},
-    //}};
     const auto m0 = Message {SegmentPartMoved {
-        .destination = segment_part_t {segment_t {wire_id_t {1}, segment_index_t {0}},
-                                       part_t {0, 5}},
-        .source = segment_part_t {segment_t {wire_id_t {0}, segment_index_t {0}},
-                                  part_t {0, 5}},
+        .destination =
+            segment_part_t {
+                segment_t {wire_id_t {1}, segment_index_t {0}},
+                part_t {0, 5},
+            },
+        .source =
+            segment_part_t {
+                segment_t {wire_id_t {0}, segment_index_t {0}},
+                part_t {0, 5},
+            },
     }};
     const auto m1 = Message {SegmentPartMoved {
-        .destination = segment_part_t {segment_t {wire_id_t {0}, segment_index_t {0}},
-                                       part_t {0, 5}},
-        .source = segment_part_t {segment_t {wire_id_t {0}, segment_index_t {0}},
-                                  part_t {5, 10}},
+        .destination =
+            segment_part_t {
+                segment_t {wire_id_t {0}, segment_index_t {0}},
+                part_t {0, 5},
+            },
+        .source =
+            segment_part_t {
+                segment_t {wire_id_t {0}, segment_index_t {0}},
+                part_t {5, 10},
+            },
     }};
     ASSERT_EQ(modifier.circuit_data().messages.size(), 2);
-    // ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
     ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
     ASSERT_EQ(modifier.circuit_data().messages.at(1), m1);
 }
@@ -264,32 +273,34 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialMiddle) {
     }
 
     // messages
-    // const auto m0 = Message {SegmentCreated {
-    //    .segment = segment_t {wire_id_t {0}, segment_index_t {1}},
-    //    .size = offset_t {5},
-    //}};
-    // const auto m1 = Message {SegmentCreated {
-    //    .segment = segment_t {wire_id_t {1}, segment_index_t {0}},
-    //    .size = offset_t {3},
-    //}};
     const auto m0 = Message {SegmentPartMoved {
-        .destination = segment_part_t {segment_t {wire_id_t {0}, segment_index_t {1}},
-                                       part_t {offset_t {0}, offset_t {5}}},
-        .source = segment_part_t {segment_t {wire_id_t {0}, segment_index_t {0}},
-                                  part_t {offset_t {5}, offset_t {10}}},
+        .destination =
+            segment_part_t {
+                segment_t {wire_id_t {0}, segment_index_t {1}},
+                part_t {offset_t {0}, offset_t {5}},
+            },
+        .source =
+            segment_part_t {
+                segment_t {wire_id_t {0}, segment_index_t {0}},
+                part_t {offset_t {5}, offset_t {10}},
+            },
     }};
     const auto m1 = Message {SegmentPartMoved {
-        .destination = segment_part_t {segment_t {wire_id_t {1}, segment_index_t {0}},
-                                       part_t {offset_t {0}, offset_t {3}}},
-        .source = segment_part_t {segment_t {wire_id_t {0}, segment_index_t {0}},
-                                  part_t {offset_t {2}, offset_t {5}}},
+        .destination =
+            segment_part_t {
+                segment_t {wire_id_t {1}, segment_index_t {0}},
+                part_t {offset_t {0}, offset_t {3}},
+            },
+        .source =
+            segment_part_t {
+                segment_t {wire_id_t {0}, segment_index_t {0}},
+                part_t {offset_t {2}, offset_t {5}},
+            },
     }};
 
     ASSERT_EQ(modifier.circuit_data().messages.size(), 2);
     ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
     ASSERT_EQ(modifier.circuit_data().messages.at(1), m1);
-    // ASSERT_EQ(modifier.circuit_data().messages.at(2), m2);
-    // ASSERT_EQ(modifier.circuit_data().messages.at(3), m3);
 }
 
 //
@@ -446,8 +457,10 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMove) {
     auto &m_tree = layout.wires().modifiable_segment_tree(wire_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
-    const auto segment_part_0 =
-        segment_part_t {segment_t {wire_id, segment_index}, part_t {0, 10}};
+    const auto segment_part_0 = segment_part_t {
+        segment_t {wire_id, segment_index},
+        part_t {0, 10},
+    };
 
     auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
 
@@ -464,12 +477,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMove) {
     ASSERT_EQ(tree.line(segment_index_t {0}), line_0);
 
     // messages
-    const auto m0 = Message {SegmentCreated {
-        .segment = segment_t {wire_id_t {0}, segment_index_t {0}},
-        .size = offset_t {10},
-    }};
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.size(), 0);
 }
 
 TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
@@ -504,10 +512,6 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
     ASSERT_EQ(tree.line(segment_index_t {1}), line_1);
 
     // messages
-    // const auto m0 = Message {SegmentCreated {
-    //    .segment = segment_part_1.segment,
-    //    .size = offset_t {5},
-    //}};
     const auto m0 = Message {SegmentPartMoved {
         .destination = segment_part_1,
         .source = segment_part_0,
@@ -519,7 +523,6 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
     ASSERT_EQ(modifier.circuit_data().messages.size(), 2);
     ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
     ASSERT_EQ(modifier.circuit_data().messages.at(1), m1);
-    // ASSERT_EQ(modifier.circuit_data().messages.at(2), m2);
 }
 
 TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialEnd) {
@@ -554,17 +557,12 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialEnd) {
     ASSERT_EQ(tree.line(segment_index_t {1}), line_1);
 
     // messages
-    // const auto m0 = Message {SegmentCreated {
-    //    .segment = segment_part_1.segment,
-    //    .size = offset_t {5},
-    //}};
     const auto m0 = Message {SegmentPartMoved {
         .destination = segment_part_1,
         .source = segment_part_0,
     }};
     ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
     ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
-    // ASSERT_EQ(modifier.circuit_data().messages.at(1), m1);
 }
 
 TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
@@ -580,16 +578,24 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
     auto &m_tree = layout.wires().modifiable_segment_tree(wire_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
-    const auto segment_part_0 =
-        segment_part_t {segment_t {wire_id, segment_index}, part_t {10, 15}};
+    const auto segment_part_0 = segment_part_t {
+        segment_t {wire_id, segment_index},
+        part_t {10, 15},
+    };
 
-    const auto segment_part_1_from =
-        segment_part_t {segment_t {wire_id, segment_index_t {0}}, part_t {15, 20}};
-    const auto segment_part_1_to =
-        segment_part_t {segment_t {wire_id, segment_index_t {1}}, part_t {0, 5}};
+    const auto segment_part_1_from = segment_part_t {
+        segment_t {wire_id, segment_index_t {0}},
+        part_t {15, 20},
+    };
+    const auto segment_part_1_to = segment_part_t {
+        segment_t {wire_id, segment_index_t {1}},
+        part_t {0, 5},
+    };
 
-    const auto segment_part_2 =
-        segment_part_t {segment_t {wire_id, segment_index_t {2}}, part_t {0, 5}};
+    const auto segment_part_2 = segment_part_t {
+        segment_t {wire_id, segment_index_t {2}},
+        part_t {0, 5},
+    };
 
     auto modifier = Modifier {Layout {layout}, ModifierConfig {.store_messages = true}};
 
@@ -607,14 +613,6 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
     ASSERT_EQ(tree.line(segment_index_t {2}), line_2);
 
     // messages
-    // const auto m0 = Message {SegmentCreated {
-    //    .segment = segment_part_1_to.segment,
-    //    .size = offset_t {5},
-    //}};
-    // const auto m1 = Message {SegmentCreated {
-    //    .segment = segment_part_2.segment,
-    //    .size = offset_t {5},
-    //}};
     const auto m0 = Message {SegmentPartMoved {
         .destination = segment_part_1_to,
         .source = segment_part_1_from,
@@ -626,8 +624,6 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
     ASSERT_EQ(modifier.circuit_data().messages.size(), 2);
     ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
     ASSERT_EQ(modifier.circuit_data().messages.at(1), m1);
-    // ASSERT_EQ(modifier.circuit_data().messages.at(2), m2);
-    // ASSERT_EQ(modifier.circuit_data().messages.at(3), m3);
 }
 
 }  // namespace editable_circuit
