@@ -8,6 +8,7 @@
 #include "format/std_type.h"
 #include "layout.h"
 #include "layout_message.h"
+#include "logging.h"
 #include "selection.h"
 #include "selection_normalization.h"
 
@@ -49,19 +50,8 @@ auto VisibleSelection::submit(const InfoMessage& message) -> void {
     // we only keep the inital selection updated
     initial_selection_.submit(message);
 
-    // we don't update our cache. In some cases we can't, as new elements are created.
-    if (std::holds_alternative<LogicItemCreated>(message) ||
-        std::holds_alternative<LogicItemIdUpdated>(message) ||
-        std::holds_alternative<LogicItemDeleted>(message)) {
-        cached_selection_.reset();
-    }
-
-    if (std::holds_alternative<SegmentCreated>(message) ||
-        std::holds_alternative<SegmentIdUpdated>(message) ||
-        std::holds_alternative<SegmentPartMoved>(message) ||
-        std::holds_alternative<SegmentPartDeleted>(message)) {
-        cached_selection_.reset();
-    }
+    // we don't update our cache. In some cases we can't (as new elements are created).
+    cached_selection_.reset();
 
     Ensures(class_invariant_holds());
 }
@@ -252,7 +242,7 @@ auto VisibleSelection::selection(const Layout& layout,
     Expects(class_invariant_holds());
 
     if (cached_selection_) {
-        // check if our cache is up to date in debug
+        // expects cache is up to date in debug
         assert(cached_selection_ == calculate_selection(layout, layout_index));
         return *cached_selection_;
     }

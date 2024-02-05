@@ -3,6 +3,7 @@
 #include "algorithm/range_step.h"
 #include "editable_circuit.h"
 #include "logging.h"
+#include "random/generator.h"
 #include "timer.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/insertion_mode.h"
@@ -26,7 +27,8 @@ constexpr inline auto is_debug_build = true;
 constexpr inline auto max_grid_value = is_debug_build ? max_grid_debug : max_grid_release;
 
 auto load_circuit_example_1(EditableCircuit& editable_circuit) -> void {
-    add_example(editable_circuit);
+    auto rng = get_random_number_generator();
+    add_example(rng, editable_circuit);
 }
 
 auto load_circuit_example_2(EditableCircuit& editable_circuit) -> void {

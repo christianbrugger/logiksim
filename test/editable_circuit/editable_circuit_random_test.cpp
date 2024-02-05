@@ -266,7 +266,7 @@ namespace {
 auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render = false) {
     auto editable_circuit = EditableCircuit {Layout {}};
 
-    add_example(editable_circuit);
+    add_example(rng, editable_circuit);
 
     auto expected_layout = moved_layout(editable_circuit.layout(), 10, 10).value();
 
@@ -290,7 +290,7 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
     tracker_2.convert_to(InsertionMode::temporary);
 
     // Add example and colliding
-    add_example(editable_circuit);
+    add_example(rng, editable_circuit);
     tracker_2.convert_to(InsertionMode::collisions);
 
     // Move second part

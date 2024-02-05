@@ -4,6 +4,7 @@
 #include "component/editable_circuit/modifier.h"
 #include "component/editable_circuit/selection_guard.h"
 #include "format/struct.h"
+#include "random/generator.h"
 #include "vocabulary/insertion_mode.h"
 #include "vocabulary/line_insertion_type.h"
 
@@ -135,7 +136,7 @@ auto add_wire_segments(EditableCircuit& editable_circuit, point_t p0, point_t p1
                        LineInsertionType segment_type, InsertionMode insertion_mode,
                        selection_id_t selection_id = null_selection_id) -> void;
 
-auto add_example(EditableCircuit& editable_circuit) -> void;
+auto add_example(Rng& rng, EditableCircuit& editable_circuit) -> void;
 
 [[nodiscard]] auto new_positions_representable(const EditableCircuit& editable_circuit,
                                                const Selection& selection, int delta_x,

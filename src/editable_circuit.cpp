@@ -291,8 +291,7 @@ auto add_wire_segments(EditableCircuit& editable_circuit, point_t p0, point_t p1
     }
 }
 
-auto add_example(EditableCircuit& editable_circuit) -> void {
-    auto rng = get_random_number_generator();
+auto add_example(Rng& rng, EditableCircuit& editable_circuit) -> void {
     add_many_wires_and_buttons(rng, editable_circuit);
 }
 
