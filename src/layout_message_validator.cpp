@@ -1,7 +1,9 @@
 #include "layout_message_validator.h"
 
+#include "allocated_size/ankerl_unordered_dense.h"
 #include "layout_message.h"
 #include "layout_message_generation.h"
+#include "layout_message_validator.h"
 #include "logging.h"
 
 #include <fmt/core.h>
@@ -46,6 +48,13 @@ auto MessageValidator::format() const -> std::string {
         "  inserted_segments_ = {}\n"
         "}}",
         all_logicitems_, inserted_logicitems_, all_segments_, inserted_segments_);
+}
+
+auto MessageValidator::allocated_size() const -> std::size_t {
+    return get_allocated_size(all_logicitems_) +       //
+           get_allocated_size(inserted_logicitems_) +  //
+           get_allocated_size(all_segments_) +         //
+           get_allocated_size(inserted_segments_);
 }
 
 namespace message_validator {
@@ -97,6 +106,32 @@ auto all_segments_match(const all_segment_map_t &map, const Layout &layout) -> b
     return std::ranges::all_of(wire_ids(layout), wire_matches);
 }
 
+auto inserted_segments_match(const inserted_segment_map_t &map, const Layout &layout)
+    -> bool {
+    const auto segment_matches = [&](const segment_t &segment) {
+        return map.at(segment).segment_info == get_segment_info(layout, segment);
+    };
+
+    const auto wire_matches = [&](const wire_id_t &wire_id) {
+        return std::ranges::all_of(layout.wires().segment_tree(wire_id).indices(wire_id),
+                                   segment_matches);
+    };
+
+    return std::ranges::all_of(inserted_wire_ids(layout), wire_matches);
+}
+
+auto segment_data_matches(const all_segment_map_t &all_segments,
+                          const inserted_segment_map_t &inserted) -> bool {
+    const auto data_matches = [&](const inserted_segment_map_t::value_type &item) {
+        const auto &uninserted = all_segments.at(item.first);
+
+        return uninserted.unique_id == item.second.unique_id &&
+               uninserted.part == to_part(item.second.segment_info.line);
+    };
+
+    return std::ranges::all_of(inserted, data_matches);
+}
+
 }  // namespace
 
 // namespace
@@ -109,7 +144,9 @@ auto MessageValidator::layout_matches_state(const Layout &layout) const -> bool 
            inserted_logicitems_match(inserted_logicitems_, layout) &&
            logicitem_unique_ids_match(all_logicitems_, inserted_logicitems_) &&
            // segments
-           all_segments_match(all_segments_, layout);
+           all_segments_match(all_segments_, layout) &&
+           inserted_segments_match(inserted_segments_, layout) &&
+           segment_data_matches(all_segments_, inserted_segments_);
 }
 
 auto MessageValidator::get_next_unique_id() -> uint64_t {
@@ -117,9 +154,6 @@ auto MessageValidator::get_next_unique_id() -> uint64_t {
 }
 
 auto MessageValidator::submit(const InfoMessage &message) -> void {
-    // print("::", message);
-    // print(*this);
-
     std::visit([this](const auto &message_) { this->handle(message_); }, message);
 }
 
@@ -162,10 +196,10 @@ auto MessageValidator::handle(const info_message::LogicItemDeleted &message) -> 
 //
 
 auto MessageValidator::handle(const info_message::LogicItemInserted &message) -> void {
-    const auto uninserted_unique_id = all_logicitems_.at(message.logicitem_id).unique_id;
+    const auto &uninserted = all_logicitems_.at(message.logicitem_id);
 
     const auto value = inserted_logicitem_value_t {
-        .unique_id = uninserted_unique_id,
+        .unique_id = uninserted.unique_id,
         .data = message.data,
     };
     Expects(inserted_logicitems_.emplace(message.logicitem_id, value).second);
@@ -180,17 +214,17 @@ auto MessageValidator::handle(const info_message::InsertedLogicItemIdUpdated &me
     Expects(inserted_logicitems_.emplace(message.new_logicitem_id, value).second);
 
     // check uninserted unique id
-    const auto uninserted_unique_id =
-        all_logicitems_.at(message.new_logicitem_id).unique_id;
-    Expects(value.unique_id == uninserted_unique_id);
+    const auto uninserted = all_logicitems_.at(message.new_logicitem_id);
+    Expects(value.unique_id == uninserted.unique_id);
 }
 
 auto MessageValidator::handle(const info_message::LogicItemUninserted &message) -> void {
-    const auto uninserted_unique_id = all_logicitems_.at(message.logicitem_id).unique_id;
-
     const auto &value = inserted_logicitems_.at(message.logicitem_id);
     Expects(value.data == message.data);
-    Expects(value.unique_id == uninserted_unique_id);
+
+    // check uninserted unique id
+    const auto uninserted = all_logicitems_.at(message.logicitem_id);
+    Expects(value.unique_id == uninserted.unique_id);
 
     Expects(inserted_logicitems_.erase(message.logicitem_id) == 1);
 }
@@ -198,13 +232,6 @@ auto MessageValidator::handle(const info_message::LogicItemUninserted &message) 
 //
 // Segment
 //
-
-// TODO check not inserted (created, delete, move)
-// TODO check uinserted exists (SegmentInserted, ...)
-// TODO check id if inserted exists (SegmentIdUpdated)
-
-// TODO match layout and inserted
-// TODO match ids between inserted & uninserted
 
 auto MessageValidator::handle(const info_message::SegmentCreated &message) -> void {
     Expects(message.size > offset_t {0});
@@ -214,6 +241,9 @@ auto MessageValidator::handle(const info_message::SegmentCreated &message) -> vo
         .part = part_t {offset_t {0}, message.size},
     };
     Expects(all_segments_.emplace(message.segment, value).second);
+
+    // not inserted yet
+    Expects(!inserted_segments_.contains(message.segment));
 }
 
 auto MessageValidator::handle(const info_message::SegmentIdUpdated &message) -> void {
@@ -222,11 +252,12 @@ auto MessageValidator::handle(const info_message::SegmentIdUpdated &message) -> 
     Expects(all_segments_.erase(message.old_segment) == 1);
     Expects(all_segments_.emplace(message.new_segment, value).second);
 
-    //// check inserted unique_id
-    // if (const auto it = inserted_logicitems_.find(message.old_logicitem_id);
-    //     it != inserted_logicitems_.end()) {
-    //     Expects(it->second.unique_id == value.unique_id);
-    // }
+    // check inserted data
+    if (const auto it = inserted_segments_.find(message.old_segment);
+        it != inserted_segments_.end()) {
+        Expects(value.unique_id == it->second.unique_id);
+        Expects(value.part == to_part(it->second.segment_info.line));
+    }
 }
 
 auto MessageValidator::handle(const info_message::SegmentPartMoved &message) -> void {
@@ -268,6 +299,10 @@ auto MessageValidator::handle(const info_message::SegmentPartMoved &message) -> 
     } else {
         std::terminate();
     }
+
+    // segments are not inserted during move
+    Expects(!inserted_segments_.contains(message.source.segment));
+    Expects(!inserted_segments_.contains(message.destination.segment));
 }
 
 auto MessageValidator::handle(const info_message::SegmentPartDeleted &message) -> void {
@@ -286,6 +321,9 @@ auto MessageValidator::handle(const info_message::SegmentPartDeleted &message) -
     } else {
         std::terminate();
     }
+
+    // segment is not inserted during deletion
+    Expects(!inserted_segments_.contains(message.segment_part.segment));
 }
 
 //
@@ -293,6 +331,7 @@ auto MessageValidator::handle(const info_message::SegmentPartDeleted &message) -
 //
 
 auto MessageValidator::handle(const info_message::SegmentInserted &message) -> void {
+    // check uninserted data
     const auto &uninserted = all_segments_.at(message.segment);
     Expects(uninserted.part == to_part(message.segment_info.line));
 
@@ -311,10 +350,10 @@ auto MessageValidator::handle(const info_message::InsertedSegmentIdUpdated &mess
     Expects(inserted_segments_.erase(message.old_segment) == 1);
     Expects(inserted_segments_.emplace(message.new_segment, value).second);
 
-    // check uninserted unique id
-    // const auto uninserted_unique_id =
-    //    all_logicitems_.at(message.new_logicitem_id).unique_id;
-    // Expects(value.unique_id == uninserted_unique_id);
+    // check uninserted data
+    const auto &uninserted = all_segments_.at(message.new_segment);
+    Expects(uninserted.unique_id == value.unique_id);
+    Expects(uninserted.part == to_part(value.segment_info.line));
 }
 
 auto MessageValidator::handle(const info_message::InsertedEndPointsUpdated &message)
@@ -332,18 +371,20 @@ auto MessageValidator::handle(const info_message::InsertedEndPointsUpdated &mess
     };
     Expects(value.segment_info == message.new_segment_info);
 
-    // check uninserted unique id
-    // const auto uninserted_unique_id =
-    //    all_logicitems_.at(message.new_logicitem_id).unique_id;
-    // Expects(value.unique_id == uninserted_unique_id);
+    // check uninserted data
+    const auto &uninserted = all_segments_.at(message.segment);
+    Expects(uninserted.unique_id == value.unique_id);
+    Expects(uninserted.part == to_part(value.segment_info.line));
 }
 
 auto MessageValidator::handle(const info_message::SegmentUninserted &message) -> void {
-    const auto &uninserted = all_segments_.at(message.segment);
-
     const auto &value = inserted_segments_.at(message.segment);
     Expects(value.segment_info == message.segment_info);
-    Expects(value.unique_id == uninserted.unique_id);
+
+    // check uninserted data
+    const auto &uninserted = all_segments_.at(message.segment);
+    Expects(uninserted.unique_id == value.unique_id);
+    Expects(uninserted.part == to_part(value.segment_info.line));
 
     Expects(inserted_segments_.erase(message.segment) == 1);
 }

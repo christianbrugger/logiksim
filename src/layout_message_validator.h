@@ -84,6 +84,7 @@ class MessageValidator {
     [[nodiscard]] explicit MessageValidator(const Layout &layout);
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto layout_matches_state(const Layout &layout) const -> bool;
 

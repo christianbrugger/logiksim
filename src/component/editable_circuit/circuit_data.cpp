@@ -1,5 +1,7 @@
 #include "component/editable_circuit/circuit_data.h"
 
+#include "allocated_size/std_optional.h"
+#include "allocated_size/std_vector.h"
 #include "format/container.h"
 #include "logging.h"
 
@@ -43,10 +45,13 @@ auto CircuitData::format() const -> std::string {
 }
 
 auto CircuitData::allocated_size() const -> std::size_t {
-    return layout.allocated_size() +           //
-           index.allocated_size() +            //
-           selection_store.allocated_size() +  //
-           visible_selection.allocated_size();
+    return layout.allocated_size() +             //
+           index.allocated_size() +              //
+           selection_store.allocated_size() +    //
+           visible_selection.allocated_size() +  //
+
+           get_allocated_size(messages) +  //
+           get_allocated_size(message_validator);
 }
 
 auto CircuitData::submit(const InfoMessage& message) -> void {
