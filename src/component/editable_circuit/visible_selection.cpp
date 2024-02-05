@@ -11,6 +11,7 @@
 #include "logging.h"
 #include "selection.h"
 #include "selection_normalization.h"
+#include "timer.h"
 
 #include <gsl/gsl>
 

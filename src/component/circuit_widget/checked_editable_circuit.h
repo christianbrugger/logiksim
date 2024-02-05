@@ -17,6 +17,7 @@ namespace circuit_widget {
  * Class-invariant:
  *   + editable-circuit has no selection in non-editing-states
  *   + editable-circuit has no visible selection is non-editing-states
+ *   + number of visible-selection operations is maximum 1 (for optimization)
  */
 class CheckedEditableCircuit {
    public:

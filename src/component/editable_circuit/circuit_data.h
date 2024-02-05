@@ -17,7 +17,6 @@ namespace editable_circuit {
 
 struct CircuitDataConfig {
     bool store_messages {false};
-    bool validate_messages {false};
 };
 
 /**

@@ -46,7 +46,7 @@ using ModifierConfig = CircuitDataConfig;
  *      + All Elements in all Selections of the SelectionStore are present in Layout.
  *      + Elements in Visible Selection are present in Layout.
  *   Message Validator:
- *      + If present layout matches validator state.
+ *      + If validator is set, layout matches validator state.
  **/
 class Modifier {
    public:
@@ -155,12 +155,12 @@ using ModifierSelectionGuard = SelectionGuardTemplate<Modifier>;
 //
 
 /**
- * @brief: Check the invariants manually, e.g. for tests.
+ * @brief: Check the class-invariants manually, e.g. for tests.
  *
  * Checking the invariants is extremely expensive compared and needs to be
  * enabled with DEBUG_CHECK_CLASS_INVARIANTS on a per method level.
  */
-[[nodiscard]] auto class_invariant_holds(const Modifier& modifier) -> bool;
+[[nodiscard]] auto is_valid(const Modifier& modifier) -> bool;
 
 [[nodiscard]] auto get_inserted_cross_points(const Modifier& modifier,
                                              const Selection& selection)

@@ -107,6 +107,7 @@ CircuitWidget::CircuitWidget(QWidget* parent)
             &CircuitWidget::on_setting_dialog_attributes_changed);
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
@@ -130,6 +131,7 @@ auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
     update();
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
@@ -147,6 +149,7 @@ auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
     update();
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
@@ -187,6 +190,7 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
     update();
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::set_editable_circuit(
@@ -221,6 +225,7 @@ auto CircuitWidget::set_editable_circuit(
     update();
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::render_config() const -> WidgetRenderConfig {
@@ -248,6 +253,7 @@ auto CircuitWidget::serialized_circuit() -> std::string {
     const auto result = serialize_circuit(circuit_store_.layout(), simulation_config_);
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
     return result;
 }
 
@@ -263,6 +269,7 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
                          default_simulation_config);
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
@@ -283,6 +290,7 @@ auto CircuitWidget::load_circuit(std::string filename) -> bool {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
     return load_result__.success;
 }
 
@@ -295,6 +303,7 @@ auto CircuitWidget::save_circuit(std::string filename) -> bool {
                                               simulation_config_);
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
     return success;
 }
 
@@ -375,6 +384,7 @@ auto CircuitWidget::do_action(UserAction action) -> void {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 void CircuitWidget::on_timer_benchmark_render() {
@@ -406,6 +416,7 @@ void CircuitWidget::on_timer_run_simulation() {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 Q_SLOT void CircuitWidget::on_setting_dialog_cleanup_request() {
@@ -416,6 +427,7 @@ Q_SLOT void CircuitWidget::on_setting_dialog_cleanup_request() {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 Q_SLOT void CircuitWidget::on_setting_dialog_attributes_changed(
@@ -429,6 +441,7 @@ Q_SLOT void CircuitWidget::on_setting_dialog_attributes_changed(
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::resizeEvent(QResizeEvent* event_ [[maybe_unused]]) -> void {
@@ -437,6 +450,7 @@ auto CircuitWidget::resizeEvent(QResizeEvent* event_ [[maybe_unused]]) -> void {
     update();
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
@@ -508,6 +522,7 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
@@ -531,6 +546,7 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
@@ -562,6 +578,7 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::wheelEvent(QWheelEvent* event_) -> void {
@@ -574,6 +591,7 @@ auto CircuitWidget::wheelEvent(QWheelEvent* event_) -> void {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
@@ -604,6 +622,7 @@ auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::abort_current_action() -> void {
@@ -630,6 +649,7 @@ auto CircuitWidget::abort_current_action() -> void {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::finalize_editing() -> void {
@@ -639,6 +659,7 @@ auto CircuitWidget::finalize_editing() -> void {
     update();
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::close_all_setting_dialogs() -> void {
@@ -649,6 +670,7 @@ auto CircuitWidget::close_all_setting_dialogs() -> void {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::select_all() -> void {
@@ -664,6 +686,7 @@ auto CircuitWidget::select_all() -> void {
     update();
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::delete_selected() -> void {
@@ -685,6 +708,7 @@ auto CircuitWidget::delete_selected() -> void {
     on_setting_dialog_cleanup_request();
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::copy_paste_position() const -> point_t {
@@ -714,6 +738,7 @@ auto CircuitWidget::copy_selected() -> void {
     }
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::paste_clipboard() -> void {
@@ -747,6 +772,7 @@ auto CircuitWidget::paste_clipboard() -> void {
     print("Pasted", visible_selection_format(circuit_store_), "in", t);
 
     Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitWidget::class_invariant_holds() const -> bool {
@@ -764,9 +790,21 @@ auto CircuitWidget::class_invariant_holds() const -> bool {
     Expects(is_editing_state(circuit_state_) ||
             setting_dialog_manager_->open_dialog_count() == 0);
 
+    // Visible Selection
+    Expects(!is_editing_state(circuit_state_) ||
+            circuit_store_.editable_circuit().visible_selection_operation_count() <= 1);
+
+    return true;
+}
+
+auto CircuitWidget::expensive_invariant_holds() const -> bool {
     // insertion state (expensive so only assert)
     assert(editing_logic_manager_.is_editing_active() ||
            all_normal_display_state(circuit_store_.layout()));
+
+    // editable circuit (expensive so only assert)
+    assert(!is_editing_state(circuit_state_) ||
+           is_valid(circuit_store_.editable_circuit()));
 
     return true;
 }

@@ -110,6 +110,7 @@ class EditableCircuit {
     auto clear_visible_selection() -> void;
     auto set_visible_selection(Selection selection) -> void;
 
+    auto visible_selection_operation_count() const -> std::size_t;
     auto add_visible_selection_rect(SelectionFunction function, rect_fine_t rect) -> void;
     auto try_pop_last_visible_selection_rect() -> bool;
     auto try_update_last_visible_selection_rect(rect_fine_t rect) -> bool;
@@ -131,6 +132,13 @@ using SelectionGuard = editable_circuit::SelectionGuardTemplate<EditableCircuit>
 //
 // Free Methods
 //
+/**
+ * @brief: Check the class invariants manually, e.g. for tests.
+ *
+ * Checking the invariants is extremely expensive compared and needs to be
+ * enabled with DEBUG_CHECK_CLASS_INVARIANTS on a per method level.
+ */
+[[nodiscard]] auto is_valid(const EditableCircuit& editable_circuit) -> bool;
 
 auto add_wire_segments(EditableCircuit& editable_circuit, point_t p0, point_t p1,
                        LineInsertionType segment_type, InsertionMode insertion_mode,

@@ -21,7 +21,7 @@ namespace {
 
 [[nodiscard]] auto debug_class_invariant_holds(const Modifier& modifier) -> bool {
     if constexpr (DEBUG_CHECK_CLASS_INVARIANTS) {
-        return class_invariant_holds(modifier);
+        return is_valid(modifier);
     }
     return true;
 }
@@ -460,7 +460,7 @@ namespace {
 
 }  // namespace
 
-auto class_invariant_holds(const Modifier& modifier) -> bool {
+auto is_valid(const Modifier& modifier) -> bool {
     const auto& circuit = modifier.circuit_data();
 
     // NOT CHECKED:

@@ -75,6 +75,7 @@ auto SelectionAreaLogic::finalize(EditableCircuit& editable_circuit,
     if (!keep_last_selection_) {
         editable_circuit.try_pop_last_visible_selection_rect();
     }
+    editable_circuit.apply_all_visible_selection_operations();
 
     // reset
     first_position_.reset();

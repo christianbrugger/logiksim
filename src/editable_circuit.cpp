@@ -220,6 +220,10 @@ auto EditableCircuit::set_visible_selection(Selection selection__) -> void {
     modifier_.set_visible_selection(std::move(selection__));
 }
 
+auto EditableCircuit::visible_selection_operation_count() const -> std::size_t {
+    return modifier_.circuit_data().visible_selection.operation_count();
+}
+
 auto EditableCircuit::add_visible_selection_rect(SelectionFunction function,
                                                  rect_fine_t rect) -> void {
     modifier_.add_visible_selection_rect(function, rect);
@@ -250,6 +254,10 @@ auto EditableCircuit::visible_selection_empty() const -> bool {
 //
 // Free Methods
 //
+
+auto is_valid(const EditableCircuit& editable_circuit) -> bool {
+    return is_valid(editable_circuit.modifier());
+}
 
 namespace {
 
@@ -328,6 +336,8 @@ auto visible_selection_select_all(EditableCircuit& editable_circuit) -> void {
 
     editable_circuit.clear_visible_selection();
     editable_circuit.add_visible_selection_rect(SelectionFunction::add, rect);
+    // for optimization
+    editable_circuit.apply_all_visible_selection_operations();
 }
 
 auto visible_selection_delete_all(EditableCircuit& editable_circuit) -> void {
