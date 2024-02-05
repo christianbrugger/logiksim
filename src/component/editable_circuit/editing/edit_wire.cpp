@@ -166,7 +166,11 @@ auto copy_segment(CircuitData& circuit, const segment_part_t source_segment_part
         }
     }
 
-    circuit.submit(info_message::SegmentCreated {destination_segment_part.segment});
+    Expects(destination_segment_part.part.begin == offset_t {0});
+    circuit.submit(info_message::SegmentCreated {
+        .segment = destination_segment_part.segment,
+        .size = destination_segment_part.part.end,
+    });
 
     if (is_inserted(destination_id)) {
         circuit.submit(info_message::SegmentInserted({
@@ -224,15 +228,15 @@ auto _move_touching_segment_between_trees(CircuitData& circuit,
 
     // messages
     circuit.submit(info_message::SegmentPartMoved {
-        .segment_part_destination = destination_segment_part,
-        .segment_part_source = source_segment_part,
+        .destination = destination_segment_part,
+        .source = source_segment_part,
     });
 
     if (part_kept.begin != full_part.begin) {
         circuit.submit(info_message::SegmentPartMoved {
-            .segment_part_destination = leftover_segment_part,
-            .segment_part_source = segment_part_t {.segment = source_segment_part.segment,
-                                                   .part = part_kept},
+            .destination = leftover_segment_part,
+            .source = segment_part_t {.segment = source_segment_part.segment,
+                                      .part = part_kept},
         });
     }
 
@@ -258,13 +262,13 @@ auto _move_splitting_segment_between_trees(CircuitData& circuit,
 
     // messages
     circuit.submit(info_message::SegmentPartMoved {
-        .segment_part_destination = destination_part1,
-        .segment_part_source = source_part1,
+        .destination = destination_part1,
+        .source = source_part1,
     });
 
     circuit.submit(info_message::SegmentPartMoved {
-        .segment_part_destination = destination_segment_part,
-        .segment_part_source = source_segment_part,
+        .destination = destination_segment_part,
+        .source = source_segment_part,
     });
 
     source_segment_part = destination_segment_part;
@@ -339,10 +343,9 @@ auto _remove_touching_segment_from_tree(CircuitData& circuit,
 
     if (part_kept.begin != full_part.begin) {
         circuit.submit(info_message::SegmentPartMoved {
-            .segment_part_destination = segment_part_t {.segment = segment_part.segment,
-                                                        .part = m_tree.part(index)},
-            .segment_part_source =
-                segment_part_t {.segment = segment_part.segment, .part = part_kept},
+            .destination = segment_part_t {.segment = segment_part.segment,
+                                           .part = m_tree.part(index)},
+            .source = segment_part_t {.segment = segment_part.segment, .part = part_kept},
         });
     }
 
@@ -368,11 +371,15 @@ auto _remove_splitting_segment_from_tree(CircuitData& circuit,
     const auto segment_part_1 =
         segment_part_t {segment_t {wire_id, index1}, m_tree.part(index1)};
 
-    circuit.submit(info_message::SegmentCreated {segment_part_1.segment});
+    Expects(segment_part_1.part.begin == offset_t {0});
+    circuit.submit(info_message::SegmentCreated {
+        .segment = segment_part_1.segment,
+        .size = segment_part_1.part.end,
+    });
 
     circuit.submit(info_message::SegmentPartMoved {
-        .segment_part_destination = segment_part_1,
-        .segment_part_source = segment_part_t {segment_part.segment, part1}});
+        .destination = segment_part_1,
+        .source = segment_part_t {segment_part.segment, part1}});
 
     circuit.submit(info_message::SegmentPartDeleted {segment_part});
 
@@ -512,7 +519,11 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
 
     // messages
     if (full_line == part_line) {  // otherwise already sent in move_segment above
-        circuit.submit(info_message::SegmentCreated {segment_part.segment});
+        Expects(segment_part.part.begin == offset_t {0});
+        circuit.submit(info_message::SegmentCreated {
+            .segment = segment_part.segment,
+            .size = segment_part.part.end,
+        });
     }
 }
 
@@ -790,16 +801,15 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
 
     if (to_part(info_0.line) != to_part(info_merged.line, info_0.line)) {
         circuit.submit(info_message::SegmentPartMoved {
-            .segment_part_destination =
+            .destination =
                 segment_part_t {segment_0, to_part(info_merged.line, info_0.line)},
-            .segment_part_source = segment_part_t {segment_0, to_part(info_0.line)},
+            .source = segment_part_t {segment_0, to_part(info_0.line)},
         });
     }
 
     circuit.submit(info_message::SegmentPartMoved {
-        .segment_part_destination =
-            segment_part_t {segment_0, to_part(info_merged.line, info_1.line)},
-        .segment_part_source = segment_part_t {segment_1, to_part(info_1.line)},
+        .destination = segment_part_t {segment_0, to_part(info_merged.line, info_1.line)},
+        .source = segment_part_t {segment_1, to_part(info_1.line)},
     });
 
     if (index_1 != index_last) {
@@ -1228,14 +1238,19 @@ auto add_segment_to_tree(CircuitData& circuit, const wire_id_t wire_id,
     };
     const auto segment_index = m_tree.add_segment(segment_info);
     const auto segment = segment_t {wire_id, segment_index};
+    const auto part = to_part(line);
 
     // messages
-    circuit.submit(info_message::SegmentCreated {segment});
+    Expects(part.begin == offset_t {0});
+    circuit.submit(info_message::SegmentCreated {
+        .segment = segment,
+        .size = part.end,
+    });
     if (is_inserted(wire_id)) {
         circuit.submit(info_message::SegmentInserted {segment, segment_info});
     }
 
-    return segment_part_t {segment, to_part(line)};
+    return segment_part_t {segment, part};
 }
 
 }  // namespace

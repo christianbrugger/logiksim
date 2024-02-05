@@ -36,13 +36,14 @@ struct inserted_logicitem_value_t {
 
 struct uninserted_segment_value_t {
     uint64_t unique_id;
+    offset_t size;
 
     [[nodiscard]] auto format() const -> std::string;
 };
 
 struct inserted_segment_value_t {
     uint64_t unique_id;
-    offset_t max_offset;
+    offset_t size;
     segment_info_t segment_info;
 
     [[nodiscard]] auto format() const -> std::string;

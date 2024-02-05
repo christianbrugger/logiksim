@@ -44,7 +44,7 @@ auto LogicItemUninserted::format() const -> std::string {
 // Segments
 
 auto SegmentCreated::format() const -> std::string {
-    return fmt::format("SegmentCreated(segment = {})", segment);
+    return fmt::format("SegmentCreated(segment = {}, size = {})", segment, size);
 }
 
 auto SegmentIdUpdated::format() const -> std::string {
@@ -53,9 +53,8 @@ auto SegmentIdUpdated::format() const -> std::string {
 }
 
 auto SegmentPartMoved::format() const -> std::string {
-    return fmt::format(
-        "SegmentPartMoved(segment_part_destination = {}, segment_part_source = {})",
-        segment_part_destination, segment_part_source);
+    return fmt::format("SegmentPartMoved(destination = {}, source = {})", destination,
+                       source);
 }
 
 auto SegmentPartDeleted::format() const -> std::string {

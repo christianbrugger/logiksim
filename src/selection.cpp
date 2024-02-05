@@ -213,8 +213,7 @@ auto Selection::selected_segments(segment_t segment) const -> const PartSelectio
 // Handle Methods
 //
 
-auto Selection::handle(const info_message::LogicItemDeleted &message)
-    -> void {
+auto Selection::handle(const info_message::LogicItemDeleted &message) -> void {
     Expects(class_invariant_holds());
 
     remove_logicitem(message.logicitem_id);
@@ -222,8 +221,7 @@ auto Selection::handle(const info_message::LogicItemDeleted &message)
     Ensures(class_invariant_holds());
 }
 
-auto Selection::handle(const info_message::LogicItemIdUpdated &message)
-    -> void {
+auto Selection::handle(const info_message::LogicItemIdUpdated &message) -> void {
     Expects(class_invariant_holds());
 
     const auto found = selected_logicitems_.erase(message.old_logicitem_id);
@@ -235,8 +233,7 @@ auto Selection::handle(const info_message::LogicItemIdUpdated &message)
     Ensures(class_invariant_holds());
 }
 
-auto Selection::handle(const info_message::SegmentIdUpdated &message)
-    -> void {
+auto Selection::handle(const info_message::SegmentIdUpdated &message) -> void {
     Expects(class_invariant_holds());
 
     const auto it = selected_segments_.find(message.old_segment);
@@ -255,18 +252,16 @@ auto Selection::handle(const info_message::SegmentIdUpdated &message)
 
 namespace {
 
-auto _handle_move_different_segment(
-    detail::selection::segment_map_t &map,
-    info_message::SegmentPartMoved message) {
+auto _handle_move_different_segment(detail::selection::segment_map_t &map,
+                                    info_message::SegmentPartMoved message) {
     using namespace detail::selection;
 
-    if (message.segment_part_source.segment == message.segment_part_destination.segment)
-        [[unlikely]] {
+    if (message.source.segment == message.destination.segment) [[unlikely]] {
         throw std::runtime_error("source and destination need to be different");
     }
 
     // find source entries
-    const auto it_source = map.find(message.segment_part_source.segment);
+    const auto it_source = map.find(message.source.segment);
     if (it_source == map.end()) {
         // nothing to copy
         return;
@@ -275,7 +270,7 @@ auto _handle_move_different_segment(
 
     // find destination entries
     auto destination_entries = [&]() {
-        const auto it_dest = map.find(message.segment_part_destination.segment);
+        const auto it_dest = map.find(message.destination.segment);
         return it_dest != map.end() ? it_dest->second : map_value_t {};
     }();
 
@@ -285,32 +280,30 @@ auto _handle_move_different_segment(
         .source = source_entries,
         .copy_definition =
             part_copy_definition_t {
-                .destination = message.segment_part_destination.part,
-                .source = message.segment_part_source.part,
+                .destination = message.destination.part,
+                .source = message.source.part,
             },
     });
 
     // delete source
     if (source_entries.empty()) {
-        map.erase(message.segment_part_source.segment);
+        map.erase(message.source.segment);
     }
 
     // add destination
     if (!destination_entries.empty()) {
-        map.insert_or_assign(message.segment_part_destination.segment,
-                             std::move(destination_entries));
+        map.insert_or_assign(message.destination.segment, std::move(destination_entries));
     }
 }
 
 auto _handle_move_same_segment(detail::selection::segment_map_t &map,
                                info_message::SegmentPartMoved message) {
-    if (message.segment_part_source.segment != message.segment_part_destination.segment)
-        [[unlikely]] {
+    if (message.source.segment != message.destination.segment) [[unlikely]] {
         throw std::runtime_error("source and destination need to the same");
     }
 
     // find entries
-    const auto it = map.find(message.segment_part_source.segment);
+    const auto it = map.find(message.source.segment);
     if (it == map.end()) {
         // nothing to copy
         return;
@@ -318,8 +311,8 @@ auto _handle_move_same_segment(detail::selection::segment_map_t &map,
     auto &entries = it->second;
 
     move_parts(entries, part_copy_definition_t {
-                            .destination = message.segment_part_destination.part,
-                            .source = message.segment_part_source.part,
+                            .destination = message.destination.part,
+                            .source = message.source.part,
                         });
 
     Expects(!entries.empty());
@@ -327,11 +320,10 @@ auto _handle_move_same_segment(detail::selection::segment_map_t &map,
 
 }  // namespace
 
-auto Selection::handle(const info_message::SegmentPartMoved &message)
-    -> void {
+auto Selection::handle(const info_message::SegmentPartMoved &message) -> void {
     Expects(class_invariant_holds());
 
-    if (message.segment_part_source.segment == message.segment_part_destination.segment) {
+    if (message.source.segment == message.destination.segment) {
         _handle_move_same_segment(selected_segments_, message);
     } else {
         _handle_move_different_segment(selected_segments_, message);
@@ -340,8 +332,7 @@ auto Selection::handle(const info_message::SegmentPartMoved &message)
     Ensures(class_invariant_holds());
 }
 
-auto Selection::handle(const info_message::SegmentPartDeleted &message)
-    -> void {
+auto Selection::handle(const info_message::SegmentPartDeleted &message) -> void {
     Expects(class_invariant_holds());
 
     remove_segment(message.segment_part);

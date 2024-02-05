@@ -62,6 +62,7 @@ auto generate_created_wire_messages(auto &&obj, const Layout &layout, wire_id_t 
     for (const auto segment_index : segment_tree.indices()) {
         obj.submit(info_message::SegmentCreated {
             .segment = segment_t {wire_id, segment_index},
+            .size = segment_tree.part(segment_index).end,
         });
     }
 }

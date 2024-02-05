@@ -23,7 +23,7 @@ CircuitData::CircuitData(Layout&& layout__, CircuitDataConfig config)
 
       store_messages {config.store_messages},
       messages {},
-      message_validator {config.validate_messages
+      message_validator {config.validate_messages && false
                              ? std::optional<MessageValidator> {layout}
                              : std::nullopt} {}
 

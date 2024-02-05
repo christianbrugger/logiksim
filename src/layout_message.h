@@ -81,6 +81,7 @@ struct LogicItemUninserted {
 
 struct SegmentCreated {
     segment_t segment;
+    offset_t size;
 
     [[nodiscard]] auto operator==(const SegmentCreated &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
@@ -95,8 +96,8 @@ struct SegmentIdUpdated {
 };
 
 struct SegmentPartMoved {
-    segment_part_t segment_part_destination;
-    segment_part_t segment_part_source;
+    segment_part_t destination;
+    segment_part_t source;
 
     [[nodiscard]] auto operator==(const SegmentPartMoved &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
