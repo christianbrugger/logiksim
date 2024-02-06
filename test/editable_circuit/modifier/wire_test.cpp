@@ -46,6 +46,7 @@ TEST(EditableCircuitModifierWire, AddTempSegment) {
     auto modifier = get_logging_modifier(layout);
     modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
                               InsertionMode::temporary);
+    Expects(is_valid(modifier));
 
     // layout
     assert_wire_count(modifier, 1);
@@ -97,6 +98,7 @@ TEST(EditableCircuitModifierWire, TempToColliding) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.change_wire_insertion_mode(segment_part, InsertionMode::collisions);
+    Expects(is_valid(modifier));
 
     // layout
     assert_wire_count(modifier, 3);
@@ -155,6 +157,7 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialOneSide) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.change_wire_insertion_mode(segment_part, InsertionMode::collisions);
+    Expects(is_valid(modifier));
 
     // layout
     assert_wire_count(modifier, 3);
@@ -236,6 +239,7 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialMiddle) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.change_wire_insertion_mode(segment_part, InsertionMode::collisions);
+    Expects(is_valid(modifier));
 
     // layout
     assert_wire_count(modifier, 3);
@@ -324,6 +328,7 @@ TEST(EditableCircuitModifierWire, TempToValid) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.change_wire_insertion_mode(segment_part, InsertionMode::collisions);
+    Expects(is_valid(modifier));
 
     // layout
     assert_wire_count(modifier, 3);
@@ -466,6 +471,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMove) {
 
     auto segment_part = segment_part_0;
     modifier.move_or_delete_temporary_wire(segment_part, 100, 200);
+    Expects(is_valid(modifier));
 
     assert_wire_count(modifier, 1);
     ASSERT_EQ(is_temporary(wire_id_t {0}), true);
@@ -501,6 +507,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
 
     auto segment_part = segment_part_0;
     modifier.move_or_delete_temporary_wire(segment_part, 100, 200);
+    Expects(is_valid(modifier));
 
     ASSERT_EQ(segment_part, segment_part_1);
     assert_wire_count(modifier, 1);
@@ -546,6 +553,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialEnd) {
 
     auto segment_part = segment_part_0;
     modifier.move_or_delete_temporary_wire(segment_part, 100, 200);
+    Expects(is_valid(modifier));
 
     ASSERT_EQ(segment_part, segment_part_1);
     assert_wire_count(modifier, 1);
@@ -597,10 +605,11 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
         part_t {0, 5},
     };
 
-    auto modifier = get_logging_modifier(layout);
-
     auto segment_part = segment_part_0;
+
+    auto modifier = get_logging_modifier(layout);
     modifier.move_or_delete_temporary_wire(segment_part, 100, 200);
+    Expects(is_valid(modifier));
 
     ASSERT_EQ(segment_part, segment_part_2);
     assert_wire_count(modifier, 1);

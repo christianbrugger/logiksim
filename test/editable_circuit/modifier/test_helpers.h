@@ -18,47 +18,55 @@ namespace logicsim {
 namespace editable_circuit {
 
 [[nodiscard]] inline auto get_modifier(Layout layout__ = Layout {}) -> Modifier {
-    return Modifier {
+    const auto modifier = Modifier {
         std::move(layout__),
         ModifierConfig {
             .store_messages = false,
             .validate_messages = true,
         },
     };
+    Expects(is_valid(modifier));
+    return modifier;
 }
 
 [[nodiscard]] inline auto get_logging_modifier(Layout layout__ = Layout {}) -> Modifier {
-    return Modifier {
+    const auto modifier = Modifier {
         std::move(layout__),
         ModifierConfig {
             .store_messages = true,
             .validate_messages = true,
         },
     };
+    Expects(is_valid(modifier));
+    return modifier;
 }
 
 }  // namespace editable_circuit
 
 [[nodiscard]] inline auto get_editable_circuit(Layout layout__ = Layout {})
     -> EditableCircuit {
-    return EditableCircuit {
+    const auto editable_circuit = EditableCircuit {
         std::move(layout__),
         EditableCircuit::Config {
             .store_messages = false,
             .validate_messages = true,
         },
     };
+    Expects(is_valid(editable_circuit));
+    return editable_circuit;
 }
 
 [[nodiscard]] inline auto get_logging_editable_circuit(Layout layout__ = Layout {})
     -> EditableCircuit {
-    return EditableCircuit {
+    const auto editable_circuit = EditableCircuit {
         std::move(layout__),
         EditableCircuit::Config {
             .store_messages = true,
             .validate_messages = true,
         },
     };
+    Expects(is_valid(editable_circuit));
+    return editable_circuit;
 }
 
 //

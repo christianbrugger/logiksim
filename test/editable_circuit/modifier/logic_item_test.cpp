@@ -31,6 +31,7 @@ TEST(EditableCircuitModifierLogicItem, DeleteTemporaryElement) {
     auto modifier = get_logging_modifier(layout);
     auto preserved_id = logicitem_id_t {0};
     modifier.delete_temporary_logicitem(logicitem_id, &preserved_id);
+    Expects(is_valid(modifier));
 
     // logicitem_ids
     ASSERT_EQ(logicitem_id, null_logicitem_id);
@@ -61,6 +62,7 @@ TEST(EditableCircuitModifierLogicItem, DeletePreserving1) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.delete_temporary_logicitem(logicitem_id_0, &logicitem_id_1);
+    Expects(is_valid(modifier));
 
     // logicitem_ids
     ASSERT_EQ(logicitem_id_0, null_logicitem_id);
@@ -101,6 +103,7 @@ TEST(EditableCircuitModifierLogicItem, DeletePreserving2) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.delete_temporary_logicitem(logicitem_id_1, &logicitem_id_0);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
@@ -180,6 +183,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemSuccess) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.move_or_delete_temporary_logicitem(logicitem_id_0, 9, -11);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
@@ -204,6 +208,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemUnchecked) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.move_temporary_logicitem_unchecked(logicitem_id_0, 9, -11);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
@@ -229,6 +234,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemDeleted) {
     auto modifier = get_logging_modifier(layout);
     constexpr static auto overflow = int {grid_t::max()} + 100;
     modifier.move_or_delete_temporary_logicitem(logicitem_id_0, overflow, 0);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id_0, null_logicitem_id);
@@ -257,6 +263,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempValid) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.change_logicitem_insertion_mode(logicitem_id_0, InsertionMode::collisions);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
@@ -289,6 +296,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToInsert) {
     auto modifier = get_logging_modifier(layout);
     modifier.change_logicitem_insertion_mode(logicitem_id_0,
                                              InsertionMode::insert_or_discard);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
@@ -323,6 +331,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempColliding) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.change_logicitem_insertion_mode(logicitem_id_1, InsertionMode::collisions);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id_1, logicitem_id_t {1});
@@ -356,6 +365,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToDiscard) {
     auto modifier = get_logging_modifier(layout);
     modifier.change_logicitem_insertion_mode(logicitem_id_1,
                                              InsertionMode::insert_or_discard);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id_1, null_logicitem_id);
@@ -388,6 +398,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToValid) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.change_logicitem_insertion_mode(logicitem_id_0, InsertionMode::collisions);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
@@ -414,6 +425,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporary) {
 
     auto modifier = get_logging_modifier(layout);
     modifier.change_logicitem_insertion_mode(logicitem_id_0, InsertionMode::temporary);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
@@ -447,6 +459,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporaryPreserving
 
     auto modifier = get_logging_modifier(layout);
     modifier.change_logicitem_insertion_mode(logicitem_id_0, InsertionMode::temporary);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
@@ -476,16 +489,17 @@ TEST(EditableCircuitModifierLogicItem, LogicItemAddElement) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto modifier = get_logging_modifier(layout);
-
     const auto definition = LogicItemDefinition {
         .logicitem_type = LogicItemType::xor_element,
         .input_count = connection_count_t {7},
         .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     };
+
+    auto modifier = get_logging_modifier(layout);
     const auto logicitem_id = modifier.add_logicitem(definition, point_t {2, 3},
                                                      InsertionMode::insert_or_discard);
+    Expects(is_valid(modifier));
 
     //  logicitem_ids
     ASSERT_EQ(logicitem_id, logicitem_id_t {0});
@@ -519,7 +533,9 @@ auto add_xor_element(Modifier &modifier, point_t position, InsertionMode inserti
         .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     };
-    return modifier.add_logicitem(definition, position, insertion_mode);
+    const auto id = modifier.add_logicitem(definition, position, insertion_mode);
+    Expects(is_valid(modifier));
+    return id;
 }
 
 TEST(EditableCircuitModifierLogicItem, LogicItemCombineAddMoveDelete) {
@@ -531,17 +547,22 @@ TEST(EditableCircuitModifierLogicItem, LogicItemCombineAddMoveDelete) {
     auto id_1 = add_xor_element(modifier, point_t {10, 10}, insert_or_discard);
 
     modifier.move_or_delete_temporary_logicitem(id_0, 10, 10);
+    Expects(is_valid(modifier));
 
     modifier.change_logicitem_insertion_mode(id_0, collisions);
+    Expects(is_valid(modifier));
     ASSERT_EQ(get_display_state(modifier, id_0), display_state_t::colliding);
 
     modifier.change_logicitem_insertion_mode(id_0, insert_or_discard);
+    Expects(is_valid(modifier));
     ASSERT_EQ(id_0, null_logicitem_id);
 
     id_1 = logicitem_id_t {0};
     modifier.change_logicitem_insertion_mode(id_1, temporary);
+    Expects(is_valid(modifier));
 
     modifier.delete_temporary_logicitem(id_1);
+    Expects(is_valid(modifier));
     ASSERT_EQ(id_1, null_logicitem_id);
 
     // layout

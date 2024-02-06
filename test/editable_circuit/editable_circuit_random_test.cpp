@@ -140,20 +140,9 @@ auto add_many_wires(Rng &rng, EditableCircuit &editable_circuit, bool random_mod
     for (auto _ [[maybe_unused]] : range(tries)) {
         auto result = add_random_line(rng, editable_circuit, random_modes);
         data.emplace_back(std::move(result));
-
-        // print();
-        // print(editable_circuit.circuit());
-        // print();
-        // verify_selections(data, editable_circuit.circuit().layout());
     }
-    // print();
-    // print();
-    // print();
-    // print(editable_circuit);
-    // print();
-    // print();
-    // print();
 
+    Expects(is_valid(editable_circuit));
     verify_selections(editable_circuit, data);
 
     return data;
@@ -230,18 +219,21 @@ class TrackedSelection {
         if (insertion_mode_ == InsertionMode::temporary) {
             editable_circuit_.split_temporary_before_insert(
                 editable_circuit_.selection(selection_id_));
+            Expects(is_valid(editable_circuit_));
         }
 
         Ensures(state_matches(editable_circuit_, selection_id_, insertion_mode_));
 
         insertion_mode_ = new_mode;
         editable_circuit_.change_insertion_mode(selection_id_, new_mode);
+        Expects(is_valid(editable_circuit_));
 
         Ensures(state_matches(editable_circuit_, selection_id_, insertion_mode_));
 
         if (new_mode == InsertionMode::temporary) {
             editable_circuit_.regularize_temporary_selection(
                 editable_circuit_.selection(selection_id_), cross_points_);
+            Expects(is_valid(editable_circuit_));
         }
 
         Ensures(state_matches(editable_circuit_, selection_id_, insertion_mode_));
@@ -249,11 +241,13 @@ class TrackedSelection {
 
     auto move_or_delete(int delta_x, int delta_y) -> void {
         editable_circuit_.move_or_delete_temporary(selection_id_, delta_x, delta_y);
+        Expects(is_valid(editable_circuit_));
     }
 
     auto move_unchecked(int delta_x, int delta_y) -> void {
         editable_circuit_.move_temporary_unchecked(
             editable_circuit_.selection(selection_id_), delta_x, delta_y);
+        Expects(is_valid(editable_circuit_));
     }
 
    private:
@@ -268,6 +262,7 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
     auto editable_circuit = get_editable_circuit();
 
     add_example(rng, editable_circuit);
+    Expects(is_valid(editable_circuit));
 
     auto expected_layout = moved_layout(editable_circuit.layout(), 10, 10).value();
 
@@ -285,13 +280,16 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
     editable_circuit.clear_visible_selection();
     editable_circuit.add_visible_selection_rect(
         SelectionFunction::add, rect_fine_t {point_fine_t {5, 5}, point_fine_t {10, 10}});
-    auto tracker_2 =
-        TrackedSelection {editable_circuit, editable_circuit.visible_selection(),
-                          InsertionMode::insert_or_discard};
+    auto tracker_2 = TrackedSelection {
+        editable_circuit,
+        editable_circuit.visible_selection(),
+        InsertionMode::insert_or_discard,
+    };
     tracker_2.convert_to(InsertionMode::temporary);
 
     // Add example and colliding
     add_example(rng, editable_circuit);
+    Expects(is_valid(editable_circuit));
     tracker_2.convert_to(InsertionMode::collisions);
 
     // Move second part

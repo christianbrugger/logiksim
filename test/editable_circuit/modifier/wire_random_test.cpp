@@ -29,6 +29,7 @@ namespace {
 auto test_add_many_wires(Rng& rng, bool random_modes) {
     auto editable_circuit = get_editable_circuit();
     add_many_wires(rng, editable_circuit, random_modes);
+    Expects(is_valid(editable_circuit));
 }
 }  // namespace
 
@@ -82,6 +83,7 @@ auto get_insertion_result(std::span<const ordered_line_t> lines) {
                                       : InsertionResult::colliding);
     }
 
+    Expects(is_valid(modifier));
     return result;
 }
 
@@ -202,6 +204,7 @@ auto test_add_wire_states_correct(Rng& rng) {
             throw_exception("the line the segment points to is different");
         }
     }
+    Expects(is_valid(modifier));
 
     // compare result
     for (const auto state : {
@@ -237,6 +240,7 @@ namespace {
 auto test_remove_many_wires(Rng& rng, bool random_modes) {
     auto editable_circuit = get_editable_circuit();
     add_many_wires(rng, editable_circuit, random_modes);
+    Expects(is_valid(editable_circuit));
 
     while (true) {
         const auto segment = get_random_segment(rng, editable_circuit.layout());
@@ -263,6 +267,7 @@ auto test_remove_many_wires(Rng& rng, bool random_modes) {
         if (!editable_circuit.selection(guard.selection_id()).empty()) {
             throw_exception("selection should be empty");
         }
+        Expects(is_valid(editable_circuit));
     }
 
     if (has_segments(editable_circuit.layout())) {
@@ -295,6 +300,7 @@ namespace {
 auto test_remove_partial_wires(Rng& rng, bool random_modes) {
     auto editable_circuit = get_editable_circuit();
     add_many_wires(rng, editable_circuit, random_modes);
+    Expects(is_valid(editable_circuit));
 
     while (true) {
         auto segment_part = get_random_segment_part(rng, editable_circuit.layout());
@@ -331,6 +337,7 @@ auto test_remove_partial_wires(Rng& rng, bool random_modes) {
         if (!editable_circuit.selection(guard.selection_id()).empty()) {
             throw_exception("selection should be empty");
         }
+        Expects(is_valid(editable_circuit));
     }
 
     if (has_segments(editable_circuit.layout())) {
@@ -354,9 +361,9 @@ TEST(HandlerWireFuzz, RemovePartialInsertedWires) {
 namespace {
 auto test_add_wires_buttons(Rng& rng, bool random_modes) {
     auto editable_circuit = get_editable_circuit();
-
     add_many_wires_and_buttons(rng, editable_circuit,
                                WiresButtonsParams {.random_modes = random_modes});
+    Expects(is_valid(editable_circuit));
 }
 }  // namespace
 
