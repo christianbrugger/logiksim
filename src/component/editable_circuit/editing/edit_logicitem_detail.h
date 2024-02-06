@@ -22,6 +22,9 @@ namespace editable_circuit {
 
 struct CircuitData;
 
+
+namespace editing {
+
 //
 // Wire Connection Struct
 //
@@ -42,7 +45,6 @@ static_assert(sizeof(wire_connection_t) == 12);
 static_assert(sizeof(wire_connections_t) == 40);
 
 [[nodiscard]] auto has_duplicate_wire_ids(wire_connections_t connections) -> bool;
-
 
 //
 // Check Convertible Inputs
@@ -95,6 +97,8 @@ auto is_logicitem_colliding(CircuitData& circuit, const layout_calculation_data_
 
 auto is_logicitem_colliding(CircuitData& circuit, const logicitem_id_t logicitem_id)
     -> bool;
+
+}  // namespace editing
 
 }  // namespace editable_circuit
 

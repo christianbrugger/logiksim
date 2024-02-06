@@ -13,6 +13,8 @@ namespace logicsim {
 
 namespace editable_circuit {
 
+namespace editing {
+
 //
 // Wire Connection
 //
@@ -29,7 +31,6 @@ auto has_duplicate_wire_ids(wire_connections_t connections) -> bool {
     return std::ranges::adjacent_find(connections, std::ranges::equal_to {},
                                       to_wire_id) != connections.end();
 }
-
 
 //
 // Check Convertible Inputs
@@ -91,7 +92,6 @@ auto find_convertible_wire_inputs(const CircuitData& circuit,
 // Convert Inputs / Outputs
 //
 
-
 namespace {
 
 auto _ensure_equal_type(SegmentPointType type, SegmentPointType expected) -> void {
@@ -150,7 +150,7 @@ auto convert_to_inputs(CircuitData& circuit, wire_connections_t outputs) -> void
 }
 
 auto convert_wires_at_outputs_to_inputs(CircuitData& circuit,
-                                      const logicitem_id_t logicitem_id) -> void {
+                                        const logicitem_id_t logicitem_id) -> void {
     const auto data = to_layout_calculation_data(circuit.layout, logicitem_id);
 
     auto result = find_convertible_wire_inputs(circuit, data);
@@ -164,7 +164,7 @@ auto convert_wires_at_outputs_to_inputs(CircuitData& circuit,
 }
 
 auto convert_wires_at_outputs_to_outputs(CircuitData& circuit,
-                                        const logicitem_id_t logicitem_id) -> void {
+                                         const logicitem_id_t logicitem_id) -> void {
     const auto data = to_layout_calculation_data(circuit.layout, logicitem_id);
 
     for (auto info : output_locations(data)) {
@@ -200,8 +200,8 @@ auto _any_logicitem_outputs_colliding(CircuitData& circuit,
 
 }  // namespace
 
-auto is_logicitem_colliding(CircuitData& circuit,
-                            const layout_calculation_data_t& data) -> bool {
+auto is_logicitem_colliding(CircuitData& circuit, const layout_calculation_data_t& data)
+    -> bool {
     return circuit.index.collision_index().is_colliding(data) ||
            _any_logicitem_inputs_colliding(circuit.index, data) ||
            _any_logicitem_outputs_colliding(circuit, data);
@@ -212,6 +212,8 @@ auto is_logicitem_colliding(CircuitData& circuit, const logicitem_id_t logicitem
     const auto data = to_layout_calculation_data(circuit.layout, logicitem_id);
     return is_logicitem_colliding(circuit, data);
 }
+
+}  // namespace editing
 
 }  // namespace editable_circuit
 
