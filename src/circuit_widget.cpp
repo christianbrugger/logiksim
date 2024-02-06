@@ -335,6 +335,7 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         }
         case reload_circuit: {
             finalize_editing();
+            const auto _ = Timer {"Reload Circuit"};
             auto layout__ = Layout {circuit_store_.layout()};
             // clear circuit to free memory
             do_action(UserAction::clear_circuit);

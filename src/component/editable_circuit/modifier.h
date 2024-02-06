@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_MODIFIER_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_MODIFIER_H
 
-#include "circuit_data.h"
+#include "component/editable_circuit/circuit_data.h"
 #include "component/editable_circuit/selection_guard.h"
 #include "format/struct.h"
 #include "vocabulary/insertion_mode.h"
@@ -18,7 +18,18 @@ class Layout;
 
 namespace editable_circuit {
 
-using ModifierConfig = CircuitDataConfig;
+#ifdef NDEBUG
+// validation has a 17-30% performance and 50MB memory overhead
+// so we disable it by default
+constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = false;
+#else
+constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = true;
+#endif
+
+struct ModifierConfig {
+    bool store_messages {false};
+    bool validate_messages {VALIDATE_MESSAGES_DEFAULT};
+};
 
 /**
  * @brief: Low level circuit editing that maintains a valid layout.

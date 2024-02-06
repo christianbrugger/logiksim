@@ -17,21 +17,6 @@ constexpr static inline auto DEBUG_PRINT_MESSAGES = false;
 // Circuit Data
 //
 
-CircuitData::CircuitData() : CircuitData {Layout {}, CircuitDataConfig {}} {}
-
-CircuitData::CircuitData(Layout&& layout__, CircuitDataConfig config)
-    : layout {std::move(layout__)},
-      index {layout},
-      selection_store {},
-      visible_selection {},
-
-      messages {config.store_messages
-                    ? std::optional<message_vector_t> {message_vector_t {}}
-                    : std::nullopt},
-      message_validator {config.validate_messages
-                             ? std::optional<MessageValidator> {layout}
-                             : std::nullopt} {}
-
 auto CircuitData::format() const -> std::string {
     return fmt::format(
         "CircuitStore{{\n"

@@ -32,8 +32,34 @@ namespace {
 // Modifier
 //
 
+
+namespace {
+
+auto create_circuit_data(Layout&& layout__, ModifierConfig config) -> CircuitData {
+    auto index__ = LayoutIndex {layout__};
+
+    auto messages__ = config.store_messages
+                          ? std::optional<message_vector_t> {message_vector_t {}}
+                          : std::nullopt;
+
+    auto validator__ = config.validate_messages
+                           ? std::optional<MessageValidator> {layout__}
+                           : std::nullopt;
+
+    return CircuitData {
+        .layout = std::move(layout__),
+        .index = std::move(index__),
+        .selection_store {},
+        .visible_selection {},
+        .messages = std::move(messages__),
+        .message_validator = std::move(validator__),
+    };
+}
+
+}  // namespace
+
 Modifier::Modifier(Layout&& layout__, ModifierConfig config)
-    : circuit_data_ {std::move(layout__), config} {
+    : circuit_data_ {create_circuit_data(std::move(layout__), config)} {
     Ensures(debug_class_invariant_holds(*this));
 }
 

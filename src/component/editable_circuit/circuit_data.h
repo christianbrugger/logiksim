@@ -10,46 +10,33 @@
 #include "layout_message_validator.h"
 
 #include <vector>
+#include <optional>
 
 namespace logicsim {
 
 namespace editable_circuit {
-
-#ifdef NDEBUG
-// validation has a 17-30% performance and 50MB memory overhead
-// so we disable it by default
-constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = false;
-#else
-constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = true;
-#endif
-
-struct CircuitDataConfig {
-    bool store_messages {false};
-    bool validate_messages {VALIDATE_MESSAGES_DEFAULT};
-};
 
 /**
  * @brief: Contains all editable circuit data.
  **/
 struct CircuitData {
    public:
-    [[nodiscard]] explicit CircuitData();
-    [[nodiscard]] explicit CircuitData(Layout&& layout, CircuitDataConfig config = {});
-
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     auto submit(const InfoMessage& message) -> void;
 
    public:
-    Layout layout;
-    LayoutIndex index;
-    SelectionStore selection_store;
-    VisibleSelection visible_selection;
+    Layout layout {};
+    LayoutIndex index {};
+    SelectionStore selection_store {};
+    VisibleSelection visible_selection {};
 
-    std::optional<message_vector_t> messages;
-    std::optional<MessageValidator> message_validator;
+    std::optional<message_vector_t> messages {std::nullopt};
+    std::optional<MessageValidator> message_validator {std::nullopt};
 };
+
+static_assert(std::is_aggregate_v<CircuitData>);
 
 }  // namespace editable_circuit
 
