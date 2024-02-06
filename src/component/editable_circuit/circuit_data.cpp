@@ -27,8 +27,9 @@ CircuitData::CircuitData(Layout&& layout__, CircuitDataConfig config)
       selection_store {},
       visible_selection {},
 
-      store_messages {config.store_messages},
-      messages {},
+      messages {config.store_messages
+                    ? std::optional<message_vector_t> {message_vector_t {}}
+                    : std::nullopt},
       message_validator {config.validate_messages
                              ? std::optional<MessageValidator> {layout}
                              : std::nullopt} {}
@@ -40,12 +41,10 @@ auto CircuitData::format() const -> std::string {
         "index = {}\n"
         "selection_store = {}\n"
         "visible_selection = {}\n"
-        "store_messages = {}\n"
         "messages = {}\n"
         "message_validator = {}\n"
         "}}\n",
-        layout, index, selection_store, visible_selection, store_messages, messages,
-        message_validator);
+        layout, index, selection_store, visible_selection, messages, message_validator);
 }
 
 auto CircuitData::allocated_size() const -> std::size_t {
@@ -67,8 +66,8 @@ auto CircuitData::submit(const InfoMessage& message) -> void {
     selection_store.submit(message);
     visible_selection.submit(message);
 
-    if (store_messages) {
-        messages.push_back(message);
+    if (messages) {
+        messages->push_back(message);
     }
     if (message_validator) {
         message_validator->submit(message);

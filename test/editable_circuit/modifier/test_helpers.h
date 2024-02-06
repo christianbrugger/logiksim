@@ -25,6 +25,8 @@ namespace editable_circuit {
             .validate_messages = true,
         },
     };
+    Expects(modifier.circuit_data().message_validator.has_value());
+    Expects(!modifier.circuit_data().messages.has_value());
     Expects(is_valid(modifier));
     return modifier;
 }
@@ -37,6 +39,8 @@ namespace editable_circuit {
             .validate_messages = true,
         },
     };
+    Expects(modifier.circuit_data().message_validator.has_value());
+    Expects(modifier.circuit_data().messages.has_value());
     Expects(is_valid(modifier));
     return modifier;
 }
@@ -52,6 +56,8 @@ namespace editable_circuit {
             .validate_messages = true,
         },
     };
+    Expects(editable_circuit.modifier().circuit_data().message_validator.has_value());
+    Expects(!editable_circuit.modifier().circuit_data().messages.has_value());
     Expects(is_valid(editable_circuit));
     return editable_circuit;
 }
@@ -65,6 +71,8 @@ namespace editable_circuit {
             .validate_messages = true,
         },
     };
+    Expects(editable_circuit.modifier().circuit_data().message_validator.has_value());
+    Expects(editable_circuit.modifier().circuit_data().messages.has_value());
     Expects(is_valid(editable_circuit));
     return editable_circuit;
 }

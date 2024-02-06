@@ -41,8 +41,8 @@ TEST(EditableCircuitModifierLogicItem, DeleteTemporaryElement) {
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0),
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0),
               Message {LogicItemDeleted {logicitem_id_t {0}}});
 }
 
@@ -79,9 +79,9 @@ TEST(EditableCircuitModifierLogicItem, DeletePreserving1) {
         .new_logicitem_id = logicitem_id_t {0},
         .old_logicitem_id = logicitem_id_t {1},
     }};
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 2);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), message0);
-    ASSERT_EQ(modifier.circuit_data().messages.at(1), message1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), message0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(1), message1);
 }
 
 TEST(EditableCircuitModifierLogicItem, DeletePreserving2) {
@@ -128,10 +128,10 @@ TEST(EditableCircuitModifierLogicItem, DeletePreserving2) {
         .data = to_layout_calculation_data(modifier.circuit_data().layout,
                                            logicitem_id_t {1}),
     }};
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 3);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), message0);
-    ASSERT_EQ(modifier.circuit_data().messages.at(1), message1);
-    ASSERT_EQ(modifier.circuit_data().messages.at(2), message2);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 3);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), message0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(1), message1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(2), message2);
 }
 
 //
@@ -194,7 +194,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemSuccess) {
                            point_t {10, -10});
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 0);
 }
 
 TEST(EditableCircuitModifierLogicItem, MoveLogicItemUnchecked) {
@@ -219,7 +219,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemUnchecked) {
                            point_t {10, -10});
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 0);
 }
 
 TEST(EditableCircuitModifierLogicItem, MoveLogicItemDeleted) {
@@ -243,9 +243,9 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemDeleted) {
     assert_logicitem_count(modifier, 0);
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
     const auto m0 = Message {LogicItemDeleted {logicitem_id_t {0}}};
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
 }
 
 //
@@ -275,13 +275,13 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempValid) {
     ASSERT_EQ(get_display_state(modifier, logicitem_id_t {0}), valid);
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
 
     const auto m0 = Message {LogicItemInserted {
         .logicitem_id = logicitem_id_t {0},
         .data = to_layout_calculation_data(layout, logicitem_id_t {0}),
     }};
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
 }
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToInsert) {
@@ -308,12 +308,12 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToInsert) {
     ASSERT_EQ(get_display_state(modifier, logicitem_id_t {0}), normal);
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
     const auto m0 = Message {
         LogicItemInserted {.logicitem_id = logicitem_id_t {0},
                            .data = to_layout_calculation_data(
                                modifier.circuit_data().layout, logicitem_id_t {0})}};
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
 }
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempColliding) {
@@ -346,7 +346,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempColliding) {
     ASSERT_EQ(get_display_state(modifier, logicitem_id_t {1}), colliding);
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 0);
 }
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToDiscard) {
@@ -377,9 +377,9 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToDiscard) {
     ASSERT_EQ(get_display_state(modifier, logicitem_id_t {0}), normal);
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
     const auto message0 = Message {LogicItemDeleted {logicitem_id_t {1}}};
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), message0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), message0);
 }
 
 //
@@ -410,7 +410,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToValid) {
     ASSERT_EQ(get_display_state(modifier, logicitem_id_t {0}), valid);
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 0);
 }
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporary) {
@@ -437,12 +437,12 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporary) {
     ASSERT_EQ(get_display_state(modifier, logicitem_id_t {0}), temporary);
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
     const auto m0 = Message {
         LogicItemUninserted {.logicitem_id = logicitem_id_t {0},
                              .data = to_layout_calculation_data(
                                  modifier.circuit_data().layout, logicitem_id_t {0})}};
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
 }
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporaryPreserving) {
@@ -471,13 +471,13 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporaryPreserving
     ASSERT_EQ(get_display_state(modifier, logicitem_id_t {0}), temporary);
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
 
     const auto m0 = Message {LogicItemUninserted {
         .logicitem_id = logicitem_id_t {0},
         .data = data0,
     }};
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
 }
 
 //
@@ -511,14 +511,14 @@ TEST(EditableCircuitModifierLogicItem, LogicItemAddElement) {
     ASSERT_EQ(get_display_state(modifier, logicitem_id_t {0}), normal);
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 2);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
     const auto m0 = Message {LogicItemCreated {logicitem_id_t {0}}};
     const auto m1 = Message {
         LogicItemInserted {.logicitem_id = logicitem_id_t {0},
                            .data = to_layout_calculation_data(
                                modifier.circuit_data().layout, logicitem_id_t {0})}};
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
-    ASSERT_EQ(modifier.circuit_data().messages.at(1), m1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(1), m1);
 }
 
 //

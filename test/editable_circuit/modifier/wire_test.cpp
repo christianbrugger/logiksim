@@ -73,8 +73,8 @@ TEST(EditableCircuitModifierWire, AddTempSegment) {
         .segment = segment_t {wire_id_t {0}, segment_index_t {0}},
         .size = offset_t {10},
     }};
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
 }
 
 //
@@ -136,8 +136,8 @@ TEST(EditableCircuitModifierWire, TempToColliding) {
         .old_segment = segment_t {wire_id_t {0}, segment_index_t {0}},
     }};
 
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
 }
 
 TEST(EditableCircuitModifierWire, TempToCollidingPartialOneSide) {
@@ -217,9 +217,9 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialOneSide) {
                 part_t {5, 10},
             },
     }};
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 2);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
-    ASSERT_EQ(modifier.circuit_data().messages.at(1), m1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(1), m1);
 }
 
 TEST(EditableCircuitModifierWire, TempToCollidingPartialMiddle) {
@@ -302,9 +302,9 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialMiddle) {
             },
     }};
 
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 2);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
-    ASSERT_EQ(modifier.circuit_data().messages.at(1), m1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(1), m1);
 }
 
 //
@@ -389,11 +389,11 @@ TEST(EditableCircuitModifierWire, TempToValid) {
         .old_segment_info = info_1,
     }};
 
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 4);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
-    ASSERT_EQ(modifier.circuit_data().messages.at(1), m1);
-    ASSERT_EQ(modifier.circuit_data().messages.at(2), m2);
-    ASSERT_EQ(modifier.circuit_data().messages.at(3), m3);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 4);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(1), m1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(2), m2);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(3), m3);
 }
 
 //
@@ -483,7 +483,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMove) {
     ASSERT_EQ(tree.line(segment_index_t {0}), line_0);
 
     // messages
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 0);
 }
 
 TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
@@ -527,9 +527,9 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
         .destination = segment_part_t {segment_t {wire_id, segment_index}, part_t {0, 5}},
         .source = segment_part_t {segment_t {wire_id, segment_index}, part_t {5, 10}},
     }};
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 2);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
-    ASSERT_EQ(modifier.circuit_data().messages.at(1), m1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(1), m1);
 }
 
 TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialEnd) {
@@ -569,8 +569,8 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialEnd) {
         .destination = segment_part_1,
         .source = segment_part_0,
     }};
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 1);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
 }
 
 TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
@@ -630,9 +630,9 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
         .destination = segment_part_2,
         .source = segment_part_0,
     }};
-    ASSERT_EQ(modifier.circuit_data().messages.size(), 2);
-    ASSERT_EQ(modifier.circuit_data().messages.at(0), m0);
-    ASSERT_EQ(modifier.circuit_data().messages.at(1), m1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(1), m1);
 }
 
 }  // namespace editable_circuit

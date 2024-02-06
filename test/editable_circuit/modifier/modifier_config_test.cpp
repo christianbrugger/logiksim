@@ -41,12 +41,12 @@ TEST(ECModifierConfig, VerifyLogging1) {
     };
 
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
-    ASSERT_EQ(modifier.circuit_data().store_messages, true);
-    ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
+    ASSERT_EQ(modifier.circuit_data().messages.has_value(), true);
+    ASSERT_EQ(modifier.circuit_data().messages.value().empty(), true);
 
     modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
                               InsertionMode::insert_or_discard);
-    ASSERT_EQ(modifier.circuit_data().messages.empty(), false);
+    ASSERT_EQ(modifier.circuit_data().messages.value().empty(), false);
 }
 
 TEST(ECModifierConfig, VerifyLogging2) {
@@ -55,36 +55,34 @@ TEST(ECModifierConfig, VerifyLogging2) {
     };
 
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
-    ASSERT_EQ(modifier.circuit_data().store_messages, true);
-    ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
+    ASSERT_EQ(modifier.circuit_data().messages.has_value(), true);
+    ASSERT_EQ(modifier.circuit_data().messages.value().empty(), true);
 
     modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
                               InsertionMode::insert_or_discard);
-    ASSERT_EQ(modifier.circuit_data().messages.empty(), false);
+    ASSERT_EQ(modifier.circuit_data().messages.value().empty(), false);
 }
 
 TEST(ECModifierConfig, VerifyNoLogging1) {
     auto modifier = Modifier {};
 
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
-    ASSERT_EQ(modifier.circuit_data().store_messages, false);
-    ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
+    ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
 
     modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
                               InsertionMode::insert_or_discard);
-    ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
+    ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
 }
 
 TEST(ECModifierConfig, VerifyNoLogging2) {
     auto modifier = Modifier {Layout {}};
 
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
-    ASSERT_EQ(modifier.circuit_data().store_messages, false);
-    ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
+    ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
 
     modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
                               InsertionMode::insert_or_discard);
-    ASSERT_EQ(modifier.circuit_data().messages.empty(), true);
+    ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
 }
 
 //
@@ -185,22 +183,22 @@ TEST(ECModifierConfig, TestHelperModifierConfig) {
     {
         const auto modifier = get_modifier();
         ASSERT_EQ(modifier.circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(modifier.circuit_data().store_messages, false);
+        ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
     }
     {
         const auto modifier = get_modifier(Layout {});
         ASSERT_EQ(modifier.circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(modifier.circuit_data().store_messages, false);
+        ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
     }
     {
         const auto modifier = get_logging_modifier();
         ASSERT_EQ(modifier.circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(modifier.circuit_data().store_messages, true);
+        ASSERT_EQ(modifier.circuit_data().messages.has_value(), true);
     }
     {
         const auto modifier = get_logging_modifier(Layout {});
         ASSERT_EQ(modifier.circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(modifier.circuit_data().store_messages, true);
+        ASSERT_EQ(modifier.circuit_data().messages.has_value(), true);
     }
 }
 
@@ -208,22 +206,22 @@ TEST(ECModifierConfig, TestHelperECConfig) {
     {
         const auto ec = get_editable_circuit();
         ASSERT_EQ(ec.modifier().circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(ec.modifier().circuit_data().store_messages, false);
+        ASSERT_EQ(ec.modifier().circuit_data().messages.has_value(), false);
     }
     {
         const auto ec = get_editable_circuit(Layout {});
         ASSERT_EQ(ec.modifier().circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(ec.modifier().circuit_data().store_messages, false);
+        ASSERT_EQ(ec.modifier().circuit_data().messages.has_value(), false);
     }
     {
         const auto ec = get_logging_editable_circuit();
         ASSERT_EQ(ec.modifier().circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(ec.modifier().circuit_data().store_messages, true);
+        ASSERT_EQ(ec.modifier().circuit_data().messages.has_value(), true);
     }
     {
         const auto ec = get_logging_editable_circuit(Layout {});
         ASSERT_EQ(ec.modifier().circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(ec.modifier().circuit_data().store_messages, true);
+        ASSERT_EQ(ec.modifier().circuit_data().messages.has_value(), true);
     }
 }
 

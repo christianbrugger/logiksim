@@ -46,8 +46,7 @@ struct CircuitData {
     SelectionStore selection_store;
     VisibleSelection visible_selection;
 
-    bool store_messages;
-    message_vector_t messages;
+    std::optional<message_vector_t> messages;
     std::optional<MessageValidator> message_validator;
 };
 
