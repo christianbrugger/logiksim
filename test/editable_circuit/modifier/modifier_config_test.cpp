@@ -16,6 +16,7 @@ namespace editable_circuit {
 
 TEST(ECModifierConfig, DefaultConstruction) {
     auto modifier = Modifier {};
+    Expects(is_valid(modifier));
 
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
 }
@@ -25,6 +26,7 @@ TEST(ECModifierConfig, ConstructionWithLayout) {
     add_and_element(layout, display_state_t::normal);
 
     auto modifier = Modifier {Layout {layout}};
+    Expects(is_valid(modifier));
 
     ASSERT_EQ(modifier.circuit_data().layout.empty(), false);
     ASSERT_EQ(modifier.circuit_data().layout, layout);
@@ -39,6 +41,7 @@ TEST(ECModifierConfig, VerifyLogging1) {
         Layout {},
         ModifierConfig {.store_messages = true},
     };
+    Expects(is_valid(modifier));
 
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
     ASSERT_EQ(modifier.circuit_data().messages.has_value(), true);
@@ -55,6 +58,7 @@ TEST(ECModifierConfig, VerifyLogging1) {
 
 TEST(ECModifierConfig, VerifyModiferNDEBUG1) {
     const auto modifier = Modifier {};
+    Expects(is_valid(modifier));
     const auto &circuit = modifier.circuit_data();
 
 #ifdef NDEBUG
@@ -67,6 +71,7 @@ TEST(ECModifierConfig, VerifyModiferNDEBUG1) {
 
 TEST(ECModifierConfig, VerifyModiferNDEBUG2) {
     const auto modifier = Modifier {Layout {}};
+    Expects(is_valid(modifier));
     const auto &circuit = modifier.circuit_data();
 
 #ifdef NDEBUG
@@ -79,6 +84,7 @@ TEST(ECModifierConfig, VerifyModiferNDEBUG2) {
 
 TEST(ECModifierConfig, VerifyEditableCircuitNDEBUG1) {
     const auto editable_circuit = EditableCircuit {};
+    Expects(is_valid(editable_circuit));
     const auto &circuit = editable_circuit.modifier().circuit_data();
 
 #ifdef NDEBUG
@@ -91,6 +97,7 @@ TEST(ECModifierConfig, VerifyEditableCircuitNDEBUG1) {
 
 TEST(ECModifierConfig, VerifyEditableCircuitNDEBUG2) {
     const auto editable_circuit = EditableCircuit {Layout {}};
+    Expects(is_valid(editable_circuit));
     const auto &circuit = editable_circuit.modifier().circuit_data();
 
 #ifdef NDEBUG

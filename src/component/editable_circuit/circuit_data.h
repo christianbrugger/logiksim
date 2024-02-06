@@ -16,7 +16,8 @@ namespace logicsim {
 namespace editable_circuit {
 
 #ifdef NDEBUG
-// validation has a performance impact of 17-30%, so we disable it by default
+// validation has a 17-30% performance and 50MB memory overhead
+// so we disable it by default
 constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = false;
 #else
 constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = true;
