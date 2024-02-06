@@ -16,6 +16,7 @@ namespace logicsim {
 namespace editable_circuit {
 
 #ifdef NDEBUG
+// validation has a performance impact of 17-30%, so we disable it by default
 constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = false;
 #else
 constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = true;
@@ -32,7 +33,6 @@ struct CircuitDataConfig {
 struct CircuitData {
    public:
     [[nodiscard]] explicit CircuitData();
-    [[nodiscard]] explicit CircuitData(CircuitDataConfig config);
     [[nodiscard]] explicit CircuitData(Layout&& layout, CircuitDataConfig config = {});
 
     [[nodiscard]] auto format() const -> std::string;

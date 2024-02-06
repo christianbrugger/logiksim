@@ -49,42 +49,6 @@ TEST(ECModifierConfig, VerifyLogging1) {
     ASSERT_EQ(modifier.circuit_data().messages.value().empty(), false);
 }
 
-TEST(ECModifierConfig, VerifyLogging2) {
-    auto modifier = Modifier {
-        ModifierConfig {.store_messages = true},
-    };
-
-    ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
-    ASSERT_EQ(modifier.circuit_data().messages.has_value(), true);
-    ASSERT_EQ(modifier.circuit_data().messages.value().empty(), true);
-
-    modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
-                              InsertionMode::insert_or_discard);
-    ASSERT_EQ(modifier.circuit_data().messages.value().empty(), false);
-}
-
-TEST(ECModifierConfig, VerifyNoLogging1) {
-    auto modifier = Modifier {};
-
-    ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
-    ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
-
-    modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
-                              InsertionMode::insert_or_discard);
-    ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
-}
-
-TEST(ECModifierConfig, VerifyNoLogging2) {
-    auto modifier = Modifier {Layout {}};
-
-    ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
-    ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
-
-    modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
-                              InsertionMode::insert_or_discard);
-    ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
-}
-
 //
 // Message Verification Defaults
 //
@@ -98,6 +62,7 @@ TEST(ECModifierConfig, VerifyModiferNDEBUG1) {
 #else
     ASSERT_EQ(circuit.message_validator.has_value(), true);
 #endif
+    ASSERT_EQ(circuit.messages.has_value(), false);
 }
 
 TEST(ECModifierConfig, VerifyModiferNDEBUG2) {
@@ -109,6 +74,7 @@ TEST(ECModifierConfig, VerifyModiferNDEBUG2) {
 #else
     ASSERT_EQ(circuit.message_validator.has_value(), true);
 #endif
+    ASSERT_EQ(circuit.messages.has_value(), false);
 }
 
 TEST(ECModifierConfig, VerifyEditableCircuitNDEBUG1) {
@@ -120,6 +86,7 @@ TEST(ECModifierConfig, VerifyEditableCircuitNDEBUG1) {
 #else
     ASSERT_EQ(circuit.message_validator.has_value(), true);
 #endif
+    ASSERT_EQ(circuit.messages.has_value(), false);
 }
 
 TEST(ECModifierConfig, VerifyEditableCircuitNDEBUG2) {
@@ -131,99 +98,9 @@ TEST(ECModifierConfig, VerifyEditableCircuitNDEBUG2) {
 #else
     ASSERT_EQ(circuit.message_validator.has_value(), true);
 #endif
+    ASSERT_EQ(circuit.messages.has_value(), false);
 }
 
-//
-// Message Verification Config
-//
-
-TEST(ECModifierConfig, VerifierOverwriteDefault1) {
-    const auto modifier = Modifier {
-        Layout {},
-        ModifierConfig {.validate_messages = true},
-    };
-    const auto &circuit = modifier.circuit_data();
-
-    ASSERT_EQ(circuit.message_validator.has_value(), true);
-}
-
-TEST(ECModifierConfig, VerifierOverwriteDefault2) {
-    const auto modifier = Modifier {
-        ModifierConfig {.validate_messages = true},
-    };
-    const auto &circuit = modifier.circuit_data();
-
-    ASSERT_EQ(circuit.message_validator.has_value(), true);
-}
-
-TEST(ECModifierConfig, VerifierOverwriteDefaultEC1) {
-    const auto editable_circuit = EditableCircuit {
-        Layout {},
-        ModifierConfig {.validate_messages = true},
-    };
-    const auto &circuit = editable_circuit.modifier().circuit_data();
-
-    ASSERT_EQ(circuit.message_validator.has_value(), true);
-}
-
-TEST(ECModifierConfig, VerifierOverwriteDefaultEC2) {
-    const auto editable_circuit = EditableCircuit {
-        ModifierConfig {.validate_messages = true},
-    };
-    const auto &circuit = editable_circuit.modifier().circuit_data();
-
-    ASSERT_EQ(circuit.message_validator.has_value(), true);
-}
-
-//
-// Test Helper Config
-//
-
-TEST(ECModifierConfig, TestHelperModifierConfig) {
-    {
-        const auto modifier = get_modifier();
-        ASSERT_EQ(modifier.circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
-    }
-    {
-        const auto modifier = get_modifier(Layout {});
-        ASSERT_EQ(modifier.circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(modifier.circuit_data().messages.has_value(), false);
-    }
-    {
-        const auto modifier = get_logging_modifier();
-        ASSERT_EQ(modifier.circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(modifier.circuit_data().messages.has_value(), true);
-    }
-    {
-        const auto modifier = get_logging_modifier(Layout {});
-        ASSERT_EQ(modifier.circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(modifier.circuit_data().messages.has_value(), true);
-    }
-}
-
-TEST(ECModifierConfig, TestHelperECConfig) {
-    {
-        const auto ec = get_editable_circuit();
-        ASSERT_EQ(ec.modifier().circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(ec.modifier().circuit_data().messages.has_value(), false);
-    }
-    {
-        const auto ec = get_editable_circuit(Layout {});
-        ASSERT_EQ(ec.modifier().circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(ec.modifier().circuit_data().messages.has_value(), false);
-    }
-    {
-        const auto ec = get_logging_editable_circuit();
-        ASSERT_EQ(ec.modifier().circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(ec.modifier().circuit_data().messages.has_value(), true);
-    }
-    {
-        const auto ec = get_logging_editable_circuit(Layout {});
-        ASSERT_EQ(ec.modifier().circuit_data().message_validator.has_value(), true);
-        ASSERT_EQ(ec.modifier().circuit_data().messages.has_value(), true);
-    }
-}
 
 }  // namespace editable_circuit
 

@@ -17,9 +17,7 @@ constexpr static inline auto DEBUG_PRINT_MESSAGES = false;
 // Circuit Data
 //
 
-CircuitData::CircuitData() : CircuitData {Layout {}} {}
-
-CircuitData::CircuitData(CircuitDataConfig config) : CircuitData {Layout {}, config} {}
+CircuitData::CircuitData() : CircuitData {Layout {}, CircuitDataConfig {}} {}
 
 CircuitData::CircuitData(Layout&& layout__, CircuitDataConfig config)
     : layout {std::move(layout__)},

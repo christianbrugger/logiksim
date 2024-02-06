@@ -18,7 +18,6 @@ class EditableCircuit {
 
    public:
     [[nodiscard]] explicit EditableCircuit() = default;
-    [[nodiscard]] explicit EditableCircuit(Config config);
     [[nodiscard]] explicit EditableCircuit(Layout&& layout, Config config = {});
 
     [[nodiscard]] auto format() const -> std::string;

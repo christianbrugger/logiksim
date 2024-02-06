@@ -7,8 +7,6 @@
 
 namespace logicsim {
 
-EditableCircuit::EditableCircuit(Config config) : modifier_ {config} {}
-
 EditableCircuit::EditableCircuit(Layout&& layout__, Config config)
     : modifier_ {std::move(layout__), config} {}
 
