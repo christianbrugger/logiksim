@@ -23,7 +23,7 @@ namespace editable_circuit {
 struct CircuitData;
 
 //
-// Wire Connections
+// Wire Connection Struct
 //
 
 struct wire_connection_t {
@@ -42,6 +42,7 @@ static_assert(sizeof(wire_connection_t) == 12);
 static_assert(sizeof(wire_connections_t) == 40);
 
 [[nodiscard]] auto has_duplicate_wire_ids(wire_connections_t connections) -> bool;
+
 
 //
 // Check Convertible Inputs

@@ -30,6 +30,7 @@ auto has_duplicate_wire_ids(wire_connections_t connections) -> bool {
                                       to_wire_id) != connections.end();
 }
 
+
 //
 // Check Convertible Inputs
 //
@@ -55,11 +56,10 @@ namespace {
 auto _find_convertible_wire_input_candidates(const LayoutIndex& index,
                                              const layout_calculation_data_t& data)
     -> convertible_inputs_result_t {
-    auto result = convertible_inputs_result_t {};
+    auto result = convertible_inputs_result_t {.any_collisions = false};
 
     for (const auto& info : output_locations(data)) {
         if (const auto entry = index.wire_output_index().find(info.position)) {
-            // not compatible
             if (!orientations_compatible(info.orientation, entry->orientation)) {
                 return {.any_collisions = true};
             }
