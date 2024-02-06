@@ -65,7 +65,9 @@ set(LS_CORE_SOURCES
     src/component/circuit_widget/simulation_runner.cpp
     src/component/circuit_widget/zoom.cpp
     src/component/editable_circuit/editing/edit_logicitem.cpp
+    src/component/editable_circuit/editing/edit_logicitem_detail.cpp
     src/component/editable_circuit/editing/edit_wire.cpp
+    src/component/editable_circuit/editing/edit_wire_detail.cpp
     src/component/editable_circuit/circuit_data.cpp
     src/component/editable_circuit/layout_index.cpp
     src/component/editable_circuit/modifier.cpp

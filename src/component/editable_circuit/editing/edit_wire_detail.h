@@ -1,0 +1,14 @@
+#ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_WIRE_DETAIL_H
+#define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_WIRE_DETAIL_H
+
+namespace logicsim {
+
+namespace editable_circuit {
+
+//
+
+}
+
+}
+
+#endif
