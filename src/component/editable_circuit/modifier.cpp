@@ -1,4 +1,5 @@
 #include "modifier.h"
+#include "modifier.h"
 
 #include "component/editable_circuit/editing/edit_logicitem.h"
 #include "component/editable_circuit/editing/edit_wire.h"
@@ -57,6 +58,8 @@ auto create_circuit_data(Layout&& layout__, ModifierConfig config) -> CircuitDat
 }
 
 }  // namespace
+
+Modifier::Modifier() : Modifier {Layout {}, ModifierConfig {}} {}
 
 Modifier::Modifier(Layout&& layout__, ModifierConfig config)
     : circuit_data_ {create_circuit_data(std::move(layout__), config)} {

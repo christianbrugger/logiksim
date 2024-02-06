@@ -61,7 +61,7 @@ struct ModifierConfig {
  **/
 class Modifier {
    public:
-    [[nodiscard]] explicit Modifier() = default;
+    [[nodiscard]] explicit Modifier();
     [[nodiscard]] explicit Modifier(Layout&& layout, ModifierConfig config = {});
     ~Modifier();
 
@@ -153,7 +153,7 @@ class Modifier {
     auto apply_all_visible_selection_operations() -> void;
 
    private:
-    CircuitData circuit_data_ {};
+    CircuitData circuit_data_;
 };
 
 //
