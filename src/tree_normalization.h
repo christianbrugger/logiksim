@@ -36,7 +36,7 @@ class SegmentTree;
  * @brief: Check if segments form a normalized tree.
  *
  * Returns false, if segments are overlapping, could be merged or need splitting,
- * or don't form a loop free, connected tree.
+ * or don't form a loop free, connected tree. Or the tree is empty.
  *
  * The algorithm is O(N log N).
  */

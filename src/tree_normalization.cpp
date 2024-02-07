@@ -166,7 +166,9 @@ auto graph_is_connected_tree(const ValidationGraph& graph) -> bool {
 
 auto segments_are_contiguous_tree(std::span<const ordered_line_t> segments,
                                   const ValidationGraph& graph) -> bool {
-    return graph_is_connected_tree(graph) && segments_are_normalized(segments);
+    return segments.size() > 0 &&             //
+           graph_is_connected_tree(graph) &&  //
+           segments_are_normalized(segments);
 }
 
 }  // namespace

@@ -43,6 +43,7 @@ struct ModifierConfig {
  *   Inserted Wires:
  *      + Segments are not colliding with anything.
  *      + Input corresponds to logicitem output and has correct orientation / position.
+ *      + Wires have at least one segment.
  *      + Segments form a flat tree. With input at the root.
  *      + Have correctly set SegmentPointTypes (input, output, corner, cross, shadow).
  *   Uninserted Wires (temporary & colliding):

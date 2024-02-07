@@ -124,67 +124,6 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
 
 namespace {
 
-auto is_wire_with_segments(const Layout& layout, const wire_id_t wire_id) -> bool {
-    return !layout.wires().segment_tree(wire_id).empty();
-}
-
-auto _notify_wire_id_change(CircuitData& circuit, const wire_id_t new_wire_id,
-                           const wire_id_t old_wire_id) {
-    const auto& segment_tree = circuit.layout.wires().segment_tree(new_wire_id);
-
-    for (auto&& segment_index : segment_tree.indices()) {
-        circuit.submit(info_message::SegmentIdUpdated {
-            .new_segment = segment_t {new_wire_id, segment_index},
-            .old_segment = segment_t {old_wire_id, segment_index},
-        });
-    }
-
-    if (is_inserted(new_wire_id)) {
-        for (auto&& segment_index : segment_tree.indices()) {
-            circuit.submit(info_message::InsertedSegmentIdUpdated {
-                .new_segment = segment_t {new_wire_id, segment_index},
-                .old_segment = segment_t {old_wire_id, segment_index},
-                .segment_info = segment_tree.info(segment_index),
-            });
-        }
-    }
-}
-
-auto swap_and_delete_empty_wire(CircuitData& circuit, wire_id_t& wire_id,
-                                wire_id_t* preserve_element = nullptr) -> void {
-    if (!wire_id) [[unlikely]] {
-        throw std::runtime_error("element id is invalid");
-    }
-
-    if (!is_inserted(wire_id)) [[unlikely]] {
-        throw std::runtime_error("can only delete inserted wires");
-    }
-    if (is_wire_with_segments(circuit.layout, wire_id)) [[unlikely]] {
-        throw std::runtime_error("can't delete wires with segments");
-    }
-
-    // delete in underlying
-    auto last_id = circuit.layout.wires().swap_and_delete(wire_id);
-
-    if (wire_id != last_id) {
-        _notify_wire_id_change(circuit, wire_id, last_id);
-    }
-
-    if (preserve_element != nullptr) {
-        if (*preserve_element == wire_id) {
-            *preserve_element = null_wire_id;
-        } else if (*preserve_element == last_id) {
-            *preserve_element = wire_id;
-        }
-    }
-
-    wire_id = null_wire_id;
-}
-
-auto add_new_wire_element(Layout& layout) -> wire_id_t {
-    return layout.wires().add_wire();
-}
-
 auto reset_segment_endpoints(Layout& layout, const segment_t segment) -> void {
     if (is_inserted(segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("cannot reset endpoints of inserted wire segment");
@@ -358,114 +297,6 @@ auto sort_through_lines_first(std::span<std::pair<ordered_line_t, segment_index_
                       });
 }
 
-auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_0,
-                                  const segment_t segment_1,
-                                  segment_part_t* preserve_segment) -> void {
-    if (segment_0.wire_id != segment_1.wire_id) [[unlikely]] {
-        throw std::runtime_error("Cannot merge segments of different trees.");
-    }
-    if (segment_0.segment_index >= segment_1.segment_index) [[unlikely]] {
-        throw std::runtime_error("Segment indices need to be ordered and not the same.");
-    }
-    const auto is_inserted = ::logicsim::is_inserted(segment_0.wire_id);
-
-    const auto index_0 = segment_0.segment_index;
-    const auto index_1 = segment_1.segment_index;
-    const auto wire_id = segment_0.wire_id;
-
-    auto& m_tree = circuit.layout.wires().modifiable_segment_tree(wire_id);
-    const auto index_last = m_tree.last_index();
-    const auto segment_last = segment_t {wire_id, index_last};
-
-    const auto info_0 = m_tree.info(index_0);
-    const auto info_1 = m_tree.info(index_1);
-
-    // merge
-    m_tree.swap_and_merge_segment({.index_merge_to = index_0, .index_deleted = index_1});
-    const auto info_merged = m_tree.info(index_0);
-
-    // messages
-    if (is_inserted) {
-        circuit.submit(info_message::SegmentUninserted {segment_0, info_0});
-        circuit.submit(info_message::SegmentUninserted {segment_1, info_1});
-    }
-
-    if (to_part(info_0.line) != to_part(info_merged.line, info_0.line)) {
-        circuit.submit(info_message::SegmentPartMoved {
-            .destination =
-                segment_part_t {
-                    segment_0,
-                    to_part(info_merged.line, info_0.line),
-                },
-            .source = segment_part_t {segment_0, to_part(info_0.line)},
-        });
-    }
-
-    circuit.submit(info_message::SegmentPartMoved {
-        .destination =
-            segment_part_t {
-                segment_0,
-                to_part(info_merged.line, info_1.line),
-            },
-        .source = segment_part_t {segment_1, to_part(info_1.line)},
-    });
-
-    if (is_inserted) {
-        circuit.submit(info_message::SegmentInserted {segment_0, info_merged});
-    }
-
-    if (index_1 != index_last) {
-        circuit.submit(info_message::SegmentIdUpdated {
-            .new_segment = segment_1,
-            .old_segment = segment_last,
-        });
-        if (is_inserted) {
-            circuit.submit(info_message::InsertedSegmentIdUpdated {
-                .new_segment = segment_1,
-                .old_segment = segment_last,
-                .segment_info = m_tree.info(index_1),
-            });
-        }
-    }
-
-    // preserve
-    if (preserve_segment && preserve_segment->segment.wire_id == wire_id) {
-        const auto p_index = preserve_segment->segment.segment_index;
-
-        if (p_index == index_0 || p_index == index_1) {
-            const auto p_info = p_index == index_0 ? info_0 : info_1;
-            const auto p_line = to_line(p_info.line, preserve_segment->part);
-            const auto p_part = to_part(info_merged.line, p_line);
-            *preserve_segment = segment_part_t {segment_t {wire_id, index_0}, p_part};
-        }
-
-        else if (p_index == index_last) {
-            const auto p_part = preserve_segment->part;
-            *preserve_segment = segment_part_t {segment_t {wire_id, index_1}, p_part};
-        }
-    }
-}
-
-auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
-                         segment_part_t* preserve_segment) -> void {
-    if (segment_0.segment_index < segment_1.segment_index) {
-        _merge_line_segments_ordered(circuit, segment_0, segment_1, preserve_segment);
-    } else {
-        _merge_line_segments_ordered(circuit, segment_1, segment_0, preserve_segment);
-    }
-}
-
-auto split_line_segment(CircuitData& circuit, const segment_t segment,
-                        const point_t position) -> segment_part_t {
-    const auto full_line = get_line(circuit.layout, segment);
-    const auto line_moved = ordered_line_t {position, full_line.p1};
-
-    auto move_segment_part = segment_part_t {segment, to_part(full_line, line_moved)};
-    move_segment_between_trees(circuit, move_segment_part, segment.wire_id);
-
-    return move_segment_part;
-}
-
 auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
                             segment_part_t* preserve_segment = nullptr) -> void {
     const auto segments = circuit.index.selection_index().query_line_segments(position);
@@ -569,80 +400,6 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
     throw std::runtime_error("unexpected unhandeled case");
 }
 
-// we assume we get a valid tree where the part between p0 and p1
-// has been removed this method puts the segments at p1 into a new tree
-auto split_broken_tree(CircuitData& circuit, point_t p0, point_t p1) -> wire_id_t {
-    const auto p0_tree_id = circuit.index.collision_index().get_first_wire(p0);
-    const auto p1_tree_id = circuit.index.collision_index().get_first_wire(p1);
-
-    if (!p0_tree_id || !p1_tree_id || p0_tree_id != p1_tree_id) {
-        return null_wire_id;
-    };
-
-    // create new tree
-    const auto new_tree_id = add_new_wire_element(circuit.layout);
-
-    // find connected segments
-    const auto& tree_from = circuit.layout.wires().modifiable_segment_tree(p0_tree_id);
-    const auto mask = calculate_connected_segments_mask(tree_from, p1);
-
-    // move over segments
-    for (const auto segment_index : tree_from.indices().reverse()) {
-        if (mask[segment_index.value]) {
-            auto segment_part = segment_part_t {segment_t {p0_tree_id, segment_index},
-                                                tree_from.part(segment_index)};
-            move_segment_between_trees(circuit, segment_part, new_tree_id);
-        }
-    }
-
-    assert(is_contiguous_tree_with_correct_endpoints(tree_from));
-    assert(is_contiguous_tree_with_correct_endpoints(
-        circuit.layout.wires().segment_tree(new_tree_id)));
-
-    return new_tree_id;
-}
-
-auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
-                           wire_id_t& tree_source) -> void {
-    if (tree_destination >= tree_source) [[unlikely]] {
-        // optimization
-        throw std::runtime_error("source is deleted and should have larget id");
-    }
-
-    if (!is_inserted(tree_source) && !is_inserted(tree_destination)) [[unlikely]] {
-        throw std::runtime_error("only supports merging of inserted trees");
-    }
-
-    auto& m_tree_source = circuit.layout.wires().modifiable_segment_tree(tree_source);
-    auto& m_tree_destination =
-        circuit.layout.wires().modifiable_segment_tree(tree_destination);
-
-    auto new_index = m_tree_destination.last_index();
-
-    for (auto old_index : m_tree_source.indices()) {
-        const auto segment_info = m_tree_source.info(old_index);
-        ++new_index;
-
-        const auto old_segment = segment_t {tree_source, old_index};
-        const auto new_segment = segment_t {tree_destination, new_index};
-
-        circuit.submit(info_message::SegmentIdUpdated {
-            .new_segment = new_segment,
-            .old_segment = old_segment,
-        });
-        circuit.submit(info_message::InsertedSegmentIdUpdated {
-            .new_segment = new_segment,
-            .old_segment = old_segment,
-            .segment_info = segment_info,
-        });
-    }
-
-    m_tree_destination.add_tree(m_tree_source);
-
-    m_tree_source.clear();
-    swap_and_delete_empty_wire(circuit, tree_source, &tree_destination);
-}
-
 auto find_wire_for_inserting_segment(CircuitData& circuit,
                                      const segment_part_t segment_part) -> wire_id_t {
     const auto line = get_line(circuit.layout, segment_part);
@@ -673,7 +430,7 @@ auto find_wire_for_inserting_segment(CircuitData& circuit,
     }
 
     // 0 wires
-    return add_new_wire_element(circuit.layout);
+    return circuit.layout.wires().add_wire();
 }
 
 auto discover_wire_inputs(CircuitData& circuit, segment_t segment) -> void {

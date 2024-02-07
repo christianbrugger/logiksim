@@ -85,6 +85,9 @@ class Layout {
 
 [[nodiscard]] auto is_inserted(const Layout &layout, logicitem_id_t logicitem_id) -> bool;
 
+[[nodiscard]] auto is_wire_empty(const Layout &layout, const wire_id_t wire_id)
+    -> bool;
+
 [[nodiscard]] auto get_segment_info(const Layout &layout, segment_t segment)
     -> segment_info_t;
 
