@@ -5,8 +5,10 @@
 #include "component/layout/logicitem_store.h"
 #include "component/layout/wire_store.h"
 #include "format/struct.h"
+#include "vocabulary/insertion_mode.h"
 
 #include <optional>
+#include <utility>
 
 namespace logicsim {
 
@@ -85,8 +87,7 @@ class Layout {
 
 [[nodiscard]] auto is_inserted(const Layout &layout, logicitem_id_t logicitem_id) -> bool;
 
-[[nodiscard]] auto is_wire_empty(const Layout &layout, const wire_id_t wire_id)
-    -> bool;
+[[nodiscard]] auto is_wire_empty(const Layout &layout, const wire_id_t wire_id) -> bool;
 
 [[nodiscard]] auto get_segment_info(const Layout &layout, segment_t segment)
     -> segment_info_t;
@@ -115,7 +116,11 @@ class Layout {
 [[nodiscard]] auto to_placed_element(const Layout &layout, logicitem_id_t logicitem_id)
     -> PlacedElement;
 
-[[nodiscard]] auto to_display_state(wire_id_t wire_id) -> display_state_t;
+[[nodiscard]] auto get_display_states(const Layout &layout, segment_part_t segment_part)
+    -> std::pair<display_state_t, display_state_t>;
+
+[[nodiscard]] auto get_insertion_modes(const Layout &layout, segment_part_t segment_part)
+    -> std::pair<InsertionMode, InsertionMode>;
 
 [[nodiscard]] auto all_normal_display_state(const Layout &layout) -> bool;
 

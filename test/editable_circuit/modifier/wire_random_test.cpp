@@ -165,7 +165,15 @@ auto get_all_lines(const Layout& layout, display_state_t state)
     for (const auto wire_id : wire_ids(layout)) {
         const auto& tree = layout.wires().segment_tree(wire_id);
 
-        if (is_inserted(wire_id) && state == display_state_t::valid) {
+        if (is_temporary(wire_id) && state == display_state_t::temporary) {
+            std::ranges::copy(all_lines(tree), std::back_inserter(result));
+        }
+
+        else if (is_colliding(wire_id) && state == display_state_t::colliding) {
+            std::ranges::copy(all_lines(tree), std::back_inserter(result));
+        }
+
+        else if (is_inserted(wire_id) && state == display_state_t::valid) {
             for (const auto index : tree.indices()) {
                 std::ranges::copy(all_valid_lines(tree, index),
                                   std::back_inserter(result));
@@ -174,10 +182,6 @@ auto get_all_lines(const Layout& layout, display_state_t state)
 
         else if (is_inserted(wire_id) && state == display_state_t::normal) {
             std::ranges::copy(calculate_normal_lines(tree), std::back_inserter(result));
-        }
-
-        else if (to_display_state(wire_id) == state && !is_inserted(wire_id)) {
-            std::ranges::copy(all_lines(tree), std::back_inserter(result));
         }
     }
     return result;

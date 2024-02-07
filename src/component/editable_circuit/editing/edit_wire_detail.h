@@ -30,6 +30,9 @@ namespace editing {
 // Segment Operations
 //
 
+auto add_segment_to_tree(CircuitData& circuit, wire_id_t wire_id, ordered_line_t line)
+    -> segment_part_t;
+
 /**
  * @brief: Moves the segment_part to the destination tree.
  *
@@ -39,7 +42,7 @@ namespace editing {
  * + Newly inserted endpoints as shadow points
  */
 auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_part,
-                                const wire_id_t destination_id) -> void;
+                                wire_id_t destination_id) -> void;
 
 /**
  * @brief: Deletes segment_part of tree (only uninserted)
@@ -49,8 +52,8 @@ auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_pa
  */
 auto remove_segment_from_tree(CircuitData& circuit, segment_part_t& segment_part) -> void;
 
-auto split_line_segment(CircuitData& circuit, const segment_t segment,
-                        const point_t position) -> segment_part_t;
+auto split_line_segment(CircuitData& circuit, segment_t segment, point_t position)
+    -> segment_part_t;
 
 auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
                          segment_part_t* preserve_segment) -> void;
@@ -79,43 +82,31 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 // Endpoints
 //
 
-// auto reset_segment_endpoints(Layout& layout, const segment_t segment) -> void;
-//
-// using point_update_t =
-//     std::initializer_list<const std::pair<segment_index_t, SegmentPointType>>;
-//
-// auto update_segment_point_types(CircuitData& circuit, wire_id_t wire_id,
-//                                 point_update_t data, const point_t position) -> void;
-//
-// auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
-//                             segment_part_t* preserve_segment = nullptr) -> void;
+auto reset_segment_endpoints(Layout& layout, segment_t segment) -> void;
+
+using point_update_t =
+    std::initializer_list<const std::pair<segment_index_t, SegmentPointType>>;
+
+auto update_segment_point_types(CircuitData& circuit, wire_id_t wire_id,
+                                point_update_t data, point_t position) -> void;
+
+auto fix_and_merge_segments(CircuitData& circuit, point_t position,
+                            segment_part_t* preserve_segment = nullptr) -> void;
 
 //
 // Valid
 //
 
-// auto mark_valid(Layout& layout, const segment_part_t segment_part) -> void;
-//
-// auto unmark_valid(Layout& layout, const segment_part_t segment_part) -> void;
+auto mark_valid(Layout& layout, segment_part_t segment_part) -> void;
+
+auto unmark_valid(Layout& layout, segment_part_t segment_part) -> void;
 
 //
 // Collisions
 //
 
-//[[nodiscard]] auto is_wire_colliding(const CircuitData& circuit,
-//                                     const ordered_line_t line) -> bool;
-
-//
-// Get States
-//
-
-//[[nodiscard]] auto get_display_states(const Layout& layout,
-//                                      const segment_part_t segment_part)
-//    -> std::pair<display_state_t, display_state_t>;
-//
-//[[nodiscard]] auto get_insertion_modes(const Layout& layout,
-//                                       const segment_part_t segment_part)
-//    -> std::pair<InsertionMode, InsertionMode>;
+[[nodiscard]] auto is_wire_colliding(const CircuitData& circuit, ordered_line_t line)
+    -> bool;
 
 }  // namespace editing
 

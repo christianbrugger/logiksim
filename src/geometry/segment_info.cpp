@@ -66,7 +66,14 @@ auto set_segment_point_type(segment_info_t &info, point_t position, SegmentPoint
     }
 }
 
-auto get_segment_point_type(const segment_info_t &info, point_t position) -> SegmentPointType {
+auto updated_segment_info(segment_info_t segment_info, point_t position,
+                          SegmentPointType type) -> segment_info_t {
+    set_segment_point_type(segment_info, position, type);
+    return segment_info;
+}
+
+auto get_segment_point_type(const segment_info_t &info, point_t position)
+    -> SegmentPointType {
     if (info.line.p0 == position) {
         return info.p0_type;
     } else if (info.line.p1 == position) {

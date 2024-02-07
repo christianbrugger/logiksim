@@ -26,6 +26,10 @@ struct point_t;
 
 auto set_segment_point_type(segment_info_t &info, point_t position, SegmentPointType type)
     -> void;
+
+[[nodiscard]] auto updated_segment_info(segment_info_t segment_info, point_t position,
+                                        SegmentPointType type) -> segment_info_t;
+
 [[nodiscard]] auto get_segment_point_type(const segment_info_t &info, point_t position)
     -> SegmentPointType;
 

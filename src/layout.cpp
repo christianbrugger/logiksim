@@ -267,17 +267,39 @@ auto to_placed_element(const Layout &layout, logicitem_id_t logicitem_id)
     };
 }
 
-auto to_display_state(wire_id_t wire_id) -> display_state_t {
-    if (!wire_id) [[unlikely]] {
-        throw std::runtime_error("invalid wire id has no display state");
+auto get_display_states(const Layout &layout, segment_part_t segment_part)
+    -> std::pair<display_state_t, display_state_t> {
+    using enum display_state_t;
+
+    // aggregates
+    if (is_temporary(segment_part.segment.wire_id)) {
+        return std::make_pair(temporary, temporary);
     }
-    if (wire_id == temporary_wire_id) {
-        return display_state_t::temporary;
+    if (is_colliding(segment_part.segment.wire_id)) {
+        return std::make_pair(colliding, colliding);
     }
-    if (wire_id == colliding_wire_id) {
-        return display_state_t::colliding;
+
+    const auto &tree = layout.wires().segment_tree(segment_part.segment.wire_id);
+
+    // check valid parts
+    for (const auto valid_part : tree.valid_parts(segment_part.segment.segment_index)) {
+        // parts can not touch or overlap, so we can return early
+        if (a_inside_b(segment_part.part, valid_part)) {
+            return std::make_pair(valid, valid);
+        }
+        if (a_overlaps_any_of_b(segment_part.part, valid_part)) {
+            return std::make_pair(valid, normal);
+        }
     }
-    return display_state_t::normal;
+    return std::make_pair(normal, normal);
+}
+
+auto get_insertion_modes(const Layout &layout, segment_part_t segment_part)
+    -> std::pair<InsertionMode, InsertionMode> {
+    const auto display_states = get_display_states(layout, segment_part);
+
+    return std::make_pair(to_insertion_mode(display_states.first),
+                          to_insertion_mode(display_states.second));
 }
 
 auto all_normal_display_state(const Layout &layout) -> bool {

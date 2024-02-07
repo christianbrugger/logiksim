@@ -124,282 +124,6 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
 
 namespace {
 
-auto reset_segment_endpoints(Layout& layout, const segment_t segment) -> void {
-    if (is_inserted(segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("cannot reset endpoints of inserted wire segment");
-    }
-    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
-
-    const auto new_info = segment_info_t {
-        .line = m_tree.line(segment.segment_index),
-        .p0_type = SegmentPointType::shadow_point,
-        .p1_type = SegmentPointType::shadow_point,
-    };
-
-    m_tree.update_segment(segment.segment_index, new_info);
-}
-
-auto _wire_endpoints_colliding(const CircuitData& circuit, ordered_line_t line) -> bool {
-    const auto wire_id_0 = circuit.index.collision_index().get_first_wire(line.p0);
-    const auto wire_id_1 = circuit.index.collision_index().get_first_wire(line.p1);
-
-    // loop check
-    if (wire_id_0 && wire_id_0 == wire_id_1) {
-        return true;
-    }
-
-    // count existing inputs
-    auto input_count = 0;
-    if (wire_id_0 && circuit.layout.wires().segment_tree(wire_id_0).has_input()) {
-        ++input_count;
-    }
-    if (wire_id_1 && circuit.layout.wires().segment_tree(wire_id_1).has_input()) {
-        ++input_count;
-    }
-    if (input_count > 1) {
-        return true;
-    }
-
-    // check for LogicItem Outputs  (requires additional inputs)
-    if (!wire_id_0) {
-        if (const auto entry = circuit.index.logicitem_output_index().find(line.p0)) {
-            if (!orientations_compatible(entry->orientation, to_orientation_p0(line))) {
-                return true;
-            }
-            ++input_count;
-        }
-    }
-    if (!wire_id_1) {
-        if (const auto entry = circuit.index.logicitem_output_index().find(line.p1)) {
-            if (!orientations_compatible(entry->orientation, to_orientation_p1(line))) {
-                return true;
-            }
-            ++input_count;
-        }
-    }
-    if (input_count > 1) {
-        return true;
-    }
-
-    // check for LogicItem Inputs
-    if (!wire_id_0) {
-        if (const auto entry = circuit.index.logicitem_input_index().find(line.p0)) {
-            if (!orientations_compatible(entry->orientation, to_orientation_p0(line))) {
-                return true;
-            }
-        }
-    }
-    if (!wire_id_1) {
-        if (const auto entry = circuit.index.logicitem_input_index().find(line.p1)) {
-            if (!orientations_compatible(entry->orientation, to_orientation_p1(line))) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-auto is_wire_colliding(const CircuitData& circuit, const ordered_line_t line) -> bool {
-    return _wire_endpoints_colliding(circuit, line) ||
-           circuit.index.collision_index().is_colliding(line);
-}
-
-auto get_display_states(const Layout& layout, const segment_part_t segment_part)
-    -> std::pair<display_state_t, display_state_t> {
-    using enum display_state_t;
-
-    const auto& tree = layout.wires().segment_tree(segment_part.segment.wire_id);
-    const auto tree_state = to_display_state(segment_part.segment.wire_id);
-
-    // aggregates
-    if (tree_state == temporary || tree_state == colliding) {
-        return std::make_pair(tree_state, tree_state);
-    }
-
-    // check valid parts
-    for (const auto valid_part : tree.valid_parts(segment_part.segment.segment_index)) {
-        // parts can not touch or overlap, so we can return early
-        if (a_inside_b(segment_part.part, valid_part)) {
-            return std::make_pair(valid, valid);
-        }
-        if (a_overlaps_any_of_b(segment_part.part, valid_part)) {
-            return std::make_pair(valid, normal);
-        }
-    }
-    return std::make_pair(normal, normal);
-}
-
-auto get_insertion_modes(const Layout& layout, const segment_part_t segment_part)
-    -> std::pair<InsertionMode, InsertionMode> {
-    const auto display_states = get_display_states(layout, segment_part);
-
-    return std::make_pair(to_insertion_mode(display_states.first),
-                          to_insertion_mode(display_states.second));
-}
-
-// TODO move to geometry
-auto updated_segment_info(segment_info_t segment_info, const point_t position,
-                          const SegmentPointType point_type) -> segment_info_t {
-    if (segment_info.line.p0 == position) {
-        segment_info.p0_type = point_type;
-    } else if (segment_info.line.p1 == position) {
-        segment_info.p1_type = point_type;
-    } else {
-        throw std::runtime_error("Position needs to be an endpoint of the segment.");
-    }
-    return segment_info;
-}
-
-using point_update_t =
-    std::initializer_list<const std::pair<segment_index_t, SegmentPointType>>;
-
-auto update_segment_point_types(CircuitData& circuit, wire_id_t wire_id,
-                                point_update_t data, const point_t position) -> void {
-    if (data.size() == 0) {
-        return;
-    }
-    if (!is_inserted(wire_id)) [[unlikely]] {
-        throw std::runtime_error("only works for inserted segment trees.");
-    }
-    auto& m_tree = circuit.layout.wires().modifiable_segment_tree(wire_id);
-
-    const auto run_point_update = [&](bool set_to_shadow) {
-        for (auto [segment_index, point_type] : data) {
-            const auto old_info = m_tree.info(segment_index);
-            const auto new_info = updated_segment_info(
-                old_info, position,
-                set_to_shadow ? SegmentPointType::shadow_point : point_type);
-
-            if (old_info != new_info) {
-                m_tree.update_segment(segment_index, new_info);
-
-                circuit.submit(info_message::InsertedEndPointsUpdated {
-                    .segment = segment_t {wire_id, segment_index},
-                    .new_segment_info = new_info,
-                    .old_segment_info = old_info,
-                });
-            }
-        }
-    };
-
-    // first empty caches
-    run_point_update(true);
-    // write the new states
-    run_point_update(false);
-}
-
-auto sort_through_lines_first(std::span<std::pair<ordered_line_t, segment_index_t>> lines,
-                              const point_t point) -> void {
-    std::ranges::sort(lines, {},
-                      [point](std::pair<ordered_line_t, segment_index_t> item) {
-                          return is_endpoint(point, item.first);
-                      });
-}
-
-auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
-                            segment_part_t* preserve_segment = nullptr) -> void {
-    const auto segments = circuit.index.selection_index().query_line_segments(position);
-    const auto segment_count = get_segment_count(segments);
-
-    if (segment_count == 0) [[unlikely]] {
-        return;
-        // throw_exception("Could not find any segments at position.");
-    }
-    const auto wire_id = get_unique_wire_id(segments);
-    const auto indices = get_segment_indices(segments);
-
-    if (segment_count == 1) {
-        const auto new_type = get_segment_point_type(circuit.layout, segments.at(0),
-                                                     position) == SegmentPointType::input
-                                  ? SegmentPointType::input
-                                  : SegmentPointType::output;
-
-        update_segment_point_types(circuit, wire_id,
-                                   {
-                                       std::pair {indices.at(0), new_type},
-                                   },
-                                   position);
-
-        return;
-    }
-
-    if (segment_count == 2) {
-        auto lines = std::array {
-            std::pair {get_line(circuit.layout, segments.at(0)), indices.at(0)},
-            std::pair {get_line(circuit.layout, segments.at(1)), indices.at(1)},
-        };
-        sort_through_lines_first(lines, position);
-        const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
-
-        if (has_through_line_0) {
-            split_line_segment(circuit, segment_t {wire_id, lines.at(0).second},
-                               position);
-            fix_and_merge_segments(circuit, position, preserve_segment);
-            return;
-        }
-
-        const auto horizontal_0 = is_horizontal(lines.at(0).first);
-        const auto horizontal_1 = is_horizontal(lines.at(1).first);
-        const auto parallel = horizontal_0 == horizontal_1;
-
-        if (parallel) {
-            merge_line_segments(circuit, segments.at(0), segments.at(1),
-                                preserve_segment);
-            return;
-        }
-
-        // this handles corners
-        update_segment_point_types(
-            circuit, wire_id,
-            {
-                std::pair {indices.at(0), SegmentPointType::corner_point},
-                std::pair {indices.at(1), SegmentPointType::shadow_point},
-            },
-            position);
-        return;
-    }
-
-    if (segment_count == 3) {
-        auto lines = std::array {
-            std::pair {get_line(circuit.layout, segments.at(0)), indices.at(0)},
-            std::pair {get_line(circuit.layout, segments.at(1)), indices.at(1)},
-            std::pair {get_line(circuit.layout, segments.at(2)), indices.at(2)},
-        };
-        sort_through_lines_first(lines, position);
-        const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
-
-        if (has_through_line_0) {
-            throw std::runtime_error("This is not allowed, segment be split");
-        } else {
-            update_segment_point_types(
-                circuit, wire_id,
-                {
-                    std::pair {indices.at(0), SegmentPointType::cross_point},
-                    std::pair {indices.at(1), SegmentPointType::shadow_point},
-                    std::pair {indices.at(2), SegmentPointType::shadow_point},
-                },
-                position);
-        }
-        return;
-    }
-
-    if (segment_count == 4) {
-        update_segment_point_types(
-            circuit, wire_id,
-            {
-                std::pair {indices.at(0), SegmentPointType::cross_point},
-                std::pair {indices.at(1), SegmentPointType::shadow_point},
-                std::pair {indices.at(2), SegmentPointType::shadow_point},
-                std::pair {indices.at(3), SegmentPointType::shadow_point},
-            },
-            position);
-        return;
-    }
-
-    throw std::runtime_error("unexpected unhandeled case");
-}
-
 auto find_wire_for_inserting_segment(CircuitData& circuit,
                                      const segment_part_t segment_part) -> wire_id_t {
     const auto line = get_line(circuit.layout, segment_part);
@@ -469,16 +193,6 @@ auto insert_wire(CircuitData& circuit, segment_part_t& segment_part) -> void {
 
     assert(is_contiguous_tree_with_correct_endpoints(
         circuit.layout.wires().segment_tree(target_wire_id)));
-}
-
-auto mark_valid(Layout& layout, const segment_part_t segment_part) -> void {
-    auto& m_tree = layout.wires().modifiable_segment_tree(segment_part.segment.wire_id);
-    m_tree.mark_valid(segment_part.segment.segment_index, segment_part.part);
-}
-
-auto unmark_valid(Layout& layout, const segment_part_t segment_part) -> void {
-    auto& m_tree = layout.wires().modifiable_segment_tree(segment_part.segment.wire_id);
-    m_tree.unmark_valid(segment_part.segment.segment_index, segment_part.part);
 }
 
 auto _wire_change_temporary_to_colliding(CircuitData& circuit,
@@ -583,44 +297,9 @@ auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_pa
 // Add Wire
 //
 
-namespace {
-
-auto add_segment_to_tree(CircuitData& circuit, const wire_id_t wire_id,
-                         ordered_line_t line) -> segment_part_t {
-    // insert new segment
-    auto& m_tree = circuit.layout.wires().modifiable_segment_tree(wire_id);
-
-    const auto segment_info = segment_info_t {
-        .line = line,
-        .p0_type = SegmentPointType::shadow_point,
-        .p1_type = SegmentPointType::shadow_point,
-    };
-    const auto segment_index = m_tree.add_segment(segment_info);
-    const auto segment = segment_t {wire_id, segment_index};
-    const auto part = to_part(line);
-
-    // messages
-    Expects(part.begin == offset_t {0});
-    circuit.submit(info_message::SegmentCreated {
-        .segment = segment,
-        .size = part.end,
-    });
-    if (is_inserted(wire_id)) {
-        circuit.submit(info_message::SegmentInserted {segment, segment_info});
-    }
-
-    return segment_part_t {segment, part};
-}
-
-}  // namespace
-
 auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
                       InsertionMode insertion_mode) -> segment_part_t {
     auto segment_part = add_segment_to_tree(circuit, temporary_wire_id, line);
-
-    // auto segment_part = add_segment_to_aggregate(state.layout, state.sender, line,
-    //                                              display_state_t::temporary);
-
     change_wire_insertion_mode(circuit, segment_part, insertion_mode);
 
     return segment_part;
@@ -632,7 +311,7 @@ auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
 
 namespace {
 
-auto delete_all_inserted_wires(CircuitData& circuit, point_t point) -> void {
+auto _delete_all_inserted_wires(CircuitData& circuit, point_t point) -> void {
     // segment ids change during deletion, so we need to query after each deletion
     while (true) {
         const auto segments = circuit.index.selection_index().query_line_segments(point);
@@ -652,7 +331,7 @@ auto delete_all_inserted_wires(CircuitData& circuit, point_t point) -> void {
     }
 }
 
-auto remove_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
+auto _remove_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     const auto segments = circuit.index.selection_index().query_line_segments(point);
     const auto segment_count = get_segment_count(segments);
 
@@ -673,12 +352,12 @@ auto remove_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     const auto new_line_0 = ordered_line_t {lines.at(0).p0, lines.at(3).p1};
     const auto new_line_1 = ordered_line_t {lines.at(1).p0, lines.at(2).p1};
 
-    delete_all_inserted_wires(circuit, point);
+    _delete_all_inserted_wires(circuit, point);
     add_wire_segment(circuit, new_line_0, InsertionMode::insert_or_discard);
     add_wire_segment(circuit, new_line_1, InsertionMode::insert_or_discard);
 }
 
-auto add_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
+auto _add_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     const auto segments = circuit.index.selection_index().query_line_segments(point);
     const auto segment_count = get_segment_count(segments);
 
@@ -705,7 +384,7 @@ auto add_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     const auto line0 = get_line(circuit.layout, segments.at(0));
     const auto line1 = get_line(circuit.layout, segments.at(1));
 
-    delete_all_inserted_wires(circuit, point);
+    _delete_all_inserted_wires(circuit, point);
 
     const auto mode = InsertionMode::insert_or_discard;
     add_wire_segment(circuit, ordered_line_t {line0.p0, point}, mode);
@@ -718,11 +397,11 @@ auto add_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
 
 auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     if (circuit.index.collision_index().is_wires_crossing(point)) {
-        add_wire_crosspoint(circuit, point);
+        _add_wire_crosspoint(circuit, point);
     }
 
     else if (circuit.index.collision_index().is_wire_cross_point(point)) {
-        remove_wire_crosspoint(circuit, point);
+        _remove_wire_crosspoint(circuit, point);
     }
 }
 

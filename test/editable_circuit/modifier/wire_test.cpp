@@ -123,7 +123,7 @@ TEST(EditableCircuitModifierWire, TempToColliding) {
         const auto wire_id = wire_id_t {2};
         const auto &tree = get_segment_tree(modifier, wire_id);
 
-        ASSERT_EQ(to_display_state(wire_id), normal);
+        ASSERT_EQ(is_inserted(wire_id), true);
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {1, 0}, point_t {3, 0}};
@@ -185,7 +185,7 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialOneSide) {
         const auto wire_id = wire_id_t {2};
         const auto &tree = get_segment_tree(modifier, wire_id);
 
-        ASSERT_EQ(to_display_state(wire_id), normal);
+        ASSERT_EQ(is_inserted(wire_id), true);
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {1, 0}, point_t {3, 0}};
@@ -269,7 +269,7 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialMiddle) {
         const auto wire_id = wire_id_t {2};
         const auto &tree = get_segment_tree(modifier, wire_id);
 
-        ASSERT_EQ(to_display_state(wire_id), normal);
+        ASSERT_EQ(is_inserted(wire_id), true);
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {1, 0}, point_t {3, 0}};
@@ -350,7 +350,7 @@ TEST(EditableCircuitModifierWire, TempToValid) {
         const auto wire_id = wire_id_t {2};
         const auto &tree = get_segment_tree(modifier, wire_id);
 
-        ASSERT_EQ(to_display_state(wire_id), normal);
+        ASSERT_EQ(is_inserted(wire_id), true);
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
