@@ -114,8 +114,9 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
     info.line = add_unchecked(part_line, dx, dy);
     m_tree.update_segment(segment_part.segment.segment_index, info);
 
-    // TODO bug missing moved messages for selection updates,
-    //      maybe use a pre-build method for this?
+    // We don't need a message to update visible-selection here
+    // as uninserted wires are not part of the selection cache
+    // and are not selected by area operators.
 }
 
 //
@@ -124,8 +125,8 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
 
 namespace {
 
-auto find_wire_for_inserting_segment(CircuitData& circuit,
-                                     const segment_part_t segment_part) -> wire_id_t {
+auto __find_wire_for_inserting_segment(CircuitData& circuit,
+                                       const segment_part_t segment_part) -> wire_id_t {
     const auto line = get_line(circuit.layout, segment_part);
 
     auto candidate_0 = circuit.index.collision_index().get_first_wire(line.p0);
@@ -157,34 +158,15 @@ auto find_wire_for_inserting_segment(CircuitData& circuit,
     return circuit.layout.wires().add_wire();
 }
 
-auto discover_wire_inputs(CircuitData& circuit, segment_t segment) -> void {
-    const auto line = get_line(circuit.layout, segment);
-
-    // find LogicItem outputs
-    if (const auto entry = circuit.index.logicitem_output_index().find(line.p0)) {
-        auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
-        auto info = m_tree.info(segment.segment_index);
-
-        info.p0_type = SegmentPointType::input;
-        m_tree.update_segment(segment.segment_index, info);
-    }
-    if (const auto entry = circuit.index.logicitem_output_index().find(line.p1)) {
-        auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
-        auto info = m_tree.info(segment.segment_index);
-
-        info.p1_type = SegmentPointType::input;
-        m_tree.update_segment(segment.segment_index, info);
-    }
-}
-
-auto insert_wire(CircuitData& circuit, segment_part_t& segment_part) -> void {
+auto __insert_temporary_segment(CircuitData& circuit, segment_part_t& segment_part)
+    -> void {
     if (is_inserted(segment_part.segment.wire_id)) {
         throw std::runtime_error("segment is already inserted");
     }
-    const auto target_wire_id = find_wire_for_inserting_segment(circuit, segment_part);
+    const auto target_wire_id = __find_wire_for_inserting_segment(circuit, segment_part);
 
     reset_segment_endpoints(circuit.layout, segment_part.segment);
-    discover_wire_inputs(circuit, segment_part.segment);
+    set_wire_inputs_at_logicitem_outputs(circuit, segment_part.segment);
     move_segment_between_trees(circuit, segment_part, target_wire_id);
 
     const auto line = get_line(circuit.layout, segment_part);
@@ -205,7 +187,7 @@ auto _wire_change_temporary_to_colliding(CircuitData& circuit,
         move_segment_between_trees(circuit, segment_part, destination);
         reset_segment_endpoints(circuit.layout, segment_part.segment);
     } else {
-        insert_wire(circuit, segment_part);
+        __insert_temporary_segment(circuit, segment_part);
         mark_valid(circuit.layout, segment_part);
     }
 }
@@ -311,7 +293,7 @@ auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
 
 namespace {
 
-auto _delete_all_inserted_wires(CircuitData& circuit, point_t point) -> void {
+auto __delete_all_inserted_wires(CircuitData& circuit, point_t point) -> void {
     // segment ids change during deletion, so we need to query after each deletion
     while (true) {
         const auto segments = circuit.index.selection_index().query_line_segments(point);
@@ -352,7 +334,7 @@ auto _remove_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     const auto new_line_0 = ordered_line_t {lines.at(0).p0, lines.at(3).p1};
     const auto new_line_1 = ordered_line_t {lines.at(1).p0, lines.at(2).p1};
 
-    _delete_all_inserted_wires(circuit, point);
+    __delete_all_inserted_wires(circuit, point);
     add_wire_segment(circuit, new_line_0, InsertionMode::insert_or_discard);
     add_wire_segment(circuit, new_line_1, InsertionMode::insert_or_discard);
 }
@@ -384,7 +366,7 @@ auto _add_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     const auto line0 = get_line(circuit.layout, segments.at(0));
     const auto line1 = get_line(circuit.layout, segments.at(1));
 
-    _delete_all_inserted_wires(circuit, point);
+    __delete_all_inserted_wires(circuit, point);
 
     const auto mode = InsertionMode::insert_or_discard;
     add_wire_segment(circuit, ordered_line_t {line0.p0, point}, mode);

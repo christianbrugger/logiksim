@@ -108,6 +108,13 @@ auto unmark_valid(Layout& layout, segment_part_t segment_part) -> void;
 [[nodiscard]] auto is_wire_colliding(const CircuitData& circuit, ordered_line_t line)
     -> bool;
 
+//
+// Connections
+//
+
+auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit, segment_t segment)
+    -> void;
+
 }  // namespace editing
 
 }  // namespace editable_circuit

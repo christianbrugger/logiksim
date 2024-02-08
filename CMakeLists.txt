@@ -139,6 +139,7 @@ set(LS_CORE_SOURCES
 
     src/index/collision_index.cpp
     src/index/connection_index.cpp
+    src/index/segment_map.cpp
     src/index/spatial_index.cpp
     src/index/spatial_point_index.cpp
 

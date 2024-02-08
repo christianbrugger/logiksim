@@ -1,5 +1,7 @@
 #include "vocabulary/segment_index.h"
 
+#include "segment_index.h"
+
 #include <fmt/core.h>
 
 namespace logicsim {

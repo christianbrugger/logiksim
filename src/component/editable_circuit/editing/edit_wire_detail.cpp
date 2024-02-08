@@ -940,6 +940,31 @@ auto is_wire_colliding(const CircuitData& circuit, const ordered_line_t line) ->
            circuit.index.collision_index().is_colliding(line);
 }
 
+//
+// Connections
+//
+
+auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit, segment_t segment)
+    -> void {
+    const auto line = get_line(circuit.layout, segment);
+
+    // find LogicItem outputs
+    if (const auto entry = circuit.index.logicitem_output_index().find(line.p0)) {
+        auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
+        auto info = segment_info_t {m_tree.info(segment.segment_index)};
+
+        info.p0_type = SegmentPointType::input;
+        m_tree.update_segment(segment.segment_index, info);
+    }
+    if (const auto entry = circuit.index.logicitem_output_index().find(line.p1)) {
+        auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
+        auto info = m_tree.info(segment.segment_index);
+
+        info.p1_type = SegmentPointType::input;
+        m_tree.update_segment(segment.segment_index, info);
+    }
+}
+
 }  // namespace editing
 
 }  // namespace editable_circuit
