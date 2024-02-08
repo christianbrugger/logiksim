@@ -1,10 +1,15 @@
 #include "index/segment_map.h"
 
+#include "geometry/orientation.h"
+#include "layout.h"
+#include "selection.h"
+#include "vocabulary/ordered_line.h"
+
 #include <stdexcept>
 
 namespace logicsim {
 
-namespace segment_index {
+namespace segment_map {
 
 auto to_index(orientation_t orientation) -> std::underlying_type<orientation_t>::type {
     if (orientation == orientation_t::undirected) [[unlikely]] {
@@ -14,7 +19,11 @@ auto to_index(orientation_t orientation) -> std::underlying_type<orientation_t>:
     return static_cast<std::underlying_type<orientation_t>::type>(orientation);
 }
 
-auto adjacent_segments_t::at(orientation_t orientation) const -> segment_t {
+auto adjacent_segments_t::at(orientation_t orientation) const -> const segment_t& {
+    return segments.at(to_index(orientation));
+}
+
+auto adjacent_segments_t::at(orientation_t orientation) -> segment_t& {
     return segments.at(to_index(orientation));
 }
 
@@ -46,6 +55,77 @@ auto get_mergeable_segments(const adjacent_segments_t& segments)
     return std::nullopt;
 }
 
-}  // namespace segment_index
+}  // namespace segment_map
+
+//
+// Segment Map
+//
+
+namespace segment_map {
+
+namespace {
+
+auto add_point(map_t& map, point_t point, segment_t segment, orientation_t orientation)
+    -> void {
+    if (const auto it = map.find(point); it != map.end()) {
+        // throws if it does not exist
+        it->second.at(orientation) = segment;
+    } else {
+        auto value = adjacent_segments_t {};
+        value.at(orientation) = segment;
+        Expects(map.emplace(point, value).second);
+    }
+}
+
+}  // namespace
+
+}  // namespace segment_map
+
+auto logicsim::SegmentMap::add_segment(segment_t segment, ordered_line_t line) -> void {
+    segment_map::add_point(map_, line.p0, segment, to_orientation_p0(line));
+    segment_map::add_point(map_, line.p1, segment, to_orientation_p1(line));
+}
+
+auto SegmentMap::segments() const -> const map_t& {
+    return map_;
+}
+
+//
+// Free Functions
+//
+
+auto adjacent_segments(const SegmentMap& segment_map)
+    -> std::vector<segment_map::mergable_t> {
+    using namespace segment_map;
+
+    auto result = std::vector<mergable_t> {};
+
+    for (const auto& [point, segments] : segment_map.segments()) {
+        if (const auto adjacent = get_mergeable_segments(segments)) {
+            result.push_back(*adjacent);
+        }
+    }
+
+    return result;
+}
+
+auto build_endpoint_map(const Layout& layout, const Selection& selection) -> SegmentMap {
+    auto map = SegmentMap {};
+
+    for (const auto& [segment, parts] : selection.selected_segments()) {
+        const auto full_line = get_line(layout, segment);
+
+        if (!is_temporary(segment.wire_id)) {
+            throw std::runtime_error("can only merge temporary segments");
+        }
+        if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
+            throw std::runtime_error("selection cannot contain partially selected lines");
+        }
+
+        map.add_segment(segment, full_line);
+    }
+
+    return map;
+}
 
 }  // namespace logicsim
