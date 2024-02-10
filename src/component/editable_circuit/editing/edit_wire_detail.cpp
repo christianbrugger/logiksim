@@ -1,10 +1,13 @@
 #include "component/editable_circuit/editing/edit_wire_detail.h"
 
+#include "algorithm/sort_pair.h"
 #include "component/editable_circuit/circuit_data.h"
 #include "geometry/line.h"
 #include "geometry/orientation.h"
 #include "geometry/segment_info.h"
 #include "tree_normalization.h"
+
+#include <algorithm>
 
 namespace logicsim {
 
@@ -546,6 +549,42 @@ auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t se
     }
 }
 
+auto merge_all_line_segments(CircuitData& circuit,
+                             std::vector<std::pair<segment_t, segment_t>>& pairs)
+    -> void {
+    // merging deletes the segment with highest segment index,
+    // so for this to work with multiple segments
+    // we need to be sort them in descendant order
+    for (auto& pair : pairs) {
+        sort_inplace(pair.first, pair.second, std::ranges::greater {});
+    }
+    std::ranges::sort(pairs, std::ranges::greater {});
+
+    // Sorted pairs example:
+    //  (<Element 0, Segment 6>, <Element 0, Segment 5>)
+    //  (<Element 0, Segment 5>, <Element 0, Segment 3>)
+    //  (<Element 0, Segment 4>, <Element 0, Segment 2>)
+    //  (<Element 0, Segment 4>, <Element 0, Segment 0>)  <-- 4 needs to become 2
+    //  (<Element 0, Segment 3>, <Element 0, Segment 1>)
+    //  (<Element 0, Segment 2>, <Element 0, Segment 1>)
+    //                                                    <-- move here & become 1
+
+    for (auto it = pairs.begin(); it != pairs.end(); ++it) {
+        merge_line_segments(circuit, it->first, it->second, nullptr);
+
+        const auto other = std::ranges::lower_bound(
+            std::next(it), pairs.end(), it->first, std::ranges::greater {},
+            [](std::pair<segment_t, segment_t> pair) { return pair.first; });
+
+        if (other != pairs.end() && other->first == it->first) {
+            other->first = it->second;
+
+            sort_inplace(other->first, other->second, std::ranges::greater {});
+            std::ranges::sort(std::next(it), pairs.end(), std::ranges::greater {});
+        }
+    }
+}
+
 //
 // Wire Operations
 //
@@ -701,6 +740,19 @@ auto reset_segment_endpoints(Layout& layout, const segment_t segment) -> void {
     m_tree.update_segment(segment.segment_index, new_info);
 }
 
+auto set_segment_crosspoint(Layout& layout, const segment_t segment, point_t point)
+    -> void {
+    if (is_inserted(segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("cannot set endpoints of inserted wire segment");
+    }
+    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
+
+    auto info = segment_info_t {m_tree.info(segment.segment_index)};
+    set_segment_point_type(info, point, SegmentPointType::cross_point);
+
+    m_tree.update_segment(segment.segment_index, info);
+}
+
 auto update_segment_point_types(CircuitData& circuit, wire_id_t wire_id,
                                 point_update_t data, const point_t position) -> void {
     if (data.size() == 0) {
@@ -849,7 +901,7 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
         return;
     }
 
-    throw std::runtime_error("unexpected unhandeled case");
+    throw std::runtime_error("unexpected unhandled case");
 }
 
 //

@@ -6,6 +6,7 @@
 #include "component/editable_circuit/editing/edit_wire_detail.h"
 #include "geometry/line.h"
 #include "geometry/orientation.h"
+#include "index/segment_map.h"
 #include "index/spatial_point_index.h"
 #include "layout.h"
 #include "tree_normalization.h"
@@ -293,7 +294,7 @@ auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
 
 namespace {
 
-auto __delete_all_inserted_wires(CircuitData& circuit, point_t point) -> void {
+auto __delete_all_selectable_wires_at(CircuitData& circuit, point_t point) -> void {
     // segment ids change during deletion, so we need to query after each deletion
     while (true) {
         const auto segments = circuit.index.selection_index().query_line_segments(point);
@@ -334,7 +335,7 @@ auto _remove_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     const auto new_line_0 = ordered_line_t {lines.at(0).p0, lines.at(3).p1};
     const auto new_line_1 = ordered_line_t {lines.at(1).p0, lines.at(2).p1};
 
-    __delete_all_inserted_wires(circuit, point);
+    __delete_all_selectable_wires_at(circuit, point);
     add_wire_segment(circuit, new_line_0, InsertionMode::insert_or_discard);
     add_wire_segment(circuit, new_line_1, InsertionMode::insert_or_discard);
 }
@@ -366,7 +367,7 @@ auto _add_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     const auto line0 = get_line(circuit.layout, segments.at(0));
     const auto line1 = get_line(circuit.layout, segments.at(1));
 
-    __delete_all_inserted_wires(circuit, point);
+    __delete_all_selectable_wires_at(circuit, point);
 
     const auto mode = InsertionMode::insert_or_discard;
     add_wire_segment(circuit, ordered_line_t {line0.p0, point}, mode);
@@ -391,193 +392,6 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
 // Regularization
 //
 
-namespace {
-
-class SegmentEndpointMap {
-   public:
-    // orientation: right, left, up, down
-    using value_t = std::array<segment_t, 4>;
-    using map_t = ankerl::unordered_dense::map<point_t, value_t>;
-
-    using mergable_t = std::pair<segment_t, segment_t>;
-
-   public:
-    [[nodiscard]] static auto index(const orientation_t orientation) {
-        return static_cast<std::underlying_type<orientation_t>::type>(orientation);
-    }
-
-    [[nodiscard]] static auto get(const value_t& segments,
-                                  const orientation_t orientation) {
-        return segments.at(index(orientation));
-    }
-
-    [[nodiscard]] static auto has(const value_t& segments,
-                                  const orientation_t orientation) {
-        return get(segments, orientation) != null_segment;
-    }
-
-   private:
-    [[nodiscard]] static auto count_points(const value_t& segments) {
-        return std::ranges::count_if(
-            segments, [](segment_t value) { return value != null_segment; });
-    }
-
-    [[nodiscard]] static auto to_adcacent_segment(const value_t& segments)
-        -> std::optional<mergable_t> {
-        using enum orientation_t;
-
-        if (count_points(segments) != 2) {
-            return std::nullopt;
-        }
-
-        const auto to_segment = [&](orientation_t orientation) {
-            return get(segments, orientation);
-        };
-        const auto has_segment = [&](orientation_t orientation) {
-            return has(segments, orientation);
-        };
-
-        if (has_segment(left) && has_segment(right)) {
-            return mergable_t {to_segment(left), to_segment(right)};
-        }
-
-        else if (has_segment(up) && has_segment(down)) {
-            return mergable_t {to_segment(up), to_segment(down)};
-        }
-
-        return std::nullopt;
-    }
-
-   public:
-    auto add_segment(segment_t segment, ordered_line_t line) -> void {
-        add_point(line.p0, segment, to_orientation_p0(line));
-        add_point(line.p1, segment, to_orientation_p1(line));
-    }
-
-    // [](point_t point, std::array<segment_t,4> segments, int count) {}
-    template <typename Func>
-    auto iter_crosspoints(Func callback) const -> void {
-        for (const auto& [point, segments] : map_.values()) {
-            const auto count = count_points(segments);
-
-            if (count >= 3) {
-                callback(point, segments, count);
-            }
-        }
-    }
-
-    [[nodiscard]] auto adjacent_segments() const -> std::vector<mergable_t> {
-        auto result = std::vector<mergable_t> {};
-
-        for (const auto& [point, segments] : map_.values()) {
-            if (const auto adjacent = to_adcacent_segment(segments)) {
-                result.push_back(*adjacent);
-            }
-        }
-
-        return result;
-    }
-
-   private:
-    auto add_point(point_t point, segment_t segment, orientation_t orientation) -> void {
-        const auto index = this->index(orientation);
-
-        const auto it = map_.find(point);
-
-        if (it != map_.end()) {
-            if (it->second.at(index) != null_segment) [[unlikely]] {
-                throw std::runtime_error("entry already exists in SegmentEndpointMap");
-            }
-
-            it->second.at(index) = segment;
-        } else {
-            auto value = value_t {null_segment, null_segment, null_segment, null_segment};
-            value.at(index) = segment;
-
-            map_.emplace(point, value);
-        }
-    }
-
-   private:
-    map_t map_ {};
-};
-
-auto build_endpoint_map(const Layout& layout, const Selection& selection)
-    -> SegmentEndpointMap {
-    auto map = SegmentEndpointMap {};
-
-    for (const auto& [segment, parts] : selection.selected_segments()) {
-        const auto full_line = get_line(layout, segment);
-
-        if (!is_temporary(segment.wire_id)) {
-            throw std::runtime_error("can only merge temporary segments");
-        }
-        if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
-            throw std::runtime_error("selection cannot contain partially selected lines");
-        }
-
-        map.add_segment(segment, full_line);
-    }
-
-    return map;
-}
-
-auto set_segment_crosspoint(Layout& layout, const segment_t segment, point_t point) {
-    if (is_inserted(segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("cannot set endpoints of inserted wire segment");
-    }
-    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
-
-    auto info = m_tree.info(segment.segment_index);
-
-    if (info.line.p0 == point) {
-        info.p0_type = SegmentPointType::cross_point;
-    } else if (info.line.p1 == point) {
-        info.p1_type = SegmentPointType::cross_point;
-    } else [[unlikely]] {
-        throw std::runtime_error("point is not part of line.");
-    }
-
-    m_tree.update_segment(segment.segment_index, info);
-}
-
-auto merge_all_line_segments(CircuitData& circuit,
-                             std::vector<std::pair<segment_t, segment_t>>& pairs) {
-    // merging deletes the segment with highest segment index,
-    // so for this to work with multiple segments
-    // we need to be sort them in descendant order
-    for (auto& pair : pairs) {
-        sort_inplace(pair.first, pair.second, std::ranges::greater {});
-    }
-    std::ranges::sort(pairs, std::ranges::greater {});
-
-    // Sorted pairs example:
-    //  (<Element 0, Segment 6>, <Element 0, Segment 5>)
-    //  (<Element 0, Segment 5>, <Element 0, Segment 3>)
-    //  (<Element 0, Segment 4>, <Element 0, Segment 2>)
-    //  (<Element 0, Segment 4>, <Element 0, Segment 0>)  <-- 4 needs to become 2
-    //  (<Element 0, Segment 3>, <Element 0, Segment 1>)
-    //  (<Element 0, Segment 2>, <Element 0, Segment 1>)
-    //                                                    <-- move here & become 1
-
-    for (auto it = pairs.begin(); it != pairs.end(); ++it) {
-        merge_line_segments(circuit, it->first, it->second, nullptr);
-
-        const auto other = std::ranges::lower_bound(
-            std::next(it), pairs.end(), it->first, std::ranges::greater {},
-            [](std::pair<segment_t, segment_t> pair) { return pair.first; });
-
-        if (other != pairs.end() && other->first == it->first) {
-            other->first = it->second;
-
-            sort_inplace(other->first, other->second, std::ranges::greater {});
-            std::ranges::sort(std::next(it), pairs.end(), std::ranges::greater {});
-        }
-    }
-}
-
-}  // namespace
-
 auto regularize_temporary_selection(CircuitData& circuit, const Selection& selection,
                                     std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t> {
@@ -587,32 +401,34 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
     }
 
     const auto map = build_endpoint_map(circuit.layout, selection);
-    auto mergable_segments = map.adjacent_segments();
+    auto mergeable_segments = adjacent_segments(map);
     auto cross_points = std::vector<point_t> {};
 
-    map.iter_crosspoints(
-        [&](point_t point, std::array<segment_t, 4> segments, int count) {
-            if (count == 3 || !true_cross_points ||
+    iter_crosspoints(
+        map, [&](point_t point, const segment_map::adjacent_segments_t& segments) {
+            using enum orientation_t;
+
+            if (segments.count() == 3 || !true_cross_points ||
                 std::ranges::binary_search(*true_cross_points, point)) {
                 cross_points.push_back(point);
 
-                const auto segment = segments.at(0) ? segments.at(0) : segments.at(1);
+                const auto segment = segments.has(right)  //
+                                         ? segments.at(right)
+                                         : segments.at(left);
                 set_segment_crosspoint(circuit.layout, segment, point);
             } else {
-                using enum orientation_t;
-
-                mergable_segments.push_back({
-                    SegmentEndpointMap::get(segments, left),
-                    SegmentEndpointMap::get(segments, right),
+                mergeable_segments.push_back({
+                    segments.at(right),
+                    segments.at(left),
                 });
-                mergable_segments.push_back({
-                    SegmentEndpointMap::get(segments, up),
-                    SegmentEndpointMap::get(segments, down),
+                mergeable_segments.push_back({
+                    segments.at(up),
+                    segments.at(down),
                 });
             }
         });
 
-    merge_all_line_segments(circuit, mergable_segments);
+    merge_all_line_segments(circuit, mergeable_segments);
 
     return cross_points;
 }

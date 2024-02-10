@@ -115,9 +115,11 @@ auto build_endpoint_map(const Layout& layout, const Selection& selection) -> Seg
     for (const auto& [segment, parts] : selection.selected_segments()) {
         const auto full_line = get_line(layout, segment);
 
+        // TODO move ???
         if (!is_temporary(segment.wire_id)) {
             throw std::runtime_error("can only merge temporary segments");
         }
+        // TODO move ???
         if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
             throw std::runtime_error("selection cannot contain partially selected lines");
         }

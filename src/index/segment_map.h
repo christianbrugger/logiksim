@@ -80,14 +80,12 @@ auto iter_crosspoints(const SegmentMap& segment_map, Func callback) -> void;
 // Implementation
 //
 
-// [](point_t point, std::array<segment_t,4> segments, int count) {}
+// [](point_t point, const segment_map::adjacent_segments_t& segments) {}
 template <typename Func>
 auto iter_crosspoints(const SegmentMap& segment_map, Func callback) -> void {
     for (const auto& [point, segments] : segment_map.segments()) {
-        const auto count = count_points(segments);
-
-        if (count >= 3) {
-            callback(point, segments, count);
+        if (segments.count() >= 3) {
+            callback(point, segments);
         }
     }
 }
