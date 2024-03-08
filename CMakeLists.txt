@@ -541,6 +541,10 @@ cmake_print_variables(CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
 cmake_print_variables(MAIN_COMPILE_OPTIONS)
 
+
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
+
 ###### GOOGLE BENCHMARK
 
 # Google Benchmark
@@ -553,13 +557,8 @@ add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
 
 # Zlib
-# on Windows
-add_subdirectory(external/zlib EXCLUDE_FROM_ALL SYSTEM)
 set(ZLIB_USE_STATIC_LIBS ON)
-set(LS_ZLIB_NAME zlibstatic)
-# on Linux/Ubuntu
-# set(LS_ZLIB_NAME )
-
+find_package(ZLIB REQUIRED)
 
 # Boost
 set(BOOST_IOSTREAMS_ENABLE_ZLIB ON)
@@ -732,7 +731,7 @@ set(LS_CORE_LIBRARIES
     range-v3
     Blend2D::Blend2D
     glaze::glaze
-    ${LS_ZLIB_NAME}
+    ZLIB::ZLIB
     harfbuzz
     gcem
     svg2b2d
