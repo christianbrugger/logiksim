@@ -464,12 +464,12 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
 
         std::visit(
             overload(
-                [&](const NonInteractiveState& _) {
+                [&](const NonInteractiveState&) {
                     circuit_widget::render_to_context(context_guard.context(),
                                                       render_surface_.render_config(),
                                                       circuit_store_.layout());
                 },
-                [&](const EditingState& _) {
+                [&](const EditingState&) {
                     const bool show_size_handles =
                         !editing_logic_manager_.is_area_selection_active();
 
@@ -477,7 +477,7 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
                         context_guard.context(), render_surface_.render_config(),
                         circuit_store_.editable_circuit(), show_size_handles);
                 },
-                [&](const SimulationState& _) {
+                [&](const SimulationState&) {
                     circuit_widget::render_to_context(
                         context_guard.context(), render_surface_.render_config(),
                         circuit_store_.interactive_simulation().spatial_simulation());
@@ -505,8 +505,8 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
 
         if (editing_logic_manager_.mouse_press(
                 position, render_surface_.view_config(), event_->modifiers(),
-                double_click, editable_circuit_pointer(circuit_store_),
-                *this) == circuit_widget::ManagerResult::require_update) {
+                double_click, editable_circuit_pointer(circuit_store_)) ==
+            circuit_widget::ManagerResult::require_update) {
             update();
         }
     }

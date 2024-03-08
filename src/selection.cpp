@@ -507,15 +507,14 @@ auto display_states(const Selection &selection, const Layout &layout) -> Display
             const auto &valid_parts = segment_tree.valid_parts(pair.first.segment_index);
             const auto &selected_parts = pair.second;
 
-            iter_overlapping_parts(
-                full_part, selected_parts, valid_parts,
-                [&](part_t selected_part, part_t valid_part, bool valid) {
-                    if (valid) {
-                        result.at(display_state_t::valid) = true;
-                    } else {
-                        result.at(display_state_t::normal) = true;
-                    }
-                });
+            iter_overlapping_parts(full_part, selected_parts, valid_parts,
+                                   [&](part_t, part_t, bool valid) {
+                                       if (valid) {
+                                           result.at(display_state_t::valid) = true;
+                                       } else {
+                                           result.at(display_state_t::normal) = true;
+                                       }
+                                   });
         }
     }
 

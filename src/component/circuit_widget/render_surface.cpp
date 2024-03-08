@@ -220,7 +220,7 @@ auto render_circuit_background(CircuitContext& context) {
     render_background(context.ctx);
 }
 
-auto render_circuit_overlay(CircuitContext& context) {
+auto render_circuit_overlay(CircuitContext& context [[maybe_unused]]) {
     // context_.ctx.bl_ctx.setFillStyle(BLRgba32(defaults::color_black.value));
     // context_.ctx.bl_ctx.fillRect(BLRect {0, 0, 1, 100});
     // context_.ctx.bl_ctx.fillRect(BLRect {context_.ctx.bl_image.width() - 1.0, 0, 1,

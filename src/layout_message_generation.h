@@ -50,8 +50,8 @@ auto generate_inserted_layout_messages(auto &&obj, const Layout &layout) -> void
 // All Messages
 //
 
-auto generate_created_logicitem_messages(auto &&obj, const Layout &layout,
-                                         logicitem_id_t logicitem_id) -> void {
+auto generate_created_logicitem_messages(auto &&obj, logicitem_id_t logicitem_id)
+    -> void {
     obj.submit(info_message::LogicItemCreated {logicitem_id});
 }
 
@@ -69,7 +69,7 @@ auto generate_created_wire_messages(auto &&obj, const Layout &layout, wire_id_t 
 
 auto generate_all_logicitem_messages(auto &&obj, const Layout &layout) -> void {
     for (const auto logicitem_id : logicitem_ids(layout)) {
-        generate_created_logicitem_messages(obj, layout, logicitem_id);
+        generate_created_logicitem_messages(obj, logicitem_id);
 
         if (is_inserted(layout, logicitem_id)) {
             generate_inserted_logicitem_messages(obj, layout, logicitem_id);

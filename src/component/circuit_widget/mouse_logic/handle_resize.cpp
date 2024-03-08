@@ -27,7 +27,7 @@ HandleResizeLogic::HandleResizeLogic(const EditableCircuit& editable_circuit,
         InsertionMode::insert_or_discard));
 }
 
-auto HandleResizeLogic::mouse_press(EditableCircuit& editable_circuit,
+auto HandleResizeLogic::mouse_press(EditableCircuit& editable_circuit [[maybe_unused]],
                                     point_fine_t position) -> void {
     first_position_ = position;
     last_delta_ = 0;

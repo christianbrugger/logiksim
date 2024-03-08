@@ -135,7 +135,7 @@ namespace {
 
 auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
                                 Qt::KeyboardModifiers modifiers,
-                                const EditableCircuit& editable_circuit, QWidget& parent,
+                                const EditableCircuit& editable_circuit,
                                 EditingState editing_state)
     -> std::optional<EditingMouseLogic> {
     const auto grid_fine_position = to_grid_fine(position, view_config);
@@ -182,14 +182,14 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
 
 auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_config,
                                       Qt::KeyboardModifiers modifiers, bool double_click,
-                                      EditableCircuit* editable_circuit_, QWidget& parent)
+                                      EditableCircuit* editable_circuit_)
     -> ManagerResult {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
     if (editable_circuit_ && !mouse_logic_) {
         mouse_logic_ = create_editing_mouse_logic(position, view_config, modifiers,
-                                                  *editable_circuit_, parent,
+                                                  *editable_circuit_,
                                                   std::get<EditingState>(circuit_state_));
     }
 
