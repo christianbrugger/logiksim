@@ -492,10 +492,13 @@ if (MSVC)
     # list(APPEND MAIN_COMPILE_OPTIONS /wd4868)
     
 
-    # disable unused parameters
-    list(APPEND MAIN_COMPILE_OPTIONS /wd4100)
-    # unreachable code warnings when using folly::small_vector in release
-    list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
+    if (CMAKE_BUILD_TYPE STREQUAL "Release")
+        # unreachable code warnings when using folly::small_vector in release
+        list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
+    else()
+        # disable unused parameters in debug
+        list(APPEND MAIN_COMPILE_OPTIONS /wd4100)
+    endif()
 else()
     # -Wthread-safety 
     list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 
