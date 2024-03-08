@@ -21,7 +21,7 @@ struct fmt::formatter<T, Char> {
         return ctx.begin();
     }
 
-    inline auto format(const T &obj, fmt::format_context &ctx) {
+    inline auto format(const T &obj, fmt::format_context &ctx) const {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
