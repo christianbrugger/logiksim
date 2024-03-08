@@ -54,7 +54,7 @@ class HistoryBuffer {
     container_t buffer_ {};
 };
 
-static_assert(sizeof(HistoryBuffer) == 28);
+static_assert(sizeof(HistoryBuffer) == 32);
 
 }  // namespace simulation
 
