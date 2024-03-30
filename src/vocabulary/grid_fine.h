@@ -173,6 +173,9 @@ constexpr auto grid_fine_t::operator*=(const value_type &right) -> grid_fine_t &
 }
 
 constexpr auto grid_fine_t::operator/=(const value_type &right) -> grid_fine_t & {
+    if (right == value_type {0}) {
+        throw std::runtime_error("division by zero");
+    }
     value /= right;
     return *this;
 }

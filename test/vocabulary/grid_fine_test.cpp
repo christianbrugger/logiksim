@@ -61,7 +61,7 @@ TEST(VocabularyGridFine, OperatorsGridFine) {
         grid /= 4;
         EXPECT_EQ(grid, grid_fine_t {2.5});
     }
-    EXPECT_EQ(std::isfinite(double {grid_fine_t {100} / 0}), false);
+    EXPECT_THROW([] { return grid_fine_t {100} / 0; }(), std::exception);
 }
 
 TEST(VocabularyGridFine, OperatorsGrid) {
@@ -89,7 +89,7 @@ TEST(VocabularyGridFine, OperatorsGrid) {
 
     // grid_t - divide
     EXPECT_EQ(grid_t {10} / 2.5, grid_fine_t {4});
-    EXPECT_EQ(std::isfinite(double {grid_t {100} / 0.}), false);
+    EXPECT_THROW([] { return grid_t {100} / 0.0; }(), std::exception);
 }
 
 TEST(VocabularyGridFine, OperatorsUnary) {
