@@ -35,7 +35,7 @@ auto RenderSurface::set_render_config(WidgetRenderConfig new_config) -> void {
         return;
     }
 
-    context_.ctx.settings.thread_count = render_config_.thread_count;
+    context_.ctx.settings.thread_count = new_config.thread_count;
 
     // update
     render_config_ = new_config;

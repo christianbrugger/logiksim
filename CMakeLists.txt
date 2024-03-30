@@ -427,8 +427,8 @@ project(simulation_srp CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
-# add_link_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all)
+add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
+add_link_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all)
 # set(BLEND2D_NO_JIT ON)
 
 include(CMakePrintHelpers)

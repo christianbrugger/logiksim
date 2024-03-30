@@ -1,7 +1,7 @@
 #include "render/context_info.h"
 
-#include "vocabulary/context_render_config.h"
 #include "logging.h"
+#include "vocabulary/context_render_config.h"
 
 #include <blend2d.h>
 
