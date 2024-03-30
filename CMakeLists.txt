@@ -109,6 +109,7 @@ set(LS_CORE_SOURCES
     src/container/enum_map.cpp
     src/container/static_vector.cpp
 
+    src/format/blend2d_type.cpp
     src/format/container.cpp
     src/format/enum.cpp
     src/format/escape_ascii.cpp

@@ -1,5 +1,6 @@
 #include "logging.h"
 
+#include <cstdio>
 #include <stdexcept>
 
 namespace logicsim {
@@ -36,5 +37,9 @@ auto get_logfile_stream() noexcept -> fmt::ostream * {
 }
 
 }  // namespace detail
+
+auto print_flush() -> void {
+    std::fflush(stdout);
+}
 
 }  // namespace logicsim

@@ -21,7 +21,7 @@ namespace logicsim {
 auto test_sanitized_render() {
     auto editable_circuit = EditableCircuit {};
 
-    const auto definition = default_element_definition(LogicItemType::buffer_element);
+    const auto definition = default_element_definition(LogicItemType::flipflop_jk);
 
     editable_circuit.add_logicitem(definition, point_t {5, 5},
                                    InsertionMode::insert_or_discard);
@@ -41,11 +41,49 @@ auto test_sanitized_render() {
         print("TEST", ctx.settings);
 
         ctx.begin();
-        render_background(circuit_ctx.ctx);
-        render_layout(circuit_ctx, layout);
+        // render_background(circuit_ctx.ctx);
+        // render_layout(circuit_ctx, layout);
 
         // draw_logic_item_base(ctx, layout, logicitem_id_t {0},
         // ElementDrawState::normal);
+
+        // static constexpr auto input_labels = string_array<5> {"> C", "J", "K", "S",
+        // "R"}; static constexpr auto output_labels = string_array<2> {"Q", "Q\u0305"};
+        // draw_connector_labels(ctx, layout, logicitem_id_t {0},
+        //                       ConnectorLabels {input_labels, output_labels},
+        //                      ElementDrawState::normal);
+
+        // draw_connector_label(ctx, point_t {5, 7}, orientation_t::left, "K",
+        //                      ElementDrawState::normal);
+
+        // ctx.text_cache.draw_text(ctx.bl_ctx, BLPoint {94, 126}, "K", 10.8,
+        //                          defaults::color_black, HTextAlignment::right,
+        //                           VTextAlignment::baseline);
+
+        const auto font_files = get_default_font_locations();
+        const auto faces = FontFaces {font_files};
+        auto fonts = Fonts {faces};
+
+        fonts.regular.setSize(10.8);
+
+        const auto shaped_text =
+            HarfbuzzShapedText {"K", faces.regular.hb_font_face(), 10.8};
+
+        const auto codepoints = std::vector<uint32_t> {46};
+        const auto placements = std::vector<BLGlyphPlacement> {
+            BLGlyphPlacement {.placement = BLPointI {0, 0}, .advance = BLPointI {619, 0}},
+        };
+
+        auto glyph_run = BLGlyphRun {};
+        glyph_run.size = std::min(codepoints.size(), placements.size());
+        glyph_run.setGlyphData(codepoints.data());
+        glyph_run.setPlacementData(placements.data());
+        glyph_run.placementType = BL_GLYPH_PLACEMENT_TYPE_ADVANCE_OFFSET;
+
+        print("shaped_text", shaped_text);
+
+        ctx.bl_ctx.fillGlyphRun(BLPoint {87, 126}, fonts.regular, glyph_run,
+                                defaults::color_black);
 
         ctx.end();
 

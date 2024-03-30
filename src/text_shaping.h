@@ -1,6 +1,8 @@
 #ifndef LOGIKSIM_TEXT_SHAPING_H
 #define LOGIKSIM_TEXT_SHAPING_H
 
+#include "format/struct.h"
+
 #include <blend2d.h>
 #include <gsl/gsl>
 
@@ -27,7 +29,7 @@ class HarfbuzzFontFace final {
     HarfbuzzFontFace &operator=(const HarfbuzzFontFace &) = delete;
     HarfbuzzFontFace &operator=(HarfbuzzFontFace &&) = delete;
 
-    auto hb_face() const noexcept -> hb_face_t *;
+    [[nodiscard]] auto hb_face() const noexcept -> hb_face_t *;
 
    private:
     gsl::not_null<hb_face_t *> hb_face_;
@@ -44,8 +46,8 @@ class HarfbuzzFont final {
     HarfbuzzFont &operator=(const HarfbuzzFont &) = delete;
     HarfbuzzFont &operator=(HarfbuzzFont &&) = delete;
 
-    auto font_size() const noexcept -> float;
-    auto hb_font() const noexcept -> hb_font_t *;
+    [[nodiscard]] auto font_size() const noexcept -> float;
+    [[nodiscard]] auto hb_font() const noexcept -> hb_font_t *;
 
    private:
     gsl::not_null<hb_font_t *> hb_font_;
@@ -59,12 +61,13 @@ class HarfbuzzShapedText {
                                 float font_size);
     explicit HarfbuzzShapedText(std::string_view text_utf8, const HarfbuzzFont &font);
 
-    auto operator==(const HarfbuzzShapedText &other) const -> bool = default;
+    [[nodiscard]] auto operator==(const HarfbuzzShapedText &other) const -> bool = default;
 
-    auto glyph_run() const noexcept -> BLGlyphRun;
+    [[nodiscard]] auto glyph_run() const noexcept -> BLGlyphRun;
+    [[nodiscard]] auto bounding_box() const noexcept -> BLBox;
+    [[nodiscard]] auto bounding_rect() const noexcept -> BLRect;
 
-    auto bounding_box() const noexcept -> BLBox;
-    auto bounding_rect() const noexcept -> BLRect;
+    [[nodiscard]] auto format() const -> std::string;
 
    private:
     std::vector<uint32_t> codepoints_ {};

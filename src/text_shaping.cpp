@@ -2,6 +2,8 @@
 
 #include "algorithm/range.h"
 #include "algorithm/round.h"
+#include "format/blend2d_type.h"
+#include "format/container.h"
 
 #include <blend2d.h>
 #include <fmt/core.h>
@@ -257,6 +259,11 @@ auto HarfbuzzShapedText::bounding_box() const noexcept -> BLBox {
 auto HarfbuzzShapedText::bounding_rect() const noexcept -> BLRect {
     const auto box = bounding_box_;
     return BLRect {box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0};
+}
+
+auto HarfbuzzShapedText::format() const -> std::string {
+    return fmt::format("ShapedText(codepoints = {}, placements = {}, bounding_box = {})",
+                       codepoints_, placements_, bounding_box_);
 }
 
 }  // namespace logicsim

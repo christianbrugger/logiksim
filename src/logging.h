@@ -50,6 +50,12 @@ namespace detail {
 }
 
 //
+// print_flush
+//
+
+auto print_flush() -> void;
+
+//
 // print_fmt
 //
 
