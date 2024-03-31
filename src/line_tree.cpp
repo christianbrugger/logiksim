@@ -6,6 +6,7 @@
 #include "geometry/orientation.h"
 #include "line_tree.h"
 #include "vocabulary/connection_count.h"
+#include "vocabulary/ordered_line.h"
 
 namespace logicsim {
 
