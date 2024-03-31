@@ -5,6 +5,7 @@
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/view_config.h"
 
+#include <filesystem>
 #include <optional>
 #include <string>
 
@@ -18,7 +19,7 @@ struct SimulationConfig;
 auto serialize_circuit(const Layout &layout, SimulationConfig simulation_config)
     -> std::string;
 
-auto save_circuit_to_file(const Layout &layout, std::string filename,
+auto save_circuit_to_file(const Layout &layout, std::filesystem::path filename,
                           std::optional<ViewPoint> view_point,
                           std::optional<SimulationConfig> simulation_config) -> bool;
 
@@ -31,7 +32,8 @@ struct LoadFileResult {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-[[nodiscard]] auto load_circit_from_file(std::string filename) -> LoadFileResult;
+[[nodiscard]] auto load_circuit_from_file(std::filesystem::path filename)
+    -> LoadFileResult;
 
 }  // namespace logicsim
 

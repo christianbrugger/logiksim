@@ -10,6 +10,7 @@
 #include "load_save_file.h"
 #include "logging.h"
 #include "qt/mouse_position.h"
+#include "qt/path_conversion.h"
 #include "qt/widget_geometry.h"
 #include "setting_dialog_manager.h"
 #include "vocabulary/simulation_config.h"
@@ -272,7 +273,7 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
     Ensures(expensive_invariant_holds());
 }
 
-auto CircuitWidget::load_circuit(std::string filename) -> bool {
+auto CircuitWidget::load_circuit(QString filename) -> bool {
     Expects(class_invariant_holds());
 
     // store original layout in case load fails
@@ -281,7 +282,7 @@ auto CircuitWidget::load_circuit(std::string filename) -> bool {
     // clear circuit to free memory
     do_action(UserAction::clear_circuit);
 
-    auto load_result__ = load_circit_from_file(filename);
+    auto load_result__ = load_circuit_from_file(to_path(filename));
     if (load_result__.success) {
         set_editable_circuit(std::move(load_result__.editable_circuit),
                              load_result__.view_point, load_result__.simulation_config);
@@ -294,11 +295,11 @@ auto CircuitWidget::load_circuit(std::string filename) -> bool {
     return load_result__.success;
 }
 
-auto CircuitWidget::save_circuit(std::string filename) -> bool {
+auto CircuitWidget::save_circuit(QString filename) -> bool {
     Expects(class_invariant_holds());
 
     finalize_editing();
-    const auto success = save_circuit_to_file(circuit_store_.layout(), filename,
+    const auto success = save_circuit_to_file(circuit_store_.layout(), to_path(filename),
                                               render_surface_.view_config().view_point(),
                                               simulation_config_);
 

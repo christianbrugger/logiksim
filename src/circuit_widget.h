@@ -11,6 +11,8 @@
 
 #include <QTimer>
 
+#include <filesystem>
+
 namespace logicsim {
 
 class SettingDialogManager;
@@ -114,8 +116,8 @@ class CircuitWidget : public CircuitWidgetBase {
     // load & save
     [[nodiscard]] auto serialized_circuit() -> std::string;
     auto load_circuit_example(int number) -> void;
-    auto load_circuit(std::string filename) -> bool;
-    auto save_circuit(std::string filename) -> bool;
+    auto load_circuit(QString filename) -> bool;
+    auto save_circuit(QString filename) -> bool;
 
     // statistics
     [[nodiscard]] auto statistics() const -> Statistics;

@@ -652,7 +652,7 @@ void MainWidget::on_timer_update_title() {
         text = fmt::format("{} {:.3g} EPS", text, round_fast(eps));
     }
 
-    if (!last_saved_filename_.empty()) {
+    if (!last_saved_filename_.isEmpty()) {
         text = fmt::format("{} - {}", text, last_saved_filename_);
     }
 
@@ -693,9 +693,8 @@ void MainWidget::on_circuit_state_changed(CircuitWidgetState new_state) {
 }
 
 void MainWidget::on_timer_process_app_arguments_once() {
-    for (const auto& argument_qt : QCoreApplication::arguments() | std::views::drop(1)) {
-        const auto argument = argument_qt.toStdString();
-        if (QFileInfo(argument_qt).isFile()) {
+    for (const auto& argument : QCoreApplication::arguments() | std::views::drop(1)) {
+        if (QFileInfo(argument).isFile()) {
             open_circuit(argument);
             break;
         }
@@ -721,7 +720,7 @@ auto MainWidget::new_circuit() -> void {
 
 auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_t {
     const auto filename = [&] {
-        if (!last_saved_filename_.empty() &&
+        if (!last_saved_filename_.isEmpty() &&
             filename_choice == filename_choice_t::same_as_last) {
             return last_saved_filename_;
         }
@@ -729,10 +728,9 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
                                             tr("Save As"),     //
                                             "",                //
                                             filename_filter()  //
-                                            )
-            .toStdString();
+        );
     }();
-    if (filename.empty()) {
+    if (filename.isEmpty()) {
         return save_result_t::canceled;
     }
 
@@ -753,7 +751,7 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
     return save_result_t::success;
 }
 
-auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
+auto MainWidget::open_circuit(std::optional<QString> filename) -> void {
     if (ensure_circuit_saved() != save_result_t::success) {
         return;
     }
@@ -763,11 +761,10 @@ auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
                                                 tr("Open"),        //
                                                 "",                //
                                                 filename_filter()  //
-                                                )
-                       .toStdString();
+        );
     }
 
-    if (!filename || filename->empty()) {
+    if (!filename || filename->isEmpty()) {
         return;
     }
 
@@ -800,7 +797,7 @@ auto MainWidget::ensure_circuit_saved() -> save_result_t {
     }
 
     const auto name =
-        last_saved_filename_.empty() ? std::string("New Circuit") : last_saved_filename_;
+        last_saved_filename_.isEmpty() ? tr("New Circuit") : last_saved_filename_;
     const auto message = fmt::format("Save file \"{}\"?", name);
     const auto result = QMessageBox::question(
         this,                                                      //
@@ -945,7 +942,7 @@ auto MainWidget::dropEvent(QDropEvent* event) -> void {
 
     if (mimeData.hasUrls() && mimeData.urls().size() == 1 &&
         mimeData.urls().front().isLocalFile()) {
-        const auto filename = mimeData.urls().front().toLocalFile().toStdString();
+        const auto filename = mimeData.urls().front().toLocalFile();
         open_circuit(filename);
     }
 }

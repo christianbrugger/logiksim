@@ -102,7 +102,7 @@ class MainWidget : public QMainWindow {
     enum class filename_choice_t { ask_new, same_as_last };
     enum class save_result_t { success, canceled };
     auto save_circuit(filename_choice_t filename_choice) -> save_result_t;
-    auto open_circuit(std::optional<std::string> filename = {}) -> void;
+    auto open_circuit(std::optional<QString> filename = {}) -> void;
     auto load_circuit_example(int number) -> void;
     auto ensure_circuit_saved() -> save_result_t;
 
@@ -128,7 +128,7 @@ class MainWidget : public QMainWindow {
     QWidget* delay_panel_ {};
     QSlider* delay_slider_ {};
 
-    std::string last_saved_filename_ {};
+    QString last_saved_filename_ {};
     std::string last_saved_data_ {};
 
     MainActions actions_ {};

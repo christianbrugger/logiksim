@@ -14,7 +14,7 @@ auto serialize_circuit(const Layout& layout, SimulationConfig simulation_config)
     return serialize_all(layout, {}, relevant_config);
 }
 
-auto save_circuit_to_file(const Layout& layout, std::string filename,
+auto save_circuit_to_file(const Layout& layout, std::filesystem::path filename,
                           std::optional<ViewPoint> view_point,
                           std::optional<SimulationConfig> simulation_config) -> bool {
     const auto binary = serialize_all(layout, view_point, simulation_config);
@@ -32,7 +32,7 @@ auto LoadFileResult::format() const -> std::string {
         success, editable_circuit, view_point, simulation_config);
 }
 
-auto load_circit_from_file(std::string filename) -> LoadFileResult {
+auto load_circuit_from_file(std::filesystem::path filename) -> LoadFileResult {
     const auto load_result = load_layout(load_file(filename));
     if (!load_result) {
         return LoadFileResult {};
