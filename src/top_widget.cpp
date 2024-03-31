@@ -5,6 +5,7 @@
 #include "file.h"
 #include "format/std_type.h"
 #include "logging.h"
+#include "qt/path_conversion.h"
 #include "resource.h"
 #include "serialize.h"
 #include "setting_location.h"
@@ -67,7 +68,7 @@ MainWidget::MainWidget(QWidget* parent)
     : QMainWindow(parent),
       circuit_widget_ {new CircuitWidget(this)},
       last_saved_data_ {circuit_widget_->serialized_circuit()} {
-    setWindowIcon(QIcon(get_icon_path(icon_t::app_icon)));
+    setWindowIcon(QIcon(to_qt(get_icon_path(icon_t::app_icon))));
     setAcceptDrops(true);
 
     create_menu();
@@ -186,7 +187,7 @@ auto add_action_impl(QMenu* menu, const QString& text, ActionAttributes attribut
         action->setAutoRepeat(attributes.shortcut_auto_repeat);
     }
     if (attributes.icon) {
-        action->setIcon(QIcon(get_icon_path(*attributes.icon)));
+        action->setIcon(QIcon(to_qt(get_icon_path(*attributes.icon))));
     }
 
     return action;
@@ -343,7 +344,7 @@ auto MainWidget::create_menu() -> void {
 
         {
             auto* submenu = menu->addMenu(tr("Simulation Speed"));
-            submenu->setIcon(QIcon(get_icon_path(icon_t::simulation_speed)));
+            submenu->setIcon(QIcon(to_qt(get_icon_path(icon_t::simulation_speed))));
 
             for (auto time_rate : detail::time_slider::TIME_RATE_MENU_ITEMS) {
                 const auto text = fmt::format("{}", time_rate);

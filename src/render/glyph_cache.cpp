@@ -12,16 +12,16 @@
 
 namespace logicsim {
 
-auto font_locations_t::get(FontStyle style) const -> std::string_view {
-    return ::logicsim::get<std::string_view>(*this, style);
+auto font_locations_t::get(FontStyle style) const -> const std::filesystem::path& {
+    return ::logicsim::get<const std::filesystem::path&>(*this, style);
 }
 
 auto get_default_font_locations() -> font_locations_t {
     return font_locations_t {
-        .regular = get_font_path(font_t::regular).toStdString(),
-        .italic = get_font_path(font_t::italic).toStdString(),
-        .bold = get_font_path(font_t::bold).toStdString(),
-        .monospace = get_font_path(font_t::monospace).toStdString(),
+        .regular = get_font_path(font_t::regular),
+        .italic = get_font_path(font_t::italic),
+        .bold = get_font_path(font_t::bold),
+        .monospace = get_font_path(font_t::monospace),
     };
 }
 
@@ -42,7 +42,7 @@ auto glyph_entry_t::format() const -> std::string {
 // Font Face
 //
 
-FontFace::FontFace(std::string font_file)
+FontFace::FontFace(std::filesystem::path font_file)
     : font_data_ {font_file.empty() ? "" : load_file(font_file)},
       hb_font_face_ {std::span<const char> {font_data_.data(), font_data_.size()}} {
     if (!font_file.empty() && font_data_.empty()) {

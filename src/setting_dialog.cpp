@@ -3,6 +3,7 @@
 #include "algorithm/range.h"
 #include "algorithm/round.h"
 #include "logging.h"
+#include "qt/path_conversion.h"
 #include "resource.h"
 #include "validate_definition.h"
 #include "vocabulary/delay.h"
@@ -124,7 +125,8 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent, selection_id_t selec
                                            attributes_clock_generator_t attrs)
     : SettingDialog {parent, selection_id} {
     setWindowTitle(tr("Clock Generator"));
-    setWindowIcon(QIcon(get_icon_path(icon_t::setting_handle_clock_generator)));
+    const auto path = get_icon_path(icon_t::setting_handle_clock_generator);
+    setWindowIcon(QIcon(to_qt(path)));
 
     auto* layout = new QFormLayout(this);
     layout_ = layout;

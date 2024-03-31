@@ -5,7 +5,7 @@
 
 namespace logicsim {
 
-[[nodiscard]] auto get_executable_path() -> std::filesystem::path;
+[[nodiscard]] auto get_executable_directory() -> std::filesystem::path;
 
 }
 

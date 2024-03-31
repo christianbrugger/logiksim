@@ -12,18 +12,19 @@
 #include <blend2d.h>
 
 #include <bit>
+#include <filesystem>
 #include <string>
 #include <string_view>
 
 namespace logicsim {
 
 struct font_locations_t {
-    std::string regular;
-    std::string italic;
-    std::string bold;
-    std::string monospace;
+    std::filesystem::path regular;
+    std::filesystem::path italic;
+    std::filesystem::path bold;
+    std::filesystem::path monospace;
 
-    [[nodiscard]] auto get(FontStyle style) const -> std::string_view;
+    [[nodiscard]] auto get(FontStyle style) const -> const std::filesystem::path &;
 };
 
 [[nodiscard]] auto get_default_font_locations() -> font_locations_t;
@@ -78,7 +79,7 @@ namespace logicsim {
 struct FontFace {
    public:
     [[nodiscard]] explicit FontFace() = default;
-    [[nodiscard]] explicit FontFace(std::string font_file);
+    [[nodiscard]] explicit FontFace(std::filesystem::path font_file);
 
     [[nodiscard]] auto hb_font_face() const -> const HarfbuzzFontFace &;
     [[nodiscard]] auto bl_font_face() const -> const BLFontFace &;

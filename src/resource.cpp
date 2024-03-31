@@ -3,10 +3,7 @@
 #include "executable_path.h"
 #include "timer.h"
 
-#include <QApplication>
-#include <QDir>
-#include <QFileInfo>
-#include <QStandardPaths>
+#include <gsl/gsl>
 
 #include <exception>
 
@@ -14,34 +11,29 @@ namespace logicsim {
 
 namespace {
 
-[[nodiscard]] auto to_absolute_resource_path(QString relative) -> QString {
-    if (relative.isEmpty()) {
-        return QString {};
-    }
+[[nodiscard]] auto to_absolute_resource_path(std::filesystem::path relative)
+    -> std::filesystem::path {
+    Expects(!relative.empty());
 
-    // const auto app_dir = QApplication::instance()->applicationDirPath();
-    const auto dir_path = get_executable_path();
-    const auto dir_str = dir_path.u8string();
-    const auto app_dir = QString::fromUtf8(dir_str.data(), dir_str.size());
-
-    return QFileInfo(app_dir + '/' + "resources" + '/' + relative).absoluteFilePath();
+    const auto directory = get_executable_directory();
+    return std::filesystem::weakly_canonical(directory / "resources" / relative);
 }
 
-[[nodiscard]] auto get_font_path_relative(font_t font) -> QString {
+[[nodiscard]] auto get_font_path_relative(font_t font) -> std::filesystem::path {
     switch (font) {
         using enum font_t;
 
         case regular: {
-            return QString("fonts/NotoSans-Regular.ttf");
+            return std::filesystem::path {"fonts/NotoSans-Regular.ttf"};
         }
         case italic: {
-            return QString("fonts/NotoSans-Italic.ttf");
+            return std::filesystem::path {"fonts/NotoSans-Italic.ttf"};
         }
         case bold: {
-            return QString("fonts/NotoSans-Bold.ttf");
+            return std::filesystem::path {"fonts/NotoSans-Bold.ttf"};
         }
         case monospace: {
-            return QString("fonts/NotoSansMono-Regular.ttf");
+            return std::filesystem::path {"fonts/NotoSansMono-Regular.ttf"};
         }
     };
     std::terminate();
@@ -49,7 +41,7 @@ namespace {
 
 }  // namespace
 
-auto get_font_path(font_t font) -> QString {
+auto get_font_path(font_t font) -> std::filesystem::path {
     return to_absolute_resource_path(get_font_path_relative(font));
 }
 
@@ -61,112 +53,112 @@ namespace {
 //
 // https://jam-icons.com/
 //
-[[nodiscard]] auto get_icon_path_relative(icon_t icon) -> QString {
+[[nodiscard]] auto get_icon_path_relative(icon_t icon) -> std::filesystem::path {
     switch (icon) {
         using enum icon_t;
 
         case app_icon: {
-            return QString("icons/own/cpu.svg");
+            return std::filesystem::path {"icons/own/cpu.svg"};
         }
 
         case new_file: {
-            return QString("icons/lucide/file.svg");
+            return std::filesystem::path {"icons/lucide/file.svg"};
         }
         case open_file: {
-            return QString("icons/lucide/folder-open.svg");
+            return std::filesystem::path {"icons/lucide/folder-open.svg"};
         }
         case save_file: {
-            return QString("icons/lucide/save.svg");
+            return std::filesystem::path {"icons/lucide/save.svg"};
         }
         case exit: {
-            return QString("icons/lucide/log-out.svg");
+            return std::filesystem::path {"icons/lucide/log-out.svg"};
         }
 
         case cut: {
-            return QString("icons/lucide/scissors.svg");
+            return std::filesystem::path {"icons/lucide/scissors.svg"};
         }
         case copy: {
-            return QString("icons/lucide/copy.svg");
+            return std::filesystem::path {"icons/lucide/copy.svg"};
         }
         case paste: {
-            return QString("icons/lucide/clipboard.svg");
+            return std::filesystem::path {"icons/lucide/clipboard.svg"};
         }
         case delete_selected: {
-            return QString("icons/lucide/trash-2.svg");
+            return std::filesystem::path {"icons/lucide/trash-2.svg"};
         }
         case select_all: {
             // maximize, grid, check-square, box-select
-            return QString("icons/lucide/box-select.svg");
+            return std::filesystem::path {"icons/lucide/box-select.svg"};
         }
 
         case reset_zoom: {
-            return QString("icons/lucide/rotate-ccw.svg");
+            return std::filesystem::path {"icons/lucide/rotate-ccw.svg"};
         }
         case zoom_in: {
-            return QString("icons/lucide/zoom-in.svg");
+            return std::filesystem::path {"icons/lucide/zoom-in.svg"};
         }
         case zoom_out: {
-            return QString("icons/lucide/zoom-out.svg");
+            return std::filesystem::path {"icons/lucide/zoom-out.svg"};
         }
 
         case simulation_start: {
-            return QString("icons/own/play.svg");
+            return std::filesystem::path {"icons/own/play.svg"};
         }
         case simulation_stop: {
-            return QString("icons/own/stop_15x15_r0_r.svg");
+            return std::filesystem::path {"icons/own/stop_15x15_r0_r.svg"};
         }
         case simulation_speed: {
-            return QString("icons/lucide/gauge.svg");
+            return std::filesystem::path {"icons/lucide/gauge.svg"};
         }
 
         case benchmark: {
-            return QString("icons/lucide/infinity.svg");
+            return std::filesystem::path {"icons/lucide/infinity.svg"};
         }
         case show_circuit: {
-            return QString("icons/lucide/cpu.svg");
+            return std::filesystem::path {"icons/lucide/cpu.svg"};
         }
         case show_collision_cache: {
-            return QString("icons/lucide/shapes.svg");
+            return std::filesystem::path {"icons/lucide/shapes.svg"};
         }
         case show_connection_cache: {
             // share-2
-            return QString("icons/lucide/spline.svg");
+            return std::filesystem::path {"icons/lucide/spline.svg"};
         }
         case show_selection_cache: {
             // ungroup, group, boxes, ratio
-            return QString("icons/lucide/ungroup.svg");
+            return std::filesystem::path {"icons/lucide/ungroup.svg"};
         }
 
         case reload_circuit: {
-            return QString("icons/lucide/refresh-ccw.svg");
+            return std::filesystem::path {"icons/lucide/refresh-ccw.svg"};
         }
         case load_simple_example: {
-            return QString("icons/lucide/cable.svg");
+            return std::filesystem::path {"icons/lucide/cable.svg"};
         }
         case load_wire_example: {
-            return QString("icons/lucide/share-2.svg");
+            return std::filesystem::path {"icons/lucide/share-2.svg"};
         }
         case load_element_example: {
-            return QString("icons/lucide/workflow.svg");
+            return std::filesystem::path {"icons/lucide/workflow.svg"};
         }
         case load_elements_and_wires_example: {
-            return QString("icons/lucide/network.svg");
+            return std::filesystem::path {"icons/lucide/network.svg"};
         }
 
         case direct_rendering: {
-            return QString("icons/lucide/grid-2x2.svg");
+            return std::filesystem::path {"icons/lucide/grid-2x2.svg"};
         }
 
         case options: {
-            return QString("icons/lucide/settings.svg");
+            return std::filesystem::path {"icons/lucide/settings.svg"};
         }
 
         case about: {
-            return QString("icons/lucide/info.svg");
+            return std::filesystem::path {"icons/lucide/info.svg"};
         }
 
         case setting_handle_clock_generator: {
-            return QString("icons/lucide/activity.svg");
+            return std::filesystem::path {"icons/lucide/activity.svg"};
         }
     };
     std::terminate();
@@ -174,7 +166,7 @@ namespace {
 
 }  // namespace
 
-auto get_icon_path(icon_t icon) -> QString {
+auto get_icon_path(icon_t icon) -> std::filesystem::path {
     return to_absolute_resource_path(get_icon_path_relative(icon));
 }
 

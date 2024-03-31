@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_RESOURCE_H
 #define LOGIKSIM_RESOURCE_H
 
-#include <QString>
+#include <filesystem>
 
 namespace logicsim {
 
@@ -15,7 +15,7 @@ enum class font_t : uint8_t {
     monospace,
 };
 
-[[nodiscard]] auto get_font_path(font_t font) -> QString;
+[[nodiscard]] auto get_font_path(font_t font) -> std::filesystem::path;
 
 enum class icon_t {
     app_icon,
@@ -68,7 +68,7 @@ enum class icon_t {
     setting_handle_clock_generator,
 };
 
-[[nodiscard]] auto get_icon_path(icon_t icon) -> QString;
+[[nodiscard]] auto get_icon_path(icon_t icon) -> std::filesystem::path;
 
 }  // namespace logicsim
 

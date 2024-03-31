@@ -17,7 +17,6 @@ set(LS_CORE_SOURCES
     src/algorithm/merged_none_of.cpp
     src/algorithm/narrow_integral.cpp
     src/algorithm/overload.cpp
-    src/algorithm/path_conversion.cpp
     src/algorithm/pop_while.cpp
     src/algorithm/random_select.cpp
     src/algorithm/range.cpp
@@ -33,6 +32,7 @@ set(LS_CORE_SOURCES
     src/algorithm/transform_if.cpp
     src/algorithm/transform_to_container.cpp
     src/algorithm/transform_to_vector.cpp
+    src/algorithm/u8_conversion.cpp
     src/algorithm/uniform_int_distribution.cpp
 
     src/allocated_size/ankerl_unordered_dense.cpp
@@ -162,6 +162,7 @@ set(LS_CORE_SOURCES
     src/logic_item/simulation_info.cpp
 
     src/qt/mouse_position.cpp
+    src/qt/path_conversion.cpp
     src/qt/widget_geometry.cpp
 
     src/random/bool.cpp
