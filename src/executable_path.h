@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_LOCATION_H
-#define LOGICSIM_LOCATION_H
+#ifndef LOGICSIM_EXECUTABLE_PATH_H
+#define LOGICSIM_EXECUTABLE_PATH_H
 
 #include <filesystem>
 

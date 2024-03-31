@@ -1,6 +1,6 @@
 #include "resource.h"
 
-#include "location.h"
+#include "executable_path.h"
 #include "timer.h"
 
 #include <QApplication>
@@ -11,6 +11,8 @@
 #include <exception>
 
 namespace logicsim {
+
+namespace {
 
 [[nodiscard]] auto to_absolute_resource_path(QString relative) -> QString {
     if (relative.isEmpty()) {
@@ -23,14 +25,6 @@ namespace logicsim {
     const auto app_dir = QString::fromUtf8(dir_str.data(), dir_str.size());
 
     return QFileInfo(app_dir + '/' + "resources" + '/' + relative).absoluteFilePath();
-}
-
-[[nodiscard]] auto writable_standard_path(QStandardPaths::StandardLocation location,
-                                          QString relative) -> QString {
-    const auto folder = QStandardPaths::writableLocation(location);
-    const auto file = QFileInfo(folder + '/' + LS_APP_VERSION_STR + '/' + relative);
-    file.absoluteDir().mkpath(".");
-    return file.absoluteFilePath();
 }
 
 [[nodiscard]] auto get_font_path_relative(font_t font) -> QString {
@@ -53,29 +47,13 @@ namespace logicsim {
     std::terminate();
 }
 
+}  // namespace
+
 auto get_font_path(font_t font) -> QString {
     return to_absolute_resource_path(get_font_path_relative(font));
 }
 
-auto get_writable_setting_path(setting_t settings) -> QString {
-    switch (settings) {
-        using enum setting_t;
-
-        case gui_geometry: {
-            return writable_standard_path(QStandardPaths::AppConfigLocation,
-                                          "gui_geometry.bin");
-        }
-        case gui_state: {
-            return writable_standard_path(QStandardPaths::AppConfigLocation,
-                                          "gui_state.bin");
-        }
-        case logfile: {
-            return writable_standard_path(QStandardPaths::AppConfigLocation,
-                                          "logging.txt");
-        }
-    };
-    std::terminate();
-}
+namespace {
 
 // Browse Icons:
 //
@@ -193,6 +171,8 @@ auto get_writable_setting_path(setting_t settings) -> QString {
     };
     std::terminate();
 }
+
+}  // namespace
 
 auto get_icon_path(icon_t icon) -> QString {
     return to_absolute_resource_path(get_icon_path_relative(icon));

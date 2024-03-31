@@ -7,6 +7,7 @@
 #include "logging.h"
 #include "resource.h"
 #include "serialize.h"
+#include "setting_location.h"
 #include "timer.h"
 #include "top_widget.h"
 #include "vocabulary/simulation_config.h"

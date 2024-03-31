@@ -17,15 +17,6 @@ enum class font_t : uint8_t {
 
 [[nodiscard]] auto get_font_path(font_t font) -> QString;
 
-enum class setting_t {
-    gui_geometry,
-    gui_state,
-
-    logfile,
-};
-
-[[nodiscard]] auto get_writable_setting_path(setting_t settings) -> QString;
-
 enum class icon_t {
     app_icon,
 

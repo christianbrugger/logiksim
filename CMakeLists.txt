@@ -286,6 +286,7 @@ set(LS_CORE_SOURCES
     src/event_counter.cpp
     src/event_counter_multi.cpp
     src/exception.cpp
+    src/executable_path.cpp
     src/file.cpp
     src/font_style_property.cpp
     src/gzip.cpp
@@ -299,7 +300,6 @@ set(LS_CORE_SOURCES
     src/line_tree.cpp
     src/line_tree_generation.cpp
     src/load_save_file.cpp
-    src/location.cpp
     src/logging.cpp
     src/part_selection.cpp
     src/render_caches.cpp
@@ -317,6 +317,7 @@ set(LS_CORE_SOURCES
     src/setting_dialog.cpp
     src/setting_dialog_manager.cpp
     src/setting_handle.cpp
+    src/setting_location.cpp
     src/simulation.cpp
     src/simulation_player.cpp
     src/simulation_view.cpp
