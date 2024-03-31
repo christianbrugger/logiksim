@@ -21,7 +21,7 @@ IncludeIsMainRegex: '(_test)?$'
 IncludeCategories:
 - Regex:    '^<(gtest/|gmock/)'
   Priority: 2
-- Regex:    '^<(boost/|fmt/|range/|blend2d\.h|benchmark/|folly/|absl/|gsl/|ankerl/|glaze/|cppcodec/|hb.h>|hb-|gcem.hpp|tl/expected)'
+- Regex:    '^<(boost/|fmt/|range/|blend2d\.h|benchmark/|folly/|absl/|gsl/|ankerl/|glaze/|cppcodec/|hb.h>|hb-|gcem.hpp|tl/expected|whereami.h>)'
   Priority: 3
 - Regex:    '^<Q'
   CaseSensitive:   true

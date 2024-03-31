@@ -96,3 +96,8 @@
 	path = external/expected
 	url = https://github.com/TartanLlama/expected.git
 	ignore = dirty
+
+[submodule "external/whereami"]
+	path = external/whereami
+	url = https://github.com/gpakosz/whereami.git
+	ignore = dirty

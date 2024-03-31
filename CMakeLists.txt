@@ -17,6 +17,7 @@ set(LS_CORE_SOURCES
     src/algorithm/merged_none_of.cpp
     src/algorithm/narrow_integral.cpp
     src/algorithm/overload.cpp
+    src/algorithm/path_conversion.cpp
     src/algorithm/pop_while.cpp
     src/algorithm/random_select.cpp
     src/algorithm/range.cpp
@@ -298,6 +299,7 @@ set(LS_CORE_SOURCES
     src/line_tree.cpp
     src/line_tree_generation.cpp
     src/load_save_file.cpp
+    src/location.cpp
     src/logging.cpp
     src/part_selection.cpp
     src/render_caches.cpp
@@ -428,8 +430,8 @@ project(simulation_srp CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
-add_link_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all)
+# add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
+# add_link_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all)
 # set(BLEND2D_NO_JIT ON)
 
 include(CMakePrintHelpers)
@@ -641,6 +643,18 @@ add_subdirectory(external/expected EXCLUDE_FROM_ALL SYSTEM)
 # cppcoro (cppcoro)
 # add_subdirectory(external/cppcoro EXCLUDE_FROM_ALL SYSTEM)
 
+# whereami
+add_library(whereami STATIC EXCLUDE_FROM_ALL
+    external/whereami/src/whereami.c
+)
+set_source_files_properties(
+    external/whereami/src/whereami.c
+    PROPERTIES LANGUAGE CXX
+)
+target_include_directories(whereami PUBLIC
+    external/whereami/src
+)
+
 
 
 
@@ -692,6 +706,7 @@ if (LS_ENABLE_PCH)
         <concepts>
         <cstdint>
         <exception>
+        <filesystem>
         <functional>
         <iterator>
         <locale>
@@ -740,6 +755,7 @@ set(LS_CORE_LIBRARIES
     gcem
     svg2b2d
     tl::expected
+    whereami
     
     Qt6::Core
     Qt6::Widgets

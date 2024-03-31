@@ -1,5 +1,8 @@
 #include "resource.h"
 
+#include "location.h"
+#include "timer.h"
+
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
@@ -14,7 +17,11 @@ namespace logicsim {
         return QString {};
     }
 
-    const auto app_dir = QApplication::instance()->applicationDirPath();
+    // const auto app_dir = QApplication::instance()->applicationDirPath();
+    const auto dir_path = get_executable_path();
+    const auto dir_str = dir_path.u8string();
+    const auto app_dir = QString::fromUtf8(dir_str.data(), dir_str.size());
+
     return QFileInfo(app_dir + '/' + "resources" + '/' + relative).absoluteFilePath();
 }
 
