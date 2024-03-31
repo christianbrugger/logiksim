@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_TOP_WIDGET_H
-#define LOGIKSIM_TOP_WIDGET_H
+#ifndef LOGIKSIM_WIDGET_TOP_WIDGET_H
+#define LOGIKSIM_WIDGET_TOP_WIDGET_H
 
 #include "circuit_widget_base.h"
 

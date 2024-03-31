@@ -1,4 +1,4 @@
-#include "circuit_widget_base.h"
+#include "widget/circuit_widget_base.h"
 
 namespace logicsim {
 

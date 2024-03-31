@@ -1,4 +1,4 @@
-#include "setting_dialog_manager.h"
+#include "widget/setting_dialog_manager.h"
 
 #include "editable_circuit.h"
 #include "logging.h"

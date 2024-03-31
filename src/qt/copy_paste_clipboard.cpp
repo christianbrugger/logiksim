@@ -1,4 +1,4 @@
-#include "copy_paste_clipboard.h"
+#include "qt/copy_paste_clipboard.h"
 
 #include "base64.h"
 #include "editable_circuit.h"
@@ -9,6 +9,7 @@
 #include <QClipboard>
 
 namespace logicsim {
+
 auto copy_clipboard_selection(const Layout& layout, const Selection& selection,
                               point_t copy_position) -> bool {
     if (!selection.empty()) {

@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_CIRCUIT_WIDGET_H
-#define LOGICSIM_CIRCUIT_WIDGET_H
+#ifndef LOGICSIM_WIDGET_CIRCUIT_WIDGET_H
+#define LOGICSIM_WIDGET_CIRCUIT_WIDGET_H
 
 #include "circuit_widget_base.h"
 #include "component/circuit_widget/circuit_store.h"

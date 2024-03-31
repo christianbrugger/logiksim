@@ -1,4 +1,4 @@
-#include "setting_dialog.h"
+#include "widget/setting_dialog.h"
 
 #include "algorithm/range.h"
 #include "algorithm/round.h"

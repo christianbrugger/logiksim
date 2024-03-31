@@ -1,4 +1,4 @@
-﻿#include "top_widget.h"
+﻿#include "widget/top_widget.h"
 
 #include "algorithm/round.h"
 #include "circuit_widget.h"
@@ -6,9 +6,9 @@
 #include "format/std_type.h"
 #include "logging.h"
 #include "qt/path_conversion.h"
+#include "qt/setting_location.h"
 #include "resource.h"
 #include "serialize.h"
-#include "setting_location.h"
 #include "timer.h"
 #include "top_widget.h"
 #include "vocabulary/simulation_config.h"

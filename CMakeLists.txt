@@ -161,8 +161,10 @@ set(LS_CORE_SOURCES
     src/logic_item/schematic_info.cpp
     src/logic_item/simulation_info.cpp
 
+    src/qt/copy_paste_clipboard.cpp
     src/qt/mouse_position.cpp
     src/qt/path_conversion.cpp
+    src/qt/setting_location.cpp
     src/qt/widget_geometry.cpp
 
     src/random/bool.cpp
@@ -276,12 +278,15 @@ set(LS_CORE_SOURCES
     src/vocabulary/widget_render_config.cpp
     src/vocabulary/wire_id.cpp
 
+    src/widget/circuit_widget.cpp
+    src/widget/circuit_widget_base.cpp
+    src/widget/setting_dialog.cpp
+    src/widget/setting_dialog_manager.cpp
+    src/widget/top_widget.cpp
+
     src/base64.cpp
     src/circuit_description.cpp
     src/circuit_example.cpp
-    src/circuit_widget.cpp
-    src/circuit_widget_base.cpp
-    src/copy_paste_clipboard.cpp
     src/default_element_definition.cpp
     src/editable_circuit.cpp
     src/event_counter.cpp
@@ -315,10 +320,7 @@ set(LS_CORE_SOURCES
     src/selection_normalization.cpp
     src/serialize.cpp
     src/serialize_detail.cpp
-    src/setting_dialog.cpp
-    src/setting_dialog_manager.cpp
     src/setting_handle.cpp
-    src/setting_location.cpp
     src/simulation.cpp
     src/simulation_player.cpp
     src/simulation_view.cpp
@@ -327,7 +329,6 @@ set(LS_CORE_SOURCES
     src/text_shaping.cpp
     src/timeout_timer.cpp
     src/timer.cpp
-    src/top_widget.cpp
     src/tree_normalization.cpp
     src/validate_definition.cpp
     src/vocabulary.cpp
@@ -337,10 +338,10 @@ set(LS_CORE_SOURCES
 # any file that contains Q_OBJECT
 # list them manually to speedup compilation
 set(MOC_FILES
-    src/circuit_widget_base.h
-    src/top_widget.h
-    src/setting_dialog.h
-    src/setting_dialog_manager.h
+    src/widget/circuit_widget_base.h
+    src/widget/top_widget.h
+    src/widget/setting_dialog.h
+    src/widget/setting_dialog_manager.h
 )
 
 set(LS_TEST_SOURCES
@@ -659,7 +660,7 @@ add_subdirectory(external/expected EXCLUDE_FROM_ALL SYSTEM)
 # cppcoro (cppcoro)
 # add_subdirectory(external/cppcoro EXCLUDE_FROM_ALL SYSTEM)
 
-# whereami
+# whereami - has no cmake
 add_library(whereami STATIC EXCLUDE_FROM_ALL
     external/whereami/src/whereami.c
 )

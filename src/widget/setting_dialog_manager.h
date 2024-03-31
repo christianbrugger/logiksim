@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_SETTING_DIALOG_MANAGER_H
-#define LOGICSIM_SETTING_DIALOG_MANAGER_H
+#ifndef LOGICSIM_WIDGET_SETTING_DIALOG_MANAGER_H
+#define LOGICSIM_WIDGET_SETTING_DIALOG_MANAGER_H
 
 #include "vocabulary/selection_id.h"
 #include "vocabulary/setting_attribute.h"
