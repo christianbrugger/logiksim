@@ -42,13 +42,6 @@ class HarfbuzzBlob {
         }
     }
 
-    explicit HarfbuzzBlob(const std::string &filename)
-        : hb_blob {hb_blob_create_from_file(filename.c_str())} {
-        if (!filename.empty() && hb_blob == hb_blob_get_empty()) [[unlikely]] {
-            throw std::runtime_error(fmt::format("Font not found {}", filename).c_str());
-        }
-    }
-
     HarfbuzzBlob(const HarfbuzzBlob &) = delete;
     HarfbuzzBlob(HarfbuzzBlob &&) = delete;
     HarfbuzzBlob &operator=(const HarfbuzzBlob &) = delete;
@@ -70,12 +63,7 @@ HarfbuzzFontFace::HarfbuzzFontFace() : hb_face_ {hb_face_get_empty()} {}
 
 HarfbuzzFontFace::HarfbuzzFontFace(std::span<const char> font_data,
                                    unsigned int font_index)
-    : hb_face_ {hb_face_create(HarfbuzzBlob {font_data}.hb_blob, font_index)} {}
-
-HarfbuzzFontFace::HarfbuzzFontFace(const std::string &filename, unsigned int font_index)
-    : hb_face_ {hb_face_create(HarfbuzzBlob {filename.c_str()}.hb_blob, font_index)}
-
-{
+    : hb_face_ {hb_face_create(HarfbuzzBlob {font_data}.hb_blob, font_index)} {
     hb_face_make_immutable(hb_face_);
 }
 

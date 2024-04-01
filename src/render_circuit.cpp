@@ -2,6 +2,7 @@
 
 #include "algorithm/range.h"
 #include "algorithm/round.h"
+#include "algorithm/u8_conversion.h"
 #include "allocated_size/std_vector.h"
 #include "allocated_size/trait.h"
 #include "component/simulation/history_view.h"
@@ -32,9 +33,6 @@
 #include <blend2d.h>
 #include <fmt/format.h>  // TODO why?
 #include <gsl/gsl>
-
-#include <QDir>
-#include <QFileInfo>
 
 #include <locale>
 #include <numbers>
@@ -1895,7 +1893,7 @@ namespace {
 
 // render_function = [](CircuitContext &ctx){ ... }
 template <typename Func>
-auto render_circuit_to_file(int width, int height, std::string filename,
+auto render_circuit_to_file(int width, int height, const std::filesystem::path& filename,
                             const ViewConfig& view_config, Func render_function) {
     auto circuit_ctx = CircuitContext {Context {
         .bl_image = BLImage {width, height, BL_FORMAT_PRGB32},
@@ -1908,10 +1906,8 @@ auto render_circuit_to_file(int width, int height, std::string filename,
     render_function(circuit_ctx);
     ctx.end();
 
-    const auto folder = QFileInfo(QString::fromUtf8(filename)).baseName();
-    QDir().mkdir(folder);
-
-    ctx.bl_image.writeToFile(filename.c_str());
+    std::filesystem::create_directories(filename.parent_path());
+    ctx.bl_image.writeToFile(to_string(filename.u8string()).c_str());
 }
 
 }  // namespace
@@ -1943,13 +1939,14 @@ auto render_layout(CircuitContext& circuit_ctx, const Layout& layout,
 }
 
 auto render_layout_to_file(const Layout& layout, int width, int height,
-                           std::string filename, const ViewConfig& view_config) -> void {
+                           const std::filesystem::path& filename,
+                           const ViewConfig& view_config) -> void {
     render_circuit_to_file(width, height, filename, view_config,
                            [&](CircuitContext& ctx) { render_layout(ctx, layout); });
 }
 
 auto render_layout_to_file(const Layout& layout, const Selection& selection, int width,
-                           int height, std::string filename,
+                           int height, const std::filesystem::path& filename,
                            const ViewConfig& view_config) -> void {
     render_circuit_to_file(
         width, height, filename, view_config,
@@ -1970,7 +1967,8 @@ auto render_simulation(CircuitContext& circuit_ctx, const Layout& layout,
 }
 
 auto render_simulation_to_file(const Layout& layout, SimulationView simulation_view,
-                               int width, int height, std::string filename,
+                               int width, int height,
+                               const std::filesystem::path& filename,
                                const ViewConfig& view_config) -> void {
     render_circuit_to_file(width, height, filename, view_config,
                            [&](CircuitContext& circuit_ctx) {

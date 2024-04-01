@@ -404,10 +404,10 @@ auto render_layout(CircuitContext& circuit_ctx, const Layout& layout,
                    const Selection& selection) -> void;
 
 auto render_layout_to_file(const Layout& layout, int width, int height,
-                           std::string filename, const ViewConfig& view_config = {})
-    -> void;
+                           const std::filesystem::path& filename,
+                           const ViewConfig& view_config = {}) -> void;
 auto render_layout_to_file(const Layout& layout, const Selection& selection, int width,
-                           int height, std::string filename,
+                           int height, const std::filesystem::path& filename,
                            const ViewConfig& view_config = {}) -> void;
 
 //
@@ -418,7 +418,8 @@ auto render_simulation(CircuitContext& circuit_ctx, const Layout& layout,
                        SimulationView simulation_view) -> void;
 
 auto render_simulation_to_file(const Layout& layout, SimulationView simulation_view,
-                               int width, int height, std::string filename,
+                               int width, int height,
+                               const std::filesystem::path& filename,
                                const ViewConfig& view_config = {}) -> void;
 
 }  // namespace logicsim

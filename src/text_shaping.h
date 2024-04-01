@@ -21,7 +21,6 @@ class HarfbuzzFontFace final {
     explicit HarfbuzzFontFace();
     explicit HarfbuzzFontFace(std::span<const char> font_data,
                               unsigned int font_index = 0);
-    explicit HarfbuzzFontFace(const std::string &filename, unsigned int font_index = 0);
     ~HarfbuzzFontFace();
 
     HarfbuzzFontFace(const HarfbuzzFontFace &) = delete;
@@ -61,7 +60,8 @@ class HarfbuzzShapedText {
                                 float font_size);
     explicit HarfbuzzShapedText(std::string_view text_utf8, const HarfbuzzFont &font);
 
-    [[nodiscard]] auto operator==(const HarfbuzzShapedText &other) const -> bool = default;
+    [[nodiscard]] auto operator==(const HarfbuzzShapedText &other) const
+        -> bool = default;
 
     [[nodiscard]] auto glyph_run() const noexcept -> BLGlyphRun;
     [[nodiscard]] auto bounding_box() const noexcept -> BLBox;

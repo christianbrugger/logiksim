@@ -656,7 +656,7 @@ void MainWidget::on_timer_update_title() {
         text = fmt::format("{} - {}", text, last_saved_filename_);
     }
 
-    QString title = QString::fromUtf8(text);
+    QString title = QString::fromStdString(text);
     if (title != windowTitle()) {
         setWindowTitle(title);
     }
@@ -738,9 +738,9 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
 
     if (!circuit_widget_->save_circuit(filename)) {
         const auto message = fmt::format("Failed to save \"{}\".", filename);
-        QMessageBox::warning(this,                            //
-                             QString::fromUtf8(LS_APP_NAME),  //
-                             QString::fromUtf8(message)       //
+        QMessageBox::warning(this,                                 //
+                             QString::fromStdString(LS_APP_NAME),  //
+                             QString::fromStdString(message)       //
         );
         return save_circuit(filename_choice_t::ask_new);
     }
@@ -775,9 +775,9 @@ auto MainWidget::open_circuit(std::optional<QString> filename) -> void {
         last_saved_data_ = circuit_widget_->serialized_circuit();
     } else {
         const auto message = fmt::format("Failed to load \"{}\".", filename);
-        QMessageBox::warning(this,                            //
-                             QString::fromUtf8(LS_APP_NAME),  //
-                             QString::fromUtf8(message)       //
+        QMessageBox::warning(this,                                 //
+                             QString::fromStdString(LS_APP_NAME),  //
+                             QString::fromStdString(message)       //
         );
     }
 }
@@ -801,8 +801,8 @@ auto MainWidget::ensure_circuit_saved() -> save_result_t {
     const auto message = fmt::format("Save file \"{}\"?", name);
     const auto result = QMessageBox::question(
         this,                                                      //
-        QString::fromUtf8(LS_APP_NAME),                            //
-        QString::fromUtf8(message),                                //
+        QString::fromStdString(LS_APP_NAME),                       //
+        QString::fromStdString(message),                           //
         QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,  //
         QMessageBox::Yes);
 
