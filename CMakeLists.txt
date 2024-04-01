@@ -48,23 +48,6 @@ set(LS_CORE_SOURCES
     src/benchmark/schematic_creation.cpp
     src/benchmark/simulation_runtime.cpp
 
-    src/component/circuit_widget/mouse_logic/editing_logic_interface.cpp
-    src/component/circuit_widget/mouse_logic/editing_logic_manager.cpp
-    src/component/circuit_widget/mouse_logic/editing_logic_variant.cpp
-    src/component/circuit_widget/mouse_logic/handle_resize.cpp
-    src/component/circuit_widget/mouse_logic/handle_setting.cpp
-    src/component/circuit_widget/mouse_logic/insert_logic_item.cpp
-    src/component/circuit_widget/mouse_logic/insert_wire.cpp
-    src/component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
-    src/component/circuit_widget/mouse_logic/mouse_wheel_logic.cpp
-    src/component/circuit_widget/mouse_logic/selection_area.cpp
-    src/component/circuit_widget/mouse_logic/selection_move.cpp
-    src/component/circuit_widget/mouse_logic/selection_single.cpp
-    src/component/circuit_widget/checked_editable_circuit.cpp
-    src/component/circuit_widget/circuit_store.cpp
-    src/component/circuit_widget/render_surface.cpp
-    src/component/circuit_widget/simulation_runner.cpp
-    src/component/circuit_widget/zoom.cpp
     src/component/editable_circuit/editing/edit_logicitem.cpp
     src/component/editable_circuit/editing/edit_logicitem_detail.cpp
     src/component/editable_circuit/editing/edit_wire.cpp
@@ -115,7 +98,6 @@ set(LS_CORE_SOURCES
     src/format/enum.cpp
     src/format/escape_ascii.cpp
     src/format/pointer.cpp
-    src/format/qt_type.cpp
     src/format/std_type.cpp
     src/format/struct.cpp
     src/format/time.cpp
@@ -160,13 +142,6 @@ set(LS_CORE_SOURCES
     src/logic_item/layout_standard_element.cpp
     src/logic_item/schematic_info.cpp
     src/logic_item/simulation_info.cpp
-
-    src/qt/clipboard_access.cpp
-    src/qt/mouse_position.cpp
-    src/qt/path_conversion.cpp
-    src/qt/point_conversion.cpp
-    src/qt/setting_location.cpp
-    src/qt/widget_geometry.cpp
 
     src/random/bool.cpp
     src/random/connection_count.cpp
@@ -282,12 +257,6 @@ set(LS_CORE_SOURCES
     src/vocabulary/widget_render_config.cpp
     src/vocabulary/wire_id.cpp
 
-    src/widget/circuit_widget.cpp
-    src/widget/circuit_widget_base.cpp
-    src/widget/setting_dialog.cpp
-    src/widget/setting_dialog_manager.cpp
-    src/widget/top_widget.cpp
-
     src/base64.cpp
     src/circuit_description.cpp
     src/circuit_example.cpp
@@ -338,6 +307,41 @@ set(LS_CORE_SOURCES
     src/validate_definition.cpp
     src/vocabulary.cpp
     src/wyhash.cpp
+)
+
+set(LS_GUI_SOURCES
+    src/component/circuit_widget/mouse_logic/editing_logic_interface.cpp
+    src/component/circuit_widget/mouse_logic/editing_logic_manager.cpp
+    src/component/circuit_widget/mouse_logic/editing_logic_variant.cpp
+    src/component/circuit_widget/mouse_logic/handle_resize.cpp
+    src/component/circuit_widget/mouse_logic/handle_setting.cpp
+    src/component/circuit_widget/mouse_logic/insert_logic_item.cpp
+    src/component/circuit_widget/mouse_logic/insert_wire.cpp
+    src/component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
+    src/component/circuit_widget/mouse_logic/mouse_wheel_logic.cpp
+    src/component/circuit_widget/mouse_logic/selection_area.cpp
+    src/component/circuit_widget/mouse_logic/selection_move.cpp
+    src/component/circuit_widget/mouse_logic/selection_single.cpp
+    src/component/circuit_widget/checked_editable_circuit.cpp
+    src/component/circuit_widget/circuit_store.cpp
+    src/component/circuit_widget/render_surface.cpp
+    src/component/circuit_widget/simulation_runner.cpp
+    src/component/circuit_widget/zoom.cpp
+    
+    src/format/qt_type.cpp
+
+    src/qt/clipboard_access.cpp
+    src/qt/mouse_position.cpp
+    src/qt/path_conversion.cpp
+    src/qt/point_conversion.cpp
+    src/qt/setting_location.cpp
+    src/qt/widget_geometry.cpp
+
+    src/widget/circuit_widget.cpp
+    src/widget/circuit_widget_base.cpp
+    src/widget/setting_dialog.cpp
+    src/widget/setting_dialog_manager.cpp
+    src/widget/top_widget.cpp
 )
 
 # any file that contains Q_OBJECT
@@ -719,8 +723,6 @@ if (LS_ENABLE_PCH)
         <folly/small_vector.h>
         <gcem.hpp>
         <gsl/gsl>
-        
-        <QWidget>
     
         <algorithm>
         <chrono>
@@ -778,9 +780,6 @@ set(LS_CORE_LIBRARIES
     svg2b2d
     tl::expected
     whereami
-    
-    Qt6::Core
-    Qt6::Widgets
 )
 
 # Resources
@@ -808,7 +807,6 @@ list(TRANSFORM LS_RESOURCE_FILES PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
 set(MAIN_LIBRARY "simulation_srp")
 add_library(${MAIN_LIBRARY} 
     ${LS_CORE_SOURCES}
-    ${MOC_SOURCES}
     ${LS_RESOURCE_FILES}
 )
 target_include_directories(${MAIN_LIBRARY} PUBLIC
@@ -848,10 +846,16 @@ target_link_libraries(${MAIN_TARGET} PRIVATE
 
 set(MAIN_GUI_TARGET "simulation_srp_gui")
 add_executable(${MAIN_GUI_TARGET}
+    ${LS_GUI_SOURCES}
+    ${MOC_SOURCES}
+
     src/main_gui.cpp
 )
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
-    ${MAIN_LIBRARY} 
+    ${MAIN_LIBRARY}
+    
+    Qt6::Core
+    Qt6::Widgets
 )
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE 

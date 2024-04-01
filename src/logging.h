@@ -2,7 +2,6 @@
 #define LOGICSIM_LOGGING_H
 
 #include "format/container.h"
-#include "format/qt_type.h"
 #include "format/std_type.h"
 
 #include <fmt/core.h>

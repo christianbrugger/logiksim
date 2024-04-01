@@ -3,6 +3,7 @@
 #include "algorithm/round.h"
 #include "circuit_widget.h"
 #include "file.h"
+#include "format/qt_type.h"
 #include "format/std_type.h"
 #include "logging.h"
 #include "qt/path_conversion.h"

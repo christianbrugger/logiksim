@@ -9,8 +9,6 @@
 #include <fmt/core.h>
 #include <gsl/gsl>
 
-#include <QCoreApplication>
-
 #include <exception>
 #include <iostream>
 
@@ -94,9 +92,8 @@ auto test_sanitized_render() {
 
 }  // namespace logicsim
 
-auto main(int argc, char** argv) -> int {
+auto main() -> int {
     using namespace logicsim;
-    const auto app [[maybe_unused]] = QCoreApplication {argc, argv};
 
     bool do_run = true;
 

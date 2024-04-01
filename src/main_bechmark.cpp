@@ -26,8 +26,6 @@
 #include <blend2d.h>
 #include <gsl/gsl>
 
-#include <QCoreApplication>
-
 #include <algorithm>
 #include <array>
 #include <functional>
@@ -292,8 +290,6 @@ BENCHMARK(BM_RenderScene_0);  // NOLINT
 }  // namespace logicsim
 
 int main(int argc, char** argv) {
-    const auto app [[maybe_unused]] = QCoreApplication {argc, argv};
-
     ::benchmark::Initialize(&argc, argv);
     if (::benchmark::ReportUnrecognizedArguments(argc, argv)) {
         return 1;
