@@ -122,7 +122,7 @@ auto to_closest_grid_position(point_device_fine_t position, size_device_t widget
 
 // to Qt widget / device coordinates
 
-auto to_widget(point_fine_t position, const ViewConfig &config) -> point_device_t {
+auto to_device(point_fine_t position, const ViewConfig &config) -> point_device_t {
     const auto scale = config.device_scale();
     const auto offset = config.offset();
 
@@ -132,8 +132,8 @@ auto to_widget(point_fine_t position, const ViewConfig &config) -> point_device_
     };
 }
 
-auto to_widget(point_t position, const ViewConfig &config) -> point_device_t {
-    return to_widget(point_fine_t {position}, config);
+auto to_device(point_t position, const ViewConfig &config) -> point_device_t {
+    return to_device(point_fine_t {position}, config);
 }
 
 // to blend2d / pixel coordinates

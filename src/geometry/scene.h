@@ -45,11 +45,10 @@ struct size_device_t;
                                             size_device_t widget_size,
                                             const ViewConfig& config) -> point_t;
 
-// TODO rename to_device
-// to Qt widget / device coordinates
-[[nodiscard]] auto to_widget(point_fine_t position, const ViewConfig& config)
+// to device coordinates used in the GUI / Qt
+[[nodiscard]] auto to_device(point_fine_t position, const ViewConfig& config)
     -> point_device_t;
-[[nodiscard]] auto to_widget(point_t position, const ViewConfig& config)
+[[nodiscard]] auto to_device(point_t position, const ViewConfig& config)
     -> point_device_t;
 
 // to blend2d / pixel coordinates

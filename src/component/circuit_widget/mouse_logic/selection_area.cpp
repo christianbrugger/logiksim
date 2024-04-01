@@ -18,7 +18,7 @@ auto calculate_q_rect(std::optional<point_fine_t> first_position, QPointF positi
     }
 
     // order points
-    const auto q0 = from(to_widget(*first_position, view_config));
+    const auto q0 = from(to_device(*first_position, view_config));
     const auto q1 = position.toPoint();
     const auto [x0, x1] = sorted(q0.x(), q1.x());
     const auto [y0, y1] = sorted(q0.y(), q1.y());
