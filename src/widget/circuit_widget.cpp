@@ -5,10 +5,11 @@
 #include "component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
 #include "component/circuit_widget/simulation_runner.h"
 #include "component/circuit_widget/zoom.h"
+#include "copy_paste_clipboard.h"
 #include "geometry/scene.h"
 #include "load_save_file.h"
 #include "logging.h"
-#include "qt/copy_paste_clipboard.h"
+#include "qt/clipboard_access.h"
 #include "qt/mouse_position.h"
 #include "qt/path_conversion.h"
 #include "qt/widget_geometry.h"
@@ -734,8 +735,10 @@ auto CircuitWidget::copy_selected() -> void {
     const auto t = Timer {};
 
     const auto copy_position = copy_paste_position();
-    if (copy_clipboard_visible_selection(circuit_store_.editable_circuit(),
-                                         copy_position)) {
+    if (const auto text = visible_selection_to_clipboard_text(
+            circuit_store_.editable_circuit(), copy_position);
+        !text.empty()) {
+        set_clipboard_text(text);
         print("Copied", visible_selection_format(circuit_store_), "in", t);
     }
 
@@ -752,7 +755,7 @@ auto CircuitWidget::paste_clipboard() -> void {
 
     const auto t = Timer {};
 
-    auto load_result__ = parse_clipboard_data();
+    auto load_result__ = parse_clipboard_text(get_clipboard_text());
     if (!load_result__) {
         Ensures(class_invariant_holds());
         return;

@@ -1,36 +1,28 @@
-#include "qt/copy_paste_clipboard.h"
+#include "copy_paste_clipboard.h"
 
 #include "base64.h"
 #include "editable_circuit.h"
 #include "serialize.h"
 #include "vocabulary/point.h"
 
-#include <QApplication>
-#include <QClipboard>
-
 namespace logicsim {
 
-auto copy_clipboard_selection(const Layout& layout, const Selection& selection,
-                              point_t copy_position) -> bool {
+auto selection_to_clipboard_text(const Layout& layout, const Selection& selection,
+                                 point_t copy_position) -> std::string {
     if (!selection.empty()) {
-        const auto value =
-            base64_encode(serialize_selected(layout, selection, copy_position));
-
-        QApplication::clipboard()->setText(QString::fromStdString(value));
-        return true;
+        return base64_encode(serialize_selected(layout, selection, copy_position));
     }
-
-    return false;
+    return std::string {};
 }
 
-auto copy_clipboard_visible_selection(const EditableCircuit& editable_circuit,
-                                      point_t copy_position) -> bool {
-    return copy_clipboard_selection(editable_circuit.layout(),
-                                    editable_circuit.visible_selection(), copy_position);
+auto visible_selection_to_clipboard_text(const EditableCircuit& editable_circuit,
+                                         point_t copy_position) -> std::string {
+    return selection_to_clipboard_text(
+        editable_circuit.layout(), editable_circuit.visible_selection(), copy_position);
 }
 
-auto parse_clipboard_data() -> std::optional<serialize::LoadLayoutResult> {
-    const auto text = QApplication::clipboard()->text().toStdString();
+auto parse_clipboard_text(const std::string& text)
+    -> std::optional<serialize::LoadLayoutResult> {
     const auto binary = base64_decode(text);
     if (binary.empty()) {
         return std::nullopt;

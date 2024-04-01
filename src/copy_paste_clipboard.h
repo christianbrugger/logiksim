@@ -1,9 +1,10 @@
-#ifndef LOGICSIM_QT_COPY_PASTE_CLIPBOARD_H
-#define LOGICSIM_QT_COPY_PASTE_CLIPBOARD_H
+#ifndef LOGICSIM_COPY_PASTE_CLIPBOARD_H
+#define LOGICSIM_COPY_PASTE_CLIPBOARD_H
 
 #include "serialize.h"
 
 #include <optional>
+#include <string>
 
 namespace logicsim {
 
@@ -17,25 +18,26 @@ class LoadLayoutResult;
 }
 
 /**
- * @brief: Copies the selected elements to the clipboard.
+ * @brief: Returns text representation of selected items usable for copy & pasting.
  *
- * Returns true if anything was copied, otherwise the clipboard remains unchanged.
+ * Returns an empty string if nothing is selected.
  */
-auto copy_clipboard_selection(const Layout& layout, const Selection& selection,
-                              point_t copy_position) -> bool;
+auto selection_to_clipboard_text(const Layout& layout, const Selection& selection,
+                                 point_t copy_position) -> std::string;
 
 /**
  * @brief: Copies the visible selected elements to the clipboard.
  *
- * Returns true if anything was copied, otherwise the clipboard remains unchanged.
+ * Returns an empty string if nothing is selected.
  */
-auto copy_clipboard_visible_selection(const EditableCircuit& editable_circuit,
-                                      point_t copy_position) -> bool;
+auto visible_selection_to_clipboard_text(const EditableCircuit& editable_circuit,
+                                         point_t copy_position) -> std::string;
 
 /**
  * @brief: Parses the clipboard data for insertable elements.
  */
-[[nodiscard]] auto parse_clipboard_data() -> std::optional<serialize::LoadLayoutResult>;
+[[nodiscard]] auto parse_clipboard_text(const std::string& text)
+    -> std::optional<serialize::LoadLayoutResult>;
 
 struct PasteClipboardResult {
     /**

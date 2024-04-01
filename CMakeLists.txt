@@ -161,7 +161,7 @@ set(LS_CORE_SOURCES
     src/logic_item/schematic_info.cpp
     src/logic_item/simulation_info.cpp
 
-    src/qt/copy_paste_clipboard.cpp
+    src/qt/clipboard_access.cpp
     src/qt/mouse_position.cpp
     src/qt/path_conversion.cpp
     src/qt/setting_location.cpp
@@ -287,6 +287,7 @@ set(LS_CORE_SOURCES
     src/base64.cpp
     src/circuit_description.cpp
     src/circuit_example.cpp
+    src/copy_paste_clipboard.cpp
     src/default_element_definition.cpp
     src/editable_circuit.cpp
     src/event_counter.cpp
