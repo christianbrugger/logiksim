@@ -256,6 +256,8 @@ set(LS_CORE_SOURCES
     src/vocabulary/part_copy_definition.cpp
     src/vocabulary/placed_element.cpp
     src/vocabulary/point.cpp
+    src/vocabulary/point_device.cpp
+    src/vocabulary/point_device_fine.cpp
     src/vocabulary/point_fine.cpp
     src/vocabulary/print_events.cpp
     src/vocabulary/realtime_timeout.cpp
@@ -270,6 +272,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/setting_attribute.cpp
     src/vocabulary/shape_draw_type.cpp
     src/vocabulary/simulation_config.cpp
+    src/vocabulary/size_device.cpp
     src/vocabulary/text_alignment.cpp
     src/vocabulary/time.cpp
     src/vocabulary/time_literal.cpp
