@@ -2,6 +2,8 @@
 
 #include "geometry/scene.h"
 #include "qt/mouse_position.h"
+#include "qt/point_conversion.h"
+#include "vocabulary/point_device_fine.h"
 #include "vocabulary/view_config.h"
 
 namespace logicsim {
@@ -15,7 +17,7 @@ constexpr inline auto standard_zoom_factor = 1.1;
 
 }  // namespace
 
-auto zoom(ViewConfig view_config, double steps, QPointF center) -> ViewPoint {
+auto zoom(ViewConfig view_config, double steps, point_device_fine_t center) -> ViewPoint {
     const auto factor = std::exp(steps * std::log(standard_zoom_factor));
 
     const auto old_grid_point = to_grid_fine(center, view_config);
@@ -27,7 +29,7 @@ auto zoom(ViewConfig view_config, double steps, QPointF center) -> ViewPoint {
 }
 
 auto zoom(const QWidget& widget, ViewConfig view_config, double steps) -> ViewPoint {
-    const auto center = get_mouse_position_inside_widget(widget);
+    const auto center = to(get_mouse_position_inside_widget(widget));
     return zoom(view_config, steps, center);
 }
 

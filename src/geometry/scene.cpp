@@ -3,8 +3,11 @@
 #include "algorithm/round.h"
 #include "geometry/grid.h"
 #include "geometry/rect.h"
+#include "vocabulary/point_device.h"
+#include "vocabulary/point_device_fine.h"
 #include "vocabulary/rect.h"
 #include "vocabulary/rect_fine.h"
+#include "vocabulary/size_device.h"
 #include "vocabulary/view_config.h"
 
 #include <gsl/gsl>
@@ -55,15 +58,16 @@ auto get_dirty_rect(rect_t bounding_rect, const ViewConfig &view_config) -> BLRe
 
 // to grid fine
 
-auto to_grid_fine(QPointF position, const ViewConfig &config) -> point_fine_t {
+auto to_grid_fine(point_device_fine_t position, const ViewConfig &config)
+    -> point_fine_t {
     const auto scale = config.device_scale();
     const auto offset = config.offset();
 
-    return point_fine_t {position.x() / scale, position.y() / scale} - offset;
+    return point_fine_t {position.x / scale, position.y / scale} - offset;
 }
 
-auto to_grid_fine(QPoint position, const ViewConfig &config) -> point_fine_t {
-    return to_grid_fine(QPointF {position}, config);
+auto to_grid_fine(point_device_t position, const ViewConfig &config) -> point_fine_t {
+    return to_grid_fine(point_device_fine_t {position}, config);
 }
 
 auto to_grid_fine(BLPoint point, const ViewConfig &config) -> point_fine_t {
@@ -75,7 +79,8 @@ auto to_grid_fine(BLPoint point, const ViewConfig &config) -> point_fine_t {
 
 // to grid
 
-auto to_grid(QPointF position, const ViewConfig &config) -> std::optional<point_t> {
+auto to_grid(point_device_fine_t position, const ViewConfig &config)
+    -> std::optional<point_t> {
     const auto fine = to_grid_fine(position, config);
 
     const auto x = round(fine.x);
@@ -88,26 +93,27 @@ auto to_grid(QPointF position, const ViewConfig &config) -> std::optional<point_
     return std::nullopt;
 }
 
-auto to_grid(QPoint position, const ViewConfig &config) -> std::optional<point_t> {
-    return to_grid(QPointF {position}, config);
+auto to_grid(point_device_t position, const ViewConfig &config)
+    -> std::optional<point_t> {
+    return to_grid(point_device_fine_t {position}, config);
 }
 
-auto to_closest_grid_position(QPointF position, QSize widget_size,
+auto to_closest_grid_position(point_device_fine_t position, size_device_t widget_size,
                               const ViewConfig &config) -> point_t {
     if (const auto grid = to_grid(position, config)) {
         return grid.value();
     }
 
-    const auto w = widget_size.width();
-    const auto h = widget_size.height();
+    const auto w = widget_size.width;
+    const auto h = widget_size.height;
 
-    if (const auto grid = to_grid(QPoint(w / 2, h / 2), config)) {
+    if (const auto grid = to_grid(point_device_t(w / 2, h / 2), config)) {
         return grid.value();
     }
-    if (const auto grid = to_grid(QPoint(0, 0), config)) {
+    if (const auto grid = to_grid(point_device_t(0, 0), config)) {
         return grid.value();
     }
-    if (const auto grid = to_grid(QPoint(w, h), config)) {
+    if (const auto grid = to_grid(point_device_t(w, h), config)) {
         return grid.value();
     }
 
@@ -116,17 +122,17 @@ auto to_closest_grid_position(QPointF position, QSize widget_size,
 
 // to Qt widget / device coordinates
 
-auto to_widget(point_fine_t position, const ViewConfig &config) -> QPoint {
+auto to_widget(point_fine_t position, const ViewConfig &config) -> point_device_t {
     const auto scale = config.device_scale();
     const auto offset = config.offset();
 
-    return QPoint {
+    return point_device_t {
         round_to<int>(double {(offset.x + position.x) * scale}),
         round_to<int>(double {(offset.y + position.y) * scale}),
     };
 }
 
-auto to_widget(point_t position, const ViewConfig &config) -> QPoint {
+auto to_widget(point_t position, const ViewConfig &config) -> point_device_t {
     return to_widget(point_fine_t {position}, config);
 }
 

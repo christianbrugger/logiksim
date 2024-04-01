@@ -164,6 +164,7 @@ set(LS_CORE_SOURCES
     src/qt/clipboard_access.cpp
     src/qt/mouse_position.cpp
     src/qt/path_conversion.cpp
+    src/qt/point_conversion.cpp
     src/qt/setting_location.cpp
     src/qt/widget_geometry.cpp
 

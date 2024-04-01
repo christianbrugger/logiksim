@@ -14,8 +14,8 @@ namespace logicsim {
 struct size_device_t {
     using value_type = int;
 
-    value_type x;
-    value_type y;
+    value_type width;
+    value_type height;
 
     [[nodiscard]] auto format() const -> std::string;
 

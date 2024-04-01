@@ -3,6 +3,7 @@
 #include "algorithm/sort_pair.h"
 #include "editable_circuit.h"
 #include "geometry/scene.h"
+#include "qt/point_conversion.h"
 
 namespace logicsim {
 
@@ -17,7 +18,7 @@ auto calculate_q_rect(std::optional<point_fine_t> first_position, QPointF positi
     }
 
     // order points
-    const auto q0 = to_widget(*first_position, view_config);
+    const auto q0 = from(to_widget(*first_position, view_config));
     const auto q1 = position.toPoint();
     const auto [x0, x1] = sorted(q0.x(), q1.x());
     const auto [y0, y1] = sorted(q0.y(), q1.y());
@@ -29,8 +30,8 @@ auto calculate_q_rect(std::optional<point_fine_t> first_position, QPointF positi
 }
 
 auto to_rect_fine(QRect qrect, const ViewConfig& view_config) -> rect_fine_t {
-    const auto a_minimum = to_grid_fine(qrect.topLeft(), view_config);
-    const auto a_maximum = to_grid_fine(qrect.bottomRight(), view_config);
+    const auto a_minimum = to_grid_fine(to(qrect.topLeft()), view_config);
+    const auto a_maximum = to_grid_fine(to(qrect.bottomRight()), view_config);
     return rect_fine_t {a_minimum, a_maximum};
 }
 
@@ -39,7 +40,7 @@ auto to_rect_fine(QRect qrect, const ViewConfig& view_config) -> rect_fine_t {
 auto SelectionAreaLogic::mouse_press(EditableCircuit& editable_circuit, QPointF position,
                                      const ViewConfig& view_config,
                                      Qt::KeyboardModifiers modifiers) -> void {
-    const auto p0 = to_grid_fine(position, view_config);
+    const auto p0 = to_grid_fine(to(position), view_config);
 
     const auto function = [modifiers] {
         if (modifiers == Qt::AltModifier) {

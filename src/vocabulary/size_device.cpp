@@ -3,7 +3,7 @@
 namespace logicsim {
 
 auto size_device_t::format() const -> std::string {
-    return fmt::format("[{}, {}]", x, y);
+    return fmt::format("[{}, {}]", width, height);
 }
 
 }  // namespace logicsim

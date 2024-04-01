@@ -12,6 +12,7 @@
 #include "qt/clipboard_access.h"
 #include "qt/mouse_position.h"
 #include "qt/path_conversion.h"
+#include "qt/point_conversion.h"
 #include "qt/widget_geometry.h"
 #include "setting_dialog_manager.h"
 #include "vocabulary/simulation_config.h"
@@ -498,7 +499,7 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
 
     if (event_->button() == Qt::MiddleButton) {
-        mouse_drag_logic_.mouse_press(position);
+        mouse_drag_logic_.mouse_press(to(position));
         update();
     }
 
@@ -514,7 +515,7 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     }
 
     if (event_->button() == Qt::LeftButton && is_simulation(circuit_state_)) {
-        if (const auto point = to_grid(position, render_surface_.view_config())) {
+        if (const auto point = to_grid(to(position), render_surface_.view_config())) {
             circuit_store_.interactive_simulation().mouse_press(*point);
             update();
         }
@@ -536,7 +537,7 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
     if (event_->buttons() & Qt::MiddleButton) {
         set_view_config_offset(
             render_surface_,
-            mouse_drag_logic_.mouse_move(position, render_surface_.view_config()));
+            mouse_drag_logic_.mouse_move(to(position), render_surface_.view_config()));
         update();
     }
 
@@ -560,7 +561,7 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
     if (event_->button() == Qt::MiddleButton) {
         set_view_config_offset(
             render_surface_,
-            mouse_drag_logic_.mouse_release(position, render_surface_.view_config()));
+            mouse_drag_logic_.mouse_release(to(position), render_surface_.view_config()));
         update();
     }
 
@@ -717,8 +718,9 @@ auto CircuitWidget::delete_selected() -> void {
 auto CircuitWidget::copy_paste_position() const -> point_t {
     Expects(class_invariant_holds());
 
-    const auto result = to_closest_grid_position(
-        get_mouse_position(*this), get_size_device(*this), render_surface_.view_config());
+    const auto result = to_closest_grid_position(to(get_mouse_position(*this)),
+                                                 to(get_size_device(*this)),
+                                                 render_surface_.view_config());
 
     Ensures(class_invariant_holds());
     return result;

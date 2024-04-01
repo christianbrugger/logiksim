@@ -5,6 +5,7 @@
 #include "editable_circuit.h"
 #include "geometry/scene.h"
 #include "logging.h"
+#include "qt/point_conversion.h"
 #include "setting_handle.h"
 #include "size_handle.h"
 #include "vocabulary/point.h"
@@ -138,7 +139,7 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
                                 const EditableCircuit& editable_circuit,
                                 EditingState editing_state)
     -> std::optional<EditingMouseLogic> {
-    const auto grid_fine_position = to_grid_fine(position, view_config);
+    const auto grid_fine_position = to_grid_fine(to(position), view_config);
 
     // insert logic items
     if (is_insert_logic_item_state(editing_state)) {
@@ -195,8 +196,8 @@ auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_c
 
     if (editable_circuit_ && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
-        const auto grid_position = to_grid(position, view_config);
-        const auto grid_fine_position = to_grid_fine(position, view_config);
+        const auto grid_position = to_grid(to(position), view_config);
+        const auto grid_fine_position = to_grid_fine(to(position), view_config);
 
         std::visit(
             overload {
@@ -236,8 +237,8 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
 
     if (editable_circuit_ && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
-        const auto grid_position = to_grid(position, view_config);
-        const auto grid_fine_position = to_grid_fine(position, view_config);
+        const auto grid_position = to_grid(to(position), view_config);
+        const auto grid_fine_position = to_grid_fine(to(position), view_config);
 
         std::visit(overload {[&](InsertLogicItemLogic& arg) {
                                  arg.mouse_move(editable_circuit, grid_position);
@@ -275,8 +276,8 @@ auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view
 
     if (editable_circuit_ && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
-        const auto grid_position = to_grid(position, view_config);
-        const auto grid_fine_position = to_grid_fine(position, view_config);
+        const auto grid_position = to_grid(to(position), view_config);
+        const auto grid_fine_position = to_grid_fine(to(position), view_config);
 
         const auto finished = std::visit(
             overload {[&](InsertLogicItemLogic& arg) {

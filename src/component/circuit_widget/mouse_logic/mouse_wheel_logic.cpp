@@ -3,6 +3,7 @@
 #include "component/circuit_widget/zoom.h"
 #include "geometry/scene.h"
 #include "qt/mouse_position.h"
+#include "qt/point_conversion.h"
 #include "vocabulary/view_config.h"
 
 #include <QCursor>
@@ -29,7 +30,7 @@ constexpr inline auto standard_delta = 120.0;
 auto wheel_zoom(QPointF position, QPoint angle_delta, const ViewConfig& view_config)
     -> ViewPoint {
     const auto steps = angle_delta.y() / standard_delta;
-    return zoom(view_config, steps, position);
+    return zoom(view_config, steps, to(position));
 }
 
 auto wheel_scroll_surface(QPoint pixel_delta, const ViewConfig& view_config)
