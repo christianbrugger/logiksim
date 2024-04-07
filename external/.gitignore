@@ -4,7 +4,6 @@ ClangBuildAnalyzer
 CMake
 folly
 ninjatracing
-llvm-project
 fuzztest
 
 blend2d_shaping

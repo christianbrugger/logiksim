@@ -443,20 +443,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-# set(BLEND2D_NO_JIT ON)
-
-# add_compile_options(-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
-# add_link_options(-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fno-sanitize-recover=all)
-
-# add_compile_options(-fsanitize=memory -fsanitize-memory-track-origins -fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
-# add_link_options(-fsanitize=memory -fsanitize-memory-track-origins -fno-sanitize-recover=all)
-
-# add_compile_options(-stdlib=libc++)
-# add_link_options(-stdlib=libc++ -lc++abi)
-# include_directories(/home/brugg/clang-source/install/libcxx-memory-reldeb-clang/include/c++/v1)
-# link_directories(/home/brugg/clang-source/install/libcxx-memory-reldeb-clang/lib)
-
-
 
 
 
@@ -470,6 +456,62 @@ option(LS_ENABLE_LTO "Enable link time optimization." OFF)
 option(LS_ENABLE_PCH "Enable pre-compiled headers." ON)
 option(LS_ENABLE_COVERAGE "Enable coverage for tests under Clang" OFF)
 
+# option for sanitizers
+set(LS_SANITIZE "" CACHE STRING
+    "Enable sanitizers (Options: Address Undefined Address;Undefined 
+    Memory MemoryWithOrigins Thread). Defaults to empty string.")
+set_property(
+    CACHE LS_SANITIZE PROPERTY STRINGS 
+    "" Address Undefined Address;Undefined Memory Thread
+)
+
+# option for libc++
+set(LS_USE_LIBCXX AUTO CACHE STRING "Compile all dependencies against clang libc++.")
+set_property(CACHE LS_USE_LIBCXX PROPERTY STRINGS AUTO ON OFF)
+
+if ((LS_USE_LIBCXX STREQUAL "AUTO" AND (LS_SANITIZE STREQUAL "Memory" OR 
+        LS_SANITIZE STREQUAL "MemoryWithOrigins" OR LS_SANITIZE STREQUAL "Thread")) 
+    OR (NOT LS_USE_LIBCXX STREQUAL "AUTO" AND LS_USE_LIBCXX)
+)
+    set(LS_USE_LIBCXX_BOOL TRUE)
+else()
+    set(LS_USE_LIBCXX_BOOL FALSE)
+endif()
+
+#message("TEST LS_SANITIZE = ${LS_SANITIZE}")
+#message("TEST LS_USE_LIBCXX = ${LS_USE_LIBCXX}")
+#message("TEST LS_USE_LIBCXX_BOOL = ${LS_USE_LIBCXX_BOOL}")
+
+
+# TODO -fsanitize=float-divide-by-zero
+
+# Set Sanitizer flags
+if (LS_SANITIZE STREQUAL "")
+elseif(LS_SANITIZE STREQUAL "Address")
+    add_compile_options(-fsanitize=address) 
+    add_link_options(-fsanitize=address)
+elseif(LS_SANITIZE STREQUAL "Undefined")
+    add_compile_options(-fsanitize=undefined) 
+    add_link_options(-fsanitize=undefined)
+elseif(LS_SANITIZE STREQUAL "Address;Undefined")
+    add_compile_options(-fsanitize=address -fsanitize=undefined) 
+    add_link_options(-fsanitize=address -fsanitize=undefined)
+elseif(LS_SANITIZE STREQUAL "Memory")
+    add_compile_options(-fsanitize=memory)
+    add_link_options(-fsanitize=memory)
+elseif(LS_SANITIZE STREQUAL "MemoryWithOrigins")
+    add_compile_options(-fsanitize=memory -fsanitize-memory-track-origins) 
+    add_link_options(-fsanitize=memory -fsanitize-memory-track-origins)
+elseif(LS_SANITIZE STREQUAL "Thread")
+    add_compile_options(-fsanitize=thread)
+    add_link_options(-fsanitize=thread)
+else()
+    message(FATAL_ERROR "Unknown LS_SANITIZE Option")
+endif()
+if (LS_SANITIZE)
+    add_compile_options(-fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
+    add_link_options(-fno-sanitize-recover=all)
+endif()
 
 
 # global exceptions
@@ -573,19 +615,49 @@ cmake_print_variables(CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
 cmake_print_variables(MAIN_COMPILE_OPTIONS)
 
-
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
-###### GOOGLE BENCHMARK
+
+if (LS_USE_LIBCXX_BOOL)
+    message(NOTICE "LOGIKSIM: Using clang libc++.")
+
+    set(LLVM_ENABLE_RUNTIMES "libcxx;libcxxabi;libunwind" CACHE STRING "" FORCE)
+
+    #set(LIBCXX_ENABLE_SHARED OFF)
+    #set(LIBCXXABI_ENABLE_SHARED OFF)
+    #set(LIBCXX_ENABLE_STATIC ON)
+    #set(LIBCXXABI_ENABLE_STATIC ON)
+
+    set(LIBCXX_ENABLE_SHARED ON)
+    set(LIBCXXABI_ENABLE_SHARED ON)
+    set(LIBCXX_ENABLE_STATIC OFF)
+    set(LIBCXXABI_ENABLE_STATIC OFF)
+
+    set(LLVM_USE_SANITIZER ${LS_SANITIZE})
+    add_subdirectory(external/llvm-project/runtimes EXCLUDE_FROM_ALL SYSTEM)
+    link_libraries(
+        #cxx_static
+        #cxxabi_static
+        cxx_shared
+        cxxabi_shared
+        #cxx_experimental
+    )
+else()
+    message(NOTICE "LOGIKSIM: Using default stdlib.")
+endif()
+
+
+###### Dependencies
 
 # Google Benchmark
 set(BENCHMARK_ENABLE_LTO OFF)
 set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
+set(BENCHMARK_ENABLE_INSTALL OFF)
 add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
 
 # Google Test
+set(INSTALL_GTEST OFF)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
 
 # Zlib
@@ -594,7 +666,6 @@ find_package(ZLIB REQUIRED)
 
 # Boost
 set(BOOST_IOSTREAMS_ENABLE_ZLIB ON)
-
 set(BOOST_INCLUDE_LIBRARIES 
     algorithm 
     container 
@@ -613,13 +684,16 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 message(NOTICE "Qt version: ${Qt6_VERSION}")
 
-QT6_WRAP_CPP (MOC_SOURCES ${MOC_FILES})
+QT6_WRAP_CPP(MOC_SOURCES ${MOC_FILES})
 
 # Blend2D
 set(BLEND2D_STATIC TRUE)
+set(BLEND2D_NO_INSTALL TRUE)
+# set(BLEND2D_NO_JIT ON)
 add_subdirectory(external/blend2d EXCLUDE_FROM_ALL SYSTEM)
 
 # fmt
+set(FMT_INSTALL FALSE)
 add_subdirectory(external/fmt EXCLUDE_FROM_ALL SYSTEM)
 
 # range-v3
@@ -655,6 +729,7 @@ add_subdirectory(external/glaze EXCLUDE_FROM_ALL SYSTEM)
 add_subdirectory(external/cppcodec EXCLUDE_FROM_ALL SYSTEM)
 
 # harfbuzz
+set(SKIP_INSTALL_ALL TRUE)
 add_subdirectory(external/harfbuzz EXCLUDE_FROM_ALL SYSTEM)
 
 # GCE-Math
@@ -680,8 +755,6 @@ set_source_files_properties(
 target_include_directories(whereami PUBLIC
     external/whereami/src
 )
-
-
 
 
 ###################################################
@@ -903,6 +976,11 @@ endif()
 enable_testing()
 include(GoogleTest)
 gtest_discover_tests(${MAIN_TEST_TARGET})
+
+
+
+set_property(TARGET ${MAIN_BENCHMARK_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+set_property(TARGET ${MAIN_TEST_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 
 # end of file
