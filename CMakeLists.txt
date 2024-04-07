@@ -483,37 +483,6 @@ endif()
 #message("TEST LS_USE_LIBCXX_BOOL = ${LS_USE_LIBCXX_BOOL}")
 
 
-# TODO -fsanitize=float-divide-by-zero
-
-# Set Sanitizer flags
-if (LS_SANITIZE STREQUAL "")
-elseif(LS_SANITIZE STREQUAL "Address")
-    add_compile_options(-fsanitize=address) 
-    add_link_options(-fsanitize=address)
-elseif(LS_SANITIZE STREQUAL "Undefined")
-    add_compile_options(-fsanitize=undefined) 
-    add_link_options(-fsanitize=undefined)
-elseif(LS_SANITIZE STREQUAL "Address;Undefined")
-    add_compile_options(-fsanitize=address -fsanitize=undefined) 
-    add_link_options(-fsanitize=address -fsanitize=undefined)
-elseif(LS_SANITIZE STREQUAL "Memory")
-    add_compile_options(-fsanitize=memory)
-    add_link_options(-fsanitize=memory)
-elseif(LS_SANITIZE STREQUAL "MemoryWithOrigins")
-    add_compile_options(-fsanitize=memory -fsanitize-memory-track-origins) 
-    add_link_options(-fsanitize=memory -fsanitize-memory-track-origins)
-elseif(LS_SANITIZE STREQUAL "Thread")
-    add_compile_options(-fsanitize=thread)
-    add_link_options(-fsanitize=thread)
-else()
-    message(FATAL_ERROR "Unknown LS_SANITIZE Option")
-endif()
-if (LS_SANITIZE)
-    add_compile_options(-fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
-    add_link_options(-fno-sanitize-recover=all)
-endif()
-
-
 
 # global exceptions
 if (MSVC)
@@ -588,6 +557,11 @@ else()
     message(NOTICE "LOGIKSIM: Disabling link time optimization.")
 endif()
 
+# better debugging profile
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")  # AND LS_SANITIZE
+    add_compile_options(-O1 -fno-optimize-sibling-calls)
+endif()
+
 if (LS_ENABLE_TIME_TRACE)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         message(NOTICE "LOGIKSIM: Enabling time tracing.")
@@ -596,6 +570,8 @@ if (LS_ENABLE_TIME_TRACE)
         message(FATAL_ERROR "Time tracing only works for Clang!" )
     endif()
 endif()
+
+
 
 if (LS_ENABLE_CCACHE)
     message(NOTICE "LOGIKSIM: Enabling ccache.")
@@ -615,6 +591,10 @@ cmake_print_variables(CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
 
 cmake_print_variables(MAIN_COMPILE_OPTIONS)
+
+
+
+
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
@@ -646,6 +626,45 @@ if (LS_USE_LIBCXX_BOOL)
 else()
     message(NOTICE "LOGIKSIM: Using default stdlib.")
 endif()
+
+
+# TODO -fsanitize=float-divide-by-zero
+
+# Set Sanitizer flags
+#
+# Set these flags after adding clang libc++. For those we pass
+# our sanitizer config and the generic settings don't work.
+#
+if (LS_SANITIZE STREQUAL "")
+elseif(LS_SANITIZE STREQUAL "Address")
+    add_compile_options(-fsanitize=address) 
+    add_link_options(-fsanitize=address)
+elseif(LS_SANITIZE STREQUAL "Undefined")
+    add_compile_options(-fsanitize=undefined) 
+    add_link_options(-fsanitize=undefined)
+elseif(LS_SANITIZE STREQUAL "Address;Undefined")
+    add_compile_options(-fsanitize=address -fsanitize=undefined) 
+    add_link_options(-fsanitize=address -fsanitize=undefined)
+elseif(LS_SANITIZE STREQUAL "Memory")
+    add_compile_options(-fsanitize=memory)
+    add_link_options(-fsanitize=memory)
+elseif(LS_SANITIZE STREQUAL "MemoryWithOrigins")
+    add_compile_options(-fsanitize=memory -fsanitize-memory-track-origins) 
+    add_link_options(-fsanitize=memory -fsanitize-memory-track-origins)
+elseif(LS_SANITIZE STREQUAL "Thread")
+    add_compile_options(-fsanitize=thread)
+    add_link_options(-fsanitize=thread)
+else()
+    message(FATAL_ERROR "Unknown LS_SANITIZE Option")
+endif()
+if (LS_SANITIZE)
+    add_compile_options(-fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
+    add_link_options(-fno-sanitize-recover=all)
+endif()
+
+set(BLEND2D_NO_JIT ON)
+
+
 
 
 ###### Dependencies
@@ -903,17 +922,6 @@ target_link_libraries(${MAIN_LIBRARY} PRIVATE
 target_compile_options(${MAIN_LIBRARY} PUBLIC ${MAIN_COMPILE_OPTIONS})
 
 
-# MAIN BENCHMARK
-
-set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
-add_executable(${MAIN_BENCHMARK_TARGET}
-    src/main_bechmark.cpp
-)
-target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
-    ${MAIN_LIBRARY}
-    benchmark::benchmark
-)
-
 # MAIN
 
 set(MAIN_TARGET "simulation_srp_main")
@@ -923,6 +931,7 @@ add_executable(${MAIN_TARGET}
 target_link_libraries(${MAIN_TARGET} PRIVATE 
     ${MAIN_LIBRARY} 
 )
+set_property(TARGET ${MAIN_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 # MAIN GUI
 
@@ -939,6 +948,8 @@ target_link_libraries(${MAIN_GUI_TARGET} PRIVATE
     Qt6::Core
     Qt6::Widgets
 )
+set_property(TARGET ${MAIN_GUI_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE 
         LS_EXCEPTION_MESSAGE_BOX
@@ -948,6 +959,20 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
         # target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE LS_LOG_TO_FILE)
     endif ()
 endif ()
+
+
+# MAIN BENCHMARK
+
+set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
+add_executable(${MAIN_BENCHMARK_TARGET}
+    src/main_bechmark.cpp
+)
+target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
+    ${MAIN_LIBRARY}
+    benchmark::benchmark
+)
+set_property(TARGET ${MAIN_BENCHMARK_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+
 
 # Google Test
 
@@ -964,6 +989,7 @@ target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
 target_include_directories(${MAIN_TEST_TARGET} PUBLIC
     test
 )
+set_property(TARGET ${MAIN_TEST_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 if (LS_ENABLE_COVERAGE)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")  #  AND CMAKE_BUILD_TYPE MATCHES Debug
@@ -988,8 +1014,7 @@ gtest_discover_tests(${MAIN_TEST_TARGET})
 
 
 
-set_property(TARGET ${MAIN_BENCHMARK_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
-set_property(TARGET ${MAIN_TEST_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+
 
 
 # end of file
