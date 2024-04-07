@@ -514,6 +514,7 @@ if (LS_SANITIZE)
 endif()
 
 
+
 # global exceptions
 if (MSVC)
 	add_compile_options(/EHsc)
@@ -820,6 +821,14 @@ if (LS_ENABLE_PCH)
         <variant>
         <vector>
     )
+
+    # this is needed so ccache works with PCH files, see:
+    # https://ccache.dev/manual/latest.html#_precompiled_headers
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(logicsim_pch INTERFACE
+            -Xclang -fno-pch-timestamp
+        )
+    endif()
 else()
     message(NOTICE "LOGIKSIM: Disabling pre-compiled headers.")
 endif()
