@@ -2,6 +2,7 @@
 
 #include "algorithm/accumulate.h"
 #include "allocated_size/tracked_resource.h"
+#include "format/container.h"
 #include "iterator_adaptor/output_callable.h"
 #include "layout.h"
 #include "layout_info.h"

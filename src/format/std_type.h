@@ -1,8 +1,11 @@
 #ifndef LOGICSIM_FORMAT_STD_TYPE_H
 #define LOGICSIM_FORMAT_STD_TYPE_H
 
+#include "algorithm/u8_conversion.h"
+
 #include <fmt/core.h>
 
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -124,6 +127,22 @@ struct fmt::formatter<std::weak_ptr<T>, Char> {
             return fmt::format_to(ctx.out(), "{}", *ptr);
         }
         return fmt::format_to(ctx.out(), "nullptr");
+    }
+};
+
+//
+// std::filesystem::path
+//
+
+template <typename Char>
+struct fmt::formatter<std::filesystem::path, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const std::filesystem::path &obj, fmt::format_context &ctx) {
+        const auto string = logicsim::to_string(obj.u8string());
+        return fmt::format_to(ctx.out(), "{}", string);
     }
 };
 

@@ -1,5 +1,6 @@
 #include "index/spatial_point_index.h"
 
+#include "format/container.h"
 #include "vocabulary/ordered_line.h"
 
 #include <boost/geometry.hpp>

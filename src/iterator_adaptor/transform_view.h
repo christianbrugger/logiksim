@@ -57,7 +57,9 @@ class TransformIterator {
     }
 
     [[nodiscard]] friend constexpr auto operator-(const TransformIterator &left,
-                                                  const TransformIterator &right) {
+                                                  const TransformIterator &right)
+        requires requires(I a, I b) { a - b; }
+    {
         return left.iterator_ - right.iterator_;
     }
 
