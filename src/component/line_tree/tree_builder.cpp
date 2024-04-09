@@ -35,8 +35,8 @@ auto create_line_store(point_t root, const LineGraph& graph) -> LineStore {
     using index_t = LineGraph::index_type;
 
     const auto visitor = CallingVisitor {
-        [&last_indices, &line_store](index_t a, index_t b, const LineGraph& graph) {
-            const auto line = line_t {graph.point(a), graph.point(b)};
+        [&last_indices, &line_store](index_t a, index_t b, const LineGraph& graph_) {
+            const auto line = line_t {graph_.point(a), graph_.point(b)};
 
             if (line_store.empty()) {
                 last_indices.at(b) = line_store.add_first_line(line);

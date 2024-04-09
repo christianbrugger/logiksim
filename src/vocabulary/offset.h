@@ -27,7 +27,7 @@ struct offset_t {
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
     [[nodiscard]] explicit constexpr offset_t() = default;
-    [[nodiscard]] explicit constexpr offset_t(integral auto value);
+    [[nodiscard]] explicit constexpr offset_t(integral auto value_);
 
     [[nodiscard]] explicit constexpr operator int() const noexcept;
 
@@ -87,8 +87,8 @@ concept offset_like = explicitly_convertible_to<T, offset_t>;
 // Implementation
 //
 
-constexpr offset_t::offset_t(integral auto value)
-    : value {narrow_integral<value_type>(value)} {}
+constexpr offset_t::offset_t(integral auto value_)
+    : value {narrow_integral<value_type>(value_)} {}
 
 constexpr offset_t::operator int() const noexcept {
     return int {value};

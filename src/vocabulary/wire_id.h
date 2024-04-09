@@ -29,7 +29,7 @@ struct wire_id_t {
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
     [[nodiscard]] explicit constexpr wire_id_t() = default;
-    [[nodiscard]] explicit constexpr wire_id_t(integral auto value);
+    [[nodiscard]] explicit constexpr wire_id_t(integral auto value_);
 
     /**
      * @brief: The conversion to std::size_t
@@ -72,8 +72,8 @@ static_assert(explicitly_convertible_to<wire_id_t, wire_id_t::difference_type>);
 // Implementation
 //
 
-constexpr wire_id_t::wire_id_t(integral auto value)
-    : value {narrow_integral<value_type>(value)} {}
+constexpr wire_id_t::wire_id_t(integral auto value_)
+    : value {narrow_integral<value_type>(value_)} {}
 
 constexpr wire_id_t::operator std::size_t() const {
     if (value < value_type {0}) [[unlikely]] {

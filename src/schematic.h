@@ -137,15 +137,14 @@ auto swap(Schematic &a, Schematic &b) noexcept -> void;
 [[nodiscard]] auto element_ids(const Schematic &schematic)
     -> range_extended_t<element_id_t>;
 
-[[nodiscard]] constexpr auto inputs(const Schematic &schematic, element_id_t element_id) {
+[[nodiscard]] inline auto inputs(const Schematic &schematic, element_id_t element_id) {
     return inputs(element_id, schematic.input_count(element_id));
 }
 
 [[nodiscard]] auto input_ids(const Schematic &schematic, element_id_t element_id)
     -> range_extended_t<connection_id_t>;
 
-[[nodiscard]] constexpr auto outputs(const Schematic &schematic,
-                                     element_id_t element_id) {
+[[nodiscard]] inline auto outputs(const Schematic &schematic, element_id_t element_id) {
     return outputs(element_id, schematic.output_count(element_id));
 }
 

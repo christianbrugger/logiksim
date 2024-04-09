@@ -25,7 +25,7 @@ auto SimulationEventGroup::push_back(simulation_event_t event) -> void {
             throw std::runtime_error("All events need to have the same time.");
         }
         if (contains(group_, event.input_id,
-                     [](const simulation_event_t &event) { return event.input_id; })) {
+                     [](const simulation_event_t &event_) { return event_.input_id; })) {
             throw std::runtime_error("All input ids need to be unique.");
         }
     }

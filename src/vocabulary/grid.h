@@ -30,7 +30,7 @@ struct grid_t {
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
     [[nodiscard]] explicit constexpr grid_t() = default;
-    [[nodiscard]] explicit constexpr grid_t(integral auto value);
+    [[nodiscard]] explicit constexpr grid_t(integral auto value_);
 
     [[nodiscard]] explicit constexpr operator int() const noexcept;
 
@@ -88,8 +88,8 @@ concept grid_like = explicitly_convertible_to<T, grid_t>;
 // Implementation
 //
 
-constexpr grid_t::grid_t(integral auto value)
-    : value {narrow_integral<value_type>(value)} {}
+constexpr grid_t::grid_t(integral auto value_)
+    : value {narrow_integral<value_type>(value_)} {}
 
 constexpr grid_t::operator int() const noexcept {
     return int {value};

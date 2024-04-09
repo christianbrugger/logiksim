@@ -147,7 +147,7 @@ auto to_state(collision_data_t data) -> CacheState {
     return invalid_state;
 }
 
-auto collision_point_t::format() const -> std::string {
+inline auto collision_point_t::format() const -> std::string {
     return fmt::format("<collision_point: {}, {}>", position, type);
 }
 

@@ -177,7 +177,8 @@ auto PartSelection::remove_part(part_t removing) -> void {
     bool require_sort = false;
 
     for (auto i : reverse_range(parts_.size())) {
-        assert(0 <= i && i < parts_.size());
+        static_assert(std::is_unsigned_v<decltype(i)>);  // ensures i >= 0
+        assert(i < parts_.size());
         const auto part = part_t {parts_[i]};
 
         // See selection_model.md

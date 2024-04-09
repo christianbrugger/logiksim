@@ -19,8 +19,8 @@ struct svg_data_t {
 
 svg_entry_t::svg_entry_t() = default;
 
-svg_entry_t::svg_entry_t(svg_data_t &&data)
-    : data {std::make_unique<svg_data_t>(std::move(data))} {}
+svg_entry_t::svg_entry_t(svg_data_t &&data_)
+    : data {std::make_unique<svg_data_t>(std::move(data_))} {}
 
 svg_entry_t::svg_entry_t(svg_entry_t &&) = default;
 

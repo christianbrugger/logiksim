@@ -47,7 +47,8 @@ constexpr auto max_static_body_point_count() -> int {
 /**
  * @brief make sure we have sensible capacities for our static and small vectors
  */
-static_assert(static_body_points_t::capacity() == max_static_body_point_count());
+static_assert(static_cast<int>(static_body_points_t::capacity()) ==
+              max_static_body_point_count());
 static_assert(body_points_vector_size >= max_static_body_point_count());
 static_assert(inputs_vector_size >= static_inputs_t::capacity());
 static_assert(outputs_vector_size >= static_outputs_t::capacity());
@@ -72,7 +73,7 @@ constexpr auto calculate_static_body_points(LogicItemType logicitem_type)
         for (const auto y : range(height + grid_t {1})) {
             const auto point = point_t {x, y};
 
-            const auto to_position = [](const auto& info) { return info.position; };
+            const auto to_position = [](const auto& item) { return item.position; };
 
             if (contains(info.static_inputs.value(), point, to_position)) {
                 continue;

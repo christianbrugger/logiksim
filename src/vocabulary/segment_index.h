@@ -25,7 +25,7 @@ struct segment_index_t {
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
     [[nodiscard]] explicit constexpr segment_index_t() = default;
-    [[nodiscard]] explicit constexpr segment_index_t(integral auto value);
+    [[nodiscard]] explicit constexpr segment_index_t(integral auto value_);
 
     /**
      * @brief: The conversion to std::size_t
@@ -66,8 +66,8 @@ static_assert(
 // Implementation
 //
 
-constexpr segment_index_t::segment_index_t(integral auto value)
-    : value {narrow_integral<value_type>(value)} {}
+constexpr segment_index_t::segment_index_t(integral auto value_)
+    : value {narrow_integral<value_type>(value_)} {}
 
 constexpr segment_index_t::operator std::size_t() const {
     if (value < value_type {0}) [[unlikely]] {

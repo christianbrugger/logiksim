@@ -38,7 +38,7 @@ struct connection_count_t {
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
     [[nodiscard]] explicit constexpr connection_count_t() noexcept;
-    [[nodiscard]] explicit constexpr connection_count_t(integral auto value);
+    [[nodiscard]] explicit constexpr connection_count_t(integral auto value_);
     template <class Stored, Stored Min, Stored Max, class P, class E>
     [[nodiscard]] explicit constexpr connection_count_t(
         boost::safe_numerics::safe_base<Stored, Min, Max, P, E> value);

@@ -25,7 +25,7 @@ struct selection_id_t {
     static_assert(sizeof(difference_type) >= sizeof(value_type));
 
     [[nodiscard]] explicit constexpr selection_id_t() = default;
-    [[nodiscard]] explicit constexpr selection_id_t(integral auto value);
+    [[nodiscard]] explicit constexpr selection_id_t(integral auto value_);
     /**
      * @brief: The conversion to std::size_t
      *
@@ -63,8 +63,8 @@ static_assert(explicitly_convertible_to<selection_id_t, selection_id_t::differen
 // Implementation
 //
 
-constexpr selection_id_t::selection_id_t(integral auto value)
-    : value {narrow_integral<value_type>(value)} {}
+constexpr selection_id_t::selection_id_t(integral auto value_)
+    : value {narrow_integral<value_type>(value_)} {}
 
 constexpr selection_id_t::operator std::size_t() const {
     if (value < value_type {0}) [[unlikely]] {

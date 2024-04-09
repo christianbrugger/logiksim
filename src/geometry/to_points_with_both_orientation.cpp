@@ -26,7 +26,7 @@ struct point_and_orientation_t {
     [[nodiscard]] auto operator<=>(const point_and_orientation_t& other) const = default;
 };
 
-auto point_and_orientation_t::format() const -> std::string {
+inline auto point_and_orientation_t::format() const -> std::string {
     return fmt::format("{} {}", point, is_horizontal ? "horizontal" : "vertical");
 }
 
