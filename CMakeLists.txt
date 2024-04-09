@@ -662,7 +662,7 @@ if (LS_SANITIZE)
     add_link_options(-fno-sanitize-recover=all)
 endif()
 
-set(BLEND2D_NO_JIT ON)
+# set(BLEND2D_NO_JIT ON)
 
 
 

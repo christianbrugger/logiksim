@@ -167,9 +167,9 @@ template <typename Callback>
 concept action_callable = std::invocable<Callback> || std::invocable<Callback, bool>;
 
 struct ActionAttributes {
-    std::optional<QKeySequence> shortcut;
+    std::optional<QKeySequence> shortcut {};
     bool shortcut_auto_repeat {false};
-    std::optional<icon_t> icon;
+    std::optional<icon_t> icon {};
 };
 
 auto add_action_impl(QMenu* menu, const QString& text, ActionAttributes attributes,
