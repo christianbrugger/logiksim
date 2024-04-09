@@ -9,8 +9,8 @@
 #include "layout_message_forward.h"
 #include "layout_message_validator.h"
 
-#include <vector>
 #include <optional>
+#include <vector>
 
 namespace logicsim {
 

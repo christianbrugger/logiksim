@@ -22,7 +22,6 @@ namespace editable_circuit {
 
 struct CircuitData;
 
-
 namespace editing {
 
 //

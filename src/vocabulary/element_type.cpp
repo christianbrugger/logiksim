@@ -10,9 +10,9 @@ auto format(ElementType type) -> std::string {
     switch (type) {
         using enum ElementType;
 
-        //
-        // LogicItem Values
-        //
+            //
+            // LogicItem Values
+            //
 
         case buffer_element:
             return "Buffer";
@@ -49,9 +49,9 @@ auto format(ElementType type) -> std::string {
         case sub_circuit:
             return "SubCircuit";
 
-        //
-        // Additional Values
-        //
+            //
+            // Additional Values
+            //
 
         case unused:
             return "Unused";

@@ -130,5 +130,4 @@ struct ankerl::unordered_dense::hash<logicsim::logicitem_id_t> {
     }
 };
 
-
 #endif

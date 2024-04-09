@@ -142,7 +142,8 @@ auto input_locations_base(const layout_calculation_data_t& data) -> inputs_vecto
     return connectors;
 }
 
-auto output_locations_base(const layout_calculation_data_t& data [[maybe_unused]]) -> outputs_vector {
+auto output_locations_base(const layout_calculation_data_t& data [[maybe_unused]])
+    -> outputs_vector {
     return outputs_vector {};
 }
 

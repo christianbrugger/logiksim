@@ -10,7 +10,7 @@ template <std::input_iterator I1, std::sentinel_for<I1> S1, std::input_iterator 
           std::sentinel_for<I2> S2, class Comp = std::ranges::less,
           std::indirect_binary_predicate<I1, I2> Pred = std::ranges::equal_to>
 auto merged_any_of(I1 first1, S1 last1, I2 first2, S2 last2, Comp comp = {},
-                   Pred pred = {}) -> bool{
+                   Pred pred = {}) -> bool {
     while (first1 != last1 && first2 != last2) {
         if (std::invoke(pred, *first1, *first2)) {
             return true;

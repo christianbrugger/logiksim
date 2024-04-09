@@ -1,5 +1,4 @@
 #include "modifier.h"
-#include "modifier.h"
 
 #include "component/editable_circuit/editing/edit_logicitem.h"
 #include "component/editable_circuit/editing/edit_wire.h"
@@ -32,7 +31,6 @@ namespace {
 //
 // Modifier
 //
-
 
 namespace {
 

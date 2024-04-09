@@ -2,9 +2,9 @@
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_INSERT_WIRE_H
 
 #include "component/circuit_widget/mouse_logic/editing_logic_interface.h"
-#include "vocabulary/selection_id.h"
-#include "vocabulary/point.h"
 #include "vocabulary/line_insertion_type.h"
+#include "vocabulary/point.h"
+#include "vocabulary/selection_id.h"
 
 #include <optional>
 
@@ -34,6 +34,6 @@ class InsertWireLogic : public EditingLogicInterface {
 
 }  // namespace circuit_widget
 
-}
+}  // namespace logicsim
 
 #endif

@@ -69,7 +69,7 @@ auto WireStore::empty() const -> bool {
 }
 
 auto WireStore::allocated_size() const -> std::size_t {
-    return get_allocated_size(segment_trees_) +       //
+    return get_allocated_size(segment_trees_) +  //
            get_allocated_size(bounding_rects_);
 }
 

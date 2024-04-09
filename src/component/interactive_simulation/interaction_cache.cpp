@@ -1,8 +1,8 @@
 #include "component/interactive_simulation/interaction_cache.h"
 
+#include "format/std_type.h"
 #include "layout.h"
 #include "schematic_generation.h"
-#include "format/std_type.h"
 
 namespace logicsim {
 

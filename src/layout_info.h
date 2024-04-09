@@ -4,8 +4,8 @@
 #include "iterator_adaptor/enumerate.h"
 #include "iterator_adaptor/transform_view.h"
 #include "vocabulary/direction_type.h"
-#include "vocabulary/logicitem_type.h"
 #include "vocabulary/layout_info_vector.h"
+#include "vocabulary/logicitem_type.h"
 #include "vocabulary/orientation.h"
 
 #include <optional>

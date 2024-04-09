@@ -8,6 +8,6 @@ namespace logicsim {
 [[nodiscard]] auto get_random_bool(Rng& rng) -> bool;
 [[nodiscard]] auto get_random_bool(Rng& rng, double percentage) -> bool;
 
-}
+}  // namespace logicsim
 
 #endif

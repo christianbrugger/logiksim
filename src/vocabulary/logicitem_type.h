@@ -58,5 +58,4 @@ constexpr inline auto all_logicitem_types = std::array {
 
 }  // namespace logicsim
 
-
 #endif

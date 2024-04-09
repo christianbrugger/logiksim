@@ -4,7 +4,6 @@
 
 namespace logicsim {
 
-
 template <>
 auto format(DirectionType type) -> std::string {
     switch (type) {
@@ -20,4 +19,4 @@ auto format(DirectionType type) -> std::string {
     std::terminate();
 }
 
-}
+}  // namespace logicsim

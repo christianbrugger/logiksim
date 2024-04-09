@@ -1,8 +1,8 @@
 #include "render/primitive/arrow.h"
 
 #include "geometry/orientation.h"
-#include "render/context_guard.h"
 #include "render/context.h"
+#include "render/context_guard.h"
 #include "vocabulary/color.h"
 #include "vocabulary/grid_fine.h"
 #include "vocabulary/point.h"

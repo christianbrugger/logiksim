@@ -6,8 +6,8 @@
 
 #include <blend2d.h>
 
-#include <stdexcept>
 #include <exception>
+#include <stdexcept>
 
 namespace logicsim {
 

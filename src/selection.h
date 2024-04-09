@@ -76,13 +76,11 @@ class Selection {
 
    private:
     auto handle(const info_message::LogicItemDeleted &message) -> void;
-    auto handle(const info_message::LogicItemIdUpdated &message)
-        -> void;
+    auto handle(const info_message::LogicItemIdUpdated &message) -> void;
 
     auto handle(const info_message::SegmentIdUpdated &message) -> void;
     auto handle(const info_message::SegmentPartMoved &message) -> void;
-    auto handle(const info_message::SegmentPartDeleted &message)
-        -> void;
+    auto handle(const info_message::SegmentPartDeleted &message) -> void;
 
     [[nodiscard]] auto class_invariant_holds() const -> bool;
 

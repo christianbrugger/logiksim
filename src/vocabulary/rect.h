@@ -4,9 +4,9 @@
 #include "format/struct.h"
 #include "vocabulary/point.h"
 
+#include <compare>
 #include <stdexcept>
 #include <type_traits>
-#include <compare>
 
 namespace logicsim {
 

@@ -30,7 +30,7 @@ TEST(LogicItemSchematicInfo, LogicItemTypeConversion) {
 }
 
 TEST(LogicItemSchematicInfo, IsInputOutputCountValid) {
-    //make sure no terminate is triggered
+    // make sure no terminate is triggered
     for (auto element_type : all_element_types) {
         static_cast<void>(is_input_output_count_valid(
             element_type, connection_count_t {1}, connection_count_t {0}));

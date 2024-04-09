@@ -1,8 +1,9 @@
 #include "random/generator.h"
 
 #include <boost/random/seed_seq.hpp>
-#include <random>
+
 #include <array>
+#include <random>
 
 namespace logicsim {
 
@@ -18,5 +19,4 @@ auto get_random_number_generator(uint32_t seed) -> Rng {
     return Rng {seed};
 }
 
-
-}
+}  // namespace logicsim

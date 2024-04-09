@@ -7,7 +7,7 @@ namespace logicsim {
 
 /**
  * @brief: Vector of logic values
- * 
+ *
  * Note this is a replacement for std::vector<bool>
  */
 using logic_vector_t = boost::container::vector<bool>;

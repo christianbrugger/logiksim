@@ -136,8 +136,7 @@ auto transform(orientation_t element_orientation, orientation_t connector)
     std::terminate();
 }
 
-auto transform(point_t position, orientation_t orientation, rect_t rect)
-    -> rect_t {
+auto transform(point_t position, orientation_t orientation, rect_t rect) -> rect_t {
     switch (orientation) {
         using enum orientation_t;
 

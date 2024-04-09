@@ -295,14 +295,12 @@ auto SpatialIndex::operator==(const SpatialIndex& other) const -> bool {
     return *tree_ == *other.tree_;
 }
 
-auto SpatialIndex::handle(
-    const info_message::LogicItemInserted& message) -> void {
+auto SpatialIndex::handle(const info_message::LogicItemInserted& message) -> void {
     const auto box = spatial_index::get_selection_box(message.data);
     tree_->value.insert({box, value_t {message.logicitem_id}});
 }
 
-auto SpatialIndex::handle(
-    const info_message::LogicItemUninserted& message) -> void {
+auto SpatialIndex::handle(const info_message::LogicItemUninserted& message) -> void {
     const auto box = spatial_index::get_selection_box(message.data);
     const auto remove_count = tree_->value.remove({box, value_t {message.logicitem_id}});
 
@@ -311,8 +309,8 @@ auto SpatialIndex::handle(
     }
 }
 
-auto SpatialIndex::handle(
-    const info_message::InsertedLogicItemIdUpdated& message) -> void {
+auto SpatialIndex::handle(const info_message::InsertedLogicItemIdUpdated& message)
+    -> void {
     using namespace info_message;
 
     // r-tree data is immutable
@@ -320,14 +318,12 @@ auto SpatialIndex::handle(
     handle(LogicItemInserted {message.new_logicitem_id, message.data});
 }
 
-auto SpatialIndex::handle(const info_message::SegmentInserted& message)
-    -> void {
+auto SpatialIndex::handle(const info_message::SegmentInserted& message) -> void {
     const auto box = spatial_index::get_selection_box(message.segment_info.line);
     tree_->value.insert({box, value_t {message.segment}});
 }
 
-auto SpatialIndex::handle(
-    const info_message::SegmentUninserted& message) -> void {
+auto SpatialIndex::handle(const info_message::SegmentUninserted& message) -> void {
     const auto box = spatial_index::get_selection_box(message.segment_info.line);
     const auto remove_count = tree_->value.remove({box, value_t {message.segment}});
 
@@ -336,8 +332,7 @@ auto SpatialIndex::handle(
     }
 }
 
-auto SpatialIndex::handle(
-    const info_message::InsertedSegmentIdUpdated& message) -> void {
+auto SpatialIndex::handle(const info_message::InsertedSegmentIdUpdated& message) -> void {
     using namespace info_message;
 
     // r-tree data is immutable

@@ -134,8 +134,7 @@ TEST(SimulationHistoryIndex, OperatorsOverflow) {
     // integral + history_index_t
     EXPECT_THROW(static_cast<void>(value_max + history_index_t {1}), std::exception);
     EXPECT_THROW(static_cast<void>(1 + history_index_t::max()), std::exception);
-    EXPECT_THROW(static_cast<void>(value_min + history_index_t {-1}),
-                 std::exception);
+    EXPECT_THROW(static_cast<void>(value_min + history_index_t {-1}), std::exception);
 }
 
 }  // namespace simulation

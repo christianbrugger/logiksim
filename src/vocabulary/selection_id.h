@@ -49,8 +49,8 @@ struct selection_id_t {
 
     [[nodiscard]] static constexpr auto max() noexcept -> selection_id_t;
 
-    constexpr auto operator++()->selection_id_t&;
-    constexpr auto operator++(int)->selection_id_t;
+    constexpr auto operator++() -> selection_id_t&;
+    constexpr auto operator++(int) -> selection_id_t;
 };
 
 static_assert(std::is_trivial_v<selection_id_t>);

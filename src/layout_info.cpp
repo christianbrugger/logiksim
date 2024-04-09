@@ -40,13 +40,15 @@ auto button_body_overdraw() -> grid_fine_t {
 // Validation
 //
 
-auto is_input_output_count_valid(LogicItemType logicitem_type, connection_count_t input_count,
+auto is_input_output_count_valid(LogicItemType logicitem_type,
+                                 connection_count_t input_count,
                                  connection_count_t output_count) -> bool {
     return layout_info::is_input_output_count_valid(logicitem_type, input_count,
                                                     output_count);
 }
 
-auto is_orientation_valid(LogicItemType logicitem_type, orientation_t orientation) -> bool {
+auto is_orientation_valid(LogicItemType logicitem_type, orientation_t orientation)
+    -> bool {
     const auto info = get_layout_info(logicitem_type);
 
     switch (info.direction_type) {
@@ -112,7 +114,8 @@ auto element_direction_type(LogicItemType logicitem_type) -> DirectionType {
     return get_layout_info(logicitem_type).direction_type;
 }
 
-auto element_enable_input_id(LogicItemType logicitem_type) -> std::optional<connection_id_t> {
+auto element_enable_input_id(LogicItemType logicitem_type)
+    -> std::optional<connection_id_t> {
     return get_layout_info(logicitem_type).enable_input_id;
 }
 

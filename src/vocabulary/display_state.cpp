@@ -1,7 +1,7 @@
 #include "vocabulary/display_state.h"
 
-#include <string>
 #include <exception>
+#include <string>
 
 namespace logicsim {
 

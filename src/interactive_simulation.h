@@ -33,10 +33,10 @@ class InteractiveSimulation {
    public:
     [[nodiscard]] explicit InteractiveSimulation();
     [[nodiscard]] explicit InteractiveSimulation(SpatialSimulation&& spatial_simulation,
-                          time_rate_t simulation_time_rate);
+                                                 time_rate_t simulation_time_rate);
     [[nodiscard]] explicit InteractiveSimulation(Layout&& layout,
                                                  delay_t wire_delay_per_distance,
-                          time_rate_t simulation_time_rate);
+                                                 time_rate_t simulation_time_rate);
 
     [[nodiscard]] auto spatial_simulation() const -> const SpatialSimulation&;
     [[nodiscard]] auto layout() const -> const Layout&;

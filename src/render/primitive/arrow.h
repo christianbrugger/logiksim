@@ -13,6 +13,6 @@ struct Context;
 auto draw_arrow(Context& ctx, point_t point, color_t color, orientation_t orientation,
                 grid_fine_t size) -> void;
 
-}
+}  // namespace logicsim
 
 #endif

@@ -36,7 +36,6 @@ static_assert(std::is_trivially_copy_assignable_v<length_t>);
 [[nodiscard]] constexpr auto operator-(const length_t &left, const length_t &right)
     -> length_t;
 
-
 //
 // Implementation
 //
@@ -64,7 +63,6 @@ constexpr auto length_t::operator-=(const length_t &right) -> length_t & {
 //
 // Free Functions
 //
-
 
 constexpr auto operator+(const length_t &left, const length_t &right) -> length_t {
     auto result = left;

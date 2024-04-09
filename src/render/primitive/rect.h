@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_RENDER_PRIMITIVE_RECT_H
 #define LOGICSIM_RENDER_PRIMITIVE_RECT_H
 
-#include "vocabulary/shape_draw_type.h"
 #include "render/primitive/stroke.h"
 #include "vocabulary/color.h"
+#include "vocabulary/shape_draw_type.h"
 
 namespace logicsim {
 
@@ -19,7 +19,6 @@ struct RectAttributes {
 
 auto draw_rect(Context& ctx, rect_fine_t rect, RectAttributes attributes) -> void;
 
-
-}
+}  // namespace logicsim
 
 #endif

@@ -2,6 +2,7 @@
 #define LOGICSIM_VOCABULARY_WIDGET_RENDER_CONFIG_H
 
 #include "format/struct.h"
+
 #include <type_traits>
 
 namespace logicsim {

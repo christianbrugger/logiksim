@@ -5,9 +5,9 @@
 #include "random/bool.h"
 #include "random/grid.h"
 #include "random/part.h"
-#include "vocabulary/wire_id.h"
 #include "vocabulary/segment_index.h"
 #include "vocabulary/segment_part.h"
+#include "vocabulary/wire_id.h"
 
 #include <stdexcept>
 
@@ -43,7 +43,8 @@ auto get_random_segment(Rng& rng, const Layout& layout) -> segment_t {
         return null_segment;
     }
 
-    const auto segment_index = get_random_segment(rng, layout.wires().segment_tree(wire_id));
+    const auto segment_index =
+        get_random_segment(rng, layout.wires().segment_tree(wire_id));
     if (!segment_index) [[unlikely]] {
         throw std::runtime_error("should always return a valid index");
     }

@@ -8,10 +8,10 @@
 #include "vocabulary/connection_count.h"
 #include "vocabulary/connector_info.h"
 #include "vocabulary/direction_type.h"
-#include "vocabulary/logicitem_type.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/layout_info_vector.h"
+#include "vocabulary/logicitem_type.h"
 #include "vocabulary/point.h"
 
 #include <concepts>
@@ -452,13 +452,11 @@ using static_body_points_t = static_vector<point_t, static_body_point_count, uin
 [[nodiscard]] auto element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector;
 
-
 namespace layout_info {
 [[nodiscard]] auto is_input_output_count_valid(LogicItemType logicitem_type,
                                                connection_count_t input_count,
                                                connection_count_t output_count) -> bool;
 }
-
 
 }  // namespace logicsim
 

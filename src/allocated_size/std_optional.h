@@ -3,8 +3,8 @@
 
 #include "allocated_size/trait.h"
 
-#include <type_traits>
 #include <optional>
+#include <type_traits>
 
 namespace logicsim {
 

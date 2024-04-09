@@ -2,12 +2,13 @@
 #define LOGICSIM_VOCABULARY_DISPLAY_STATE_MAP_H
 
 #include "container/enum_map.h"
-#include "vocabulary/display_state.h"
 #include "format/container.h"
+#include "vocabulary/display_state.h"
 
 #include <fmt/core.h>
-#include <vector>
+
 #include <algorithm>
+#include <vector>
 
 namespace logicsim {
 

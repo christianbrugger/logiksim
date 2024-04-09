@@ -9,6 +9,7 @@ struct Context;
 namespace defaults {
 constexpr inline static auto use_view_config_stroke_width = int {-1};
 }  // namespace defaults
+
 auto resolve_stroke_width(int attribute, const ViewConfig& view_config) -> int;
 auto resolve_stroke_width(int attribute, const Context& ctx) -> int;
 

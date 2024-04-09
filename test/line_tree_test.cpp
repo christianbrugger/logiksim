@@ -1,5 +1,6 @@
 
 #include "line_tree.h"
+
 #include "logging.h"
 
 #include <gmock/gmock.h>
@@ -355,9 +356,9 @@ TEST(LineTree2, MergeWithLoop) {
 }
 
 TEST(LineTree2, MergeTwoSidesLoop) {
-    auto tree1 = LineTree2({point_t {1, 0}, point_t {2, 0}, point_t {2, 1}, point_t {3, 1},
-                           point_t {3, 0}, point_t {4, 0}});
-    auto tree2 = LineTree2({point_t {0, 0}, point_t {4, 0}});
+    auto tree1 = LineTree2({point_t {1, 0}, point_t {2, 0}, point_t {2, 1}, point_t {3,
+1}, point_t {3, 0}, point_t {4, 0}}); auto tree2 = LineTree2({point_t {0, 0}, point_t {4,
+0}});
 
     auto tree = merge({tree1, tree2});
     ASSERT_EQ(tree, std::nullopt);

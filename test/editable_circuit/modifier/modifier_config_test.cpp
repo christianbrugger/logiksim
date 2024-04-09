@@ -108,7 +108,6 @@ TEST(ECModifierConfig, VerifyEditableCircuitNDEBUG2) {
     ASSERT_EQ(circuit.messages.has_value(), false);
 }
 
-
 }  // namespace editable_circuit
 
 }  // namespace logicsim

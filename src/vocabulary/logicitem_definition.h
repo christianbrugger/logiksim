@@ -5,8 +5,8 @@
 #include "vocabulary/circuit_id.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/delay.h"
-#include "vocabulary/logicitem_type.h"
 #include "vocabulary/logic_small_vector.h"
+#include "vocabulary/logicitem_type.h"
 #include "vocabulary/orientation.h"
 
 #include <compare>
@@ -58,7 +58,8 @@ struct LogicItemDefinition {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const LogicItemDefinition& other) const -> bool = default;
+    [[nodiscard]] auto operator==(const LogicItemDefinition& other) const
+        -> bool = default;
     [[nodiscard]] auto operator<=>(const LogicItemDefinition& other) const = default;
 };
 

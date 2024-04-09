@@ -2,8 +2,8 @@
 
 #include "layout_info.h"
 #include "random/connection_count.h"
-#include "random/logicitem_type.h"
 #include "random/internal_state_count.h"
+#include "random/logicitem_type.h"
 #include "random/orientation.h"
 #include "random/point.h"
 #include "vocabulary/layout_calculation_data.h"
