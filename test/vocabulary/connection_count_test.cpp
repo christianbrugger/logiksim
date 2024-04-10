@@ -14,7 +14,7 @@ TEST(VocabularyConnectionCount, Overflow) {
                  std::runtime_error);
     EXPECT_THROW(static_cast<void>(connection_count_t {-1}), std::runtime_error);
 
-    // size_t
+    // std::size_t
     EXPECT_EQ(std::size_t {connection_count_t {10}}, std::size_t {10});
     // count
     EXPECT_EQ(std::size_t {connection_count_t {10}.count()}, 10);

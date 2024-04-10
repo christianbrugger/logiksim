@@ -892,14 +892,16 @@ auto MainWidget::save_gui_state() -> void {
     // geometry
     {
         const auto bytes = saveGeometry();
-        const auto string = std::string {bytes.data(), gsl::narrow<size_t>(bytes.size())};
+        const auto string =
+            std::string {bytes.data(), gsl::narrow<std::size_t>(bytes.size())};
         save_file(get_writable_setting_path(setting_t::gui_geometry), string);
     }
 
     // state
     {
         const auto bytes = saveState();
-        const auto string = std::string {bytes.data(), gsl::narrow<size_t>(bytes.size())};
+        const auto string =
+            std::string {bytes.data(), gsl::narrow<std::size_t>(bytes.size())};
         save_file(get_writable_setting_path(setting_t::gui_state), string);
     }
 }

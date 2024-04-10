@@ -422,7 +422,7 @@ auto Modifier::add_visible_selection_rect(SelectionFunction function, rect_fine_
 }
 
 auto Modifier::try_pop_last_visible_selection_rect() -> bool {
-    if (circuit_data_.visible_selection.operation_count() == size_t {0}) {
+    if (circuit_data_.visible_selection.operation_count() == std::size_t {0}) {
         return false;
     }
     circuit_data_.visible_selection.pop_last();
@@ -432,7 +432,7 @@ auto Modifier::try_pop_last_visible_selection_rect() -> bool {
 }
 
 auto Modifier::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool {
-    if (circuit_data_.visible_selection.operation_count() == size_t {0}) {
+    if (circuit_data_.visible_selection.operation_count() == std::size_t {0}) {
         return false;
     }
     circuit_data_.visible_selection.update_last(rect);

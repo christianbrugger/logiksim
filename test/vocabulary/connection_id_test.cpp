@@ -9,7 +9,7 @@ TEST(VocabularyConnectionId, Overflow) {
     EXPECT_EQ(bool {null_connection_id}, false);
     EXPECT_EQ(bool {connection_id_t {10}}, true);
 
-    // size_t
+    // std::size_t
     EXPECT_EQ(std::size_t {connection_id_t {10}}, std::size_t {10});
     EXPECT_THROW(static_cast<void>(std::size_t {null_connection_id}), std::runtime_error);
 

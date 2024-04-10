@@ -1,5 +1,9 @@
 #include "algorithm/u8_conversion.h"
 
+#include <algorithm>
+#include <string>
+#include <string_view>
+
 namespace logicsim {
 
 auto to_u8string(std::string_view text) -> std::u8string {

@@ -9,7 +9,7 @@ TEST(VocabularySegmentIndex, Overflow) {
     EXPECT_EQ(bool {null_segment_index}, false);
     EXPECT_EQ(bool {segment_index_t {10}}, true);
 
-    // size_t
+    // std::size_t
     EXPECT_EQ(std::size_t {segment_index_t {10}}, std::size_t {10});
     EXPECT_THROW(static_cast<void>(std::size_t {null_segment_index}), std::runtime_error);
 

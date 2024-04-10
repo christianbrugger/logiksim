@@ -11,7 +11,7 @@ TEST(VocabularyElementId, Overflow) {
     EXPECT_EQ(bool {null_element}, false);
     EXPECT_EQ(bool {element_id_t {10}}, true);
 
-    // size_t
+    // std::size_t
     EXPECT_EQ(std::size_t {element_id_t {10}}, std::size_t {10});
     EXPECT_THROW(static_cast<void>(std::size_t {null_element}), std::runtime_error);
 

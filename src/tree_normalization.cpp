@@ -100,7 +100,7 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
 }
 
 [[nodiscard]] auto find_root_index(const ValidationGraph& graph)
-    -> std::optional<size_t> {
+    -> std::optional<std::size_t> {
     for (auto index : graph.indices()) {
         if (is_leaf(graph, index)) {
             return index;
@@ -204,7 +204,7 @@ auto has_same_inputs_outputs(const SegmentTree& tree, const ValidationGraph& gra
     add_points_of_type(tree_points, tree, SegmentPointType::output);
 
     assert(tree_points.size() ==
-           size_t {tree.input_count()} + size_t {tree.output_count()});
+           std::size_t {tree.input_count()} + std::size_t {tree.output_count()});
 
     // graph
     auto graph_points = std::vector<point_t> {};

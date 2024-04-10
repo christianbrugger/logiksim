@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_ALGORITHM_MERGED_FOR_EACH_H
 #define LOGICSIM_ALGORITHM_MERGED_FOR_EACH_H
 
+#include <functional>
 #include <iterator>
 #include <ranges>
 

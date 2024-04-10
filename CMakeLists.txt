@@ -542,8 +542,17 @@ if (MSVC)
     endif()
 else()
     # -Wthread-safety 
-    list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 
+    list(APPEND MAIN_COMPILE_OPTIONS -W -Wall -Wextra -Wshadow -Werror 
                              -Wstrict-aliasing) # -Wconversion) # -Wsign-conversion)
+
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
+        (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
+        # g++ generates those in library headers for sanitized builds
+        list(APPEND MAIN_COMPILE_OPTIONS -Wno-maybe-uninitialized)
+        # also happens in benchmark which uses Werror
+        set(BENCHMARK_ENABLE_WERROR OFF)
+    endif()
 endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # clang 16 warns on brace elision, why?
@@ -655,7 +664,7 @@ elseif(LS_SANITIZE STREQUAL "Thread")
     add_compile_options(-fsanitize=thread)
     add_link_options(-fsanitize=thread)
 else()
-    message(FATAL_ERROR "Unknown LS_SANITIZE Option")
+    message(FATAL_ERROR "Unknown LS_SANITIZE Option: ${LS_SANITIZE}")
 endif()
 if (LS_SANITIZE)
     add_compile_options(-fno-sanitize-recover=all -fno-omit-frame-pointer -g) 

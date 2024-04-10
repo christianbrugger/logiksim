@@ -7,7 +7,7 @@
 
 namespace logicsim {
 
-template <typename Enum, size_t MaxValue, typename Value>
+template <typename Enum, std::size_t MaxValue, typename Value>
 class EnumMap {
    public:
     [[nodiscard]] auto at(Enum key) -> Value&;
@@ -21,12 +21,12 @@ class EnumMap {
 // Implementation
 //
 
-template <typename Enum, size_t MaxValue, typename Value>
+template <typename Enum, std::size_t MaxValue, typename Value>
 auto EnumMap<Enum, MaxValue, Value>::at(Enum key) -> Value& {
     return storage_.at(to_underlying(key));
 }
 
-template <typename Enum, size_t MaxValue, typename Value>
+template <typename Enum, std::size_t MaxValue, typename Value>
 auto EnumMap<Enum, MaxValue, Value>::at(Enum key) const -> const Value& {
     return storage_.at(to_underlying(key));
 }

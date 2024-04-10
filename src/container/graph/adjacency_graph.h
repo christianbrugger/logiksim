@@ -60,7 +60,7 @@ class AdjacencyGraph {
 
    private:
     // assumes point is part of graph
-    [[nodiscard]] auto to_index_unchecked(point_t _point) const -> size_t;
+    [[nodiscard]] auto to_index_unchecked(point_t _point) const -> std::size_t;
     // assumes both endpoints are part of graph
     auto add_edge_unchecked(const line_t& segment) -> void;
     auto sort_adjacency() -> void;
@@ -149,7 +149,7 @@ auto AdjacencyGraph<index_t>::to_index(point_t _point) const -> std::optional<in
 
 // assumes point is part of graph
 template <typename index_t>
-auto AdjacencyGraph<index_t>::to_index_unchecked(point_t _point) const -> size_t {
+auto AdjacencyGraph<index_t>::to_index_unchecked(point_t _point) const -> std::size_t {
     auto found = std::ranges::lower_bound(points_, _point);
     assert(found != points_.end());
     return found - points_.begin();

@@ -147,7 +147,7 @@ auto VisibleSelection::set_selection(Selection selection__) -> void {
     Ensures(class_invariant_holds());
 }
 
-auto VisibleSelection::operation_count() const -> size_t {
+auto VisibleSelection::operation_count() const -> std::size_t {
     Expects(class_invariant_holds());
 
     return operations_.size();

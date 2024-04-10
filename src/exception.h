@@ -11,16 +11,20 @@ namespace detail {
 [[noreturn]] auto throw_exception_impl(const char* msg) -> void;
 }
 
-[[noreturn]] constexpr auto throw_exception(const char* msg) -> void {
-    if (std::is_constant_evaluated()) {
-        // to make it not ill-formed until P2448R2 is implemented in C++23
-        if (msg != nullptr) {
-            detail::throw_exception_impl(msg);
-        }
-    } else {
-        detail::throw_exception_impl(msg);
-    }
+[[noreturn]] inline auto throw_exception(const char* msg) -> void {
+    detail::throw_exception_impl(msg);
 }
+
+// [[noreturn]] constexpr auto throw_exception(const char* msg) -> void {
+//     if (std::is_constant_evaluated()) {
+//         // to make it not ill-formed until P2448R2 is implemented in C++23
+//         if (msg != nullptr) {
+//             detail::throw_exception_impl(msg);
+//         }
+//     } else {
+//         detail::throw_exception_impl(msg);
+//     }
+// }
 
 // constexpr void assert_ls(bool value, const char* msg = nullptr) {
 // #ifndef NDEBUG

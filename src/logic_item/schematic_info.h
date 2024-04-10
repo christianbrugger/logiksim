@@ -6,6 +6,8 @@
 #include "vocabulary/internal_connections.h"
 #include "vocabulary/logicitem_type.h"
 
+#include <optional>
+
 namespace logicsim {
 
 [[nodiscard]] auto to_element_type(LogicItemType logicitem_type) -> ElementType;

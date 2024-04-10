@@ -103,11 +103,11 @@ auto inserted_wire_ids(const Layout &layout) -> range_extended_t<wire_id_t> {
 
 auto is_id_valid(logicitem_id_t logicitem_id, const Layout &layout) -> bool {
     return logicitem_id >= logicitem_id_t {0} &&
-           size_t {logicitem_id} < layout.logic_items().size();
+           std::size_t {logicitem_id} < layout.logic_items().size();
 }
 
 auto is_id_valid(wire_id_t wire_id, const Layout &layout) -> bool {
-    return wire_id >= wire_id_t {0} && size_t {wire_id} < layout.wires().size();
+    return wire_id >= wire_id_t {0} && std::size_t {wire_id} < layout.wires().size();
 }
 
 auto is_segment_valid(segment_t segment, const Layout &layout) -> bool {
