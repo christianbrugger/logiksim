@@ -96,7 +96,7 @@ TEST(ECModifierConfig, VerifyEditableCircuitNDEBUG1) {
 }
 
 TEST(ECModifierConfig, VerifyEditableCircuitNDEBUG2) {
-    const auto editable_circuit = EditableCircuit {Layout {}};
+    const auto editable_circuit = EditableCircuit {};
     Expects(is_valid(editable_circuit));
     const auto &circuit = editable_circuit.modifier().circuit_data();
 

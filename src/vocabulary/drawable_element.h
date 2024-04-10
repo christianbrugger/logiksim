@@ -6,6 +6,7 @@
 #include "vocabulary/logicitem_id.h"
 
 #include <string>
+#include <type_traits>
 
 namespace logicsim {
 
@@ -23,6 +24,7 @@ struct DrawableElement {
 };
 
 static_assert(sizeof(DrawableElement) == 8);
+static_assert(std::is_aggregate_v<DrawableElement>);
 
 }  // namespace logicsim
 

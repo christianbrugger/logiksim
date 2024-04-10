@@ -19,7 +19,7 @@ namespace logicsim {
  */
 struct segment_index_t {
     using value_type = int32_t;
-    value_type value;
+    value_type value {-1};
 
     using difference_type = safe_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
@@ -55,8 +55,6 @@ struct segment_index_t {
     constexpr auto operator--(int) -> segment_index_t;
 };
 
-static_assert(std::is_trivial_v<segment_index_t>);
-static_assert(std::is_trivially_constructible_v<segment_index_t>);
 static_assert(std::is_trivially_copyable_v<segment_index_t>);
 static_assert(std::is_trivially_copy_assignable_v<segment_index_t>);
 static_assert(
@@ -125,6 +123,7 @@ constexpr auto segment_index_t::operator--(int) -> segment_index_t {
 //
 
 inline constexpr auto null_segment_index = segment_index_t {-1};
+static_assert(null_segment_index == segment_index_t {});
 
 }  // namespace logicsim
 

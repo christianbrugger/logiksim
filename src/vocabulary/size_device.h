@@ -14,8 +14,8 @@ namespace logicsim {
 struct size_device_t {
     using value_type = int;
 
-    value_type width;
-    value_type height;
+    value_type width {0};
+    value_type height {0};
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -24,7 +24,8 @@ struct size_device_t {
     [[nodiscard]] constexpr auto operator<=>(const size_device_t &other) const = default;
 };
 
-static_assert(std::is_trivial_v<size_device_t>);
+static_assert(std::is_trivially_copyable_v<size_device_t>);
+static_assert(std::is_trivially_copy_assignable_v<size_device_t>);
 
 }  // namespace logicsim
 

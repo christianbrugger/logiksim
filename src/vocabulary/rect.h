@@ -19,8 +19,8 @@ namespace logicsim {
  *         * p0.y <= p1.y
  */
 struct rect_t {
-    point_t p0;
-    point_t p1;
+    point_t p0 {};
+    point_t p1 {};
 
     [[nodiscard]] explicit constexpr rect_t() = default;
     [[nodiscard]] explicit constexpr rect_t(point_t p0_, point_t p1_);
@@ -31,8 +31,6 @@ struct rect_t {
     [[nodiscard]] constexpr auto operator<=>(const rect_t &other) const = default;
 };
 
-static_assert(std::is_trivial_v<rect_t>);
-static_assert(std::is_trivially_constructible_v<rect_t>);
 static_assert(std::is_trivially_copyable_v<rect_t>);
 static_assert(std::is_trivially_copy_assignable_v<rect_t>);
 

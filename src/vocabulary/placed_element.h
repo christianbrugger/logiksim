@@ -6,6 +6,7 @@
 #include "vocabulary/point.h"
 
 #include <compare>
+#include <type_traits>
 
 namespace logicsim {
 
@@ -18,6 +19,8 @@ struct PlacedElement {
     [[nodiscard]] auto operator==(const PlacedElement& other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const PlacedElement&) const = default;
 };
+
+static_assert(std::is_aggregate_v<PlacedElement>);
 
 }  // namespace logicsim
 

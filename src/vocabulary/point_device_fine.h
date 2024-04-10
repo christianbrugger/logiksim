@@ -14,8 +14,8 @@ namespace logicsim {
 struct point_device_fine_t {
     using value_type = double;
 
-    value_type x;
-    value_type y;
+    value_type x {0};
+    value_type y {0};
 
     [[nodiscard]] explicit constexpr point_device_fine_t() = default;
     [[nodiscard]] explicit constexpr point_device_fine_t(value_type x_,
@@ -30,7 +30,7 @@ struct point_device_fine_t {
         default;
 };
 
-static_assert(std::is_trivial_v<point_device_fine_t>);
+static_assert(std::is_trivially_copyable_v<point_device_fine_t>);
 
 //
 // Implementation

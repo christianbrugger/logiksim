@@ -16,8 +16,8 @@ namespace logicsim {
  * @brief: A continuous 2-d position on the grid.
  */
 struct point_fine_t {
-    grid_fine_t x;
-    grid_fine_t y;
+    grid_fine_t x {};
+    grid_fine_t y {};
 
     [[nodiscard]] explicit constexpr point_fine_t() = default;
     [[nodiscard]] explicit constexpr point_fine_t(grid_fine_like auto x_,
@@ -34,8 +34,6 @@ struct point_fine_t {
     constexpr auto operator-=(const point_fine_t &other) -> point_fine_t &;
 };
 
-static_assert(std::is_trivial_v<point_fine_t>);
-static_assert(std::is_trivially_constructible_v<point_fine_t>);
 static_assert(std::is_trivially_copyable_v<point_fine_t>);
 static_assert(std::is_trivially_copy_assignable_v<point_fine_t>);
 

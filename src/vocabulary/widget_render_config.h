@@ -21,6 +21,7 @@ struct WidgetRenderConfig {
     [[nodiscard]] auto operator==(const WidgetRenderConfig &) const -> bool = default;
 };
 
+static_assert(std::is_aggregate_v<WidgetRenderConfig>);
 static_assert(std::regular<WidgetRenderConfig>);
 
 }  // namespace logicsim

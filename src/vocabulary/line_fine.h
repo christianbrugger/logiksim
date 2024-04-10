@@ -20,8 +20,8 @@ namespace logicsim {
  *     * line has positive length, p0 != p1
  */
 struct line_fine_t {
-    point_fine_t p0;
-    point_fine_t p1;
+    point_fine_t p0 {};
+    point_fine_t p1 {};
 
     [[nodiscard]] explicit constexpr line_fine_t() = default;
 
@@ -38,8 +38,6 @@ struct line_fine_t {
     [[nodiscard]] constexpr auto operator<=>(const line_fine_t &other) const = default;
 };
 
-static_assert(std::is_trivial_v<line_fine_t>);
-static_assert(std::is_trivially_constructible_v<line_fine_t>);
 static_assert(std::is_trivially_copyable_v<line_fine_t>);
 static_assert(std::is_trivially_copy_assignable_v<line_fine_t>);
 

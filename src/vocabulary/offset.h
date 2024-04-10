@@ -21,7 +21,7 @@ namespace logicsim {
 struct offset_t {
     using value_type = std::make_unsigned_t<grid_t::value_type>;
     static_assert(sizeof(offset_t::value_type) == sizeof(grid_t::value_type));
-    value_type value;
+    value_type value {0};
 
     using difference_type = safe_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
@@ -52,8 +52,6 @@ struct offset_t {
     constexpr auto operator--(int) -> offset_t;
 };
 
-static_assert(std::is_trivial_v<offset_t>);
-static_assert(std::is_trivially_constructible_v<offset_t>);
 static_assert(std::is_trivially_copyable_v<offset_t>);
 static_assert(std::is_trivially_copy_assignable_v<offset_t>);
 static_assert(std::is_standard_layout_v<offset_t>);

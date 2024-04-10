@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_ALLOCATED_SIZE_STD_VECTOR_H
 #define LOGICSIM_ALLOCATED_SIZE_STD_VECTOR_H
 
+#include "algorithm/accumulate.h"
 #include "allocated_size/trait.h"
 
 #include <type_traits>
@@ -16,9 +17,9 @@ struct AllocatedSizeTrait<std::vector<Value>> {
         auto count = std::size_t {container.capacity() * sizeof(Value)};
 
         if constexpr (!std::is_trivially_copyable_v<Value>) {
-            for (const auto& elem : container) {
-                count += get_allocated_size(elem);
-            }
+            count += accumulate(container, std::size_t {0}, [](const Value& item) {
+                return get_allocated_size(item);
+            });
         }
 
         return count;

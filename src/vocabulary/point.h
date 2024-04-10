@@ -15,8 +15,8 @@ namespace logicsim {
  * @brief: A discrete 2-d position on the grid.
  */
 struct point_t {
-    grid_t x;
-    grid_t y;
+    grid_t x {};
+    grid_t y {};
 
     [[nodiscard]] explicit constexpr point_t() = default;
     [[nodiscard]] explicit constexpr point_t(grid_like auto x_, grid_like auto y_);
@@ -30,8 +30,6 @@ struct point_t {
     constexpr auto operator-=(const point_t &other) -> point_t &;
 };
 
-static_assert(std::is_trivial_v<point_t>);
-static_assert(std::is_trivially_constructible_v<point_t>);
 static_assert(std::is_trivially_copyable_v<point_t>);
 static_assert(std::is_trivially_copy_assignable_v<point_t>);
 

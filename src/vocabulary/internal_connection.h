@@ -5,6 +5,7 @@
 #include "vocabulary/connection_id.h"
 
 #include <compare>
+#include <type_traits>
 
 namespace logicsim {
 
@@ -17,6 +18,8 @@ struct internal_connection_t {
     [[nodiscard]] auto operator==(const internal_connection_t&) const -> bool = default;
     [[nodiscard]] auto operator<=>(const internal_connection_t&) const = default;
 };
+
+static_assert(std::is_aggregate_v<internal_connection_t>);
 
 }  // namespace logicsim
 

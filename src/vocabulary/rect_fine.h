@@ -20,8 +20,8 @@ namespace logicsim {
  *         * p0.y <= p1.y
  */
 struct rect_fine_t {
-    point_fine_t p0;
-    point_fine_t p1;
+    point_fine_t p0 {};
+    point_fine_t p1 {};
 
     [[nodiscard]] explicit constexpr rect_fine_t() = default;
     [[nodiscard]] explicit constexpr rect_fine_t(rect_t rect) noexcept;
@@ -38,8 +38,6 @@ struct rect_fine_t {
     constexpr auto operator-=(const point_fine_like auto &other) -> rect_fine_t &;
 };
 
-static_assert(std::is_trivial_v<rect_fine_t>);
-static_assert(std::is_trivially_constructible_v<rect_fine_t>);
 static_assert(std::is_trivially_copyable_v<rect_fine_t>);
 static_assert(std::is_trivially_copy_assignable_v<rect_fine_t>);
 

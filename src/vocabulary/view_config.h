@@ -8,6 +8,7 @@
 
 #include <compare>
 #include <string>
+#include <type_traits>
 
 namespace logicsim {
 
@@ -21,6 +22,8 @@ struct ViewPoint {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const ViewPoint&) const -> bool = default;
 };
+
+static_assert(std::is_aggregate_v<ViewPoint>);
 
 /**
  * brief: Defines the rendered area of the grid and how it relates to

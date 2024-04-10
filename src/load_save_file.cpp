@@ -38,7 +38,7 @@ auto load_circuit_from_file(std::filesystem::path filename) -> LoadFileResult {
         return LoadFileResult {};
     }
 
-    auto editable_circuit__ = EditableCircuit {Layout {}};
+    auto editable_circuit__ = EditableCircuit {};
     load_result->add(editable_circuit__, {InsertionMode::insert_or_discard});
 
     return LoadFileResult {

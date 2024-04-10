@@ -7,6 +7,7 @@
 
 #include <compare>
 #include <limits>
+#include <type_traits>
 
 namespace logicsim {
 
@@ -26,6 +27,7 @@ struct length_t {
     constexpr auto operator-=(const length_t &right) -> length_t &;
 };
 
+static_assert(std::is_aggregate_v<length_t>);
 static_assert(std::is_trivial_v<length_t>);
 static_assert(std::is_trivially_constructible_v<length_t>);
 static_assert(std::is_trivially_copyable_v<length_t>);

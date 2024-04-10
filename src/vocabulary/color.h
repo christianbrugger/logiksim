@@ -17,7 +17,7 @@ namespace logicsim {
 struct color_t {
     using value_type = uint32_t;
     // we expose the value, as the type has no invariant
-    value_type value;
+    value_type value {0};
 
     [[nodiscard]] constexpr explicit color_t() = default;
     [[nodiscard]] constexpr explicit color_t(uint32_t value_) noexcept;
@@ -38,8 +38,6 @@ struct color_t {
     [[nodiscard]] constexpr auto a() const noexcept -> uint32_t;
 };
 
-static_assert(std::is_trivial_v<color_t>);
-static_assert(std::is_trivially_constructible_v<color_t>);
 static_assert(std::is_trivially_copyable_v<color_t>);
 static_assert(std::is_trivially_copy_assignable_v<color_t>);
 

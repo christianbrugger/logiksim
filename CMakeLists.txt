@@ -8,6 +8,7 @@ set(LS_CORE_SOURCES
     src/algorithm/compare_sorted.cpp
     src/algorithm/contains.cpp
     src/algorithm/copy_adjacent_if.cpp
+    src/algorithm/create_array.cpp
     src/algorithm/depth_first_visitor.cpp
     src/algorithm/distance_fast.cpp
     src/algorithm/fmt_join.cpp
@@ -437,11 +438,15 @@ if(POLICY CMP0069)
   set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 endif()
 
-project(simulation_srp CXX)
+project(simulation_srp C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# strongly encouraged to enable this globally to avoid conflicts between
+# -Wpedantic being enabled and -std=c++20 and -std=gnu++20 for example
+# when compiling with PCH enabled
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 
@@ -469,8 +474,9 @@ set_property(
 set(LS_USE_LIBCXX AUTO CACHE STRING "Compile all dependencies against clang libc++.")
 set_property(CACHE LS_USE_LIBCXX PROPERTY STRINGS AUTO ON OFF)
 
-if ((LS_USE_LIBCXX STREQUAL "AUTO" AND (LS_SANITIZE STREQUAL "Memory" OR 
-        LS_SANITIZE STREQUAL "MemoryWithOrigins" OR LS_SANITIZE STREQUAL "Thread")) 
+if ((LS_USE_LIBCXX STREQUAL "AUTO" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+       (LS_SANITIZE STREQUAL "Memory" OR  LS_SANITIZE STREQUAL "MemoryWithOrigins" OR 
+        LS_SANITIZE STREQUAL "Thread")) 
     OR (NOT LS_USE_LIBCXX STREQUAL "AUTO" AND LS_USE_LIBCXX)
 )
     set(LS_USE_LIBCXX_BOOL TRUE)
@@ -663,6 +669,7 @@ elseif(LS_SANITIZE STREQUAL "MemoryWithOrigins")
 elseif(LS_SANITIZE STREQUAL "Thread")
     add_compile_options(-fsanitize=thread)
     add_link_options(-fsanitize=thread)
+    set(BLEND2D_NO_JIT ON)
 else()
     message(FATAL_ERROR "Unknown LS_SANITIZE Option: ${LS_SANITIZE}")
 endif()

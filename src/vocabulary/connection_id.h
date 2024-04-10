@@ -1,7 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_CONNECTION_ID_H
 #define LOGICSIM_VOCABULARY_CONNECTION_ID_H
 
+#include "algorithm/narrow_integral.h"
 #include "concept/explicitly_convertible.h"
+#include "concept/integral.h"
 #include "format/struct.h"
 #include "type_trait/safe_difference_type.h"
 
@@ -20,10 +22,13 @@ namespace logicsim {
 struct connection_id_t {
     using value_type = int16_t;
     // we expose the value, as the type has no invariant
-    value_type value;
+    value_type value {-1};
 
     using difference_type = safe_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
+
+    [[nodiscard]] explicit constexpr connection_id_t() = default;
+    [[nodiscard]] explicit constexpr connection_id_t(integral auto value_);
 
     /**
      * @brief: The conversion to std::size_t
@@ -53,13 +58,17 @@ struct connection_id_t {
     constexpr auto operator++(int) -> connection_id_t;
 };
 
-static_assert(std::is_aggregate_v<connection_id_t>);
+static_assert(std::is_trivially_copyable_v<connection_id_t>);
+static_assert(std::is_trivially_copy_assignable_v<connection_id_t>);
 static_assert(
     explicitly_convertible_to<connection_id_t, connection_id_t::difference_type>);
 
 //
 // Implementation
 //
+
+constexpr connection_id_t::connection_id_t(integral auto value_)
+    : value {narrow_integral<value_type>(value_)} {}
 
 constexpr connection_id_t::operator std::size_t() const {
     if (value < value_type {0}) [[unlikely]] {
@@ -107,6 +116,7 @@ constexpr auto connection_id_t::operator++(int) -> connection_id_t {
 //
 
 constexpr inline auto null_connection_id = connection_id_t {-1};
+static_assert(null_connection_id == connection_id_t {});
 
 }  // namespace logicsim
 

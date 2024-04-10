@@ -1,6 +1,8 @@
 #ifndef LOGICSIM_CONTAINER_STATIC_VECTOR_H
 #define LOGICSIM_CONTAINER_STATIC_VECTOR_H
 
+#include "algorithm/create_array.h"
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -37,8 +39,8 @@ class static_vector {
 
     using buffer_t = std::array<Value, Capacity>;
 
-    buffer_t buffer_;
-    internal_size_t size_;
+    buffer_t buffer_ = create_array<Capacity>(Value {});
+    internal_size_t size_ {0};
 
    public:
     using iterator = typename buffer_t::iterator;

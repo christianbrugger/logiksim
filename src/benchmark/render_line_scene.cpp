@@ -141,7 +141,7 @@ auto set_inputs(Layout& layout) {
 }
 
 auto get_random_wires(Rng& rng, RenderBenchmarkConfig config) -> Layout {
-    auto editable_circuit = EditableCircuit {Layout {}};
+    auto editable_circuit = EditableCircuit {};
 
     for (auto _ [[maybe_unused]] : range(400)) {
         add_random_wire_segment(rng, editable_circuit, config);

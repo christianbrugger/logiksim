@@ -6,6 +6,7 @@
 #include "vocabulary/segment_point_type.h"
 
 #include <string>
+#include <type_traits>
 
 namespace logicsim {
 
@@ -21,6 +22,7 @@ struct segment_info_t {
 };
 
 static_assert(sizeof(segment_info_t) == 10);
+static_assert(std::is_aggregate_v<segment_info_t>);
 
 }  // namespace logicsim
 

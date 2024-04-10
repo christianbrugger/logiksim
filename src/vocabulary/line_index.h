@@ -19,7 +19,7 @@ namespace logicsim {
  */
 struct line_index_t {
     using value_type = int32_t;
-    value_type value;
+    value_type value {-1};
 
     using difference_type = safe_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
@@ -55,8 +55,6 @@ struct line_index_t {
     constexpr auto operator--(int) -> line_index_t;
 };
 
-static_assert(std::is_trivial_v<line_index_t>);
-static_assert(std::is_trivially_constructible_v<line_index_t>);
 static_assert(std::is_trivially_copyable_v<line_index_t>);
 static_assert(std::is_trivially_copy_assignable_v<line_index_t>);
 static_assert(explicitly_convertible_to<line_index_t, line_index_t::difference_type>);
@@ -140,6 +138,7 @@ constexpr auto get_next(line_index_t index) -> line_index_t {
 //
 
 inline constexpr auto null_line_index = line_index_t {-1};
+static_assert(null_line_index == line_index_t {});
 
 }  // namespace logicsim
 

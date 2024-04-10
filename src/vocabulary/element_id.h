@@ -22,7 +22,7 @@ namespace logicsim {
  */
 struct element_id_t {
     using value_type = int32_t;
-    value_type value;
+    value_type value {-1};
 
     using difference_type = safe_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
@@ -57,8 +57,6 @@ struct element_id_t {
     constexpr auto operator++(int) -> element_id_t;
 };
 
-static_assert(std::is_trivial_v<element_id_t>);
-static_assert(std::is_trivially_constructible_v<element_id_t>);
 static_assert(std::is_trivially_copyable_v<element_id_t>);
 static_assert(std::is_trivially_copy_assignable_v<element_id_t>);
 static_assert(explicitly_convertible_to<element_id_t, element_id_t::difference_type>);
@@ -112,6 +110,7 @@ constexpr auto element_id_t::operator++(int) -> element_id_t {
 //
 
 constexpr inline static auto null_element = element_id_t {-1};
+static_assert(null_element == element_id_t {});
 
 }  // namespace logicsim
 

@@ -19,8 +19,8 @@ namespace logicsim {
  *     * line has positive length, p0 != p1
  */
 struct ordered_line_t {
-    point_t p0;
-    point_t p1;
+    point_t p0 {};
+    point_t p1 {};
 
     [[nodiscard]] explicit constexpr ordered_line_t() = default;
     [[nodiscard]] explicit constexpr ordered_line_t(point_t p0_, point_t p1_);
@@ -35,8 +35,6 @@ struct ordered_line_t {
     [[nodiscard]] constexpr auto operator<=>(const ordered_line_t &other) const = default;
 };
 
-static_assert(std::is_trivial_v<ordered_line_t>);
-static_assert(std::is_trivially_constructible_v<ordered_line_t>);
 static_assert(std::is_trivially_copyable_v<ordered_line_t>);
 static_assert(std::is_trivially_copy_assignable_v<ordered_line_t>);
 

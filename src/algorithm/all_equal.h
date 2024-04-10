@@ -10,9 +10,9 @@ namespace logicsim {
 /**
  * brief: Return true if all elements are equal to the given value.
  */
-auto all_equal(std::input_iterator auto first, std::input_iterator auto last, auto value)
-    -> bool {
-    return std::all_of(first, last, [&](auto& item) { return item == value; });
+auto all_equal(std::input_iterator auto first, std::input_iterator auto last,
+               auto&& value) -> bool {
+    return std::all_of(first, last, [&](const auto& item) { return item == value; });
 }
 
 /**

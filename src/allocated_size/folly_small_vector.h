@@ -26,9 +26,9 @@ struct AllocatedSizeTrait<folly::small_vector<Value, RequestedMaxInline, Policy>
         auto count = is_inlined(container) ? 0 : container.capacity() * sizeof(Value);
 
         if constexpr (!std::is_trivially_copyable_v<Value>) {
-            for (const auto& elem : container) {
-                count += get_allocated_size(elem);
-            }
+            count += accumulate(container, std::size_t {0}, [](const Value& item) {
+                return get_allocated_size(item);
+            });
         }
 
         return count;

@@ -23,7 +23,7 @@ namespace logicsim {
  */
 struct wire_id_t {
     using value_type = int32_t;
-    value_type value;
+    value_type value {-1};
 
     using difference_type = safe_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
@@ -58,8 +58,6 @@ struct wire_id_t {
     constexpr auto operator++(int) -> wire_id_t;
 };
 
-static_assert(std::is_trivial_v<wire_id_t>);
-static_assert(std::is_trivially_constructible_v<wire_id_t>);
 static_assert(std::is_trivially_copyable_v<wire_id_t>);
 static_assert(std::is_trivially_copy_assignable_v<wire_id_t>);
 static_assert(explicitly_convertible_to<wire_id_t, wire_id_t::difference_type>);
@@ -120,6 +118,8 @@ constexpr inline static auto null_wire_id = wire_id_t {-1};
 constexpr inline static auto temporary_wire_id = wire_id_t {0};
 constexpr inline static auto colliding_wire_id = wire_id_t {1};
 constexpr inline static auto first_inserted_wire_id = wire_id_t {2};
+
+static_assert(null_wire_id == wire_id_t {});
 
 //
 // Free Methods

@@ -24,7 +24,7 @@ namespace logicsim {
  */
 struct grid_t {
     using value_type = int16_t;
-    value_type value;
+    value_type value {0};
 
     using difference_type = safe_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
@@ -60,8 +60,6 @@ struct grid_t {
     [[nodiscard]] constexpr auto operator-() const -> grid_t;
 };
 
-static_assert(std::is_trivial_v<grid_t>);
-static_assert(std::is_trivially_constructible_v<grid_t>);
 static_assert(std::is_trivially_copyable_v<grid_t>);
 static_assert(std::is_trivially_copy_assignable_v<grid_t>);
 static_assert(explicitly_convertible_to<grid_t, grid_t::difference_type>);

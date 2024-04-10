@@ -14,8 +14,8 @@ namespace logicsim {
  * @brief: Input connector position and orientation.
  */
 struct simple_input_info_t {
-    point_t position;
-    orientation_t orientation;
+    point_t position {};
+    orientation_t orientation {orientation_t::undirected};
 
     [[nodiscard]] auto format() const -> std::string;
 };
@@ -26,8 +26,8 @@ static_assert(std::is_aggregate_v<simple_input_info_t>);
  * @brief: Output connector position and orientation.
  */
 struct simple_output_info_t {
-    point_t position;
-    orientation_t orientation;
+    point_t position {};
+    orientation_t orientation {orientation_t::undirected};
 
     [[nodiscard]] auto format() const -> std::string;
 };

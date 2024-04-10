@@ -6,6 +6,7 @@
 
 #include <compare>
 #include <cstdint>
+#include <type_traits>
 
 namespace logicsim {
 
@@ -27,6 +28,8 @@ struct internal_state_index_t {
         -> bool = default;
     [[nodiscard]] auto operator<=>(const internal_state_index_t &other) const = default;
 };
+
+static_assert(std::is_aggregate_v<internal_state_index_t>);
 
 //
 // Implementation

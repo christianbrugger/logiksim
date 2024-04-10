@@ -17,7 +17,7 @@ namespace logicsim {
  */
 struct grid_fine_t {
     using value_type = double;
-    value_type value;
+    value_type value {0.};
 
     [[nodiscard]] explicit constexpr grid_fine_t() = default;
     [[nodiscard]] explicit constexpr grid_fine_t(value_type v) noexcept;
@@ -51,8 +51,6 @@ struct grid_fine_t {
     constexpr auto operator/=(const value_type &right) -> grid_fine_t &;
 };
 
-static_assert(std::is_trivial<grid_fine_t>::value);
-static_assert(std::is_trivially_constructible_v<grid_fine_t>);
 static_assert(std::is_trivially_copyable_v<grid_fine_t>);
 static_assert(std::is_trivially_copy_assignable_v<grid_fine_t>);
 
