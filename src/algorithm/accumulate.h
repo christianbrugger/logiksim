@@ -33,8 +33,8 @@ constexpr T accumulate(I first, I last, T init, Proj proj) {
 
 template <std::ranges::input_range R, class T, class Proj = std::identity>
 constexpr T accumulate(R&& r, T init, Proj proj) {
-    return accumulate(std::ranges::begin(r), std::ranges::end(r), std::move(init),
-                      std::move(proj));
+    return ::logicsim::accumulate(std::ranges::begin(r), std::ranges::end(r),
+                                  std::move(init), std::move(proj));
 }
 
 }  // namespace logicsim

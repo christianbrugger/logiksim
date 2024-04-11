@@ -17,9 +17,9 @@ struct AllocatedSizeTrait<std::vector<Value>> {
         auto count = std::size_t {container.capacity() * sizeof(Value)};
 
         if constexpr (!std::is_trivially_copyable_v<Value>) {
-            count += accumulate(container, std::size_t {0}, [](const Value& item) {
-                return get_allocated_size(item);
-            });
+            count += ::logicsim::accumulate(
+                container, std::size_t {0},
+                [](const Value& item) { return get_allocated_size(item); });
         }
 
         return count;
