@@ -154,7 +154,7 @@ struct BaselineOffsets {
     [[nodiscard]] constexpr auto operator==(const BaselineOffsets &other) const
         -> bool = default;
 
-    [[nodiscard]] auto get(FontStyle style, double font_size) const
+    [[nodiscard]] auto get(FontStyle style, float font_size) const
         -> ScaledBaselineOffset;
 
    private:

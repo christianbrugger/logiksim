@@ -62,10 +62,11 @@ auto test_sanitized_render() {
         const auto faces = FontFaces {font_files};
         auto fonts = Fonts {faces};
 
-        fonts.regular.setSize(10.8);
+        const auto font_size = 10.8f;
+        fonts.regular.setSize(font_size);
 
         const auto shaped_text =
-            HarfbuzzShapedText {"K", faces.regular.hb_font_face(), 10.8};
+            HarfbuzzShapedText {"K", faces.regular.hb_font_face(), font_size};
 
         const auto codepoints = std::vector<uint32_t> {46};
         const auto placements = std::vector<BLGlyphPlacement> {

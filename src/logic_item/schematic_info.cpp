@@ -129,7 +129,6 @@ auto element_output_delay(LogicItemType logicitem_type) -> delay_t {
         default:
             return logic_item_delay;
     };
-    std::terminate();
 }
 
 auto element_internal_connections(ElementType element_type) -> internal_connections_t {

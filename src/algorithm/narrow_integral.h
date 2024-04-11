@@ -19,8 +19,9 @@ constexpr auto narrow_integral(integral auto value) -> T {
     if constexpr (sizeof(decltype(value)) < sizeof(T) ||
                   std::is_same_v<decltype(value), T>) {
         return T {value};
+    } else {
+        return gsl::narrow<T>(value);
     }
-    return gsl::narrow<T>(value);
 }
 
 }  // namespace logicsim

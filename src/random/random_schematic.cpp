@@ -29,7 +29,6 @@ auto add_random_element(Rng &rng, Schematic &schematic) -> void {
             default:
                 std::terminate();
         };
-        std::terminate();
     }();
 
     constexpr static auto max_connections = 8;
@@ -48,7 +47,6 @@ auto add_random_element(Rng &rng, Schematic &schematic) -> void {
             default:
                 std::terminate();
         };
-        std::terminate();
     }();
 
     const auto output_count = [&] {
@@ -65,7 +63,6 @@ auto add_random_element(Rng &rng, Schematic &schematic) -> void {
             default:
                 std::terminate();
         };
-        std::terminate();
     }();
 
     const auto delay = element_type == ElementType::wire

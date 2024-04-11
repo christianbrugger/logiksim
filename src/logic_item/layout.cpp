@@ -129,7 +129,6 @@ auto input_locations_base(const layout_calculation_data_t& data) -> inputs_vecto
                                  static_inputs.value().end());
         }
     }
-    std::terminate();
 }
 
 auto output_locations_base(const layout_calculation_data_t& data) -> outputs_vector {
@@ -151,7 +150,6 @@ auto output_locations_base(const layout_calculation_data_t& data) -> outputs_vec
                                   static_outputs.value().end());
         }
     }
-    std::terminate();
 }
 
 auto element_body_points_base(const layout_calculation_data_t& data)
@@ -174,7 +172,6 @@ auto element_body_points_base(const layout_calculation_data_t& data)
             return body_points_vector(points.value().begin(), points.value().end());
         }
     }
-    std::terminate();
 }
 
 namespace layout_info {

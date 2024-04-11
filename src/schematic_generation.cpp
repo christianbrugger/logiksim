@@ -79,7 +79,6 @@ auto logic_item_output_delays(const Layout& layout, logicitem_id_t logicitem_id)
             return output_delays_t(output_count.count(), delay);
         }
     }
-    std::terminate();
 }
 
 auto add_logic_item(Schematic& schematic, const Layout& layout,

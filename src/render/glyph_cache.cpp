@@ -226,7 +226,7 @@ auto BaselineOffsets::format() const -> std::string {
     return fmt::format("BaselineOffsets(\n  {})\n", joined);
 }
 
-auto BaselineOffsets::get(FontStyle style, double font_size) const
+auto BaselineOffsets::get(FontStyle style, float font_size) const
     -> ScaledBaselineOffset {
     return get(style) * font_size;
 }

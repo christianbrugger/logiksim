@@ -575,7 +575,7 @@ endif()
 # better debugging profile
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")  # AND LS_SANITIZE
     if (MSVC)
-        add_compile_options(/O1)
+        # add_compile_options(/O1)
     else()
         add_compile_options(-O1 -fno-optimize-sibling-calls)
     endif()
