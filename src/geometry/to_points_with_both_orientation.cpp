@@ -1,6 +1,7 @@
 #include "geometry/to_points_with_both_orientation.h"
 
 #include "algorithm/copy_adjacent_if.h"
+#include "algorithm/make_unique.h"
 #include "format/struct.h"
 #include "geometry/orientation.h"
 #include "vocabulary/line.h"
@@ -50,8 +51,7 @@ inline auto point_and_orientation_t::format() const -> std::string {
 
 auto extract_points_with_both_orientations(std::vector<point_and_orientation_t>& points)
     -> std::vector<point_t> {
-    std::ranges::sort(points);
-    points.erase(std::ranges::unique(points).begin(), points.end());
+    sort_and_make_unique(points);
 
     auto result = std::vector<point_t> {};
     result.reserve(points.size());

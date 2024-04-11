@@ -20,7 +20,7 @@ struct ViewPoint {
     double device_scale {};  // distance of grid in device coordinates
 
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const ViewPoint&) const -> bool = default;
+    [[nodiscard]] auto operator==(const ViewPoint &) const -> bool = default;
 };
 
 static_assert(std::is_aggregate_v<ViewPoint>);
@@ -73,7 +73,7 @@ struct ViewConfig {
     /**
      * brief: Load the Device Independent View Point
      */
-    auto set_view_point(ViewPoint view_point) -> void;
+    auto set_view_point(const ViewPoint &view_point) -> void;
 
     /**
      * brief: The offset of the viewed area in grid coordinates.
@@ -116,7 +116,7 @@ struct ViewConfig {
     [[nodiscard]] auto view_point() const noexcept -> ViewPoint;
 
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const ViewConfig&) const -> bool = default;
+    [[nodiscard]] auto operator==(const ViewConfig &) const -> bool = default;
 
    private:
     auto update() -> void;

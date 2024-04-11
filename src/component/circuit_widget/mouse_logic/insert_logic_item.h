@@ -16,7 +16,7 @@ namespace circuit_widget {
 
 class InsertLogicItemLogic : public EditingLogicInterface {
    public:
-    InsertLogicItemLogic(LogicItemDefinition element_definition);
+    explicit InsertLogicItemLogic(LogicItemDefinition element_definition__);
 
     auto mouse_press(EditableCircuit& editable_circuit, std::optional<point_t> position)
         -> void;

@@ -54,7 +54,7 @@ auto RenderSurface::view_config() const -> const ViewConfig& {
     return context_.ctx.settings.view_config;
 }
 
-auto RenderSurface::set_view_point(ViewPoint view_point) -> void {
+auto RenderSurface::set_view_point(const ViewPoint& view_point) -> void {
     context_.ctx.settings.view_config.set_view_point(view_point);
 }
 

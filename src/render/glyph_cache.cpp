@@ -212,7 +212,7 @@ auto calculate_baseline_offset(FontStyle style [[maybe_unused]], const FontFace&
 }  // namespace
 
 BaselineOffsets::BaselineOffsets(const FontFaces& faces) {
-    for (auto& style : all_font_styles) {
+    for (const auto& style : all_font_styles) {
         set(style, calculate_baseline_offset(style, faces.get(style)));
     }
 }

@@ -41,9 +41,6 @@ struct RenderBenchmarkConfig {
     std::size_t min_line_segments {1};
     std::size_t max_line_segments {5};
 
-    int n_outputs_min {1};
-    int n_outputs_max {5};
-
     int min_event_spacing_ns {500};
     int max_event_spacing_ns {3000};
 };
@@ -104,12 +101,12 @@ auto add_tree_segment(Rng& rng, EditableCircuit& editable_circuit, point_t start
 }
 
 auto add_random_wire_segment(Rng& rng, EditableCircuit& editable_circuit,
-                             RenderBenchmarkConfig config) -> void {
+                             const RenderBenchmarkConfig& config) -> void {
     const auto grid_dist = get_udist(config.min_grid, config.max_grid, rng);
     const auto p0 = point_t {grid_dist(), grid_dist()};
 
-    const auto is_horizontal = uint_distribution<int>(0, 1)(rng);
-    add_tree_segment(rng, editable_circuit, p0, is_horizontal, config);
+    const auto as_horizontal = uint_distribution<int>(0, 1)(rng);
+    add_tree_segment(rng, editable_circuit, p0, as_horizontal, config);
 }
 
 auto set_inputs(Layout& layout) {
@@ -140,7 +137,7 @@ auto set_inputs(Layout& layout) {
     }
 }
 
-auto get_random_wires(Rng& rng, RenderBenchmarkConfig config) -> Layout {
+auto get_random_wires(Rng& rng, const RenderBenchmarkConfig& config) -> Layout {
     auto editable_circuit = EditableCircuit {};
 
     for (auto _ [[maybe_unused]] : range(400)) {

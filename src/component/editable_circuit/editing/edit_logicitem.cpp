@@ -113,7 +113,7 @@ auto are_logicitem_positions_representable(const Layout& layout,
 
 auto move_temporary_logicitem_unchecked(Layout& layout, const logicitem_id_t logicitem_id,
                                         int dx, int dy) -> void {
-    assert(layout.logic_items().display_state(logicitem_id) ==
+    assert(std::as_const(layout).logic_items().display_state(logicitem_id) ==
            display_state_t::temporary);
     assert(is_logicitem_position_representable(layout, logicitem_id, dx, dy));
 

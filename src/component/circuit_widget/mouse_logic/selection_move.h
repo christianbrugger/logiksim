@@ -68,7 +68,7 @@ class SelectionMoveLogic : public EditingLogicInterface {
     [[nodiscard]] auto is_finished() const -> bool;
     auto confirm() -> void;
 
-    auto finalize(EditableCircuit& editable_circuit) -> void;
+    auto finalize(EditableCircuit& editable_circuit) -> void override;
 
    private:
     auto move_selection(EditableCircuit& editable_circuit, point_fine_t point) -> void;

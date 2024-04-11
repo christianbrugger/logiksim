@@ -33,7 +33,7 @@ enum class ManagerResult {
  */
 class EditingLogicManager {
    public:
-    EditingLogicManager(QWidget* parent);
+    explicit EditingLogicManager(QWidget* parent);
 
     auto set_circuit_state(CircuitWidgetState new_state,
                            EditableCircuit* editable_circuit) -> void;

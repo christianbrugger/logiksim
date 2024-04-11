@@ -26,7 +26,7 @@ struct ordered_line_t {
     [[nodiscard]] explicit constexpr ordered_line_t(point_t p0_, point_t p1_);
     [[nodiscard]] explicit constexpr ordered_line_t(line_t line) noexcept;
 
-    [[nodiscard]] explicit constexpr operator line_t() const noexcept;
+    [[nodiscard]] explicit constexpr operator line_t() const;
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -53,7 +53,7 @@ constexpr ordered_line_t::ordered_line_t(line_t line) noexcept
     : p0 {line.p0 < line.p1 ? line.p0 : line.p1},
       p1 {line.p0 < line.p1 ? line.p1 : line.p0} {}
 
-constexpr ordered_line_t::operator line_t() const noexcept {
+constexpr ordered_line_t::operator line_t() const {
     return line_t {p0, p1};
 }
 

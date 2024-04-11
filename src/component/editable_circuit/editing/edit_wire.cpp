@@ -1,5 +1,6 @@
 #include "component/editable_circuit/editing/edit_wire.h"
 
+#include "algorithm/make_unique.h"
 #include "algorithm/sort_pair.h"
 #include "algorithm/transform_to_vector.h"
 #include "component/editable_circuit/circuit_data.h"
@@ -134,7 +135,7 @@ auto __find_wire_for_inserting_segment(CircuitData& circuit,
     auto candidate_1 = circuit.index.collision_index().get_first_wire(line.p1);
 
     // 1 wire
-    if (bool {candidate_0} ^ bool {candidate_1}) {
+    if ((bool {candidate_0}) ^ (bool {candidate_1})) {
         return candidate_0 ? candidate_0 : candidate_1;
     }
 
@@ -175,7 +176,7 @@ auto __insert_temporary_segment(CircuitData& circuit, segment_part_t& segment_pa
     fix_and_merge_segments(circuit, line.p1, &segment_part);
 
     assert(is_contiguous_tree_with_correct_endpoints(
-        circuit.layout.wires().segment_tree(target_wire_id)));
+        std::as_const(circuit).layout.wires().segment_tree(target_wire_id)));
 }
 
 auto _wire_change_temporary_to_colliding(CircuitData& circuit,
@@ -212,7 +213,7 @@ auto _wire_change_colliding_to_insert(CircuitData& circuit, segment_part_t& segm
     }
 }
 
-auto _wire_change_insert_to_colliding(Layout& layout, segment_part_t& segment_part)
+auto _wire_change_insert_to_colliding(Layout& layout, const segment_part_t segment_part)
     -> void {
     mark_valid(layout, segment_part);
 }
@@ -450,9 +451,7 @@ auto get_inserted_cross_points(const CircuitData& circuit, const Selection& sele
         }
     }
 
-    std::ranges::sort(cross_points);
-    cross_points.erase(std::ranges::unique(cross_points).begin(), cross_points.end());
-
+    sort_and_make_unique(cross_points);
     return cross_points;
 }
 
@@ -481,8 +480,7 @@ auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
         const auto full_line = get_line(circuit.layout, segment);
 
         auto query_result = cache.query_intersects(full_line);
-        std::ranges::sort(query_result, std::greater<point_t>());
-        query_result.erase(std::ranges::unique(query_result).begin(), query_result.end());
+        sort_and_make_unique(query_result, std::greater<point_t>());
 
         // splitting puts the second half into a new segment
         // so for this to work with multiple point, cross_points

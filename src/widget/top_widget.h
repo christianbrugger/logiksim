@@ -72,7 +72,7 @@ class MainWidget : public QMainWindow {
     Q_OBJECT
 
    public:
-    MainWidget(QWidget* parent = nullptr);
+    explicit MainWidget(QWidget* parent = nullptr);
 
    private:
     auto create_menu() -> void;

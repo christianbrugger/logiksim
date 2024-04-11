@@ -459,7 +459,7 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
     if (segment_0.segment_index >= segment_1.segment_index) [[unlikely]] {
         throw std::runtime_error("Segment indices need to be ordered and not the same.");
     }
-    const auto is_inserted = ::logicsim::is_inserted(segment_0.wire_id);
+    const auto was_inserted = is_inserted(segment_0.wire_id);
 
     const auto index_0 = segment_0.segment_index;
     const auto index_1 = segment_1.segment_index;
@@ -469,15 +469,15 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
     const auto index_last = m_tree.last_index();
     const auto segment_last = segment_t {wire_id, index_last};
 
-    const auto info_0 = m_tree.info(index_0);
-    const auto info_1 = m_tree.info(index_1);
+    const auto info_0 = segment_info_t {m_tree.info(index_0)};
+    const auto info_1 = segment_info_t {m_tree.info(index_1)};
 
     // merge
     m_tree.swap_and_merge_segment({.index_merge_to = index_0, .index_deleted = index_1});
-    const auto info_merged = m_tree.info(index_0);
+    const auto& info_merged = m_tree.info(index_0);
 
     // messages
-    if (is_inserted) {
+    if (was_inserted) {
         circuit.submit(info_message::SegmentUninserted {segment_0, info_0});
         circuit.submit(info_message::SegmentUninserted {segment_1, info_1});
     }
@@ -502,7 +502,7 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
         .source = segment_part_t {segment_1, to_part(info_1.line)},
     });
 
-    if (is_inserted) {
+    if (was_inserted) {
         circuit.submit(info_message::SegmentInserted {segment_0, info_merged});
     }
 
@@ -511,7 +511,7 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
             .new_segment = segment_1,
             .old_segment = segment_last,
         });
-        if (is_inserted) {
+        if (was_inserted) {
             circuit.submit(info_message::InsertedSegmentIdUpdated {
                 .new_segment = segment_1,
                 .old_segment = segment_last,

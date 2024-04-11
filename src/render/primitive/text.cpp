@@ -8,12 +8,12 @@
 namespace logicsim {
 
 auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
-               TextAttributes attributes) -> void {
+               const TextAttributes& attributes) -> void {
     if (text.empty()) {
         return;
     }
     const auto font_size_px = to_context_unrounded(attributes.font_size, ctx);
-    if (font_size_px < attributes.cuttoff_size_px) {
+    if (font_size_px < attributes.cutoff_size_px) {
         return;
     }
 

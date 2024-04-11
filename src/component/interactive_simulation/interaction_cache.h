@@ -27,7 +27,7 @@ class InteractionCache {
     using map_type = ankerl::unordered_dense::map<point_t, interaction_data_t>;
 
    public:
-    InteractionCache(const Layout& layout);
+    explicit InteractionCache(const Layout& layout);
 
     [[nodiscard]] auto format() const -> std::string;
 

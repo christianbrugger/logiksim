@@ -193,21 +193,21 @@ auto _any_logicitem_inputs_colliding(const LayoutIndex& cache,
     return !std::ranges::all_of(input_locations(data), compatible);
 }
 
-auto _any_logicitem_outputs_colliding(CircuitData& circuit,
+auto _any_logicitem_outputs_colliding(const CircuitData& circuit,
                                       const layout_calculation_data_t& data) -> bool {
     return find_convertible_wire_inputs(circuit, data).any_collisions;
 }
 
 }  // namespace
 
-auto is_logicitem_colliding(CircuitData& circuit, const layout_calculation_data_t& data)
-    -> bool {
+auto is_logicitem_colliding(const CircuitData& circuit,
+                            const layout_calculation_data_t& data) -> bool {
     return circuit.index.collision_index().is_colliding(data) ||
            _any_logicitem_inputs_colliding(circuit.index, data) ||
            _any_logicitem_outputs_colliding(circuit, data);
 }
 
-auto is_logicitem_colliding(CircuitData& circuit, const logicitem_id_t logicitem_id)
+auto is_logicitem_colliding(const CircuitData& circuit, const logicitem_id_t logicitem_id)
     -> bool {
     const auto data = to_layout_calculation_data(circuit.layout, logicitem_id);
     return is_logicitem_colliding(circuit, data);

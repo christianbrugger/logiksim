@@ -101,10 +101,12 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
 
 [[nodiscard]] auto find_root_index(const ValidationGraph& graph)
     -> std::optional<std::size_t> {
-    for (auto index : graph.indices()) {
-        if (is_leaf(graph, index)) {
-            return index;
-        }
+    const auto& indices = graph.indices();
+
+    if (const auto it = std::ranges::find_if(
+            indices, [&](std::size_t index) { return is_leaf(graph, index); });
+        it != indices.end()) {
+        return *it;
     }
 
     return std::nullopt;

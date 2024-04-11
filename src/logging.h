@@ -84,12 +84,12 @@ namespace detail {
 template <std::size_t count>
 constexpr auto repeat_format_string() {
     constexpr auto buffer_size = count == 0 ? 1 : count * 3;
-    std::array<char, buffer_size> buffer;
+    auto buffer = std::array<char, buffer_size> {};
 
-    std::size_t pos = 0;
+    auto pos = std::size_t {0};
     for (std::size_t i = 0; i < count; ++i) {
-        std::string_view format = "{} ";
-        for (char c : format) {
+        const auto element = std::string_view {"{} "};
+        for (char c : element) {
             buffer[pos++] = c;
         }
     }

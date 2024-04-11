@@ -13,6 +13,7 @@ set(LS_CORE_SOURCES
     src/algorithm/distance_fast.cpp
     src/algorithm/fmt_join.cpp
     src/algorithm/has_duplicates_quadratic.cpp
+    src/algorithm/make_unique.cpp
     src/algorithm/merged_any_of.cpp
     src/algorithm/merged_for_each.cpp
     src/algorithm/merged_none_of.cpp
@@ -328,7 +329,7 @@ set(LS_GUI_SOURCES
     src/component/circuit_widget/render_surface.cpp
     src/component/circuit_widget/simulation_runner.cpp
     src/component/circuit_widget/zoom.cpp
-    
+
     src/format/qt_type.cpp
 
     src/qt/clipboard_access.cpp

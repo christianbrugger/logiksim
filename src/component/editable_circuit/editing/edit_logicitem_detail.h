@@ -91,10 +91,10 @@ auto convert_wires_at_outputs_to_outputs(CircuitData& circuit,
 // Logic Item Colliding
 //
 
-auto is_logicitem_colliding(CircuitData& circuit, const layout_calculation_data_t& data)
-    -> bool;
+auto is_logicitem_colliding(const CircuitData& circuit,
+                            const layout_calculation_data_t& data) -> bool;
 
-auto is_logicitem_colliding(CircuitData& circuit, const logicitem_id_t logicitem_id)
+auto is_logicitem_colliding(const CircuitData& circuit, const logicitem_id_t logicitem_id)
     -> bool;
 
 }  // namespace editing

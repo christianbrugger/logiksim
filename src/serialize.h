@@ -52,7 +52,7 @@ struct AddParameters {
 
 class LoadLayoutResult {
    public:
-    LoadLayoutResult(SerializedLayout&& layout);
+    explicit LoadLayoutResult(SerializedLayout&& layout);
 
     LoadLayoutResult(LoadLayoutResult&&);
     LoadLayoutResult(const LoadLayoutResult&) = delete;

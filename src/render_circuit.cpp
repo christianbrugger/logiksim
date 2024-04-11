@@ -481,7 +481,7 @@ auto draw_logic_item_label(Context& ctx, point_fine_t center, std::string_view t
                   .horizontal_alignment = attributes.horizontal_alignment,
                   .vertical_alignment = attributes.vertical_alignment,
                   .style = attributes.style,
-                  .cuttoff_size_px = defaults::font::text_cutoff_px,
+                  .cutoff_size_px = defaults::font::text_cutoff_px,
               });
 }
 

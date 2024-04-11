@@ -95,7 +95,7 @@ auto ViewConfig::view_point() const noexcept -> ViewPoint {
     };
 }
 
-auto ViewConfig::set_view_point(ViewPoint view_point) -> void {
+auto ViewConfig::set_view_point(const ViewPoint &view_point) -> void {
     set_device_scale(view_point.device_scale);
     set_offset(view_point.offset);
 }

@@ -22,11 +22,11 @@ struct TextAttributes {
     FontStyle style {FontStyle::regular};
 
     // don't render, if scaled font size is smaller
-    double cuttoff_size_px {3.0};  // pixels
+    double cutoff_size_px {3.0};  // pixels
 };
 
 auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
-               TextAttributes attributes) -> void;
+               const TextAttributes& attributes) -> void;
 
 }  // namespace logicsim
 

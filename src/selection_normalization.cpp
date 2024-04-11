@@ -150,7 +150,7 @@ auto sanitize_selection(Selection &selection, const Layout &layout,
         }
     }
 
-    for (auto &segment : to_delete) {
+    for (const auto &segment : to_delete) {
         selection.set_selection(segment, PartSelection {});
     }
 }

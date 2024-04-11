@@ -27,7 +27,7 @@ auto test_sanitized_render() {
     // render_layout_to_file(editable_circuit.layout(), 500, 500, "render.png",
     //                      ViewConfig {});
 
-    const auto layout = editable_circuit.layout();
+    // const auto layout = editable_circuit.layout();
     const auto filename = std::string {"render.png"};
 
     {

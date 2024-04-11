@@ -414,7 +414,7 @@ auto SpatialIndex::rects() const -> std::vector<rect_fine_t> {
     auto result = std::vector<rect_fine_t> {};
     result.reserve(tree_->value.size());
 
-    for (auto& value : tree_->value) {
+    for (const auto& value : tree_->value) {
         result.push_back(spatial_index::to_rect(value.first));
     }
 

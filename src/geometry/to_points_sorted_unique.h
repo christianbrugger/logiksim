@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_GEOMETRY_TO_POINTS_SORTED_UNIQUE_H
 #define LOGICSIM_GEOMETRY_TO_POINTS_SORTED_UNIQUE_H
 
+#include "algorithm/make_unique.h"
 #include "concept/input_range.h"
 #include "vocabulary/line.h"
 #include "vocabulary/ordered_line.h"
@@ -25,9 +26,7 @@ auto to_points_sorted_unique(R&& segments) -> std::vector<point_t> {
         points.push_back(segment.p1);
     }
 
-    std::ranges::sort(points);
-    points.erase(std::ranges::unique(points).begin(), points.end());
-
+    sort_and_make_unique(points);
     return points;
 }
 
