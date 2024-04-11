@@ -512,8 +512,16 @@ endif()
 	# add_link_options(/PROFILE)
 #endif()
 
-# our library: needs to be standard complient
+
 set(MAIN_COMPILE_OPTIONS)
+
+# utf-8
+if (MSVC)
+	list(APPEND MAIN_COMPILE_OPTIONS /utf-8)
+else()
+endif()
+
+# our library: needs to be standard complient
 if (MSVC)
     list(APPEND MAIN_COMPILE_OPTIONS /permissive-)
 else()
