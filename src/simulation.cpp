@@ -434,6 +434,19 @@ auto Simulation::is_finished() const -> bool {
     return queue_.empty() && time() >= largest_history_event_;
 }
 
+namespace {
+
+auto clean_history(simulation::HistoryBuffer &history, delay_t history_length,
+                   time_t simulation_time) -> void {
+    const auto min_time = simulation_time - history_length;
+
+    while (!history.empty() && history.front() < min_time) {
+        history.pop_front();
+    }
+}
+
+}  // namespace
+
 auto Simulation::record_input_history(input_t input, const bool new_value) -> void {
     // we only record the first input, as we only need a history for wires
     if (input.connection_id != connection_id_t {0}) {
@@ -448,23 +461,16 @@ auto Simulation::record_input_history(input_t input, const bool new_value) -> vo
         return;
     }
     auto &history = first_input_histories_.at(input.element_id.value);
+    const auto simulation_time = time();
 
     // remove old values
-    clean_history(history, history_length);
+    clean_history(history, history_length, simulation_time);
 
     // add new entry
-    history.push_back(time());
+    history.push_back(simulation_time);
 
     // update largest history event
     largest_history_event_ = std::max(largest_history_event_, time() + history_length);
-}
-
-auto Simulation::clean_history(simulation::HistoryBuffer &history, delay_t history_length)
-    -> void {
-    const auto min_time = time() - history_length;
-    while (!history.empty() && history.front() < min_time) {
-        history.pop_front();
-    }
 }
 
 auto Simulation::input_value(input_t input) const -> bool {

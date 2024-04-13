@@ -14,7 +14,7 @@ class AdjacencyGraph;
 class EmptyVisitor {
    public:
     template <typename index_t>
-    auto tree_edge(index_t, index_t, const AdjacencyGraph<index_t>&) const -> void {}
+    static auto tree_edge(index_t, index_t, const AdjacencyGraph<index_t>&) -> void {}
 };
 
 }  // namespace logicsim

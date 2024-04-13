@@ -15,7 +15,8 @@ class AdjacencyGraph;
  */
 struct PrintingGraphVisitor {
     template <typename index_t>
-    auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) -> void;
+    static auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph)
+        -> void;
 };
 
 //

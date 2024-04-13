@@ -63,7 +63,7 @@ struct enumerate_sentinel {
      * @brief: Implicite conversion to the iterator type, so enumerate
      *         can be used in old-style iterator pair algorithms.
      */
-    [[nodiscard]] constexpr operator enumerate_iterator<I, C>() {
+    [[nodiscard]] constexpr operator enumerate_iterator<I, C>() const {
         return enumerate_iterator<I, C> {sentinel};
     }
 

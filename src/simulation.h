@@ -174,8 +174,6 @@ class Simulation {
                       const simulation::SimulationEventGroup &group) -> void;
     auto set_input_internal(input_t input, bool value) -> void;
     auto record_input_history(input_t input, bool new_value) -> void;
-    auto clean_history(simulation::HistoryBuffer &history, delay_t history_length)
-        -> void;
 
     // update logic
     enum class Outputs { SwitchedOff, Current };
