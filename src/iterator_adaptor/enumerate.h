@@ -226,7 +226,7 @@ template <typename C = std::size_t, std::ranges::input_range R>
     using range_t = detail::enumerate_range<R, C>;
     static_assert(std::ranges::forward_range<range_t>);
 
-    return range_t {std::move(r)};
+    return range_t {std::forward<R>(r)};
 }
 
 }  // namespace logicsim

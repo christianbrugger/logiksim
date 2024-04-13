@@ -208,7 +208,7 @@ template <std::ranges::input_range R, std::copy_constructible Proj>
     using range_t = detail::TransformRange<R, Proj>;
     static_assert(std::ranges::forward_range<range_t>);
 
-    return range_t {std::move(range), proj};
+    return range_t {std::forward<R>(range), proj};
 }
 
 }  // namespace logicsim

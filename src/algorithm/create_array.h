@@ -9,7 +9,7 @@ namespace logicsim {
 namespace detail {
 
 template <typename T, std::size_t... Is>
-constexpr auto create_array(T value, std::index_sequence<Is...>)
+constexpr auto create_array(T value, std::index_sequence<Is...> /*unused*/)
     -> std::array<T, sizeof...(Is)> {
     // cast Is to void to remove the warning: unused value
     return {{(static_cast<void>(Is), value)...}};

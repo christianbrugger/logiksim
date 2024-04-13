@@ -42,7 +42,7 @@ template <std::ranges::forward_range R, class Proj = std::identity,
           std::indirect_binary_predicate<std::projected<std::ranges::iterator_t<R>, Proj>,
                                          std::projected<std::ranges::iterator_t<R>, Proj>>
               Pred = std::ranges::equal_to>
-constexpr auto adjacent_count_if(R&& r, Pred pred = {}, Proj proj = {}) {
+constexpr auto adjacent_count_if(const R& r, Pred pred = {}, Proj proj = {}) {
     return adjacent_count_if(std::ranges::begin(r), std::ranges::end(r), std::ref(pred),
                              std::ref(proj));
 }

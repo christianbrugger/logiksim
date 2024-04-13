@@ -25,7 +25,7 @@ template <std::ranges::input_range R, std::weakly_incrementable O,
     requires std::indirectly_writable<
         O, std::indirect_result_t<F&, std::projected<std::ranges::iterator_t<R>, Proj>,
                                   std::projected<std::ranges::iterator_t<R>, Proj>>>
-constexpr auto transform_adjacent(R&& r, O result, F binary_op, Proj proj = {}) {
+constexpr auto transform_adjacent(const R& r, O result, F binary_op, Proj proj = {}) {
     return transform(std::ranges::begin(r), std::ranges::end(r), result, binary_op, proj);
 }
 

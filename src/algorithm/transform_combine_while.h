@@ -34,7 +34,7 @@ auto transform_combine_while(IteratorFirst first, IteratorLast last,
 
 template <std::ranges::input_range R, class OutputIterator, class MakeState, class Pred,
           class Update = std::identity, class Proj = std::identity>
-auto transform_combine_while(R&& r, OutputIterator result, MakeState make_state,
+auto transform_combine_while(const R& r, OutputIterator result, MakeState make_state,
                              Pred predicate, Update update = {}, Proj project = {})
     -> OutputIterator {
     return transform_combine_while(std::begin(r), std::end(r), result, make_state,

@@ -32,7 +32,7 @@ template <std::ranges::input_range R1, std::ranges::input_range R2,
           std::indirect_binary_predicate<std::ranges::iterator_t<R1>,
                                          std::ranges::iterator_t<R2>>
               Pred = std::ranges::equal_to>
-auto merged_none_of(R1&& r1, R2&& r2, Comp comp = {}, Pred pred = {}) -> bool {
+auto merged_none_of(const R1& r1, const R2& r2, Comp comp = {}, Pred pred = {}) -> bool {
     return merged_none_of(std::ranges::begin(r1), std::ranges::end(r1),
                           std::ranges::begin(r2), std::ranges::end(r2), std::move(comp),
                           std::move(pred));

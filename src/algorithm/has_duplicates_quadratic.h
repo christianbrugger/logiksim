@@ -51,8 +51,8 @@ auto has_duplicates_quadratic(std::bidirectional_iterator auto begin,
  */
 template <class Proj = std::identity, class Comp = std::equal_to<>,
           class Ignore = always_false>
-bool has_duplicates_quadratic(std::ranges::input_range auto&& range, Proj proj = {},
-                              Comp comp = {}, Ignore ignore = {}) {
+auto has_duplicates_quadratic(std::ranges::input_range auto&& range, Proj proj = {},
+                              Comp comp = {}, Ignore ignore = {}) -> bool{
     return has_duplicates_quadratic(std::ranges::begin(range), std::ranges::end(range),
                                     std::move(proj), std::move(comp), std::move(ignore));
 }

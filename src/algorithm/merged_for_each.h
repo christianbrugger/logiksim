@@ -24,7 +24,7 @@ auto merged_for_each(I1 first1, S1 last1, I2 first2, S2 last2, Fun f, Comp comp 
 
 template <std::ranges::input_range R1, std::ranges::input_range R2, typename Fun,
           class Comp = std::ranges::less>
-auto merged_for_each(R1&& r1, R2&& r2, Fun f, Comp comp = {}) -> void {
+auto merged_for_each(const R1& r1, const R2& r2, Fun f, Comp comp = {}) -> void {
     merged_for_each(std::ranges::begin(r1), std::ranges::end(r1), std::ranges::begin(r2),
                     std::ranges::end(r2), std::move(f), std::move(comp));
 }

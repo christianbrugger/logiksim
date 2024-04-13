@@ -17,7 +17,7 @@ namespace logicsim {
  */
 template <typename R>
     requires input_range_of2<R, line_t, ordered_line_t>
-auto to_points_sorted_unique(R&& segments) -> std::vector<point_t> {
+auto to_points_sorted_unique(const R& segments) -> std::vector<point_t> {
     auto points = std::vector<point_t> {};
     points.reserve(2 * std::size(segments));
 

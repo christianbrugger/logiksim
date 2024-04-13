@@ -44,7 +44,7 @@ class AdjacencyGraph {
 
     template <typename R>
         requires input_range_of2<R, line_t, ordered_line_t>
-    [[nodiscard]] explicit AdjacencyGraph(R&& segments);
+    [[nodiscard]] explicit AdjacencyGraph(const R& segments);
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -89,7 +89,7 @@ template <typename index_t>
 template <typename index_t>
 template <typename R>
     requires input_range_of2<R, line_t, ordered_line_t>
-AdjacencyGraph<index_t>::AdjacencyGraph(R&& segments)
+AdjacencyGraph<index_t>::AdjacencyGraph(const R& segments)
     : points_ {to_points_sorted_unique(segments)} {
     neighbors_.resize(points_.size());
 

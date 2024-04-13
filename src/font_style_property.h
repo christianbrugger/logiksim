@@ -32,16 +32,16 @@ auto set(T& obj, FontStyle style, V&& value) -> void {
         using enum FontStyle;
 
         case regular:
-            obj.regular = std::move(value);
+            obj.regular = std::forward<V>(value);
             return;
         case italic:
-            obj.italic = std::move(value);
+            obj.italic = std::forward<V>(value);
             return;
         case bold:
-            obj.bold = std::move(value);
+            obj.bold = std::forward<V>(value);
             return;
         case monospace:
-            obj.monospace = std::move(value);
+            obj.monospace = std::forward<V>(value);
             return;
     }
     std::terminate();

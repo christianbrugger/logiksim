@@ -147,9 +147,10 @@ auto segments_are_normalized(std::span<const ordered_line_t> segments) -> bool {
     }
 
     auto normalized_segments = normalize_segments(segments);
-    auto given_segments = std::vector<ordered_line_t> {segments.begin(), segments.end()};
 
-    return compare_sorted(given_segments, normalized_segments);
+    return normalized_segments.size() == segments.size() &&
+           compare_sorted(std::move(normalized_segments),
+                          std::vector<ordered_line_t> {segments.begin(), segments.end()});
 };
 
 namespace {
@@ -216,7 +217,7 @@ auto has_same_inputs_outputs(const SegmentTree& tree, const ValidationGraph& gra
         }
     }
 
-    return compare_sorted(tree_points, graph_points);
+    return compare_sorted(std::move(tree_points), std::move(graph_points));
 }
 
 auto has_same_cross_points(const SegmentTree& tree, const ValidationGraph& graph)
@@ -233,7 +234,7 @@ auto has_same_cross_points(const SegmentTree& tree, const ValidationGraph& graph
         }
     }
 
-    return compare_sorted(tree_points, graph_points);
+    return compare_sorted(std::move(tree_points), std::move(graph_points));
 }
 
 auto has_same_corner_points(const SegmentTree& tree, const ValidationGraph& graph)
@@ -250,7 +251,7 @@ auto has_same_corner_points(const SegmentTree& tree, const ValidationGraph& grap
         }
     }
 
-    return compare_sorted(tree_points, graph_points);
+    return compare_sorted(std::move(tree_points), std::move(graph_points));
 }
 
 auto has_same_shadow_points(const SegmentTree& tree, const ValidationGraph& graph)

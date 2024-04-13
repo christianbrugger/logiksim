@@ -3,32 +3,37 @@
 
 # Checks: '-*,modernize-use-trailing-return-type'
 
+# Checks: '
+# -*,
+# cppcoreguidelines-missing-std-forward
+# '
+
 HeaderFilterRegex: '.*'
 
 Checks: '
 -*,
-bugprone-move-forwarding-reference
+clang-analyzer-*,
+clang-diagnostic-*,
+
+performance-*,
+portability-*,
+concurrency-*,
+cppcoreguidelines-*,
+modernize-*,
+bugprone-*,
+readability-*,
+
+google-default-arguments,
+google-explicit-constructor,
+google-readability-avoid-underscore-in-googletest-name,
+google-runtime-operator,
+
+-readability-identifier-length,
+-readability-redundant-access-specifiers,
 '
 
-# clang-analyzer-*,
-# clang-diagnostic-*,
-# 
-# performance-*,
-# portability-*,
-# concurrency-*,
-# cppcoreguidelines-*,
-# modernize-*,
-# bugprone-*,
-# readability-*,
-# 
-# google-default-arguments,
-# google-explicit-constructor,
-# google-readability-avoid-underscore-in-googletest-name,
-# google-runtime-operator,
-# 
-# -readability-identifier-length,
-# -readability-redundant-access-specifiers,
-# '
+
+# bugprone-move-forwarding-reference
 
 
 # -cppcoreguidelines-avoid-magic-numbers,

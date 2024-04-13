@@ -13,7 +13,7 @@ namespace logicsim {
  */
 template <std::ranges::input_range R>
     requires std::ranges::sized_range<R>
-constexpr auto to_vector(R&& range) {
+constexpr auto to_vector(const R& range) {
     using iterator = std::ranges::iterator_t<R>;
     using value_type = std::iter_value_t<iterator>;
 

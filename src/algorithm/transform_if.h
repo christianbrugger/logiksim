@@ -28,8 +28,8 @@ auto transform_if(IteratorFirst first1, IteratorLast last1, OutputIterator resul
  * brief: Transform the projected value if the pred is fulfilled.
  */
 template <std::ranges::input_range R, class OutputIterator, class Pred, class Proj>
-auto transform_if(R&& r, OutputIterator result, Proj proj, Pred pred) -> void {
-    transform_if(std::begin(r), std::end(r), result, proj, pred);
+auto transform_if(const R& r, OutputIterator result, Proj proj, Pred pred) -> void {
+    transform_if(std::begin(r), std::end(r), result, std::move(proj), std::move(pred));
 }
 
 }  // namespace logicsim
