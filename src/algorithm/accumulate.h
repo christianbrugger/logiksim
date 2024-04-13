@@ -14,17 +14,17 @@ namespace logicsim {
 //
 
 template <std::input_iterator I, class T>
-constexpr T accumulate(I first, I last, T init) {
+constexpr auto accumulate(I first, I last, T init) -> T {
     return std::accumulate(first, last, std::move(init));
 }
 
 template <std::ranges::input_range R, class T>
-constexpr T accumulate(R&& r, T init) {
+constexpr auto accumulate(R&& r, T init) -> T{
     return std::accumulate(std::ranges::begin(r), std::ranges::end(r), std::move(init));
 }
 
 template <std::input_iterator I, class T, class Proj = std::identity>
-constexpr T accumulate(I first, I last, T init, Proj proj) {
+constexpr auto accumulate(I first, I last, T init, Proj proj) -> T {
     for (; first != last; ++first) {
         init += std::invoke(proj, *first);
     }
@@ -32,7 +32,7 @@ constexpr T accumulate(I first, I last, T init, Proj proj) {
 }
 
 template <std::ranges::input_range R, class T, class Proj = std::identity>
-constexpr T accumulate(R&& r, T init, Proj proj) {
+constexpr auto accumulate(R&& r, T init, Proj proj) -> T {
     return ::logicsim::accumulate(std::ranges::begin(r), std::ranges::end(r),
                                   std::move(init), std::move(proj));
 }

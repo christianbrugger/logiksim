@@ -436,8 +436,8 @@ auto Simulation::is_finished() const -> bool {
 
 namespace {
 
-auto clean_history(simulation::HistoryBuffer &history, delay_t history_length,
-                   time_t simulation_time) -> void {
+auto shrink_history(simulation::HistoryBuffer &history, delay_t history_length,
+                    time_t simulation_time) -> void {
     const auto min_time = simulation_time - history_length;
 
     while (!history.empty() && history.front() < min_time) {
@@ -464,7 +464,7 @@ auto Simulation::record_input_history(input_t input, const bool new_value) -> vo
     const auto simulation_time = time();
 
     // remove old values
-    clean_history(history, history_length, simulation_time);
+    shrink_history(history, history_length, simulation_time);
 
     // add new entry
     history.push_back(simulation_time);

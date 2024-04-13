@@ -3,12 +3,12 @@
 
 # Checks: '-*,modernize-use-trailing-return-type'
 
+HeaderFilterRegex: '.*'
+
 Checks: '
 -*,
-
+bugprone-move-forwarding-reference
 '
-
-
 
 # clang-analyzer-*,
 # clang-diagnostic-*,
@@ -25,7 +25,10 @@ Checks: '
 # google-explicit-constructor,
 # google-readability-avoid-underscore-in-googletest-name,
 # google-runtime-operator,
-
+# 
+# -readability-identifier-length,
+# -readability-redundant-access-specifiers,
+# '
 
 
 # -cppcoreguidelines-avoid-magic-numbers,
@@ -35,10 +38,3 @@ Checks: '
 # -clang-analyzer-optin.cplusplus.UninitializedObject,
 # -modernize-use-trailing-return-type,
 
-
-
-
-# logicsim::Circuit::ElementTemplate::ElementTemplate,
-# logicsim::Circuit::InputTemplate::InputTemplate,
-# logicsim::Circuit::InputTemplate::OutputTemplate
-#
