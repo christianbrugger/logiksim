@@ -48,7 +48,7 @@ class circular_buffer {
     [[nodiscard]] explicit circular_buffer() = default;
     [[nodiscard]] explicit circular_buffer(size_type n);
     [[nodiscard]] explicit circular_buffer(size_type n, value_type const& t);
-    [[nodiscard]] explicit circular_buffer(std::initializer_list<value_type> list);
+    [[nodiscard]] circular_buffer(std::initializer_list<value_type> list);
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto size() const noexcept -> size_type;

@@ -27,7 +27,7 @@ auto distance(ordered_line_t line) -> int {
     return distance(line_t {line});
 }
 
-auto order_points(const line_t line0, const line_t line1) noexcept
+auto order_points(line_t line0, line_t line1) noexcept
     -> std::tuple<ordered_line_t, ordered_line_t> {
     auto a = ordered_line_t {line0};
     auto b = ordered_line_t {line1};

@@ -14,7 +14,7 @@ struct ordered_line_t;
 [[nodiscard]] auto distance(ordered_line_t line) -> int;
 
 // order points within lines
-[[nodiscard]] auto order_points(const line_t line0, const line_t line1) noexcept
+[[nodiscard]] auto order_points(line_t line0, line_t line1) noexcept
     -> std::tuple<ordered_line_t, ordered_line_t>;
 
 [[nodiscard]] auto is_endpoint(point_t point, line_t line) -> bool;

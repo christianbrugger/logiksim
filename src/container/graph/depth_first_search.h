@@ -36,9 +36,9 @@ template <typename index_t = int>
 struct DFSResult {
     using visited_vector_t = boost::container::vector<bool>;
 
-    visited_vector_t visited;
-    index_t n_vertex_visited;
-    DFSStatus status;
+    visited_vector_t visited {};
+    index_t n_vertex_visited {};
+    DFSStatus status {DFSStatus::success};
 
     [[nodiscard]] auto format() const -> std::string;
 };

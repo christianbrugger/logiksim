@@ -37,12 +37,12 @@ template <typename T, typename Char>
     requires logicsim::format_range_type<T, Char>
 struct fmt::formatter<T, Char> {
     constexpr auto parse(fmt::format_parse_context &ctx) {
-        auto it = ctx.begin();
-        auto end = ctx.end();
+        const auto *it = ctx.begin();
+        const auto *const end = ctx.end();
 
         if (it != end && *it == 'n') {
             use_brackets_ = false;
-            ++it;
+            std::advance(it, 1);
         }
 
         if (it == end || *it == '}') {
