@@ -19,9 +19,9 @@ struct color_t {
     // we expose the value, as the type has no invariant
     value_type value {0};
 
-    [[nodiscard]] constexpr explicit color_t() = default;
-    [[nodiscard]] constexpr explicit color_t(uint32_t value_) noexcept;
-    [[nodiscard]] constexpr explicit color_t(uint32_t r, uint32_t g, uint32_t b,
+    [[nodiscard]] explicit constexpr color_t() = default;
+    [[nodiscard]] explicit constexpr color_t(uint32_t value_) noexcept;
+    [[nodiscard]] explicit constexpr color_t(uint32_t r, uint32_t g, uint32_t b,
                                              uint32_t a = 0xFFu) noexcept;
 
     // we make this operator implicit so we can pass color_t to the Blend2D API
