@@ -8,6 +8,8 @@
 
 namespace logicsim {
 
+SpatialSimulation::SpatialSimulation() : SpatialSimulation {Layout {}, delay_t {1us}} {}
+
 SpatialSimulation::SpatialSimulation(Layout &&layout__, delay_t wire_delay_per_distance)
     : layout_ {std::move(layout__)},
       line_trees_ {generate_line_trees(layout_)},

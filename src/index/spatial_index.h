@@ -7,6 +7,7 @@
 
 #include <array>
 #include <cstdint>
+#include <span>
 #include <vector>
 
 namespace logicsim {
@@ -22,6 +23,7 @@ struct segment_t;
 
 struct layout_calculation_data_t;
 class Layout;
+class Selection;
 
 namespace spatial_index {
 
@@ -103,6 +105,15 @@ static_assert(std::regular<SpatialIndex>);
 [[nodiscard]] auto get_segment_indices(SpatialIndex::queried_segments_t result)
     -> std::array<segment_index_t, 4>;
 [[nodiscard]] auto get_unique_wire_id(SpatialIndex::queried_segments_t) -> wire_id_t;
+
+[[nodiscard]] auto is_selected(const SpatialIndex::value_t &item, point_fine_t point,
+                               const Selection &selection, const Layout &layout) -> bool;
+[[nodiscard]] auto anything_selected(std::span<const SpatialIndex::value_t> items,
+                                     point_fine_t point, const Selection &selection,
+                                     const Layout &layout) -> bool;
+[[nodiscard]] auto all_selected(std::span<const SpatialIndex::value_t> items,
+                                point_fine_t point, const Selection &selection,
+                                const Layout &layout) -> bool;
 
 }  // namespace logicsim
 

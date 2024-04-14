@@ -105,8 +105,11 @@ auto load_circuit_example(EditableCircuit& editable_circuit, int number) -> void
         case 4: {
             return load_circuit_example_4(editable_circuit);
         }
+
+        default: {
+            throw std::runtime_error("unknown circuit example number");
+        }
     }
-    throw std::runtime_error("unknown circuit example number");
 }
 
 }  // namespace

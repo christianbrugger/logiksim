@@ -37,8 +37,8 @@ template <typename T, typename Char>
     requires logicsim::format_range_type<T, Char>
 struct fmt::formatter<T, Char> {
     constexpr auto parse(fmt::format_parse_context &ctx) {
-        const auto *it = ctx.begin();
-        const auto *const end = ctx.end();
+        auto it = ctx.begin();
+        const auto end = ctx.end();
 
         if (it != end && *it == 'n') {
             use_brackets_ = false;

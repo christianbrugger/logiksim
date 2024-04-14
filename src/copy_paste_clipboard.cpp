@@ -48,14 +48,14 @@ auto insert_clipboard_data_as_temporary(EditableCircuit& editable_circuit,
 }  // namespace
 
 auto insert_clipboard_data(EditableCircuit& editable_circuit,
-                           serialize::LoadLayoutResult&& load_result__,
+                           serialize::LoadLayoutResult&& load_result_,
                            point_t paste_position) -> PasteClipboardResult {
     // insert as temporary
-    insert_clipboard_data_as_temporary(editable_circuit, std::move(load_result__),
+    insert_clipboard_data_as_temporary(editable_circuit, std::move(load_result_),
                                        paste_position);
 
     // insert as collisions
-    auto cross_points__ = editable_circuit.regularize_temporary_selection(
+    auto cross_points_ = editable_circuit.regularize_temporary_selection(
         editable_circuit.visible_selection());
     editable_circuit.split_temporary_before_insert(editable_circuit.visible_selection());
     editable_circuit.change_insertion_mode(editable_circuit.visible_selection(),
@@ -71,7 +71,7 @@ auto insert_clipboard_data(EditableCircuit& editable_circuit,
 
     return PasteClipboardResult {
         .is_colliding = is_colliding,
-        .cross_points = std::move(cross_points__),
+        .cross_points = std::move(cross_points_),
     };
 }
 

@@ -143,8 +143,8 @@ auto convert_to_output(CircuitData& circuit, wire_connection_t output) -> void {
     convert_from_to(circuit, output, SegmentPointType::input, SegmentPointType::output);
 }
 
-auto convert_to_inputs(CircuitData& circuit, wire_connections_t outputs) -> void {
-    for (auto output : outputs) {
+auto convert_to_inputs(CircuitData& circuit, const wire_connections_t& outputs) -> void {
+    for (const auto output : outputs) {
         convert_to_input(circuit, output);
     }
 }

@@ -211,7 +211,7 @@ static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
         state.PauseTiming();
 
         auto schematic = Schematic {};
-        for (auto __ [[maybe_unused]] : range(8)) {
+        for (auto _0 [[maybe_unused]] : range(8)) {
             auto inverter = schematic.add_element(schematic::NewElement {
                 .element_type = ElementType::buffer_element,
                 .input_count = connection_count_t {1},

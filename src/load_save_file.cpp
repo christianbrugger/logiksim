@@ -38,12 +38,12 @@ auto load_circuit_from_file(std::filesystem::path filename) -> LoadFileResult {
         return LoadFileResult {};
     }
 
-    auto editable_circuit__ = EditableCircuit {};
-    load_result->add(editable_circuit__, {InsertionMode::insert_or_discard});
+    auto editable_circuit_ = EditableCircuit {};
+    load_result->add(editable_circuit_, {InsertionMode::insert_or_discard});
 
     return LoadFileResult {
         .success = true,
-        .editable_circuit = std::move(editable_circuit__),
+        .editable_circuit = std::move(editable_circuit_),
         .view_point = load_result->view_point(),
         .simulation_config = load_result->simulation_config(),
     };

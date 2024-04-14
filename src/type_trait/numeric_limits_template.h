@@ -19,7 +19,7 @@ class numeric_limits_template {
    public:
     static constexpr bool is_specialized = true;
 
-    static constexpr T min() noexcept {
+    static constexpr auto min() noexcept -> T {
         if constexpr (has_static_member_min<T>) {
             static_assert(std::is_same_v<decltype(T::min()), T>);
             return T::min();
@@ -28,7 +28,7 @@ class numeric_limits_template {
         }
     }
 
-    static constexpr T max() noexcept {
+    static constexpr auto max() noexcept -> T {
         if constexpr (has_static_member_max<T>) {
             static_assert(std::is_same_v<decltype(T::max()), T>);
             return T::max();
@@ -37,7 +37,7 @@ class numeric_limits_template {
         }
     }
 
-    static constexpr T lowest() noexcept {
+    static constexpr auto lowest() noexcept -> T {
         static_assert(value_limits::is_integer);
         return max();
     }

@@ -77,15 +77,15 @@ auto convert_from_to(CircuitData& circuit, wire_connection_t output,
 
 auto convert_to_input(CircuitData& circuit, wire_connection_t output) -> void;
 
-auto convert_to_inputs(CircuitData& circuit, wire_connections_t outputs) -> void;
+auto convert_to_inputs(CircuitData& circuit, const wire_connections_t& outputs) -> void;
 
 auto convert_to_output(CircuitData& circuit, wire_connection_t output) -> void;
 
-auto convert_wires_at_outputs_to_inputs(CircuitData& circuit,
-                                        const logicitem_id_t logicitem_id) -> void;
+auto convert_wires_at_outputs_to_inputs(CircuitData& circuit, logicitem_id_t logicitem_id)
+    -> void;
 
 auto convert_wires_at_outputs_to_outputs(CircuitData& circuit,
-                                         const logicitem_id_t logicitem_id) -> void;
+                                         logicitem_id_t logicitem_id) -> void;
 
 //
 // Logic Item Colliding
@@ -94,7 +94,7 @@ auto convert_wires_at_outputs_to_outputs(CircuitData& circuit,
 auto is_logicitem_colliding(const CircuitData& circuit,
                             const layout_calculation_data_t& data) -> bool;
 
-auto is_logicitem_colliding(const CircuitData& circuit, const logicitem_id_t logicitem_id)
+auto is_logicitem_colliding(const CircuitData& circuit, logicitem_id_t logicitem_id)
     -> bool;
 
 }  // namespace editing

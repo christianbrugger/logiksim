@@ -26,6 +26,8 @@ namespace logicsim {
  */
 class SpatialSimulation {
    public:
+    [[nodiscard]] explicit SpatialSimulation();
+
     /**
      * @brief: Create a new spatial simulation.
      *

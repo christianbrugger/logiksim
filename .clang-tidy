@@ -30,6 +30,12 @@ google-runtime-operator,
 
 -readability-identifier-length,
 -readability-redundant-access-specifiers,
+-modernize-concat-nested-namespaces,
+
+-readability-qualified-auto,
+-cppcoreguidelines-avoid-magic-numbers,
+-readability-magic-numbers,
+-readability-uppercase-literal-suffix,
 '
 
 

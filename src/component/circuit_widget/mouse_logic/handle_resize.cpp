@@ -21,7 +21,7 @@ HandleResizeLogic::HandleResizeLogic(const EditableCircuit& editable_circuit,
     : size_handle_ {size_handle},
       initial_logic_item_ {get_single_placed_element(editable_circuit)} {
     Expects(editable_circuit.visible_selection().selected_logic_items().size() == 1);
-    Expects(editable_circuit.visible_selection().selected_segments().size() == 0);
+    Expects(editable_circuit.visible_selection().selected_segments().empty());
     Expects(found_states_matches_insertion_mode(
         display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
         InsertionMode::insert_or_discard));
@@ -61,7 +61,7 @@ auto HandleResizeLogic::finalize(EditableCircuit& editable_circuit) -> void {
 
 namespace {
 
-auto resize_logic_item(EditableCircuit& editable_circuit, const PlacedElement original,
+auto resize_logic_item(EditableCircuit& editable_circuit, const PlacedElement& original,
                        size_handle_t size_handle, int new_delta) {
     // delete element
     editable_circuit.delete_all(editable_circuit.visible_selection());

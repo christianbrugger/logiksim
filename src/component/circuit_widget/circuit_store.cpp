@@ -91,14 +91,14 @@ auto CircuitStore::set_simulation_config(SimulationConfig new_config) -> void {
     Ensures(class_invariant_holds());
 }
 
-auto CircuitStore::set_editable_circuit(EditableCircuit&& editable_circuit__) -> void {
+auto CircuitStore::set_editable_circuit(EditableCircuit&& editable_circuit_) -> void {
     Expects(class_invariant_holds());
 
     if (is_simulation(circuit_state_)) {
         throw std::runtime_error("cannot set new editable circuit when in simulation");
     }
 
-    checked_editable_circuit_.set_editable_circuit(std::move(editable_circuit__));
+    checked_editable_circuit_.set_editable_circuit(std::move(editable_circuit_));
 
     if (const auto count = layout().size(); 0 < count && count < 30) {
         print(layout());

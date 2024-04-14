@@ -58,7 +58,7 @@ auto EditingLogicManager::finalize_editing(EditableCircuit* editable_circuit_)
 
     const auto res = mouse_logic_ ? ManagerResult::require_update : ManagerResult::done;
 
-    if (editable_circuit_ && mouse_logic_) {
+    if (editable_circuit_ != nullptr && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
 
         std::visit(
@@ -82,7 +82,7 @@ auto EditingLogicManager::confirm_editing(EditableCircuit* editable_circuit_)
 
     const auto res = mouse_logic_ ? ManagerResult::require_update : ManagerResult::done;
 
-    if (editable_circuit_ && mouse_logic_) {
+    if (editable_circuit_ != nullptr && mouse_logic_) {
         bool finished = std::visit(overload {
                                        [&](SelectionMoveLogic& arg) {
                                            arg.confirm();
@@ -115,7 +115,7 @@ auto EditingLogicManager::is_area_selection_active() const -> bool {
 }
 
 auto EditingLogicManager::setup_colliding_move(const EditableCircuit& editable_circuit,
-                                               std::vector<point_t> cross_points__)
+                                               std::vector<point_t> cross_points_)
     -> void {
     Expects(class_invariant_holds());
 
@@ -123,11 +123,13 @@ auto EditingLogicManager::setup_colliding_move(const EditableCircuit& editable_c
     Expects(!mouse_logic_);
 
     mouse_logic_.emplace(SelectionMoveLogic {
-        editable_circuit, SelectionMoveLogic::Args {
-                              .has_colliding = true,
-                              .delete_on_cancel = true,
-                              .cross_points = std::move(cross_points__),
-                          }});
+        editable_circuit,
+        SelectionMoveLogic::Args {
+            .has_colliding = true,
+            .delete_on_cancel = true,
+            .cross_points = std::move(cross_points_),
+        },
+    });
 
     Ensures(class_invariant_holds());
 }
@@ -188,13 +190,13 @@ auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_c
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
-    if (editable_circuit_ && !mouse_logic_) {
+    if (editable_circuit_ != nullptr && !mouse_logic_) {
         mouse_logic_ = create_editing_mouse_logic(position, view_config, modifiers,
                                                   *editable_circuit_,
                                                   std::get<EditingState>(circuit_state_));
     }
 
-    if (editable_circuit_ && mouse_logic_) {
+    if (editable_circuit_ != nullptr && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
         const auto grid_position = to_grid(to(position), view_config);
         const auto grid_fine_position = to_grid_fine(to(position), view_config);
@@ -235,7 +237,7 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
-    if (editable_circuit_ && mouse_logic_) {
+    if (editable_circuit_ != nullptr && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
         const auto grid_position = to_grid(to(position), view_config);
         const auto grid_fine_position = to_grid_fine(to(position), view_config);
@@ -274,7 +276,7 @@ auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view
 
     const auto res = mouse_logic_ ? ManagerResult::require_update : ManagerResult::done;
 
-    if (editable_circuit_ && mouse_logic_) {
+    if (editable_circuit_ != nullptr && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
         const auto grid_position = to_grid(to(position), view_config);
         const auto grid_fine_position = to_grid_fine(to(position), view_config);

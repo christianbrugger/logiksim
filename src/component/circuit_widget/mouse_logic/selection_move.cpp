@@ -12,23 +12,6 @@ namespace circuit_widget {
 
 namespace {
 
-auto anything_selected(const Selection& selection, const Layout& layout,
-                       std::span<const SpatialIndex::value_t> items, point_fine_t point)
-    -> bool {
-    for (const auto& item : items) {
-        if (item.is_logicitem()) {
-            if (selection.is_selected(item.logicitem())) {
-                return true;
-            }
-        } else {
-            if (is_selected(selection, layout, item.segment(), point)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 auto add_to_selection(Selection& selection, const Layout& layout,
                       std::span<const SpatialIndex::value_t> items, bool whole_tree)
     -> void {
@@ -73,8 +56,8 @@ auto SelectionMoveLogic::mouse_press(EditableCircuit& editable_circuit,
             return;
         }
 
-        if (!anything_selected(editable_circuit.visible_selection(),
-                               editable_circuit.layout(), items, point)) {
+        if (!anything_selected(items, point, editable_circuit.visible_selection(),
+                               editable_circuit.layout())) {
             auto selection = Selection {};
             add_to_selection(selection, editable_circuit.layout(), items, false);
             editable_circuit.set_visible_selection(selection);

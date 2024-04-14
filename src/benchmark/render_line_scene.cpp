@@ -11,6 +11,7 @@
 #include "line_tree.h"
 #include "line_tree_generation.h"
 #include "logging.h"
+#include "random/bool.h"
 #include "random/generator.h"
 #include "random/ordered_line.h"
 #include "render_circuit.h"
@@ -105,7 +106,7 @@ auto add_random_wire_segment(Rng& rng, EditableCircuit& editable_circuit,
     const auto grid_dist = get_udist(config.min_grid, config.max_grid, rng);
     const auto p0 = point_t {grid_dist(), grid_dist()};
 
-    const auto as_horizontal = uint_distribution<int>(0, 1)(rng);
+    const auto as_horizontal = get_random_bool(rng);
     add_tree_segment(rng, editable_circuit, p0, as_horizontal, config);
 }
 

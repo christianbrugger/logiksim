@@ -40,8 +40,8 @@ class SelectionStore {
     [[nodiscard]] auto operator==(const SelectionStore& other) const -> bool = default;
 
     auto clear() -> void;
-    auto empty() const -> bool;
-    auto size() const -> std::size_t;
+    [[nodiscard]] auto empty() const -> bool;
+    [[nodiscard]] auto size() const -> std::size_t;
 
     [[nodiscard]] auto begin() -> iterator;
     [[nodiscard]] auto end() -> iterator;

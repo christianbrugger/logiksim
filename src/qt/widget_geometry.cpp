@@ -62,8 +62,11 @@ auto to_device_rounded(GeometryInfo geometry_info) -> QRect {
 }
 
 auto to_device_rounded(GeometryInfo geometry_info, QRect clip) -> QRect {
-    return round_logical_to_device(geometry_info.geometry_top_level_logical,
-                                   geometry_info.device_pixel_ratio, clip);
+    const auto result = round_logical_to_device(geometry_info.geometry_top_level_logical,
+                                                geometry_info.device_pixel_ratio, clip);
+
+    Ensures(clip.contains(result));
+    return result;
 }
 
 auto to_size_device(GeometryInfo geometry_info) -> QSize {

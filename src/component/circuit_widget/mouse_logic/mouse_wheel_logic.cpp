@@ -95,14 +95,14 @@ auto wheel_scroll_zoom(QPointF position, Qt::KeyboardModifiers modifiers,
         return wheel_zoom(position, angle_delta, view_config);
     }
 
-    else if (modifiers == Qt::NoModifier) {
+    if (modifiers == Qt::NoModifier) {
         if (pixel_delta) {
             return wheel_scroll_surface_view_point(*pixel_delta, view_config);
         }
         return wheel_scroll_vertical_view_point(angle_delta, view_config);
     }
 
-    else if (modifiers == Qt::ShiftModifier) {
+    if (modifiers == Qt::ShiftModifier) {
         return wheel_scroll_horizontal_view_point(angle_delta, view_config);
     }
 

@@ -15,13 +15,13 @@ class tracked_resource : public std::pmr::memory_resource {
     tracked_resource();
     explicit tracked_resource(std::pmr::memory_resource* upstream);
 
-    auto allocated_size() const -> std::size_t;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
    private:
     auto do_allocate(std::size_t bytes, std::size_t alignment) -> void* override;
     auto do_deallocate(void* p, std::size_t bytes, std::size_t alignment)
         -> void override;
-    auto do_is_equal(const std::pmr::memory_resource& other) const noexcept
+    [[nodiscard]] auto do_is_equal(const std::pmr::memory_resource& other) const noexcept
         -> bool override;
 
    private:

@@ -9,23 +9,6 @@ namespace circuit_widget {
 
 namespace {
 
-auto all_selected(const Selection& selection, const Layout& layout,
-                  std::span<const SpatialIndex::value_t> items, point_fine_t point)
-    -> bool {
-    for (const auto& item : items) {
-        if (item.is_logicitem()) {
-            if (!selection.is_selected(item.logicitem())) {
-                return false;
-            }
-        } else {
-            if (!is_selected(selection, layout, item.segment(), point)) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
 auto add_selection(Selection& selection, const Layout& layout,
                    std::span<const SpatialIndex::value_t> items, point_fine_t point)
     -> void {
@@ -83,13 +66,13 @@ auto SelectionSingleLogic::mouse_press(EditableCircuit& editable_circuit,
     auto selection = Selection {editable_circuit.visible_selection()};
 
     if (!double_click) {
-        if (!all_selected(selection, layout, items, point)) {
+        if (!all_selected(items, point, selection, layout)) {
             add_selection(selection, layout, items, point);
         } else {
             remove_selection(selection, layout, items, point);
         }
     } else {
-        if (!all_selected(selection, layout, items, point)) {
+        if (!all_selected(items, point, selection, layout)) {
             remove_whole_trees(selection, layout, items);
         } else {
             add_whole_trees(selection, layout, items);
@@ -99,7 +82,7 @@ auto SelectionSingleLogic::mouse_press(EditableCircuit& editable_circuit,
     editable_circuit.set_visible_selection(selection);
 }
 
-auto SelectionSingleLogic::finalize(EditableCircuit&) -> void {}
+auto SelectionSingleLogic::finalize(EditableCircuit& /*unused*/) -> void {}
 
 }  // namespace circuit_widget
 

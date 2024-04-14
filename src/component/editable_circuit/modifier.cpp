@@ -5,7 +5,6 @@
 #include "component/editable_circuit/modifier.h"
 #include "format/pointer.h"
 #include "logging.h"
-#include "modifier.h"
 #include "tree_normalization.h"
 
 #include <fmt/core.h>
@@ -34,24 +33,23 @@ namespace {
 
 namespace {
 
-auto create_circuit_data(Layout&& layout__, ModifierConfig config) -> CircuitData {
-    auto index__ = LayoutIndex {layout__};
+auto create_circuit_data(Layout&& layout_, ModifierConfig config) -> CircuitData {
+    auto index_ = LayoutIndex {layout_};
 
-    auto messages__ = config.store_messages
-                          ? std::optional<message_vector_t> {message_vector_t {}}
-                          : std::nullopt;
+    auto messages_ = config.store_messages
+                         ? std::optional<message_vector_t> {message_vector_t {}}
+                         : std::nullopt;
 
-    auto validator__ = config.validate_messages
-                           ? std::optional<MessageValidator> {layout__}
-                           : std::nullopt;
+    auto validator_ = config.validate_messages ? std::optional<MessageValidator> {layout_}
+                                               : std::nullopt;
 
     return CircuitData {
-        .layout = std::move(layout__),
-        .index = std::move(index__),
+        .layout = std::move(layout_),
+        .index = std::move(index_),
         .selection_store {},
         .visible_selection {},
-        .messages = std::move(messages__),
-        .message_validator = std::move(validator__),
+        .messages = std::move(messages_),
+        .message_validator = std::move(validator_),
     };
 }
 

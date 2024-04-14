@@ -22,7 +22,7 @@ struct ContextRenderSettings {
      */
     int thread_count {4};
 
-    auto format() const -> std::string;
+    [[nodiscard]] auto format() const -> std::string;
 };
 
 }  // namespace logicsim

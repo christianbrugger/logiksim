@@ -21,7 +21,7 @@ auto delete_temporary_logicitem(CircuitData& circuit, logicitem_id_t& logicitem_
                                 logicitem_id_t* preserve_element = nullptr) -> void;
 
 [[nodiscard]] auto is_logicitem_position_representable(const Layout& layout,
-                                                       const logicitem_id_t logicitem_id,
+                                                       logicitem_id_t logicitem_id,
                                                        int dx, int dy) -> bool;
 
 [[nodiscard]] auto are_logicitem_positions_representable(const Layout& layout,
@@ -36,7 +36,7 @@ auto delete_temporary_logicitem(CircuitData& circuit, logicitem_id_t& logicitem_
  *    + logicitem is temporary
  *    + new position is representable
  */
-auto move_temporary_logicitem_unchecked(Layout& layout, const logicitem_id_t logicitem_id,
+auto move_temporary_logicitem_unchecked(Layout& layout, logicitem_id_t logicitem_id,
                                         int dx, int dy) -> void;
 
 auto move_or_delete_temporary_logicitem(CircuitData& circuit,
@@ -44,7 +44,7 @@ auto move_or_delete_temporary_logicitem(CircuitData& circuit,
     -> void;
 
 auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logicitem_id,
-                                     InsertionMode new_insertion_mode) -> void;
+                                     InsertionMode new_mode) -> void;
 
 auto add_logicitem(CircuitData& circuit, const LogicItemDefinition& definition,
                    point_t position, InsertionMode insertion_mode) -> logicitem_id_t;

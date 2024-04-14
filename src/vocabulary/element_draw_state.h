@@ -28,7 +28,7 @@ enum class ElementDrawState : uint32_t {
 };
 
 template <>
-auto format(ElementDrawState) -> std::string;
+[[nodiscard]] auto format(ElementDrawState state) -> std::string;
 
 [[nodiscard]] auto is_inserted(ElementDrawState state) noexcept -> bool;
 

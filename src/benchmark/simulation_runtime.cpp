@@ -28,9 +28,9 @@ void _generate_random_events(Rng &rng, Simulation &simulation) {
 
 }  // namespace
 
-auto benchmark_simulation(Rng &rng, Schematic &&schematic__, const int n_events,
+auto benchmark_simulation(Rng &rng, Schematic &&schematic_, const int n_events,
                           const PrintEvents do_print) -> int64_t {
-    Simulation simulation {std::move(schematic__), do_print};
+    Simulation simulation {std::move(schematic_), do_print};
 
     while (true) {
         simulation.run({.max_events = n_events - simulation.processed_event_count()});
@@ -65,9 +65,9 @@ auto benchmark_simulation(const int n_elements, const int m_events,
     return benchmark_simulation(rng, std::move(schematic), m_events, do_print);
 }
 
-auto benchmark_simulation_metastable(Schematic &&schematic__, const int n_events,
+auto benchmark_simulation_metastable(Schematic &&schematic_, const int n_events,
                                      const PrintEvents do_print) -> int64_t {
-    Simulation simulation {std::move(schematic__), do_print};
+    Simulation simulation {std::move(schematic_), do_print};
 
     while (true) {
         // we use realtime timeout, to see the impact of its checking

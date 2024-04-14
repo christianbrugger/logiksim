@@ -115,6 +115,11 @@ class RenderSurface::ScopedContext {
                            QBackingStore* backing_store = nullptr);
     ~ScopedContext();
 
+    ScopedContext(ScopedContext&&) = delete;
+    ScopedContext(const ScopedContext&) = delete;
+    auto operator=(ScopedContext&&) -> ScopedContext& = delete;
+    auto operator=(const ScopedContext&) -> ScopedContext& = delete;
+
     [[nodiscard]] auto context() -> CircuitContext&;
 
    private:

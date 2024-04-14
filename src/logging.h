@@ -26,7 +26,7 @@ class LogFile {
     ~LogFile();
 
     // move construction only, same as fmt::ostream
-    [[nodiscard]] LogFile(LogFile &&) = default;
+    [[nodiscard]] LogFile(LogFile &&) noexcept = default;
     LogFile(const LogFile &) = delete;
     auto operator=(LogFile &&) -> LogFile & = delete;
     auto operator=(const LogFile &) -> LogFile & = delete;
@@ -90,13 +90,13 @@ constexpr auto repeat_format_string() {
     for (std::size_t i = 0; i < count; ++i) {
         const auto element = std::string_view {"{} "};
         for (char c : element) {
-            buffer[pos++] = c;
+            buffer.at(pos++) = c;
         }
     }
     if constexpr (count > 0) {
         --pos;
     }
-    buffer[pos] = '\n';
+    buffer.at(pos) = '\n';
     return buffer;
 }
 

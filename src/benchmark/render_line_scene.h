@@ -8,8 +8,8 @@
 namespace logicsim {
 
 struct SimulatedLineScene {
-    SpatialSimulation spatial_simulation;
-    int64_t total_wire_length_sum;
+    SpatialSimulation spatial_simulation {};
+    int64_t total_wire_length_sum {};
 };
 
 auto fill_line_scene(int n_lines = 100) -> SimulatedLineScene;

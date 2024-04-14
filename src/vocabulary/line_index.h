@@ -59,8 +59,8 @@ static_assert(std::is_trivially_copyable_v<line_index_t>);
 static_assert(std::is_trivially_copy_assignable_v<line_index_t>);
 static_assert(explicitly_convertible_to<line_index_t, line_index_t::difference_type>);
 
-[[nodiscard]] constexpr auto get_previous(line_index_t) -> line_index_t;
-[[nodiscard]] constexpr auto get_next(line_index_t) -> line_index_t;
+[[nodiscard]] constexpr auto get_previous(line_index_t index) -> line_index_t;
+[[nodiscard]] constexpr auto get_next(line_index_t index) -> line_index_t;
 
 //
 // Implementation

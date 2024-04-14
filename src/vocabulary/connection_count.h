@@ -31,13 +31,13 @@ struct connection_count_t {
     static_assert(sizeof(value_type) == sizeof(connection_id_t));
 
    private:
-    value_type value;
+    value_type value {value_type_rep {0}};
 
    public:
     using difference_type = safe_difference_t<value_type_rep>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
-    [[nodiscard]] explicit constexpr connection_count_t() noexcept;
+    [[nodiscard]] explicit constexpr connection_count_t() noexcept = default;
     [[nodiscard]] explicit constexpr connection_count_t(integral auto value_);
     template <class Stored, Stored Min, Stored Max, class P, class E>
     [[nodiscard]] explicit constexpr connection_count_t(
@@ -74,6 +74,7 @@ struct connection_count_t {
     constexpr auto operator--(int) -> connection_count_t;
 };
 
+static_assert(std::is_nothrow_default_constructible_v<connection_count_t>);
 static_assert(std::is_trivially_copyable_v<connection_count_t>);
 static_assert(std::is_trivially_copy_constructible_v<connection_count_t>);
 static_assert(std::is_trivially_copy_assignable_v<connection_count_t>);
@@ -95,8 +96,6 @@ static_assert(
 //
 // Implementation
 //
-
-constexpr connection_count_t::connection_count_t() noexcept : value {0} {};
 
 constexpr connection_count_t::connection_count_t(integral auto value_)
     : value {value_} {};
@@ -202,6 +201,12 @@ constexpr auto operator*(const int &left, const connection_count_t &right)
     -> connection_count_t {
     return operator*(right, left);
 }
+
+//
+// Constants
+//
+
+static_assert(connection_count_t {} == connection_count_t {0});
 
 }  // namespace logicsim
 

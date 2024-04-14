@@ -39,7 +39,7 @@ class polling_iterator {
         : mutator_ {m}, generator_ {g}, state_ {std::move(s)}, status_ {start_status} {}
 
     [[nodiscard]] friend auto operator==(const polling_iterator &it,
-                                         polling_sentinel) noexcept -> bool {
+                                         polling_sentinel /*unused*/) noexcept -> bool {
         return (it.mutator_ == nullptr) || (it.status_ == polling_status::stop);
     }
 

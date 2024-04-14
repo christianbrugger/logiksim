@@ -2,7 +2,6 @@
 
 #include "allocated_size/std_optional.h"
 #include "allocated_size/std_vector.h"
-#include "circuit_data.h"
 #include "component/editable_circuit/circuit_data.h"
 #include "format/container.h"
 #include "logging.h"

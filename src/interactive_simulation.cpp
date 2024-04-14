@@ -39,11 +39,11 @@ InteractiveSimulation::InteractiveSimulation(SpatialSimulation&& spatial_simulat
     Ensures(simulation_time_rate_ >= time_rate_t {0us});
 }
 
-InteractiveSimulation::InteractiveSimulation(Layout&& layout__,
+InteractiveSimulation::InteractiveSimulation(Layout&& layout_,
                                              delay_t wire_delay_per_distance,
                                              time_rate_t simulation_time_rate)
     : InteractiveSimulation {
-          SpatialSimulation {std::move(layout__), wire_delay_per_distance},
+          SpatialSimulation {std::move(layout_), wire_delay_per_distance},
           simulation_time_rate,
       } {
     Ensures(realtime_reference_ <= timer_t::now());

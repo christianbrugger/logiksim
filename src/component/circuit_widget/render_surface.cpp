@@ -101,8 +101,12 @@ auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geom
     if (image->depth() != 32) {
         return tl::unexpected("Widget paintDevice has an unexpected depth.");
     }
+    if (image->bitPlaneCount() != 32) {
+        return tl::unexpected("Widget paintDevice has an unexpected bitPlaneCount.");
+    }
 
     const auto rect = to_device_rounded(geometry_info, image->rect());
+    Expects(image->rect().contains(rect));
 
     // get pointer
     auto pixels_direct = image->constScanLine(rect.y());
@@ -112,13 +116,15 @@ auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geom
         return tl::unexpected("Widget paintDevice data pointer is null.");
     }
     // scanLine can make a deep copy, we don't want that, constScanLine never does
+    // we query that one so if pointers are the same, we know there was no copy made.
     if (pixels != pixels_direct) {
         return tl::unexpected("Widget paintDevice data is shared.");
     }
 
     // shift by x
     static_assert(sizeof(*pixels) == 1);
-    pixels += rect.x() * (image->depth() / 8);
+    static_assert(CHAR_BIT == 8);
+    pixels += std::ptrdiff_t {rect.x()} * std::ptrdiff_t {image->bitPlaneCount() / 8};
 
     auto result = tl::expected<BLImage, std::string> {BLImage {}};
     if (result.value().createFromData(rect.width(), rect.height(), BL_FORMAT_PRGB32,
@@ -148,12 +154,14 @@ auto bl_image_from_qt_image(QImage& qt_image) -> BLImage {
 auto get_bl_image(QBackingStore* backing_store, QImage& qt_image,
                   GeometryInfo geometry_info, bool direct_rendering) -> BLImage {
     if (direct_rendering) {
-        if (auto result = bl_image_from_backing_store(backing_store, geometry_info)) {
+        auto result_ = bl_image_from_backing_store(backing_store, geometry_info);
+
+        if (result_) {
+            // free memory
             qt_image = QImage {};
-            return std::move(*result);
-        } else {
-            print("WARNING: Cannot use direct rendering:", result.error());
+            return std::move(*result_);
         }
+        print("WARNING: Cannot use direct rendering:", result_.error());
     }
 
     resize_qt_image(qt_image, to_size_device(geometry_info));

@@ -12,7 +12,7 @@ namespace circuit_widget {
 namespace {
 
 auto remove_and_insert(EditableCircuit& editable_circuit, selection_id_t selection_id,
-                       LogicItemDefinition element_definition,
+                       const LogicItemDefinition& element_definition,
                        std::optional<point_t> position, InsertionMode mode)
     -> selection_id_t {
     save_delete_all(editable_circuit, selection_id);
@@ -31,8 +31,8 @@ auto remove_and_insert(EditableCircuit& editable_circuit, selection_id_t selecti
 
 }  // namespace
 
-InsertLogicItemLogic::InsertLogicItemLogic(LogicItemDefinition element_definition__)
-    : element_definition_ {std::move(element_definition__)} {}
+InsertLogicItemLogic::InsertLogicItemLogic(LogicItemDefinition element_definition_)
+    : element_definition_ {std::move(element_definition_)} {}
 
 auto InsertLogicItemLogic::mouse_press(EditableCircuit& editable_circuit,
                                        std::optional<point_t> position) -> void {

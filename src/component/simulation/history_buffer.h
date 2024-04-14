@@ -30,7 +30,7 @@ class HistoryBuffer {
 
    public:
     [[nodiscard]] explicit HistoryBuffer() = default;
-    [[nodiscard]] explicit HistoryBuffer(std::initializer_list<value_type> list);
+    [[nodiscard]] HistoryBuffer(std::initializer_list<value_type> list);
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto size() const -> std::size_t;

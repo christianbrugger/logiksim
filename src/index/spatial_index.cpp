@@ -8,6 +8,7 @@
 #include "layout_info.h"
 #include "layout_message.h"
 #include "layout_message_generation.h"
+#include "selection.h"
 #include "vocabulary/grid_fine.h"
 #include "vocabulary/point.h"
 #include "vocabulary/point_fine.h"
@@ -16,6 +17,7 @@
 
 #include <boost/geometry.hpp>
 
+#include <algorithm>
 #include <memory_resource>
 
 namespace logicsim::spatial_index {
@@ -487,6 +489,32 @@ auto get_unique_wire_id(SpatialIndex::queried_segments_t result) -> wire_id_t {
         throw std::runtime_error("result has different ids");
     }
     return result.at(0).wire_id;
+}
+
+auto is_selected(const SpatialIndex::value_t& item, point_fine_t point,
+                 const Selection& selection, const Layout& layout) -> bool {
+    bool is_logicitem = item.is_logicitem();
+
+    return (is_logicitem && selection.is_selected(item.logicitem())) ||
+           (!is_logicitem && is_selected(selection, layout, item.segment(), point));
+}
+
+auto anything_selected(std::span<const SpatialIndex::value_t> items, point_fine_t point,
+                       const Selection& selection, const Layout& layout) -> bool {
+    const auto index_selected = [&](const SpatialIndex::value_t& item) {
+        return is_selected(item, point, selection, layout);
+    };
+
+    return std::ranges::any_of(items, index_selected);
+}
+
+auto all_selected(std::span<const SpatialIndex::value_t> items, point_fine_t point,
+                  const Selection& selection, const Layout& layout) -> bool {
+    const auto index_selected = [&](const SpatialIndex::value_t& item) {
+        return is_selected(item, point, selection, layout);
+    };
+
+    return std::ranges::all_of(items, index_selected);
 }
 
 }  // namespace logicsim

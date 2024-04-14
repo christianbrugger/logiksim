@@ -12,10 +12,10 @@ namespace circuit_widget {
 
 class SelectionSingleLogic : public EditingLogicInterface {
    public:
-    auto mouse_press(EditableCircuit& editable_circuit, point_fine_t point,
-                     bool double_click) -> void;
+    static auto mouse_press(EditableCircuit& editable_circuit, point_fine_t point,
+                            bool double_click) -> void;
 
-    auto finalize(EditableCircuit& editable_circuit) -> void override;
+    auto finalize(EditableCircuit& /*unused*/) -> void override;
 };
 
 }  // namespace circuit_widget
