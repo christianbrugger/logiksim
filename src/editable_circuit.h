@@ -101,10 +101,14 @@ class EditableCircuit {
     [[nodiscard]] auto selection(selection_id_t selection_id) const -> const Selection&;
     auto set_selection(selection_id_t selection_id, Selection selection) -> void;
 
-    auto add_to_selection(selection_id_t, logicitem_id_t logicitem_id) -> void;
-    auto add_to_selection(selection_id_t, segment_part_t segment_part) -> void;
-    auto remove_from_selection(selection_id_t, logicitem_id_t logicitem_id) -> void;
-    auto remove_from_selection(selection_id_t, segment_part_t segment_part) -> void;
+    auto add_to_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
+        -> void;
+    auto add_to_selection(selection_id_t selection_id, segment_part_t segment_part)
+        -> void;
+    auto remove_from_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
+        -> void;
+    auto remove_from_selection(selection_id_t selection_id, segment_part_t segment_part)
+        -> void;
 
     //
     // Visible Selections

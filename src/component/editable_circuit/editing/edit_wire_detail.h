@@ -88,8 +88,7 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 
 auto reset_segment_endpoints(Layout& layout, segment_t segment) -> void;
 
-auto set_segment_crosspoint(Layout& layout, const segment_t segment, point_t point)
-    -> void;
+auto set_segment_crosspoint(Layout& layout, segment_t segment, point_t point) -> void;
 
 using point_update_t =
     std::initializer_list<const std::pair<segment_index_t, SegmentPointType>>;

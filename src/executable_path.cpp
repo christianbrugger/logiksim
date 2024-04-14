@@ -20,7 +20,8 @@ auto get_executable_directory() -> std::filesystem::path {
 
     const auto folder_view =
         std::string_view {buffer}.substr(0, gsl::narrow<std::size_t>(dirname_length));
-    return std::filesystem::path(to_u8string(folder_view));
+
+    return std::filesystem::path {to_u8string(folder_view)};
 }
 
 }  // namespace logicsim

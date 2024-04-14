@@ -57,7 +57,7 @@ struct PasteClipboardResult {
  * The result indicates if it was inserted as normal or colliding.
  */
 [[nodiscard]] auto insert_clipboard_data(EditableCircuit& editable_circuit,
-                                         serialize::LoadLayoutResult&& load_result,
+                                         const serialize::LoadLayoutResult& load_result,
                                          point_t paste_position) -> PasteClipboardResult;
 
 }  // namespace logicsim

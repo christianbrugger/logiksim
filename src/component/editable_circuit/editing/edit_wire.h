@@ -43,7 +43,7 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
                                    int dx, int dy) -> void;
 
 auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_part,
-                                InsertionMode new_insertion_mode) -> void;
+                                InsertionMode new_mode) -> void;
 
 auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
                       InsertionMode insertion_mode) -> segment_part_t;

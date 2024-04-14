@@ -19,7 +19,7 @@ auto LineStore::size() const noexcept -> std::size_t {
     return lines_.size();
 }
 
-auto LineStore::empty() const noexcept -> std::size_t {
+auto LineStore::empty() const noexcept -> bool {
     Expects(lines_.size() == start_lengths_.size());
 
     return lines_.empty();

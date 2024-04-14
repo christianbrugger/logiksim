@@ -757,8 +757,8 @@ auto CircuitWidget::paste_clipboard() -> void {
 
     const auto t = Timer {};
 
-    auto load_result__ = parse_clipboard_text(get_clipboard_text());
-    if (!load_result__) {
+    auto load_result = parse_clipboard_text(get_clipboard_text());
+    if (!load_result) {
         Ensures(class_invariant_holds());
         return;
     }
@@ -767,12 +767,12 @@ auto CircuitWidget::paste_clipboard() -> void {
     set_circuit_state(defaults::selection_state);
 
     const auto paste_position = copy_paste_position();
-    auto paste_result__ = insert_clipboard_data(
-        circuit_store_.editable_circuit(), std::move(*load_result__), paste_position);
+    auto paste_result = insert_clipboard_data(circuit_store_.editable_circuit(),
+                                              load_result.value(), paste_position);
 
-    if (paste_result__.is_colliding) {
-        editing_logic_manager_.setup_colliding_move(
-            circuit_store_.editable_circuit(), std::move(paste_result__.cross_points));
+    if (paste_result.is_colliding) {
+        editing_logic_manager_.setup_colliding_move(circuit_store_.editable_circuit(),
+                                                    std::move(paste_result.cross_points));
     }
 
     update();

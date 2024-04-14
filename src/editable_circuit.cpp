@@ -7,8 +7,8 @@
 
 namespace logicsim {
 
-EditableCircuit::EditableCircuit(Layout&& layout__, Config config)
-    : modifier_ {std::move(layout__), config} {}
+EditableCircuit::EditableCircuit(Layout&& layout, Config config)
+    : modifier_ {std::move(layout), config} {}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", modifier_.circuit_data().layout);
@@ -60,11 +60,11 @@ auto EditableCircuit::change_insertion_mode(selection_id_t selection_id,
     change_insertion_mode_consuming(modifier_, guard.selection_id(), new_insertion_mode);
 }
 
-auto EditableCircuit::change_insertion_mode(Selection selection__,
+auto EditableCircuit::change_insertion_mode(Selection selection,
                                             InsertionMode new_insertion_mode) -> void {
     using namespace editable_circuit;
 
-    const auto guard = ModifierSelectionGuard(modifier_, std::move(selection__));
+    const auto guard = ModifierSelectionGuard(modifier_, std::move(selection));
     change_insertion_mode_consuming(modifier_, guard.selection_id(), new_insertion_mode);
 }
 
@@ -76,11 +76,11 @@ auto EditableCircuit::move_or_delete_temporary(selection_id_t selection_id, int 
     move_or_delete_temporary_consuming(modifier_, guard.selection_id(), delta_x, delta_y);
 }
 
-auto EditableCircuit::move_or_delete_temporary(Selection selection__, int delta_x,
+auto EditableCircuit::move_or_delete_temporary(Selection selection, int delta_x,
                                                int delta_y) -> void {
     using namespace editable_circuit;
 
-    const auto guard = ModifierSelectionGuard(modifier_, std::move(selection__));
+    const auto guard = ModifierSelectionGuard(modifier_, std::move(selection));
     move_or_delete_temporary_consuming(modifier_, guard.selection_id(), delta_x, delta_y);
 }
 
@@ -93,10 +93,10 @@ auto EditableCircuit::delete_all(selection_id_t selection_id) -> void {
     editable_circuit::delete_all(modifier_, selection_id);
 }
 
-auto EditableCircuit::delete_all(Selection selection__) -> void {
+auto EditableCircuit::delete_all(Selection selection) -> void {
     using namespace editable_circuit;
 
-    const auto guard = ModifierSelectionGuard(modifier_, std::move(selection__));
+    const auto guard = ModifierSelectionGuard(modifier_, std::move(selection));
     editable_circuit::delete_all(modifier_, guard.selection_id());
 }
 
@@ -113,8 +113,8 @@ auto EditableCircuit::toggle_wire_crosspoint(point_t point) -> void {
 }
 
 auto EditableCircuit::set_attributes(logicitem_id_t logicitem_id,
-                                     attributes_clock_generator_t attrs__) -> void {
-    modifier_.set_attributes(logicitem_id, std::move(attrs__));
+                                     attributes_clock_generator_t attrs) -> void {
+    modifier_.set_attributes(logicitem_id, std::move(attrs));
 }
 
 //
@@ -122,10 +122,10 @@ auto EditableCircuit::set_attributes(logicitem_id_t logicitem_id,
 //
 
 auto EditableCircuit::regularize_temporary_selection(
-    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points__)
+    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t> {
     return modifier_.regularize_temporary_selection(selection,
-                                                    std::move(true_cross_points__));
+                                                    std::move(true_cross_points));
 }
 
 auto EditableCircuit::split_temporary_before_insert(selection_id_t selection_id) -> void {
@@ -160,8 +160,8 @@ auto EditableCircuit::create_selection() -> selection_id_t {
     return modifier_.create_selection();
 }
 
-auto EditableCircuit::create_selection(Selection selection__) -> selection_id_t {
-    return modifier_.create_selection(std::move(selection__));
+auto EditableCircuit::create_selection(Selection selection) -> selection_id_t {
+    return modifier_.create_selection(std::move(selection));
 }
 
 auto EditableCircuit::create_selection(selection_id_t copy_id) -> selection_id_t {
@@ -184,9 +184,9 @@ auto EditableCircuit::selection(selection_id_t selection_id) const -> const Sele
     return modifier_.circuit_data().selection_store.at(selection_id);
 }
 
-auto EditableCircuit::set_selection(selection_id_t selection_id, Selection selection__)
+auto EditableCircuit::set_selection(selection_id_t selection_id, Selection selection)
     -> void {
-    modifier_.set_selection(selection_id, std::move(selection__));
+    modifier_.set_selection(selection_id, std::move(selection));
 }
 
 auto EditableCircuit::add_to_selection(selection_id_t selection_id,
@@ -217,8 +217,8 @@ auto EditableCircuit::clear_visible_selection() -> void {
     modifier_.clear_visible_selection();
 }
 
-auto EditableCircuit::set_visible_selection(Selection selection__) -> void {
-    modifier_.set_visible_selection(std::move(selection__));
+auto EditableCircuit::set_visible_selection(Selection selection) -> void {
+    modifier_.set_visible_selection(std::move(selection));
 }
 
 auto EditableCircuit::visible_selection_operation_count() const -> std::size_t {
@@ -345,9 +345,9 @@ auto visible_selection_delete_all(EditableCircuit& editable_circuit) -> void {
     // Clear the visible selection before deleting for optimization.
     // So it is not tracked during deletion. (10% speedup)
 
-    auto selection__ = Selection {editable_circuit.visible_selection()};
+    auto selection = Selection {editable_circuit.visible_selection()};
     editable_circuit.clear_visible_selection();
-    editable_circuit.delete_all(std::move(selection__));
+    editable_circuit.delete_all(std::move(selection));
 }
 
 }  // namespace logicsim

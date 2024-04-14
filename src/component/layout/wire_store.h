@@ -39,12 +39,12 @@ class WireStore {
      *         so that visual equivalent layouts compare equal
      */
     auto normalize() -> void;
-    [[nodiscard]] auto operator==(const WireStore &) const -> bool;
+    [[nodiscard]] auto operator==(const WireStore &other) const -> bool;
 
     // add & delete
     auto add_wire() -> wire_id_t;
     auto swap_and_delete(wire_id_t wire_id) -> wire_id_t;
-    auto swap(wire_id_t wire_id_1, wire_id_t wire_id_2) -> void;
+    auto swap_wires(wire_id_t wire_id_1, wire_id_t wire_id_2) -> void;
 
     // getters
     [[nodiscard]] auto segment_tree(wire_id_t wire_id) const -> const SegmentTree &;

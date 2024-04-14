@@ -50,7 +50,7 @@ class VisibleSelection {
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto format() const -> std ::string;
-    [[nodiscard]] auto operator==(const VisibleSelection &) const -> bool;
+    [[nodiscard]] auto operator==(const VisibleSelection &other) const -> bool;
 
     auto clear() -> void;
     auto add(SelectionFunction function, rect_fine_t rect) -> void;

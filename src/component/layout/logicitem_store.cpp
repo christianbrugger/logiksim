@@ -6,7 +6,6 @@
 #include "allocated_size/std_vector.h"
 #include "component/layout/logicitem_store.h"
 #include "layout_info.h"
-#include "logicitem_store.h"
 #include "validate_definition.h"
 #include "vocabulary/layout_calculation_data.h"
 
@@ -190,7 +189,7 @@ auto move_from_vector(std::vector<std::optional<attributes_clock_generator_t>> &
     auto map = layout::attr_map_t<attributes_clock_generator_t> {};
 
     for (logicitem_id_t logicitem_id : range_extended<logicitem_id_t>(vector.size())) {
-        const auto &entry = vector[logicitem_id.value];
+        auto &entry = vector[logicitem_id.value];
 
         if (entry.has_value()) {
             map[logicitem_id] = std::move(entry.value());
@@ -307,17 +306,17 @@ auto LogicItemStore::set_display_state(logicitem_id_t logicitem_id,
 }
 
 auto LogicItemStore::set_attributes(logicitem_id_t logicitem_id,
-                                    attributes_clock_generator_t attrs__) -> void {
+                                    attributes_clock_generator_t attrs) -> void {
     const auto it = map_clock_generator_.find(logicitem_id);
 
     if (it == map_clock_generator_.end()) [[unlikely]] {
         throw std::runtime_error("could not find attribute");
     }
-    if (!is_valid(attrs__)) [[unlikely]] {
+    if (!is_valid(attrs)) [[unlikely]] {
         throw std::runtime_error("attributes not valid");
     }
 
-    it->second = std::move(attrs__);
+    it->second = std::move(attrs);
 }
 
 auto LogicItemStore::set_input_inverter(logicitem_id_t logicitem_id,
@@ -355,7 +354,7 @@ auto LogicItemStore::delete_last() -> void {
     map_clock_generator_.erase(last_id);
 }
 
-auto LogicItemStore::last_logicitem_id() -> logicitem_id_t {
+auto LogicItemStore::last_logicitem_id() const -> logicitem_id_t {
     return logicitem_id_t {
         gsl::narrow_cast<logicitem_id_t::value_type>(size() - std::size_t {1})};
 }

@@ -86,7 +86,7 @@ class LogicItemStore {
 
    private:
     auto delete_last() -> void;
-    auto last_logicitem_id() -> logicitem_id_t;
+    auto last_logicitem_id() const -> logicitem_id_t;
 
    private:
     std::vector<LogicItemType> logicitem_types_ {};

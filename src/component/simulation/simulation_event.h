@@ -38,8 +38,8 @@ static_assert(std::is_trivially_copy_assignable_v<simulation_event_t>);
  * @brief: Check if time or element_id is greater for two events.
  */
 struct greater_time_element_id {
-    [[nodiscard]] auto operator()(const simulation_event_t &,
-                                  const simulation_event_t &) const -> bool;
+    [[nodiscard]] auto operator()(const simulation_event_t &left,
+                                  const simulation_event_t &right) const -> bool;
 };
 
 }  // namespace simulation

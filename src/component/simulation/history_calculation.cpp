@@ -89,7 +89,7 @@ auto calculate_min_index(const HistoryBuffer* history, time_t simulation_time,
               std::ptrdiff_t {min_index} <= history->ssize())) [[unlikely]] {
             throw std::runtime_error("min index out of history bounds");
         }
-        if (history->size() > 0 && simulation_time < history->back()) [[unlikely]] {
+        if (!history->empty() && simulation_time < history->back()) [[unlikely]] {
             throw std::runtime_error("simulation time in the past");
         }
     }

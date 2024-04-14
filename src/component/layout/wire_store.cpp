@@ -45,11 +45,11 @@ auto WireStore::size() const -> std::size_t {
         return segment_trees_.size();
     }
 
-    else if (!segment_trees_[colliding_wire_id.value].empty()) {
+    if (!segment_trees_[colliding_wire_id.value].empty()) {
         return std::size_t {colliding_wire_id} + std::size_t {1};
     }
 
-    else if (!segment_trees_[temporary_wire_id.value].empty()) {
+    if (!segment_trees_[temporary_wire_id.value].empty()) {
         return std::size_t {temporary_wire_id} + std::size_t {1};
     }
 
@@ -105,13 +105,13 @@ auto WireStore::add_wire() -> wire_id_t {
 auto WireStore::swap_and_delete(wire_id_t wire_id) -> wire_id_t {
     const auto last_id = last_wire_id();
 
-    swap(wire_id, last_id);
+    swap_wires(wire_id, last_id);
     delete_last();
 
     return last_id;
 }
 
-auto WireStore::swap(wire_id_t wire_id_1, wire_id_t wire_id_2) -> void {
+auto WireStore::swap_wires(wire_id_t wire_id_1, wire_id_t wire_id_2) -> void {
     if (!is_inserted(wire_id_1) || !is_inserted(wire_id_2)) [[unlikely]] {
         throw std::runtime_error("can only swap inserted wires");
     }

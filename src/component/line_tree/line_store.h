@@ -38,7 +38,7 @@ static_assert(sizeof(length_vector_t) == 12);
 class LineStore {
    public:
     [[nodiscard]] auto size() const noexcept -> std::size_t;
-    [[nodiscard]] auto empty() const noexcept -> std::size_t;
+    [[nodiscard]] auto empty() const noexcept -> bool;
 
     [[nodiscard]] auto allocated_size() const -> std::size_t;
     auto reserve(std::size_t capacity) -> void;
@@ -66,7 +66,7 @@ class LineStore {
      *
      * Returns the index of the new line
      */
-    auto add_line(line_t new_line, line_index_t previous_line) -> line_index_t;
+    auto add_line(line_t new_line, line_index_t previous_index) -> line_index_t;
 
     [[nodiscard]] auto line(line_index_t index) const -> line_t;
     [[nodiscard]] auto start_length(line_index_t index) const -> length_t;

@@ -1,5 +1,7 @@
 #include "event_counter_multi.h"
 
+#include <gsl/gsl>
+
 #include <numeric>
 
 namespace logicsim {
@@ -46,7 +48,7 @@ auto MultiEventCounter::events_per_second() const -> double {
     if (time_delta == double {0}) {
         return double {0};
     }
-    return total_count / time_delta;
+    return gsl::narrow<double>(total_count) / time_delta;
 }
 
 }  // namespace logicsim

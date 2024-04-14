@@ -6,7 +6,7 @@ namespace simulation {
 
 HistoryIterator::HistoryIterator(HistoryCalculationData data,
                                  history_index_t index) noexcept
-    : data_ {std::move(data)}, index_ {index} {}
+    : data_ {data}, index_ {index} {}
 
 auto HistoryIterator::operator*() const -> value_type {
     return history_entry_t {{
@@ -16,12 +16,12 @@ auto HistoryIterator::operator*() const -> value_type {
     }};
 }
 
-auto HistoryIterator::operator++() noexcept -> HistoryIterator & {
+auto HistoryIterator::operator++() -> HistoryIterator & {
     ++index_;
     return *this;
 }
 
-auto HistoryIterator::operator++(int) noexcept -> HistoryIterator {
+auto HistoryIterator::operator++(int) -> HistoryIterator {
     const auto tmp = *this;
     ++(*this);
     return tmp;

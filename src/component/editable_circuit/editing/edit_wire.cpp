@@ -127,8 +127,8 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
 
 namespace {
 
-auto __find_wire_for_inserting_segment(CircuitData& circuit,
-                                       const segment_part_t segment_part) -> wire_id_t {
+auto _find_wire_for_inserting_segment(CircuitData& circuit,
+                                      const segment_part_t segment_part) -> wire_id_t {
     const auto line = get_line(circuit.layout, segment_part);
 
     auto candidate_0 = circuit.index.collision_index().get_first_wire(line.p0);
@@ -160,12 +160,12 @@ auto __find_wire_for_inserting_segment(CircuitData& circuit,
     return circuit.layout.wires().add_wire();
 }
 
-auto __insert_temporary_segment(CircuitData& circuit, segment_part_t& segment_part)
+auto _insert_temporary_segment(CircuitData& circuit, segment_part_t& segment_part)
     -> void {
     if (is_inserted(segment_part.segment.wire_id)) {
         throw std::runtime_error("segment is already inserted");
     }
-    const auto target_wire_id = __find_wire_for_inserting_segment(circuit, segment_part);
+    const auto target_wire_id = _find_wire_for_inserting_segment(circuit, segment_part);
 
     reset_segment_endpoints(circuit.layout, segment_part.segment);
     set_wire_inputs_at_logicitem_outputs(circuit, segment_part.segment);
@@ -189,7 +189,7 @@ auto _wire_change_temporary_to_colliding(CircuitData& circuit,
         move_segment_between_trees(circuit, segment_part, destination);
         reset_segment_endpoints(circuit.layout, segment_part.segment);
     } else {
-        __insert_temporary_segment(circuit, segment_part);
+        _insert_temporary_segment(circuit, segment_part);
         mark_valid(circuit.layout, segment_part);
     }
 }
@@ -295,7 +295,7 @@ auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
 
 namespace {
 
-auto __delete_all_selectable_wires_at(CircuitData& circuit, point_t point) -> void {
+auto _delete_all_selectable_wires_at(CircuitData& circuit, point_t point) -> void {
     // segment ids change during deletion, so we need to query after each deletion
     while (true) {
         const auto segments = circuit.index.selection_index().query_line_segments(point);
@@ -336,7 +336,7 @@ auto _remove_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     const auto new_line_0 = ordered_line_t {lines.at(0).p0, lines.at(3).p1};
     const auto new_line_1 = ordered_line_t {lines.at(1).p0, lines.at(2).p1};
 
-    __delete_all_selectable_wires_at(circuit, point);
+    _delete_all_selectable_wires_at(circuit, point);
     add_wire_segment(circuit, new_line_0, InsertionMode::insert_or_discard);
     add_wire_segment(circuit, new_line_1, InsertionMode::insert_or_discard);
 }
@@ -368,7 +368,7 @@ auto _add_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     const auto line0 = get_line(circuit.layout, segments.at(0));
     const auto line1 = get_line(circuit.layout, segments.at(1));
 
-    __delete_all_selectable_wires_at(circuit, point);
+    _delete_all_selectable_wires_at(circuit, point);
 
     const auto mode = InsertionMode::insert_or_discard;
     add_wire_segment(circuit, ordered_line_t {line0.p0, point}, mode);
@@ -418,14 +418,8 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
                                          : segments.at(left);
                 set_segment_crosspoint(circuit.layout, segment, point);
             } else {
-                mergeable_segments.push_back({
-                    segments.at(right),
-                    segments.at(left),
-                });
-                mergeable_segments.push_back({
-                    segments.at(up),
-                    segments.at(down),
-                });
+                mergeable_segments.emplace_back(segments.at(right), segments.at(left));
+                mergeable_segments.emplace_back(segments.at(up), segments.at(down));
             }
         });
 
@@ -460,7 +454,7 @@ auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
     const auto cache = SpatialPointIndex {split_points};
 
     const auto segments = transform_to_vector(
-        selection.selected_segments(), [&](Selection::segment_pair_t value) {
+        selection.selected_segments(), [&](const Selection::segment_pair_t& value) {
             const auto& [segment, parts] = value;
 
             const auto full_line = get_line(circuit.layout, segment);
@@ -480,7 +474,7 @@ auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
         const auto full_line = get_line(circuit.layout, segment);
 
         auto query_result = cache.query_intersects(full_line);
-        sort_and_make_unique(query_result, std::greater<point_t>());
+        sort_and_make_unique(query_result, std::greater<>());
 
         // splitting puts the second half into a new segment
         // so for this to work with multiple point, cross_points

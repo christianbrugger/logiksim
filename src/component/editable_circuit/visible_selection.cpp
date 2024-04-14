@@ -137,11 +137,11 @@ auto VisibleSelection::pop_last() -> void {
     Ensures(class_invariant_holds());
 }
 
-auto VisibleSelection::set_selection(Selection selection__) -> void {
+auto VisibleSelection::set_selection(Selection selection) -> void {
     Expects(class_invariant_holds());
 
     clear();
-    initial_selection_ = std::move(selection__);
+    initial_selection_ = std::move(selection);
 
     Ensures(operations_.empty());
     Ensures(class_invariant_holds());

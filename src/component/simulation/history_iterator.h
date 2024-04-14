@@ -31,8 +31,8 @@ class HistoryIterator {
                                            history_index_t index) noexcept;
 
     [[nodiscard]] auto operator*() const -> value_type;
-    auto operator++() noexcept -> HistoryIterator &;
-    auto operator++(int) noexcept -> HistoryIterator;
+    auto operator++() -> HistoryIterator &;
+    auto operator++(int) -> HistoryIterator;
 
     [[nodiscard]] auto operator==(const HistoryIterator &right) const noexcept -> bool;
     [[nodiscard]] auto operator-(const HistoryIterator &right) const noexcept

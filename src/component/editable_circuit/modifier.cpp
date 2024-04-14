@@ -57,8 +57,8 @@ auto create_circuit_data(Layout&& layout_, ModifierConfig config) -> CircuitData
 
 Modifier::Modifier() : Modifier {Layout {}, ModifierConfig {}} {}
 
-Modifier::Modifier(Layout&& layout__, ModifierConfig config)
-    : circuit_data_ {create_circuit_data(std::move(layout__), config)} {
+Modifier::Modifier(Layout&& layout_, ModifierConfig config)
+    : circuit_data_ {create_circuit_data(std::move(layout_), config)} {
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -175,16 +175,16 @@ auto Modifier::toggle_inverter(point_t point) -> void {
 }
 
 auto Modifier::set_attributes(logicitem_id_t logicitem_id,
-                              attributes_clock_generator_t attrs__) -> void {
+                              attributes_clock_generator_t attrs_) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
             "set_attributes(logicitem_id = {}, attrs_ = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, logicitem_id, attrs__);
+            circuit_data_.layout, logicitem_id, attrs_);
     }
 
-    circuit_data_.layout.logic_items().set_attributes(logicitem_id, std::move(attrs__));
+    circuit_data_.layout.logic_items().set_attributes(logicitem_id, std::move(attrs_));
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -283,18 +283,18 @@ auto Modifier::toggle_wire_crosspoint(point_t point) -> void {
 //
 
 auto Modifier::regularize_temporary_selection(
-    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points__)
+    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points_)
     -> std::vector<point_t> {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
             "regularize_temporary_selection(selection = {}, true_cross_points = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, selection, true_cross_points__);
+            circuit_data_.layout, selection, true_cross_points_);
     }
 
     const auto points = editing::regularize_temporary_selection(
-        circuit_data_, selection, std::move(true_cross_points__));
+        circuit_data_, selection, std::move(true_cross_points_));
 
     Ensures(debug_class_invariant_holds(*this));
     return points;
@@ -321,16 +321,16 @@ auto Modifier::create_selection() -> selection_id_t {
     return selection_id;
 }
 
-auto Modifier::create_selection(Selection selection__) -> selection_id_t {
+auto Modifier::create_selection(Selection selection_) -> selection_id_t {
     // this method needs to take selection as a copy, as create might invalidate the
     // reference, if the underlying vector is resized and given selection points to it.
 
-    if (!is_valid_selection(selection__, circuit_data_.layout)) {
+    if (!is_valid_selection(selection_, circuit_data_.layout)) {
         throw std::runtime_error("Selection contains elements not in layout");
     }
 
     const auto selection_id = circuit_data_.selection_store.create();
-    circuit_data_.selection_store.at(selection_id) = std::move(selection__);
+    circuit_data_.selection_store.at(selection_id) = std::move(selection_);
 
     Ensures(debug_class_invariant_holds(*this));
     return selection_id;
@@ -350,12 +350,12 @@ auto Modifier::destroy_selection(selection_id_t selection_id) -> void {
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::set_selection(selection_id_t selection_id, Selection selection__) -> void {
-    if (!is_valid_selection(selection__, circuit_data_.layout)) {
+auto Modifier::set_selection(selection_id_t selection_id, Selection selection_) -> void {
+    if (!is_valid_selection(selection_, circuit_data_.layout)) {
         throw std::runtime_error("Selection contains elements not in layout");
     }
 
-    circuit_data_.selection_store.at(selection_id) = std::move(selection__);
+    circuit_data_.selection_store.at(selection_id) = std::move(selection_);
 
     Ensures(debug_class_invariant_holds(*this));
 }
@@ -402,12 +402,12 @@ auto Modifier::clear_visible_selection() -> void {
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::set_visible_selection(Selection selection__) -> void {
-    if (!is_valid_selection(selection__, circuit_data_.layout)) {
+auto Modifier::set_visible_selection(Selection selection_) -> void {
+    if (!is_valid_selection(selection_, circuit_data_.layout)) {
         throw std::runtime_error("Selection contains elements not in layout");
     }
 
-    circuit_data_.visible_selection.set_selection(std::move(selection__));
+    circuit_data_.visible_selection.set_selection(std::move(selection_));
 
     Ensures(debug_class_invariant_holds(*this));
 }

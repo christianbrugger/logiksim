@@ -133,8 +133,8 @@ auto _move_full_segment_between_trees(CircuitData& circuit, segment_t& source_se
 
 namespace move_segment {
 
-auto __copy_segment(CircuitData& circuit, const segment_part_t source_segment_part,
-                    const wire_id_t destination_id) -> segment_part_t {
+auto _copy_segment(CircuitData& circuit, const segment_part_t source_segment_part,
+                   const wire_id_t destination_id) -> segment_part_t {
     auto& m_tree_source = circuit.layout.wires().modifiable_segment_tree(
         source_segment_part.segment.wire_id);
     auto& m_tree_destination =
@@ -185,7 +185,7 @@ auto __copy_segment(CircuitData& circuit, const segment_part_t source_segment_pa
     return destination_segment_part;
 }
 
-auto __shrink_segment_begin(CircuitData& circuit, const segment_t segment) -> void {
+auto _shrink_segment_begin(CircuitData& circuit, const segment_t segment) -> void {
     using namespace info_message;
 
     if (is_inserted(segment.wire_id)) {
@@ -196,8 +196,8 @@ auto __shrink_segment_begin(CircuitData& circuit, const segment_t segment) -> vo
     }
 }
 
-auto __shrink_segment_end(CircuitData& circuit, const segment_t segment,
-                          const part_t part_kept) -> segment_part_t {
+auto _shrink_segment_end(CircuitData& circuit, const segment_t segment,
+                         const part_t part_kept) -> segment_part_t {
     using namespace info_message;
     auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
     m_tree.shrink_segment(segment.segment_index, part_kept);
@@ -218,10 +218,10 @@ auto _move_touching_segment_between_trees(CircuitData& circuit,
         difference_touching_one_side(full_part, source_segment_part.part);
 
     // move
-    move_segment::__shrink_segment_begin(circuit, source_segment_part.segment);
+    move_segment::_shrink_segment_begin(circuit, source_segment_part.segment);
     const auto destination_segment_part =
-        move_segment::__copy_segment(circuit, source_segment_part, destination_id);
-    const auto leftover_segment_part = move_segment::__shrink_segment_end(
+        move_segment::_copy_segment(circuit, source_segment_part, destination_id);
+    const auto leftover_segment_part = move_segment::_shrink_segment_end(
         circuit, source_segment_part.segment, part_kept);
 
     // messages
@@ -266,13 +266,13 @@ auto _move_splitting_segment_between_trees(CircuitData& circuit,
     // move
     const auto source_part1 = segment_part_t {source_segment_part.segment, part1};
 
-    move_segment::__shrink_segment_begin(circuit, source_segment_part.segment);
+    move_segment::_shrink_segment_begin(circuit, source_segment_part.segment);
     const auto destination_part1 =
-        move_segment::__copy_segment(circuit, source_part1, source_part1.segment.wire_id);
+        move_segment::_copy_segment(circuit, source_part1, source_part1.segment.wire_id);
     const auto destination_segment_part =
-        move_segment::__copy_segment(circuit, source_segment_part, destination_id);
+        move_segment::_copy_segment(circuit, source_segment_part, destination_id);
     const auto leftover_segment_part =
-        move_segment::__shrink_segment_end(circuit, source_segment_part.segment, part0);
+        move_segment::_shrink_segment_end(circuit, source_segment_part.segment, part0);
 
     // messages
     circuit.submit(info_message::SegmentPartMoved {
@@ -521,7 +521,7 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
     }
 
     // preserve
-    if (preserve_segment && preserve_segment->segment.wire_id == wire_id) {
+    if (preserve_segment != nullptr && preserve_segment->segment.wire_id == wire_id) {
         const auto p_index = preserve_segment->segment.segment_index;
 
         if (p_index == index_0 || p_index == index_1) {
@@ -875,16 +875,16 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
 
         if (has_through_line_0) {
             throw std::runtime_error("This is not allowed, segment be split");
-        } else {
-            update_segment_point_types(
-                circuit, wire_id,
-                {
-                    std::pair {indices.at(0), SegmentPointType::cross_point},
-                    std::pair {indices.at(1), SegmentPointType::shadow_point},
-                    std::pair {indices.at(2), SegmentPointType::shadow_point},
-                },
-                position);
         }
+
+        update_segment_point_types(
+            circuit, wire_id,
+            {
+                std::pair {indices.at(0), SegmentPointType::cross_point},
+                std::pair {indices.at(1), SegmentPointType::shadow_point},
+                std::pair {indices.at(2), SegmentPointType::shadow_point},
+            },
+            position);
         return;
     }
 

@@ -26,7 +26,7 @@ auto a_disjoint_b(part_t a, part_t b) -> bool {
 }
 
 auto a_inside_b_touching_one_side(part_t a, part_t b) -> bool {
-    return a_inside_b(a, b) && ((b.begin == a.begin) ^ (b.end == a.end));
+    return a_inside_b(a, b) && ((b.begin == a.begin) != (b.end == a.end));
 }
 
 auto a_inside_b_touching_begin(part_t a, part_t b) -> bool {

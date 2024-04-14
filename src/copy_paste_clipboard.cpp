@@ -33,7 +33,7 @@ auto parse_clipboard_text(const std::string& text)
 namespace {
 
 auto insert_clipboard_data_as_temporary(EditableCircuit& editable_circuit,
-                                        serialize::LoadLayoutResult&& load_result,
+                                        const serialize::LoadLayoutResult& load_result,
                                         point_t paste_position) {
     const auto guard = SelectionGuard(editable_circuit);
     load_result.add(editable_circuit, serialize::AddParameters {
@@ -48,11 +48,10 @@ auto insert_clipboard_data_as_temporary(EditableCircuit& editable_circuit,
 }  // namespace
 
 auto insert_clipboard_data(EditableCircuit& editable_circuit,
-                           serialize::LoadLayoutResult&& load_result_,
+                           const serialize::LoadLayoutResult& load_result,
                            point_t paste_position) -> PasteClipboardResult {
     // insert as temporary
-    insert_clipboard_data_as_temporary(editable_circuit, std::move(load_result_),
-                                       paste_position);
+    insert_clipboard_data_as_temporary(editable_circuit, load_result, paste_position);
 
     // insert as collisions
     auto cross_points_ = editable_circuit.regularize_temporary_selection(

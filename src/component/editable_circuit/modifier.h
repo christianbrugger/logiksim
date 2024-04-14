@@ -66,6 +66,11 @@ class Modifier {
     [[nodiscard]] explicit Modifier(Layout&& layout, ModifierConfig config = {});
     ~Modifier();
 
+    Modifier(Modifier&&) = default;
+    Modifier(const Modifier&) = default;
+    auto operator=(Modifier&&) -> Modifier& = default;
+    auto operator=(const Modifier&) -> Modifier& = default;
+
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto circuit_data() const -> const CircuitData&;
@@ -78,8 +83,8 @@ class Modifier {
     auto delete_temporary_logicitem(logicitem_id_t& logicitem_id,
                                     logicitem_id_t* preserve_element = nullptr) -> void;
 
-    auto move_temporary_logicitem_unchecked(const logicitem_id_t logicitem_id, int dx,
-                                            int dy) -> void;
+    auto move_temporary_logicitem_unchecked(logicitem_id_t logicitem_id, int dx, int dy)
+        -> void;
 
     auto move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, int dx, int dy)
         -> void;
@@ -136,10 +141,14 @@ class Modifier {
     auto destroy_selection(selection_id_t selection_id) -> void;
     auto set_selection(selection_id_t selection_id, Selection selection) -> void;
 
-    auto add_to_selection(selection_id_t, logicitem_id_t logicitem_id) -> void;
-    auto add_to_selection(selection_id_t, segment_part_t segment_part) -> void;
-    auto remove_from_selection(selection_id_t, logicitem_id_t logicitem_id) -> void;
-    auto remove_from_selection(selection_id_t, segment_part_t segment_part) -> void;
+    auto add_to_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
+        -> void;
+    auto add_to_selection(selection_id_t selection_id, segment_part_t segment_part)
+        -> void;
+    auto remove_from_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
+        -> void;
+    auto remove_from_selection(selection_id_t selection_id, segment_part_t segment_part)
+        -> void;
 
     //
     // Visible Selection

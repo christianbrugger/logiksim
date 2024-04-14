@@ -1,5 +1,7 @@
 #include "event_counter.h"
 
+#include <gsl/gsl>
+
 namespace logicsim {
 
 EventCounter::EventCounter(duration_t average_interval)
@@ -30,7 +32,7 @@ auto EventCounter::events_per_second() const -> double {
     if (time_delta == 0) {
         return 0;
     }
-    return deque_.size() / time_delta;
+    return gsl::narrow<double>(deque_.size()) / time_delta;
 }
 
 }  // namespace logicsim
