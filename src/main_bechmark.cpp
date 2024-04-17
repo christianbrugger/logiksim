@@ -141,7 +141,7 @@ static void BM_Benchmark_Iter_SmallVector_Private(benchmark::State& state) {
         auto p_index = 0;
 
         for (const auto point : element_body_points_base(data[index])) {
-            buffer[p_index++] = point;
+            buffer.at(p_index++) = point;
             // sum += int {point.x} + int {point.y};
         }
 
@@ -211,7 +211,7 @@ static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
         state.PauseTiming();
 
         auto schematic = Schematic {};
-        for (auto _0 [[maybe_unused]] : range(8)) {
+        for (auto _1 [[maybe_unused]] : range(8)) {
             auto inverter = schematic.add_element(schematic::NewElement {
                 .element_type = ElementType::buffer_element,
                 .input_count = connection_count_t {1},
@@ -288,7 +288,7 @@ BENCHMARK(BM_RenderScene_0);  // NOLINT
 
 }  // namespace logicsim
 
-int main(int argc, char** argv) {
+auto main(int argc, char** argv) -> int {
     ::benchmark::Initialize(&argc, argv);
     if (::benchmark::ReportUnrecognizedArguments(argc, argv)) {
         return 1;

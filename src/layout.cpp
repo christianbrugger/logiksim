@@ -6,7 +6,6 @@
 #include "geometry/line.h"
 #include "geometry/point.h"
 #include "geometry/segment_info.h"
-#include "layout.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/placed_element.h"
 #include "vocabulary/segment_part.h"

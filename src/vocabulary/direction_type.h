@@ -18,7 +18,7 @@ enum class DirectionType {
 };
 
 template <>
-auto format(DirectionType type) -> std::string;
+[[nodiscard]] auto format(DirectionType type) -> std::string;
 
 }  // namespace logicsim
 

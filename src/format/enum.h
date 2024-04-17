@@ -19,7 +19,7 @@
 
 namespace logicsim {
 template <typename T>
-auto format(T) -> std::string;
+[[nodiscard]] auto format(T) -> std::string;
 
 // clang-format off
 template <typename T>

@@ -67,12 +67,12 @@ constexpr auto _generate_widths() {
     constexpr auto count = std::size_t {max_inputs - min_inputs + connection_count_t {1}};
     auto result = std::array<grid_t::value_type, count> {};
     for (connection_count_t i = min_inputs; i <= max_inputs; ++i) {
-        result[std::size_t {i - min_inputs}] = _width(i).value;
+        result.at(std::size_t {i - min_inputs}) = _width(i).value;
     }
     return result;
 }
 
-constexpr static inline auto generated_widths = _generate_widths();
+constexpr inline auto generated_widths = _generate_widths();
 
 // lock in generated values to make sure our saves are compatible
 static_assert(generated_widths ==

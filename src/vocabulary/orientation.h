@@ -21,7 +21,7 @@ enum class orientation_t : uint8_t {
 };
 
 template <>
-auto format(orientation_t state) -> std::string;
+[[nodiscard]] auto format(orientation_t state) -> std::string;
 
 constexpr inline auto all_orientations = std::array {
     orientation_t::right,  //

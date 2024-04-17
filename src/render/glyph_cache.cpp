@@ -42,7 +42,7 @@ auto glyph_entry_t::format() const -> std::string {
 // Font Face
 //
 
-FontFace::FontFace(std::filesystem::path font_file)
+FontFace::FontFace(const std::filesystem::path& font_file)
     : font_data_ {font_file.empty() ? "" : load_file(font_file)},
       hb_font_face_ {std::span<const char> {font_data_.data(), font_data_.size()}} {
     if (!font_file.empty() && font_data_.empty()) {
@@ -76,7 +76,7 @@ auto FontFace::bl_font_face() const -> const BLFontFace& {
 // Font Faces
 //
 
-FontFaces::FontFaces(font_locations_t font_files)
+FontFaces::FontFaces(const font_locations_t& font_files)
     : regular {FontFace {font_files.regular}},
       italic {FontFace {font_files.italic}},
       bold {FontFace {font_files.bold}},
@@ -236,7 +236,7 @@ auto BaselineOffsets::get(FontStyle style) const -> const BaselineOffset& {
 }
 
 auto BaselineOffsets::set(FontStyle style, BaselineOffset offset) -> void {
-    ::logicsim::set(*this, style, std::move(offset));
+    ::logicsim::set(*this, style, offset);
 }
 
 //
@@ -245,7 +245,7 @@ auto BaselineOffsets::set(FontStyle style, BaselineOffset offset) -> void {
 
 GlyphCache::GlyphCache() : GlyphCache(get_default_font_locations()) {}
 
-GlyphCache::GlyphCache(font_locations_t font_files)
+GlyphCache::GlyphCache(const font_locations_t& font_files)
     : font_faces_ {font_files}, baseline_offsets_ {font_faces_}, fonts_ {font_faces_} {}
 
 auto GlyphCache::format() const -> std::string {
@@ -261,7 +261,7 @@ auto GlyphCache::shrink_to_fit() -> void {
 }
 
 auto GlyphCache::get_font(float font_size, FontStyle style) const -> const BLFont& {
-    // reuse font, to avoid allocation everytime we draw a text
+    // reuse font, to avoid allocation every time we draw a text
     auto& font = fonts_.get(style);
     font.setSize(font_size);
     return font;

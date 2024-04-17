@@ -145,10 +145,10 @@ static_assert(wire_cross_point_tag != wire_corner_point_tag);
 }  // namespace collision_index
 
 template <>
-auto format(collision_index::ItemType type) -> std::string;
+[[nodiscard]] auto format(collision_index::ItemType type) -> std::string;
 
 template <>
-auto format(collision_index::CacheState state) -> std::string;
+[[nodiscard]] auto format(collision_index::CacheState state) -> std::string;
 
 /**
  * @brief: Efficiently store collision information of the Layout

@@ -114,7 +114,8 @@ auto create_random_connections(Rng &rng, Schematic &schematic, double connection
     shuffle(all_outputs, rng);
 
     const auto min_size = std::min(all_inputs.size(), all_outputs.size());
-    const auto n_connections = round_to<std::size_t>(connection_ratio * min_size);
+    const auto n_connections =
+        round_to<std::size_t>(connection_ratio * gsl::narrow<double>(min_size));
 
     for (const auto index : range(n_connections)) {
         schematic.connect(all_inputs.at(index), all_outputs.at(index));

@@ -68,20 +68,20 @@ class SpatialIndex {
     explicit SpatialIndex(const Layout &layout);
     explicit SpatialIndex();
     ~SpatialIndex();
-    SpatialIndex(const SpatialIndex &);
-    auto operator=(const SpatialIndex &) -> SpatialIndex &;
-    SpatialIndex(SpatialIndex &&);
-    auto operator=(SpatialIndex &&) -> SpatialIndex &;
+    SpatialIndex(const SpatialIndex &other);
+    auto operator=(const SpatialIndex &other) -> SpatialIndex &;
+    SpatialIndex(SpatialIndex &&other) noexcept;
+    auto operator=(SpatialIndex &&other) noexcept -> SpatialIndex &;
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
-    [[nodiscard]] auto operator==(const SpatialIndex &) const -> bool;
+    [[nodiscard]] auto operator==(const SpatialIndex &other) const -> bool;
 
-    auto query_selection(rect_fine_t rect) const -> std::vector<value_t>;
-    auto has_element(point_fine_t point) const -> bool;
-    auto query_line_segments(point_t point) const -> queried_segments_t;
+    [[nodiscard]] auto query_selection(rect_fine_t rect) const -> std::vector<value_t>;
+    [[nodiscard]] auto has_element(point_fine_t point) const -> bool;
+    [[nodiscard]] auto query_line_segments(point_t point) const -> queried_segments_t;
 
-    auto rects() const -> std::vector<rect_fine_t>;
+    [[nodiscard]] auto rects() const -> std::vector<rect_fine_t>;
 
     auto submit(const InfoMessage &message) -> void;
 
@@ -104,7 +104,8 @@ static_assert(std::regular<SpatialIndex>);
 [[nodiscard]] auto all_same_wire_id(SpatialIndex::queried_segments_t result) -> bool;
 [[nodiscard]] auto get_segment_indices(SpatialIndex::queried_segments_t result)
     -> std::array<segment_index_t, 4>;
-[[nodiscard]] auto get_unique_wire_id(SpatialIndex::queried_segments_t) -> wire_id_t;
+[[nodiscard]] auto get_unique_wire_id(SpatialIndex::queried_segments_t result)
+    -> wire_id_t;
 
 [[nodiscard]] auto is_selected(const SpatialIndex::value_t &item, point_fine_t point,
                                const Selection &selection, const Layout &layout) -> bool;

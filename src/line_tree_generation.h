@@ -27,18 +27,24 @@ class Layout;
  */
 [[nodiscard]] auto generate_line_trees(const Layout& layout) -> std::vector<LineTree>;
 
-[[nodiscard]] auto has_same_segments(const SegmentTree&, const LineTree&) -> bool;
-[[nodiscard]] auto has_same_cross_points(const SegmentTree&, const LineTree&) -> bool;
-[[nodiscard]] auto has_same_corner_points(const SegmentTree&, const LineTree&) -> bool;
-[[nodiscard]] auto has_same_input_position(const SegmentTree&, const LineTree&) -> bool;
-[[nodiscard]] auto has_same_output_positions(const SegmentTree&, const LineTree&) -> bool;
+[[nodiscard]] auto has_same_segments(const SegmentTree& segment_tree,
+                                     const LineTree& line_tree) -> bool;
+[[nodiscard]] auto has_same_cross_points(const SegmentTree& segment_tree,
+                                         const LineTree& line_tree) -> bool;
+[[nodiscard]] auto has_same_corner_points(const SegmentTree& segment_tree,
+                                          const LineTree& line_tree) -> bool;
+[[nodiscard]] auto has_same_input_position(const SegmentTree& segment_tree,
+                                           const LineTree& line_tree) -> bool;
+[[nodiscard]] auto has_same_output_positions(const SegmentTree& segment_tree,
+                                             const LineTree& line_tree) -> bool;
 
 /**
  * @brief: Checks if a segment-tree and line-tree are equivalent.
  *
  * Note this includes same segments, cross-points, corners, input and output positions.
  */
-[[nodiscard]] auto is_equivalent(const SegmentTree&, const LineTree&) -> bool;
+[[nodiscard]] auto is_equivalent(const SegmentTree& segment_tree,
+                                 const LineTree& line_tree) -> bool;
 
 /**
  * @brief: Checks if all lines-trees are equivalent to the segment-trees of the layout.

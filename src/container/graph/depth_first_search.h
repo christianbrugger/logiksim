@@ -23,7 +23,7 @@ enum class DFSStatus {
 };
 
 template <>
-auto format(DFSStatus result) -> std::string;
+[[nodiscard]] auto format(DFSStatus result) -> std::string;
 
 /**
  * @brief: Result of the depth first search.

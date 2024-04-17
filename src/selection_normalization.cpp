@@ -8,6 +8,7 @@
 #include "vocabulary/segment_part.h"
 
 #include <folly/small_vector.h>
+#include <gsl/gsl>
 
 #include <exception>
 #include <vector>
@@ -29,26 +30,34 @@ namespace {
 
 class CrossingCache {
    public:
-    CrossingCache(const CollisionIndex &cache, ordered_line_t full_line)
-        : collision_index_ {cache}, full_line_ {full_line} {}
+    CrossingCache(const CollisionIndex &cache, ordered_line_t full_line);
 
-    auto is_colliding(point_t point) const -> bool {
-        return collision_index_.is_wires_crossing(point);
-    }
-
-    auto is_colliding(offset_t offset) const -> bool {
-        const auto point = to_point(full_line_, offset);
-        return is_colliding(point);
-    }
-
-    auto max_offset() const -> offset_t {
-        return to_part(full_line_).end;
-    }
+    [[nodiscard]] auto is_colliding(point_t point) const -> bool;
+    [[nodiscard]] auto is_colliding(offset_t offset) const -> bool;
+    [[nodiscard]] auto max_offset() const -> offset_t;
 
    private:
-    const CollisionIndex &collision_index_;
-    const ordered_line_t full_line_;
+    gsl::not_null<const CollisionIndex *> collision_index_;
+    ordered_line_t full_line_;
 };
+
+CrossingCache::CrossingCache(const CollisionIndex &cache, ordered_line_t full_line)
+    : collision_index_ {&cache}, full_line_ {full_line} {}
+
+auto CrossingCache::is_colliding(point_t point) const -> bool {
+    return collision_index_->is_wires_crossing(point);
+}
+
+auto CrossingCache::is_colliding(offset_t offset) const -> bool {
+    const auto point = to_point(full_line_, offset);
+    return is_colliding(point);
+}
+
+auto CrossingCache::max_offset() const -> offset_t {
+    return to_part(full_line_).end;
+}
+
+// free functions
 
 auto is_colliding(part_t part, const CrossingCache &cache) -> bool {
     return cache.is_colliding(part.begin) || cache.is_colliding(part.end);

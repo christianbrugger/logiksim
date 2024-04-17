@@ -13,7 +13,7 @@ constexpr inline static auto use_view_config_stroke_width = int {-1};
 auto resolve_stroke_width(int attribute, const ViewConfig& view_config) -> int;
 auto resolve_stroke_width(int attribute, const Context& ctx) -> int;
 
-auto stroke_offset(int stoke_width) -> double;
+auto stroke_offset(int stroke_width) -> double;
 
 }  // namespace logicsim
 

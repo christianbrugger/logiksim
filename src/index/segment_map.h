@@ -21,7 +21,7 @@ class Selection;
 namespace segment_map {
 
 [[nodiscard]] auto to_index(orientation_t orientation)
-    -> std::underlying_type<orientation_t>::type;
+    -> std::underlying_type_t<orientation_t>;
 
 struct adjacent_segments_t {
    public:

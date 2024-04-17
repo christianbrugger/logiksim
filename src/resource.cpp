@@ -11,7 +11,7 @@ namespace logicsim {
 
 namespace {
 
-[[nodiscard]] auto to_absolute_resource_path(std::filesystem::path relative)
+[[nodiscard]] auto to_absolute_resource_path(const std::filesystem::path &relative)
     -> std::filesystem::path {
     Expects(!relative.empty());
 

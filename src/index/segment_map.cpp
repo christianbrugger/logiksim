@@ -1,5 +1,6 @@
 #include "index/segment_map.h"
 
+#include "algorithm/to_underlying.h"
 #include "geometry/orientation.h"
 #include "layout.h"
 #include "selection.h"
@@ -11,12 +12,12 @@ namespace logicsim {
 
 namespace segment_map {
 
-auto to_index(orientation_t orientation) -> std::underlying_type<orientation_t>::type {
+auto to_index(orientation_t orientation) -> std::underlying_type_t<orientation_t> {
     if (orientation == orientation_t::undirected) [[unlikely]] {
         throw std::runtime_error("not supported");
     }
 
-    return static_cast<std::underlying_type<orientation_t>::type>(orientation);
+    return to_underlying(orientation);
 }
 
 auto adjacent_segments_t::at(orientation_t orientation) const -> const segment_t& {
@@ -48,7 +49,7 @@ auto get_mergeable_segments(const adjacent_segments_t& segments)
         return mergable_t {segments.at(left), segments.at(right)};
     }
 
-    else if (segments.has(up) && segments.has(down)) {
+    if (segments.has(up) && segments.has(down)) {
         return mergable_t {segments.at(up), segments.at(down)};
     }
 

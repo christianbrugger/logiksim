@@ -95,20 +95,20 @@ constexpr auto calculate_all_static_body_points() {
     auto result = std::array<std::optional<static_body_points_t>, size> {};
 
     for (const auto logicitem_type : all_logicitem_types) {
-        result[to_underlying(logicitem_type)] =
+        result.at(to_underlying(logicitem_type)) =
             calculate_static_body_points(logicitem_type);
     }
 
     return result;
 }
 
-constexpr static inline auto all_static_body_points = calculate_all_static_body_points();
+constexpr inline auto all_static_body_points = calculate_all_static_body_points();
 
 }  // namespace
 
 auto static_body_points_base(LogicItemType logicitem_type)
     -> const std::optional<static_body_points_t>& {
-    return all_static_body_points[to_underlying(logicitem_type)];
+    return all_static_body_points.at(to_underlying(logicitem_type));
 }
 
 auto input_locations_base(const layout_calculation_data_t& data) -> inputs_vector {

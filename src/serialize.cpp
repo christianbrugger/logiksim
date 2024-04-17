@@ -303,9 +303,10 @@ auto calculate_move_delta(point_t save_position, std::optional<point_t> load_pos
 LoadLayoutResult::LoadLayoutResult(SerializedLayout&& layout)
     : data_ {std::make_unique<SerializedLayout>(std::move(layout))} {}
 
-LoadLayoutResult::LoadLayoutResult(LoadLayoutResult&&) = default;
+LoadLayoutResult::LoadLayoutResult(LoadLayoutResult&&) noexcept = default;
 
-auto LoadLayoutResult::operator=(LoadLayoutResult&&) -> LoadLayoutResult& = default;
+auto LoadLayoutResult::operator=(LoadLayoutResult&&) noexcept
+    -> LoadLayoutResult& = default;
 
 LoadLayoutResult::~LoadLayoutResult() = default;
 

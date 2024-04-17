@@ -309,7 +309,7 @@ auto connector_vertical_alignment(orientation_t orientation) -> VTextAlignment {
 
 auto draw_connector_label(Context& ctx, point_t position, orientation_t orientation,
                           std::string_view label, ElementDrawState state) -> void {
-    const auto point = label.size() > 0 && label.at(0) == '>'
+    const auto point = !label.empty() && label.at(0) == '>'
                            ? point_fine_t {position}
                            : connector_point(position, orientation,
                                              -defaults::font::connector_label_margin);
@@ -371,19 +371,20 @@ auto get_logic_item_state(const Layout& layout, logicitem_id_t logicitem_id,
     if (is_inserted(display_state)) {
         if (display_state == display_state_t::valid) {
             return ElementDrawState::valid;
-        } else if (is_selected()) {
+        }
+        if (is_selected()) {
             return ElementDrawState::normal_selected;
         }
         return ElementDrawState::normal;
-    } else {
-        if (display_state == display_state_t::colliding) {
-            return ElementDrawState::colliding;
-        } else if (is_selected()) {
-            return ElementDrawState::temporary_selected;
-        } else [[unlikely]] {
-            throw_exception("cannot draw temporary items");
-        }
     }
+
+    if (display_state == display_state_t::colliding) {
+        return ElementDrawState::colliding;
+    }
+    if (is_selected()) {
+        return ElementDrawState::temporary_selected;
+    }
+    throw_exception("cannot draw temporary items");
 }
 
 auto get_logic_item_fill_color(ElementDrawState state) -> color_t {
@@ -421,7 +422,7 @@ auto draw_logic_item_rect(Context& ctx, const Layout& layout, logicitem_id_t log
     -> void {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
     const auto rect = element_body_draw_rect(layout_data);
-    draw_logic_item_rect(ctx, rect, state, std::move(attributes));
+    draw_logic_item_rect(ctx, rect, state, attributes);
 }
 
 auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, ElementDrawState state,
@@ -456,7 +457,7 @@ auto draw_logic_item_label(Context& ctx, const Layout& layout,
                            ElementDrawState state, LogicItemTextAttributes attributes)
     -> void {
     const auto center = get_logic_item_center(layout, logicitem_id);
-    draw_logic_item_label(ctx, center, text, state, std::move(attributes));
+    draw_logic_item_label(ctx, center, text, state, attributes);
 }
 
 auto draw_logic_item_label(Context& ctx, point_fine_t center, std::string_view text,
@@ -743,7 +744,7 @@ auto _number_value_to_text(bool two_complement, std::size_t digit_count) {
             // sign extensions
             if (0 < digit_count && digit_count < 64) {
                 constexpr auto all_ones = ~uint64_t {0};
-                const auto sign = number >> (digit_count - std::size_t {1});
+                const auto sign = (number >> (digit_count - std::size_t {1})) > 0;
                 const auto sign_flag = sign ? all_ones : uint64_t {0};
                 unsigned_value = ((all_ones << digit_count) & sign_flag) | number;
             }
@@ -904,8 +905,8 @@ auto draw_shift_register(Context& ctx, const Layout& layout, logicitem_id_t logi
     const auto position = layout.logic_items().position(logicitem_id);
     for (auto n : range(output_count, state_size)) {
         const auto point = point_fine_t {
-            -1 + 2.0 * (n / output_count),
-            0.25 + 1.5 * (n % output_count),
+            -1 + 2.0 * static_cast<double>(n / output_count),
+            0.25 + 1.5 * static_cast<double>(n % output_count),
         };
         const auto logic_value = logic_state ? logic_state->internal_state(n) : false;
         draw_binary_value(ctx, position + point, logic_value, state);

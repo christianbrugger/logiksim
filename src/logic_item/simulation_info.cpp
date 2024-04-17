@@ -123,6 +123,17 @@ struct state_mapping_clock_generator {
         }
     }
 
+    ~state_mapping_clock_generator() = default;
+
+    // non-copyable && non-movable
+    auto operator=(const state_mapping_clock_generator &other)
+        -> state_mapping_clock_generator & = delete;
+    auto operator=(state_mapping_clock_generator &&other) noexcept
+        -> state_mapping_clock_generator & = delete;
+    state_mapping_clock_generator(const state_mapping_clock_generator &other) = delete;
+    state_mapping_clock_generator(state_mapping_clock_generator &&other) noexcept =
+        delete;
+
     bool_ref enabled;
     bool_ref output_value;
     bool_ref on_finish_event;
@@ -338,7 +349,7 @@ auto calculate_outputs_from_inputs(const logic_small_vector_t &input,
         using enum ElementType;
 
         case wire:
-            return logic_small_vector_t(output_count.count(), input.at(0));
+            return {logic_small_vector_t(output_count.count(), input.at(0))};
 
         case buffer_element:
             return {input.at(0)};

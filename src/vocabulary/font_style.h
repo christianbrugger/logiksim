@@ -24,7 +24,7 @@ constexpr inline auto all_font_styles = std::array {
 };
 
 template <>
-auto format(FontStyle style) -> std::string;
+[[nodiscard]] auto format(FontStyle style) -> std::string;
 
 }  // namespace logicsim
 

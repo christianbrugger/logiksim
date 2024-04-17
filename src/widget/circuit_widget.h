@@ -65,7 +65,7 @@ enum class UserAction {
 }  // namespace circuit_widget
 
 template <>
-auto format(circuit_widget::UserAction action) -> std::string;
+[[nodiscard]] auto format(circuit_widget::UserAction action) -> std::string;
 
 /**
  * @brief: Widget that hold the circuit and is responsible for managing rendering,

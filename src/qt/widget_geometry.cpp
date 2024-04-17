@@ -1,5 +1,7 @@
 #include "qt/widget_geometry.h"
 
+#include "algorithm/round.h"
+
 #include <gsl/gsl>
 
 #include <QWidget>
@@ -45,13 +47,19 @@ auto round_logical_to_device(QPointF p, double pixel_ratio,
 
 auto round_logical_to_device(QRectF rect, double pixel_ratio,
                              std::optional<QRect> clip = {}) -> QRect {
-    const auto p0_logic = QPoint(rect.x(), rect.y());
-    const auto p1_logic = QPoint(rect.x() + rect.width(), rect.y() + rect.height());
+    const auto p0_logic = QPoint {
+        round_to<int>(rect.x()),
+        round_to<int>(rect.y()),
+    };
+    const auto p1_logic = QPoint {
+        round_to<int>(rect.x() + rect.width()),
+        round_to<int>(rect.y() + rect.height()),
+    };
 
     const auto p0 = round_logical_to_device(p0_logic, pixel_ratio, clip);
     const auto p1 = round_logical_to_device(p1_logic, pixel_ratio, clip);
 
-    return QRect(p0.x(), p0.y(), p1.x() - p0.x(), p1.y() - p0.y());
+    return QRect {p0.x(), p0.y(), p1.x() - p0.x(), p1.y() - p0.y()};
 }
 
 }  // namespace

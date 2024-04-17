@@ -76,7 +76,7 @@ auto logic_item_output_delays(const Layout& layout, logicitem_id_t logicitem_id)
 
         default: {
             const auto output_count = layout.logic_items().output_count(logicitem_id);
-            return output_delays_t(output_count.count(), delay);
+            return {output_delays_t(output_count.count(), delay)};
         }
     }
 }

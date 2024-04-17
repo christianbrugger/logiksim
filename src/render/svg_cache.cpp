@@ -22,9 +22,9 @@ svg_entry_t::svg_entry_t() = default;
 svg_entry_t::svg_entry_t(svg_data_t &&data_)
     : data {std::make_unique<svg_data_t>(std::move(data_))} {}
 
-svg_entry_t::svg_entry_t(svg_entry_t &&) = default;
+svg_entry_t::svg_entry_t(svg_entry_t &&) noexcept = default;
 
-auto svg_entry_t::operator=(svg_entry_t &&) -> svg_entry_t & = default;
+auto svg_entry_t::operator=(svg_entry_t &&) noexcept -> svg_entry_t & = default;
 
 svg_entry_t::~svg_entry_t() = default;
 

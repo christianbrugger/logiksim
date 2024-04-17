@@ -9,10 +9,10 @@ namespace logicsim {
 
 namespace {
 
-constexpr static inline auto logic_item_delay = delay_t {3us};
+constexpr inline auto logic_item_delay = delay_t {3us};
 
-constexpr static inline auto button_delay = delay_t::epsilon();
-constexpr static inline auto clock_generator_output_delay = delay_t::epsilon();
+constexpr inline auto button_delay = delay_t::epsilon();
+constexpr inline auto clock_generator_output_delay = delay_t::epsilon();
 
 }  // namespace
 
@@ -149,7 +149,7 @@ auto element_internal_connections(ElementType element_type) -> internal_connecti
 }
 
 auto has_internal_connections(ElementType element_type) -> bool {
-    return element_internal_connections(element_type).size() != 0;
+    return !element_internal_connections(element_type).empty();
 }
 
 auto is_input_output_count_valid(ElementType element_type, connection_count_t input_count,

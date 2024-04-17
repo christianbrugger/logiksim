@@ -28,7 +28,7 @@ auto get_mouse_position_inside_widget(const QWidget& widget) -> QPointF {
         return mouse_position;
     }
 
-    return QPointF(widget.width() / 2., widget.height() / 2.);
+    return QPointF {widget.width() / 2., widget.height() / 2.};
 }
 
 }  // namespace logicsim

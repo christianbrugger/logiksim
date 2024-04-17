@@ -4,13 +4,12 @@
 #include "allocated_size/trait.h"
 #include "component/line_tree/tree_builder.h"
 #include "geometry/orientation.h"
-#include "line_tree.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/ordered_line.h"
 
 namespace logicsim {
 
-LineTree::LineTree(line_tree::LineStore&& store__) : store_ {std::move(store__)} {}
+LineTree::LineTree(line_tree::LineStore&& store) : store_ {std::move(store)} {}
 
 auto LineTree::format() const -> std::string {
     return store_.format();

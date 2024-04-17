@@ -76,7 +76,8 @@ auto get_segment_point_type(const segment_info_t &info, point_t position)
     -> SegmentPointType {
     if (info.line.p0 == position) {
         return info.p0_type;
-    } else if (info.line.p1 == position) {
+    }
+    if (info.line.p1 == position) {
         return info.p1_type;
     };
     throw std::runtime_error("Position needs to be an endpoint of the segment.");

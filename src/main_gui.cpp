@@ -11,11 +11,12 @@
 
 auto main(int argc, char* argv[]) -> int {
     using namespace logicsim;
-    auto app = QApplication {argc, argv};
 
-    app.setApplicationName(LS_APP_NAME);
-    app.setApplicationVersion(LS_APP_VERSION_STR);
-    app.setOrganizationName(LS_APP_NAME);
+    QApplication::setApplicationName(LS_APP_NAME);
+    QApplication::setApplicationVersion(LS_APP_VERSION_STR);
+    QApplication::setOrganizationName(LS_APP_NAME);
+
+    auto app [[maybe_unused]] = QApplication {argc, argv};
 
 #ifdef LS_LOG_TO_FILE
     const auto log_filename = get_writable_setting_path(setting_t::logfile).toStdString();
@@ -28,7 +29,7 @@ auto main(int argc, char* argv[]) -> int {
 
         auto frame = MainWidget {};
         frame.show();
-        return app.exec();
+        return QApplication::exec();
 
 #ifdef LS_EXCEPTION_MESSAGE_BOX
     }

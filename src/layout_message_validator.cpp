@@ -3,7 +3,6 @@
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "layout_message.h"
 #include "layout_message_generation.h"
-#include "layout_message_validator.h"
 #include "logging.h"
 
 #include <fmt/core.h>

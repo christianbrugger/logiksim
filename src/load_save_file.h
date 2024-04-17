@@ -19,7 +19,7 @@ struct SimulationConfig;
 auto serialize_circuit(const Layout &layout, SimulationConfig simulation_config)
     -> std::string;
 
-auto save_circuit_to_file(const Layout &layout, std::filesystem::path filename,
+auto save_circuit_to_file(const Layout &layout, const std::filesystem::path &filename,
                           std::optional<ViewPoint> view_point,
                           std::optional<SimulationConfig> simulation_config) -> bool;
 
@@ -32,7 +32,7 @@ struct LoadFileResult {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-[[nodiscard]] auto load_circuit_from_file(std::filesystem::path filename)
+[[nodiscard]] auto load_circuit_from_file(const std::filesystem::path &filename)
     -> LoadFileResult;
 
 }  // namespace logicsim

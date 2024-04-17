@@ -210,7 +210,7 @@ auto all_wires_equivalent(const Layout& layout, const std::vector<LineTree>& lin
         if (is_inserted(wire_id)) {
             return is_equivalent(layout.wires().segment_tree(wire_id), line_tree);
         }
-        return line_tree == LineTree {};
+        return line_tree.empty();
     };
 
     return std::ranges::all_of(wire_ids(layout), is_wire_equivalent);

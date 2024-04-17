@@ -18,8 +18,10 @@ auto get_random_insertion_mode(Rng& rng) -> InsertionMode {
             return collisions;
         case 2:
             return insert_or_discard;
+
+        default:
+            std::terminate();
     }
-    std::terminate();
 }
 
 }  // namespace logicsim

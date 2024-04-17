@@ -17,7 +17,7 @@ namespace logicsim {
 using OptionalLogicValue = std::optional<bool>;
 
 template <>
-auto format(OptionalLogicValue value) -> std::string;
+[[nodiscard]] auto format(OptionalLogicValue value) -> std::string;
 
 }  // namespace logicsim
 

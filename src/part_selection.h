@@ -55,7 +55,7 @@ class PartSelection {
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     auto add_part(part_t part) -> void;
-    auto remove_part(part_t part) -> void;
+    auto remove_part(part_t removing) -> void;
     auto copy_parts(const PartSelection& source, part_copy_definition_t copy_definition)
         -> void;
 

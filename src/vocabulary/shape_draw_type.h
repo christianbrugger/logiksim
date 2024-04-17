@@ -14,7 +14,7 @@ enum class ShapeDrawType {
 };
 
 template <>
-auto format(ShapeDrawType type) -> std::string;
+[[nodiscard]] auto format(ShapeDrawType type) -> std::string;
 
 [[nodiscard]] auto do_fill(ShapeDrawType type) -> bool;
 [[nodiscard]] auto do_stroke(ShapeDrawType type) -> bool;

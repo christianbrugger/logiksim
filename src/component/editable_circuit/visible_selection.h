@@ -21,7 +21,7 @@ enum class SelectionFunction {
 };
 
 template <>
-auto format(SelectionFunction selection_function) -> std::string;
+[[nodiscard]] auto format(SelectionFunction selection_function) -> std::string;
 
 namespace visible_selection {
 

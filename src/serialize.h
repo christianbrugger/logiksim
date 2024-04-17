@@ -54,9 +54,9 @@ class LoadLayoutResult {
    public:
     explicit LoadLayoutResult(SerializedLayout&& layout);
 
-    LoadLayoutResult(LoadLayoutResult&&);
+    LoadLayoutResult(LoadLayoutResult&&) noexcept;
     LoadLayoutResult(const LoadLayoutResult&) = delete;
-    auto operator=(LoadLayoutResult&&) -> LoadLayoutResult&;
+    auto operator=(LoadLayoutResult&&) noexcept -> LoadLayoutResult&;
     auto operator=(const LoadLayoutResult&) -> LoadLayoutResult& = delete;
     ~LoadLayoutResult();
 

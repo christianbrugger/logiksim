@@ -20,9 +20,9 @@ namespace logicsim {
 InteractiveSimulation::InteractiveSimulation()
     : InteractiveSimulation {Layout {}, delay_t {0us}, time_rate_t {0us}} {}
 
-InteractiveSimulation::InteractiveSimulation(SpatialSimulation&& spatial_simulation__,
+InteractiveSimulation::InteractiveSimulation(SpatialSimulation&& spatial_simulation,
                                              time_rate_t simulation_time_rate)
-    : spatial_simulation_ {spatial_simulation__},
+    : spatial_simulation_ {std::move(spatial_simulation)},
       interaction_cache_ {spatial_simulation_.layout()},
 
       simulation_time_rate_ {simulation_time_rate},
@@ -39,11 +39,11 @@ InteractiveSimulation::InteractiveSimulation(SpatialSimulation&& spatial_simulat
     Ensures(simulation_time_rate_ >= time_rate_t {0us});
 }
 
-InteractiveSimulation::InteractiveSimulation(Layout&& layout_,
+InteractiveSimulation::InteractiveSimulation(Layout&& layout,
                                              delay_t wire_delay_per_distance,
                                              time_rate_t simulation_time_rate)
     : InteractiveSimulation {
-          SpatialSimulation {std::move(layout_), wire_delay_per_distance},
+          SpatialSimulation {std::move(layout), wire_delay_per_distance},
           simulation_time_rate,
       } {
     Ensures(realtime_reference_ <= timer_t::now());
@@ -167,8 +167,9 @@ auto InteractiveSimulation::expected_simulation_time(realtime_t now) const -> ti
     Expects(simulation_time_rate_ >= time_rate_t {0us});
 
     const auto realtime_delta = std::chrono::duration<double> {now - realtime_reference_};
-    const auto time_delta_ns = realtime_delta / std::chrono::seconds {1} *
-                               simulation_time_rate_.rate_per_second.count_ns();
+    const auto time_delta_ns =
+        realtime_delta / std::chrono::seconds {1} *
+        gsl::narrow<double>(simulation_time_rate_.rate_per_second.count_ns());
 
     const auto time_delta = delay_t {round_to<delay_t::rep>(time_delta_ns) * 1ns};
     const auto expected_time = time_t {simulation_time_reference_ + time_delta};

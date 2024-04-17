@@ -86,9 +86,10 @@ auto SpatialPointIndex::operator=(const SpatialPointIndex& other) -> SpatialPoin
     return *this;
 }
 
-SpatialPointIndex::SpatialPointIndex(SpatialPointIndex&&) = default;
+SpatialPointIndex::SpatialPointIndex(SpatialPointIndex&&) noexcept = default;
 
-auto SpatialPointIndex::operator=(SpatialPointIndex&&) -> SpatialPointIndex& = default;
+auto SpatialPointIndex::operator=(SpatialPointIndex&&) noexcept -> SpatialPointIndex& =
+                                                                       default;
 
 auto SpatialPointIndex::add_split_point(point_t point) -> void {
     using namespace spatial_point_index;

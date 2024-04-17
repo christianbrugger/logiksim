@@ -788,6 +788,7 @@ add_subdirectory(external/gcem EXCLUDE_FROM_ALL SYSTEM)
 add_subdirectory(external/svg2b2d EXCLUDE_FROM_ALL SYSTEM)
 
 # expected
+set(EXPECTED_BUILD_TESTS OFF)
 add_subdirectory(external/expected EXCLUDE_FROM_ALL SYSTEM)
 
 # cppcoro (cppcoro)

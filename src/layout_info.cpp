@@ -122,7 +122,7 @@ auto element_enable_input_id(LogicItemType logicitem_type)
 auto element_fixed_width(LogicItemType logicitem_type) -> grid_t {
     const auto info = get_layout_info(logicitem_type);
 
-    if (!info.fixed_width || info.variable_width) [[unlikely]] {
+    if (info.variable_width != nullptr) [[unlikely]] {
         throw std::runtime_error("element has variable width");
     }
 
@@ -132,7 +132,7 @@ auto element_fixed_width(LogicItemType logicitem_type) -> grid_t {
 auto element_fixed_height(LogicItemType logicitem_type) -> grid_t {
     const auto info = get_layout_info(logicitem_type);
 
-    if (!info.fixed_height || info.variable_height) [[unlikely]] {
+    if (info.variable_height != nullptr) [[unlikely]] {
         throw std::runtime_error("element has variable height");
     }
 
@@ -146,12 +146,14 @@ auto element_fixed_size(LogicItemType logicitem_type) -> point_t {
 
 auto element_width(const layout_calculation_data_t &data) -> grid_t {
     const auto info = get_layout_info(data.logicitem_type);
-    return info.variable_width ? info.variable_width(data) : info.fixed_width.value();
+    return info.variable_width != nullptr ? info.variable_width(data)
+                                          : info.fixed_width.value();
 }
 
 auto element_height(const layout_calculation_data_t &data) -> grid_t {
     const auto info = get_layout_info(data.logicitem_type);
-    return info.variable_height ? info.variable_height(data) : info.fixed_height.value();
+    return info.variable_height != nullptr ? info.variable_height(data)
+                                           : info.fixed_height.value();
 }
 
 auto element_size(const layout_calculation_data_t &data) -> point_t {

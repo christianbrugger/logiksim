@@ -15,7 +15,7 @@ enum class HorizontalAlignment : uint8_t {
 };
 
 template <>
-auto format(HorizontalAlignment alignment) -> std::string;
+[[nodiscard]] auto format(HorizontalAlignment alignment) -> std::string;
 
 enum class VerticalAlignment : uint8_t {
     center,
@@ -24,7 +24,7 @@ enum class VerticalAlignment : uint8_t {
 };
 
 template <>
-auto format(VerticalAlignment alignment) -> std::string;
+[[nodiscard]] auto format(VerticalAlignment alignment) -> std::string;
 
 }  // namespace logicsim
 

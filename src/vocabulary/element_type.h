@@ -45,7 +45,7 @@ enum class ElementType : uint8_t {
 };
 
 template <>
-auto format(ElementType type) -> std::string;
+[[nodiscard]] auto format(ElementType type) -> std::string;
 
 [[nodiscard]] auto is_logic_item(ElementType element_type) -> bool;
 

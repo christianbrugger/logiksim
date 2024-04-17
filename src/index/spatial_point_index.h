@@ -26,10 +26,11 @@ class SpatialPointIndex {
     [[nodiscard]] explicit SpatialPointIndex();
     [[nodiscard]] explicit SpatialPointIndex(std::span<const point_t> points);
     ~SpatialPointIndex();
-    SpatialPointIndex(const SpatialPointIndex &);
-    auto operator=(const SpatialPointIndex &) -> SpatialPointIndex &;
-    SpatialPointIndex(SpatialPointIndex &&);
-    auto operator=(SpatialPointIndex &&) -> SpatialPointIndex &;
+
+    SpatialPointIndex(const SpatialPointIndex &other);
+    auto operator=(const SpatialPointIndex &other) -> SpatialPointIndex &;
+    SpatialPointIndex(SpatialPointIndex &&other) noexcept;
+    auto operator=(SpatialPointIndex &&other) noexcept -> SpatialPointIndex &;
 
     [[nodiscard]] auto format() const -> std::string;
 

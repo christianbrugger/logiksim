@@ -36,7 +36,7 @@ struct LayerSurface {
  * to set render with different blend modes.
  */
 auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_rect,
-                     std::function<void(Context&, bool)> render_func) -> void;
+                     const std::function<void(Context&, bool)>& render_func) -> void;
 
 [[nodiscard]] auto make_context_guard(LayerSurface& surface) -> ContextGuard;
 

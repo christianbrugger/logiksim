@@ -228,7 +228,7 @@ auto draw_logic_item_label(Context& ctx, const Layout& layout,
                            ElementDrawState state,
                            LogicItemTextAttributes attributes = {}) -> void;
 
-auto draw_logic_item_label(Context& ctx, point_fine_t point, std::string_view text,
+auto draw_logic_item_label(Context& ctx, point_fine_t center, std::string_view text,
                            ElementDrawState state,
                            LogicItemTextAttributes attributes = {}) -> void;
 
@@ -255,7 +255,7 @@ auto draw_logic_items_base(Context& ctx, const Layout& layout,
 auto wire_color(bool is_enabled) -> color_t;
 auto wire_color(bool is_enabled, ElementDrawState state) -> color_t;
 
-auto draw_line_cross_point(Context& ctx, const point_t point, bool is_enabled,
+auto draw_line_cross_point(Context& ctx, point_t point, bool is_enabled,
                            ElementDrawState state) -> void;
 
 struct SegmentAttributes {
@@ -294,7 +294,7 @@ enum class shadow_t : uint8_t {
 };
 
 template <>
-auto format(shadow_t state) -> std::string;
+[[nodiscard]] auto format(shadow_t state) -> std::string;
 
 auto shadow_color(shadow_t shadow_type) -> color_t;
 
@@ -328,10 +328,10 @@ struct InteractiveLayers {
     std::optional<rect_t> overlay_bounding_rect;
 
    public:
-    auto format() const -> std::string;
+    [[nodiscard]] auto format() const -> std::string;
     auto clear() -> void;
     auto shrink_to_fit() -> void;
-    auto allocated_size() const -> std::size_t;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto has_inserted() const -> bool;
     [[nodiscard]] auto has_uninserted() const -> bool;
@@ -356,10 +356,10 @@ struct SimulationLayers {
     std::vector<logicitem_id_t> items_above;
 
    public:
-    auto format() const -> std::string;
+    [[nodiscard]] auto format() const -> std::string;
     auto clear() -> void;
     auto shrink_to_fit() -> void;
-    auto allocated_size() const -> std::size_t;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 };
 
 //
@@ -381,7 +381,7 @@ struct CircuitLayers {
 
     auto clear() -> void;
     auto shrink_to_fit() -> void;
-    auto allocated_size() const -> std::size_t;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 };
 
 struct CircuitContext {

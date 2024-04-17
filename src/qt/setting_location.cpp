@@ -12,12 +12,13 @@ namespace logicsim {
 namespace {
 
 [[nodiscard]] auto writable_standard_path(QStandardPaths::StandardLocation location,
-                                          QString relative) -> std::filesystem::path {
+                                          const std::filesystem::path &relative)
+    -> std::filesystem::path {
     const auto parent = to_path(QStandardPaths::writableLocation(location));
     const auto folder = parent / LS_APP_VERSION_STR;
 
     std::filesystem::create_directory(folder);
-    return std::filesystem::weakly_canonical(folder) / relative.toStdString();
+    return std::filesystem::weakly_canonical(folder) / relative;
 }
 
 }  // namespace

@@ -24,7 +24,8 @@ struct point_and_orientation_t {
 
     [[nodiscard]] auto operator==(const point_and_orientation_t& other) const
         -> bool = default;
-    [[nodiscard]] auto operator<=>(const point_and_orientation_t& other) const = default;
+    [[nodiscard]] auto operator<=>(const point_and_orientation_t& other) const
+        -> std::strong_ordering = default;
 };
 
 inline auto point_and_orientation_t::format() const -> std::string {

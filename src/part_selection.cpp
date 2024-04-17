@@ -5,7 +5,6 @@
 #include "format/container.h"
 #include "geometry/part.h"
 #include "logging.h"
-#include "part_selection.h"
 #include "vocabulary/grid.h"
 
 #include <fmt/core.h>
@@ -73,7 +72,7 @@ PartSelection::PartSelection(part_t part) : parts_ {part} {
     Ensures(class_invariant_holds());
 }
 
-PartSelection::PartSelection(part_vector_t&& parts__) : parts_ {std::move(parts__)} {
+PartSelection::PartSelection(part_vector_t&& parts) : parts_ {std::move(parts)} {
     part_selection::sort_and_merge_parts(parts_);
 
     Ensures(class_invariant_holds());

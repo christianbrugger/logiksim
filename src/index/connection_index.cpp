@@ -167,12 +167,12 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Input>::
-    handle(const info_message::LogicItemInserted&) -> void {}
+    handle(const info_message::LogicItemInserted& /*unused*/) -> void {}
 
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Output>::
-    handle(const info_message::LogicItemInserted&) -> void {}
+    handle(const info_message::LogicItemInserted& /*unused*/) -> void {}
 
 //
 // InsertedLogicItemIdUpdated
@@ -217,12 +217,12 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Input>::
-    handle(const info_message::InsertedLogicItemIdUpdated&) -> void {}
+    handle(const info_message::InsertedLogicItemIdUpdated& /*unused*/) -> void {}
 
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Output>::
-    handle(const info_message::InsertedLogicItemIdUpdated&) -> void {}
+    handle(const info_message::InsertedLogicItemIdUpdated& /*unused*/) -> void {}
 
 //
 // LogicItemUninserted
@@ -267,12 +267,12 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Input>::
-    handle(const info_message::LogicItemUninserted&) -> void {}
+    handle(const info_message::LogicItemUninserted& /*unused*/) -> void {}
 
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Output>::
-    handle(const info_message::LogicItemUninserted&) -> void {}
+    handle(const info_message::LogicItemUninserted& /*unused*/) -> void {}
 
 //
 // SegmentInserted

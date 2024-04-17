@@ -15,7 +15,7 @@ enum class HTextAlignment : uint8_t {
 };
 
 template <>
-auto format(HTextAlignment alignment) -> std::string;
+[[nodiscard]] auto format(HTextAlignment alignment) -> std::string;
 
 enum class VTextAlignment : uint8_t {
     baseline,
@@ -30,7 +30,7 @@ enum class VTextAlignment : uint8_t {
 };
 
 template <>
-auto format(VTextAlignment alignment) -> std::string;
+[[nodiscard]] auto format(VTextAlignment alignment) -> std::string;
 
 }  // namespace logicsim
 

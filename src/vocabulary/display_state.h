@@ -21,7 +21,7 @@ enum class display_state_t : uint8_t {
 };
 
 template <>
-auto format(display_state_t state) -> std::string;
+[[nodiscard]] auto format(display_state_t state) -> std::string;
 
 [[nodiscard]] auto is_inserted(display_state_t display_state) -> bool;
 

@@ -79,7 +79,7 @@ namespace logicsim {
 struct FontFace {
    public:
     [[nodiscard]] explicit FontFace() = default;
-    [[nodiscard]] explicit FontFace(std::filesystem::path font_file);
+    [[nodiscard]] explicit FontFace(const std::filesystem::path &font_file);
 
     [[nodiscard]] auto hb_font_face() const -> const HarfbuzzFontFace &;
     [[nodiscard]] auto bl_font_face() const -> const BLFontFace &;
@@ -100,9 +100,9 @@ struct FontFaces {
     FontFace monospace;
 
     [[nodiscard]] explicit FontFaces() = default;
-    [[nodiscard]] explicit FontFaces(font_locations_t font_files);
+    [[nodiscard]] explicit FontFaces(const font_locations_t &font_files);
 
-    auto get(FontStyle style) const -> const FontFace &;
+    [[nodiscard]] auto get(FontStyle style) const -> const FontFace &;
 };
 
 struct Fonts {
@@ -173,7 +173,7 @@ class GlyphCache {
 
    public:
     explicit GlyphCache();
-    explicit GlyphCache(font_locations_t font_files);
+    explicit GlyphCache(const font_locations_t &font_files);
 
     [[nodiscard]] auto format() const -> std::string;
 

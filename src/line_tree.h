@@ -26,7 +26,7 @@ class LineTree {
     [[nodiscard]] explicit LineTree(line_tree::LineStore &&store);
 
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const LineTree &) const -> bool = default;
+    [[nodiscard]] auto operator==(const LineTree &other) const -> bool = default;
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto size() const noexcept -> std::size_t;
@@ -36,27 +36,27 @@ class LineTree {
     [[nodiscard]] auto end() const -> iterator;
 
     [[nodiscard]] auto lines() const -> std::span<const line_t>;
-    [[nodiscard]] auto line(line_index_t) const -> line_t;
+    [[nodiscard]] auto line(line_index_t index) const -> line_t;
     /**
      * @brief: Indicates if there is a cross-point at p0.
      */
-    [[nodiscard]] auto has_cross_point_p0(line_index_t) const -> bool;
+    [[nodiscard]] auto has_cross_point_p0(line_index_t index) const -> bool;
     /**
      * @brief: Indicates if there is a corner at the point.
      *
      * Note that currently also cross-points are flagged as corners for some lines.
      */
-    [[nodiscard]] auto is_corner_p0(line_index_t) const -> bool;
-    [[nodiscard]] auto is_corner_p1(line_index_t) const -> bool;
-    [[nodiscard]] auto length_p0(line_index_t) const -> length_t;
-    [[nodiscard]] auto length_p1(line_index_t) const -> length_t;
+    [[nodiscard]] auto is_corner_p0(line_index_t index) const -> bool;
+    [[nodiscard]] auto is_corner_p1(line_index_t index) const -> bool;
+    [[nodiscard]] auto length_p0(line_index_t index) const -> length_t;
+    [[nodiscard]] auto length_p1(line_index_t index) const -> length_t;
 
     [[nodiscard]] auto input_position() const -> point_t;
     [[nodiscard]] auto input_orientation() const -> orientation_t;
 
     [[nodiscard]] auto output_count() const -> connection_count_t;
-    [[nodiscard]] auto output_position(connection_id_t) const -> point_t;
-    [[nodiscard]] auto output_orientation(connection_id_t) const -> orientation_t;
+    [[nodiscard]] auto output_position(connection_id_t output) const -> point_t;
+    [[nodiscard]] auto output_orientation(connection_id_t output) const -> orientation_t;
     [[nodiscard]] auto calculate_output_lengths() const -> length_vector_t;
 
    private:

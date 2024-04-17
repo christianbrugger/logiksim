@@ -10,7 +10,7 @@ namespace logicsim {
 enum class PrintEvents { yes, no };
 
 template <>
-auto format(PrintEvents type) -> std::string;
+[[nodiscard]] auto format(PrintEvents type) -> std::string;
 
 }  // namespace logicsim
 

@@ -26,7 +26,7 @@ enum class PointShape {
 };
 
 template <>
-auto format(PointShape shape) -> std::string;
+[[nodiscard]] auto format(PointShape shape) -> std::string;
 
 auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color,
                 grid_fine_t size) -> void;

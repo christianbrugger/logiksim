@@ -16,7 +16,7 @@ enum class SanitizeMode {
 };
 
 template <>
-auto format(SanitizeMode mode) -> std::string;
+[[nodiscard]] auto format(SanitizeMode mode) -> std::string;
 
 auto sanitize_part(segment_part_t segment_part, const Layout &layout,
                    const CollisionIndex &cache, SanitizeMode mode) -> segment_part_t;

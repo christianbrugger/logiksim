@@ -18,7 +18,7 @@ enum class InsertionMode {
 };
 
 template <>
-auto format(InsertionMode mode) -> std::string;
+[[nodiscard]] auto format(InsertionMode mode) -> std::string;
 
 [[nodiscard]] auto to_insertion_mode(display_state_t display_state) -> InsertionMode;
 

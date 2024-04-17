@@ -15,6 +15,11 @@ class ContextGuard {
     [[nodiscard]] explicit ContextGuard(BLContext& bl_ctx);
     ~ContextGuard();
 
+    ContextGuard(ContextGuard&& other) = delete;
+    ContextGuard(const ContextGuard& other) = delete;
+    auto operator=(ContextGuard&& other) -> ContextGuard& = delete;
+    auto operator=(const ContextGuard& other) -> ContextGuard& = delete;
+
    private:
     BLContext& bl_ctx_;
 };

@@ -20,8 +20,8 @@ struct ordered_line_t;
 [[nodiscard]] auto is_endpoint(point_t point, line_t line) -> bool;
 [[nodiscard]] auto is_endpoint(point_t point, ordered_line_t line) -> bool;
 
-[[nodiscard]] auto is_representable(line_t point, int dx, int dy) -> bool;
-[[nodiscard]] auto is_representable(ordered_line_t point, int dx, int dy) -> bool;
+[[nodiscard]] auto is_representable(line_t line, int dx, int dy) -> bool;
+[[nodiscard]] auto is_representable(ordered_line_t line, int dx, int dy) -> bool;
 
 [[nodiscard]] auto add_unchecked(line_t line, int dx, int dy) -> line_t;
 [[nodiscard]] auto add_unchecked(ordered_line_t line, int dx, int dy) -> ordered_line_t;

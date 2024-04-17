@@ -84,7 +84,7 @@ class SegmentTree {
     [[nodiscard]] auto segments() const -> const segment_vector_t &;
 
     // indices
-    [[nodiscard]] auto first_index() const -> segment_index_t;
+    [[nodiscard]] static auto first_index() -> segment_index_t;
     [[nodiscard]] auto last_index() const -> segment_index_t;
     [[nodiscard]] auto indices() const -> forward_range_t<segment_index_t>;
     [[nodiscard]] inline auto indices(wire_id_t wire_id) const;
@@ -194,7 +194,7 @@ class SegmentTree {
         -> const PartSelection &;
 
    private:
-    auto get_next_index() const -> segment_index_t;
+    [[nodiscard]] auto get_next_index() const -> segment_index_t;
     auto register_segment(segment_index_t index) -> void;
     auto unregister_segment(segment_index_t index) -> void;
 

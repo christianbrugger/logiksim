@@ -8,7 +8,6 @@
 #include "container/graph/visitor/empty_visitor.h"
 #include "format/container.h"
 #include "geometry/segment_info.h"
-#include "segment_tree.h"
 #include "vocabulary/part_copy_definition.h"
 #include "vocabulary/rect.h"
 
@@ -190,8 +189,8 @@ auto SegmentTree::unregister_segment(segment_index_t index) -> void {
 auto SegmentTree::clear() -> void {
     *this = SegmentTree {};
 
-    assert(segments_.size() == 0);
-    assert(valid_parts_vector_.size() == 0);
+    assert(segments_.empty());
+    assert(valid_parts_vector_.empty());
     assert(input_position_ == std::nullopt);
     assert(output_count_ == connection_count_t {0});
 }
@@ -461,7 +460,7 @@ auto SegmentTree::valid_parts(segment_index_t segment_index) const
     return valid_parts_vector_.at(segment_index.value);
 }
 
-auto SegmentTree::first_index() const -> segment_index_t {
+auto SegmentTree::first_index() -> segment_index_t {
     return segment_index_t {0};
 }
 

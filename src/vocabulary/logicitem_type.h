@@ -33,7 +33,7 @@ enum class LogicItemType : uint8_t {
 };
 
 template <>
-auto format(LogicItemType type) -> std::string;
+[[nodiscard]] auto format(LogicItemType type) -> std::string;
 
 constexpr inline auto all_logicitem_types = std::array {
     LogicItemType::buffer_element,  //

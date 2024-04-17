@@ -43,7 +43,7 @@ auto LayerSurface::shrink_to_fit() -> void {
 }
 
 auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_rect,
-                     std::function<void(Context&, bool)> render_func) -> void {
+                     const std::function<void(Context&, bool)>& render_func) -> void {
     auto _ [[maybe_unused]] = make_context_guard(target_ctx);
 
     if (surface.enabled) {
@@ -51,7 +51,7 @@ auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_r
         surface.ctx.bl_ctx.clearRect(dirty_rect);
 
         {
-            auto __ [[maybe_unused]] = make_context_guard(surface);
+            auto _1 [[maybe_unused]] = make_context_guard(surface);
             render_func(surface.ctx, surface.enabled);
         }
 

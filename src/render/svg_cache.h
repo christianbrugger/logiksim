@@ -23,9 +23,9 @@ struct svg_entry_t {
     [[nodiscard]] explicit svg_entry_t();
     [[nodiscard]] explicit svg_entry_t(svg_data_t &&data);
 
-    [[nodiscard]] explicit svg_entry_t(svg_entry_t &&);
-    [[nodiscard]] explicit svg_entry_t(const svg_entry_t &) = delete;
-    [[nodiscard]] auto operator=(svg_entry_t &&) -> svg_entry_t &;
+    [[nodiscard]] svg_entry_t(svg_entry_t &&) noexcept;
+    [[nodiscard]] svg_entry_t(const svg_entry_t &) = delete;
+    [[nodiscard]] auto operator=(svg_entry_t &&) noexcept -> svg_entry_t &;
     [[nodiscard]] auto operator=(const svg_entry_t &) -> svg_entry_t & = delete;
     ~svg_entry_t();
 };

@@ -43,7 +43,7 @@ using tree_t = bgi::rtree<                         //
     >;
 
 auto get_selection_box(const layout_calculation_data_t& data) -> tree_box_t;
-auto get_selection_box(ordered_line_t segment) -> tree_box_t;
+auto get_selection_box(ordered_line_t line) -> tree_box_t;
 auto to_tree_point(point_fine_t point) -> tree_point_t;
 auto to_rect(tree_box_t box) -> rect_fine_t;
 auto to_box(rect_fine_t rect) -> tree_box_t;
@@ -56,7 +56,8 @@ struct tree_container {
     tree_t value;
 
     tree_container();
-    explicit tree_container(const tree_t&);
+    explicit tree_container(const tree_t& other);
+    ~tree_container() = default;
 
     [[nodiscard]] auto operator==(const tree_container& other) const -> bool;
 
@@ -248,7 +249,7 @@ SpatialIndex::SpatialIndex(const Layout& layout) : SpatialIndex {} {
         if (is_inserted(layout, logicitem_id)) {
             const auto data = to_layout_calculation_data(layout, logicitem_id);
             const auto box = get_selection_box(data);
-            values.push_back({box, value_t {logicitem_id}});
+            values.emplace_back(box, value_t {logicitem_id});
         }
     }
 
@@ -256,7 +257,7 @@ SpatialIndex::SpatialIndex(const Layout& layout) : SpatialIndex {} {
         const auto& tree = layout.wires().segment_tree(wire_id);
         for (const auto& segment_index : tree.indices()) {
             const auto box = get_selection_box(tree.line(segment_index));
-            values.push_back({box, value_t {segment_t {wire_id, segment_index}}});
+            values.emplace_back(box, value_t {segment_t {wire_id, segment_index}});
         }
     }
 
@@ -281,9 +282,9 @@ auto SpatialIndex::operator=(const SpatialIndex& other) -> SpatialIndex& {
     return *this;
 }
 
-SpatialIndex::SpatialIndex(SpatialIndex&&) = default;
+SpatialIndex::SpatialIndex(SpatialIndex&& other) noexcept = default;
 
-auto SpatialIndex::operator=(SpatialIndex&&) -> SpatialIndex& = default;
+auto SpatialIndex::operator=(SpatialIndex&& other) noexcept -> SpatialIndex& = default;
 
 auto SpatialIndex::format() const -> std::string {
     return fmt::format("SpatialIndex = {}", tree_->value);

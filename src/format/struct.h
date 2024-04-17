@@ -10,7 +10,7 @@
  *
  *     struct/class Foo {
  *       public:
- *         auto format() const -> std::string;
+ *         [[nodiscard]] auto format() const -> std::string;
  *     };
  *
  */

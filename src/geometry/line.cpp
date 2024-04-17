@@ -3,7 +3,6 @@
 #include "geometry/line.h"
 #include "geometry/orientation.h"
 #include "geometry/point.h"
-#include "line.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/line.h"
 #include "vocabulary/ordered_line.h"

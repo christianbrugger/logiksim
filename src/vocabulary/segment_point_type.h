@@ -22,7 +22,7 @@ enum class SegmentPointType : uint8_t {
 };
 
 template <>
-auto format(SegmentPointType type) -> std::string;
+[[nodiscard]] auto format(SegmentPointType type) -> std::string;
 
 [[nodiscard]] auto is_corner_point(SegmentPointType point_type) -> bool;
 [[nodiscard]] auto is_cross_point(SegmentPointType point_type) -> bool;

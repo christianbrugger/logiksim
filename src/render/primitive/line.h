@@ -21,12 +21,11 @@ struct LineAttributes {
 
 auto draw_orthogonal_line(Context& ctx, BLLine line, LineAttributes attributes) -> void;
 
-auto draw_line(Context& ctx, const ordered_line_t line, LineAttributes attributes)
-    -> void;
+auto draw_line(Context& ctx, ordered_line_t line, LineAttributes attributes) -> void;
 
-auto draw_line(Context& ctx, const line_t line, LineAttributes attributes) -> void;
+auto draw_line(Context& ctx, line_t line, LineAttributes attributes) -> void;
 
-auto draw_line(Context& ctx, const line_fine_t line, LineAttributes attributes) -> void;
+auto draw_line(Context& ctx, line_fine_t line, LineAttributes attributes) -> void;
 
 }  // namespace logicsim
 

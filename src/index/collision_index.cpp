@@ -447,7 +447,7 @@ CollisionIndex::CollisionIndex(const Layout& layout) {
 
 auto CollisionIndex::format() const -> std::string {
     if (map_.empty()) {
-        return std::string("CollisionIndex = []\n");
+        return std::string {"CollisionIndex = []\n"};
     }
 
     return fmt::format("CollisionIndex ({} elements) = [\n  {}\n]\n", map_.size(),
