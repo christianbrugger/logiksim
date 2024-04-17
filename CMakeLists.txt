@@ -651,6 +651,15 @@ if (LS_USE_LIBCXX_BOOL)
         cxxabi_shared
         #cxx_experimental
     )
+
+    # The google benchmark contains an unconditional export that requires
+    # all its dependencies to be exportable. By itself llvm does not define
+    # export for runtime targets. Thats why we define them here.
+    export(TARGETS 
+        cxx_shared cxxabi_shared cxx-headers cxxabi_shared_objects 
+        libcxx-abi-headers cxxabi-headers 
+        FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/LlvmRuntimeTargets.cmake"
+    )
 else()
     message(NOTICE "LOGIKSIM: Using default stdlib.")
 endif()
