@@ -4,7 +4,6 @@
 #include "interactive_simulation.h"
 #include "schematic_generation.h"  // TODO remove
 #include "simulation.h"
-#include "simulation_view.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/wire_id.h"
 

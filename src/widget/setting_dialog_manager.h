@@ -48,13 +48,13 @@ class SettingDialogManager : public QObject {
 
    public:
     Q_SIGNAL void attributes_changed(selection_id_t selection_id,
-                                     SettingAttributes attributes);
+                                     const SettingAttributes& attributes);
     Q_SIGNAL void request_cleanup();
 
    private:
     Q_SLOT void on_dialog_destroyed(QObject* object);
     Q_SLOT void on_dialog_attributes_changed(selection_id_t selection_id,
-                                             SettingAttributes attributes);
+                                             const SettingAttributes& attributes);
     Q_SLOT void on_timer_request_cleanup();
 
    private:

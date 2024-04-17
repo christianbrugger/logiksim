@@ -76,8 +76,8 @@ auto Simulation::resize_vectors() -> void {
     Ensures(schematic_.size() == first_input_histories_.size());
 }
 
-Simulation::Simulation(Schematic &&schematic__, PrintEvents do_print)
-    : schematic_ {std::move(schematic__)},
+Simulation::Simulation(Schematic &&schematic, PrintEvents do_print)
+    : schematic_ {std::move(schematic)},
       queue_ {},
       largest_history_event_ {queue_.time()},
       print_events_ {do_print == PrintEvents::yes},
@@ -185,14 +185,8 @@ auto invert_inputs(logic_small_vector_t &values, const logic_small_vector_t &inv
         throw std::runtime_error("Inputs and inverters need to have same size.");
     }
     for (auto i : range(std::ssize(values))) {
-        values[i] ^= inverters[i];
+        values[i] = values[i] != inverters[i];
     }
-}
-
-auto inverted_inputs(logic_small_vector_t values, const logic_small_vector_t &inverters)
-    -> logic_small_vector_t {
-    invert_inputs(values, inverters);
-    return values;
 }
 
 template <Simulation::Outputs OutputFrom>
@@ -287,7 +281,8 @@ auto Simulation::update_no_internal_state(element_id_t element_id,
     submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
 }
 
-auto Simulation::process_event_group(simulation::SimulationEventGroup &&events) -> void {
+auto Simulation::process_event_group(const simulation::SimulationEventGroup &events)
+    -> void {
     if (print_events_) {
         print_fmt("events: {:n}\n", events);
     }
@@ -330,10 +325,10 @@ auto Simulation::initialize_circuit_state() -> void {
  */
 auto Simulation::process_all_current_events() -> void {
     while (queue_.next_event_time() == queue_.time()) {
-        auto event_group = queue_.pop_event_group();
-        event_count_ += std::ssize(event_group);
+        const auto event_group = queue_.pop_event_group();
+        process_event_group(event_group);
 
-        process_event_group(std::move(event_group));
+        event_count_ += std::ssize(event_group);
     }
 }
 

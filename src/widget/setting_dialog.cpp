@@ -34,7 +34,7 @@ SettingDialog::SettingDialog(QWidget* parent, selection_id_t selection_id)
     setAttribute(Qt::WA_DeleteOnClose);
 }
 
-void SettingDialog::emit_attributes_changed(SettingAttributes attributes) {
+void SettingDialog::emit_attributes_changed(const SettingAttributes& attributes) {
     Q_EMIT attributes_changed(selection_id_, attributes);
 }
 
@@ -42,7 +42,7 @@ void SettingDialog::emit_attributes_changed(SettingAttributes attributes) {
 // Clock Generator Dialog
 //
 
-DelayInput::DelayInput(QWidget* parent, QString text, delay_t initial_value,
+DelayInput::DelayInput(QWidget* parent, const QString& text, delay_t initial_value,
                        double scale_)
     : QObject(parent), scale {scale_}, last_valid_delay {initial_value} {
     label = new QLabel(parent);
@@ -60,14 +60,14 @@ DelayInput::DelayInput(QWidget* parent, QString text, delay_t initial_value,
     combo_box->addItem(tr("µs"), qint64 {1'000});
     combo_box->addItem(tr("ms"), qint64 {1'000'000});
 
-    const auto value_ns = initial_value.count_ns() * scale;
+    const auto value_ns = gsl::narrow<double>(initial_value.count_ns()) * scale;
     for (auto index : range(combo_box->count())) {
         const auto unit = combo_box->itemData(index).toLongLong();
         if (round_to<int64_t>(value_ns) >= int64_t {unit}) {
             combo_box->setCurrentIndex(index);
         }
     }
-    const auto unit = combo_box->currentData().toLongLong();
+    const auto unit = gsl::narrow<double>(combo_box->currentData().toLongLong());
     line_edit->setText(delay_validator.locale().toString(1.0 * value_ns / unit));
 
     layout->addWidget(line_edit);
@@ -87,20 +87,21 @@ DelayInput::DelayInput(QWidget* parent, QString text, delay_t initial_value,
 }
 
 auto DelayInput::value_changed() -> void {
-    if (!delay_value || !delay_unit) {
-        throw std::runtime_error("a pointer is not set in DelayInput");
-    }
+    Expects(delay_value != nullptr);
+    Expects(delay_unit != nullptr);
 
     if (delay_value->hasAcceptableInput()) {
         const auto value = delay_validator.locale().toDouble(delay_value->text());
-        const auto unit = int64_t {delay_unit->currentData().toLongLong()};
+        const auto unit = gsl::narrow<double>(delay_unit->currentData().toLongLong());
         const auto period = delay_t {round_to<int64_t>(value * unit / scale) * 1ns};
         last_valid_delay = period;
     }
 }
 
 auto DelayInput::delay_unit_changed() -> void {
-    const auto unit = int64_t {delay_unit->currentData().toLongLong()};
+    Expects(delay_unit != nullptr);
+
+    const auto unit = gsl::narrow<double>(delay_unit->currentData().toLongLong());
 
     if (unit == 1) {
         delay_validator.setDecimals(0);
@@ -116,13 +117,13 @@ auto DelayInput::delay_unit_changed() -> void {
     const auto min_time = clock_generator_min_time();
     const auto max_time = clock_generator_max_time();
 
-    double min_ns = gsl::narrow<double>(min_time.count_ns()) * scale;
-    double max_ns = gsl::narrow<double>(max_time.count_ns()) * scale;
+    const double min_ns = gsl::narrow<double>(min_time.count_ns()) * scale;
+    const double max_ns = gsl::narrow<double>(max_time.count_ns()) * scale;
     delay_validator.setRange(min_ns / unit, max_ns / unit);
 }
 
 ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent, selection_id_t selection_id,
-                                           attributes_clock_generator_t attrs)
+                                           const attributes_clock_generator_t& attrs)
     : SettingDialog {parent, selection_id} {
     setWindowTitle(tr("Clock Generator"));
     const auto path = get_icon_path(icon_t::setting_handle_clock_generator);
@@ -209,10 +210,13 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent, selection_id_t selec
 }
 
 auto ClockGeneratorDialog::value_changed() -> void {
-    if (!name_ || !is_symmetric_ || !time_symmetric_ || !time_on_ || !time_off_ ||
-        !simulation_controls_) {
-        throw std::runtime_error("a pointer is not set");
-    }
+    Expects(name_ != nullptr);
+    Expects(time_symmetric_ != nullptr);
+    Expects(time_on_ != nullptr);
+    Expects(time_off_ != nullptr);
+
+    Expects(is_symmetric_ != nullptr);
+    Expects(simulation_controls_ != nullptr);
 
     emit_attributes_changed(SettingAttributes {
         .attrs_clock_generator = attributes_clock_generator_t {

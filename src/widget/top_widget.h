@@ -32,8 +32,8 @@ class ElementButton : public QPushButton {
     Q_OBJECT
    public:
     explicit ElementButton(const QString& text, QWidget* parent = nullptr);
-    auto sizeHint() const -> QSize override;
-    auto minimumSizeHint() const -> QSize override;
+    [[nodiscard]] auto sizeHint() const -> QSize override;
+    [[nodiscard]] auto minimumSizeHint() const -> QSize override;
 };
 
 struct MainActions {
@@ -80,7 +80,8 @@ class MainWidget : public QMainWindow {
     auto create_statusbar() -> void;
 
     [[nodiscard]] auto build_element_buttons() -> QWidget*;
-    [[nodiscard]] auto new_button(QString label, CircuitWidgetState state) -> QWidget*;
+    [[nodiscard]] auto new_button(const QString& label, CircuitWidgetState state)
+        -> QWidget*;
 
     // circuit_widget slots
     Q_SLOT void on_circuit_state_changed(CircuitWidgetState new_state);
@@ -98,7 +99,7 @@ class MainWidget : public QMainWindow {
     auto show_about_dialog() -> void;
 
     // load & safe
-    auto filename_filter() const -> QString;
+    [[nodiscard]] static auto filename_filter() -> QString;
     enum class filename_choice_t { ask_new, same_as_last };
     enum class save_result_t { success, canceled };
     auto save_circuit(filename_choice_t filename_choice) -> save_result_t;
@@ -111,9 +112,9 @@ class MainWidget : public QMainWindow {
     auto restore_gui_state() -> void;
 
    protected:
-    auto closeEvent(QCloseEvent* event) -> void;
-    auto dragEnterEvent(QDragEnterEvent* event) -> void;
-    auto dropEvent(QDropEvent* event) -> void;
+    auto closeEvent(QCloseEvent* event) -> void override;
+    auto dragEnterEvent(QDragEnterEvent* event) -> void override;
+    auto dropEvent(QDropEvent* event) -> void override;
 
    private:
     gsl::not_null<CircuitWidget*> circuit_widget_;

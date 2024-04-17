@@ -25,8 +25,8 @@ class HarfbuzzFontFace final {
 
     HarfbuzzFontFace(const HarfbuzzFontFace &) = delete;
     HarfbuzzFontFace(HarfbuzzFontFace &&) = delete;
-    HarfbuzzFontFace &operator=(const HarfbuzzFontFace &) = delete;
-    HarfbuzzFontFace &operator=(HarfbuzzFontFace &&) = delete;
+    auto operator=(const HarfbuzzFontFace &) -> HarfbuzzFontFace & = delete;
+    auto operator=(HarfbuzzFontFace &&) -> HarfbuzzFontFace & = delete;
 
     [[nodiscard]] auto hb_face() const noexcept -> hb_face_t *;
 
@@ -42,8 +42,8 @@ class HarfbuzzFont final {
 
     HarfbuzzFont(const HarfbuzzFont &) = delete;
     HarfbuzzFont(HarfbuzzFont &&) = delete;
-    HarfbuzzFont &operator=(const HarfbuzzFont &) = delete;
-    HarfbuzzFont &operator=(HarfbuzzFont &&) = delete;
+    auto operator=(const HarfbuzzFont &) -> HarfbuzzFont & = delete;
+    auto operator=(HarfbuzzFont &&) -> HarfbuzzFont & = delete;
 
     [[nodiscard]] auto font_size() const noexcept -> float;
     [[nodiscard]] auto hb_font() const noexcept -> hb_font_t *;

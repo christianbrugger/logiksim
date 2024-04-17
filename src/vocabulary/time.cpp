@@ -1,4 +1,4 @@
-#include "time.h"
+#include "vocabulary/time.h"
 
 #include "format/time.h"
 #include "vocabulary/time.h"

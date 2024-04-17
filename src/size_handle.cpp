@@ -125,7 +125,7 @@ auto size_handle_rect_px(size_handle_t handle, const ViewConfig& config) -> BLRe
     const auto y0 = round_fast(y - size / 2);
     const auto s = round_fast(size);
 
-    return BLRect(x0, y0, s, s);
+    return BLRect {x0, y0, s, s};
 }
 
 auto size_handle_rect_grid(size_handle_t handle, const ViewConfig& config)
@@ -231,9 +231,8 @@ auto get_resized_element(const PlacedElement& original, size_handle_t handle, in
 
         case and_element:
         case or_element:
-        case xor_element: {
-            return adjust_height(original, handle, delta);
-        }
+        case xor_element:
+
         case display_number: {
             return adjust_height(original, handle, delta);
         }

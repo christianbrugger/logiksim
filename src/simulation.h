@@ -160,7 +160,7 @@ class Simulation {
     auto resize_vectors() -> void;
     auto initialize_circuit_state() -> void;
     auto process_all_current_events() -> void;
-    auto process_event_group(simulation::SimulationEventGroup &&events) -> void;
+    auto process_event_group(const simulation::SimulationEventGroup &events) -> void;
 
     // submit events
     auto submit_events_for_changed_outputs(element_id_t element_id,

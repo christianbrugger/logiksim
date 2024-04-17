@@ -18,7 +18,7 @@ auto SimulationConfig::wire_delay_per_distance() const -> delay_t {
 }
 
 namespace {
-constexpr static inline auto _default_wire_delay_per_distance = delay_t {1us};
+constexpr inline auto _default_wire_delay_per_distance = delay_t {1us};
 // WARNING: safe-file behavior depend on this value staying the same
 static_assert(_default_wire_delay_per_distance == delay_t {1us});
 }  // namespace

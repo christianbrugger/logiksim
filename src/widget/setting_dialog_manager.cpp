@@ -36,7 +36,7 @@ auto get_selected_logic_item(const EditableCircuit& editable_circuit,
     const auto& selection = editable_circuit.selection(selection_id);
 
     if (selection.selected_logic_items().size() != 1 ||
-        selection.selected_segments().size() != 0) {
+        !selection.selected_segments().empty()) {
         return null_logicitem_id;
     }
 
@@ -123,7 +123,7 @@ auto SettingDialogManager::close_all(EditableCircuit& editable_circuit) -> void 
     Expects(class_invariant_holds());
 
     for (auto&& [_, widget] : map_) {
-        if (widget) {
+        if (widget != nullptr) {
             widget->deleteLater();
             widget = nullptr;
         }
@@ -138,7 +138,7 @@ auto SettingDialogManager::run_cleanup(EditableCircuit& editable_circuit) -> voi
 
     // close dialogs with deleted logic-items
     for (auto&& [selection_id, widget] : map_) {
-        if (widget) {
+        if (widget != nullptr) {
             if (!get_selected_logic_item(editable_circuit, selection_id)) {
                 widget->deleteLater();
                 widget = nullptr;
@@ -149,7 +149,7 @@ auto SettingDialogManager::run_cleanup(EditableCircuit& editable_circuit) -> voi
     // find destroyed dialogs
     auto delete_list = std::vector<selection_id_t> {};
     for (auto&& [selection_id, widget] : map_) {
-        if (!widget) {
+        if (widget == nullptr) {
             delete_list.push_back(selection_id);
         }
     }
@@ -189,7 +189,7 @@ Q_SLOT void SettingDialogManager::on_dialog_destroyed(QObject* object) {
 }
 
 Q_SLOT void SettingDialogManager::on_dialog_attributes_changed(
-    selection_id_t selection_id, SettingAttributes attributes) {
+    selection_id_t selection_id, const SettingAttributes& attributes) {
     Expects(class_invariant_holds());
 
     Q_EMIT attributes_changed(selection_id, attributes);

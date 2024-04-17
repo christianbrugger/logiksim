@@ -22,6 +22,11 @@ class Timer {
                                  int precision = 3);
     ~Timer();
 
+    Timer(Timer&&) noexcept = default;
+    Timer(const Timer&) = default;
+    auto operator=(Timer&&) noexcept -> Timer& = default;
+    auto operator=(const Timer&) -> Timer& = default;
+
     [[nodiscard]] auto delta() const -> delta_t;
     [[nodiscard]] auto delta_seconds() const -> double;
     [[nodiscard]] auto delta_ms() const -> double;

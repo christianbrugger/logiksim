@@ -10,7 +10,6 @@
 #include "layout.h"
 #include "layout_info.h"
 #include "layout_message.h"
-#include "selection.h"
 #include "vocabulary/ordered_line.h"
 #include "vocabulary/point_fine.h"
 #include "vocabulary/rect_fine.h"
@@ -225,7 +224,7 @@ auto Selection::handle(const info_message::LogicItemIdUpdated &message) -> void 
     Expects(class_invariant_holds());
 
     const auto found = selected_logicitems_.erase(message.old_logicitem_id);
-    if (found) {
+    if (found != 0) {
         const auto added = selected_logicitems_.insert(message.new_logicitem_id).second;
         Expects(added);
     }
@@ -524,18 +523,14 @@ auto display_states(const Selection &selection, const Layout &layout) -> Display
 
 auto is_selected(const Selection &selection, const Layout &layout, segment_t segment,
                  point_fine_t point) -> bool {
-    const auto full_line = get_line(layout, segment);
+    const auto is_part_selected =
+        [point, full_line = get_line(layout, segment)](const part_t &part) {
+            const auto line = to_line(full_line, part);
+            const auto rect = element_selection_rect(line);
+            return is_colliding(point, rect);
+        };
 
-    for (const auto part : selection.selected_segments(segment)) {
-        const auto line = to_line(full_line, part);
-        const auto rect = element_selection_rect(line);
-
-        if (is_colliding(point, rect)) {
-            return true;
-        }
-    }
-
-    return false;
+    return std::ranges::any_of(selection.selected_segments(segment), is_part_selected);
 }
 
 //

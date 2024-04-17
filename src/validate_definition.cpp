@@ -1,7 +1,6 @@
 #include "validate_definition.h"
 
 #include "layout_info.h"
-#include "validate_definition.h"
 #include "vocabulary/delay.h"
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_type.h"

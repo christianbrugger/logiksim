@@ -76,7 +76,7 @@ struct SerializedLayout {
 
 namespace logicsim {
 auto json_dumps(const serialize::SerializedLayout& data) -> std::string;
-auto json_loads(std::string value) -> std::optional<serialize::SerializedLayout>;
+auto json_loads(std::string text) -> std::optional<serialize::SerializedLayout>;
 
 }  // namespace logicsim
 

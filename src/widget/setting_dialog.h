@@ -34,10 +34,10 @@ class SettingDialog : public QWidget {
 
    public:
     Q_SIGNAL void attributes_changed(selection_id_t selection_id,
-                                     SettingAttributes attributes);
+                                     const SettingAttributes& attributes);
 
    protected:
-    Q_SLOT void emit_attributes_changed(SettingAttributes attributes);
+    Q_SLOT void emit_attributes_changed(const SettingAttributes& attributes);
 
    private:
     selection_id_t selection_id_;
@@ -51,14 +51,19 @@ class DelayInput : public QObject {
     Q_OBJECT
 
    public:
-    explicit DelayInput(QWidget* parent, QString text, delay_t initial_value,
+    explicit DelayInput(QWidget* parent, const QString& text, delay_t initial_value,
                         double scale_);
 
+    // TODO change names to better reflect slot nature
     auto value_changed() -> void;
     auto delay_unit_changed() -> void;
 
     double scale;
     delay_t last_valid_delay;
+
+    // TODO make private
+    // TODO initialize with {}
+    // TODO use not null and remove Expects
 
     QLineEdit* delay_value;
     QComboBox* delay_unit;
@@ -73,7 +78,7 @@ class ClockGeneratorDialog : public SettingDialog {
 
    public:
     explicit ClockGeneratorDialog(QWidget* parent, selection_id_t selection_id,
-                                  attributes_clock_generator_t attrs);
+                                  const attributes_clock_generator_t& attrs);
 
    private:
     auto value_changed() -> void;

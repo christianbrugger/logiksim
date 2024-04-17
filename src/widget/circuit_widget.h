@@ -116,8 +116,8 @@ class CircuitWidget : public CircuitWidgetBase {
     // load & save
     [[nodiscard]] auto serialized_circuit() -> std::string;
     auto load_circuit_example(int number) -> void;
-    auto load_circuit(QString filename) -> bool;
-    auto save_circuit(QString filename) -> bool;
+    auto load_circuit(const QString& filename) -> bool;
+    auto save_circuit(const QString& filename) -> bool;
 
     // statistics
     [[nodiscard]] auto statistics() const -> Statistics;
@@ -127,7 +127,7 @@ class CircuitWidget : public CircuitWidgetBase {
     Q_SLOT void on_timer_run_simulation();
     Q_SLOT void on_setting_dialog_cleanup_request();
     Q_SLOT void on_setting_dialog_attributes_changed(selection_id_t selection_id,
-                                                     SettingAttributes attributes);
+                                                     const SettingAttributes& attributes);
 
     auto resizeEvent(QResizeEvent* event_) -> void override;
     auto paintEvent(QPaintEvent* event_) -> void override;

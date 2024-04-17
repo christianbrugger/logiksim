@@ -197,7 +197,7 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
 }
 
 auto CircuitWidget::set_editable_circuit(
-    EditableCircuit&& editable_circuit__, std::optional<ViewPoint> view_point,
+    EditableCircuit&& editable_circuit, std::optional<ViewPoint> view_point,
     std::optional<SimulationConfig> simulation_config) -> void {
     Expects(class_invariant_holds());
 
@@ -212,7 +212,7 @@ auto CircuitWidget::set_editable_circuit(
     }
 
     // set new circuit
-    circuit_store_.set_editable_circuit(std::move(editable_circuit__));
+    circuit_store_.set_editable_circuit(std::move(editable_circuit));
     if (view_point) {
         render_surface_.set_view_point(view_point.value());
     }
@@ -275,29 +275,29 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
     Ensures(expensive_invariant_holds());
 }
 
-auto CircuitWidget::load_circuit(QString filename) -> bool {
+auto CircuitWidget::load_circuit(const QString& filename) -> bool {
     Expects(class_invariant_holds());
 
     // store original layout in case load fails
     finalize_editing();
-    auto orig_layout__ = Layout {circuit_store_.layout()};
+    auto orig_layout = Layout {circuit_store_.layout()};
     // clear circuit to free memory
     do_action(UserAction::clear_circuit);
 
-    auto load_result__ = load_circuit_from_file(to_path(filename));
-    if (load_result__.success) {
-        set_editable_circuit(std::move(load_result__.editable_circuit),
-                             load_result__.view_point, load_result__.simulation_config);
+    auto load_result = load_circuit_from_file(to_path(filename));
+    if (load_result.success) {
+        set_editable_circuit(std::move(load_result.editable_circuit),
+                             load_result.view_point, load_result.simulation_config);
     } else {
-        set_editable_circuit(EditableCircuit {std::move(orig_layout__)});
+        set_editable_circuit(EditableCircuit {std::move(orig_layout)});
     }
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return load_result__.success;
+    return load_result.success;
 }
 
-auto CircuitWidget::save_circuit(QString filename) -> bool {
+auto CircuitWidget::save_circuit(const QString& filename) -> bool {
     Expects(class_invariant_holds());
 
     finalize_editing();
@@ -339,10 +339,10 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         case reload_circuit: {
             finalize_editing();
             const auto _ = Timer {"Reload Circuit"};
-            auto layout__ = Layout {circuit_store_.layout()};
+            auto layout = Layout {circuit_store_.layout()};
             // clear circuit to free memory
             do_action(UserAction::clear_circuit);
-            set_editable_circuit(EditableCircuit {std::move(layout__)});
+            set_editable_circuit(EditableCircuit {std::move(layout)});
             break;
         }
 
@@ -435,7 +435,7 @@ Q_SLOT void CircuitWidget::on_setting_dialog_cleanup_request() {
 }
 
 Q_SLOT void CircuitWidget::on_setting_dialog_attributes_changed(
-    selection_id_t selection_id, SettingAttributes attributes) {
+    selection_id_t selection_id, const SettingAttributes& attributes) {
     Expects(class_invariant_holds());
 
     if (is_editing_state(circuit_state_)) {
@@ -534,14 +534,14 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
 
     const auto position = get_mouse_position(this, event_);
 
-    if (event_->buttons() & Qt::MiddleButton) {
+    if ((event_->buttons() & Qt::MiddleButton) != 0) {
         set_view_config_offset(
             render_surface_,
             mouse_drag_logic_.mouse_move(to(position), render_surface_.view_config()));
         update();
     }
 
-    if (event_->buttons() & Qt::LeftButton) {
+    if ((event_->buttons() & Qt::LeftButton) != 0) {
         if (editing_logic_manager_.mouse_move(position, render_surface_.view_config(),
                                               editable_circuit_pointer(circuit_store_)) ==
             circuit_widget::ManagerResult::require_update) {

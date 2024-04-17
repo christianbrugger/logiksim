@@ -54,7 +54,7 @@ auto ElementButton::sizeHint() const -> QSize {
     const auto size = metric.size(Qt::TextShowMnemonic, text);
     const auto extend = std::max(size.height(), size.width()) + margin;
 
-    return QSize(extend, extend);
+    return QSize {extend, extend};
 }
 
 auto ElementButton::minimumSizeHint() const -> QSize {
@@ -153,7 +153,8 @@ auto to_slider_scale(time_rate_t rate) -> int {
     }
 
     const auto value_log =
-        std::log10(rate.rate_per_second.count_ns() / double {SLIDER_MIN_NS}) *
+        std::log10(gsl::narrow<double>(rate.rate_per_second.count_ns()) /
+                   double {SLIDER_MIN_NS}) *
         double {SLIDER_TICK_INTERVAL};
     return std::clamp(gsl::narrow<int>(std::round(value_log)), SLIDER_MIN_VALUE,
                       SLIDER_MAX_VALUE);
@@ -578,7 +579,7 @@ auto MainWidget::create_statusbar() -> void {
     this->setStatusBar(statusbar);
 }
 
-auto MainWidget::new_button(QString label, CircuitWidgetState state) -> QWidget* {
+auto MainWidget::new_button(const QString& label, CircuitWidgetState state) -> QWidget* {
     const auto button = new ElementButton(label);
     button->setCheckable(true);
     button_map_[state] = button;
@@ -679,16 +680,16 @@ void MainWidget::on_circuit_state_changed(CircuitWidgetState new_state) {
     }
 
     // simulation panel
-    if (actions_.simulation_start) {
+    if (actions_.simulation_start != nullptr) {
         actions_.simulation_start->setEnabled(!simulation_active);
     }
-    if (actions_.simulation_stop) {
+    if (actions_.simulation_stop != nullptr) {
         actions_.simulation_stop->setEnabled(simulation_active);
     }
-    if (actions_.wire_delay) {
+    if (actions_.wire_delay != nullptr) {
         actions_.wire_delay->setEnabled(!simulation_active);
     }
-    if (actions_.wire_delay_checkbox) {
+    if (actions_.wire_delay_checkbox != nullptr) {
         actions_.wire_delay_checkbox->setEnabled(!simulation_active);
     }
 }
@@ -702,7 +703,7 @@ void MainWidget::on_timer_process_app_arguments_once() {
     }
 }
 
-auto MainWidget::filename_filter() const -> QString {
+auto MainWidget::filename_filter() -> QString {
     return tr("Circuit Files (*.ls2)");
 }
 
@@ -811,7 +812,7 @@ auto MainWidget::ensure_circuit_saved() -> save_result_t {
         return save_circuit(filename_choice_t::same_as_last);
     }
 
-    else if (result == QMessageBox::No) {
+    if (result == QMessageBox::No) {
         return save_result_t::success;
     }
 
@@ -823,45 +824,45 @@ void MainWidget::on_simulation_config_changed(SimulationConfig new_config) {
     set_time_rate_slider(new_config.simulation_time_rate);
 
     // use_wire_delay
-    if (actions_.wire_delay) {
+    if (actions_.wire_delay != nullptr) {
         actions_.wire_delay->setChecked(new_config.use_wire_delay);
     }
 }
 
 Q_SLOT void MainWidget::on_render_config_changed(WidgetRenderConfig new_config) {
-    if (actions_.do_benchmark) {
+    if (actions_.do_benchmark != nullptr) {
         actions_.do_benchmark->setChecked(new_config.do_benchmark);
     }
-    if (actions_.show_circuit) {
+    if (actions_.show_circuit != nullptr) {
         actions_.show_circuit->setChecked(new_config.show_circuit);
     }
-    if (actions_.show_collision_cache) {
+    if (actions_.show_collision_cache != nullptr) {
         actions_.show_collision_cache->setChecked(new_config.show_collision_cache);
     }
-    if (actions_.show_connection_cache) {
+    if (actions_.show_connection_cache != nullptr) {
         actions_.show_connection_cache->setChecked(new_config.show_connection_cache);
     }
-    if (actions_.show_selection_cache) {
+    if (actions_.show_selection_cache != nullptr) {
         actions_.show_selection_cache->setChecked(new_config.show_selection_cache);
     }
 
     // thread count
     {
-        if (actions_.thread_count_0) {
+        if (actions_.thread_count_0 != nullptr) {
             actions_.thread_count_0->setChecked(new_config.thread_count == 0);
         }
-        if (actions_.thread_count_2) {
+        if (actions_.thread_count_2 != nullptr) {
             actions_.thread_count_2->setChecked(new_config.thread_count == 2);
         }
-        if (actions_.thread_count_4) {
+        if (actions_.thread_count_4 != nullptr) {
             actions_.thread_count_4->setChecked(new_config.thread_count == 4);
         }
-        if (actions_.thread_count_8) {
+        if (actions_.thread_count_8 != nullptr) {
             actions_.thread_count_8->setChecked(new_config.thread_count == 8);
         }
     }
 
-    if (actions_.direct_rendering) {
+    if (actions_.direct_rendering != nullptr) {
         actions_.direct_rendering->setChecked(new_config.direct_rendering);
     }
 }
@@ -869,7 +870,7 @@ Q_SLOT void MainWidget::on_render_config_changed(WidgetRenderConfig new_config) 
 auto MainWidget::set_time_rate_slider(time_rate_t time_rate) -> void {
     using namespace detail::time_slider;
 
-    if (time_rate_slider_) {
+    if (time_rate_slider_ != nullptr) {
         time_rate_slider_->setValue(to_slider_scale(time_rate));
     }
 }

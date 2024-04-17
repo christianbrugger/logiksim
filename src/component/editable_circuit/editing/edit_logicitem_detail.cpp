@@ -184,10 +184,8 @@ namespace {
 auto _any_logicitem_inputs_colliding(const LayoutIndex& cache,
                                      const layout_calculation_data_t& data) -> bool {
     const auto compatible = [&](simple_input_info_t info) -> bool {
-        if (const auto entry = cache.wire_output_index().find(info.position)) {
-            return orientations_compatible(info.orientation, entry->orientation);
-        }
-        return true;
+        const auto entry = cache.wire_output_index().find(info.position);
+        return !entry || orientations_compatible(info.orientation, entry->orientation);
     };
 
     return !std::ranges::all_of(input_locations(data), compatible);

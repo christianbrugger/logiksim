@@ -44,8 +44,8 @@ class HarfbuzzBlob {
 
     HarfbuzzBlob(const HarfbuzzBlob &) = delete;
     HarfbuzzBlob(HarfbuzzBlob &&) = delete;
-    HarfbuzzBlob &operator=(const HarfbuzzBlob &) = delete;
-    HarfbuzzBlob &operator=(HarfbuzzBlob &&) = delete;
+    auto operator=(const HarfbuzzBlob &) -> HarfbuzzBlob & = delete;
+    auto operator=(HarfbuzzBlob &&) -> HarfbuzzBlob & = delete;
 
     ~HarfbuzzBlob() {
         hb_blob_destroy(hb_blob);
@@ -110,8 +110,8 @@ class HarfbuzzBuffer {
 
     HarfbuzzBuffer(const HarfbuzzBuffer &) = delete;
     HarfbuzzBuffer(HarfbuzzBuffer &&) = delete;
-    HarfbuzzBuffer &operator=(const HarfbuzzBuffer &) = delete;
-    HarfbuzzBuffer &operator=(HarfbuzzBuffer &&) = delete;
+    auto operator=(const HarfbuzzBuffer &) -> HarfbuzzBuffer & = delete;
+    auto operator=(HarfbuzzBuffer &&) -> HarfbuzzBuffer & = delete;
 
     ~HarfbuzzBuffer() {
         hb_buffer_destroy(hb_buffer);
@@ -146,7 +146,7 @@ auto calculate_bounding_rect(std::span<const hb_glyph_info_t> glyph_info,
         const auto &pos = glyph_positions[i];
         auto extents = hb_glyph_extents_t {};
 
-        if (hb_font_get_glyph_extents(hb_font, glyph_info[i].codepoint, &extents) &&
+        if (hb_font_get_glyph_extents(hb_font, glyph_info[i].codepoint, &extents) != 0 &&
             extents.width != 0 && extents.height != 0) {
             const auto glyph_rect = BLBox {
                 origin.x + pos.x_offset + extents.x_bearing,
