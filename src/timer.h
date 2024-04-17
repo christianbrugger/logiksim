@@ -22,10 +22,11 @@ class Timer {
                                  int precision = 3);
     ~Timer();
 
-    Timer(Timer&&) noexcept = default;
     Timer(const Timer&) = default;
-    auto operator=(Timer&&) noexcept -> Timer& = default;
     auto operator=(const Timer&) -> Timer& = default;
+    // disallow move because destructor accesses members
+    Timer(Timer&&) noexcept = delete;
+    auto operator=(Timer&&) noexcept -> Timer& = delete;
 
     [[nodiscard]] auto delta() const -> delta_t;
     [[nodiscard]] auto delta_seconds() const -> double;

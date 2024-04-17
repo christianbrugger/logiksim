@@ -25,8 +25,8 @@ class LogFile {
     [[nodiscard]] explicit LogFile(fmt::cstring_view filename);
     ~LogFile();
 
-    // move construction only, same as fmt::ostream
-    [[nodiscard]] LogFile(LogFile &&) noexcept = default;
+    // TODO move construction only, same as fmt::ostream
+    [[nodiscard]] LogFile(LogFile &&) noexcept = delete;
     LogFile(const LogFile &) = delete;
     auto operator=(LogFile &&) -> LogFile & = delete;
     auto operator=(const LogFile &) -> LogFile & = delete;

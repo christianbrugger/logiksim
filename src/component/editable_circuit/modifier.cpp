@@ -62,10 +62,6 @@ Modifier::Modifier(Layout&& layout_, ModifierConfig config)
     Ensures(debug_class_invariant_holds(*this));
 }
 
-Modifier::~Modifier() {
-    assert(is_valid(*this));
-}
-
 auto Modifier::format() const -> std::string {
     return fmt::format("Modifier-{}", circuit_data_);
 }

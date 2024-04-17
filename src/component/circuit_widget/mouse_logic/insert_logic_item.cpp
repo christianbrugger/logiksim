@@ -31,8 +31,8 @@ auto remove_and_insert(EditableCircuit& editable_circuit, selection_id_t selecti
 
 }  // namespace
 
-InsertLogicItemLogic::InsertLogicItemLogic(LogicItemDefinition element_definition_)
-    : element_definition_ {std::move(element_definition_)} {}
+InsertLogicItemLogic::InsertLogicItemLogic(LogicItemDefinition element_definition)
+    : element_definition_ {std::move(element_definition)} {}
 
 auto InsertLogicItemLogic::mouse_press(EditableCircuit& editable_circuit,
                                        std::optional<point_t> position) -> void {

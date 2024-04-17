@@ -64,12 +64,6 @@ class Modifier {
    public:
     [[nodiscard]] explicit Modifier();
     [[nodiscard]] explicit Modifier(Layout&& layout, ModifierConfig config = {});
-    ~Modifier();
-
-    Modifier(Modifier&&) = default;
-    Modifier(const Modifier&) = default;
-    auto operator=(Modifier&&) -> Modifier& = default;
-    auto operator=(const Modifier&) -> Modifier& = default;
 
     [[nodiscard]] auto format() const -> std::string;
 
