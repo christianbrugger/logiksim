@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_TIMER_H
 #define LOGIKSIM_TIMER_H
 
+#include "format/enum.h"
 #include "format/struct.h"
 
 #include <chrono>
@@ -12,19 +13,26 @@
 namespace logicsim {
 
 namespace timer {
-using logging_function = std::function<void(std::string&&)>;
-}
+
+enum class Unit { s, ms, us, ns };
+
+using logging_function = std::function<void(std::string)>;
+
+}  // namespace timer
+
+template <>
+[[nodiscard]] auto format(timer::Unit unit) -> std::string;
 
 class Timer {
    public:
+    using Unit = timer::Unit;
+    using logging_function = timer::logging_function;
+
     using clock_t = std::chrono::steady_clock;
     using timepoint_t = clock_t::time_point;
     using delta_t = std::chrono::duration<double>;
-    using logging_function = timer::logging_function;
 
    public:
-    enum class Unit { s, ms, us, ns };
-
     [[nodiscard]] explicit Timer(std::string description = "", Unit unit = Unit::ms,
                                  int precision = 3,
                                  std::optional<logging_function> custom_logging = {});

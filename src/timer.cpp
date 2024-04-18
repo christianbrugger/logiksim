@@ -8,6 +8,22 @@
 
 namespace logicsim {
 
+template <>
+auto format(timer::Unit unit) -> std::string {
+    switch (unit) {
+        using enum timer::Unit;
+        case s:
+            return "s";
+        case ms:
+            return "ms";
+        case us:
+            return "us";
+        case ns:
+            return "ns";
+    }
+    std::terminate();
+}
+
 Timer::Timer(std::string description, Unit unit, int precision,
              std::optional<logging_function> custom_logging)
     : description_ {std::move(description)},
@@ -57,26 +73,22 @@ auto Timer::delta_ms() const -> double {
 auto Timer::format() const -> std::string {
     double seconds = delta().count();
 
-    auto unit_str = std::string {"s"};
     switch (unit_) {
         case Unit::s:
             break;
         case Unit::ms:
             seconds *= 1e3;
-            unit_str = "ms";
             break;
         case Unit::us:
             seconds *= 1e6;
-            unit_str = "us";
             break;
         case Unit::ns:
             seconds *= 1e9;
-            unit_str = "ns";
             break;
     }
 
     auto prefix = description_.empty() ? "" : fmt::format("{}: ", description_);
-    return fmt::format("{}{:.{}f}{}", prefix, seconds, precision_, unit_str);
+    return fmt::format("{}{:.{}f}{}", prefix, seconds, precision_, unit_);
 }
 
 }  // namespace logicsim
