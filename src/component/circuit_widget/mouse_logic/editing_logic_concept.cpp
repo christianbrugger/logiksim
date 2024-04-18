@@ -1,4 +1,4 @@
-#include "component/circuit_widget/mouse_logic/editing_logic_interface.h"
+#include "component/circuit_widget/mouse_logic/editing_logic_concept.h"
 
 namespace logicsim {
 

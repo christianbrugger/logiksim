@@ -61,12 +61,14 @@ auto EditingLogicManager::finalize_editing(EditableCircuit* editable_circuit_)
     if (editable_circuit_ != nullptr && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
 
-        std::visit(
-            overload([&](EditingLogicInterface& arg) { arg.finalize(editable_circuit); },
-                     [&](SelectionAreaLogic& arg) {
-                         arg.finalize(editable_circuit, rubber_band_);
-                     }),
-            mouse_logic_.value());
+        std::visit(overload(
+                       [&](has_mouse_logic_finalize auto& arg) {
+                           arg.finalize(editable_circuit);
+                       },
+                       [&](SelectionAreaLogic& arg) {
+                           arg.finalize(editable_circuit, rubber_band_);
+                       }),
+                   mouse_logic_.value());
         mouse_logic_.reset();
     }
 

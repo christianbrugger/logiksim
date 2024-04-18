@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_MOVE_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_MOVE_H
 
-#include "component/circuit_widget/mouse_logic/editing_logic_interface.h"
+#include "component/circuit_widget/mouse_logic/editing_logic_concept.h"
 #include "vocabulary/insertion_mode.h"
 #include "vocabulary/point_fine.h"
 
@@ -52,7 +52,7 @@ struct Args {
  *
  *
  */
-class SelectionMoveLogic : public EditingLogicInterface {
+class SelectionMoveLogic {
    public:
     using State = selection_move_logic::State;
     using Args = selection_move_logic::Args;
@@ -68,7 +68,7 @@ class SelectionMoveLogic : public EditingLogicInterface {
     [[nodiscard]] auto is_finished() const -> bool;
     auto confirm() -> void;
 
-    auto finalize(EditableCircuit& editable_circuit) -> void override;
+    auto finalize(EditableCircuit& editable_circuit) -> void;
 
    private:
     auto move_selection(EditableCircuit& editable_circuit, point_fine_t point) -> void;
@@ -85,6 +85,8 @@ class SelectionMoveLogic : public EditingLogicInterface {
     std::pair<int, int> total_offsets_ {};
     std::optional<std::vector<point_t>> cross_points_ {};
 };
+
+static_assert(has_mouse_logic_finalize<SelectionMoveLogic>);
 
 }  // namespace circuit_widget
 

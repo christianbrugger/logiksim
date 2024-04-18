@@ -312,7 +312,7 @@ set(LS_CORE_SOURCES
 )
 
 set(LS_GUI_SOURCES
-    src/component/circuit_widget/mouse_logic/editing_logic_interface.cpp
+    src/component/circuit_widget/mouse_logic/editing_logic_concept.cpp
     src/component/circuit_widget/mouse_logic/editing_logic_manager.cpp
     src/component/circuit_widget/mouse_logic/editing_logic_variant.cpp
     src/component/circuit_widget/mouse_logic/handle_resize.cpp

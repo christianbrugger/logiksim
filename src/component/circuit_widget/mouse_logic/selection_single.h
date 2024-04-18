@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_SINGLE_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_SINGLE_H
 
-#include "component/circuit_widget/mouse_logic/editing_logic_interface.h"
+#include "component/circuit_widget/mouse_logic/editing_logic_concept.h"
 
 namespace logicsim {
 
@@ -10,13 +10,15 @@ class EditableCircuit;
 
 namespace circuit_widget {
 
-class SelectionSingleLogic : public EditingLogicInterface {
+class SelectionSingleLogic {
    public:
     static auto mouse_press(EditableCircuit& editable_circuit, point_fine_t point,
                             bool double_click) -> void;
 
-    auto finalize(EditableCircuit& /*unused*/) -> void override;
+    auto finalize(EditableCircuit& /*unused*/) -> void;
 };
+
+static_assert(has_mouse_logic_finalize<SelectionSingleLogic>);
 
 }  // namespace circuit_widget
 
