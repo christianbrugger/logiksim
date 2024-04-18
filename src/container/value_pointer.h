@@ -3,15 +3,17 @@
 
 #include <fmt/core.h>
 
-#include <format/struct.h>
 #include <memory>
 #include <type_traits>
 #include <utility>
 
-// using a = std::optional<int>;
-
 namespace logicsim {
 
+/**
+ * @brief: Value like type stored on the heap.
+ *
+ * Works for incomplete types T, needed for the Pimpl idiom.
+ */
 template <typename T>
 class value_pointer {
    public:
@@ -24,12 +26,12 @@ class value_pointer {
 
     [[nodiscard]] explicit value_pointer();
 
-    template <class... Args>
-    [[nodiscard]] explicit value_pointer(std::in_place_t, Args&&... args)
-        requires std::is_constructible_v<T, Args...>;
-
     [[nodiscard]] explicit value_pointer(const T& value);
     [[nodiscard]] explicit value_pointer(T&& value);
+
+    template <class... Args>
+    [[nodiscard]] explicit value_pointer(std::in_place_t /*unused*/, Args&&... args)
+        requires std::is_constructible_v<T, Args...>;
 
     // defined by unique ptr
     constexpr ~value_pointer() = default;
@@ -43,7 +45,7 @@ class value_pointer {
     template <class U>
     friend auto swap(value_pointer<U>& a, value_pointer<U>& b) noexcept -> void;
 
-    // const-preserving access
+    // const preserving access
     [[nodiscard]] auto operator->() const noexcept -> const T*;
     [[nodiscard]] auto operator->() noexcept -> T*;
 
@@ -66,11 +68,6 @@ class value_pointer {
 //
 // Free Functions
 //
-
-// template <class T1, std::equality_comparable_with<T1> T2>
-//[[nodiscard]] constexpr auto operator==(const value_pointer<T1>& left,
-//                                         const T2& right) noexcept(noexcept(bool {
-//     *left == right})) -> bool;
 
 template <class T1, std::equality_comparable_with<T1> T2>
 [[nodiscard]] constexpr auto operator==(
@@ -95,18 +92,18 @@ template <typename T>
 value_pointer<T>::value_pointer() : value_ {std::make_unique<value_type>()} {}
 
 template <typename T>
-template <class... Args>
-value_pointer<T>::value_pointer(std::in_place_t, Args&&... args)
-    requires std::is_constructible_v<T, Args...>
-    : value_ {std::make_unique<value_type>(std::forward<Args>(args)...)} {}
-
-template <typename T>
 value_pointer<T>::value_pointer(const T& value)
     : value_ {std::make_unique<value_type>(value)} {}
 
 template <typename T>
 value_pointer<T>::value_pointer(T&& value)
     : value_ {std::make_unique<value_type>(std::move(value))} {}
+
+template <typename T>
+template <class... Args>
+value_pointer<T>::value_pointer(std::in_place_t /*unused*/, Args&&... args)
+    requires std::is_constructible_v<T, Args...>
+    : value_ {std::make_unique<value_type>(std::forward<Args>(args)...)} {}
 
 // special members
 
@@ -182,13 +179,6 @@ auto value_pointer<T>::value() && noexcept -> T&& {
 //
 // Free Functions
 //
-
-// template <class T1, std::equality_comparable_with<T1> T2>
-// constexpr auto operator==(const value_pointer<T1>& left,
-//                           const T2& right) noexcept(noexcept(bool {*left == right}))
-//     -> bool {
-//     return *left == right;
-// }
 
 template <class T1, std::equality_comparable_with<T1> T2>
 constexpr auto operator==(const value_pointer<T1>& left,

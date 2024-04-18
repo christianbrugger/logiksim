@@ -204,15 +204,4 @@ TEST(ContainerValuePointer, ComparableTypeThreeWay) {
     ASSERT_EQ(a >= b, false);
 }
 
-// TEST(ContainerValuePointer, ComparableTypeEqualValue) {
-//     const auto a = value_pointer<ComparableType> {ComparableType {"abc"}};
-//     const auto b = value_pointer<ComparableType> {ComparableType {"efg"}};
-//
-//     const auto val_a = ComparableType {"abc"};
-//     const auto val_b = ComparableType {"efg"};
-//
-//     ASSERT_EQ(a == val_a, true);
-//     ASSERT_EQ(b == val_b, true);
-// }
-
 }  // namespace logicsim
