@@ -71,7 +71,7 @@ auto Timer::delta_ms() const -> double {
 }
 
 auto Timer::format() const -> std::string {
-    double seconds = delta().count();
+    double seconds = delta_seconds();
 
     switch (unit_) {
         case Unit::s:

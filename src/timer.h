@@ -36,6 +36,7 @@ class Timer {
     [[nodiscard]] explicit Timer(std::string description = "", Unit unit = Unit::ms,
                                  int precision = 3,
                                  std::optional<logging_function> custom_logging = {});
+
     ~Timer();
     Timer(const Timer&) = default;
     Timer(Timer&& other) noexcept;
@@ -54,7 +55,7 @@ class Timer {
     int precision_;
     Unit unit_;
     std::optional<logging_function> custom_logging_;
-    // initialize start_ last so we measure after everything is initialized
+    // initialize start_ last so time is measure after everything is initialized
     timepoint_t start_;
 };
 
