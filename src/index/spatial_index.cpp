@@ -59,13 +59,13 @@ struct tree_container {
     explicit tree_container(const tree_t& other);
     ~tree_container() = default;
 
-    [[nodiscard]] auto operator==(const tree_container& other) const -> bool;
-
-    // disable copy & move
+    // disable copy & move, as we reference resource
     tree_container(const tree_container&) = delete;
     tree_container(tree_container&&) = delete;
     auto operator=(const tree_container&) -> tree_container& = delete;
     auto operator=(tree_container&&) -> tree_container& = delete;
+
+    [[nodiscard]] auto operator==(const tree_container& other) const -> bool;
 };
 
 tree_container::tree_container()
@@ -236,6 +236,9 @@ auto to_box(rect_fine_t rect) -> tree_box_t {
 
 }  // namespace spatial_index
 
+SpatialIndex::SpatialIndex()
+    : tree_ {std::make_unique<spatial_index::tree_container>()} {}
+
 SpatialIndex::SpatialIndex(const Layout& layout) : SpatialIndex {} {
     // Using RTree bulk insertion is 6x faster than generate_layout_messages
     using namespace spatial_index;
@@ -266,9 +269,6 @@ SpatialIndex::SpatialIndex(const Layout& layout) : SpatialIndex {} {
         tree_t {values.begin(), values.end(),
                 std::pmr::polymorphic_allocator<tree_value_t> {&tree_->resource}};
 }
-
-SpatialIndex::SpatialIndex()
-    : tree_ {std::make_unique<spatial_index::tree_container>()} {}
 
 SpatialIndex::~SpatialIndex() = default;
 

@@ -65,8 +65,9 @@ class SpatialIndex {
     using queried_segments_t = std::array<segment_t, 4>;
 
    public:
-    explicit SpatialIndex(const Layout &layout);
     explicit SpatialIndex();
+    explicit SpatialIndex(const Layout &layout);
+
     ~SpatialIndex();
     SpatialIndex(const SpatialIndex &other);
     auto operator=(const SpatialIndex &other) -> SpatialIndex &;

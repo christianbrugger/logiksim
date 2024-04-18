@@ -94,6 +94,7 @@ set(LS_CORE_SOURCES
     src/container/circular_buffer.cpp
     src/container/enum_map.cpp
     src/container/static_vector.cpp
+    src/container/value_pointer.cpp
 
     src/format/blend2d_type.cpp
     src/format/container.cpp
@@ -371,6 +372,7 @@ set(LS_TEST_SOURCES
     test/container/graph/depth_first_search_test.cpp
     test/container/circular_buffer_test.cpp
     test/container/static_vector_test.cpp
+    test/container/value_pointer_test.cpp
 
     test/editable_circuit/modifier/logic_item_test.cpp
     test/editable_circuit/modifier/modifier_config_test.cpp
