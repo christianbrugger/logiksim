@@ -1,7 +1,6 @@
 ﻿#include "timer.h"
 
 #include "logging.h"
-#include "timer.h"
 
 #include <fmt/core.h>
 
@@ -31,8 +30,15 @@ Timer::Timer(Timer &&other) noexcept : Timer {} {
     swap(*this, other);
 };
 
-auto Timer::operator=(Timer other) -> Timer & {
-    swap(*this, other);
+auto Timer::operator=(const Timer &other) -> Timer & {
+    auto tmp = Timer {other};
+    swap(*this, tmp);
+    return *this;
+}
+
+auto Timer::operator=(Timer &&other) noexcept -> Timer & {
+    auto tmp = Timer {std::move(other)};
+    swap(*this, tmp);
     return *this;
 }
 

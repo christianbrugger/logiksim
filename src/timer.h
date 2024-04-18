@@ -31,7 +31,8 @@ class Timer {
     ~Timer();
     Timer(const Timer&) = default;
     Timer(Timer&& other) noexcept;
-    auto operator=(Timer other) -> Timer&;
+    auto operator=(const Timer& other) -> Timer&;
+    auto operator=(Timer&& other) noexcept -> Timer&;
     friend auto swap(Timer& a, Timer& b) noexcept -> void;
 
     [[nodiscard]] auto delta() const -> delta_t;

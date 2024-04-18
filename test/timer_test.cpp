@@ -148,23 +148,6 @@ TEST(Timer, MoveAssignment) {
 }
 
 // SelfCopyAssignment: not allowed, because of compiler warning
-
-TEST(Timer, SelfMoveAssignment) {
-    auto result = std::vector<std::string> {};
-    const auto logger = [&](std::string&& s) { result.push_back(std::move(s)); };
-
-    // move assignment
-    {
-        auto t = Timer {"Test", Timer::Unit::ms, 3, logger};  //
-        t = std::move(t);
-
-        EXPECT_TRUE(t.format().starts_with("Test: 0"));
-
-        EXPECT_EQ(result.size(), 0);
-    }
-
-    EXPECT_EQ(result.size(), 1);
-    EXPECT_TRUE(result.at(0).starts_with("Test: 0"));
-}
+// SelfMoveAssignment: not allowed, because of compiler warning
 
 }  // namespace logicsim
