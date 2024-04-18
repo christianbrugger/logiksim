@@ -1,25 +1,42 @@
 ﻿#include "timer.h"
 
 #include "logging.h"
+#include "timer.h"
 
 #include <fmt/core.h>
 
+#include <utility>
+
 namespace logicsim {
 
-Timer::Timer(std::string description, Unit unit, int precision)
-    : precision_ {precision},
-      description_(std::move(description)),
-      unit_(unit),
-      start_(clock_t::now()) {};
+Timer::Timer(std::string description, Unit unit, int precision,
+             std::optional<logging_function> custom_logging)
+    : description_ {std::move(description)},
+      precision_ {precision},
+      unit_ {unit},
+      custom_logging_ {std::move(custom_logging)},
+      start_ {clock_t::now()} {};
 
 Timer::~Timer() {
     if (!description_.empty()) {
-        const auto str = format();
-        print_fmt("{}\n", str);
+        if (custom_logging_.has_value()) {
+            custom_logging_->operator()(format());
+        } else {
+            print(format());
+        }
     }
 }
 
-auto Timer::delta() const -> std::chrono::duration<double> {
+Timer::Timer(Timer &&other) noexcept : Timer {} {
+    swap(*this, other);
+};
+
+auto Timer::operator=(Timer other) -> Timer & {
+    swap(*this, other);
+    return *this;
+}
+
+auto Timer::delta() const -> delta_t {
     return delta_t {clock_t::now() - start_};
 }
 
@@ -45,6 +62,10 @@ auto Timer::format() const -> std::string {
         case Unit::us:
             seconds *= 1e6;
             unit_str = "us";
+            break;
+        case Unit::ns:
+            seconds *= 1e9;
+            unit_str = "ns";
             break;
     }
 

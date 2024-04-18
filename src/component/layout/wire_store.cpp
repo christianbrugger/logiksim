@@ -2,7 +2,6 @@
 
 #include "allocated_size/std_optional.h"
 #include "allocated_size/std_vector.h"
-#include "logging.h"
 #include "vocabulary/rect.h"
 #include "vocabulary/wire_id.h"
 

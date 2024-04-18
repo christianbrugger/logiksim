@@ -421,6 +421,7 @@ set(LS_TEST_SOURCES
     test/schematic_test.cpp
     test/segment_tree_test.cpp
     test/simulation_test.cpp
+    test/timer_test.cpp
 )
 
 cmake_policy(PUSH)
