@@ -23,7 +23,7 @@ auto IncompleteTypeTest::value() const -> int {
 
 }  // namespace value_pointer_strong_ordering
 template class value_pointer<value_pointer_strong_ordering::incomplete_type,
-                             std::true_type, std::strong_ordering>;
+                             equality_comparable, std::strong_ordering>;
 
 //
 // No Comparison
@@ -63,7 +63,7 @@ auto IncompleteTypeTest::value() const -> int {
 }
 
 }  // namespace value_pointer_equality_only
-template class value_pointer<value_pointer_equality_only::incomplete_type, std::true_type,
-                             void>;
+template class value_pointer<value_pointer_equality_only::incomplete_type,
+                             equality_comparable>;
 
 }  // namespace logicsim

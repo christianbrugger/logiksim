@@ -12,12 +12,23 @@
 #include <utility>
 
 namespace logicsim {
-
-// similar to std::optional requirements
+/**
+ * @brief: requirements for the T in value_pointer
+ *
+ * Note these are similar to std::optional requirements
+ */
 template <class T>
 concept is_value_pointer_compatible =
     !std::is_same_v<std::remove_cv_t<T>, std::in_place_t> &&  //
     std::is_object_v<T> && std::is_destructible_v<T> && !std::is_array_v<T>;
+
+/**
+ * @brief:  allowed ordering values for value_pointer
+ */
+template <typename T>
+concept ordering_or_void =
+    std::is_void_v<T> || std::same_as<T, std::strong_ordering> ||
+    std::same_as<T, std::partial_ordering> || std::same_as<T, std::weak_ordering>;
 
 /**
  * @brief: Value like type for incomplete types stored on the heap.
@@ -35,7 +46,8 @@ concept is_value_pointer_compatible =
  *          std::strong_ordering, std::partial_ordering, std::weak_ordering.
  *
  */
-template <typename T, typename C = std::false_type, typename O = void>
+template <typename T, equality_comparable_tag C = not_equality_comparable,
+          ordering_or_void O = void>
 class value_pointer {
    public:
     using value_type = T;
@@ -58,7 +70,7 @@ class value_pointer {
     [[nodiscard]] value_pointer(const value_pointer& other);
     auto operator=(const value_pointer& other) -> value_pointer&;
 
-    template <typename T_, typename C_, typename O_>
+    template <typename T_, equality_comparable_tag C_, ordering_or_void O_>
     friend auto swap(value_pointer<T_, C_, O_>& a, value_pointer<T_, C_, O_>& b) noexcept
         -> void;
 
@@ -80,7 +92,7 @@ class value_pointer {
 
     // comparison as members so they are auto-generated for template instantiations
     [[nodiscard]] auto operator==(const value_pointer& other) const -> bool
-        requires(std::same_as<C, std::true_type>);
+        requires(std::same_as<C, equality_comparable>);
     [[nodiscard]] auto operator<=>(const value_pointer& other) const -> O
         requires(!std::is_void_v<O>);
 
@@ -93,31 +105,31 @@ class value_pointer {
  *         ordering template parameters.
  */
 template <typename T>
-using value_pointer_complete =
-    value_pointer<T, is_equality_comparable_v<T>, std::compare_three_way_result_t<T, T>>;
+using value_pointer_complete = value_pointer<T, to_equality_comparable_tag_t<T>,
+                                             std::compare_three_way_result_t<T, T>>;
 
 //
 // Implementation
 //
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 value_pointer<T, C, O>::value_pointer() : value_ {std::make_unique<value_type>()} {
     static_assert(is_value_pointer_compatible<T>);
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 value_pointer<T, C, O>::value_pointer(const T& value)
     : value_ {std::make_unique<value_type>(value)} {
     static_assert(is_value_pointer_compatible<T>);
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 value_pointer<T, C, O>::value_pointer(T&& value)
     : value_ {std::make_unique<value_type>(std::move(value))} {
     static_assert(is_value_pointer_compatible<T>);
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 template <class... Args>
 value_pointer<T, C, O>::value_pointer(std::in_place_t /*unused*/, Args&&... args)
     requires std::is_constructible_v<T, Args...>
@@ -127,28 +139,28 @@ value_pointer<T, C, O>::value_pointer(std::in_place_t /*unused*/, Args&&... args
 
 // special members
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 value_pointer<T, C, O>::~value_pointer() noexcept = default;
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 value_pointer<T, C, O>::value_pointer(value_pointer&& other) noexcept = default;
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::operator=(value_pointer&& other) noexcept
     -> value_pointer& = default;
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 value_pointer<T, C, O>::value_pointer(const value_pointer& other)
     : value_ {std::make_unique<value_type>(*other.value_)} {}
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::operator=(const value_pointer& other) -> value_pointer& {
     auto tmp = value_pointer {other};
     swap(*this, tmp);
     return *this;
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto swap(value_pointer<T, C, O>& a, value_pointer<T, C, O>& b) noexcept -> void {
     using std::swap;
     swap(a.value_, b.value_);
@@ -156,66 +168,66 @@ auto swap(value_pointer<T, C, O>& a, value_pointer<T, C, O>& b) noexcept -> void
 
 // access operators
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::operator->() const noexcept -> const T* {
     return value_.get();
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::operator->() noexcept -> T* {
     return value_.get();
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::operator*() const& noexcept -> const T& {
     return *value_;
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::operator*() & noexcept -> T& {
     return *value_;
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::operator*() const&& noexcept -> const T&& {
     return std::move(*value_);
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::operator*() && noexcept -> T&& {
     return std::move(*value_);
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::value() const& noexcept -> const T& {
     return *value_;
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::value() & noexcept -> T& {
     return *value_;
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::value() const&& noexcept -> const T&& {
     return std::move(*value_);
 }
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::value() && noexcept -> T&& {
     return std::move(*value_);
 }
 
 // comparison
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::operator==(const value_pointer& other) const -> bool
-    requires(std::same_as<C, std::true_type>)
+    requires(std::same_as<C, equality_comparable>)
 {
     return value() == other.value();
 };
 
-template <typename T, typename C, typename O>
+template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::operator<=>(const value_pointer& other) const -> O
     requires(!std::is_void_v<O>)
 {
@@ -226,7 +238,8 @@ auto value_pointer<T, C, O>::operator<=>(const value_pointer& other) const -> O
 
 }  // namespace logicsim
 
-template <typename T, typename C, typename O, typename Char>
+template <typename T, logicsim::equality_comparable_tag C, logicsim::ordering_or_void O,
+          typename Char>
 struct fmt::formatter<logicsim::value_pointer<T, C, O>, Char> {
     constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();

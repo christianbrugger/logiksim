@@ -26,7 +26,7 @@ class IncompleteTypeTest {
     friend auto swap(IncompleteTypeTest& a, IncompleteTypeTest& b) noexcept -> void;
 
    private:
-    value_pointer<incomplete_type, std::true_type, std::strong_ordering> value_;
+    value_pointer<incomplete_type, equality_comparable, std::strong_ordering> value_;
 };
 
 inline auto swap(IncompleteTypeTest& a, IncompleteTypeTest& b) noexcept -> void {
@@ -36,7 +36,7 @@ inline auto swap(IncompleteTypeTest& a, IncompleteTypeTest& b) noexcept -> void 
 }  // namespace value_pointer_strong_ordering
 
 extern template class value_pointer<value_pointer_strong_ordering::incomplete_type,
-                                    std::true_type, std::strong_ordering>;
+                                    equality_comparable, std::strong_ordering>;
 
 //
 // No Comparison
@@ -53,9 +53,15 @@ class IncompleteTypeTest {
 
     [[nodiscard]] auto value() const -> int;
 
+    friend auto swap(IncompleteTypeTest& a, IncompleteTypeTest& b) noexcept -> void;
+
    private:
-    value_pointer<incomplete_type, std::strong_ordering> value_;
+    value_pointer<incomplete_type> value_;
 };
+
+inline auto swap(IncompleteTypeTest& a, IncompleteTypeTest& b) noexcept -> void {
+    ::logicsim::swap(a.value_, b.value_);
+}
 
 }  // namespace value_pointer_no_comparison
 
@@ -78,14 +84,20 @@ class IncompleteTypeTest {
 
     [[nodiscard]] auto operator==(const IncompleteTypeTest&) const -> bool = default;
 
+    friend auto swap(IncompleteTypeTest& a, IncompleteTypeTest& b) noexcept -> void;
+
    private:
-    value_pointer<incomplete_type, std::true_type, void> value_;
+    value_pointer<incomplete_type, equality_comparable> value_;
 };
+
+inline auto swap(IncompleteTypeTest& a, IncompleteTypeTest& b) noexcept -> void {
+    ::logicsim::swap(a.value_, b.value_);
+}
 
 }  // namespace value_pointer_equality_only
 
 extern template class value_pointer<value_pointer_equality_only::incomplete_type,
-                                    std::true_type, void>;
+                                    equality_comparable>;
 
 }  // namespace logicsim
 

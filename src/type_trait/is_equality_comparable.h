@@ -22,13 +22,13 @@ using is_equality_comparable_v = is_equality_comparable<T>::value;
 // To equality_comparable and not_equality_comparable tag types
 //
 
-struct equality_comparable;
+struct equality_comparable {};
 
-struct not_equality_comparable;
+struct not_equality_comparable {};
 
 template <typename T>
-concept equality_comparable_tag = std::is_base_of_v<T, equality_comparable> ||
-                                  std::is_base_of_v<T, equality_comparable>;
+concept equality_comparable_tag = std::same_as<T, equality_comparable> ||  //
+                                  std::same_as<T, not_equality_comparable>;
 
 template <typename T>
 struct to_equality_comparable_tag {
