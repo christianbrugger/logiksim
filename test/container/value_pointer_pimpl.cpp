@@ -6,13 +6,10 @@ namespace value_pointer_test {
 
 struct incomplete_type {
     int value;
+
+    [[nodiscard]] auto operator==(const incomplete_type&) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const incomplete_type&) const = default;
 };
-
-}  // namespace value_pointer_test
-
-template class value_pointer<value_pointer_test::incomplete_type>;
-
-namespace value_pointer_test {
 
 IncompleteTypeTest::IncompleteTypeTest(int value) : value_ {std::in_place, value} {}
 
@@ -21,5 +18,6 @@ auto IncompleteTypeTest::value() const -> int {
 }
 
 }  // namespace value_pointer_test
+template class value_pointer<value_pointer_test::incomplete_type, std::strong_ordering>;
 
 }  // namespace logicsim

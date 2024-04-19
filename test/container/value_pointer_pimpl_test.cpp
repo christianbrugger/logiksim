@@ -38,4 +38,20 @@ TEST(ContainerValuePointerPimpl, MoveCopy) {
     ASSERT_EQ(e.value(), 2);
 }
 
+TEST(ContainerValuePointerPimpl, Equality) {
+    auto a = IncompleteTypeTest {1};
+    auto b = IncompleteTypeTest {2};
+
+    ASSERT_EQ(a == b, false);
+    ASSERT_EQ(a != b, true);
+}
+
+TEST(ContainerValuePointerPimpl, Comparison) {
+    auto a = IncompleteTypeTest {1};
+    auto b = IncompleteTypeTest {2};
+
+    ASSERT_EQ(a < b, true);
+    ASSERT_EQ(a > b, false);
+}
+
 }  // namespace logicsim::value_pointer_test

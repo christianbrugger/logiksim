@@ -204,8 +204,10 @@ TEST(ContainerValuePointer, ComparableTypeEqual) {
 }
 
 TEST(ContainerValuePointer, ComparableTypeThreeWay) {
-    const auto a = value_pointer<ComparableType> {ComparableType {"abc"}};
-    const auto b = value_pointer<ComparableType> {ComparableType {"efg"}};
+    const auto a =
+        value_pointer<ComparableType, std::strong_ordering> {ComparableType {"abc"}};
+    const auto b =
+        value_pointer<ComparableType, std::strong_ordering> {ComparableType {"efg"}};
 
     ASSERT_EQ(a < b, true);
     ASSERT_EQ(a > b, false);
@@ -213,5 +215,7 @@ TEST(ContainerValuePointer, ComparableTypeThreeWay) {
     ASSERT_EQ(a <= b, true);
     ASSERT_EQ(a >= b, false);
 }
+
+// TODO test swap
 
 }  // namespace logicsim

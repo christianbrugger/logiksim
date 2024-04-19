@@ -9,12 +9,6 @@ namespace value_pointer_test {
 
 struct incomplete_type;
 
-}
-
-extern template class value_pointer<value_pointer_test::incomplete_type>;
-
-namespace value_pointer_test {
-
 class IncompleteTypeTest {
    public:
     IncompleteTypeTest() = default;
@@ -22,11 +16,17 @@ class IncompleteTypeTest {
 
     [[nodiscard]] auto value() const -> int;
 
+    [[nodiscard]] auto operator==(const IncompleteTypeTest&) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const IncompleteTypeTest&) const = default;
+
    private:
-    value_pointer<incomplete_type> value_;
+    value_pointer<incomplete_type, std::strong_ordering> value_;
 };
 
 }  // namespace value_pointer_test
+
+extern template class value_pointer<value_pointer_test::incomplete_type,
+                                    std::strong_ordering>;
 
 }  // namespace logicsim
 
