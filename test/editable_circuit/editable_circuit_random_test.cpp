@@ -2,7 +2,6 @@
 #include "algorithm/range.h"
 #include "algorithm/uniform_int_distribution.h"
 #include "editable_circuit.h"
-#include "editable_circuit/modifier/test_helpers.h"  // TODO different folder
 #include "format/container.h"
 #include "geometry/display_state_map.h"
 #include "logging.h"
@@ -11,6 +10,7 @@
 #include "random/insertion_mode.h"
 #include "random/point.h"
 #include "render_circuit.h"
+#include "test/editable_circuit/modifier/test_helpers.h"  // TODO different folder
 #include "timer.h"
 #include "tree_normalization.h"
 

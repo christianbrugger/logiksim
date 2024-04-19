@@ -1,11 +1,10 @@
-
-#include "./test_helpers.h"
 #include "component/editable_circuit/editing/edit_logicitem.h"
 #include "component/editable_circuit/modifier.h"
 #include "format/container.h"
 #include "layout.h"
 #include "layout_message.h"
 #include "logging.h"
+#include "test/editable_circuit/modifier/test_helpers.h"
 #include "vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>

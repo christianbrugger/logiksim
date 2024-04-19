@@ -372,6 +372,8 @@ set(LS_TEST_SOURCES
     test/container/graph/depth_first_search_test.cpp
     test/container/circular_buffer_test.cpp
     test/container/static_vector_test.cpp
+    test/container/value_pointer_pimpl.cpp
+    test/container/value_pointer_pimpl_test.cpp
     test/container/value_pointer_test.cpp
 
     test/editable_circuit/modifier/logic_item_test.cpp
@@ -1029,7 +1031,7 @@ target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
     GTest::gtest_main
 )
 target_include_directories(${MAIN_TEST_TARGET} PUBLIC
-    test
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 set_property(TARGET ${MAIN_TEST_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 

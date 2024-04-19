@@ -3,11 +3,24 @@
 
 #include <fmt/core.h>
 
+#include <any>
 #include <memory>
 #include <type_traits>
 #include <utility>
 
 namespace logicsim {
+
+namespace detail {
+
+struct value_pointer_deleter_t {
+    template <typename T>
+    auto operator()(T* p) const noexcept -> void {
+        static_assert(sizeof(T) > 0, "can't delete an incomplete type");
+        delete p;
+    }
+};
+
+}  // namespace detail
 
 /**
  * @brief: Value like type stored on the heap.
@@ -17,10 +30,11 @@ namespace logicsim {
 template <typename T>
 class value_pointer {
    public:
-    static_assert(!std::is_same_v<std::remove_cv_t<T>, std::in_place_t>,
-                  "T in value_pointer<T> must be a type other than in_place_t.");
-    static_assert(std::is_object_v<T> && std::is_destructible_v<T> && !std::is_array_v<T>,
-                  "T in optional<T> must meet the destructible requirements.");
+    // static_assert(!std::is_same_v<std::remove_cv_t<T>, std::in_place_t>,
+    //               "T in value_pointer<T> must be a type other than in_place_t.");
+    // static_assert(std::is_object_v<T> && std::is_destructible_v<T> &&
+    // !std::is_array_v<T>,
+    //               "T in optional<T> must meet the destructible requirements.");
 
     using value_type = T;
 
@@ -34,9 +48,9 @@ class value_pointer {
         requires std::is_constructible_v<T, Args...>;
 
     // defined by unique ptr
-    constexpr ~value_pointer() = default;
-    [[nodiscard]] value_pointer(value_pointer&& other) noexcept = default;
-    auto operator=(value_pointer&& other) noexcept -> value_pointer& = default;
+    ~value_pointer() noexcept;
+    [[nodiscard]] value_pointer(value_pointer&& other) noexcept;
+    auto operator=(value_pointer&& other) noexcept -> value_pointer&;
 
     // add copy operations
     [[nodiscard]] value_pointer(const value_pointer& other);
@@ -62,7 +76,7 @@ class value_pointer {
     [[nodiscard]] auto value() && noexcept -> T&&;
 
    private:
-    std::unique_ptr<T> value_;
+    std::unique_ptr<T, detail::value_pointer_deleter_t> value_;
 };
 
 //
@@ -89,27 +103,54 @@ template <class T1, std::three_way_comparable_with<T1> T2>
 //
 
 template <typename T>
-value_pointer<T>::value_pointer() : value_ {std::make_unique<value_type>()} {}
+value_pointer<T>::value_pointer()
+    : value_ {std::unique_ptr<value_type, detail::value_pointer_deleter_t> {
+          new value_type {},
+          detail::value_pointer_deleter_t {},
+      }} {}
 
 template <typename T>
 value_pointer<T>::value_pointer(const T& value)
-    : value_ {std::make_unique<value_type>(value)} {}
+    : value_ {std::unique_ptr<value_type, detail::value_pointer_deleter_t> {
+          new value_type {value},
+          detail::value_pointer_deleter_t {},
+      }} {}
 
 template <typename T>
 value_pointer<T>::value_pointer(T&& value)
-    : value_ {std::make_unique<value_type>(std::move(value))} {}
+    : value_ {std::unique_ptr<value_type, detail::value_pointer_deleter_t> {
+          new value_type {std::move(value)},
+          detail::value_pointer_deleter_t {},
+      }} {}
 
 template <typename T>
 template <class... Args>
 value_pointer<T>::value_pointer(std::in_place_t /*unused*/, Args&&... args)
     requires std::is_constructible_v<T, Args...>
-    : value_ {std::make_unique<value_type>(std::forward<Args>(args)...)} {}
+    : value_ {std::unique_ptr<value_type, detail::value_pointer_deleter_t> {
+          new value_type {std::forward<Args>(args)...},
+          detail::value_pointer_deleter_t {},
+      }} {}
 
 // special members
 
 template <typename T>
+value_pointer<T>::~value_pointer() noexcept = default;
+
+template <typename T>
+value_pointer<T>::value_pointer(value_pointer&& other) noexcept = default;
+
+template <typename T>
+auto value_pointer<T>::operator=(value_pointer&& other) noexcept
+    -> value_pointer& = default;
+
+template <typename T>
 value_pointer<T>::value_pointer(const value_pointer& other)
-    : value_ {std::make_unique<value_type>(*(other.value_))} {}
+    // : value_ {std::make_unique<value_type>(*(other.value_))} {}
+    : value_ {std::unique_ptr<value_type, detail::value_pointer_deleter_t> {
+          new value_type {*(other.value_)},
+          detail::value_pointer_deleter_t {},
+      }} {}
 
 template <typename T>
 auto value_pointer<T>::operator=(const value_pointer& other) -> value_pointer& {

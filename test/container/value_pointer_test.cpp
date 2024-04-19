@@ -6,6 +6,9 @@
 
 namespace logicsim {
 
+static_assert(sizeof(value_pointer<int>) == sizeof(int*));
+static_assert(sizeof(value_pointer<std::string>) == sizeof(std::string*));
+
 TEST(ContainerValuePointer, ConstIntDefault) {
     const auto x = value_pointer<int> {};
 
@@ -81,6 +84,13 @@ TEST(ContainerValuePointer, MoveOnlyConstructDefault) {
     ASSERT_EQ(val->value, 0);
 
     static_assert(!std::is_assignable_v<decltype(*val), MoveOnlyType>);
+}
+
+TEST(ContainerValuePointer, MoveOnlyConstructWithMoved) {
+    auto obj = MoveOnlyType {2};
+    const auto val = value_pointer<MoveOnlyType> {std::move(obj)};
+
+    ASSERT_EQ(val->value, 2);
 }
 
 TEST(ContainerValuePointer, MoveOnlyConstruct) {

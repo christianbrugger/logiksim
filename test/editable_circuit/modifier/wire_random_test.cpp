@@ -1,4 +1,3 @@
-#include "./test_helpers.h"
 #include "algorithm/uniform_int_distribution.h"
 #include "component/editable_circuit/modifier.h"
 #include "editable_circuit.h"
@@ -10,6 +9,7 @@
 #include "random/segment.h"
 #include "random/wire.h"
 #include "selection_normalization.h"
+#include "test/editable_circuit/modifier/test_helpers.h"
 #include "timer.h"
 #include "tree_normalization.h"
 #include "vocabulary/segment_part.h"
