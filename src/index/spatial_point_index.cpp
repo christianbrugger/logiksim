@@ -27,6 +27,11 @@ struct tree_container {
 
     // [[nodiscard]] auto operator==(const tree_container& other) const -> bool = default;
 };
+
+auto make_tree(std::span<const point_t> points) {
+    return tree_t {transform_view(points, to_tree_point)};
+}
+
 }  // namespace logicsim::spatial_point_index
 
 template <>
@@ -59,37 +64,10 @@ auto from_tree_point(const tree_point_t& point) -> point_t {
 
 }  // namespace spatial_point_index
 
-SpatialPointIndex::SpatialPointIndex()
-    : tree_ {std::make_unique<spatial_point_index::tree_container>()} {}
-
-namespace {
-auto make_tree(std::span<const point_t> points) {
-    using namespace spatial_point_index;
-
-    return std::make_unique<tree_container>(
-        tree_container {tree_t {transform_view(points, to_tree_point)}});
-}
-}  // namespace
+template class value_pointer<spatial_point_index::tree_container>;
 
 SpatialPointIndex::SpatialPointIndex(std::span<const point_t> points)
-    : tree_ {make_tree(points)} {}
-
-SpatialPointIndex::~SpatialPointIndex() = default;
-
-SpatialPointIndex::SpatialPointIndex(const SpatialPointIndex& other)
-    : tree_ {std::make_unique<spatial_point_index::tree_container>(*other.tree_)} {}
-
-auto SpatialPointIndex::operator=(const SpatialPointIndex& other) -> SpatialPointIndex& {
-    auto tmp = SpatialPointIndex {other};
-    using std::swap;
-    swap(*this, tmp);
-    return *this;
-}
-
-SpatialPointIndex::SpatialPointIndex(SpatialPointIndex&&) noexcept = default;
-
-auto SpatialPointIndex::operator=(SpatialPointIndex&&) noexcept -> SpatialPointIndex& =
-                                                                       default;
+    : tree_ {std::in_place, spatial_point_index::make_tree(points)} {}
 
 auto SpatialPointIndex::add_split_point(point_t point) -> void {
     using namespace spatial_point_index;

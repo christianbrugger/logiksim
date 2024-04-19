@@ -22,6 +22,7 @@ auto IncompleteTypeTest::value() const -> int {
 }
 
 }  // namespace value_pointer_strong_ordering
+
 template class value_pointer<value_pointer_strong_ordering::incomplete_type,
                              equality_comparable, std::strong_ordering>;
 
@@ -42,6 +43,7 @@ auto IncompleteTypeTest::value() const -> int {
 }
 
 }  // namespace value_pointer_no_comparison
+
 template class value_pointer<value_pointer_no_comparison::incomplete_type>;
 
 //
@@ -63,6 +65,7 @@ auto IncompleteTypeTest::value() const -> int {
 }
 
 }  // namespace value_pointer_equality_only
+
 template class value_pointer<value_pointer_equality_only::incomplete_type,
                              equality_comparable>;
 
