@@ -19,9 +19,15 @@ class IncompleteTypeTest {
     [[nodiscard]] auto operator==(const IncompleteTypeTest&) const -> bool = default;
     [[nodiscard]] auto operator<=>(const IncompleteTypeTest&) const = default;
 
+    friend auto swap(IncompleteTypeTest& a, IncompleteTypeTest& b) noexcept -> void;
+
    private:
     value_pointer<incomplete_type, std::strong_ordering> value_;
 };
+
+inline auto swap(IncompleteTypeTest& a, IncompleteTypeTest& b) noexcept -> void {
+    ::logicsim::swap(a.value_, b.value_);
+}
 
 }  // namespace value_pointer_test
 

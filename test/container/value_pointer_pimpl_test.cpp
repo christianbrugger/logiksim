@@ -54,4 +54,11 @@ TEST(ContainerValuePointerPimpl, Comparison) {
     ASSERT_EQ(a > b, false);
 }
 
+TEST(ContainerValuePointerPimpl, Swap) {
+    auto a = IncompleteTypeTest {1};
+    auto b = IncompleteTypeTest {2};
+
+    swap(a, b);
+}
+
 }  // namespace logicsim::value_pointer_test

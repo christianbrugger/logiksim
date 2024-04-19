@@ -18,13 +18,16 @@ concept is_value_pointer_compatible =
     std::is_object_v<T> && std::is_destructible_v<T> && !std::is_array_v<T>;
 
 /**
- * @brief: Value like type stored on the heap.
+ * @brief: Value like type for incomplete types stored on the heap.
  *
- * Works for incomplete types T, needed for the Pimpl idiom.
+ * This class is suitable to implement the Pimpl idiom. For this add a explicit
+ * template instantiation of value_pointer<incomplete_t> to the h and cpp file.
  *
- * Note, if type supports three-way-comparison the type needs to be given one,
- * in case T is incomplete. One of: std::strong_ordering, std::partial_ordering,
- * std::weak_ordering.
+ *      header: extern template class value_pointer<incomplete_t, ..>;
+ *      cpp:    template class value_pointer<incomplete_t, ..>;
+ *
+ * To support three-way-comparison O needs to be set to one of std::strong_ordering,
+ * std::partial_ordering, std::weak_ordering.
  */
 template <typename T, typename O = void>
 class value_pointer {
@@ -49,8 +52,8 @@ class value_pointer {
     [[nodiscard]] value_pointer(const value_pointer& other);
     auto operator=(const value_pointer& other) -> value_pointer&;
 
-    template <class U, class P>
-    friend auto swap(value_pointer<U, P>& a, value_pointer<U, P>& b) noexcept -> void;
+    template <typename T_, typename O_>
+    friend auto swap(value_pointer<T_, O_>& a, value_pointer<T_, O_>& b) noexcept -> void;
 
     // const preserving access
     [[nodiscard]] auto operator->() const noexcept -> const T*;
@@ -129,8 +132,8 @@ auto value_pointer<T, O>::operator=(const value_pointer& other) -> value_pointer
     return *this;
 }
 
-template <typename U, typename P>
-auto swap(value_pointer<U, P>& a, value_pointer<U, P>& b) noexcept -> void {
+template <typename T, typename O>
+auto swap(value_pointer<T, O>& a, value_pointer<T, O>& b) noexcept -> void {
     using std::swap;
     swap(a.value_, b.value_);
 }
