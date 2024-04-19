@@ -190,9 +190,9 @@ TEST(ContainerValuePointer, ComparableTypeConstruction) {
 }
 
 TEST(ContainerValuePointer, ComparableTypeEqual) {
-    const auto a = value_pointer<ComparableType> {ComparableType {"abc"}};
-    const auto b = value_pointer<ComparableType> {ComparableType {"abc"}};
-    const auto c = value_pointer<ComparableType> {ComparableType {"efg"}};
+    const auto a = value_pointer_complete<ComparableType> {ComparableType {"abc"}};
+    const auto b = value_pointer_complete<ComparableType> {ComparableType {"abc"}};
+    const auto c = value_pointer_complete<ComparableType> {ComparableType {"efg"}};
 
     ASSERT_EQ(a == b, true);
     ASSERT_EQ(b == a, true);
@@ -204,10 +204,8 @@ TEST(ContainerValuePointer, ComparableTypeEqual) {
 }
 
 TEST(ContainerValuePointer, ComparableTypeThreeWay) {
-    const auto a =
-        value_pointer<ComparableType, std::strong_ordering> {ComparableType {"abc"}};
-    const auto b =
-        value_pointer<ComparableType, std::strong_ordering> {ComparableType {"efg"}};
+    const auto a = value_pointer_complete<ComparableType> {ComparableType {"abc"}};
+    const auto b = value_pointer_complete<ComparableType> {ComparableType {"efg"}};
 
     ASSERT_EQ(a < b, true);
     ASSERT_EQ(a > b, false);

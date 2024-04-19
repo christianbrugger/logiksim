@@ -181,6 +181,7 @@ set(LS_CORE_SOURCES
 
     src/type_trait/add_const_to_reference.cpp
     src/type_trait/const_iterator.cpp
+    src/type_trait/is_equality_comparable.cpp
     src/type_trait/numeric_limits_template.cpp
     src/type_trait/safe_difference_type.cpp
 

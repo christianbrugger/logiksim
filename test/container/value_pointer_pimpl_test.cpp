@@ -5,7 +5,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace logicsim::value_pointer_test {
+//
+// Strong Ordering
+//
+
+namespace logicsim::value_pointer_strong_ordering {
 
 TEST(ContainerValuePointerPimpl, ConstructDefault) {
     const auto x = IncompleteTypeTest {};
@@ -61,4 +65,4 @@ TEST(ContainerValuePointerPimpl, Swap) {
     swap(a, b);
 }
 
-}  // namespace logicsim::value_pointer_test
+}  // namespace logicsim::value_pointer_strong_ordering
