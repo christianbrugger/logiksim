@@ -37,6 +37,8 @@ class Timer {
                                  int precision = 3,
                                  std::optional<logging_function> custom_logging = {});
 
+    // state is accessed in destructor so Timer needs
+    // to be in a defined state when moved from
     ~Timer();
     Timer(const Timer&) = default;
     Timer(Timer&& other) noexcept;

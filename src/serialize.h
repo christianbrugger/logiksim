@@ -60,7 +60,7 @@ class LoadLayoutResult {
     [[nodiscard]] auto simulation_config() const -> SimulationConfig;
 
    private:
-    // read-only so its safe to use shared_ptr
+    // read-only, so it preserving whole parts relationship
     std::shared_ptr<SerializedLayout> data_;
 };
 

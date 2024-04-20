@@ -17,20 +17,26 @@ struct svg_data_t {
     svg2b2d::SVGDocument document {};
 };
 
-svg_entry_t::svg_entry_t() = default;
-
-svg_entry_t::svg_entry_t(svg_data_t &&data_)
-    : data {std::make_unique<svg_data_t>(std::move(data_))} {}
-
-svg_entry_t::svg_entry_t(svg_entry_t &&) noexcept = default;
-
-auto svg_entry_t::operator=(svg_entry_t &&) noexcept -> svg_entry_t & = default;
-
-svg_entry_t::~svg_entry_t() = default;
-
 }  // namespace svg_cache
 
+template class value_pointer<const svg_cache::svg_data_t>;
+
 namespace {
+
+auto load_svg_icon(icon_t icon) -> svg_cache::svg_data_t {
+    const auto filename = get_icon_path(icon);
+    const auto binary = load_file(filename);
+
+    if (binary.empty()) {
+        print("WARNING: unable to load svg icon", filename);
+    }
+
+    auto byte_span = svg2b2d::ByteSpan {binary.data(), binary.size()};
+    auto result = svg_cache::svg_data_t {};
+    result.document.readFromData(byte_span);
+
+    return result;
+}
 
 auto render_svg_icon_impl(BLContext &bl_ctx, const svg2b2d::SVGDocument &document,
                           BLPoint position, color_t color, double scale) -> void {
@@ -99,12 +105,8 @@ auto calculate_offset(const svg2b2d::SVGDocument &document, double scale,
 }  // namespace
 
 auto SVGCache::draw_icon(BLContext &bl_ctx, IconAttributes attributes) const -> void {
-    const auto &entry = get_entry(attributes.icon);
-
-    if (!entry.data) {
-        return;
-    }
-    const auto &document = entry.data->document;
+    const auto &entry = get_svg_data(attributes.icon);
+    const auto &document = entry.document;
 
     if (document.height() <= 0 || document.width() <= 0) {
         return;
@@ -113,39 +115,22 @@ auto SVGCache::draw_icon(BLContext &bl_ctx, IconAttributes attributes) const -> 
     const auto scale = attributes.height / document.height();
     const auto offset = calculate_offset(document, scale, attributes.horizontal_alignment,
                                          attributes.vertical_alignment);
-    render_svg_icon_impl(bl_ctx, document, attributes.position + offset, attributes.color,
-                         scale);
+    const auto position = attributes.position + offset;
+
+    render_svg_icon_impl(bl_ctx, document, position, attributes.color, scale);
 }
 
-namespace {
+namespace {}  // namespace
 
-auto load_svg_icon(icon_t icon) -> svg2b2d::SVGDocument {
-    const auto filename = get_icon_path(icon);
-    const auto binary = load_file(filename);
-
-    if (binary.empty()) {
-        print("WARNING: unable to load svg icon", filename);
-    }
-
-    auto byte_span = svg2b2d::ByteSpan {binary.data(), binary.size()};
-    auto document = svg2b2d::SVGDocument {};
-    document.readFromData(byte_span);
-
-    return document;
-}
-
-}  // namespace
-
-auto SVGCache::get_entry(icon_t icon) const -> const svg_entry_t & {
+auto SVGCache::get_svg_data(icon_t icon) const -> const svg_data_t & {
     if (const auto it = svg_map_.find(icon); it != svg_map_.end()) {
-        return it->second;
+        return *it->second;
     }
 
     // insert
-    const auto [it, _] =
-        svg_map_.emplace(icon, svg_entry_t {svg_data_t {load_svg_icon(icon)}});
+    const auto [it, _] = svg_map_.emplace(icon, svg_entry_t {load_svg_icon(icon)});
 
-    return it->second;
+    return *it->second;
 }
 
 }  // namespace logicsim

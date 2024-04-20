@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_RENDER_SVG_CACHE_H
 #define LOGIKSIM_RENDER_SVG_CACHE_H
 
+#include "container/value_pointer.h"
 #include "resource.h"
 #include "vocabulary/alignment.h"
 #include "vocabulary/color.h"
@@ -17,20 +18,11 @@ namespace svg_cache {
 
 struct svg_data_t;
 
-struct svg_entry_t {
-    std::unique_ptr<const svg_data_t> data {};  // Pimpl
-
-    [[nodiscard]] explicit svg_entry_t();
-    [[nodiscard]] explicit svg_entry_t(svg_data_t &&data);
-
-    [[nodiscard]] svg_entry_t(svg_entry_t &&) noexcept;
-    [[nodiscard]] svg_entry_t(const svg_entry_t &) = delete;
-    [[nodiscard]] auto operator=(svg_entry_t &&) noexcept -> svg_entry_t &;
-    [[nodiscard]] auto operator=(const svg_entry_t &) -> svg_entry_t & = delete;
-    ~svg_entry_t();
-};
+using svg_entry_t = value_pointer<const svg_data_t>;
 
 }  // namespace svg_cache
+
+extern template class value_pointer<const svg_cache::svg_data_t>;
 
 class SVGCache {
    private:
@@ -56,7 +48,7 @@ class SVGCache {
     auto draw_icon(BLContext &bl_ctx, IconAttributes attributes) const -> void;
 
    private:
-    auto get_entry(icon_t icon) const -> const svg_entry_t &;
+    auto get_svg_data(icon_t icon) const -> const svg_data_t &;
 
    private:
     using svg_map_t = ankerl::unordered_dense::map<icon_t, svg_entry_t>;
