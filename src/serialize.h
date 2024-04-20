@@ -60,8 +60,8 @@ class LoadLayoutResult {
     [[nodiscard]] auto simulation_config() const -> SimulationConfig;
 
    private:
-    // read-only, so it preserving whole parts relationship
-    std::shared_ptr<SerializedLayout> data_;
+    // read-only, preserving whole parts relationship
+    std::shared_ptr<const SerializedLayout> data_;
 };
 
 static_assert(std::copyable<LoadLayoutResult>);

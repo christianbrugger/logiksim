@@ -40,6 +40,9 @@ using HbFacePointer = std::unique_ptr<hb_face_t, HbFaceDeleter>;
 using HbFontPointer = std::unique_ptr<hb_font_t, HbFontDeleter>;
 using HbBufferPointer = std::unique_ptr<hb_buffer_t, HbBufferDeleter>;
 
+using HbFaceShared = std::shared_ptr<hb_face_t>;
+using HbFontShared = std::shared_ptr<hb_font_t>;
+
 }  // namespace detail
 
 class HarfbuzzFontFace final {
@@ -51,8 +54,11 @@ class HarfbuzzFontFace final {
     [[nodiscard]] auto hb_face() const noexcept -> hb_face_t *;
 
    private:
-    detail::HbFacePointer face_;
+    // read-only, preserving whole parts relationship
+    detail::HbFaceShared face_;
 };
+
+static_assert(std::semiregular<HarfbuzzFontFace>);
 
 class HarfbuzzFont final {
    public:
@@ -63,15 +69,16 @@ class HarfbuzzFont final {
     [[nodiscard]] auto hb_font() const noexcept -> hb_font_t *;
 
    private:
-    detail::HbFontPointer font_;
+    // read-only, preserving whole parts relationship
+    detail::HbFontShared font_;
     float font_size_ {};
 };
+
+static_assert(std::semiregular<HarfbuzzFont>);
 
 class HarfbuzzShapedText {
    public:
     explicit HarfbuzzShapedText() = default;
-    explicit HarfbuzzShapedText(std::string_view text_utf8, const HarfbuzzFontFace &face,
-                                float font_size);
     explicit HarfbuzzShapedText(std::string_view text_utf8, const HarfbuzzFont &font);
 
     [[nodiscard]] auto operator==(const HarfbuzzShapedText &other) const

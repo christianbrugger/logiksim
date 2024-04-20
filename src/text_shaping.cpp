@@ -46,9 +46,9 @@ namespace {
     void *user_data = nullptr;
     hb_destroy_func_t destroy = nullptr;
 
-    // TODO make const
-    auto blob =
-        detail::HbBlobPointer {hb_blob_create(data, length, mode, user_data, destroy)};
+    auto blob = detail::HbBlobPointer {
+        hb_blob_create(data, length, mode, user_data, destroy),
+    };
 
     Expects(blob != nullptr);
     Expects(hb_blob_get_length(blob.get()) == length);
@@ -56,16 +56,27 @@ namespace {
     return blob;
 }
 
+[[nodiscard]] auto create_immutable_face() -> detail::HbFacePointer {
+    auto face = detail::HbFacePointer {hb_face_reference(hb_face_get_empty())};
+    hb_face_make_immutable(face.get());
+    return face;
+}
+
 [[nodiscard]] auto create_immutable_face(std::span<const char> font_data,
                                          unsigned int font_index)
     -> detail::HbFacePointer {
     const auto blob = create_hb_blob(font_data);
 
-    // TODO make const
     auto face = detail::HbFacePointer {hb_face_create(blob.get(), font_index)};
     hb_face_make_immutable(face.get());
 
     return face;
+}
+
+[[nodiscard]] auto create_immutable_font() -> detail::HbFontPointer {
+    auto font = detail::HbFontPointer {hb_font_reference(hb_font_get_empty())};
+    hb_font_make_immutable(font.get());
+    return font;
 }
 
 [[nodiscard]] auto create_immutable_font(hb_face_t *hb_face, float font_size)
@@ -209,16 +220,22 @@ namespace {
 // Harfbuzz Font Face
 //
 
-HarfbuzzFontFace::HarfbuzzFontFace() : face_ {hb_face_get_empty()} {}
+HarfbuzzFontFace::HarfbuzzFontFace() : face_ {create_immutable_face()} {
+    Expects(face_ != nullptr);
+    Ensures(hb_face_is_immutable(face_.get()));
+}
 
 HarfbuzzFontFace::HarfbuzzFontFace(std::span<const char> font_data,
                                    unsigned int font_index)
     : face_ {create_immutable_face(font_data, font_index)} {
     Ensures(face_ != nullptr);
+    Ensures(hb_face_is_immutable(face_.get()));
 }
 
 auto HarfbuzzFontFace::hb_face() const noexcept -> hb_face_t * {
     Expects(face_ != nullptr);
+    Ensures(hb_face_is_immutable(face_.get()));
+
     return face_.get();
 }
 
@@ -226,11 +243,15 @@ auto HarfbuzzFontFace::hb_face() const noexcept -> hb_face_t * {
 // Harfbuzz Font
 //
 
-HarfbuzzFont::HarfbuzzFont() : font_ {hb_font_get_empty()} {}
+HarfbuzzFont::HarfbuzzFont() : font_ {create_immutable_font()} {
+    Ensures(font_ != nullptr);
+    Ensures(hb_font_is_immutable(font_.get()));
+}
 
 HarfbuzzFont::HarfbuzzFont(const HarfbuzzFontFace &face, float font_size)
     : font_ {create_immutable_font(face.hb_face(), font_size)}, font_size_ {font_size} {
     Ensures(font_ != nullptr);
+    Ensures(hb_font_is_immutable(font_.get()));
 }
 
 auto HarfbuzzFont::font_size() const noexcept -> float {
@@ -239,16 +260,14 @@ auto HarfbuzzFont::font_size() const noexcept -> float {
 
 auto HarfbuzzFont::hb_font() const noexcept -> hb_font_t * {
     Expects(font_ != nullptr);
+    Ensures(hb_font_is_immutable(font_.get()));
+
     return font_.get();
 }
 
 //
 // Harfbuzz Shaped Text
 //
-
-HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
-                                       const HarfbuzzFontFace &face, float font_size)
-    : HarfbuzzShapedText {text_utf8, HarfbuzzFont {face, font_size}} {}
 
 HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
                                        const HarfbuzzFont &font) {

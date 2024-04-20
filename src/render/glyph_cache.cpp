@@ -198,8 +198,8 @@ auto calculate_baseline_offset(FontStyle style [[maybe_unused]], const FontFace&
         "0123456789";
     const auto font_size = float {16};
 
-    const auto box =
-        HarfbuzzShapedText {text, face.hb_font_face(), font_size}.bounding_box();
+    const auto font = HarfbuzzFont {face.hb_font_face(), font_size};
+    const auto box = HarfbuzzShapedText {text, font}.bounding_box();
 
     using enum VTextAlignment;
     return BaselineOffset {
@@ -269,8 +269,8 @@ auto GlyphCache::get_font(float font_size, FontStyle style) const -> const BLFon
 
 auto GlyphCache::calculate_bounding_box(std::string_view text, float font_size,
                                         FontStyle style) const -> BLBox {
-    return HarfbuzzShapedText {text, font_faces_.get(style).hb_font_face(), font_size}
-        .bounding_box();
+    const auto font = HarfbuzzFont {font_faces_.get(style).hb_font_face(), font_size};
+    return HarfbuzzShapedText {text, font}.bounding_box();
 }
 
 auto GlyphCache::get_entry(std::string_view text, float font_size, FontStyle style,
@@ -287,10 +287,10 @@ auto GlyphCache::get_entry(std::string_view text, float font_size, FontStyle sty
     auto& entry = it->second;
 
     if (inserted) {
-        const auto& font_face = font_faces_.get(style);
+        const auto& face = font_faces_.get(style);
 
-        entry.shaped_text =
-            HarfbuzzShapedText {text, font_face.hb_font_face(), font_size};
+        const auto font = HarfbuzzFont {face.hb_font_face(), font_size};
+        entry.shaped_text = HarfbuzzShapedText {text, font};
         entry.offset = calculate_offset(entry.shaped_text.bounding_box(),
                                         baseline_offsets_.get(style, font_size),
                                         horizontal_alignment, vertical_alignment);
