@@ -128,11 +128,10 @@ struct state_mapping_clock_generator {
     // non-copyable && non-movable
     auto operator=(const state_mapping_clock_generator &other)
         -> state_mapping_clock_generator & = delete;
-    auto operator=(state_mapping_clock_generator &&other) noexcept
+    auto operator=(state_mapping_clock_generator &&other)
         -> state_mapping_clock_generator & = delete;
     state_mapping_clock_generator(const state_mapping_clock_generator &other) = delete;
-    state_mapping_clock_generator(state_mapping_clock_generator &&other) noexcept =
-        delete;
+    state_mapping_clock_generator(state_mapping_clock_generator &&other) = delete;
 
     bool_ref enabled;
     bool_ref output_value;

@@ -54,20 +54,17 @@ class LoadLayoutResult {
    public:
     explicit LoadLayoutResult(SerializedLayout&& layout);
 
-    LoadLayoutResult(LoadLayoutResult&&) noexcept;
-    LoadLayoutResult(const LoadLayoutResult&) = delete;
-    auto operator=(LoadLayoutResult&&) noexcept -> LoadLayoutResult&;
-    auto operator=(const LoadLayoutResult&) -> LoadLayoutResult& = delete;
-    ~LoadLayoutResult();
-
    public:
     auto add(EditableCircuit& editable_circuit, AddParameters parameters) const -> void;
     [[nodiscard]] auto view_point() const -> ViewPoint;
     [[nodiscard]] auto simulation_config() const -> SimulationConfig;
 
    private:
-    std::unique_ptr<SerializedLayout> data_;
+    // read-only so its safe to use shared_ptr
+    std::shared_ptr<SerializedLayout> data_;
 };
+
+static_assert(std::copyable<LoadLayoutResult>);
 
 }  // namespace serialize
 

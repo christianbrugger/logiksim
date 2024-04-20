@@ -32,8 +32,9 @@
 
 #include <optional>
 
-namespace logicsim::serialize {
+namespace logicsim {
 
+namespace serialize {
 struct move_delta_t {
     int x;
     int y;
@@ -215,7 +216,8 @@ auto parse_simulation_config(const SerializedSimulationConfig& config)
     static_assert(std::is_same_v<decltype(rate_stored.rate_per_second)::rep,
                                  decltype(config.simulation_time_rate_ns)>);
 
-    // const auto rate = std::clamp(rate_stored, time_rate_t {1us}, time_rate_t {10s});
+    // const auto rate = std::clamp(rate_stored, time_rate_t {1us}, time_rate_t
+    // {10s});
 
     return SimulationConfig {
         .simulation_time_rate = rate_stored,
@@ -223,9 +225,7 @@ auto parse_simulation_config(const SerializedSimulationConfig& config)
     };
 }
 
-}  // namespace logicsim::serialize
-
-namespace logicsim {
+}  // namespace serialize
 
 auto serialize_all(const Layout& layout, std::optional<ViewPoint> view_point,
                    std::optional<SimulationConfig> simulation_config) -> std::string {
@@ -300,22 +300,14 @@ auto calculate_move_delta(point_t save_position, std::optional<point_t> load_pos
             int {load_position->y} - int {save_position.y}};
 }
 
-LoadLayoutResult::LoadLayoutResult(SerializedLayout&& layout)
-    : data_ {std::make_unique<SerializedLayout>(std::move(layout))} {}
-
-LoadLayoutResult::LoadLayoutResult(LoadLayoutResult&&) noexcept = default;
-
-auto LoadLayoutResult::operator=(LoadLayoutResult&&) noexcept
-    -> LoadLayoutResult& = default;
-
-LoadLayoutResult::~LoadLayoutResult() = default;
+LoadLayoutResult::LoadLayoutResult(SerializedLayout&& serialize_layout)
+    : data_ {std::make_shared<SerializedLayout>(std::move(serialize_layout))} {
+    Ensures(data_ != nullptr);
+}
 
 auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
                            AddParameters parameters) const -> void {
-    if (!data_) {
-        throw std::runtime_error("no layout data");
-    }
-
+    Expects(data_ != nullptr);
     const auto delta =
         calculate_move_delta(data_->save_position, parameters.load_position);
 
@@ -339,16 +331,12 @@ auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
 }
 
 auto LoadLayoutResult::view_point() const -> ViewPoint {
-    if (!data_) {
-        throw std::runtime_error("no layout data");
-    }
+    Expects(data_ != nullptr);
     return parse_view_point(data_->view_point);
 }
 
 auto LoadLayoutResult::simulation_config() const -> SimulationConfig {
-    if (!data_) {
-        throw std::runtime_error("no layout data");
-    }
+    Expects(data_ != nullptr);
     return parse_simulation_config(data_->simulation_config);
 }
 

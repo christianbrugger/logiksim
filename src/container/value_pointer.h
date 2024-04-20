@@ -44,6 +44,9 @@ concept ordering_or_void =
  *      C:  Use tag 'equality_comparable' to enable the comparison operator
  *      O:  To support three-way-comparison O needs to be set to one of
  *          std::strong_ordering, std::partial_ordering, std::weak_ordering.
+ *
+ * If the template instantiation is used, T needs to be default constructible and
+ * copy constructible. Other special member functions can be deleted.
  */
 template <typename T, equality_comparable_tag C = not_equality_comparable,
           ordering_or_void O = void>
