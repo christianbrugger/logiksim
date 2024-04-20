@@ -1,8 +1,9 @@
-#include "render/svg_cache.h"
+#include "svg_cache.h"
 
 #include "file.h"
 #include "logging.h"
 #include "render/context_guard.h"
+#include "render/svg_cache.h"
 #include "resource.h"
 
 #include <exception>
@@ -17,13 +18,9 @@ struct svg_data_t {
     svg2b2d::SVGDocument document {};
 };
 
-}  // namespace svg_cache
-
-template class value_pointer<const svg_cache::svg_data_t>;
-
 namespace {
 
-auto load_svg_icon(icon_t icon) -> svg_cache::svg_data_t {
+auto load_svg_icon(icon_t icon) -> svg_data_t {
     const auto filename = get_icon_path(icon);
     const auto binary = load_file(filename);
 
@@ -31,8 +28,9 @@ auto load_svg_icon(icon_t icon) -> svg_cache::svg_data_t {
         print("WARNING: unable to load svg icon", filename);
     }
 
-    auto byte_span = svg2b2d::ByteSpan {binary.data(), binary.size()};
-    auto result = svg_cache::svg_data_t {};
+    auto result = svg_data_t {};
+
+    const auto byte_span = svg2b2d::ByteSpan {binary.data(), binary.size()};
     result.document.readFromData(byte_span);
 
     return result;
@@ -51,18 +49,6 @@ auto render_svg_icon_impl(BLContext &bl_ctx, const svg2b2d::SVGDocument &documen
 
     document.draw(bl_ctx);
 }
-
-}  // namespace
-
-auto SVGCache::clear() -> void {
-    svg_map_.clear();
-}
-
-auto SVGCache::shrink_to_fit() -> void {
-    svg_map_.rehash(svg_map_.size());
-}
-
-namespace {
 
 auto calculate_offset_x(double width, HorizontalAlignment horizontal_alignment)
     -> double {
@@ -102,10 +88,40 @@ auto calculate_offset(const svg2b2d::SVGDocument &document, double scale,
     };
 }
 
+auto load_svg_icon(svg_cache::svg_map_t &svg_map, icon_t icon) -> const svg_data_t & {
+    if (const auto it = svg_map.find(icon); it != svg_map.end()) {
+        return *it->second;
+    }
+
+    // insert
+    const auto [it, _] = svg_map.emplace(icon, svg_entry_t {load_svg_icon(icon)});
+
+    return *it->second;
+}
+
 }  // namespace
 
+}  // namespace svg_cache
+
+template class value_pointer<const svg_cache::svg_data_t>;
+
+auto SVGCache::operator==(const SVGCache & /*unused*/) const noexcept -> bool {
+    // all caches behave the same way, so they are all equal
+    return true;
+}
+
+auto SVGCache::clear() const -> void {
+    svg_map_.clear();
+}
+
+auto SVGCache::shrink_to_fit() const -> void {
+    svg_map_.rehash(svg_map_.size());
+}
+
 auto SVGCache::draw_icon(BLContext &bl_ctx, IconAttributes attributes) const -> void {
-    const auto &entry = get_svg_data(attributes.icon);
+    using namespace svg_cache;
+
+    const auto &entry = load_svg_icon(svg_map_, attributes.icon);
     const auto &document = entry.document;
 
     if (document.height() <= 0 || document.width() <= 0) {
@@ -121,16 +137,5 @@ auto SVGCache::draw_icon(BLContext &bl_ctx, IconAttributes attributes) const -> 
 }
 
 namespace {}  // namespace
-
-auto SVGCache::get_svg_data(icon_t icon) const -> const svg_data_t & {
-    if (const auto it = svg_map_.find(icon); it != svg_map_.end()) {
-        return *it->second;
-    }
-
-    // insert
-    const auto [it, _] = svg_map_.emplace(icon, svg_entry_t {load_svg_icon(icon)});
-
-    return *it->second;
-}
 
 }  // namespace logicsim

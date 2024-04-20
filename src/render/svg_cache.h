@@ -17,8 +17,8 @@ namespace logicsim {
 namespace svg_cache {
 
 struct svg_data_t;
-
 using svg_entry_t = value_pointer<const svg_data_t>;
+using svg_map_t = ankerl::unordered_dense::map<icon_t, svg_entry_t>;
 
 }  // namespace svg_cache
 
@@ -28,12 +28,15 @@ class SVGCache {
    private:
     using svg_data_t = svg_cache::svg_data_t;
     using svg_entry_t = svg_cache::svg_entry_t;
+    using svg_map_t = svg_cache::svg_map_t;
 
    public:
     [[nodiscard]] explicit SVGCache() = default;
 
-    auto clear() -> void;
-    auto shrink_to_fit() -> void;
+    [[nodiscard]] auto operator==(const SVGCache &) const noexcept -> bool;
+
+    auto clear() const -> void;
+    auto shrink_to_fit() const -> void;
 
     struct IconAttributes {
         icon_t icon;
@@ -48,13 +51,10 @@ class SVGCache {
     auto draw_icon(BLContext &bl_ctx, IconAttributes attributes) const -> void;
 
    private:
-    auto get_svg_data(icon_t icon) const -> const svg_data_t &;
-
-   private:
-    using svg_map_t = ankerl::unordered_dense::map<icon_t, svg_entry_t>;
-
     mutable svg_map_t svg_map_ {};
 };
+
+static_assert(std::regular<SVGCache>);
 
 }  // namespace logicsim
 
