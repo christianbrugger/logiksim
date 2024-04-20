@@ -7,6 +7,7 @@
 
 #include <any>
 #include <compare>
+#include <concepts>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -14,11 +15,10 @@
 namespace logicsim {
 /**
  * @brief: requirements for the T in value_pointer
- *
- * Note these are similar to std::optional requirements
  */
 template <class T>
 concept is_value_pointer_compatible =
+    // similar to std::optional requirements
     !std::is_same_v<std::remove_cv_t<T>, std::in_place_t> &&  //
     std::is_object_v<T> && std::is_destructible_v<T> && !std::is_array_v<T>;
 
@@ -41,10 +41,9 @@ concept ordering_or_void =
  *
  * Template arguments:
  *      T:  The possibly incomplete type that is held.
- *      C:  When set to std::true_type the equality operator is enabled.
+ *      C:  Use tag 'equality_comparable' to enable the comparison operator
  *      O:  To support three-way-comparison O needs to be set to one of
  *          std::strong_ordering, std::partial_ordering, std::weak_ordering.
- *
  */
 template <typename T, equality_comparable_tag C = not_equality_comparable,
           ordering_or_void O = void>
@@ -55,7 +54,12 @@ class value_pointer {
     [[nodiscard]] explicit value_pointer();
 
     [[nodiscard]] explicit value_pointer(const T& value);
-    [[nodiscard]] explicit value_pointer(T&& value);
+
+    // define via template, so it is not forced on explicit template initiation.
+    // this constructor requires T to be complete and is generated on demand
+    // this is not a problem as it is generally only needed on the private pimpl side
+    template <std::same_as<T> Complete>
+    [[nodiscard]] explicit value_pointer(Complete&& value);
 
     template <class... Args>
     [[nodiscard]] explicit value_pointer(std::in_place_t /*unused*/, Args&&... args)
@@ -124,7 +128,8 @@ value_pointer<T, C, O>::value_pointer(const T& value)
 }
 
 template <typename T, equality_comparable_tag C, ordering_or_void O>
-value_pointer<T, C, O>::value_pointer(T&& value)
+template <std::same_as<T> Complete>
+value_pointer<T, C, O>::value_pointer(Complete&& value)
     : value_ {std::make_unique<value_type>(std::move(value))} {
     static_assert(is_value_pointer_compatible<T>);
 }
@@ -151,7 +156,7 @@ auto value_pointer<T, C, O>::operator=(value_pointer&& other) noexcept
 
 template <typename T, equality_comparable_tag C, ordering_or_void O>
 value_pointer<T, C, O>::value_pointer(const value_pointer& other)
-    : value_ {std::make_unique<value_type>(*other.value_)} {}
+    : value_pointer {*other.value_} {}
 
 template <typename T, equality_comparable_tag C, ordering_or_void O>
 auto value_pointer<T, C, O>::operator=(const value_pointer& other) -> value_pointer& {
@@ -238,6 +243,7 @@ auto value_pointer<T, C, O>::operator<=>(const value_pointer& other) const -> O
 
 }  // namespace logicsim
 
+/*
 template <typename T, logicsim::equality_comparable_tag C, logicsim::ordering_or_void O,
           typename Char>
 struct fmt::formatter<logicsim::value_pointer<T, C, O>, Char> {
@@ -250,5 +256,6 @@ struct fmt::formatter<logicsim::value_pointer<T, C, O>, Char> {
         return fmt::format_to(ctx.out(), "{}", obj.value());
     }
 };
+*/
 
 #endif

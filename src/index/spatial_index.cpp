@@ -2,6 +2,7 @@
 
 #include "algorithm/accumulate.h"
 #include "allocated_size/tracked_resource.h"
+#include "concept/input_range.h"
 #include "format/container.h"
 #include "iterator_adaptor/output_callable.h"
 #include "layout.h"
@@ -42,28 +43,31 @@ using tree_t = bgi::rtree<                         //
     std::pmr::polymorphic_allocator<tree_value_t>  // Allocator
     >;
 
-auto get_selection_box(const layout_calculation_data_t& data) -> tree_box_t;
-auto get_selection_box(ordered_line_t line) -> tree_box_t;
-auto to_tree_point(point_fine_t point) -> tree_point_t;
-auto to_rect(tree_box_t box) -> rect_fine_t;
-auto to_box(rect_fine_t rect) -> tree_box_t;
+[[nodiscard]] auto get_selection_box(const layout_calculation_data_t& data) -> tree_box_t;
+[[nodiscard]] auto get_selection_box(ordered_line_t line) -> tree_box_t;
+[[nodiscard]] auto to_tree_point(point_fine_t point) -> tree_point_t;
+[[nodiscard]] auto to_rect(tree_box_t box) -> rect_fine_t;
+[[nodiscard]] auto to_box(rect_fine_t rect) -> tree_box_t;
+[[nodiscard]] auto get_all_tree_values(const Layout& layout) -> std::vector<tree_value_t>;
 
-auto operator==(const tree_t& a, const tree_t& b) -> bool;
-auto operator!=(const tree_t& a, const tree_t& b) -> bool;
+[[nodiscard]] auto operator==(const tree_t& a, const tree_t& b) -> bool;
+[[nodiscard]] auto operator!=(const tree_t& a, const tree_t& b) -> bool;
 
 struct tree_container {
     tracked_resource resource;
     tree_t value;
 
-    tree_container();
-    explicit tree_container(const tree_t& other);
+    explicit tree_container();
+    tree_container(const tree_container& other);
     ~tree_container() = default;
 
-    // disable copy & move, as we reference resource
-    tree_container(const tree_container&) = delete;
-    tree_container(tree_container&&) = delete;
+    template <input_range_of<tree_value_t> R>
+    tree_container(const R& range);
+
+    // delete as resource is referenced, and its not needed by value_pointer
+    tree_container(tree_container&& other) noexcept = delete;
     auto operator=(const tree_container&) -> tree_container& = delete;
-    auto operator=(tree_container&&) -> tree_container& = delete;
+    auto operator=(tree_container&&) noexcept -> tree_container& = delete;
 
     [[nodiscard]] auto operator==(const tree_container& other) const -> bool;
 };
@@ -72,9 +76,15 @@ tree_container::tree_container()
     : resource {},
       value {tree_t {}, std::pmr::polymorphic_allocator<tree_value_t> {&resource}} {}
 
-tree_container::tree_container(const tree_t& other)
+tree_container::tree_container(const tree_container& other)
     : resource {},
-      value {other, std::pmr::polymorphic_allocator<tree_value_t> {&resource}} {}
+      value {other.value, std::pmr::polymorphic_allocator<tree_value_t> {&resource}} {}
+
+template <input_range_of<tree_value_t> R>
+tree_container::tree_container(const R& range)
+    : resource {},
+      value {tree_t {std::ranges::begin(range), std::ranges::end(range)},
+             std::pmr::polymorphic_allocator<tree_value_t> {&resource}} {}
 
 auto tree_container::operator==(const tree_container& other) const -> bool {
     return value == other.value;
@@ -234,15 +244,7 @@ auto to_box(rect_fine_t rect) -> tree_box_t {
     return tree_box_t {p0, p1};
 }
 
-}  // namespace spatial_index
-
-SpatialIndex::SpatialIndex()
-    : tree_ {std::make_unique<spatial_index::tree_container>()} {}
-
-SpatialIndex::SpatialIndex(const Layout& layout) : SpatialIndex {} {
-    // Using RTree bulk insertion is 6x faster than generate_layout_messages
-    using namespace spatial_index;
-
+auto get_all_tree_values(const Layout& layout) -> std::vector<tree_value_t> {
     const auto count =
         get_inserted_logicitem_count(layout) + get_inserted_segment_count(layout);
     auto values = std::vector<tree_value_t> {};
@@ -252,7 +254,7 @@ SpatialIndex::SpatialIndex(const Layout& layout) : SpatialIndex {} {
         if (is_inserted(layout, logicitem_id)) {
             const auto data = to_layout_calculation_data(layout, logicitem_id);
             const auto box = get_selection_box(data);
-            values.emplace_back(box, value_t {logicitem_id});
+            values.emplace_back(box, tree_payload_t {logicitem_id});
         }
     }
 
@@ -260,31 +262,21 @@ SpatialIndex::SpatialIndex(const Layout& layout) : SpatialIndex {} {
         const auto& tree = layout.wires().segment_tree(wire_id);
         for (const auto& segment_index : tree.indices()) {
             const auto box = get_selection_box(tree.line(segment_index));
-            values.emplace_back(box, value_t {segment_t {wire_id, segment_index}});
+            values.emplace_back(box, tree_payload_t {segment_t {wire_id, segment_index}});
         }
     }
 
     Expects(values.size() == count);
-    tree_->value =
-        tree_t {values.begin(), values.end(),
-                std::pmr::polymorphic_allocator<tree_value_t> {&tree_->resource}};
+    return values;
 }
 
-SpatialIndex::~SpatialIndex() = default;
+}  // namespace spatial_index
 
-SpatialIndex::SpatialIndex(const SpatialIndex& other)
-    : tree_ {std::make_unique<spatial_index::tree_container>(other.tree_->value)} {}
+template class value_pointer<spatial_index::tree_container, equality_comparable>;
 
-auto SpatialIndex::operator=(const SpatialIndex& other) -> SpatialIndex& {
-    using std::swap;
-    auto tmp = SpatialIndex {other};
-    swap(*this, tmp);
-    return *this;
-}
-
-SpatialIndex::SpatialIndex(SpatialIndex&& other) noexcept = default;
-
-auto SpatialIndex::operator=(SpatialIndex&& other) noexcept -> SpatialIndex& = default;
+SpatialIndex::SpatialIndex(const Layout& layout)
+    // Using RTree bulk insertion is 6x faster than generate_layout_messages
+    : tree_ {spatial_index::get_all_tree_values(layout)} {}
 
 auto SpatialIndex::format() const -> std::string {
     return fmt::format("SpatialIndex = {}", tree_->value);
@@ -292,10 +284,6 @@ auto SpatialIndex::format() const -> std::string {
 
 auto SpatialIndex::allocated_size() const -> std::size_t {
     return tree_->resource.allocated_size();
-}
-
-auto SpatialIndex::operator==(const SpatialIndex& other) const -> bool {
-    return *tree_ == *other.tree_;
 }
 
 auto SpatialIndex::handle(const info_message::LogicItemInserted& message) -> void {
@@ -338,12 +326,13 @@ auto SpatialIndex::handle(const info_message::SegmentUninserted& message) -> voi
 auto SpatialIndex::handle(const info_message::InsertedSegmentIdUpdated& message) -> void {
     using namespace info_message;
 
+    // Deletion and re-insertion is not a performance problem: when un-inserting 500k line
+    // segments 1975 ms (this approach) vs 1927 ms (using hacky query & const_cast)
+    // overall performance.
+
     // r-tree data is immutable
     handle(SegmentUninserted {message.old_segment, message.segment_info});
     handle(SegmentInserted {message.new_segment, message.segment_info});
-
-    // Note this is not a performance problem: when un-inserting 500k line segments
-    // 1975 ms (this) vs 1927 ms (using query & const_cast) overall performance.
 }
 
 auto SpatialIndex::submit(const InfoMessage& message) -> void {

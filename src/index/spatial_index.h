@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_INDEX_SPATIAL_INDEX_H
 #define LOGIKSIM_INDEX_SPATIAL_INDEX_H
 
+#include "container/value_pointer.h"
 #include "format/struct.h"
 #include "layout_message_forward.h"
 #include "vocabulary/segment_index.h"
@@ -53,6 +54,8 @@ struct tree_container;
 
 }  // namespace spatial_index
 
+extern template class value_pointer<spatial_index::tree_container, equality_comparable>;
+
 /**
  * brief: Efficiently stores selection-boxes of inserted Layout elements.
  *
@@ -65,18 +68,12 @@ class SpatialIndex {
     using queried_segments_t = std::array<segment_t, 4>;
 
    public:
-    explicit SpatialIndex();
+    explicit SpatialIndex() = default;
     explicit SpatialIndex(const Layout &layout);
-
-    ~SpatialIndex();
-    SpatialIndex(const SpatialIndex &other);
-    auto operator=(const SpatialIndex &other) -> SpatialIndex &;
-    SpatialIndex(SpatialIndex &&other) noexcept;
-    auto operator=(SpatialIndex &&other) noexcept -> SpatialIndex &;
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
-    [[nodiscard]] auto operator==(const SpatialIndex &other) const -> bool;
+    [[nodiscard]] auto operator==(const SpatialIndex &other) const -> bool = default;
 
     [[nodiscard]] auto query_selection(rect_fine_t rect) const -> std::vector<value_t>;
     [[nodiscard]] auto has_element(point_fine_t point) const -> bool;
@@ -95,8 +92,8 @@ class SpatialIndex {
     auto handle(const info_message::SegmentUninserted &message) -> void;
     auto handle(const info_message::InsertedSegmentIdUpdated &message) -> void;
 
-    // never null
-    std::unique_ptr<spatial_index::tree_container> tree_;
+   private:
+    value_pointer<spatial_index::tree_container, equality_comparable> tree_;
 };
 
 static_assert(std::regular<SpatialIndex>);
