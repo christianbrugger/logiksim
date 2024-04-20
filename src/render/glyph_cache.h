@@ -25,7 +25,12 @@ struct font_locations_t {
     std::filesystem::path monospace;
 
     [[nodiscard]] auto get(FontStyle style) const -> const std::filesystem::path &;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const font_locations_t &) const -> bool = default;
 };
+
+static_assert(std::regular<font_locations_t>);
 
 [[nodiscard]] auto get_default_font_locations() -> font_locations_t;
 
@@ -42,6 +47,8 @@ struct glyph_key_t {
     [[nodiscard]] auto operator==(const glyph_key_t &other) const -> bool = default;
 };
 
+static_assert(std::regular<glyph_key_t>);
+
 struct glyph_entry_t {
     HarfbuzzShapedText shaped_text {};
     BLPoint offset {0., 0.};
@@ -49,6 +56,8 @@ struct glyph_entry_t {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const glyph_entry_t &other) const -> bool = default;
 };
+
+static_assert(std::regular<glyph_entry_t>);
 
 }  // namespace glyph_cache
 }  // namespace logicsim
@@ -93,6 +102,8 @@ struct FontFace {
     BLFontFace bl_font_face_ {};
 };
 
+static_assert(std::semiregular<FontFace>);
+
 struct FontFaces {
     FontFace regular {};
     FontFace italic {};
@@ -104,6 +115,8 @@ struct FontFaces {
 
     [[nodiscard]] auto get(FontStyle style) const -> const FontFace &;
 };
+
+static_assert(std::semiregular<FontFaces>);
 
 struct Fonts {
     BLFont regular {};
@@ -118,19 +131,7 @@ struct Fonts {
     [[nodiscard]] auto get(FontStyle style) -> BLFont &;
 };
 
-struct ScaledBaselineOffset;
-
-// offsets for fontsize 1.0
-struct BaselineOffset {
-    double baseline_center {};
-    double baseline_top {};
-    double baseline_bottom {};
-
-    [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator*(float font_size) const -> ScaledBaselineOffset;
-    [[nodiscard]] constexpr auto operator==(const BaselineOffset &other) const
-        -> bool = default;
-};
+static_assert(std::semiregular<Fonts>);
 
 // using strong type for scaled offsets for a specific font size
 struct ScaledBaselineOffset {
@@ -143,12 +144,29 @@ struct ScaledBaselineOffset {
         -> bool = default;
 };
 
+static_assert(std::regular<ScaledBaselineOffset>);
+
+// offsets for font-size 1.0
+struct BaselineOffset {
+    double baseline_center {};
+    double baseline_top {};
+    double baseline_bottom {};
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator*(float font_size) const -> ScaledBaselineOffset;
+    [[nodiscard]] constexpr auto operator==(const BaselineOffset &other) const
+        -> bool = default;
+};
+
+static_assert(std::regular<BaselineOffset>);
+
 struct BaselineOffsets {
     BaselineOffset regular {};
     BaselineOffset italic {};
     BaselineOffset bold {};
-    BaselineOffset monospace;
+    BaselineOffset monospace {};
 
+    [[nodiscard]] explicit BaselineOffsets() = default;
     [[nodiscard]] explicit BaselineOffsets(const FontFaces &faces);
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] constexpr auto operator==(const BaselineOffsets &other) const
@@ -161,6 +179,8 @@ struct BaselineOffsets {
     [[nodiscard]] auto get(FontStyle style) const -> const BaselineOffset &;
     auto set(FontStyle style, BaselineOffset offset) -> void;
 };
+
+static_assert(std::regular<BaselineOffsets>);
 
 //
 // Glyph Cache
@@ -215,6 +235,8 @@ class GlyphCache {
     mutable Fonts fonts_;
     mutable glyph_map_t glyph_map_ {};
 };
+
+static_assert(std::semiregular<GlyphCache>);
 
 auto print_character_metrics(const GlyphCache &glyph_cache) -> void;
 

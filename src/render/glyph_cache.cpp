@@ -12,6 +12,17 @@
 
 namespace logicsim {
 
+auto font_locations_t::format() const -> std::string {
+    return fmt::format(
+        "font_locations_t{{\n"
+        "    regular = {},\n"
+        "    italic = {},\n"
+        "    bold = {},\n"
+        "    monospace = {}\n"
+        "}}",
+        regular, italic, bold, monospace);
+}
+
 auto font_locations_t::get(FontStyle style) const -> const std::filesystem::path& {
     return ::logicsim::get<const std::filesystem::path&>(*this, style);
 }
