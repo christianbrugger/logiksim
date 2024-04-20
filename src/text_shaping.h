@@ -13,43 +13,57 @@
 struct hb_blob_t;
 struct hb_face_t;
 struct hb_font_t;
+struct hb_buffer_t;
 
 namespace logicsim {
+
+namespace detail {
+
+struct HbBlobDeleter {
+    auto operator()(hb_blob_t *hb_blob) -> void;
+};
+
+struct HbFaceDeleter {
+    auto operator()(hb_face_t *hb_face) -> void;
+};
+
+struct HbFontDeleter {
+    auto operator()(hb_font_t *hb_font) -> void;
+};
+
+struct HbBufferDeleter {
+    auto operator()(hb_buffer_t *hb_buffer) -> void;
+};
+
+using HbBlobPointer = std::unique_ptr<hb_blob_t, HbBlobDeleter>;
+using HbFacePointer = std::unique_ptr<hb_face_t, HbFaceDeleter>;
+using HbFontPointer = std::unique_ptr<hb_font_t, HbFontDeleter>;
+using HbBufferPointer = std::unique_ptr<hb_buffer_t, HbBufferDeleter>;
+
+}  // namespace detail
 
 class HarfbuzzFontFace final {
    public:
     explicit HarfbuzzFontFace();
     explicit HarfbuzzFontFace(std::span<const char> font_data,
                               unsigned int font_index = 0);
-    ~HarfbuzzFontFace();
-
-    HarfbuzzFontFace(const HarfbuzzFontFace &) = delete;
-    HarfbuzzFontFace(HarfbuzzFontFace &&) = delete;
-    auto operator=(const HarfbuzzFontFace &) -> HarfbuzzFontFace & = delete;
-    auto operator=(HarfbuzzFontFace &&) -> HarfbuzzFontFace & = delete;
 
     [[nodiscard]] auto hb_face() const noexcept -> hb_face_t *;
 
    private:
-    gsl::not_null<hb_face_t *> hb_face_;
+    detail::HbFacePointer face_;
 };
 
 class HarfbuzzFont final {
    public:
     explicit HarfbuzzFont();
     explicit HarfbuzzFont(const HarfbuzzFontFace &face, float font_size);
-    ~HarfbuzzFont();
-
-    HarfbuzzFont(const HarfbuzzFont &) = delete;
-    HarfbuzzFont(HarfbuzzFont &&) = delete;
-    auto operator=(const HarfbuzzFont &) -> HarfbuzzFont & = delete;
-    auto operator=(HarfbuzzFont &&) -> HarfbuzzFont & = delete;
 
     [[nodiscard]] auto font_size() const noexcept -> float;
     [[nodiscard]] auto hb_font() const noexcept -> hb_font_t *;
 
    private:
-    gsl::not_null<hb_font_t *> hb_font_;
+    detail::HbFontPointer font_;
     float font_size_ {};
 };
 
@@ -72,9 +86,10 @@ class HarfbuzzShapedText {
    private:
     std::vector<uint32_t> codepoints_ {};
     std::vector<BLGlyphPlacement> placements_ {};
-
     BLBox bounding_box_ {};
 };
+
+static_assert(std::regular<HarfbuzzShapedText>);
 
 }  // namespace logicsim
 

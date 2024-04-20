@@ -2,6 +2,7 @@
 
 #include "algorithm/range.h"
 #include "algorithm/round.h"
+#include "algorithm/transform_to_vector.h"
 #include "format/blend2d_type.h"
 #include "format/container.h"
 
@@ -12,123 +13,148 @@
 
 #include <numeric>
 
-//
-// Reference Implementation:
-//
-// https://github.com/aam/skiaex/blob/master/app/main.cpp
-// https://gist.github.com/Danielku15/63a6a58cbe8cf0ac61d5b16e53715fd9
-//
-// https://source.chromium.org/chromium/chromium/src/+/master:ui/gfx/harfbuzz_font_skia.cc
-// https://chromium.googlesource.com/skia/+/chrome/m57/tools/SkShaper_harfbuzz.cpp
-//
-
 namespace logicsim {
 
-//
-// Harfbuzz Blob
-//
+namespace detail {
 
-class HarfbuzzBlob {
-   public:
-    explicit HarfbuzzBlob() : hb_blob {hb_blob_get_empty()} {}
-
-    explicit HarfbuzzBlob(std::span<const char> font_data)
-        : hb_blob {hb_blob_create(
-              font_data.data(), gsl::narrow<unsigned int>(font_data.size()),
-              hb_memory_mode_t::HB_MEMORY_MODE_READONLY, nullptr, nullptr)} {
-        if (!font_data.empty() && hb_blob == hb_blob_get_empty()) [[unlikely]] {
-            throw std::runtime_error(
-                fmt::format("Could not load font data in Harfbuzz").c_str());
-        }
-    }
-
-    HarfbuzzBlob(const HarfbuzzBlob &) = delete;
-    HarfbuzzBlob(HarfbuzzBlob &&) = delete;
-    auto operator=(const HarfbuzzBlob &) -> HarfbuzzBlob & = delete;
-    auto operator=(HarfbuzzBlob &&) -> HarfbuzzBlob & = delete;
-
-    ~HarfbuzzBlob() {
-        hb_blob_destroy(hb_blob);
-    }
-
-   public:
-    gsl::not_null<hb_blob_t *> hb_blob;
-};
-
-//
-// Harfbuzz Font Face
-//
-
-HarfbuzzFontFace::HarfbuzzFontFace() : hb_face_ {hb_face_get_empty()} {}
-
-HarfbuzzFontFace::HarfbuzzFontFace(std::span<const char> font_data,
-                                   unsigned int font_index)
-    : hb_face_ {hb_face_create(HarfbuzzBlob {font_data}.hb_blob, font_index)} {
-    hb_face_make_immutable(hb_face_);
+auto HbBlobDeleter::operator()(hb_blob_t *hb_blob) -> void {
+    hb_blob_destroy(hb_blob);
 }
 
-HarfbuzzFontFace::~HarfbuzzFontFace() {
-    hb_face_destroy(hb_face_);
+auto HbFaceDeleter::operator()(hb_face_t *hb_face) -> void {
+    hb_face_destroy(hb_face);
 }
 
-auto HarfbuzzFontFace::hb_face() const noexcept -> hb_face_t * {
-    return hb_face_;
+auto HbFontDeleter::operator()(hb_font_t *hb_font) -> void {
+    hb_font_destroy(hb_font);
 }
 
-//
-// Harfbuzz Font
-//
+auto HbBufferDeleter::operator()(hb_buffer_t *hb_buffer) -> void {
+    hb_buffer_destroy(hb_buffer);
+}
 
-HarfbuzzFont::HarfbuzzFont() : hb_font_ {hb_font_get_empty()} {}
+}  // namespace detail
 
-HarfbuzzFont::HarfbuzzFont(const HarfbuzzFontFace &face, float font_size)
-    : hb_font_ {hb_font_create(face.hb_face())}, font_size_ {font_size} {
-    hb_font_set_ppem(hb_font_, clamp_to<unsigned int>(font_size),
+namespace {
+
+[[nodiscard]] auto create_hb_blob(std::span<const char> font_data)
+    -> detail::HbBlobPointer {
+    const auto *data = font_data.data();
+    const auto length = gsl::narrow<unsigned int>(font_data.size());
+    const auto mode = hb_memory_mode_t::HB_MEMORY_MODE_DUPLICATE;
+
+    void *user_data = nullptr;
+    hb_destroy_func_t destroy = nullptr;
+
+    // TODO make const
+    auto blob =
+        detail::HbBlobPointer {hb_blob_create(data, length, mode, user_data, destroy)};
+
+    Expects(blob != nullptr);
+    Expects(hb_blob_get_length(blob.get()) == length);
+
+    return blob;
+}
+
+[[nodiscard]] auto create_immutable_face(std::span<const char> font_data,
+                                         unsigned int font_index)
+    -> detail::HbFacePointer {
+    const auto blob = create_hb_blob(font_data);
+
+    // TODO make const
+    auto face = detail::HbFacePointer {hb_face_create(blob.get(), font_index)};
+    hb_face_make_immutable(face.get());
+
+    return face;
+}
+
+[[nodiscard]] auto create_immutable_font(hb_face_t *hb_face, float font_size)
+    -> detail::HbFontPointer {
+    Expects(hb_face);
+
+    auto font = detail::HbFontPointer {hb_font_create(hb_face)};
+    hb_font_set_ppem(font.get(), clamp_to<unsigned int>(font_size),
                      clamp_to<unsigned int>(font_size));
-    hb_font_make_immutable(hb_font_);
+    hb_font_make_immutable(font.get());
+
+    return font;
 }
 
-HarfbuzzFont::~HarfbuzzFont() {
-    hb_font_destroy(hb_font_);
+[[nodiscard]] auto shape_text(std::string_view text_utf8, hb_font_t *hb_font)
+    -> detail::HbBufferPointer {
+    Expects(hb_font != nullptr);
+
+    // TODO set const
+    auto buffer = detail::HbBufferPointer {hb_buffer_create()};
+    Expects(buffer != nullptr);
+
+    const auto text_length = gsl::narrow<int>(text_utf8.size());
+    const auto item_offset = std::size_t {0};
+    const auto item_length = text_length;
+    hb_buffer_add_utf8(buffer.get(), text_utf8.data(), text_length, item_offset,
+                       item_length);
+
+    // set text properties
+    hb_buffer_set_direction(buffer.get(), HB_DIRECTION_LTR);
+    hb_buffer_set_script(buffer.get(), HB_SCRIPT_LATIN);
+    hb_buffer_set_language(buffer.get(), hb_language_from_string("en", -1));
+    hb_buffer_guess_segment_properties(buffer.get());
+
+    // shape text
+    const hb_feature_t *features = nullptr;
+    const auto num_features = std::size_t {0};
+    hb_shape(hb_font, buffer.get(), features, num_features);
+
+    return buffer;
 }
 
-auto HarfbuzzFont::font_size() const noexcept -> float {
-    return font_size_;
+[[nodiscard]] auto get_glyph_infos(hb_buffer_t *hb_buffer) -> std::span<hb_glyph_info_t> {
+    Expects(hb_buffer != nullptr);
+
+    const auto glyph_count = hb_buffer_get_length(hb_buffer);
+    return std::span<hb_glyph_info_t>(hb_buffer_get_glyph_infos(hb_buffer, nullptr),
+                                      glyph_count);
 }
 
-auto HarfbuzzFont::hb_font() const noexcept -> hb_font_t * {
-    return hb_font_;
+[[nodiscard]] auto get_hb_glyph_positions(hb_buffer_t *hb_buffer)
+    -> std::span<hb_glyph_position_t> {
+    Expects(hb_buffer != nullptr);
+
+    const auto glyph_count = hb_buffer_get_length(hb_buffer);
+    return std::span<hb_glyph_position_t>(
+        hb_buffer_get_glyph_positions(hb_buffer, nullptr), glyph_count);
 }
 
-//
-// Harfbuzz Buffer
-//
+[[nodiscard]] auto get_uint32_codepoints(hb_buffer_t *hb_buffer)
+    -> std::vector<uint32_t> {
+    Expects(hb_buffer != nullptr);
+    const auto glyph_infos = get_glyph_infos(hb_buffer);
 
-class HarfbuzzBuffer {
-   public:
-    explicit HarfbuzzBuffer() : hb_buffer {hb_buffer_create()} {}
+    return transform_to_vector(glyph_infos, [](const hb_glyph_info_t &glyph_info) {
+        return glyph_info.codepoint;
+    });
+}
 
-    HarfbuzzBuffer(const HarfbuzzBuffer &) = delete;
-    HarfbuzzBuffer(HarfbuzzBuffer &&) = delete;
-    auto operator=(const HarfbuzzBuffer &) -> HarfbuzzBuffer & = delete;
-    auto operator=(HarfbuzzBuffer &&) -> HarfbuzzBuffer & = delete;
+[[nodiscard]] auto get_bl_placements(hb_buffer_t *hb_buffer)
+    -> std::vector<BLGlyphPlacement> {
+    Expects(hb_buffer != nullptr);
+    const auto glyph_positions = get_hb_glyph_positions(hb_buffer);
 
-    ~HarfbuzzBuffer() {
-        hb_buffer_destroy(hb_buffer);
-    }
+    return transform_to_vector(glyph_positions, [](const hb_glyph_position_t &position) {
+        return BLGlyphPlacement {
+            .placement = BLPointI {position.x_offset, position.y_offset},
+            .advance = BLPointI {position.x_advance, position.y_advance},
+        };
+    });
+}
 
-   public:
-    gsl::not_null<hb_buffer_t *> hb_buffer;
-};
+[[nodiscard]] auto calculate_bounding_rect(hb_buffer_t *hb_buffer, hb_font_t *hb_font,
+                                           float font_size) -> BLBox {
+    Expects(hb_buffer != nullptr);
+    Expects(hb_font != nullptr);
 
-//
-// Harfbuzz Shaped Text
-//
-
-auto calculate_bounding_rect(std::span<const hb_glyph_info_t> glyph_info,
-                             std::span<hb_glyph_position_t> glyph_positions,
-                             const HarfbuzzFont &font) -> BLBox {
-    const auto hb_font = font.hb_font();
+    const auto glyph_infos = get_glyph_infos(hb_buffer);
+    const auto glyph_positions = get_hb_glyph_positions(hb_buffer);
 
     auto scale = BLPointI {};
     hb_font_get_scale(hb_font, &scale.x, &scale.y);
@@ -142,11 +168,11 @@ auto calculate_bounding_rect(std::span<const hb_glyph_info_t> glyph_info,
     };
     bool found = false;
 
-    for (auto i : range(std::min(glyph_info.size(), glyph_positions.size()))) {
+    for (auto i : range(std::min(glyph_infos.size(), glyph_positions.size()))) {
         const auto &pos = glyph_positions[i];
         auto extents = hb_glyph_extents_t {};
 
-        if (hb_font_get_glyph_extents(hb_font, glyph_info[i].codepoint, &extents) != 0 &&
+        if (hb_font_get_glyph_extents(hb_font, glyph_infos[i].codepoint, &extents) != 0 &&
             extents.width != 0 && extents.height != 0) {
             const auto glyph_rect = BLBox {
                 origin.x + pos.x_offset + extents.x_bearing,
@@ -174,8 +200,51 @@ auto calculate_bounding_rect(std::span<const hb_glyph_info_t> glyph_info,
         return BLBox {};
     }
 
-    return rect / scale * font.font_size();
+    return rect / scale * font_size;
 }
+
+}  // namespace
+
+//
+// Harfbuzz Font Face
+//
+
+HarfbuzzFontFace::HarfbuzzFontFace() : face_ {hb_face_get_empty()} {}
+
+HarfbuzzFontFace::HarfbuzzFontFace(std::span<const char> font_data,
+                                   unsigned int font_index)
+    : face_ {create_immutable_face(font_data, font_index)} {
+    Ensures(face_ != nullptr);
+}
+
+auto HarfbuzzFontFace::hb_face() const noexcept -> hb_face_t * {
+    Expects(face_ != nullptr);
+    return face_.get();
+}
+
+//
+// Harfbuzz Font
+//
+
+HarfbuzzFont::HarfbuzzFont() : font_ {hb_font_get_empty()} {}
+
+HarfbuzzFont::HarfbuzzFont(const HarfbuzzFontFace &face, float font_size)
+    : font_ {create_immutable_font(face.hb_face(), font_size)}, font_size_ {font_size} {
+    Ensures(font_ != nullptr);
+}
+
+auto HarfbuzzFont::font_size() const noexcept -> float {
+    return font_size_;
+}
+
+auto HarfbuzzFont::hb_font() const noexcept -> hb_font_t * {
+    Expects(font_ != nullptr);
+    return font_.get();
+}
+
+//
+// Harfbuzz Shaped Text
+//
 
 HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
                                        const HarfbuzzFontFace &face, float font_size)
@@ -183,50 +252,12 @@ HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
 
 HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
                                        const HarfbuzzFont &font) {
-    const auto buffer = HarfbuzzBuffer {};
-    const auto hb_buffer = buffer.hb_buffer;
+    const auto buffer = shape_text(text_utf8, font.hb_font());
 
-    const auto text_length = gsl::narrow<int>(text_utf8.size());
-    const auto item_offset = std::size_t {0};
-    const auto item_length = text_length;
-    hb_buffer_add_utf8(hb_buffer, text_utf8.data(), text_length, item_offset,
-                       item_length);
-
-    // set text properties
-    hb_buffer_set_direction(hb_buffer, HB_DIRECTION_LTR);
-    hb_buffer_set_script(hb_buffer, HB_SCRIPT_LATIN);
-    hb_buffer_set_language(hb_buffer, hb_language_from_string("en", -1));
-    hb_buffer_guess_segment_properties(hb_buffer);
-
-    // shape text
-    const hb_feature_t *features = nullptr;
-    const auto num_features = std::size_t {0};
-    hb_shape(font.hb_font(), hb_buffer, features, num_features);
-
-    // extract placement data
-    const auto glyph_count = hb_buffer_get_length(hb_buffer);
-    const auto glyph_infos = std::span<hb_glyph_info_t>(
-        hb_buffer_get_glyph_infos(hb_buffer, nullptr), glyph_count);
-    const auto glyph_positions = std::span<hb_glyph_position_t>(
-        hb_buffer_get_glyph_positions(hb_buffer, nullptr), glyph_count);
-
-    codepoints_.reserve(glyph_count);
-    placements_.reserve(glyph_count);
-
-    std::ranges::transform(
-        glyph_infos, std::back_inserter(codepoints_),
-        [](const hb_glyph_info_t &glyph_info) { return glyph_info.codepoint; });
-
-    std::ranges::transform(
-        glyph_positions, std::back_inserter(placements_),
-        [](const hb_glyph_position_t &position) {
-            return BLGlyphPlacement {
-                .placement = BLPointI {position.x_offset, position.y_offset},
-                .advance = BLPointI {position.x_advance, position.y_advance},
-            };
-        });
-
-    bounding_box_ = calculate_bounding_rect(glyph_infos, glyph_positions, font);
+    codepoints_ = get_uint32_codepoints(buffer.get());
+    placements_ = get_bl_placements(buffer.get());
+    bounding_box_ =
+        calculate_bounding_rect(buffer.get(), font.hb_font(), font.font_size());
 }
 
 auto HarfbuzzShapedText::glyph_run() const noexcept -> BLGlyphRun {

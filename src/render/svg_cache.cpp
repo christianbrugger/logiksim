@@ -36,6 +36,17 @@ auto load_svg_icon(icon_t icon) -> svg_data_t {
     return result;
 }
 
+auto load_svg_icon(svg_cache::svg_map_t &svg_map, icon_t icon) -> const svg_data_t & {
+    if (const auto it = svg_map.find(icon); it != svg_map.end()) {
+        return *it->second;
+    }
+
+    // insert
+    const auto [it, _] = svg_map.emplace(icon, svg_entry_t {load_svg_icon(icon)});
+
+    return *it->second;
+}
+
 auto render_svg_icon_impl(BLContext &bl_ctx, const svg2b2d::SVGDocument &document,
                           BLPoint position, color_t color, double scale) -> void {
     auto _ [[maybe_unused]] = make_context_guard(bl_ctx);
@@ -86,17 +97,6 @@ auto calculate_offset(const svg2b2d::SVGDocument &document, double scale,
         calculate_offset_x(document.width(), horizontal_alignment) * scale,
         calculate_offset_y(document.height(), vertical_alignment) * scale,
     };
-}
-
-auto load_svg_icon(svg_cache::svg_map_t &svg_map, icon_t icon) -> const svg_data_t & {
-    if (const auto it = svg_map.find(icon); it != svg_map.end()) {
-        return *it->second;
-    }
-
-    // insert
-    const auto [it, _] = svg_map.emplace(icon, svg_entry_t {load_svg_icon(icon)});
-
-    return *it->second;
 }
 
 }  // namespace
