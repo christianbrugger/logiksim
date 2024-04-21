@@ -3,9 +3,9 @@
 #include "algorithm/fmt_join.h"
 #include "file.h"
 #include "font_style_property.h"
+#include "iterator_adaptor/output_callable.h"
 #include "logging.h"
 #include "resource.h"
-#include "timer.h"  // TODO remove
 
 #include <fmt/core.h>
 
@@ -54,34 +54,61 @@ auto glyph_entry_t::format() const -> std::string {
 // Font Face
 //
 
-FontFace::FontFace(const std::filesystem::path& font_file)
-    : font_data_ {font_file.empty() ? "" : load_file(font_file)},
-      hb_font_face_ {std::span<const char> {font_data_.data(), font_data_.size()}} {
-    if (!font_file.empty() && font_data_.empty()) {
-        print("WARNING: could not open font file", font_file);
-    }
+namespace {
 
-    {
-        const auto status =
-            bl_font_data_.createFromData(font_data_.data(), font_data_.size());
-        if (!font_data_.empty() && status != BL_SUCCESS) [[unlikely]] {
-            throw std::runtime_error("Could not create BLFontData");
-        }
-    }
-    {
-        const auto status = bl_font_face_.createFromData(bl_font_data_, 0);
-        if (!font_data_.empty() && status != BL_SUCCESS) [[unlikely]] {
-            throw std::runtime_error("Could not create BLFontFace");
-        }
-    }
+[[nodiscard]] auto to_bl_array(const std::string& data) -> BLArray<uint8_t> {
+    auto array = BLArray<uint8_t> {};
+
+    array.reserve(data.size());
+    std::ranges::copy(data, output_callable([&](const char& c) { array.append(c); }));
+
+    return array;
 }
 
-auto FontFace::hb_font_face() const -> const HarfbuzzFontFace& {
-    return hb_font_face_;
+[[nodiscard]] auto to_bl_font_data(const std::string& data) -> BLFontData {
+    const auto array = to_bl_array(data);
+
+    auto font_data = BLFontData {};
+    const auto status = font_data.createFromData(array);
+
+    if (!font_data.empty() && status != BL_SUCCESS) [[unlikely]] {
+        throw std::runtime_error("Could not create BLFontData");
+    }
+
+    return font_data;
 }
 
-auto FontFace::bl_font_face() const -> const BLFontFace& {
-    return bl_font_face_;
+[[nodiscard]] auto create_bl_face(const std::string& data) -> BLFontFace {
+    const auto font_data = to_bl_font_data(data);
+
+    auto face = BLFontFace {};
+    const auto status = face.createFromData(font_data, 0);
+
+    if (!data.empty() && status != BL_SUCCESS) [[unlikely]] {
+        throw std::runtime_error("Could not create BLFontFace");
+    }
+
+    return face;
+}
+
+[[nodiscard]] auto create_hb_face(const std::string& data) -> HarfbuzzFontFace {
+    return HarfbuzzFontFace {std::span<const char> {data.data(), data.size()}};
+}
+
+}  // namespace
+
+auto load_font_face(const std::filesystem::path& path) -> FontFace {
+    const auto data = path.empty() ? "" : load_file(path);
+
+    if (!path.empty() && data.empty()) {
+        print("WARNING: could not open font file", path);
+        return FontFace {};
+    }
+
+    return FontFace {
+        .hb_font_face = create_hb_face(data),
+        .bl_font_face = create_bl_face(data),
+    };
 }
 
 //
@@ -89,10 +116,10 @@ auto FontFace::bl_font_face() const -> const BLFontFace& {
 //
 
 FontFaces::FontFaces(const font_locations_t& font_files)
-    : regular {FontFace {font_files.regular}},
-      italic {FontFace {font_files.italic}},
-      bold {FontFace {font_files.bold}},
-      monospace {FontFace {font_files.monospace}} {}
+    : regular {load_font_face(font_files.regular)},
+      italic {load_font_face(font_files.italic)},
+      bold {load_font_face(font_files.bold)},
+      monospace {load_font_face(font_files.monospace)} {}
 
 auto FontFaces::get(FontStyle style) const -> const FontFace& {
     return ::logicsim::get<const FontFace&>(*this, style);
@@ -102,10 +129,10 @@ auto FontFaces::get(FontStyle style) const -> const FontFace& {
 // Font
 //
 
-Font::Font(const FontFace& font_face) : hb_font {font_face.hb_font_face()}, bl_font {} {
+Font::Font(const FontFace& font_face) : hb_font {font_face.hb_font_face}, bl_font {} {
     // doesn't matter, as we rescale them later
     constexpr auto create_font_size = float {10};
-    bl_font.createFromFace(font_face.bl_font_face(), create_font_size);
+    bl_font.createFromFace(font_face.bl_font_face, create_font_size);
 }
 
 //
@@ -218,7 +245,7 @@ auto calculate_baseline_offset(FontStyle style [[maybe_unused]], const FontFace&
         "0123456789";
     const auto font_size = float {16};
 
-    const auto font = HarfbuzzFont {face.hb_font_face()};
+    const auto font = HarfbuzzFont {face.hb_font_face};
     const auto box = HarfbuzzShapedText {text, font, font_size}.bounding_box();
 
     using enum VTextAlignment;

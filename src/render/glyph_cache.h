@@ -86,21 +86,11 @@ namespace logicsim {
 //
 
 struct FontFace {
-   public:
-    [[nodiscard]] explicit FontFace() = default;
-    [[nodiscard]] explicit FontFace(const std::filesystem::path &font_file);
-
-    [[nodiscard]] auto hb_font_face() const -> const HarfbuzzFontFace &;
-    [[nodiscard]] auto bl_font_face() const -> const BLFontFace &;
-
-   private:
-    std::string font_data_ {};
-
-    HarfbuzzFontFace hb_font_face_ {};
-
-    BLFontData bl_font_data_ {};
-    BLFontFace bl_font_face_ {};
+    HarfbuzzFontFace hb_font_face {};
+    BLFontFace bl_font_face {};
 };
+
+[[nodiscard]] auto load_font_face(const std::filesystem::path &font_file) -> FontFace;
 
 static_assert(std::semiregular<FontFace>);
 
