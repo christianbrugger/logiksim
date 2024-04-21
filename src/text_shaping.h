@@ -6,6 +6,7 @@
 #include <blend2d.h>
 #include <gsl/gsl>
 
+#include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -40,9 +41,6 @@ using HbFacePointer = std::unique_ptr<hb_face_t, HbFaceDeleter>;
 using HbFontPointer = std::unique_ptr<hb_font_t, HbFontDeleter>;
 using HbBufferPointer = std::unique_ptr<hb_buffer_t, HbBufferDeleter>;
 
-using HbFaceShared = std::shared_ptr<hb_face_t>;
-using HbFontShared = std::shared_ptr<hb_font_t>;
-
 }  // namespace detail
 
 class HarfbuzzFontFace final {
@@ -55,7 +53,7 @@ class HarfbuzzFontFace final {
 
    private:
     // read-only, preserving whole parts relationship
-    detail::HbFaceShared face_;
+    std::shared_ptr<hb_face_t> face_;
 };
 
 static_assert(std::semiregular<HarfbuzzFontFace>);
@@ -63,15 +61,13 @@ static_assert(std::semiregular<HarfbuzzFontFace>);
 class HarfbuzzFont final {
    public:
     explicit HarfbuzzFont();
-    explicit HarfbuzzFont(const HarfbuzzFontFace &face, float font_size);
+    explicit HarfbuzzFont(const HarfbuzzFontFace &face);
 
-    [[nodiscard]] auto font_size() const noexcept -> float;
     [[nodiscard]] auto hb_font() const noexcept -> hb_font_t *;
 
    private:
     // read-only, preserving whole parts relationship
-    detail::HbFontShared font_;
-    float font_size_ {};
+    std::shared_ptr<hb_font_t> font_;
 };
 
 static_assert(std::semiregular<HarfbuzzFont>);
@@ -79,7 +75,8 @@ static_assert(std::semiregular<HarfbuzzFont>);
 class HarfbuzzShapedText {
    public:
     explicit HarfbuzzShapedText() = default;
-    explicit HarfbuzzShapedText(std::string_view text_utf8, const HarfbuzzFont &font);
+    explicit HarfbuzzShapedText(std::string_view text_utf8, const HarfbuzzFont &font,
+                                float font_size);
 
     [[nodiscard]] auto operator==(const HarfbuzzShapedText &other) const
         -> bool = default;

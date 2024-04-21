@@ -118,17 +118,27 @@ struct FontFaces {
 
 static_assert(std::semiregular<FontFaces>);
 
+struct Font {
+    HarfbuzzFont hb_font {};
+    BLFont bl_font {};
+
+    [[nodiscard]] explicit Font() = default;
+    [[nodiscard]] explicit Font(const FontFace &font_face);
+};
+
+static_assert(std::semiregular<Font>);
+
 struct Fonts {
-    BLFont regular {};
-    BLFont italic {};
-    BLFont bold {};
-    BLFont monospace;
+    Font regular {};
+    Font italic {};
+    Font bold {};
+    Font monospace;
 
     [[nodiscard]] explicit Fonts() = default;
     [[nodiscard]] explicit Fonts(const FontFaces &font_faces);
 
-    [[nodiscard]] auto get(FontStyle style) const -> const BLFont &;
-    [[nodiscard]] auto get(FontStyle style) -> BLFont &;
+    [[nodiscard]] auto get(FontStyle style) const -> const Font &;
+    [[nodiscard]] auto get(FontStyle style) -> Font &;
 };
 
 static_assert(std::semiregular<Fonts>);
@@ -220,7 +230,8 @@ class GlyphCache {
                                               FontStyle style) const -> BLBox;
 
    private:
-    [[nodiscard]] auto get_font(float font_size, FontStyle style) const -> const BLFont &;
+    [[nodiscard]] auto get_scaled_bl_font(float font_size, FontStyle style) const
+        -> const BLFont &;
     [[nodiscard]] auto get_entry(std::string_view text, float font_size, FontStyle style,
                                  HTextAlignment horizontal_alignment,
                                  VTextAlignment vertical_alignment) const

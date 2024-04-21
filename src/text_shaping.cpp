@@ -79,13 +79,10 @@ namespace {
     return font;
 }
 
-[[nodiscard]] auto create_immutable_font(hb_face_t *hb_face, float font_size)
-    -> detail::HbFontPointer {
+[[nodiscard]] auto create_immutable_font(hb_face_t *hb_face) -> detail::HbFontPointer {
     Expects(hb_face);
 
     auto font = detail::HbFontPointer {hb_font_create(hb_face)};
-    hb_font_set_ppem(font.get(), clamp_to<unsigned int>(font_size),
-                     clamp_to<unsigned int>(font_size));
     hb_font_make_immutable(font.get());
 
     return font;
@@ -248,14 +245,10 @@ HarfbuzzFont::HarfbuzzFont() : font_ {create_immutable_font()} {
     Ensures(hb_font_is_immutable(font_.get()));
 }
 
-HarfbuzzFont::HarfbuzzFont(const HarfbuzzFontFace &face, float font_size)
-    : font_ {create_immutable_font(face.hb_face(), font_size)}, font_size_ {font_size} {
+HarfbuzzFont::HarfbuzzFont(const HarfbuzzFontFace &face)
+    : font_ {create_immutable_font(face.hb_face())} {
     Ensures(font_ != nullptr);
     Ensures(hb_font_is_immutable(font_.get()));
-}
-
-auto HarfbuzzFont::font_size() const noexcept -> float {
-    return font_size_;
 }
 
 auto HarfbuzzFont::hb_font() const noexcept -> hb_font_t * {
@@ -270,13 +263,12 @@ auto HarfbuzzFont::hb_font() const noexcept -> hb_font_t * {
 //
 
 HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
-                                       const HarfbuzzFont &font) {
+                                       const HarfbuzzFont &font, float font_size) {
     const auto buffer = shape_text(text_utf8, font.hb_font());
 
     codepoints_ = get_uint32_codepoints(buffer.get());
     placements_ = get_bl_placements(buffer.get());
-    bounding_box_ =
-        calculate_bounding_rect(buffer.get(), font.hb_font(), font.font_size());
+    bounding_box_ = calculate_bounding_rect(buffer.get(), font.hb_font(), font_size);
 }
 
 auto HarfbuzzShapedText::glyph_run() const noexcept -> BLGlyphRun {

@@ -5,6 +5,7 @@
 #include "font_style_property.h"
 #include "logging.h"
 #include "resource.h"
+#include "timer.h"  // TODO remove
 
 #include <fmt/core.h>
 
@@ -98,23 +99,31 @@ auto FontFaces::get(FontStyle style) const -> const FontFace& {
 }
 
 //
+// Font
+//
+
+Font::Font(const FontFace& font_face) : hb_font {font_face.hb_font_face()}, bl_font {} {
+    // doesn't matter, as we rescale them later
+    constexpr auto create_font_size = float {10};
+    bl_font.createFromFace(font_face.bl_font_face(), create_font_size);
+}
+
+//
 // Fonts
 //
 
-Fonts::Fonts(const FontFaces& font_faces) {
-    const auto create_font_size = float {10};  // doesn't matter, as we rescale it later
+Fonts::Fonts(const FontFaces& font_faces)
+    : regular {Font {font_faces.regular}},
+      italic {Font {font_faces.italic}},
+      bold {Font {font_faces.bold}},
+      monospace {Font {font_faces.monospace}} {}
 
-    for (auto& style : all_font_styles) {
-        get(style).createFromFace(font_faces.get(style).bl_font_face(), create_font_size);
-    }
+auto Fonts::get(FontStyle style) const -> const Font& {
+    return ::logicsim::get<const Font&>(*this, style);
 }
 
-auto Fonts::get(FontStyle style) const -> const BLFont& {
-    return ::logicsim::get<const BLFont&>(*this, style);
-}
-
-auto Fonts::get(FontStyle style) -> BLFont& {
-    return ::logicsim::get<BLFont&>(*this, style);
+auto Fonts::get(FontStyle style) -> Font& {
+    return ::logicsim::get<Font&>(*this, style);
 }
 
 //
@@ -209,8 +218,8 @@ auto calculate_baseline_offset(FontStyle style [[maybe_unused]], const FontFace&
         "0123456789";
     const auto font_size = float {16};
 
-    const auto font = HarfbuzzFont {face.hb_font_face(), font_size};
-    const auto box = HarfbuzzShapedText {text, font}.bounding_box();
+    const auto font = HarfbuzzFont {face.hb_font_face()};
+    const auto box = HarfbuzzShapedText {text, font, font_size}.bounding_box();
 
     using enum VTextAlignment;
     return BaselineOffset {
@@ -271,17 +280,18 @@ auto GlyphCache::shrink_to_fit() -> void {
     glyph_map_.rehash(glyph_map_.size());
 }
 
-auto GlyphCache::get_font(float font_size, FontStyle style) const -> const BLFont& {
-    // reuse font, to avoid allocation every time we draw a text
-    auto& font = fonts_.get(style);
-    font.setSize(font_size);
-    return font;
+auto GlyphCache::get_scaled_bl_font(float font_size, FontStyle style) const
+    -> const BLFont& {
+    // reuse font to avoid allocation in every draw call
+    auto& bl_font = fonts_.get(style).bl_font;
+    bl_font.setSize(font_size);
+    return bl_font;
 }
 
 auto GlyphCache::calculate_bounding_box(std::string_view text, float font_size,
                                         FontStyle style) const -> BLBox {
-    const auto font = HarfbuzzFont {font_faces_.get(style).hb_font_face(), font_size};
-    return HarfbuzzShapedText {text, font}.bounding_box();
+    const auto& font = fonts_.get(style).hb_font;
+    return HarfbuzzShapedText {text, font, font_size}.bounding_box();
 }
 
 auto GlyphCache::get_entry(std::string_view text, float font_size, FontStyle style,
@@ -298,10 +308,9 @@ auto GlyphCache::get_entry(std::string_view text, float font_size, FontStyle sty
     auto& entry = it->second;
 
     if (inserted) {
-        const auto& face = font_faces_.get(style);
+        const auto& hb_font = fonts_.get(style).hb_font;
 
-        const auto font = HarfbuzzFont {face.hb_font_face(), font_size};
-        entry.shaped_text = HarfbuzzShapedText {text, font};
+        entry.shaped_text = HarfbuzzShapedText {text, hb_font, font_size};
         entry.offset = calculate_offset(entry.shaped_text.bounding_box(),
                                         baseline_offsets_.get(style, font_size),
                                         horizontal_alignment, vertical_alignment);
@@ -316,10 +325,10 @@ auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_
         return;
     }
 
-    const auto& font = get_font(font_size, attributes.style);
-    const auto& entry =
-        get_entry(text, font_size, attributes.style, attributes.horizontal_alignment,
-                  attributes.vertical_alignment);
+    const auto& font = get_scaled_bl_font(font_size, attributes.style);
+    const auto& entry = get_entry(text, font_size, attributes.style,  //
+                                  attributes.horizontal_alignment,    //
+                                  attributes.vertical_alignment);
     const auto origin = position - entry.offset;
 
     ctx.fillGlyphRun(origin, font, entry.shaped_text.glyph_run(), attributes.color);
