@@ -75,9 +75,8 @@ class TextCache {
     using cache_entry_t = text_cache::cache_entry_t;
 
    public:
-    explicit TextCache();
+    explicit TextCache() = default;
     explicit TextCache(FontFaces faces);
-    explicit TextCache(const font_locations_t &font_files);
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -114,10 +113,10 @@ class TextCache {
    private:
     using glyph_map_t = ankerl::unordered_dense::map<cache_key_t, cache_entry_t>;
 
-    FontFaces font_faces_;
-    BaselineOffsets baseline_offsets_;
+    FontFaces font_faces_ {};
+    BaselineOffsets baseline_offsets_ {};
 
-    mutable Fonts fonts_;
+    mutable Fonts fonts_ {};
     mutable glyph_map_t glyph_map_ {};
 };
 

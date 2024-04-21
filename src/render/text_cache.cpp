@@ -27,10 +27,6 @@ auto cache_entry_t::format() const -> std::string {
 // TextCache
 //
 
-TextCache::TextCache() : TextCache(get_default_font_locations()) {}
-
-// doesn't matter, as we rescale them later
-
 namespace {
 /**
  * @brief: initial size, fonts will be rescaled later
@@ -42,9 +38,6 @@ TextCache::TextCache(FontFaces faces)
     : font_faces_ {std::move(faces)},
       baseline_offsets_ {font_faces_},
       fonts_ {font_faces_, CACHE_FONT_INITIAL_SIZE} {}
-
-TextCache::TextCache(const font_locations_t& font_files)
-    : TextCache {FontFaces {font_files}} {}
 
 auto TextCache::format() const -> std::string {
     return fmt::format("TextCache({} glyphs)", glyph_map_.size());

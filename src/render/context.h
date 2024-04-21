@@ -18,7 +18,7 @@ struct Context {
     BLImage bl_image {};
     BLContext bl_ctx {};
     ContextRenderSettings settings {};
-    TextCache text_cache {};
+    TextCache text_cache {FontFaces {get_default_font_locations()}};
     SVGCache svg_cache {};
 
     auto begin() -> void;
