@@ -2,6 +2,7 @@
 
 #include "logging.h"
 #include "render/text_cache.h"
+#include "timer.h"  // TODO remove
 
 #include <fmt/core.h>
 
@@ -28,10 +29,19 @@ auto cache_entry_t::format() const -> std::string {
 
 TextCache::TextCache() : TextCache(get_default_font_locations()) {}
 
+// doesn't matter, as we rescale them later
+
+namespace {
+/**
+ * @brief: initial size, fonts will be rescaled later
+ */
+constexpr auto CACHE_FONT_INITIAL_SIZE = float {10};
+}  // namespace
+
 TextCache::TextCache(FontFaces faces)
     : font_faces_ {std::move(faces)},
       baseline_offsets_ {font_faces_},
-      fonts_ {font_faces_} {}
+      fonts_ {font_faces_, CACHE_FONT_INITIAL_SIZE} {}
 
 TextCache::TextCache(const font_locations_t& font_files)
     : TextCache {FontFaces {font_files}} {}
@@ -51,14 +61,14 @@ auto TextCache::shrink_to_fit() -> void {
 auto TextCache::get_scaled_bl_font(float font_size, FontStyle style) const
     -> const BLFont& {
     // reuse font to avoid allocation in every draw call
-    auto& bl_font = fonts_.get(style).bl_font;
-    bl_font.setSize(font_size);
-    return bl_font;
+    auto& font = fonts_.get(style);
+    font.set_font_size(font_size);
+    return font.bl_font();
 }
 
 auto TextCache::calculate_bounding_box(std::string_view text, float font_size,
                                        FontStyle style) const -> BLBox {
-    const auto& font = fonts_.get(style).hb_font;
+    const auto& font = fonts_.get(style).hb_font();
     return HarfbuzzShapedText {text, font, font_size}.bounding_box();
 }
 
@@ -76,7 +86,7 @@ auto TextCache::get_entry(std::string_view text, float font_size, FontStyle styl
     auto& entry = it->second;
 
     if (inserted) {
-        const auto& hb_font = fonts_.get(style).hb_font;
+        const auto& hb_font = fonts_.get(style).hb_font();
 
         entry.shaped_text = HarfbuzzShapedText {text, hb_font, font_size};
         entry.offset = calculate_offset(entry.shaped_text.bounding_box(),

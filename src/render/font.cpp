@@ -53,28 +53,90 @@ namespace {
 
 }  // namespace
 
-auto load_face_or_warn(const std::filesystem::path& path) -> FontFace {
-    const auto data = path.empty() ? "" : load_file(path);
+FontFace::FontFace(const std::string& data)
+    : hb_face_ {create_hb_face(data)}, bl_face_ {create_bl_face(data)} {
+    Ensures(hb_face_.empty() == bl_face_.empty());
+}
 
-    if (!path.empty() && data.empty()) {
+auto FontFace::empty() const -> bool {
+    Expects(hb_face_.empty() == bl_face_.empty());
+
+    return bl_face_.empty();
+}
+
+auto FontFace::hb_face() const -> const HarfbuzzFontFace& {
+    return hb_face_;
+}
+
+auto FontFace::bl_face() const -> const BLFontFace& {
+    return bl_face_;
+}
+
+auto load_face_or_warn(const std::filesystem::path& path) -> FontFace {
+    if (path.empty()) {
+        return FontFace {};
+    }
+
+    const auto data = load_file(path);
+
+    if (data.empty()) {
         print("WARNING: could not open font file", path);
         return FontFace {};
     }
 
-    return FontFace {
-        .hb_font_face = create_hb_face(data),
-        .bl_font_face = create_bl_face(data),
-    };
+    const auto face = FontFace {data};
+
+    if (face.empty()) {
+        print("WARNING: font file resulted in an empty font face", path);
+        return FontFace {};
+    }
+
+    return face;
 }
 
-Font::Font(const FontFace& font_face) : hb_font {font_face.hb_font_face}, bl_font {} {
-    // doesn't matter, as we rescale them later
-    constexpr auto create_font_size = float {10};
-    bl_font.createFromFace(font_face.bl_font_face, create_font_size);
+namespace {
+
+[[nodiscard]] auto create_bl_font(const BLFontFace& face, float font_size) -> BLFont {
+    auto font = BLFont {};
+    font.createFromFace(face, font_size);
+    return font;
+}
+
+}  // namespace
+
+Font::Font(const FontFace& face, float font_size)
+    : hb_font_ {face.hb_face()}, bl_font_ {create_bl_font(face.bl_face(), font_size)} {
+    Ensures(hb_font_.empty() == bl_font_.empty());
+    Ensures(empty() == face.empty());
+    Ensures(empty() || this->font_size() == font_size);
+}
+
+auto Font::hb_font() const -> const HarfbuzzFont& {
+    return hb_font_;
+}
+
+auto Font::bl_font() const -> const BLFont& {
+    return bl_font_;
+}
+
+auto Font::empty() const -> bool {
+    Expects(hb_font_.empty() == bl_font_.empty());
+
+    return bl_font_.empty();
+}
+
+auto Font::font_size() const -> float {
+    return bl_font_.size();
+}
+
+auto Font::set_font_size(float font_size) -> void {
+    bl_font_.setSize(font_size);
+
+    Ensures(empty() || this->font_size() == font_size);
 }
 
 //
-//
+// Collections
 //
 
 auto font_locations_t::format() const -> std::string {
@@ -92,12 +154,16 @@ auto font_locations_t::get(FontStyle style) const -> const std::filesystem::path
     return ::logicsim::get<const std::filesystem::path&>(*this, style);
 }
 
+auto get_default_font_location(FontStyle style) -> std::filesystem::path {
+    return get_font_path(style);
+}
+
 auto get_default_font_locations() -> font_locations_t {
     return font_locations_t {
-        .regular = get_font_path(font_t::regular),
-        .italic = get_font_path(font_t::italic),
-        .bold = get_font_path(font_t::bold),
-        .monospace = get_font_path(font_t::monospace),
+        .regular = get_default_font_location(FontStyle::regular),
+        .italic = get_default_font_location(FontStyle::italic),
+        .bold = get_default_font_location(FontStyle::bold),
+        .monospace = get_default_font_location(FontStyle::monospace),
     };
 }
 
@@ -111,11 +177,11 @@ auto FontFaces::get(FontStyle style) const -> const FontFace& {
     return ::logicsim::get<const FontFace&>(*this, style);
 }
 
-Fonts::Fonts(const FontFaces& font_faces)
-    : regular {Font {font_faces.regular}},
-      italic {Font {font_faces.italic}},
-      bold {Font {font_faces.bold}},
-      monospace {Font {font_faces.monospace}} {}
+Fonts::Fonts(const FontFaces& font_faces, float font_size)
+    : regular {Font {font_faces.regular, font_size}},
+      italic {Font {font_faces.italic, font_size}},
+      bold {Font {font_faces.bold, font_size}},
+      monospace {Font {font_faces.monospace, font_size}} {}
 
 auto Fonts::get(FontStyle style) const -> const Font& {
     return ::logicsim::get<const Font&>(*this, style);

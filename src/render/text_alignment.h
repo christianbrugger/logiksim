@@ -12,7 +12,7 @@
 
 namespace logicsim {
 
-struct FontFace;
+class FontFace;
 struct FontFaces;
 
 /**
@@ -68,7 +68,7 @@ auto calculate_baseline_offset(FontStyle style [[maybe_unused]], const FontFace 
                                     VTextAlignment vertical_alignment) -> BLPoint;
 
 //
-//
+// Collections
 //
 
 struct BaselineOffsets {

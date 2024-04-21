@@ -5,6 +5,7 @@
 #include "algorithm/transform_to_vector.h"
 #include "format/blend2d_type.h"
 #include "format/container.h"
+#include "text_shaping.h"
 
 #include <blend2d.h>
 #include <fmt/core.h>
@@ -229,6 +230,10 @@ HarfbuzzFontFace::HarfbuzzFontFace(std::span<const char> font_data,
     Ensures(hb_face_is_immutable(face_.get()));
 }
 
+auto HarfbuzzFontFace::empty() const -> bool {
+    return hb_face_get_glyph_count(hb_face()) == 0;
+}
+
 auto HarfbuzzFontFace::hb_face() const noexcept -> hb_face_t * {
     Expects(face_ != nullptr);
     Ensures(hb_face_is_immutable(face_.get()));
@@ -251,6 +256,13 @@ HarfbuzzFont::HarfbuzzFont(const HarfbuzzFontFace &face)
     Ensures(hb_font_is_immutable(font_.get()));
 }
 
+auto HarfbuzzFont::empty() const -> bool {
+    const auto *face = hb_font_get_face(hb_font());
+    Expects(face != nullptr);
+
+    return hb_face_get_glyph_count(face) == 0;
+}
+
 auto HarfbuzzFont::hb_font() const noexcept -> hb_font_t * {
     Expects(font_ != nullptr);
     Ensures(hb_font_is_immutable(font_.get()));
@@ -269,12 +281,22 @@ HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
     codepoints_ = get_uint32_codepoints(buffer.get());
     placements_ = get_bl_placements(buffer.get());
     bounding_box_ = calculate_bounding_rect(buffer.get(), font.hb_font(), font_size);
+
+    Ensures(codepoints_.size() == placements_.size());
+}
+
+auto HarfbuzzShapedText::empty() const -> bool {
+    Expects(codepoints_.size() == placements_.size());
+
+    return codepoints_.empty();
 }
 
 auto HarfbuzzShapedText::glyph_run() const noexcept -> BLGlyphRun {
+    Expects(codepoints_.size() == placements_.size());
+
     auto result = BLGlyphRun {};
 
-    result.size = std::min(codepoints_.size(), placements_.size());
+    result.size = codepoints_.size();
     result.setGlyphData(codepoints_.data());
     result.setPlacementData(placements_.data());
     result.placementType = BL_GLYPH_PLACEMENT_TYPE_ADVANCE_OFFSET;

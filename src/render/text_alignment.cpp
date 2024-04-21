@@ -92,7 +92,7 @@ auto calculate_baseline_offset(FontStyle style [[maybe_unused]], const FontFace&
         "0123456789";
     const auto font_size = float {16};
 
-    const auto font = HarfbuzzFont {face.hb_font_face};
+    const auto font = HarfbuzzFont {face.hb_face()};
     const auto box = HarfbuzzShapedText {text, font, font_size}.bounding_box();
 
     using enum VTextAlignment;
@@ -102,6 +102,10 @@ auto calculate_baseline_offset(FontStyle style [[maybe_unused]], const FontFace&
         .baseline_bottom = calculate_vertical_offset(box, {}, bottom) / font_size,
     };
 }
+
+//
+// Collections
+//
 
 BaselineOffsets::BaselineOffsets(const FontFaces& faces) {
     for (const auto& style : all_font_styles) {

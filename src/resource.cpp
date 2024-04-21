@@ -19,9 +19,9 @@ namespace {
     return std::filesystem::weakly_canonical(directory / "resources" / relative);
 }
 
-[[nodiscard]] auto get_font_path_relative(font_t font) -> std::filesystem::path {
-    switch (font) {
-        using enum font_t;
+[[nodiscard]] auto get_font_path_relative(FontStyle style) -> std::filesystem::path {
+    switch (style) {
+        using enum FontStyle;
 
         case regular: {
             return std::filesystem::path {"fonts/NotoSans-Regular.ttf"};
@@ -41,8 +41,8 @@ namespace {
 
 }  // namespace
 
-auto get_font_path(font_t font) -> std::filesystem::path {
-    return to_absolute_resource_path(get_font_path_relative(font));
+auto get_font_path(FontStyle style) -> std::filesystem::path {
+    return to_absolute_resource_path(get_font_path_relative(style));
 }
 
 namespace {

@@ -1,6 +1,8 @@
 #ifndef LOGIKSIM_RESOURCE_H
 #define LOGIKSIM_RESOURCE_H
 
+#include "vocabulary/font_style.h"
+
 #include <filesystem>
 
 namespace logicsim {
@@ -8,14 +10,7 @@ namespace logicsim {
 constexpr static auto inline LS_APP_NAME = "LogikSim";
 constexpr static auto inline LS_APP_VERSION_STR = "2.2.0";
 
-enum class font_t : uint8_t {
-    regular,
-    italic,
-    bold,
-    monospace,
-};
-
-[[nodiscard]] auto get_font_path(font_t font) -> std::filesystem::path;
+[[nodiscard]] auto get_font_path(FontStyle style) -> std::filesystem::path;
 
 enum class icon_t {
     app_icon,
