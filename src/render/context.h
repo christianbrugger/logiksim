@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_RENDER_CONTEXT_H
 #define LOGICSIM_RENDER_CONTEXT_H
 
-#include "render/glyph_cache.h"
 #include "render/svg_cache.h"
+#include "render/text_cache.h"
 #include "vocabulary/context_render_config.h"
 
 #include <blend2d.h>
@@ -18,7 +18,7 @@ struct Context {
     BLImage bl_image {};
     BLContext bl_ctx {};
     ContextRenderSettings settings {};
-    GlyphCache text_cache {};
+    TextCache text_cache {};
     SVGCache svg_cache {};
 
     auto begin() -> void;

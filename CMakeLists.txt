@@ -175,9 +175,11 @@ set(LS_CORE_SOURCES
     src/render/context.cpp
     src/render/context_guard.cpp
     src/render/context_info.cpp
-    src/render/glyph_cache.cpp
+    src/render/font.cpp
     src/render/layer_surface.cpp
     src/render/svg_cache.cpp
+    src/render/text_alignment.cpp
+    src/render/text_cache.cpp
 
     src/type_trait/add_const_to_reference.cpp
     src/type_trait/const_iterator.cpp
