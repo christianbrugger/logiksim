@@ -59,14 +59,13 @@ auto test_sanitized_render() {
         //                           VTextAlignment::baseline);
 
         const auto font_files = get_default_font_locations();
-        const auto faces = FontFaces {font_files};
-        auto fonts = Fonts {faces};
-
         const auto font_size = 10.8f;
-        fonts.regular.setSize(font_size);
+
+        const auto faces = FontFaces {font_files};
+        const auto fonts = Fonts {faces, font_size};
 
         const auto shaped_text =
-            HarfbuzzShapedText {"K", faces.regular.hb_font_face(), font_size};
+            HarfbuzzShapedText {"K", fonts.regular.hb_font(), font_size};
 
         const auto codepoints = std::vector<uint32_t> {46};
         const auto placements = std::vector<BLGlyphPlacement> {
@@ -81,7 +80,7 @@ auto test_sanitized_render() {
 
         print("shaped_text", shaped_text);
 
-        ctx.bl_ctx.fillGlyphRun(BLPoint {87, 126}, fonts.regular, glyph_run,
+        ctx.bl_ctx.fillGlyphRun(BLPoint {87, 126}, fonts.regular.bl_font(), glyph_run,
                                 defaults::color_black);
 
         ctx.end();
