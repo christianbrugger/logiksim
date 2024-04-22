@@ -16,7 +16,36 @@
 
 namespace logicsim {
 
-namespace detail {
+namespace {
+
+//
+// Declarations
+//
+
+struct HbBlobDeleter {
+    auto operator()(hb_blob_t *hb_blob) -> void;
+};
+
+struct HbFaceDeleter {
+    auto operator()(hb_face_t *hb_face) -> void;
+};
+
+struct HbFontDeleter {
+    auto operator()(hb_font_t *hb_font) -> void;
+};
+
+struct HbBufferDeleter {
+    auto operator()(hb_buffer_t *hb_buffer) -> void;
+};
+
+using HbBlobPointer = std::unique_ptr<hb_blob_t, HbBlobDeleter>;
+using HbFacePointer = std::unique_ptr<hb_face_t, HbFaceDeleter>;
+using HbFontPointer = std::unique_ptr<hb_font_t, HbFontDeleter>;
+using HbBufferPointer = std::unique_ptr<hb_buffer_t, HbBufferDeleter>;
+
+//
+// Definitions
+//
 
 auto HbBlobDeleter::operator()(hb_blob_t *hb_blob) -> void {
     hb_blob_destroy(hb_blob);
@@ -34,12 +63,7 @@ auto HbBufferDeleter::operator()(hb_buffer_t *hb_buffer) -> void {
     hb_buffer_destroy(hb_buffer);
 }
 
-}  // namespace detail
-
-namespace {
-
-[[nodiscard]] auto create_hb_blob(std::span<const char> font_data)
-    -> detail::HbBlobPointer {
+[[nodiscard]] auto create_hb_blob(std::span<const char> font_data) -> HbBlobPointer {
     const auto *data = font_data.data();
     const auto length = gsl::narrow<unsigned int>(font_data.size());
     const auto mode = hb_memory_mode_t::HB_MEMORY_MODE_DUPLICATE;
@@ -47,7 +71,7 @@ namespace {
     void *user_data = nullptr;
     hb_destroy_func_t destroy = nullptr;
 
-    auto blob = detail::HbBlobPointer {
+    auto blob = HbBlobPointer {
         hb_blob_create(data, length, mode, user_data, destroy),
     };
 
@@ -57,44 +81,43 @@ namespace {
     return blob;
 }
 
-[[nodiscard]] auto create_immutable_face() -> detail::HbFacePointer {
-    auto face = detail::HbFacePointer {hb_face_reference(hb_face_get_empty())};
+[[nodiscard]] auto create_immutable_face() -> HbFacePointer {
+    auto face = HbFacePointer {hb_face_reference(hb_face_get_empty())};
     hb_face_make_immutable(face.get());
     return face;
 }
 
 [[nodiscard]] auto create_immutable_face(std::span<const char> font_data,
-                                         unsigned int font_index)
-    -> detail::HbFacePointer {
+                                         unsigned int font_index) -> HbFacePointer {
     const auto blob = create_hb_blob(font_data);
 
-    auto face = detail::HbFacePointer {hb_face_create(blob.get(), font_index)};
+    auto face = HbFacePointer {hb_face_create(blob.get(), font_index)};
     hb_face_make_immutable(face.get());
 
     return face;
 }
 
-[[nodiscard]] auto create_immutable_font() -> detail::HbFontPointer {
-    auto font = detail::HbFontPointer {hb_font_reference(hb_font_get_empty())};
+[[nodiscard]] auto create_immutable_font() -> HbFontPointer {
+    auto font = HbFontPointer {hb_font_reference(hb_font_get_empty())};
     hb_font_make_immutable(font.get());
     return font;
 }
 
-[[nodiscard]] auto create_immutable_font(hb_face_t *hb_face) -> detail::HbFontPointer {
+[[nodiscard]] auto create_immutable_font(hb_face_t *hb_face) -> HbFontPointer {
     Expects(hb_face);
 
-    auto font = detail::HbFontPointer {hb_font_create(hb_face)};
+    auto font = HbFontPointer {hb_font_create(hb_face)};
     hb_font_make_immutable(font.get());
 
     return font;
 }
 
 [[nodiscard]] auto shape_text(std::string_view text_utf8, hb_font_t *hb_font)
-    -> detail::HbBufferPointer {
+    -> HbBufferPointer {
     Expects(hb_font != nullptr);
 
     // TODO set const
-    auto buffer = detail::HbBufferPointer {hb_buffer_create()};
+    auto buffer = HbBufferPointer {hb_buffer_create()};
     Expects(buffer != nullptr);
 
     const auto text_length = gsl::narrow<int>(text_utf8.size());
@@ -215,26 +238,25 @@ namespace {
 }  // namespace
 
 //
-// Harfbuzz Font Face
+// Font Face
 //
 
-HarfbuzzFontFace::HarfbuzzFontFace() : face_ {create_immutable_face()} {
+HbFontFace::HbFontFace() : face_ {create_immutable_face()} {
     Expects(face_ != nullptr);
     Ensures(hb_face_is_immutable(face_.get()));
 }
 
-HarfbuzzFontFace::HarfbuzzFontFace(std::span<const char> font_data,
-                                   unsigned int font_index)
+HbFontFace::HbFontFace(std::span<const char> font_data, unsigned int font_index)
     : face_ {create_immutable_face(font_data, font_index)} {
     Ensures(face_ != nullptr);
     Ensures(hb_face_is_immutable(face_.get()));
 }
 
-auto HarfbuzzFontFace::empty() const -> bool {
+auto HbFontFace::empty() const -> bool {
     return hb_face_get_glyph_count(hb_face()) == 0;
 }
 
-auto HarfbuzzFontFace::hb_face() const noexcept -> hb_face_t * {
+auto HbFontFace::hb_face() const noexcept -> hb_face_t * {
     Expects(face_ != nullptr);
     Ensures(hb_face_is_immutable(face_.get()));
 
@@ -242,28 +264,27 @@ auto HarfbuzzFontFace::hb_face() const noexcept -> hb_face_t * {
 }
 
 //
-// Harfbuzz Font
+// Font
 //
 
-HarfbuzzFont::HarfbuzzFont() : font_ {create_immutable_font()} {
+HbFont::HbFont() : font_ {create_immutable_font()} {
     Ensures(font_ != nullptr);
     Ensures(hb_font_is_immutable(font_.get()));
 }
 
-HarfbuzzFont::HarfbuzzFont(const HarfbuzzFontFace &face)
-    : font_ {create_immutable_font(face.hb_face())} {
+HbFont::HbFont(const HbFontFace &face) : font_ {create_immutable_font(face.hb_face())} {
     Ensures(font_ != nullptr);
     Ensures(hb_font_is_immutable(font_.get()));
 }
 
-auto HarfbuzzFont::empty() const -> bool {
+auto HbFont::empty() const -> bool {
     const auto *face = hb_font_get_face(hb_font());
     Expects(face != nullptr);
 
     return hb_face_get_glyph_count(face) == 0;
 }
 
-auto HarfbuzzFont::hb_font() const noexcept -> hb_font_t * {
+auto HbFont::hb_font() const noexcept -> hb_font_t * {
     Expects(font_ != nullptr);
     Ensures(hb_font_is_immutable(font_.get()));
 
@@ -271,11 +292,11 @@ auto HarfbuzzFont::hb_font() const noexcept -> hb_font_t * {
 }
 
 //
-// Harfbuzz Shaped Text
+// Shaped Text
 //
 
-HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
-                                       const HarfbuzzFont &font, float font_size) {
+HbShapedText::HbShapedText(std::string_view text_utf8, const HbFont &font,
+                           float font_size) {
     const auto buffer = shape_text(text_utf8, font.hb_font());
 
     codepoints_ = get_uint32_codepoints(buffer.get());
@@ -285,13 +306,13 @@ HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
     Ensures(codepoints_.size() == placements_.size());
 }
 
-auto HarfbuzzShapedText::empty() const -> bool {
+auto HbShapedText::empty() const -> bool {
     Expects(codepoints_.size() == placements_.size());
 
     return codepoints_.empty();
 }
 
-auto HarfbuzzShapedText::glyph_run() const noexcept -> BLGlyphRun {
+auto HbShapedText::glyph_run() const noexcept -> BLGlyphRun {
     Expects(codepoints_.size() == placements_.size());
 
     auto result = BLGlyphRun {};
@@ -304,16 +325,16 @@ auto HarfbuzzShapedText::glyph_run() const noexcept -> BLGlyphRun {
     return result;
 }
 
-auto HarfbuzzShapedText::bounding_box() const noexcept -> BLBox {
+auto HbShapedText::bounding_box() const noexcept -> BLBox {
     return bounding_box_;
 }
 
-auto HarfbuzzShapedText::bounding_rect() const noexcept -> BLRect {
+auto HbShapedText::bounding_rect() const noexcept -> BLRect {
     const auto box = bounding_box_;
     return BLRect {box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0};
 }
 
-auto HarfbuzzShapedText::format() const -> std::string {
+auto HbShapedText::format() const -> std::string {
     return fmt::format("ShapedText(codepoints = {}, placements = {}, bounding_box = {})",
                        codepoints_, placements_, bounding_box_);
 }

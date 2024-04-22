@@ -47,8 +47,8 @@ namespace {
     return face;
 }
 
-[[nodiscard]] auto create_hb_face(const std::string& data) -> HarfbuzzFontFace {
-    return HarfbuzzFontFace {std::span<const char> {data.data(), data.size()}};
+[[nodiscard]] auto create_hb_face(const std::string& data) -> HbFontFace {
+    return HbFontFace {std::span<const char> {data.data(), data.size()}};
 }
 
 }  // namespace
@@ -64,7 +64,7 @@ auto FontFace::empty() const -> bool {
     return bl_face_.empty();
 }
 
-auto FontFace::hb_face() const -> const HarfbuzzFontFace& {
+auto FontFace::hb_face() const -> const HbFontFace& {
     return hb_face_;
 }
 
@@ -111,7 +111,7 @@ Font::Font(const FontFace& face, float font_size)
     Ensures(empty() || this->font_size() == font_size);
 }
 
-auto Font::hb_font() const -> const HarfbuzzFont& {
+auto Font::hb_font() const -> const HbFont& {
     return hb_font_;
 }
 
@@ -174,6 +174,10 @@ FontFaces::FontFaces(const font_locations_t& font_files)
       monospace {load_face_or_warn(font_files.monospace)} {}
 
 auto FontFaces::get(FontStyle style) const -> const FontFace& {
+    return ::logicsim::get<const FontFace&>(*this, style);
+}
+
+auto FontFaces::get(FontStyle style) -> const FontFace& {
     return ::logicsim::get<const FontFace&>(*this, style);
 }
 

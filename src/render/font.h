@@ -12,20 +12,20 @@
 namespace logicsim {
 
 /**
- * @brief: Harfbuzz and Blend2d face with the same data
+ * @brief: Harfbuzz and Blend2d font-face with the same data.
  */
 class FontFace {
    public:
     explicit FontFace() = default;
     explicit FontFace(const std::string &data);
 
-    [[nodiscard]] auto hb_face() const -> const HarfbuzzFontFace &;
+    [[nodiscard]] auto hb_face() const -> const HbFontFace &;
     [[nodiscard]] auto bl_face() const -> const BLFontFace &;
 
     [[nodiscard]] auto empty() const -> bool;
 
    private:
-    HarfbuzzFontFace hb_face_ {};
+    HbFontFace hb_face_ {};
     BLFontFace bl_face_ {};
 };
 
@@ -34,14 +34,14 @@ static_assert(std::semiregular<FontFace>);
 [[nodiscard]] auto load_face_or_warn(const std::filesystem::path &font_file) -> FontFace;
 
 /**
- * @brief: Harfbuzz and Blend2d font from the same face
+ * @brief: Harfbuzz and Blend2d font from the same data.
  */
 class Font {
    public:
     [[nodiscard]] explicit Font() = default;
     [[nodiscard]] explicit Font(const FontFace &font_face, float font_size);
 
-    [[nodiscard]] auto hb_font() const -> const HarfbuzzFont &;
+    [[nodiscard]] auto hb_font() const -> const HbFont &;
     [[nodiscard]] auto bl_font() const -> const BLFont &;
 
     [[nodiscard]] auto empty() const -> bool;
@@ -50,7 +50,7 @@ class Font {
     auto set_font_size(float font_size) -> void;
 
    private:
-    HarfbuzzFont hb_font_ {};
+    HbFont hb_font_ {};
     BLFont bl_font_ {};
 };
 
@@ -87,6 +87,7 @@ struct FontFaces {
     [[nodiscard]] explicit FontFaces(const font_locations_t &font_files);
 
     [[nodiscard]] auto get(FontStyle style) const -> const FontFace &;
+    [[nodiscard]] auto get(FontStyle style) -> const FontFace &;
 };
 
 static_assert(std::semiregular<FontFaces>);

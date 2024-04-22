@@ -34,7 +34,7 @@ struct cache_key_t {
 static_assert(std::regular<cache_key_t>);
 
 struct cache_entry_t {
-    HarfbuzzShapedText shaped_text {};
+    HbShapedText shaped_text {};
     BLPoint offset {0., 0.};
 
     [[nodiscard]] auto format() const -> std::string;

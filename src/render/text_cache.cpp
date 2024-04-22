@@ -62,7 +62,7 @@ auto TextCache::get_scaled_bl_font(float font_size, FontStyle style) const
 auto TextCache::calculate_bounding_box(std::string_view text, float font_size,
                                        FontStyle style) const -> BLBox {
     const auto& font = fonts_.get(style).hb_font();
-    return HarfbuzzShapedText {text, font, font_size}.bounding_box();
+    return HbShapedText {text, font, font_size}.bounding_box();
 }
 
 auto TextCache::get_entry(std::string_view text, float font_size, FontStyle style,
@@ -81,7 +81,7 @@ auto TextCache::get_entry(std::string_view text, float font_size, FontStyle styl
     if (inserted) {
         const auto& hb_font = fonts_.get(style).hb_font();
 
-        entry.shaped_text = HarfbuzzShapedText {text, hb_font, font_size};
+        entry.shaped_text = HbShapedText {text, hb_font, font_size};
         entry.offset = calculate_offset(entry.shaped_text.bounding_box(),
                                         baseline_offsets_.get(style, font_size),
                                         horizontal_alignment, vertical_alignment);

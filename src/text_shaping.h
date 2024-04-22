@@ -11,79 +11,50 @@
 #include <string_view>
 #include <vector>
 
-struct hb_blob_t;
 struct hb_face_t;
 struct hb_font_t;
-struct hb_buffer_t;
 
 namespace logicsim {
 
-namespace detail {
-
-struct HbBlobDeleter {
-    auto operator()(hb_blob_t *hb_blob) -> void;
-};
-
-struct HbFaceDeleter {
-    auto operator()(hb_face_t *hb_face) -> void;
-};
-
-struct HbFontDeleter {
-    auto operator()(hb_font_t *hb_font) -> void;
-};
-
-struct HbBufferDeleter {
-    auto operator()(hb_buffer_t *hb_buffer) -> void;
-};
-
-using HbBlobPointer = std::unique_ptr<hb_blob_t, HbBlobDeleter>;
-using HbFacePointer = std::unique_ptr<hb_face_t, HbFaceDeleter>;
-using HbFontPointer = std::unique_ptr<hb_font_t, HbFontDeleter>;
-using HbBufferPointer = std::unique_ptr<hb_buffer_t, HbBufferDeleter>;
-
-}  // namespace detail
-
-class HarfbuzzFontFace final {
+class HbFontFace final {
    public:
-    explicit HarfbuzzFontFace();
-    explicit HarfbuzzFontFace(std::span<const char> font_data,
-                              unsigned int font_index = 0);
+    explicit HbFontFace();
+    explicit HbFontFace(std::span<const char> font_data, unsigned int font_index = 0);
 
     [[nodiscard]] auto empty() const -> bool;
 
     [[nodiscard]] auto hb_face() const noexcept -> hb_face_t *;
 
    private:
-    // read-only, preserving whole parts relationship
+    // immutable preserves whole parts relationship
     std::shared_ptr<hb_face_t> face_;
 };
 
-static_assert(std::semiregular<HarfbuzzFontFace>);
+static_assert(std::semiregular<HbFontFace>);
 
-class HarfbuzzFont final {
+class HbFont final {
    public:
-    explicit HarfbuzzFont();
-    explicit HarfbuzzFont(const HarfbuzzFontFace &face);
+    explicit HbFont();
+    explicit HbFont(const HbFontFace &face);
 
     [[nodiscard]] auto empty() const -> bool;
 
     [[nodiscard]] auto hb_font() const noexcept -> hb_font_t *;
 
    private:
-    // read-only, preserving whole parts relationship
+    // immutable preserves whole parts relationship
     std::shared_ptr<hb_font_t> font_;
 };
 
-static_assert(std::semiregular<HarfbuzzFont>);
+static_assert(std::semiregular<HbFont>);
 
-class HarfbuzzShapedText {
+class HbShapedText {
    public:
-    explicit HarfbuzzShapedText() = default;
-    explicit HarfbuzzShapedText(std::string_view text_utf8, const HarfbuzzFont &font,
-                                float font_size);
+    explicit HbShapedText() = default;
+    explicit HbShapedText(std::string_view text_utf8, const HbFont &font,
+                          float font_size);
 
-    [[nodiscard]] auto operator==(const HarfbuzzShapedText &other) const
-        -> bool = default;
+    [[nodiscard]] auto operator==(const HbShapedText &other) const -> bool = default;
 
     [[nodiscard]] auto empty() const -> bool;
 
@@ -99,7 +70,7 @@ class HarfbuzzShapedText {
     BLBox bounding_box_ {};
 };
 
-static_assert(std::regular<HarfbuzzShapedText>);
+static_assert(std::regular<HbShapedText>);
 
 }  // namespace logicsim
 
