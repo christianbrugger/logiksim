@@ -180,6 +180,7 @@ set(LS_CORE_SOURCES
     src/render/svg_cache.cpp
     src/render/text_alignment.cpp
     src/render/text_cache.cpp
+    src/render/text_shaping.cpp
 
     src/type_trait/add_const_to_reference.cpp
     src/type_trait/const_iterator.cpp
@@ -306,7 +307,6 @@ set(LS_CORE_SOURCES
     src/simulation_view.cpp
     src/size_handle.cpp
     src/spatial_simulation.cpp
-    src/text_shaping.cpp
     src/timeout_timer.cpp
     src/timer.cpp
     src/tree_normalization.cpp

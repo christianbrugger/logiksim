@@ -6,6 +6,8 @@
 #include "logging.h"
 #include "resource.h"
 
+#include <gsl/gsl>
+
 #include <algorithm>
 
 namespace logicsim {
@@ -120,7 +122,7 @@ auto Font::bl_font() const -> const BLFont& {
 }
 
 auto Font::empty() const -> bool {
-    Expects(hb_font_.empty() == bl_font_.empty());
+    assert(hb_font_.empty() == bl_font_.empty());
 
     return bl_font_.empty();
 }
@@ -132,7 +134,7 @@ auto Font::font_size() const -> float {
 auto Font::set_font_size(float font_size) -> void {
     bl_font_.setSize(font_size);
 
-    Ensures(empty() || this->font_size() == font_size);
+    assert(empty() || this->font_size() == font_size);
 }
 
 //

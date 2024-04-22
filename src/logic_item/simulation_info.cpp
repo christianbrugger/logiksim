@@ -109,35 +109,27 @@ namespace {
 
 template <bool Const>
 struct state_mapping_clock_generator {
-    using vector_ref =
-        std::conditional_t<!Const, logic_small_vector_t &, const logic_small_vector_t &>;
+    using vector_ref = std::conditional_t<!Const, logic_small_vector_t &,  //
+                                          const logic_small_vector_t &>;
+
     using bool_ref = std::conditional_t<!Const, bool &, const bool &>;
 
-    explicit state_mapping_clock_generator(vector_ref state)
-        : enabled {state.at(0)},
-          output_value {state.at(1)},
-          on_finish_event {state.at(2)},
-          off_finish_event {state.at(3)} {
-        if (state.size() != 4) {
-            throw std::runtime_error("invalid state size");
-        }
-    }
-
-    ~state_mapping_clock_generator() = default;
-
-    // non-copyable && non-movable
-    auto operator=(const state_mapping_clock_generator &other)
-        -> state_mapping_clock_generator & = delete;
-    auto operator=(state_mapping_clock_generator &&other)
-        -> state_mapping_clock_generator & = delete;
-    state_mapping_clock_generator(const state_mapping_clock_generator &other) = delete;
-    state_mapping_clock_generator(state_mapping_clock_generator &&other) = delete;
+    explicit state_mapping_clock_generator(vector_ref state);
 
     bool_ref enabled;
     bool_ref output_value;
     bool_ref on_finish_event;
     bool_ref off_finish_event;
 };
+
+template <bool Const>
+state_mapping_clock_generator<Const>::state_mapping_clock_generator(vector_ref state)
+    : enabled {state.at(0)},
+      output_value {state.at(1)},
+      on_finish_event {state.at(2)},
+      off_finish_event {state.at(3)} {
+    Expects(state.size() == 4);
+}
 
 }  // namespace
 

@@ -4,7 +4,7 @@
 #include "format/struct.h"
 #include "render/font.h"
 #include "render/text_alignment.h"
-#include "text_shaping.h"
+#include "render/text_shaping.h"
 #include "vocabulary/color.h"
 #include "vocabulary/font_style.h"
 #include "vocabulary/text_alignment.h"
