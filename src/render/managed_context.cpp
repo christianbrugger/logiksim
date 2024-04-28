@@ -7,39 +7,34 @@
 
 namespace logicsim {
 
+auto create_context(BLImage &bl_image, const ContextRenderSettings &render_settings)
+    -> BLContext {
+    if (bl_image.size() != render_settings.view_config.size()) {
+        throw std::runtime_error("Given bl_image does not match size of settings.");
+    }
+
+    return BLContext {bl_image, context_info(render_settings)};
+}
+
 //
 // Managed Context
 //
 
 auto ManagedContext::render_settings() const -> const ContextRenderSettings & {
-    return context_.settings;
+    return data_.settings;
 }
 
 auto ManagedContext::set_render_settings(const ContextRenderSettings &new_settings)
     -> void {
-    context_.settings = new_settings;
+    data_.settings = new_settings;
 }
 
 auto ManagedContext::clear() -> void {
-    context_.clear();
+    data_.clear();
 }
 
 auto ManagedContext::shrink_to_fit() -> void {
-    context_.shrink_to_fit();
-}
-
-auto ManagedContext::begin(BLImage &bl_image) -> void {
-    if (context_.settings.view_config.size() != bl_image.size()) {
-        throw std::runtime_error("Given bl_image does not match size of settings.");
-    }
-
-    if (context_.bl_ctx.begin(bl_image, context_info(context_.settings)) != BL_SUCCESS) {
-        throw std::runtime_error("Error during BLContext::begin");
-    }
-}
-
-auto ManagedContext::end() -> void {
-    checked_end(context_.bl_ctx);
+    data_.shrink_to_fit();
 }
 
 //

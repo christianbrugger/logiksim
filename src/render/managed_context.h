@@ -1,7 +1,8 @@
 #ifndef LOGICSIM_RENDER_MANAGED_CONTEXT_H
 #define LOGICSIM_RENDER_MANAGED_CONTEXT_H
 
-#include "context2.h"
+#include "render/bl_error_check.h"
+#include "render/context2.h"
 
 #include <blend2d.h>
 
@@ -9,6 +10,12 @@
 #include <exception>
 
 namespace logicsim {
+
+// TODO move somewhere else ???
+// TODO merge with bl_error_check & context_info ???
+[[nodiscard]] auto create_context(BLImage &bl_image,
+                                  const ContextRenderSettings &render_settings)
+    -> BLContext;
 
 /**
  * @brief: A managed context that renders to an outside source.
@@ -32,10 +39,7 @@ class ManagedContext {
     auto shrink_to_fit() -> void;
 
    private:
-    auto begin(BLImage &bl_image) -> void;
-    auto end() -> void;
-
-    Context context_ {};
+    ContextData data_ {};
 };
 
 /**
@@ -73,19 +77,23 @@ class ImageContext {
 
 template <std::invocable<Context &> Func>
 inline auto ManagedContext::render(BLImage &bl_image, Func render_function) -> void {
-    this->begin(bl_image);
-    const auto settings = context_.settings;
+    auto context = Context {
+        create_context(bl_image, data_.settings),
+        std::move(data_),
+    };
+    const auto _ [[maybe_unused]] = gsl::finally([this, &context]() {
+        static_assert(std::is_nothrow_move_assignable_v<decltype(data_)>);
+        static_assert(!std::is_reference_v<decltype(context.extract_data())>);
+        this->data_ = context.extract_data();
+    });
 
-    try {
-        std::invoke(render_function, context_);
-    } catch (...) {
-        // TODO use std::throw_with_nested ???
-        context_.bl_ctx.end();
-        throw;
-    }
+    std::invoke(render_function, context);
 
-    Expects(settings == context_.settings);
-    this->end();
+    // In case of exception context.bl_ctx is cleaned up automatically and blocks
+    // until all processing is done Here additional errors are checked.
+
+    ensure_all_saves_restored(context.bl_ctx);
+    check_errors(context.bl_ctx);
 }
 
 template <std::invocable<Context &> Func>
