@@ -21,11 +21,13 @@
 #include "logging.h"
 #include "logic_item/layout_display_ascii.h"
 #include "logic_item/layout_display_number.h"
+#include "render_circuit.h"
 #include "selection.h"
 #include "setting_handle.h"
 #include "simulation.h"
 #include "simulation_view.h"
 #include "size_handle.h"
+#include "timer.h"  // TODO remove
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/length.h"
 #include "vocabulary/logicitem_id.h"
@@ -1426,6 +1428,27 @@ auto InteractiveLayers::format() const -> std::string {
     );
 }
 
+auto InteractiveLayers::size() const -> std::size_t {
+    return normal_below.size() +           //
+           normal_wires.size() +           //
+           normal_above.size() +           //
+                                           //
+           uninserted_below.size() +       //
+           uninserted_above.size() +       //
+                                           //
+           selected_logic_items.size() +   //
+           selected_wires.size() +         //
+           temporary_wires.size() +        //
+           valid_logic_items.size() +      //
+           valid_wires.size() +            //
+           colliding_logic_items.size() +  //
+           colliding_wires.size();         //
+}
+
+auto InteractiveLayers::empty() const -> bool {
+    return this->size() == std::size_t {0};
+}
+
 auto InteractiveLayers::clear() -> void {
     normal_below.clear();
     normal_wires.clear();
@@ -1447,6 +1470,7 @@ auto InteractiveLayers::clear() -> void {
 }
 
 auto InteractiveLayers::shrink_to_fit() -> void {
+    print("I-STF");
     normal_below.shrink_to_fit();
     normal_wires.shrink_to_fit();
     normal_above.shrink_to_fit();
@@ -1573,6 +1597,7 @@ auto SimulationLayers::clear() -> void {
 }
 
 auto SimulationLayers::shrink_to_fit() -> void {
+    print("S-STF");
     items_below.shrink_to_fit();
     wires.shrink_to_fit();
     items_above.shrink_to_fit();
@@ -1582,6 +1607,16 @@ auto SimulationLayers::allocated_size() const -> std::size_t {
     return get_allocated_size(items_below) +  //
            get_allocated_size(wires) +        //
            get_allocated_size(items_above);
+}
+
+auto SimulationLayers::size() const -> std::size_t {
+    return items_below.size() +  //
+           wires.size() +        //
+           items_above.size();   //
+}
+
+auto SimulationLayers::empty() const -> bool {
+    return this->size() == std::size_t {0};
 }
 
 //
@@ -1807,7 +1842,11 @@ auto insert_logic_item(InteractiveLayers& layers, const Layout& layout,
 
 auto build_interactive_layers(const Layout& layout, InteractiveLayers& layers,
                               const Selection* selection, rect_t scene_rect) -> void {
+    const auto t = Timer {fmt::format("build_interactive_layers {} items, {:.3f} kb",
+                                      layers.size(), layers.allocated_size() / 1024.)};
+
     layers.clear();
+    // layers.shrink_to_fit();
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
         // visibility
@@ -1856,7 +1895,11 @@ auto build_interactive_layers(const Layout& layout, InteractiveLayers& layers,
 
 auto build_simulation_layers(const Layout& layout, SimulationLayers& layers,
                              rect_t scene_rect) -> void {
+    const auto t = Timer {fmt::format("build_simulation_layers {} items, {:.3f} kb",
+                                      layers.size(), layers.allocated_size() / 1024.)};
+
     layers.clear();
+    // layers.shrink_to_fit();
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
         // visibility

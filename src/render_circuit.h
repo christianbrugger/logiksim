@@ -329,9 +329,13 @@ struct InteractiveLayers {
 
    public:
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const InteractiveLayers&) const -> bool = default;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
+
+    [[nodiscard]] auto size() const -> std::size_t;
+    [[nodiscard]] auto empty() const -> bool;
     auto clear() -> void;
     auto shrink_to_fit() -> void;
-    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto has_inserted() const -> bool;
     [[nodiscard]] auto has_uninserted() const -> bool;
@@ -357,9 +361,13 @@ struct SimulationLayers {
 
    public:
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SimulationLayers&) const -> bool = default;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
+
+    [[nodiscard]] auto size() const -> std::size_t;
+    [[nodiscard]] auto empty() const -> bool;
     auto clear() -> void;
     auto shrink_to_fit() -> void;
-    [[nodiscard]] auto allocated_size() const -> std::size_t;
 };
 
 //
