@@ -1470,7 +1470,6 @@ auto InteractiveLayers::clear() -> void {
 }
 
 auto InteractiveLayers::shrink_to_fit() -> void {
-    print("I-STF");
     normal_below.shrink_to_fit();
     normal_wires.shrink_to_fit();
     normal_above.shrink_to_fit();
@@ -1597,7 +1596,6 @@ auto SimulationLayers::clear() -> void {
 }
 
 auto SimulationLayers::shrink_to_fit() -> void {
-    print("S-STF");
     items_below.shrink_to_fit();
     wires.shrink_to_fit();
     items_above.shrink_to_fit();
@@ -1842,8 +1840,8 @@ auto insert_logic_item(InteractiveLayers& layers, const Layout& layout,
 
 auto build_interactive_layers(const Layout& layout, InteractiveLayers& layers,
                               const Selection* selection, rect_t scene_rect) -> void {
-    const auto t = Timer {fmt::format("build_interactive_layers {} items, {:.3f} kb",
-                                      layers.size(), layers.allocated_size() / 1024.)};
+    // const auto t = Timer {fmt::format("build_interactive_layers {} items, {:.3f} kb",
+    //                                   layers.size(), layers.allocated_size() / 1024.)};
 
     layers.clear();
     // layers.shrink_to_fit();
@@ -1895,8 +1893,8 @@ auto build_interactive_layers(const Layout& layout, InteractiveLayers& layers,
 
 auto build_simulation_layers(const Layout& layout, SimulationLayers& layers,
                              rect_t scene_rect) -> void {
-    const auto t = Timer {fmt::format("build_simulation_layers {} items, {:.3f} kb",
-                                      layers.size(), layers.allocated_size() / 1024.)};
+    // const auto t = Timer {fmt::format("build_simulation_layers {} items, {:.3f} kb",
+    //                                   layers.size(), layers.allocated_size() / 1024.)};
 
     layers.clear();
     // layers.shrink_to_fit();

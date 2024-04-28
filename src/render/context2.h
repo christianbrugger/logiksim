@@ -30,7 +30,7 @@ struct ContextData {
 };
 
 /**
- * @brief: Generic render context that most render code operates on for one frame.
+ * @brief: Generic render context that render code operates on for one frame.
  */
 struct Context {
     explicit Context() = default;
