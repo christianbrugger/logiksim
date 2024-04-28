@@ -22,8 +22,7 @@ auto Context::sync() -> void {
 }
 
 auto Context::end() -> void {
-    bl_ctx.end();
-    check_errors(bl_ctx);
+    checked_end(bl_ctx);
 }
 
 auto Context::clear() -> void {

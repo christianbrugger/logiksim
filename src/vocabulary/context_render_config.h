@@ -23,6 +23,7 @@ struct ContextRenderSettings {
     int thread_count {4};
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const ContextRenderSettings &) const -> bool = default;
 };
 
 }  // namespace logicsim

@@ -172,11 +172,13 @@ set(LS_CORE_SOURCES
     src/render/primitive/stroke.cpp
     src/render/primitive/text.cpp
     src/render/bl_error_check.cpp
+    src/render/context2.cpp
     src/render/context.cpp
     src/render/context_guard.cpp
     src/render/context_info.cpp
     src/render/font.cpp
     src/render/layer_surface.cpp
+    src/render/managed_context.cpp
     src/render/svg_cache.cpp
     src/render/text_alignment.cpp
     src/render/text_cache.cpp
