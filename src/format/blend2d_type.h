@@ -51,6 +51,37 @@ struct fmt::formatter<BLBox, Char> {
 };
 
 //
+// BLRectI
+//
+
+template <typename Char>
+struct fmt::formatter<BLRectI, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const BLRectI &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "BLRectI(x={}, y={}, w={}, h={})", obj.x, obj.y,
+                              obj.w, obj.h);
+    }
+};
+
+//
+// BLSizeI
+//
+
+template <typename Char>
+struct fmt::formatter<BLSizeI, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const BLSizeI &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "BLSizeI(w={}, h={})", obj.w, obj.h);
+    }
+};
+
+//
 // BLGlyphPlacement
 //
 

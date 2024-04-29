@@ -43,11 +43,11 @@ auto TextCache::format() const -> std::string {
     return fmt::format("TextCache({} glyphs)", glyph_map_.size());
 }
 
-auto TextCache::clear() -> void {
+auto TextCache::clear() const -> void {
     glyph_map_.clear();
 }
 
-auto TextCache::shrink_to_fit() -> void {
+auto TextCache::shrink_to_fit() const -> void {
     glyph_map_.rehash(glyph_map_.size());
 }
 

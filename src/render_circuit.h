@@ -375,11 +375,8 @@ struct SimulationLayers {
 //
 
 struct CircuitSurfaces {
-    LayerSurface layer_surface_uninserted {.enabled = true};
-    LayerSurface layer_surface_overlay {.enabled = true};
-
-    auto clear() -> void;
-    auto shrink_to_fit() -> void;
+    ImageSurface layer_surface_uninserted {};
+    ImageSurface layer_surface_overlay {};
 };
 
 struct CircuitLayers {
@@ -392,24 +389,15 @@ struct CircuitLayers {
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 };
 
-struct CircuitContext {
-    Context ctx {};
-
-    CircuitLayers layers {};
-    CircuitSurfaces surfaces {};
-
-    auto clear() -> void;
-    auto shrink_to_fit() -> void;
-};
-
 //
 // Layout
 //
 
-auto render_layout(CircuitContext& circuit_ctx, const Layout& layout) -> void;
+auto render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+                   const Layout& layout) -> void;
 
-auto render_layout(CircuitContext& circuit_ctx, const Layout& layout,
-                   const Selection& selection) -> void;
+auto render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+                   const Layout& layout, const Selection& selection) -> void;
 
 auto render_layout_to_file(const Layout& layout, int width, int height,
                            const std::filesystem::path& filename,
@@ -422,7 +410,7 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, int
 // Simulation
 //
 
-auto render_simulation(CircuitContext& circuit_ctx, const Layout& layout,
+auto render_simulation(Context& ctx, SimulationLayers& layers, const Layout& layout,
                        SimulationView simulation_view) -> void;
 
 auto render_simulation_to_file(const Layout& layout, SimulationView simulation_view,

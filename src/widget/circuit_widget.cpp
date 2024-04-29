@@ -457,36 +457,66 @@ auto CircuitWidget::resizeEvent(QResizeEvent* event_ [[maybe_unused]]) -> void {
     Ensures(expensive_invariant_holds());
 }
 
+namespace circuit_widget {
+
+namespace {
+
+auto paint_non_interactive_state(QWidget& widget, RenderSurface& render_surface,
+                                 const CircuitStore& circuit_store) {
+    render_surface.paintEvent(
+        widget, [&](Context& ctx, ImageSurface& surface, CircuitLayers& layers) {
+            render_to_context(ctx, surface, layers.interactive_layers,
+                              render_surface.render_config(), circuit_store.layout());
+        });
+}
+
+auto paint_editing_state(QWidget& widget, RenderSurface& render_surface,
+                         const CircuitStore& circuit_store,
+                         const EditingLogicManager& editing_logic_manager) -> void {
+    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& surface,
+                                          CircuitLayers& layers) {
+        const bool show_size_handles = !editing_logic_manager.is_area_selection_active();
+
+        render_to_context(ctx, surface, layers.interactive_layers,
+                          render_surface.render_config(),
+                          circuit_store.editable_circuit(), show_size_handles);
+    });
+};
+
+auto paint_simulation_state(QWidget& widget, RenderSurface& render_surface,
+                            const CircuitStore& circuit_store) -> void {
+    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& surface,
+                                          CircuitLayers& layers) {
+        render_to_context(ctx, layers.simulation_layers, render_surface.render_config(),
+                          circuit_store.interactive_simulation().spatial_simulation());
+    });
+};
+
+}  // namespace
+
+}  // namespace circuit_widget
+
 auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
     Expects(class_invariant_holds());
 
     circuit_widget::set_optimal_render_attributes(*this);
 
-    {
-        auto context_guard = render_surface_.paintEvent(*this);
-
-        std::visit(
-            overload(
-                [&](const NonInteractiveState&) {
-                    circuit_widget::render_to_context(context_guard.context(),
-                                                      render_surface_.render_config(),
-                                                      circuit_store_.layout());
-                },
-                [&](const EditingState&) {
-                    const bool show_size_handles =
-                        !editing_logic_manager_.is_area_selection_active();
-
-                    circuit_widget::render_to_context(
-                        context_guard.context(), render_surface_.render_config(),
-                        circuit_store_.editable_circuit(), show_size_handles);
-                },
-                [&](const SimulationState&) {
-                    circuit_widget::render_to_context(
-                        context_guard.context(), render_surface_.render_config(),
-                        circuit_store_.interactive_simulation().spatial_simulation());
-                }),
-            circuit_state());
-    }
+    // TODO put visit inside render_surface.paintEvent() call
+    std::visit(overload(
+                   [&](const NonInteractiveState&) {
+                       circuit_widget::paint_non_interactive_state(*this, render_surface_,
+                                                                   circuit_store_);
+                   },
+                   [&](const EditingState&) {
+                       circuit_widget::paint_editing_state(*this, render_surface_,
+                                                           circuit_store_,
+                                                           editing_logic_manager_);
+                   },
+                   [&](const SimulationState&) {
+                       circuit_widget::paint_simulation_state(*this, render_surface_,
+                                                              circuit_store_);
+                   }),
+               circuit_state());
 
     simulation_image_update_pending_ = false;
 

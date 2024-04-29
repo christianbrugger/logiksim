@@ -3,7 +3,7 @@
 
 #include "render/context.h"
 #include "render/context_guard.h"
-#include "render/layer_surface.h"
+#include "render/managed_context.h"
 #include "render/primitive/arrow.h"
 #include "render/primitive/circle.h"
 #include "render/primitive/icon.h"

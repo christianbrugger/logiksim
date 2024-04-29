@@ -60,12 +60,13 @@ struct MainActions {
     QAction* show_connection_cache;
     QAction* show_selection_cache;
 
+    QAction* set_non_interactive;
+    QAction* direct_rendering;
+
     QAction* thread_count_0;
     QAction* thread_count_2;
     QAction* thread_count_4;
     QAction* thread_count_8;
-
-    QAction* direct_rendering;
 };
 
 class MainWidget : public QMainWindow {

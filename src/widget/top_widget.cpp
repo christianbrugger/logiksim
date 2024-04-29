@@ -416,6 +416,10 @@ auto MainWidget::create_menu() -> void {
 
         // Thread Count
         menu->addSeparator();
+        actions_.set_non_interactive = add_action(
+            menu, tr("Set Non-In&teractive"), ActionAttributes {},
+            [this]() { circuit_widget_->set_circuit_state(NonInteractiveState {}); });
+
         actions_.direct_rendering = add_action_checkable(
             menu, tr("&Direct Rendering"),
             ActionAttributes {.icon = icon_t::direct_rendering},

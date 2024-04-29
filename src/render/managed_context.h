@@ -2,7 +2,8 @@
 #define LOGICSIM_RENDER_MANAGED_CONTEXT_H
 
 #include "render/bl_error_check.h"
-#include "render/context2.h"
+#include "render/context.h"
+#include "render/context_guard.h"
 
 #include <blend2d.h>
 
@@ -11,96 +12,117 @@
 
 namespace logicsim {
 
-// TODO move somewhere else ???
-// TODO merge with bl_error_check & context_info ???
-[[nodiscard]] auto create_context(BLImage &bl_image,
-                                  const ContextRenderSettings &render_settings)
-    -> BLContext;
-
-/**
- * @brief: A managed context that renders to an outside source.
- */
-class ManagedContext {
-   public:
-    [[nodiscard]] auto render_settings() const -> const ContextRenderSettings &;
-    auto set_render_settings(const ContextRenderSettings &new_settings) -> void;
-
-    /**
-     * @brief: Sets up the Context and calls render_function.
-     *
-     * Throws an exception if the given image is not the size of the render settings.
-     *
-     * Note, render_function is not allowed to change Context::settings.
-     */
-    template <std::invocable<Context &> Func>
-    inline auto render(BLImage &bl_image, Func render_function) -> void;
-
-    auto clear() -> void;
-    auto shrink_to_fit() -> void;
-
-   private:
-    ContextData data_ {};
-};
+// TODO !!! rename file
 
 /**
  * @brief: A Render Context that own the target image.
- *
- * Class invariant:
- *   - bl_image always has the size as the render_settings().size()
  */
-class ImageContext {
+class ImageSurface {
    public:
-    [[nodiscard]] auto render_settings() const -> const ContextRenderSettings &;
-    auto set_render_settings(const ContextRenderSettings &new_settings) -> void;
-
     [[nodiscard]] auto bl_image() const -> const BLImage &;
 
     /**
      * @brief: Renders the given function in the stored bl_image.
      *
-     * Note, render_function is not allowed to change Context::settings.
+     * Automatically resizes the bl_image as needed by the settings.
      */
     template <std::invocable<Context &> Func>
-    inline auto render(Func render_function) -> void;
-
-    auto clear() -> void;
-    auto shrink_to_fit() -> void;
+    inline auto render(const ContextRenderSettings &settings, ContextCache cache,
+                       Func render_function) -> void;
 
    private:
     BLImage bl_image_ {};
-    ManagedContext managed_context_ {};
 };
+
+// TODO move somewhere else ???
+// TODO merge with bl_error_check & context_info ???
+
+/**
+ * @brief: Create a context from the image and render settings.
+ *
+ * Throws an exception if the given image is not the size of the render settings.
+ */
+[[nodiscard]] auto create_context(BLImage &bl_image,
+                                  const ContextRenderSettings &render_settings)
+    -> BLContext;
+
+/**
+ * @brief: Allocates a new image if the size is different, without copying data.
+ */
+auto resize_image_no_copy(BLImage &image, BLSizeI new_size) -> void;
+
+/**
+ * @brief: Create a context and calls render_function.
+ *
+ * Throws an exception if the given image is not the size of the render settings.
+ */
+template <std::invocable<Context &> Func>
+inline auto render_to_image(BLImage &bl_image, const ContextRenderSettings &settings,
+                            ContextCache cache, Func render_function) -> void;
+
+/**
+ * @brief: Copies the data from the source image to the target context.
+ *
+ * Throws if source and target don't have the same size.
+ */
+auto blit_layer(Context &target_ctx, const BLImage &source_image, BLRectI dirty_rect)
+    -> void;
+
+/**
+ * @brief: Copies the data from the source layer to the target context.
+ *
+ * Throws if source and target don't have the same size.
+ */
+auto blit_layer(Context &target_ctx, const ImageSurface &source_layer, BLRectI dirty_rect)
+    -> void;
+
+/**
+ * @brief: Renders the function first to the layer and then to the target within
+ *         the given dirty_rect.
+ */
+template <std::invocable<Context &> Func>
+auto render_layer(Context &target_ctx, ImageSurface &layer, BLRectI dirty_rect,
+                  Func render_func) -> void;
 
 //
 // Implementation
 //
 
 template <std::invocable<Context &> Func>
-inline auto ManagedContext::render(BLImage &bl_image, Func render_function) -> void {
+inline auto render_to_image(BLImage &bl_image, const ContextRenderSettings &settings,
+                            ContextCache cache, Func render_function) -> void {
     auto context = Context {
-        create_context(bl_image, data_.settings),
-        std::move(data_),
+        .bl_ctx = create_context(bl_image, settings),
+        .settings = settings,
+        .cache = std::move(cache),
     };
-    const auto _ [[maybe_unused]] = gsl::finally([this, &context]() {
-        static_assert(std::is_nothrow_move_assignable_v<decltype(data_)>);
-        static_assert(!std::is_reference_v<decltype(context.extract_data())>);
-        this->data_ = context.extract_data();
-    });
 
     std::invoke(render_function, context);
 
     // In case of exception context.bl_ctx is cleaned up automatically and blocks
-    // until all processing is done Here additional errors are checked.
+    // until all processing is done. Here additional errors are checked.
 
     ensure_all_saves_restored(context.bl_ctx);
     check_errors(context.bl_ctx);
 }
 
 template <std::invocable<Context &> Func>
-inline auto ImageContext::render(Func render_function) -> void {
-    Expects(managed_context_.render_settings().view_config.size() == bl_image_.size());
+inline auto ImageSurface::render(const ContextRenderSettings &settings,
+                                 ContextCache cache, Func render_function) -> void {
+    resize_image_no_copy(bl_image_, settings.view_config.size());
+    render_to_image(bl_image_, settings, std::move(cache), std::move(render_function));
+}
 
-    managed_context_.render(bl_image_, std::move(render_function));
+template <std::invocable<Context &> Func>
+auto render_layer(Context &target_ctx, ImageSurface &layer, BLRectI dirty_rect,
+                  Func render_func) -> void {
+    layer.render(target_ctx.settings, target_ctx.cache, [&](Context &layer_ctx) {
+        layer_ctx.bl_ctx.clearRect(dirty_rect);
+        auto _ [[maybe_unused]] = make_context_guard(layer_ctx);
+        std::invoke(render_func, layer_ctx);
+    });
+
+    blit_layer(target_ctx, layer, dirty_rect);
 }
 
 }  // namespace logicsim

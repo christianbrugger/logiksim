@@ -1,6 +1,7 @@
 #include "component/circuit_widget/render_surface.h"
 
 #include "editable_circuit.h"
+#include "format/blend2d_type.h"  // TODO remove
 #include "logging.h"
 #include "qt/widget_geometry.h"
 #include "render_caches.h"
@@ -35,7 +36,7 @@ auto RenderSurface::set_render_config(WidgetRenderConfig new_config) -> void {
         return;
     }
 
-    context_.ctx.settings.thread_count = new_config.thread_count;
+    context_settings_.thread_count = new_config.thread_count;
 
     // update
     render_config_ = new_config;
@@ -46,34 +47,37 @@ auto RenderSurface::render_config() const -> const WidgetRenderConfig& {
 }
 
 auto RenderSurface::reset() -> void {
-    context_.clear();
-    context_.shrink_to_fit();
+    qt_image_ = QImage {};
+    context_surface_ = ImageSurface {};
+
+    context_cache_.clear();
+    context_cache_.shrink_to_fit();
+
+    context_layers_ = CircuitLayers {};
+
+    fps_counter_ = EventCounter {};
+    last_render_size_ = BLSize {};
 }
 
 auto RenderSurface::view_config() const -> const ViewConfig& {
-    return context_.ctx.settings.view_config;
+    return context_settings_.view_config;
 }
 
 auto RenderSurface::set_view_point(const ViewPoint& view_point) -> void {
-    context_.ctx.settings.view_config.set_view_point(view_point);
+    context_settings_.view_config.set_view_point(view_point);
 }
 
 auto RenderSurface::set_device_pixel_ratio(double device_pixel_ratio) -> void {
-    context_.ctx.settings.view_config.set_device_pixel_ratio(device_pixel_ratio);
+    context_settings_.view_config.set_device_pixel_ratio(device_pixel_ratio);
 }
 
 auto RenderSurface::statistics() const -> SurfaceStatistics {
     return SurfaceStatistics {
         .frames_per_second = fps_counter_.events_per_second(),
-        .pixel_scale = context_.ctx.settings.view_config.pixel_scale(),
+        .pixel_scale = context_settings_.view_config.pixel_scale(),
         .image_size = last_render_size_,
         .uses_direct_rendering = qt_image_.width() == 0 && qt_image_.height() == 0,
     };
-}
-
-auto RenderSurface::paintEvent(QWidget& widget) -> ScopedContext {
-    return ScopedContext {*this, widget, get_geometry_info(widget),
-                          widget.backingStore()};
 }
 
 namespace {
@@ -170,31 +174,32 @@ auto get_bl_image(QBackingStore* backing_store, QImage& qt_image,
 
 }  // namespace
 
-auto RenderSurface::begin_paint(GeometryInfo geometry_info, QBackingStore* backing_store)
-    -> CircuitContext& {
+auto RenderSurface::paintEvent(
+    QWidget& widget,
+    std::function<void(Context&, ImageSurface&, CircuitLayers&)> render_function)
+    -> void {
+    const auto geometry_info = get_geometry_info(widget);
     set_device_pixel_ratio(geometry_info.device_pixel_ratio);
 
-    context_.ctx.bl_image = get_bl_image(backing_store, qt_image_, geometry_info,
-                                         render_config_.direct_rendering);
-    context_.ctx.begin();
-    last_render_size_ = context_.ctx.bl_image.size();
+    auto bl_image = get_bl_image(widget.backingStore(), qt_image_, geometry_info,
+                                 render_config_.direct_rendering);
+    // TODO is this the right place to set it ???
+    context_settings_.view_config.set_size(bl_image.size());
 
-    return context_;
-}
+    render_to_image(bl_image, context_settings_, context_cache_, [&](Context& ctx) {
+        render_function(ctx, context_surface_, context_layers_);
+    });
 
-auto RenderSurface::end_paint(QPaintDevice& paint_device) -> void {
-    context_.ctx.end();
-    context_.ctx.bl_image = BLImage {};
-
-    // we need to use QPainter if we are not directly drawing to the backend store
-    // this mostly acceptable, but slow with display scaling
+    // QPainter is used if we are not directly drawing to the backend store
+    // this has generally little overhead, except with display scaling enabled
     if (qt_image_.width() != 0) {
         qt_image_.setDevicePixelRatio(view_config().device_pixel_ratio());
-        auto painter = QPainter {&paint_device};
+        auto painter = QPainter {&widget};
         painter.drawImage(QPoint(0, 0), qt_image_);
     }
 
     fps_counter_.count_event();
+    last_render_size_ = bl_image.size();
 }
 
 //
@@ -222,13 +227,13 @@ auto set_optimal_render_attributes(QWidget& widget) -> void {
 
 namespace {
 
-auto render_circuit_background(CircuitContext& context) {
+auto render_circuit_background(Context& ctx) {
     // print_fmt("Layers: {:.3f} MB\n", context_.layers.allocated_size() / 1024. / 1024.);
 
-    render_background(context.ctx);
+    render_background(ctx);
 }
 
-auto render_circuit_overlay(CircuitContext& context [[maybe_unused]]) {
+auto render_circuit_overlay(Context& ctx [[maybe_unused]]) {
     // context_.ctx.bl_ctx.setFillStyle(BLRgba32(defaults::color_black.value));
     // context_.ctx.bl_ctx.fillRect(BLRect {0, 0, 1, 100});
     // context_.ctx.bl_ctx.fillRect(BLRect {context_.ctx.bl_image.width() - 1.0, 0, 1,
@@ -239,21 +244,24 @@ auto render_circuit_overlay(CircuitContext& context [[maybe_unused]]) {
 
 }  // namespace
 
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
-                       const Layout& layout) -> void {
-    render_circuit_background(context);
+auto render_to_context(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+                       const WidgetRenderConfig& render_config, const Layout& layout)
+    -> void {
+    render_circuit_background(ctx);
 
     if (render_config.show_circuit) {
-        render_layout(context, layout);
+        // TODO write version that does not need surface ?
+        render_layout(ctx, surface, layers, layout);
     }
 
-    render_circuit_overlay(context);
+    render_circuit_overlay(ctx);
 }
 
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
+auto render_to_context(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+                       const WidgetRenderConfig& render_config,
                        const EditableCircuit& editable_circuit, bool show_size_handles)
     -> void {
-    render_circuit_background(context);
+    render_circuit_background(ctx);
 
     // print_fmt("Layout: {:.3f} MB\n",
     //           editable_circuit_.value().layout().allocated_size() / 1024. / 1024.);
@@ -265,12 +273,12 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render
         const auto& target_layout = editable_circuit.layout();
         const auto& selection = editable_circuit.visible_selection();
 
-        render_layout(context, target_layout, selection);
+        render_layout(ctx, surface, layers, target_layout, selection);
 
-        render_setting_handle(context.ctx, target_layout, selection);
+        render_setting_handle(ctx, target_layout, selection);
 
         if (show_size_handles) {
-            render_size_handles(context.ctx, target_layout, selection);
+            render_size_handles(ctx, target_layout, selection);
         }
 
         // if (!(mouse_logic_ &&
@@ -281,45 +289,30 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render
     }
 
     if (render_config.show_collision_cache) {
-        render_editable_circuit_collision_cache(context.ctx, editable_circuit);
+        render_editable_circuit_collision_cache(ctx, editable_circuit);
     }
     if (render_config.show_connection_cache) {
-        render_editable_circuit_connection_cache(context.ctx, editable_circuit);
+        render_editable_circuit_connection_cache(ctx, editable_circuit);
     }
     if (render_config.show_selection_cache) {
-        render_editable_circuit_selection_cache(context.ctx, editable_circuit);
+        render_editable_circuit_selection_cache(ctx, editable_circuit);
     }
 
-    render_circuit_overlay(context);
+    render_circuit_overlay(ctx);
 }
 
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
+auto render_to_context(Context& ctx, SimulationLayers& layers,
+                       const WidgetRenderConfig& render_config,
                        const SpatialSimulation& spatial_simulation) -> void {
-    render_circuit_background(context);
+    render_circuit_background(ctx);
 
     if (render_config.show_circuit) {
         // TODO Simulation view should contain layout, remove double reference
-        render_simulation(context, spatial_simulation.layout(),
+        render_simulation(ctx, layers, spatial_simulation.layout(),
                           SimulationView {spatial_simulation});
     }
 
-    render_circuit_overlay(context);
-}
-
-RenderSurface::ScopedContext::ScopedContext(RenderSurface& render_surface,
-                                            QPaintDevice& paint_device,
-                                            GeometryInfo geometry_info,
-                                            QBackingStore* backing_store)
-    : render_surface_ {render_surface},
-      paint_device_ {paint_device},
-      context_ {render_surface.begin_paint(geometry_info, backing_store)} {}
-
-RenderSurface::ScopedContext::~ScopedContext() {
-    render_surface_.end_paint(paint_device_);
-}
-
-auto RenderSurface::ScopedContext::context() -> CircuitContext& {
-    return context_;
+    render_circuit_overlay(ctx);
 }
 
 }  // namespace circuit_widget

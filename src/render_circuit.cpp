@@ -90,8 +90,8 @@ auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int d
     const auto p0 = to_context(g0, ctx);
     const auto p1 = to_context(g1, ctx);
 
-    const auto offset = ctx.settings.view_config.offset();
-    const auto scale = ctx.settings.view_config.pixel_scale();
+    const auto offset = ctx.view_config().offset();
+    const auto scale = ctx.view_config().pixel_scale();
 
     // vertical
     for (int x = int {g0.x}; x <= int {g1.x}; x += delta) {
@@ -106,7 +106,7 @@ auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int d
 }
 
 auto draw_background_patterns(Context& ctx) {
-    auto scene_rect = get_scene_rect_fine(ctx.settings.view_config);
+    auto scene_rect = get_scene_rect_fine(ctx.view_config());
 
     constexpr static auto grid_definition = {
         std::tuple {1, monochrome(0xF0), 1},    //
@@ -117,10 +117,9 @@ auto draw_background_patterns(Context& ctx) {
     };
 
     for (auto&& [delta, color, width] : grid_definition) {
-        if (delta * ctx.settings.view_config.device_scale() >=
+        if (delta * ctx.view_config().device_scale() >=
             ctx.settings.background_grid_min_distance_device) {
-            const auto draw_width_f =
-                width * ctx.settings.view_config.device_pixel_ratio();
+            const auto draw_width_f = width * ctx.view_config().device_pixel_ratio();
             // we substract a little, as we want 150% scaling to round down
             const auto epsilon = 0.01;
             const auto draw_width = std::max(1, round_to<int>(draw_width_f - epsilon));
@@ -148,7 +147,7 @@ auto do_draw_connector(const ViewConfig& view_config) {
 
 auto _draw_connector_inverted(Context& ctx, ConnectorAttributes attributes) {
     const auto radius = defaults::inverted_circle_radius;
-    const auto width = ctx.settings.view_config.stroke_width();
+    const auto width = ctx.view_config().stroke_width();
     const auto offset = stroke_offset(width);
 
     const auto r = to_context_unrounded(radius, ctx);
@@ -254,7 +253,7 @@ auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
 
 auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements) -> void {
-    if (do_draw_connector(ctx.settings.view_config)) {
+    if (do_draw_connector(ctx.view_config())) {
         for (const auto entry : elements) {
             draw_logic_item_connectors(ctx, layout, entry.logicitem_id, entry.state);
         }
@@ -264,7 +263,7 @@ auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
 auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
                                  std::span<const logicitem_id_t> elements,
                                  SimulationView simulation_view) -> void {
-    if (do_draw_connector(ctx.settings.view_config)) {
+    if (do_draw_connector(ctx.view_config())) {
         for (const auto logicitem_id : elements) {
             const auto state = ElementDrawState::normal;
             draw_logic_item_connectors(ctx, layout, logicitem_id, state,
@@ -1033,12 +1032,12 @@ auto wire_color(bool is_enabled, ElementDrawState state) -> color_t {
 
 auto draw_line_cross_point(Context& ctx, const point_t point, bool is_enabled,
                            ElementDrawState state) -> void {
-    int lc_width = ctx.settings.view_config.line_cross_width();
+    int lc_width = ctx.view_config().line_cross_width();
     if (lc_width <= 0) {
         return;
     }
 
-    const int wire_width = ctx.settings.view_config.stroke_width();
+    const int wire_width = ctx.view_config().stroke_width();
     const int wire_offset = (wire_width - 1) / 2;
 
     const int size = 2 * lc_width + wire_width;
@@ -1219,9 +1218,8 @@ struct OutlinedRectAttributes {
 };
 
 auto draw_outlined_rect_px(Context& ctx, BLRect rect, OutlinedRectAttributes attributes) {
-    auto stroke_width =
-        std::max(1., round_fast(attributes.stroke_width_device *
-                                ctx.settings.view_config.device_pixel_ratio()));
+    auto stroke_width = std::max(1., round_fast(attributes.stroke_width_device *
+                                                ctx.view_config().device_pixel_ratio()));
 
     // draw square
     ctx.bl_ctx.fillRect(rect, attributes.stroke_color);
@@ -1234,7 +1232,7 @@ auto draw_outlined_rect_px(Context& ctx, BLRect rect, OutlinedRectAttributes att
 }  // namespace
 
 auto draw_size_handle(Context& ctx, const size_handle_t& position) -> void {
-    auto rect = size_handle_rect_px(position, ctx.settings.view_config);
+    auto rect = size_handle_rect_px(position, ctx.view_config());
 
     draw_outlined_rect_px(
         ctx, rect,
@@ -1596,6 +1594,7 @@ auto SimulationLayers::clear() -> void {
 }
 
 auto SimulationLayers::shrink_to_fit() -> void {
+    // print("S-STF");
     items_below.shrink_to_fit();
     wires.shrink_to_fit();
     items_above.shrink_to_fit();
@@ -1621,16 +1620,6 @@ auto SimulationLayers::empty() const -> bool {
 // Circuit Context
 //
 
-auto CircuitSurfaces::clear() -> void {
-    layer_surface_uninserted.clear();
-    layer_surface_overlay.clear();
-}
-
-auto CircuitSurfaces::shrink_to_fit() -> void {
-    layer_surface_uninserted.shrink_to_fit();
-    layer_surface_overlay.shrink_to_fit();
-}
-
 auto CircuitLayers::clear() -> void {
     interactive_layers.clear();
     simulation_layers.clear();
@@ -1643,18 +1632,6 @@ auto CircuitLayers::shrink_to_fit() -> void {
 
 auto CircuitLayers::allocated_size() const -> std::size_t {
     return interactive_layers.allocated_size() + simulation_layers.allocated_size();
-}
-
-auto CircuitContext::clear() -> void {
-    ctx.clear();
-    layers.clear();
-    surfaces.clear();
-}
-
-auto CircuitContext::shrink_to_fit() -> void {
-    ctx.shrink_to_fit();
-    layers.shrink_to_fit();
-    surfaces.shrink_to_fit();
 }
 
 //
@@ -1714,30 +1691,30 @@ auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers&
 }
 
 auto render_interactive_layers(Context& ctx, const Layout& layout,
-                               const InteractiveLayers& layers, CircuitSurfaces& surfaces)
+                               const InteractiveLayers& layers, ImageSurface& surface)
     -> void {
     if (layers.has_inserted()) {
         render_inserted(ctx, layout, layers);
     }
 
-    if (layers.uninserted_bounding_rect.has_value()) {
-        const auto rect = get_dirty_rect(layers.uninserted_bounding_rect.value(),
-                                         ctx.settings.view_config);
+    const auto layer_enabled = true;
 
-        render_to_layer(ctx, surfaces.layer_surface_uninserted, rect,
-                        [&](Context& layer_ctx, bool layer_enabled) {
-                            render_uninserted(layer_ctx, layout, layers, layer_enabled);
-                        });
+    if (layers.uninserted_bounding_rect.has_value()) {
+        const auto rect =
+            get_dirty_rect(layers.uninserted_bounding_rect.value(), ctx.view_config());
+
+        render_layer(ctx, surface, rect, [&](Context& layer_ctx) {
+            render_uninserted(layer_ctx, layout, layers, layer_enabled);
+        });
     }
 
     if (layers.overlay_bounding_rect.has_value()) {
-        const auto rect = get_dirty_rect(layers.overlay_bounding_rect.value(),
-                                         ctx.settings.view_config);
+        const auto rect =
+            get_dirty_rect(layers.overlay_bounding_rect.value(), ctx.view_config());
 
-        render_to_layer(ctx, surfaces.layer_surface_overlay, rect,
-                        [&](Context& layer_ctx, bool layer_enabled) {
-                            render_overlay(layer_ctx, layout, layers, layer_enabled);
-                        });
+        render_layer(ctx, surface, rect, [&](Context& layer_ctx) {
+            render_overlay(layer_ctx, layout, layers, layer_enabled);
+        });
     }
 }
 
@@ -1933,23 +1910,24 @@ auto build_simulation_layers(const Layout& layout, SimulationLayers& layers,
 
 namespace {
 
-// render_function = [](CircuitContext &ctx){ ... }
-template <typename Func>
+template <std::invocable<Context&> Func>
 auto render_circuit_to_file(int width, int height, const std::filesystem::path& filename,
                             const ViewConfig& view_config, Func render_function) {
-    auto circuit_ctx = CircuitContext {Context {
-        .bl_image = BLImage {width, height, BL_FORMAT_PRGB32},
-        .settings = ContextRenderSettings {.view_config = view_config},
-    }};
-    auto& ctx = circuit_ctx.ctx;
+    auto bl_image = BLImage {width, height, BL_FORMAT_PRGB32};
 
-    ctx.begin();
-    render_background(circuit_ctx.ctx);
-    render_function(circuit_ctx);
-    ctx.end();
+    // TODO !!! add cache as optional parameter
+    const auto cache = ContextCache {FontFaces {get_default_font_locations()}};
+    const auto settings = ContextRenderSettings {.view_config = view_config};
+
+    std::terminate();  // not implemented
+
+    render_to_image(bl_image, settings, cache, [&render_function](Context& ctx) {
+        render_background(ctx);
+        std::invoke(render_function, ctx);
+    });
 
     std::filesystem::create_directories(filename.parent_path());
-    ctx.bl_image.writeToFile(to_string(filename.u8string()).c_str());
+    bl_image.writeToFile(to_string(filename.u8string()).c_str());
 }
 
 }  // namespace
@@ -1958,54 +1936,62 @@ auto render_circuit_to_file(int width, int height, const std::filesystem::path& 
 // Layout
 //
 
-auto _render_layout(CircuitContext& circuit_ctx, const Layout& layout,
-                    const Selection* selection) -> void {
-    const auto scene_rect = get_scene_rect(circuit_ctx.ctx.settings.view_config);
-    auto& layers = circuit_ctx.layers.interactive_layers;
+auto _render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+                    const Layout& layout, const Selection* selection) -> void {
+    const auto scene_rect = get_scene_rect(ctx.settings.view_config);
 
     build_interactive_layers(layout, layers, selection, scene_rect);
-    render_interactive_layers(circuit_ctx.ctx, layout, layers, circuit_ctx.surfaces);
+    render_interactive_layers(ctx, layout, layers, surface);
 }
 
-auto render_layout(CircuitContext& circuit_ctx, const Layout& layout) -> void {
-    _render_layout(circuit_ctx, layout, nullptr);
+auto render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+                   const Layout& layout) -> void {
+    _render_layout(ctx, surface, layers, layout, nullptr);
 }
 
-auto render_layout(CircuitContext& circuit_ctx, const Layout& layout,
-                   const Selection& selection) -> void {
+auto render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+                   const Layout& layout, const Selection& selection) -> void {
     if (selection.empty()) {
-        _render_layout(circuit_ctx, layout, nullptr);
+        _render_layout(ctx, surface, layers, layout, nullptr);
     } else {
-        _render_layout(circuit_ctx, layout, &selection);
+        _render_layout(ctx, surface, layers, layout, &selection);
     }
 }
 
 auto render_layout_to_file(const Layout& layout, int width, int height,
                            const std::filesystem::path& filename,
                            const ViewConfig& view_config) -> void {
-    render_circuit_to_file(width, height, filename, view_config,
-                           [&](CircuitContext& ctx) { render_layout(ctx, layout); });
+    // TODO add to interface ???
+    auto surface = ImageSurface {};
+    auto layers = InteractiveLayers {};
+
+    render_circuit_to_file(width, height, filename, view_config, [&](Context& ctx) {
+        render_layout(ctx, surface, layers, layout);
+    });
 }
 
 auto render_layout_to_file(const Layout& layout, const Selection& selection, int width,
                            int height, const std::filesystem::path& filename,
                            const ViewConfig& view_config) -> void {
-    render_circuit_to_file(
-        width, height, filename, view_config,
-        [&](CircuitContext& ctx) { render_layout(ctx, layout, selection); });
+    // TODO add to interface ???
+    auto surface = ImageSurface {};
+    auto layers = InteractiveLayers {};
+
+    render_circuit_to_file(width, height, filename, view_config, [&](Context& ctx) {
+        render_layout(ctx, surface, layers, layout, selection);
+    });
 }
 
 //
 // Simulation
 //
 
-auto render_simulation(CircuitContext& circuit_ctx, const Layout& layout,
+auto render_simulation(Context& ctx, SimulationLayers& layers, const Layout& layout,
                        SimulationView simulation_view) -> void {
-    const auto scene_rect = get_scene_rect(circuit_ctx.ctx.settings.view_config);
-    auto& layers = circuit_ctx.layers.simulation_layers;
+    const auto scene_rect = get_scene_rect(ctx.view_config());
 
     build_simulation_layers(layout, layers, scene_rect);
-    render_simulation_layers(circuit_ctx.ctx, layout, simulation_view, layers);
+    render_simulation_layers(ctx, layout, simulation_view, layers);
 }
 
 auto render_simulation_to_file(const Layout& layout, SimulationView simulation_view,
@@ -2013,8 +1999,9 @@ auto render_simulation_to_file(const Layout& layout, SimulationView simulation_v
                                const std::filesystem::path& filename,
                                const ViewConfig& view_config) -> void {
     render_circuit_to_file(width, height, filename, view_config,
-                           [&](CircuitContext& circuit_ctx) {
-                               render_simulation(circuit_ctx, layout, simulation_view);
+                           [&](Context& circuit_ctx) {
+                               /*render_simulation(circuit_ctx, layout,
+                                *simulation_view);*/
                            });
 }
 }  // namespace logicsim

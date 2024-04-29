@@ -1,8 +1,7 @@
-#ifndef LOGICSIM_RENDER_CONTEXT_H
-#define LOGICSIM_RENDER_CONTEXT_H
+#ifndef LOGICSIM_RENDER_CONTEXT2_H
+#define LOGICSIM_RENDER_CONTEXT2_H
 
-#include "render/svg_cache.h"
-#include "render/text_cache.h"
+#include "render/context_cache.h"
 #include "vocabulary/context_render_config.h"
 
 #include <blend2d.h>
@@ -12,22 +11,14 @@ namespace logicsim {
 class ContextGuard;
 
 /**
- * @brief: The context we pass to all of our render methods.
+ * @brief: Generic render context that render code operates on for one frame.
  */
 struct Context {
-    BLImage bl_image {};
     BLContext bl_ctx {};
     ContextRenderSettings settings {};
-    TextCache text_cache {FontFaces {get_default_font_locations()}};
-    SVGCache svg_cache {};
+    ContextCache cache {};
 
-    auto begin() -> void;
-    auto begin(BLImage& image) -> void;
-    auto sync() -> void;
-    auto end() -> void;
-
-    auto clear() -> void;
-    auto shrink_to_fit() -> void;
+    [[nodiscard]] auto view_config() const -> const ViewConfig&;
 };
 
 [[nodiscard]] auto make_context_guard(Context& ctx) -> ContextGuard;

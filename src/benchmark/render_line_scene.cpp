@@ -254,6 +254,8 @@ auto fill_line_scene(int n_lines [[maybe_unused]]) -> SimulatedLineScene {
 }
 
 auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
+    std::terminate();  // implement
+    /*
     auto scene = fill_line_scene(n_lines);
 
     // render image
@@ -277,6 +279,8 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     }
 
     return scene.total_wire_length_sum;
+    */
+    return 0;
 }
 
 }  // namespace logicsim
