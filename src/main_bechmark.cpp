@@ -251,32 +251,38 @@ BENCHMARK(BM_Simulation_Inverter_Loop);  // NOLINT
 static void BM_RenderScene_0(benchmark::State& state) {
     constexpr static auto save_image = false;  // to verify correctness
 
+    const auto size = BLSizeI {1200, 1200};
     const auto scene = fill_line_scene(100);
 
-    auto context =
-        CircuitContext {Context {.bl_image = BLImage {1200, 1200, BL_FORMAT_PRGB32},
-                                 .settings = {.thread_count = 2}}};
-    context.ctx.settings.view_config.set_device_scale(12.);
-    context.ctx.begin();
+    // setup rendering
+    auto bl_image = BLImage {size.w, size.h, BL_FORMAT_PRGB32};
+    auto layers = SimulationLayers {};
+    const auto cache = ContextCache {};
+    // TODO generate settings from bl_image, ...
+    const auto settings = [&] {
+        auto res = ContextRenderSettings {.thread_count = 0};
+        res.view_config.set_device_scale(12.);
+        res.view_config.set_size(size);
+        return res;
+    }();
 
-    {
-        context.ctx.bl_ctx.fillAll(defaults::color_white);
-        context.ctx.sync();
-    }
+    render_to_image(bl_image, settings, cache,
+                    [](Context& ctx) { ctx.bl_ctx.fillAll(defaults::color_white); });
 
     int64_t count = 0;
     for ([[maybe_unused]] auto _ : state) {
         count += scene.total_wire_length_sum;
 
-        render_simulation(context, scene.spatial_simulation.layout(),
-                          SimulationView {scene.spatial_simulation});
-        context.ctx.sync();
+        render_to_image(bl_image, settings, cache, [&](Context& ctx) {
+            render_simulation(ctx, layers, scene.spatial_simulation.layout(),
+                              SimulationView {scene.spatial_simulation});
+        });
 
-        benchmark::DoNotOptimize(context.ctx.bl_image);
+        benchmark::DoNotOptimize(bl_image);
         benchmark::ClobberMemory();
 
         if constexpr (save_image) {
-            context.ctx.bl_image.writeToFile("google_benchmark_BM_RenderScene_0.png");
+            bl_image.writeToFile("google_benchmark_BM_RenderScene_0.png");
         }
     }
 

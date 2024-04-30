@@ -1917,12 +1917,12 @@ auto render_circuit_to_file(int width, int height, const std::filesystem::path& 
 
     // TODO !!! add cache as optional parameter
     const auto cache = ContextCache {FontFaces {get_default_font_locations()}};
-    const auto settings = ContextRenderSettings {.view_config = view_config};
 
-    std::terminate();  // not implemented
+    // TODO !!! generate settings differently
+    auto settings = ContextRenderSettings {.view_config = view_config};
+    settings.view_config.set_size(bl_image.size());
 
     render_to_image(bl_image, settings, cache, [&render_function](Context& ctx) {
-        render_background(ctx);
         std::invoke(render_function, ctx);
     });
 
@@ -1966,6 +1966,7 @@ auto render_layout_to_file(const Layout& layout, int width, int height,
     auto layers = InteractiveLayers {};
 
     render_circuit_to_file(width, height, filename, view_config, [&](Context& ctx) {
+        render_background(ctx);
         render_layout(ctx, surface, layers, layout);
     });
 }
@@ -1978,6 +1979,7 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, int
     auto layers = InteractiveLayers {};
 
     render_circuit_to_file(width, height, filename, view_config, [&](Context& ctx) {
+        render_background(ctx);
         render_layout(ctx, surface, layers, layout, selection);
     });
 }
@@ -1998,10 +2000,12 @@ auto render_simulation_to_file(const Layout& layout, SimulationView simulation_v
                                int width, int height,
                                const std::filesystem::path& filename,
                                const ViewConfig& view_config) -> void {
-    render_circuit_to_file(width, height, filename, view_config,
-                           [&](Context& circuit_ctx) {
-                               /*render_simulation(circuit_ctx, layout,
-                                *simulation_view);*/
-                           });
+    // TODO remove
+    auto layers = SimulationLayers {};
+
+    render_circuit_to_file(width, height, filename, view_config, [&](Context& ctx) {
+        render_background(ctx);
+        render_simulation(ctx, layers, layout, simulation_view);
+    });
 }
 }  // namespace logicsim

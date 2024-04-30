@@ -254,33 +254,35 @@ auto fill_line_scene(int n_lines [[maybe_unused]]) -> SimulatedLineScene {
 }
 
 auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
-    std::terminate();  // implement
-    /*
     auto scene = fill_line_scene(n_lines);
 
-    // render image
-    auto circuit_ctx =
-        CircuitContext {Context {.bl_image = BLImage {1200, 1200, BL_FORMAT_PRGB32},
-                                 .settings = {.thread_count = 0}}};
-    circuit_ctx.ctx.settings.view_config.set_device_scale(12.);
-    auto& ctx = circuit_ctx.ctx;
+    const auto size = BLSizeI {1200, 1200};
 
-    ctx.begin();
-    render_background(ctx);
-    {
-        auto timer = Timer {"Render", Timer::Unit::ms, 3};
-        render_simulation(circuit_ctx, scene.spatial_simulation.layout(),
+    auto bl_image = BLImage {size.w, size.h, BL_FORMAT_PRGB32};
+    const auto cache = ContextCache {};
+
+    // TODO generate settings from bl_image, ...
+    const auto settings = [&] {
+        auto res = ContextRenderSettings {.thread_count = 0};
+        res.view_config.set_device_scale(12.);
+        res.view_config.set_size(size);
+        return res;
+    }();
+
+    render_to_image(bl_image, settings, cache, [&](Context& ctx) {
+        render_background(ctx);
+
+        const auto timer = Timer {"Render", Timer::Unit::ms, 3};
+        auto layers = SimulationLayers {};
+        render_simulation(ctx, layers, scene.spatial_simulation.layout(),
                           SimulationView {scene.spatial_simulation});
-    }
-    ctx.end();
+    });
 
     if (save_image) {
-        ctx.bl_image.writeToFile("benchmark_line_renderer.png");
+        bl_image.writeToFile("benchmark_line_renderer.png");
     }
 
     return scene.total_wire_length_sum;
-    */
-    return 0;
 }
 
 }  // namespace logicsim

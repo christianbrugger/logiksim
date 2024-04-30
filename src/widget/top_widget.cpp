@@ -414,17 +414,19 @@ auto MainWidget::create_menu() -> void {
                        [this]() { load_circuit_example(2); });
         }
 
-        // Thread Count
         menu->addSeparator();
-        actions_.set_non_interactive = add_action(
-            menu, tr("Set Non-In&teractive"), ActionAttributes {},
+        actions_.non_interactive_mode = add_action(
+            menu, tr("Enter Non-In&teractive Mode"),
+            ActionAttributes {.icon = icon_t::non_interactive_mode},
             [this]() { circuit_widget_->set_circuit_state(NonInteractiveState {}); });
 
+        menu->addSeparator();
         actions_.direct_rendering = add_action_checkable(
             menu, tr("&Direct Rendering"),
             ActionAttributes {.icon = icon_t::direct_rendering},
             [this](bool checked) { set_direct_rendering(*circuit_widget_, checked); });
 
+        // Thread Count
         menu->addSeparator();
         {
             auto* group = new QActionGroup(menu);

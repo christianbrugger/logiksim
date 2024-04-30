@@ -51,6 +51,7 @@ enum class icon_t {
     load_element_example,
     load_elements_and_wires_example,
     // --
+    non_interactive_mode,
     direct_rendering,
 
     // options

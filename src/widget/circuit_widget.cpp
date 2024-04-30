@@ -485,7 +485,7 @@ auto paint_editing_state(QWidget& widget, RenderSurface& render_surface,
 
 auto paint_simulation_state(QWidget& widget, RenderSurface& render_surface,
                             const CircuitStore& circuit_store) -> void {
-    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& surface,
+    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& /*unused*/,
                                           CircuitLayers& layers) {
         render_to_context(ctx, layers.simulation_layers, render_surface.render_config(),
                           circuit_store.interactive_simulation().spatial_simulation());

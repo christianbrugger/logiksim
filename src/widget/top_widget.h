@@ -60,7 +60,7 @@ struct MainActions {
     QAction* show_connection_cache;
     QAction* show_selection_cache;
 
-    QAction* set_non_interactive;
+    QAction* non_interactive_mode;
     QAction* direct_rendering;
 
     QAction* thread_count_0;
