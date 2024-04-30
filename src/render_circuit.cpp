@@ -1594,7 +1594,6 @@ auto SimulationLayers::clear() -> void {
 }
 
 auto SimulationLayers::shrink_to_fit() -> void {
-    // print("S-STF");
     items_below.shrink_to_fit();
     wires.shrink_to_fit();
     items_above.shrink_to_fit();
@@ -1815,13 +1814,9 @@ auto insert_logic_item(InteractiveLayers& layers, const Layout& layout,
     }
 }
 
-auto build_interactive_layers(const Layout& layout, InteractiveLayers& layers,
-                              const Selection* selection, rect_t scene_rect) -> void {
-    // const auto t = Timer {fmt::format("build_interactive_layers {} items, {:.3f} kb",
-    //                                   layers.size(), layers.allocated_size() / 1024.)};
-
-    layers.clear();
-    // layers.shrink_to_fit();
+auto build_interactive_layers(const Layout& layout, const Selection* selection,
+                              rect_t scene_rect) -> InteractiveLayers {
+    auto layers = InteractiveLayers {};
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
         // visibility
@@ -1866,15 +1861,18 @@ auto build_interactive_layers(const Layout& layout, InteractiveLayers& layers,
     }
 
     layers.calculate_overlay_bounding_rect();
-}
 
-auto build_simulation_layers(const Layout& layout, SimulationLayers& layers,
-                             rect_t scene_rect) -> void {
-    // const auto t = Timer {fmt::format("build_simulation_layers {} items, {:.3f} kb",
+    // const auto t = Timer {fmt::format("build_interactive_layers {} items, {:.3f} kb",
     //                                   layers.size(), layers.allocated_size() / 1024.)};
 
-    layers.clear();
-    // layers.shrink_to_fit();
+    return layers;
+}
+
+auto build_simulation_layers(const Layout& layout, rect_t scene_rect)
+    -> SimulationLayers {
+    // const auto t = Timer {};
+
+    auto layers = SimulationLayers {};
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
         // visibility
@@ -1902,6 +1900,12 @@ auto build_simulation_layers(const Layout& layout, SimulationLayers& layers,
 
         layers.wires.push_back(wire_id);
     }
+
+    // fmt::format("build_simulation_layers {} items, {:.3f} kb: {}",
+    //                                   layers.size(), layers.allocated_size() / 1024.,
+    //                                   t);
+
+    return layers;
 }
 
 //
@@ -1936,11 +1940,10 @@ auto render_circuit_to_file(int width, int height, const std::filesystem::path& 
 // Layout
 //
 
-auto _render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+auto _render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& /*unused*/,
                     const Layout& layout, const Selection* selection) -> void {
     const auto scene_rect = get_scene_rect(ctx.settings.view_config);
-
-    build_interactive_layers(layout, layers, selection, scene_rect);
+    const auto layers = build_interactive_layers(layout, selection, scene_rect);
     render_interactive_layers(ctx, layout, layers, surface);
 }
 
@@ -1988,11 +1991,10 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, int
 // Simulation
 //
 
-auto render_simulation(Context& ctx, SimulationLayers& layers, const Layout& layout,
+auto render_simulation(Context& ctx, SimulationLayers& /*unused*/, const Layout& layout,
                        SimulationView simulation_view) -> void {
     const auto scene_rect = get_scene_rect(ctx.view_config());
-
-    build_simulation_layers(layout, layers, scene_rect);
+    const auto layers = build_simulation_layers(layout, scene_rect);
     render_simulation_layers(ctx, layout, simulation_view, layers);
 }
 
