@@ -49,13 +49,6 @@ auto ContextCache::clear() -> void {
     cache_->svg_cache.clear();
 }
 
-auto ContextCache::shrink_to_fit() -> void {
-    Expects(cache_ != nullptr);
-
-    cache_->text_cache.shrink_to_fit();
-    cache_->svg_cache.shrink_to_fit();
-}
-
 //
 // Free Functions
 //

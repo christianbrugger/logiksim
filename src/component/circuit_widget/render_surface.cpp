@@ -49,9 +49,7 @@ auto RenderSurface::render_config() const -> const WidgetRenderConfig& {
 auto RenderSurface::reset() -> void {
     qt_image_ = QImage {};
     context_surface_ = ImageSurface {};
-
     context_cache_.clear();
-    context_cache_.shrink_to_fit();
 
     fps_counter_ = EventCounter {};
     last_render_size_ = BLSize {};

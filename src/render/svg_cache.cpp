@@ -111,11 +111,10 @@ auto SVGCache::operator==(const SVGCache & /*unused*/) const noexcept -> bool {
 }
 
 auto SVGCache::clear() const -> void {
-    svg_map_.clear();
-}
+    svg_map_ = svg_map_t {};
 
-auto SVGCache::shrink_to_fit() const -> void {
-    svg_map_.rehash(svg_map_.size());
+    Ensures(svg_map_.values().size() == 0);
+    Ensures(svg_map_.values().capacity() == 0);
 }
 
 auto SVGCache::draw_icon(BLContext &bl_ctx, IconAttributes attributes) const -> void {

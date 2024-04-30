@@ -83,7 +83,7 @@ class RenderSurface {
     // to cache SVG and Text
     ContextCache context_cache_ {cache_with_default_fonts()};
 
-    // TODO not clear what can be internally set and what not
+    // TODO !!! not clear what can be internally set and what not
     ContextRenderSettings context_settings_ {};
     // setting are only written from external setter, no internal writes
     WidgetRenderConfig render_config_ {};

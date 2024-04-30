@@ -36,7 +36,6 @@ class SVGCache {
     [[nodiscard]] auto operator==(const SVGCache &) const noexcept -> bool;
 
     auto clear() const -> void;
-    auto shrink_to_fit() const -> void;
 
     struct IconAttributes {
         icon_t icon {icon_t::app_icon};

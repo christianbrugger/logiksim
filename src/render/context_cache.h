@@ -25,13 +25,9 @@ class ContextCache {
     [[nodiscard]] auto svg_cache() const -> const SVGCache&;
 
     /**
-     * @brief: clear cached data
+     * @brief: clear cached data and de-allocates storages
      */
     auto clear() -> void;
-    /**
-     * @brief: shrinks unused memory allocations of caches
-     */
-    auto shrink_to_fit() -> void;
 
    private:
     // const maintains whole-part relationship

@@ -5,6 +5,7 @@
 #include "timer.h"  // TODO remove
 
 #include <fmt/core.h>
+#include <gsl/gsl>
 
 #include <exception>
 
@@ -44,11 +45,10 @@ auto TextCache::format() const -> std::string {
 }
 
 auto TextCache::clear() const -> void {
-    glyph_map_.clear();
-}
+    glyph_map_ = glyph_map_t {};
 
-auto TextCache::shrink_to_fit() const -> void {
-    glyph_map_.rehash(glyph_map_.size());
+    Ensures(glyph_map_.values().size() == 0);
+    Ensures(glyph_map_.values().capacity() == 0);
 }
 
 auto TextCache::get_scaled_bl_font(float font_size, FontStyle style) const

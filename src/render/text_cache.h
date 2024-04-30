@@ -81,7 +81,6 @@ class TextCache {
     [[nodiscard]] auto format() const -> std::string;
 
     auto clear() const -> void;
-    auto shrink_to_fit() const -> void;
 
     struct TextAttributes {
         color_t color {defaults::color_black};

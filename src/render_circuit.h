@@ -334,8 +334,6 @@ struct InteractiveLayers {
 
     [[nodiscard]] auto size() const -> std::size_t;
     [[nodiscard]] auto empty() const -> bool;
-    auto clear() -> void;
-    auto shrink_to_fit() -> void;
 
     [[nodiscard]] auto has_inserted() const -> bool;
     [[nodiscard]] auto has_uninserted() const -> bool;
@@ -366,8 +364,6 @@ struct SimulationLayers {
 
     [[nodiscard]] auto size() const -> std::size_t;
     [[nodiscard]] auto empty() const -> bool;
-    auto clear() -> void;
-    auto shrink_to_fit() -> void;
 };
 
 //

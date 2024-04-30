@@ -1447,43 +1447,6 @@ auto InteractiveLayers::empty() const -> bool {
     return this->size() == std::size_t {0};
 }
 
-auto InteractiveLayers::clear() -> void {
-    normal_below.clear();
-    normal_wires.clear();
-    normal_above.clear();
-
-    uninserted_below.clear();
-    uninserted_above.clear();
-
-    selected_logic_items.clear();
-    selected_wires.clear();
-    temporary_wires.clear();
-    valid_logic_items.clear();
-    valid_wires.clear();
-    colliding_logic_items.clear();
-    colliding_wires.clear();
-
-    uninserted_bounding_rect.reset();
-    overlay_bounding_rect.reset();
-}
-
-auto InteractiveLayers::shrink_to_fit() -> void {
-    normal_below.shrink_to_fit();
-    normal_wires.shrink_to_fit();
-    normal_above.shrink_to_fit();
-
-    uninserted_below.shrink_to_fit();
-    uninserted_above.shrink_to_fit();
-
-    selected_logic_items.shrink_to_fit();
-    selected_wires.shrink_to_fit();
-    temporary_wires.shrink_to_fit();
-    valid_logic_items.shrink_to_fit();
-    valid_wires.shrink_to_fit();
-    colliding_logic_items.shrink_to_fit();
-    colliding_wires.shrink_to_fit();
-}
-
 auto InteractiveLayers::allocated_size() const -> std::size_t {
     return get_allocated_size(normal_below) +           //
            get_allocated_size(normal_wires) +           //
@@ -1585,18 +1548,6 @@ auto SimulationLayers::format() const -> std::string {
         wires,        //
         items_above   //
     );
-}
-
-auto SimulationLayers::clear() -> void {
-    items_below.clear();
-    wires.clear();
-    items_above.clear();
-}
-
-auto SimulationLayers::shrink_to_fit() -> void {
-    items_below.shrink_to_fit();
-    wires.shrink_to_fit();
-    items_above.shrink_to_fit();
 }
 
 auto SimulationLayers::allocated_size() const -> std::size_t {
