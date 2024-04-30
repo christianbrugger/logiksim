@@ -1616,24 +1616,6 @@ auto SimulationLayers::empty() const -> bool {
 }
 
 //
-// Circuit Context
-//
-
-auto CircuitLayers::clear() -> void {
-    interactive_layers.clear();
-    simulation_layers.clear();
-}
-
-auto CircuitLayers::shrink_to_fit() -> void {
-    interactive_layers.shrink_to_fit();
-    simulation_layers.shrink_to_fit();
-}
-
-auto CircuitLayers::allocated_size() const -> std::size_t {
-    return interactive_layers.allocated_size() + simulation_layers.allocated_size();
-}
-
-//
 // Layout
 //
 
@@ -1915,12 +1897,10 @@ auto build_simulation_layers(const Layout& layout, rect_t scene_rect)
 namespace {
 
 template <std::invocable<Context&> Func>
-auto render_circuit_to_file(int width, int height, const std::filesystem::path& filename,
-                            const ViewConfig& view_config, Func render_function) {
-    auto bl_image = BLImage {width, height, BL_FORMAT_PRGB32};
-
-    // TODO !!! add cache as optional parameter
-    const auto cache = ContextCache {FontFaces {get_default_font_locations()}};
+auto render_circuit_to_file(BLSizeI size, const std::filesystem::path& filename,
+                            const ViewConfig& view_config, const ContextCache& cache,
+                            Func render_function) {
+    auto bl_image = BLImage {size.w, size.h, BL_FORMAT_PRGB32};
 
     // TODO !!! generate settings differently
     auto settings = ContextRenderSettings {.view_config = view_config};
@@ -1940,50 +1920,48 @@ auto render_circuit_to_file(int width, int height, const std::filesystem::path& 
 // Layout
 //
 
-auto _render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& /*unused*/,
-                    const Layout& layout, const Selection* selection) -> void {
+auto _render_layout(Context& ctx, ImageSurface& surface, const Layout& layout,
+                    const Selection* selection) -> void {
     const auto scene_rect = get_scene_rect(ctx.settings.view_config);
     const auto layers = build_interactive_layers(layout, selection, scene_rect);
+
     render_interactive_layers(ctx, layout, layers, surface);
 }
 
-auto render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
-                   const Layout& layout) -> void {
-    _render_layout(ctx, surface, layers, layout, nullptr);
+auto render_layout(Context& ctx, ImageSurface& surface, const Layout& layout) -> void {
+    _render_layout(ctx, surface, layout, nullptr);
 }
 
-auto render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
-                   const Layout& layout, const Selection& selection) -> void {
+auto render_layout(Context& ctx, ImageSurface& surface, const Layout& layout,
+                   const Selection& selection) -> void {
     if (selection.empty()) {
-        _render_layout(ctx, surface, layers, layout, nullptr);
+        _render_layout(ctx, surface, layout, nullptr);
     } else {
-        _render_layout(ctx, surface, layers, layout, &selection);
+        _render_layout(ctx, surface, layout, &selection);
     }
 }
 
-auto render_layout_to_file(const Layout& layout, int width, int height,
+auto render_layout_to_file(const Layout& layout, BLSizeI size,
                            const std::filesystem::path& filename,
-                           const ViewConfig& view_config) -> void {
-    // TODO add to interface ???
+                           const ViewConfig& view_config, const ContextCache& cache)
+    -> void {
     auto surface = ImageSurface {};
-    auto layers = InteractiveLayers {};
 
-    render_circuit_to_file(width, height, filename, view_config, [&](Context& ctx) {
+    render_circuit_to_file(size, filename, view_config, cache, [&](Context& ctx) {
         render_background(ctx);
-        render_layout(ctx, surface, layers, layout);
+        render_layout(ctx, surface, layout);
     });
 }
 
-auto render_layout_to_file(const Layout& layout, const Selection& selection, int width,
-                           int height, const std::filesystem::path& filename,
-                           const ViewConfig& view_config) -> void {
-    // TODO add to interface ???
+auto render_layout_to_file(const Layout& layout, const Selection& selection, BLSizeI size,
+                           const std::filesystem::path& filename,
+                           const ViewConfig& view_config, const ContextCache& cache)
+    -> void {
     auto surface = ImageSurface {};
-    auto layers = InteractiveLayers {};
 
-    render_circuit_to_file(width, height, filename, view_config, [&](Context& ctx) {
+    render_circuit_to_file(size, filename, view_config, cache, [&](Context& ctx) {
         render_background(ctx);
-        render_layout(ctx, surface, layers, layout, selection);
+        render_layout(ctx, surface, layout, selection);
     });
 }
 
@@ -1991,23 +1969,21 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, int
 // Simulation
 //
 
-auto render_simulation(Context& ctx, SimulationLayers& /*unused*/, const Layout& layout,
-                       SimulationView simulation_view) -> void {
+auto render_simulation(Context& ctx, const Layout& layout, SimulationView simulation_view)
+    -> void {
     const auto scene_rect = get_scene_rect(ctx.view_config());
     const auto layers = build_simulation_layers(layout, scene_rect);
+
     render_simulation_layers(ctx, layout, simulation_view, layers);
 }
 
 auto render_simulation_to_file(const Layout& layout, SimulationView simulation_view,
-                               int width, int height,
-                               const std::filesystem::path& filename,
-                               const ViewConfig& view_config) -> void {
-    // TODO remove
-    auto layers = SimulationLayers {};
-
-    render_circuit_to_file(width, height, filename, view_config, [&](Context& ctx) {
+                               BLSizeI size, const std::filesystem::path& filename,
+                               const ViewConfig& view_config, const ContextCache& cache)
+    -> void {
+    render_circuit_to_file(size, filename, view_config, cache, [&](Context& ctx) {
         render_background(ctx);
-        render_simulation(ctx, layers, layout, simulation_view);
+        render_simulation(ctx, layout, simulation_view);
     });
 }
 }  // namespace logicsim

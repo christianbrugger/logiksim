@@ -1,13 +1,11 @@
 #ifndef LOGICSIM_RENDER_CONTEXT_CACHE_H
 #define LOGICSIM_RENDER_CONTEXT_CACHE_H
 
-#include "render/svg_cache.h"
-#include "render/text_cache.h"
-
 namespace logicsim {
 
 class TextCache;
 class SVGCache;
+struct FontFaces;
 
 namespace context_cache {
 struct CacheData;
@@ -20,7 +18,7 @@ struct CacheData;
  */
 class ContextCache {
    public:
-    [[nodiscard]] explicit ContextCache();
+    [[nodiscard]] ContextCache();
     [[nodiscard]] explicit ContextCache(FontFaces faces);
 
     [[nodiscard]] auto text_cache() const -> const TextCache&;
@@ -39,6 +37,10 @@ class ContextCache {
     // const maintains whole-part relationship
     std::shared_ptr<const context_cache::CacheData> cache_;
 };
+
+static_assert(std::semiregular<ContextCache>);
+
+[[nodiscard]] auto cache_with_default_fonts() -> ContextCache;
 
 }  // namespace logicsim
 

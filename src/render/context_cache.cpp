@@ -56,4 +56,12 @@ auto ContextCache::shrink_to_fit() -> void {
     cache_->svg_cache.shrink_to_fit();
 }
 
+//
+// Free Functions
+//
+
+[[nodiscard]] auto cache_with_default_fonts() -> ContextCache {
+    return ContextCache {FontFaces {get_default_font_locations()}};
+}
+
 }  // namespace logicsim

@@ -371,52 +371,42 @@ struct SimulationLayers {
 };
 
 //
-// Circuit Context
-//
-
-struct CircuitSurfaces {
-    ImageSurface layer_surface_uninserted {};
-    ImageSurface layer_surface_overlay {};
-};
-
-struct CircuitLayers {
-    // vectors are cached to avoid allocations
-    InteractiveLayers interactive_layers {};
-    SimulationLayers simulation_layers {};
-
-    auto clear() -> void;
-    auto shrink_to_fit() -> void;
-    [[nodiscard]] auto allocated_size() const -> std::size_t;
-};
-
-//
 // Layout
 //
 
-auto render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
-                   const Layout& layout) -> void;
+auto render_layout(Context& ctx, ImageSurface& surface, const Layout& layout) -> void;
 
-auto render_layout(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
-                   const Layout& layout, const Selection& selection) -> void;
+auto render_layout(Context& ctx, ImageSurface& surface, const Layout& layout,
+                   const Selection& selection) -> void;
 
-auto render_layout_to_file(const Layout& layout, int width, int height,
+/**
+ * @brief: Render the layout to the given PNG file.
+ *
+ * Note, if fonts are required you need to provide a cache with loaded fonts. E.g:
+ *       const auto cache = cache_with_default_fonts();
+ *   or
+ *       const thread_local auto cache = cache_with_default_fonts();
+ */
+auto render_layout_to_file(const Layout& layout, BLSizeI size,
                            const std::filesystem::path& filename,
-                           const ViewConfig& view_config = {}) -> void;
-auto render_layout_to_file(const Layout& layout, const Selection& selection, int width,
-                           int height, const std::filesystem::path& filename,
-                           const ViewConfig& view_config = {}) -> void;
+                           const ViewConfig& view_config = {},
+                           const ContextCache& cache = {}) -> void;
+auto render_layout_to_file(const Layout& layout, const Selection& selection, BLSizeI size,
+                           const std::filesystem::path& filename,
+                           const ViewConfig& view_config = {},
+                           const ContextCache& cache = {}) -> void;
 
 //
 // Simulation
 //
 
-auto render_simulation(Context& ctx, SimulationLayers& layers, const Layout& layout,
-                       SimulationView simulation_view) -> void;
+auto render_simulation(Context& ctx, const Layout& layout, SimulationView simulation_view)
+    -> void;
 
 auto render_simulation_to_file(const Layout& layout, SimulationView simulation_view,
-                               int width, int height,
-                               const std::filesystem::path& filename,
-                               const ViewConfig& view_config = {}) -> void;
+                               BLSizeI size, const std::filesystem::path& filename,
+                               const ViewConfig& view_config = {},
+                               const ContextCache& cache = {}) -> void;
 
 }  // namespace logicsim
 

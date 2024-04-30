@@ -2,6 +2,7 @@
 
 #include "render/context.h"
 #include "render/context_cache.h"
+#include "render/text_cache.h"
 #include "vocabulary/point_fine.h"
 
 #include <blend2d.h>

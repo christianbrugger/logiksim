@@ -72,10 +72,8 @@ class RenderSurface {
      * If the backend store supports direct rendering it is used,
      * otherwise a QImage buffer is setup for rendering.
      */
-    auto paintEvent(
-        QWidget& widget,
-        std::function<void(Context&, ImageSurface&, CircuitLayers&)> render_function)
-        -> void;
+    auto paintEvent(QWidget& widget,
+                    std::function<void(Context&, ImageSurface&)> render_function) -> void;
 
    private:
     // used when backing store is not directly writable
@@ -83,10 +81,7 @@ class RenderSurface {
     // used for layered rendering
     ImageSurface context_surface_ {};
     // to cache SVG and Text
-    // TODO remove dependency of FontFaces in this file
-    ContextCache context_cache_ {FontFaces {get_default_font_locations()}};
-    // TODO !!! remove
-    CircuitLayers context_layers_ {};
+    ContextCache context_cache_ {cache_with_default_fonts()};
 
     // TODO not clear what can be internally set and what not
     ContextRenderSettings context_settings_ {};
@@ -113,7 +108,7 @@ auto set_optimal_render_attributes(QWidget& widget) -> void;
  * @brief: Renders the given layout.
  */
 // TODO move to renderer folder
-auto render_to_context(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+auto render_to_context(Context& ctx, ImageSurface& surface,
                        const WidgetRenderConfig& render_config, const Layout& layout)
     -> void;
 
@@ -121,7 +116,7 @@ auto render_to_context(Context& ctx, ImageSurface& surface, InteractiveLayers& l
  * @brief: Renders the editable circuit.
  */
 // TODO move to renderer folder
-auto render_to_context(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+auto render_to_context(Context& ctx, ImageSurface& surface,
                        const WidgetRenderConfig& render_config,
                        const EditableCircuit& editable_circuit, bool show_size_handles)
     -> void;
@@ -130,8 +125,7 @@ auto render_to_context(Context& ctx, ImageSurface& surface, InteractiveLayers& l
  * @brief: Renders the spatial simulation.
  */
 // TODO move to renderer folder
-auto render_to_context(Context& ctx, SimulationLayers& layers,
-                       const WidgetRenderConfig& render_config,
+auto render_to_context(Context& ctx, const WidgetRenderConfig& render_config,
                        const SpatialSimulation& spatial_simulation) -> void;
 
 }  // namespace circuit_widget

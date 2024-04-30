@@ -463,31 +463,27 @@ namespace {
 
 auto paint_non_interactive_state(QWidget& widget, RenderSurface& render_surface,
                                  const CircuitStore& circuit_store) {
-    render_surface.paintEvent(
-        widget, [&](Context& ctx, ImageSurface& surface, CircuitLayers& layers) {
-            render_to_context(ctx, surface, layers.interactive_layers,
-                              render_surface.render_config(), circuit_store.layout());
-        });
+    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& surface) {
+        render_to_context(ctx, surface, render_surface.render_config(),
+                          circuit_store.layout());
+    });
 }
 
 auto paint_editing_state(QWidget& widget, RenderSurface& render_surface,
                          const CircuitStore& circuit_store,
                          const EditingLogicManager& editing_logic_manager) -> void {
-    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& surface,
-                                          CircuitLayers& layers) {
+    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& surface) {
         const bool show_size_handles = !editing_logic_manager.is_area_selection_active();
 
-        render_to_context(ctx, surface, layers.interactive_layers,
-                          render_surface.render_config(),
+        render_to_context(ctx, surface, render_surface.render_config(),
                           circuit_store.editable_circuit(), show_size_handles);
     });
 };
 
 auto paint_simulation_state(QWidget& widget, RenderSurface& render_surface,
                             const CircuitStore& circuit_store) -> void {
-    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& /*unused*/,
-                                          CircuitLayers& layers) {
-        render_to_context(ctx, layers.simulation_layers, render_surface.render_config(),
+    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& /*unused*/) {
+        render_to_context(ctx, render_surface.render_config(),
                           circuit_store.interactive_simulation().spatial_simulation());
     });
 };

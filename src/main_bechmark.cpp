@@ -256,7 +256,6 @@ static void BM_RenderScene_0(benchmark::State& state) {
 
     // setup rendering
     auto bl_image = BLImage {size.w, size.h, BL_FORMAT_PRGB32};
-    auto layers = SimulationLayers {};
     const auto cache = ContextCache {};
     // TODO generate settings from bl_image, ...
     const auto settings = [&] {
@@ -274,7 +273,7 @@ static void BM_RenderScene_0(benchmark::State& state) {
         count += scene.total_wire_length_sum;
 
         render_to_image(bl_image, settings, cache, [&](Context& ctx) {
-            render_simulation(ctx, layers, scene.spatial_simulation.layout(),
+            render_simulation(ctx, scene.spatial_simulation.layout(),
                               SimulationView {scene.spatial_simulation});
         });
 

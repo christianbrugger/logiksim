@@ -53,8 +53,6 @@ auto RenderSurface::reset() -> void {
     context_cache_.clear();
     context_cache_.shrink_to_fit();
 
-    context_layers_ = CircuitLayers {};
-
     fps_counter_ = EventCounter {};
     last_render_size_ = BLSize {};
 }
@@ -175,8 +173,7 @@ auto get_bl_image(QBackingStore* backing_store, QImage& qt_image,
 }  // namespace
 
 auto RenderSurface::paintEvent(
-    QWidget& widget,
-    std::function<void(Context&, ImageSurface&, CircuitLayers&)> render_function)
+    QWidget& widget, std::function<void(Context&, ImageSurface&)> render_function)
     -> void {
     const auto geometry_info = get_geometry_info(widget);
     set_device_pixel_ratio(geometry_info.device_pixel_ratio);
@@ -186,9 +183,8 @@ auto RenderSurface::paintEvent(
     // TODO is this the right place to set it ???
     context_settings_.view_config.set_size(bl_image.size());
 
-    render_to_image(bl_image, context_settings_, context_cache_, [&](Context& ctx) {
-        render_function(ctx, context_surface_, context_layers_);
-    });
+    render_to_image(bl_image, context_settings_, context_cache_,
+                    [&](Context& ctx) { render_function(ctx, context_surface_); });
 
     // QPainter is used if we are not directly drawing to the backend store
     // this has generally little overhead, except with display scaling enabled
@@ -244,20 +240,20 @@ auto render_circuit_overlay(Context& ctx [[maybe_unused]]) {
 
 }  // namespace
 
-auto render_to_context(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+auto render_to_context(Context& ctx, ImageSurface& surface,
                        const WidgetRenderConfig& render_config, const Layout& layout)
     -> void {
     render_circuit_background(ctx);
 
     if (render_config.show_circuit) {
         // TODO write version that does not need surface ?
-        render_layout(ctx, surface, layers, layout);
+        render_layout(ctx, surface, layout);
     }
 
     render_circuit_overlay(ctx);
 }
 
-auto render_to_context(Context& ctx, ImageSurface& surface, InteractiveLayers& layers,
+auto render_to_context(Context& ctx, ImageSurface& surface,
                        const WidgetRenderConfig& render_config,
                        const EditableCircuit& editable_circuit, bool show_size_handles)
     -> void {
@@ -273,7 +269,7 @@ auto render_to_context(Context& ctx, ImageSurface& surface, InteractiveLayers& l
         const auto& target_layout = editable_circuit.layout();
         const auto& selection = editable_circuit.visible_selection();
 
-        render_layout(ctx, surface, layers, target_layout, selection);
+        render_layout(ctx, surface, target_layout, selection);
 
         render_setting_handle(ctx, target_layout, selection);
 
@@ -301,14 +297,13 @@ auto render_to_context(Context& ctx, ImageSurface& surface, InteractiveLayers& l
     render_circuit_overlay(ctx);
 }
 
-auto render_to_context(Context& ctx, SimulationLayers& layers,
-                       const WidgetRenderConfig& render_config,
+auto render_to_context(Context& ctx, const WidgetRenderConfig& render_config,
                        const SpatialSimulation& spatial_simulation) -> void {
     render_circuit_background(ctx);
 
     if (render_config.show_circuit) {
         // TODO Simulation view should contain layout, remove double reference
-        render_simulation(ctx, layers, spatial_simulation.layout(),
+        render_simulation(ctx, spatial_simulation.layout(),
                           SimulationView {spatial_simulation});
     }
 

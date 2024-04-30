@@ -273,8 +273,7 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
         render_background(ctx);
 
         const auto timer = Timer {"Render", Timer::Unit::ms, 3};
-        auto layers = SimulationLayers {};
-        render_simulation(ctx, layers, scene.spatial_simulation.layout(),
+        render_simulation(ctx, scene.spatial_simulation.layout(),
                           SimulationView {scene.spatial_simulation});
     });
 
