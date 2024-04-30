@@ -201,6 +201,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/context_render_config.cpp
     src/vocabulary/default_mouse_action.cpp
     src/vocabulary/delay.cpp
+    src/vocabulary/device_pixel_ratio.cpp
     src/vocabulary/direction_type.cpp
     src/vocabulary/display_state.cpp
     src/vocabulary/display_state_map.cpp
@@ -247,6 +248,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/realtime_timeout.cpp
     src/vocabulary/rect.cpp
     src/vocabulary/rect_fine.cpp
+    src/vocabulary/render_mode.cpp
     src/vocabulary/segment.cpp
     src/vocabulary/segment_index.cpp
     src/vocabulary/segment_info.cpp
@@ -341,6 +343,7 @@ set(LS_GUI_SOURCES
     src/qt/mouse_position.cpp
     src/qt/path_conversion.cpp
     src/qt/point_conversion.cpp
+    src/qt/render_surface.cpp
     src/qt/setting_location.cpp
     src/qt/widget_geometry.cpp
 
