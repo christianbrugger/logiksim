@@ -28,7 +28,6 @@ struct SurfaceStatistics {
     double frames_per_second;
     double pixel_scale;
     BLSize image_size;
-    bool uses_direct_rendering;
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const SurfaceStatistics&) const -> bool = default;
@@ -37,7 +36,7 @@ struct SurfaceStatistics {
 static_assert(std::regular<SurfaceStatistics>);
 
 /**
- * @brief: Maintains the render buffers of the Circuit Widget for render tasks.
+ * @brief: Renders circuit widgets in efficient manner and different modes.
  *
  * Pre-conditions:
  *   +
@@ -45,10 +44,10 @@ static_assert(std::regular<SurfaceStatistics>);
  * Class-invariants:
  *  ???
  */
-class RenderSurface {
+class CircuitRenderer {
    public:
     /**
-     * @brief: Free temporary memory for layers and fonts.
+     * @brief: Free temporary memory for layers and caches.
      */
     auto reset() -> void;
 
@@ -64,20 +63,16 @@ class RenderSurface {
     [[nodiscard]] auto statistics() const -> SurfaceStatistics;
 
    public:
-    /**
-     * @brief: TODO
-     *
-     * Note paintEvent can only be called within paint-event.
-     *
-     * If the backend store supports direct rendering it is used,
-     * otherwise a QImage buffer is setup for rendering.
-     */
-    auto paintEvent(QWidget& widget,
-                    std::function<void(Context&, ImageSurface&)> render_function) -> void;
+    auto render_layout(BLImage& bl_image, const Layout& layout) -> void;
+    auto render_editable_circuit(BLImage& bl_image,
+                                 const EditableCircuit& editable_circuit,
+                                 bool show_size_handles) -> void;
+    auto render_simulation(BLImage& bl_image, const SpatialSimulation& spatial_simulation)
+        -> void;
 
    private:
-    // used when backing store is not directly writable
-    QImage qt_image_ {};
+    auto count_frame(BLSizeI image_size) -> void;
+
     // used for layered rendering
     ImageSurface context_surface_ {};
     // to cache SVG and Text
@@ -89,7 +84,7 @@ class RenderSurface {
     WidgetRenderConfig render_config_ {};
 
     EventCounter fps_counter_ {};
-    // to accurately report render sizes in statistics
+    // to report render sizes in statistics
     BLSize last_render_size_ {};
 };
 
@@ -97,12 +92,10 @@ class RenderSurface {
 // Free Functions
 //
 
-auto set_view_config_offset(RenderSurface& render_surface, point_fine_t offset) -> void;
+auto set_view_config_offset(CircuitRenderer& render_surface, point_fine_t offset) -> void;
 
-auto set_view_config_device_scale(RenderSurface& render_surface, double device_scale)
+auto set_view_config_device_scale(CircuitRenderer& render_surface, double device_scale)
     -> void;
-
-auto set_optimal_render_attributes(QWidget& widget) -> void;
 
 /**
  * @brief: Renders the given layout.

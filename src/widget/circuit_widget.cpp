@@ -35,10 +35,10 @@ auto Statistics::format() const -> std::string {
         "  frames_per_second = {},\n"
         "  pixel_scale = {},\n"
         "  image_size = {}x{}px\n"
-        "  uses_direct_rendering = {},\n"
+        "  render_mode = {},\n"
         "}}",
         simulation_events_per_second, frames_per_second, pixel_scale, image_size.w,
-        image_size.h, uses_direct_rendering);
+        image_size.h, render_mode);
 }
 
 }  // namespace circuit_widget
@@ -85,7 +85,7 @@ CircuitWidget::CircuitWidget(QWidget* parent)
     // initialize components
     circuit_store_.set_simulation_config(simulation_config_);
     circuit_store_.set_circuit_state(circuit_state_);
-    render_surface_.set_render_config(render_config_);
+    circuit_renderer_.set_render_config(render_config_);
     editing_logic_manager_.set_circuit_state(circuit_state_,
                                              editable_circuit_pointer(circuit_store_));
 
@@ -120,7 +120,10 @@ auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
         return;
     }
 
-    render_surface_.set_render_config(new_config);
+    circuit_renderer_.set_render_config(new_config);
+    // TODO remove direct rendering from this config
+    render_surface_.set_requested_mode(
+        new_config.direct_rendering ? RenderMode::direct : RenderMode::buffered);
 
     if (new_config.do_benchmark) {
         timer_benchmark_render_.start();
@@ -204,6 +207,7 @@ auto CircuitWidget::set_editable_circuit(
     finalize_editing();
     close_all_setting_dialogs();
     render_surface_.reset();
+    circuit_renderer_.reset();
 
     // disable simulation
     const auto was_simulation = is_simulation(circuit_state_);
@@ -214,7 +218,7 @@ auto CircuitWidget::set_editable_circuit(
     // set new circuit
     circuit_store_.set_editable_circuit(std::move(editable_circuit));
     if (view_point) {
-        render_surface_.set_view_point(view_point.value());
+        circuit_renderer_.set_view_point(view_point.value());
     }
     if (simulation_config) {
         set_simulation_config(simulation_config.value());
@@ -301,9 +305,9 @@ auto CircuitWidget::save_circuit(const QString& filename) -> bool {
     Expects(class_invariant_holds());
 
     finalize_editing();
-    const auto success = save_circuit_to_file(circuit_store_.layout(), to_path(filename),
-                                              render_surface_.view_config().view_point(),
-                                              simulation_config_);
+    const auto success = save_circuit_to_file(
+        circuit_store_.layout(), to_path(filename),
+        circuit_renderer_.view_config().view_point(), simulation_config_);
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
@@ -313,13 +317,13 @@ auto CircuitWidget::save_circuit(const QString& filename) -> bool {
 auto CircuitWidget::statistics() const -> Statistics {
     Expects(class_invariant_holds());
 
-    const auto surface_statistics = render_surface_.statistics();
+    const auto surface_statistics = circuit_renderer_.statistics();
     const auto result = Statistics {
         .simulation_events_per_second = circuit_store_.simulation_events_per_second(),
         .frames_per_second = surface_statistics.frames_per_second,
         .pixel_scale = surface_statistics.pixel_scale,
         .image_size = surface_statistics.image_size,
-        .uses_direct_rendering = surface_statistics.uses_direct_rendering,
+        .render_mode = last_render_mode_,
     };
 
     Ensures(class_invariant_holds());
@@ -369,19 +373,19 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         }
 
         case zoom_in: {
-            render_surface_.set_view_point(
-                circuit_widget::zoom(*this, render_surface_.view_config(), +1));
+            circuit_renderer_.set_view_point(
+                circuit_widget::zoom(*this, circuit_renderer_.view_config(), +1));
             update();
             break;
         }
         case zoom_out: {
-            render_surface_.set_view_point(
-                circuit_widget::zoom(*this, render_surface_.view_config(), -1));
+            circuit_renderer_.set_view_point(
+                circuit_widget::zoom(*this, circuit_renderer_.view_config(), -1));
             update();
             break;
         }
         case reset_view: {
-            render_surface_.set_view_point(ViewConfig {}.view_point());
+            circuit_renderer_.set_view_point(ViewConfig {}.view_point());
             update();
             break;
         }
@@ -457,64 +461,52 @@ auto CircuitWidget::resizeEvent(QResizeEvent* event_ [[maybe_unused]]) -> void {
     Ensures(expensive_invariant_holds());
 }
 
-namespace circuit_widget {
+auto CircuitWidget::do_render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio,
+                              RenderMode render_mode, fallback_error_t fallback_error)
+    -> void {
+    Expects(class_invariant_holds());
 
-namespace {
+    if (bool {fallback_error}) {
+        print("WARNING: Cannot use direct rendering:", fallback_error.message);
+    }
 
-auto paint_non_interactive_state(QWidget& widget, RenderSurface& render_surface,
-                                 const CircuitStore& circuit_store) {
-    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& surface) {
-        render_to_context(ctx, surface, render_surface.render_config(),
-                          circuit_store.layout());
-    });
+    // TODO use more device_pixel_ratio_t
+    circuit_renderer_.set_device_pixel_ratio(double {device_pixel_ratio});
+
+    if (std::holds_alternative<NonInteractiveState>(circuit_state_)) {
+        circuit_renderer_.render_layout(bl_image, circuit_store_.layout());
+    }
+
+    else if (std::holds_alternative<EditingState>(circuit_state_)) {
+        const bool show_size_handles = !editing_logic_manager_.is_area_selection_active();
+        circuit_renderer_.render_editable_circuit(
+            bl_image, circuit_store_.editable_circuit(), show_size_handles);
+    }
+
+    else if (std::holds_alternative<SimulationState>(circuit_state_)) {
+        circuit_renderer_.render_simulation(
+            bl_image, circuit_store_.interactive_simulation().spatial_simulation());
+    }
+
+    else {
+        std::terminate();
+    }
+
+    last_render_mode_ = render_mode;
+    simulation_image_update_pending_ = false;
+
+    Ensures(class_invariant_holds());
 }
-
-auto paint_editing_state(QWidget& widget, RenderSurface& render_surface,
-                         const CircuitStore& circuit_store,
-                         const EditingLogicManager& editing_logic_manager) -> void {
-    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& surface) {
-        const bool show_size_handles = !editing_logic_manager.is_area_selection_active();
-
-        render_to_context(ctx, surface, render_surface.render_config(),
-                          circuit_store.editable_circuit(), show_size_handles);
-    });
-};
-
-auto paint_simulation_state(QWidget& widget, RenderSurface& render_surface,
-                            const CircuitStore& circuit_store) -> void {
-    render_surface.paintEvent(widget, [&](Context& ctx, ImageSurface& /*unused*/) {
-        render_to_context(ctx, render_surface.render_config(),
-                          circuit_store.interactive_simulation().spatial_simulation());
-    });
-};
-
-}  // namespace
-
-}  // namespace circuit_widget
 
 auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
     Expects(class_invariant_holds());
 
-    circuit_widget::set_optimal_render_attributes(*this);
-
-    // TODO put visit inside render_surface.paintEvent() call
-    std::visit(overload(
-                   [&](const NonInteractiveState&) {
-                       circuit_widget::paint_non_interactive_state(*this, render_surface_,
-                                                                   circuit_store_);
-                   },
-                   [&](const EditingState&) {
-                       circuit_widget::paint_editing_state(*this, render_surface_,
-                                                           circuit_store_,
-                                                           editing_logic_manager_);
-                   },
-                   [&](const SimulationState&) {
-                       circuit_widget::paint_simulation_state(*this, render_surface_,
-                                                              circuit_store_);
-                   }),
-               circuit_state());
-
-    simulation_image_update_pending_ = false;
+    render_surface_.paintEvent(
+        *this, [this](BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio,
+                      RenderMode render_mode, fallback_error_t fallback_error) {
+            this->do_render(bl_image, device_pixel_ratio, render_mode,
+                            std::move(fallback_error));
+        });
 
     Ensures(class_invariant_holds());
 }
@@ -533,7 +525,7 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
         const auto double_click = event_->type() == QEvent::MouseButtonDblClick;
 
         if (editing_logic_manager_.mouse_press(
-                position, render_surface_.view_config(), event_->modifiers(),
+                position, circuit_renderer_.view_config(), event_->modifiers(),
                 double_click, editable_circuit_pointer(circuit_store_)) ==
             circuit_widget::ManagerResult::require_update) {
             update();
@@ -541,7 +533,7 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     }
 
     if (event_->button() == Qt::LeftButton && is_simulation(circuit_state_)) {
-        if (const auto point = to_grid(to(position), render_surface_.view_config())) {
+        if (const auto point = to_grid(to(position), circuit_renderer_.view_config())) {
             circuit_store_.interactive_simulation().mouse_press(*point);
             update();
         }
@@ -562,13 +554,13 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
 
     if ((event_->buttons() & Qt::MiddleButton) != 0) {
         set_view_config_offset(
-            render_surface_,
-            mouse_drag_logic_.mouse_move(to(position), render_surface_.view_config()));
+            circuit_renderer_,
+            mouse_drag_logic_.mouse_move(to(position), circuit_renderer_.view_config()));
         update();
     }
 
     if ((event_->buttons() & Qt::LeftButton) != 0) {
-        if (editing_logic_manager_.mouse_move(position, render_surface_.view_config(),
+        if (editing_logic_manager_.mouse_move(position, circuit_renderer_.view_config(),
                                               editable_circuit_pointer(circuit_store_)) ==
             circuit_widget::ManagerResult::require_update) {
             update();
@@ -585,9 +577,9 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
 
     if (event_->button() == Qt::MiddleButton) {
-        set_view_config_offset(
-            render_surface_,
-            mouse_drag_logic_.mouse_release(to(position), render_surface_.view_config()));
+        set_view_config_offset(circuit_renderer_,
+                               mouse_drag_logic_.mouse_release(
+                                   to(position), circuit_renderer_.view_config()));
         update();
     }
 
@@ -599,10 +591,10 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
                                                          setting_handle);
         };
 
-        if (editing_logic_manager_.mouse_release(position, render_surface_.view_config(),
-                                                 editable_circuit_pointer(circuit_store_),
-                                                 show_setting_dialog) ==
-            circuit_widget::ManagerResult::require_update) {
+        if (editing_logic_manager_.mouse_release(
+                position, circuit_renderer_.view_config(),
+                editable_circuit_pointer(circuit_store_),
+                show_setting_dialog) == circuit_widget::ManagerResult::require_update) {
             update();
         }
     }
@@ -615,8 +607,8 @@ auto CircuitWidget::wheelEvent(QWheelEvent* event_) -> void {
     Expects(class_invariant_holds());
 
     if (const auto view_point = circuit_widget::wheel_scroll_zoom(
-            *this, *event_, render_surface_.view_config())) {
-        render_surface_.set_view_point(*view_point);
+            *this, *event_, circuit_renderer_.view_config())) {
+        circuit_renderer_.set_view_point(*view_point);
         update();
     }
 
@@ -746,7 +738,7 @@ auto CircuitWidget::copy_paste_position() const -> point_t {
 
     const auto result = to_closest_grid_position(to(get_mouse_position(*this)),
                                                  to(get_size_device(*this)),
-                                                 render_surface_.view_config());
+                                                 circuit_renderer_.view_config());
 
     Ensures(class_invariant_holds());
     return result;
@@ -810,10 +802,12 @@ auto CircuitWidget::paste_clipboard() -> void {
 
 auto CircuitWidget::class_invariant_holds() const -> bool {
     // Configs
-    Expects(render_surface_.render_config() == render_config_);
+    Expects(circuit_renderer_.render_config() == render_config_);
     Expects(circuit_store_.simulation_config() == simulation_config_);
     Expects(circuit_store_.circuit_state() == circuit_state_);
     Expects(editing_logic_manager_.circuit_state() == circuit_state_);
+    Expects(circuit_renderer_.render_config().direct_rendering ==
+            (render_surface_.requested_mode() == RenderMode::direct));
 
     // Timer
     Expects(timer_benchmark_render_.isActive() == render_config_.do_benchmark);

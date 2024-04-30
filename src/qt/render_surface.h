@@ -7,11 +7,18 @@
 #include <QImage>
 
 #include <functional>
+#include <string>
 
 class BLImage;
 class QWidget;
 
 namespace logicsim {
+
+struct fallback_error_t {
+    std::string message {};
+
+    [[nodiscard]] explicit operator bool() const;
+};
 
 /**
  * @brief: Component used for direct or buffered rendering.
@@ -34,7 +41,7 @@ class RenderSurface {
      * RenderMode: The actual render mode used for this frame.
      */
     using render_function_t =
-        std::function<void(BLImage&, device_pixel_ratio_t, RenderMode)>;
+        std::function<void(BLImage&, device_pixel_ratio_t, RenderMode, fallback_error_t)>;
 
     /**
      * @brief: Render the function with the mode requested, or its fallback..

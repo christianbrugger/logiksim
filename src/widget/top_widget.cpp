@@ -649,11 +649,10 @@ auto MainWidget::build_element_buttons() -> QWidget* {
 void MainWidget::on_timer_update_title() {
     const auto statistics = circuit_widget_->statistics();
 
-    const auto render_type = statistics.uses_direct_rendering ? "direct" : "buffered";
     auto text =
         fmt::format("[{}x{}] {:.1f} FPS {:.1f} pixel scale ({})", statistics.image_size.w,
                     statistics.image_size.h, statistics.frames_per_second,
-                    statistics.pixel_scale, render_type);
+                    statistics.pixel_scale, statistics.render_mode);
 
     if (statistics.simulation_events_per_second.has_value()) {
         const auto eps = statistics.simulation_events_per_second.value();

@@ -332,8 +332,8 @@ set(LS_GUI_SOURCES
     src/component/circuit_widget/mouse_logic/selection_move.cpp
     src/component/circuit_widget/mouse_logic/selection_single.cpp
     src/component/circuit_widget/checked_editable_circuit.cpp
+    src/component/circuit_widget/circuit_renderer.cpp
     src/component/circuit_widget/circuit_store.cpp
-    src/component/circuit_widget/render_surface.cpp
     src/component/circuit_widget/simulation_runner.cpp
     src/component/circuit_widget/zoom.cpp
 

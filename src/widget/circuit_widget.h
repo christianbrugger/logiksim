@@ -2,10 +2,12 @@
 #define LOGICSIM_WIDGET_CIRCUIT_WIDGET_H
 
 #include "circuit_widget_base.h"
+#include "component/circuit_widget/circuit_renderer.h"
 #include "component/circuit_widget/circuit_store.h"
 #include "component/circuit_widget/mouse_logic/editing_logic_manager.h"
 #include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
-#include "component/circuit_widget/render_surface.h"
+#include "qt/render_surface.h"
+#include "vocabulary/render_mode.h"
 
 #include <gsl/gsl>
 
@@ -29,7 +31,7 @@ struct Statistics {
     double frames_per_second;
     double pixel_scale;
     BLSize image_size;
-    bool uses_direct_rendering;
+    RenderMode render_mode;
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const Statistics&) const -> bool = default;
@@ -140,6 +142,8 @@ class CircuitWidget : public CircuitWidgetBase {
     auto keyPressEvent(QKeyEvent* event_) -> void override;
 
    private:
+    auto do_render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio,
+                   RenderMode render_mode, fallback_error_t fallback_error) -> void;
     auto set_editable_circuit(EditableCircuit&& editable_circuit,
                               std::optional<ViewPoint> view_point = {},
                               std::optional<SimulationConfig> simulation_config = {})
@@ -164,14 +168,16 @@ class CircuitWidget : public CircuitWidgetBase {
     SimulationConfig simulation_config_ {};
     CircuitWidgetState circuit_state_ {};
 
+    RenderSurface render_surface_ {};
     circuit_widget::CircuitStore circuit_store_ {};
-    circuit_widget::RenderSurface render_surface_ {};
+    circuit_widget::CircuitRenderer circuit_renderer_ {};
     circuit_widget::MouseDragLogic mouse_drag_logic_ {};
     circuit_widget::EditingLogicManager editing_logic_manager_;
 
     QTimer timer_benchmark_render_ {};
     QTimer timer_run_simulation_ {};
     bool simulation_image_update_pending_ {false};
+    RenderMode last_render_mode_ {RenderMode::buffered};
 
     gsl::not_null<SettingDialogManager*> setting_dialog_manager_;
 };
