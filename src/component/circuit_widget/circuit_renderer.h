@@ -18,6 +18,7 @@ struct GeometryInfo;
 struct ViewConfig;
 class EditableCircuit;
 class SpatialSimulation;
+struct MousePositionInfo;
 
 namespace circuit_widget {
 
@@ -68,6 +69,8 @@ class CircuitRenderer {
                                  const EditableCircuit& editable_circuit,
                                  bool show_size_handles) -> void;
     auto render_simulation(BLImage& bl_image, const SpatialSimulation& spatial_simulation)
+        -> void;
+    auto render_mouse_position_info(BLImage& bl_image, const MousePositionInfo& info)
         -> void;
 
    private:

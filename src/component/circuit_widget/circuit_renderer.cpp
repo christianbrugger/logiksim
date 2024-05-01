@@ -108,6 +108,12 @@ auto CircuitRenderer::render_simulation(BLImage& bl_image,
     count_frame(bl_image.size());
 }
 
+auto CircuitRenderer::render_mouse_position_info(BLImage& bl_image,
+                                                 const MousePositionInfo& info) -> void {
+    static_cast<void>(bl_image);
+    static_cast<void>(info);
+}
+
 //
 // Free Functions
 //

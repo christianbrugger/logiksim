@@ -232,6 +232,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/logicitem_definition.cpp
     src/vocabulary/logicitem_id.cpp
     src/vocabulary/logicitem_type.cpp
+    src/vocabulary/mouse_postion_info.cpp
     src/vocabulary/offset.cpp
     src/vocabulary/optional_logic_value.cpp
     src/vocabulary/optional_logic_values.cpp
