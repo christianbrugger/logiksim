@@ -52,7 +52,7 @@ auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geom
     auto painting_device = backing_store->paintDevice();
 
     if (painting_device->paintingActive()) {
-        return tl::unexpected("PaintingDevice has active painters unexpectively.");
+        return tl::unexpected("PaintingDevice has active painters unexpectedly.");
     }
 
     const auto image = dynamic_cast<QImage*>(painting_device);
@@ -85,8 +85,9 @@ auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geom
     if (pixels == nullptr) {
         return tl::unexpected("Widget paintDevice data pointer is a nullptr.");
     }
-    // scanLine can make a deep copy, we don't want that, constScanLine never does
-    // we query that one so if pointers are the same, we know there was no copy made.
+    // QImage has copy-on-write behavior. That means constScanLine always gives us a
+    // pointer to the buffer, while scanLine might make a copy first, if it is shared.
+    // A modifying pointer to the original buffer is needed, which is check here.
     if (pixels != pixels_direct) {
         return tl::unexpected("Widget paintDevice data is shared.");
     }
@@ -97,10 +98,12 @@ auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geom
     pixels += std::ptrdiff_t {rect.x()} * std::ptrdiff_t {image->bitPlaneCount() / 8};
 
     auto result = tl::expected<BLImage, std::string> {BLImage {}};
+
     if (result.value().createFromData(rect.width(), rect.height(), BL_FORMAT_PRGB32,
                                       pixels, image->bytesPerLine()) != BL_SUCCESS) {
         return tl::unexpected("Unable to create BLImage, wrong parameters.");
     }
+
     return result;
 }
 
@@ -115,8 +118,8 @@ auto resize_qt_image_no_copy(QImage& qt_image, QSize window_size) -> QImage {
 auto bl_image_from_qt_image(QImage& qt_image) -> BLImage {
     auto bl_image = BLImage {};
 
-    bl_image.createFromData(qt_image.width(), qt_image.height(), BL_FORMAT_PRGB32,
-                            qt_image.bits(), qt_image.bytesPerLine());
+    Expects(bl_image.createFromData(qt_image.width(), qt_image.height(), BL_FORMAT_PRGB32,
+                                    qt_image.bits(), qt_image.bytesPerLine()));
 
     return bl_image;
 }
@@ -135,33 +138,41 @@ struct get_bl_image_result_t {
 
 auto _get_bl_image(QBackingStore* backing_store, QImage& qt_image,
                    GeometryInfo geometry_info, RenderMode requested_mode)
+
     -> get_bl_image_result_t {
-    if (requested_mode == RenderMode::direct) {
-        auto result_ = bl_image_from_backing_store(backing_store, geometry_info);
+    switch (requested_mode) {
+        case RenderMode::direct: {
+            auto result_ = bl_image_from_backing_store(backing_store, geometry_info);
 
-        if (result_.has_value()) {
-            // free memory, as buffer is not needed
-            qt_image = QImage {};
+            if (result_.has_value()) {
+                // free memory, as buffer is not needed
+                qt_image = QImage {};
 
+                return get_bl_image_result_t {
+                    .bl_image = std::move(*result_),
+                    .mode = RenderMode::direct,
+                    .fallback_info = {},
+                };
+            }
+
+            // buffered fallback
             return get_bl_image_result_t {
-                .bl_image = std::move(*result_),
-                .mode = RenderMode::direct,
-                .fallback_info = {},
+                .bl_image = bl_image_from_qt_image(qt_image, geometry_info),
+                .mode = RenderMode::buffered,
+                .fallback_info = {.message = std::move(result_.error())},
             };
         }
 
-        return get_bl_image_result_t {
-            .bl_image = bl_image_from_qt_image(qt_image, geometry_info),
-            .mode = RenderMode::buffered,
-            .fallback_info = {.message = std::move(result_.error())},
-        };
+        case RenderMode::buffered: {
+            return get_bl_image_result_t {
+                .bl_image = bl_image_from_qt_image(qt_image, geometry_info),
+                .mode = RenderMode::buffered,
+                .fallback_info = {},
+            };
+        }
     }
 
-    return get_bl_image_result_t {
-        .bl_image = bl_image_from_qt_image(qt_image, geometry_info),
-        .mode = RenderMode::buffered,
-        .fallback_info = {},
-    };
+    std::terminate();
 }
 
 auto expected_qt_image_size(RenderMode actual_mode, QSize size_device) -> QSize {
@@ -185,11 +196,11 @@ auto get_bl_image(QBackingStore* backing_store, QImage& qt_image,
     const auto size_device_qt = to_size_device(geometry_info);
     const auto size_device_bl = BLSizeI {size_device_qt.width(), size_device_qt.height()};
 
+    using enum RenderMode;
     Ensures(result.bl_image.size() == size_device_bl);
     Ensures(qt_image.size() == expected_qt_image_size(result.mode, size_device_qt));
-    Ensures(
-        !(requested_mode == RenderMode::buffered && result.mode == RenderMode::direct));
-    Ensures((requested_mode == result.mode) == result.fallback_info.message.empty());
+    Ensures(!(requested_mode == buffered && result.mode != buffered));
+    Ensures((requested_mode != result.mode) == bool {result.fallback_info});
 
     return result;
 }
