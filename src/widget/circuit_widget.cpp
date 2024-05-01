@@ -466,9 +466,8 @@ auto CircuitWidget::renderEvent(BLImage bl_image, device_pixel_ratio_t device_pi
     -> void {
     Expects(class_invariant_holds());
 
-    if (bool {fallback_info}) {
-        print("WARNING: Cannot use direct rendering:", fallback_info.message);
-    }
+    fallback_printer_.print_if_set("WARNING: Cannot use direct rendering:",
+                                   fallback_info);
 
     // TODO use more device_pixel_ratio_t
     circuit_renderer_.set_device_pixel_ratio(double {device_pixel_ratio});

@@ -6,6 +6,7 @@
 #include <QImage>
 #include <QWidget>
 
+#include <concepts>
 #include <string>
 
 class BLImage;
@@ -13,16 +14,7 @@ class BLImage;
 namespace logicsim {
 
 struct device_pixel_ratio_t;
-
-namespace render_widget {
-
-struct fallback_info_t {
-    std::string message {};
-
-    [[nodiscard]] explicit operator bool() const;
-};
-
-}  // namespace render_widget
+struct fallback_info_t;
 
 /**
  * @brief: Widget for direct or buffered rendering via Blend2d.
@@ -35,8 +27,6 @@ class RenderWidget : public QWidget {
     Q_OBJECT
 
    public:
-    using fallback_info_t = render_widget::fallback_info_t;
-
     explicit RenderWidget(QWidget* parent = nullptr, Qt::WindowFlags flags = {});
 
     auto set_requested_render_mode(RenderMode mode) -> void;

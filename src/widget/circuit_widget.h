@@ -6,6 +6,7 @@
 #include "component/circuit_widget/circuit_store.h"
 #include "component/circuit_widget/mouse_logic/editing_logic_manager.h"
 #include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
+#include "vocabulary/fallback_info.h"
 #include "vocabulary/render_mode.h"
 
 #include <gsl/gsl>
@@ -175,7 +176,9 @@ class CircuitWidget : public CircuitWidgetBase {
     QTimer timer_benchmark_render_ {};
     QTimer timer_run_simulation_ {};
     bool simulation_image_update_pending_ {false};
+
     RenderMode last_render_mode_ {RenderMode::buffered};
+    FallbackPrinter fallback_printer_ {};
 
     gsl::not_null<SettingDialogManager*> setting_dialog_manager_;
 };

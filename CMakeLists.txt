@@ -209,6 +209,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/element_draw_state.cpp
     src/vocabulary/element_id.cpp
     src/vocabulary/element_type.cpp
+    src/vocabulary/fallback_info.cpp
     src/vocabulary/font_style.cpp
     src/vocabulary/grid.cpp
     src/vocabulary/grid_fine.cpp

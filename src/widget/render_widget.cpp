@@ -3,6 +3,7 @@
 #include "logging.h"
 #include "qt/widget_geometry.h"
 #include "vocabulary/device_pixel_ratio.h"
+#include "vocabulary/fallback_info.h"
 
 #include <blend2d.h>
 #include <gsl/gsl>
@@ -12,14 +13,6 @@
 #include <QPainter>
 
 namespace logicsim {
-
-namespace render_widget {
-
-fallback_info_t::operator bool() const {
-    return !message.empty();
-}
-
-}  // namespace render_widget
 
 //
 // Render Surface
@@ -53,13 +46,13 @@ namespace {
 auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geometry_info)
     -> tl::expected<BLImage, std::string> {
     if (backing_store == nullptr) {
-        return tl::unexpected("BackingStore is null.");
+        return tl::unexpected("Given BackingStore is a nullptr.");
     }
 
     auto painting_device = backing_store->paintDevice();
 
     if (painting_device->paintingActive()) {
-        return tl::unexpected("PaintingDevice is already used.");
+        return tl::unexpected("PaintingDevice has active painters unexpectively.");
     }
 
     const auto image = dynamic_cast<QImage*>(painting_device);
@@ -68,13 +61,18 @@ auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geom
         return tl::unexpected("Widget paintDevice is not a QImage.");
     }
     if (image->format() != QImage::Format_ARGB32_Premultiplied) {
-        return tl::unexpected("Widget paintDevice has the wrong format.");
+        const auto value = qToUnderlying(image->format());
+        return tl::unexpected(
+            fmt::format("Widget paintDevice has wrong QImage::Format of id {}.", value));
     }
     if (image->depth() != 32) {
-        return tl::unexpected("Widget paintDevice has an unexpected depth.");
+        return tl::unexpected(fmt::format(
+            "Widget paintDevice has an unexpected depth of {}.", image->depth()));
     }
     if (image->bitPlaneCount() != 32) {
-        return tl::unexpected("Widget paintDevice has an unexpected bitPlaneCount.");
+        return tl::unexpected(
+            fmt::format("Widget paintDevice has an unexpected bitPlaneCount of {}.",
+                        image->bitPlaneCount()));
     }
 
     const auto rect = to_device_rounded(geometry_info, image->rect());
@@ -85,7 +83,7 @@ auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geom
     auto pixels = image->scanLine(rect.y());
 
     if (pixels == nullptr) {
-        return tl::unexpected("Widget paintDevice data pointer is null.");
+        return tl::unexpected("Widget paintDevice data pointer is a nullptr.");
     }
     // scanLine can make a deep copy, we don't want that, constScanLine never does
     // we query that one so if pointers are the same, we know there was no copy made.
@@ -101,7 +99,7 @@ auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geom
     auto result = tl::expected<BLImage, std::string> {BLImage {}};
     if (result.value().createFromData(rect.width(), rect.height(), BL_FORMAT_PRGB32,
                                       pixels, image->bytesPerLine()) != BL_SUCCESS) {
-        return tl::unexpected("Unable to create BLImage, wrong parameters");
+        return tl::unexpected("Unable to create BLImage, wrong parameters.");
     }
     return result;
 }
@@ -130,9 +128,9 @@ auto bl_image_from_qt_image(QImage& qt_image, GeometryInfo geometry_info) -> BLI
 }
 
 struct get_bl_image_result_t {
-    BLImage image {};
+    BLImage bl_image {};
     RenderMode mode {RenderMode::buffered};
-    render_widget::fallback_info_t fallback_info {};
+    fallback_info_t fallback_info {};
 };
 
 auto _get_bl_image(QBackingStore* backing_store, QImage& qt_image,
@@ -141,26 +139,26 @@ auto _get_bl_image(QBackingStore* backing_store, QImage& qt_image,
     if (requested_mode == RenderMode::direct) {
         auto result_ = bl_image_from_backing_store(backing_store, geometry_info);
 
-        if (result_) {
+        if (result_.has_value()) {
             // free memory, as buffer is not needed
             qt_image = QImage {};
 
             return get_bl_image_result_t {
-                .image = std::move(*result_),
+                .bl_image = std::move(*result_),
                 .mode = RenderMode::direct,
                 .fallback_info = {},
             };
         }
 
         return get_bl_image_result_t {
-            .image = bl_image_from_qt_image(qt_image, geometry_info),
+            .bl_image = bl_image_from_qt_image(qt_image, geometry_info),
             .mode = RenderMode::buffered,
-            .fallback_info = {.message = result_.error()},
+            .fallback_info = {.message = std::move(result_.error())},
         };
     }
 
     return get_bl_image_result_t {
-        .image = bl_image_from_qt_image(qt_image, geometry_info),
+        .bl_image = bl_image_from_qt_image(qt_image, geometry_info),
         .mode = RenderMode::buffered,
         .fallback_info = {},
     };
@@ -187,7 +185,7 @@ auto get_bl_image(QBackingStore* backing_store, QImage& qt_image,
     const auto size_device_qt = to_size_device(geometry_info);
     const auto size_device_bl = BLSizeI {size_device_qt.width(), size_device_qt.height()};
 
-    Ensures(result.image.size() == size_device_bl);
+    Ensures(result.bl_image.size() == size_device_bl);
     Ensures(qt_image.size() == expected_qt_image_size(result.mode, size_device_qt));
     Ensures(
         !(requested_mode == RenderMode::buffered && result.mode == RenderMode::direct));
@@ -202,8 +200,9 @@ auto RenderWidget::paintEvent(QPaintEvent* /*unused*/) -> void {
     const auto info = get_geometry_info(*this);
     auto result = get_bl_image(this->backingStore(), qt_image_, info, requested_mode_);
 
-    renderEvent(std::move(result.image), device_pixel_ratio_t {info.device_pixel_ratio},
-                result.mode, std::move(result.fallback_info));
+    renderEvent(std::move(result.bl_image),
+                device_pixel_ratio_t {info.device_pixel_ratio}, result.mode,
+                std::move(result.fallback_info));
 
     if (result.mode == RenderMode::buffered) {
         qt_image_.setDevicePixelRatio(info.device_pixel_ratio);
