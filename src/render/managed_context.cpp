@@ -1,7 +1,5 @@
 #include "render/managed_context.h"
 
-#include "format/blend2d_type.h"  // TODO remove
-#include "logging.h"              // TODO remove
 #include "render/bl_error_check.h"
 #include "render/context_info.h"
 
@@ -22,9 +20,7 @@ auto create_context(BLImage &bl_image, const ContextRenderSettings &render_setti
 
 auto resize_image_no_copy(BLImage &image, BLSizeI new_size) -> void {
     if (image.size() != new_size) {
-        if (image.create(new_size.w, new_size.h, BL_FORMAT_PRGB32) != BL_SUCCESS) {
-            throw std::runtime_error("Error while calling BLImage::create");
-        }
+        Expects(image.create(new_size.w, new_size.h, BL_FORMAT_PRGB32) == BL_SUCCESS);
     }
 }
 
@@ -45,8 +41,6 @@ auto blit_layer(Context &target_ctx, const BLImage &source_image, BLRectI dirty_
     if (target_ctx.bl_ctx.targetSize() != source_image.size()) [[unlikely]] {
         throw std::runtime_error("target_ctx and source_image need to have same size.");
     }
-    // TODO ??? throws if dirty_rect is not within size
-    // print("dirty_rect", dirty_rect);
 
     auto _ [[maybe_unused]] = make_context_guard(target_ctx);
 

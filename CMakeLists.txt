@@ -343,12 +343,12 @@ set(LS_GUI_SOURCES
     src/qt/mouse_position.cpp
     src/qt/path_conversion.cpp
     src/qt/point_conversion.cpp
-    src/qt/render_surface.cpp
     src/qt/setting_location.cpp
     src/qt/widget_geometry.cpp
 
     src/widget/circuit_widget.cpp
     src/widget/circuit_widget_base.cpp
+    src/widget/render_widget.cpp
     src/widget/setting_dialog.cpp
     src/widget/setting_dialog_manager.cpp
     src/widget/top_widget.cpp
@@ -358,9 +358,10 @@ set(LS_GUI_SOURCES
 # list them manually to speedup compilation
 set(MOC_FILES
     src/widget/circuit_widget_base.h
-    src/widget/top_widget.h
+    src/widget/render_widget.h
     src/widget/setting_dialog.h
     src/widget/setting_dialog_manager.h
+    src/widget/top_widget.h
 )
 
 set(LS_TEST_SOURCES

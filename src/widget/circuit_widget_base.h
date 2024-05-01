@@ -4,16 +4,15 @@
 #include "vocabulary/circuit_widget_state.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/widget_render_config.h"
-
-#include <QWidget>
+#include "widget/render_widget.h"
 
 namespace logicsim {
 
-class CircuitWidgetBase : public QWidget {
+class CircuitWidgetBase : public RenderWidget {
     Q_OBJECT
 
    public:
-    using QWidget::QWidget;
+    using RenderWidget::RenderWidget;
 
     Q_SIGNAL void render_config_changed(logicsim::WidgetRenderConfig new_config);
     Q_SIGNAL void simulation_config_changed(logicsim::SimulationConfig new_config);

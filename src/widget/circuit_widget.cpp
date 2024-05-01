@@ -15,6 +15,7 @@
 #include "qt/point_conversion.h"
 #include "qt/widget_geometry.h"
 #include "setting_dialog_manager.h"
+#include "vocabulary/device_pixel_ratio.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/widget_render_config.h"
 
@@ -122,8 +123,8 @@ auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
 
     circuit_renderer_.set_render_config(new_config);
     // TODO remove direct rendering from this config
-    render_surface_.set_requested_mode(
-        new_config.direct_rendering ? RenderMode::direct : RenderMode::buffered);
+    this->set_requested_render_mode(new_config.direct_rendering ? RenderMode::direct
+                                                                : RenderMode::buffered);
 
     if (new_config.do_benchmark) {
         timer_benchmark_render_.start();
@@ -206,7 +207,6 @@ auto CircuitWidget::set_editable_circuit(
 
     finalize_editing();
     close_all_setting_dialogs();
-    render_surface_.reset();
     circuit_renderer_.reset();
 
     // disable simulation
@@ -461,13 +461,13 @@ auto CircuitWidget::resizeEvent(QResizeEvent* event_ [[maybe_unused]]) -> void {
     Ensures(expensive_invariant_holds());
 }
 
-auto CircuitWidget::do_render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio,
-                              RenderMode render_mode, fallback_error_t fallback_error)
+auto CircuitWidget::renderEvent(BLImage bl_image, device_pixel_ratio_t device_pixel_ratio,
+                                RenderMode render_mode, fallback_info_t fallback_info)
     -> void {
     Expects(class_invariant_holds());
 
-    if (bool {fallback_error}) {
-        print("WARNING: Cannot use direct rendering:", fallback_error.message);
+    if (bool {fallback_info}) {
+        print("WARNING: Cannot use direct rendering:", fallback_info.message);
     }
 
     // TODO use more device_pixel_ratio_t
@@ -494,19 +494,6 @@ auto CircuitWidget::do_render(BLImage& bl_image, device_pixel_ratio_t device_pix
 
     last_render_mode_ = render_mode;
     simulation_image_update_pending_ = false;
-
-    Ensures(class_invariant_holds());
-}
-
-auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
-    Expects(class_invariant_holds());
-
-    render_surface_.paintEvent(
-        *this, [this](BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio,
-                      RenderMode render_mode, fallback_error_t fallback_error) {
-            this->do_render(bl_image, device_pixel_ratio, render_mode,
-                            std::move(fallback_error));
-        });
 
     Ensures(class_invariant_holds());
 }
@@ -807,7 +794,7 @@ auto CircuitWidget::class_invariant_holds() const -> bool {
     Expects(circuit_store_.circuit_state() == circuit_state_);
     Expects(editing_logic_manager_.circuit_state() == circuit_state_);
     Expects(circuit_renderer_.render_config().direct_rendering ==
-            (render_surface_.requested_mode() == RenderMode::direct));
+            (this->requested_render_mode() == RenderMode::direct));
 
     // Timer
     Expects(timer_benchmark_render_.isActive() == render_config_.do_benchmark);

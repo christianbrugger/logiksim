@@ -6,7 +6,6 @@
 #include "component/circuit_widget/circuit_store.h"
 #include "component/circuit_widget/mouse_logic/editing_logic_manager.h"
 #include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
-#include "qt/render_surface.h"
 #include "vocabulary/render_mode.h"
 
 #include <gsl/gsl>
@@ -132,7 +131,9 @@ class CircuitWidget : public CircuitWidgetBase {
                                                      const SettingAttributes& attributes);
 
     auto resizeEvent(QResizeEvent* event_) -> void override;
-    auto paintEvent(QPaintEvent* event_) -> void override;
+    auto renderEvent(BLImage bl_image, device_pixel_ratio_t device_pixel_ratio,
+                     RenderMode render_mode, fallback_info_t fallback_info)
+        -> void override;
 
     auto mousePressEvent(QMouseEvent* event_) -> void override;
     auto mouseMoveEvent(QMouseEvent* event_) -> void override;
@@ -142,8 +143,6 @@ class CircuitWidget : public CircuitWidgetBase {
     auto keyPressEvent(QKeyEvent* event_) -> void override;
 
    private:
-    auto do_render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio,
-                   RenderMode render_mode, fallback_error_t fallback_error) -> void;
     auto set_editable_circuit(EditableCircuit&& editable_circuit,
                               std::optional<ViewPoint> view_point = {},
                               std::optional<SimulationConfig> simulation_config = {})
@@ -168,7 +167,6 @@ class CircuitWidget : public CircuitWidgetBase {
     SimulationConfig simulation_config_ {};
     CircuitWidgetState circuit_state_ {};
 
-    RenderSurface render_surface_ {};
     circuit_widget::CircuitStore circuit_store_ {};
     circuit_widget::CircuitRenderer circuit_renderer_ {};
     circuit_widget::MouseDragLogic mouse_drag_logic_ {};

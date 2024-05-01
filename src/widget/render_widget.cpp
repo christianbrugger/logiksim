@@ -1,7 +1,8 @@
-#include "qt/render_surface.h"
+#include "widget/render_widget.h"
 
 #include "logging.h"
 #include "qt/widget_geometry.h"
+#include "vocabulary/device_pixel_ratio.h"
 
 #include <blend2d.h>
 #include <gsl/gsl>
@@ -9,29 +10,20 @@
 
 #include <QBackingStore>
 #include <QPainter>
-#include <QWidget>
 
 namespace logicsim {
 
-fallback_error_t::operator bool() const {
+namespace render_widget {
+
+fallback_info_t::operator bool() const {
     return !message.empty();
 }
+
+}  // namespace render_widget
 
 //
 // Render Surface
 //
-
-auto RenderSurface::reset() -> void {
-    qt_image_ = QImage {};
-}
-
-auto RenderSurface::set_requested_mode(RenderMode mode) -> void {
-    requested_mode_ = mode;
-}
-
-auto RenderSurface::requested_mode() const -> RenderMode {
-    return requested_mode_;
-}
 
 namespace {
 
@@ -40,6 +32,23 @@ auto set_optimal_render_attributes(QWidget& widget) -> void {
     widget.setAttribute(Qt::WA_OpaquePaintEvent, true);
     widget.setAttribute(Qt::WA_NoSystemBackground, true);
 }
+
+}  // namespace
+
+RenderWidget::RenderWidget(QWidget* parent, Qt::WindowFlags flags)
+    : QWidget {parent, flags} {
+    set_optimal_render_attributes(*this);
+}
+
+auto RenderWidget::set_requested_render_mode(RenderMode mode) -> void {
+    requested_mode_ = mode;
+}
+
+auto RenderWidget::requested_render_mode() const -> RenderMode {
+    return requested_mode_;
+}
+
+namespace {
 
 auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geometry_info)
     -> tl::expected<BLImage, std::string> {
@@ -123,7 +132,7 @@ auto bl_image_from_qt_image(QImage& qt_image, GeometryInfo geometry_info) -> BLI
 struct get_bl_image_result_t {
     BLImage image {};
     RenderMode mode {RenderMode::buffered};
-    fallback_error_t fallback_error {};
+    render_widget::fallback_info_t fallback_info {};
 };
 
 auto _get_bl_image(QBackingStore* backing_store, QImage& qt_image,
@@ -139,21 +148,21 @@ auto _get_bl_image(QBackingStore* backing_store, QImage& qt_image,
             return get_bl_image_result_t {
                 .image = std::move(*result_),
                 .mode = RenderMode::direct,
-                .fallback_error = {},
+                .fallback_info = {},
             };
         }
 
         return get_bl_image_result_t {
             .image = bl_image_from_qt_image(qt_image, geometry_info),
             .mode = RenderMode::buffered,
-            .fallback_error = fallback_error_t {.message = result_.error()},
+            .fallback_info = {.message = result_.error()},
         };
     }
 
     return get_bl_image_result_t {
         .image = bl_image_from_qt_image(qt_image, geometry_info),
         .mode = RenderMode::buffered,
-        .fallback_error = {},
+        .fallback_info = {},
     };
 }
 
@@ -182,27 +191,23 @@ auto get_bl_image(QBackingStore* backing_store, QImage& qt_image,
     Ensures(qt_image.size() == expected_qt_image_size(result.mode, size_device_qt));
     Ensures(
         !(requested_mode == RenderMode::buffered && result.mode == RenderMode::direct));
-    Ensures((requested_mode == result.mode) == result.fallback_error.message.empty());
+    Ensures((requested_mode == result.mode) == result.fallback_info.message.empty());
 
     return result;
 }
 
 }  // namespace
 
-auto RenderSurface::paintEvent(QWidget& widget, render_function_t render_function)
-    -> void {
-    set_optimal_render_attributes(widget);
+auto RenderWidget::paintEvent(QPaintEvent* /*unused*/) -> void {
+    const auto info = get_geometry_info(*this);
+    auto result = get_bl_image(this->backingStore(), qt_image_, info, requested_mode_);
 
-    const auto info = get_geometry_info(widget);
-    auto result = get_bl_image(widget.backingStore(), qt_image_, info, requested_mode_);
-
-    // TODO !!! use device_pixel_ratio_t in more places
-    render_function(result.image, device_pixel_ratio_t {info.device_pixel_ratio},
-                    result.mode, std::move(result.fallback_error));
+    renderEvent(std::move(result.image), device_pixel_ratio_t {info.device_pixel_ratio},
+                result.mode, std::move(result.fallback_info));
 
     if (result.mode == RenderMode::buffered) {
         qt_image_.setDevicePixelRatio(info.device_pixel_ratio);
-        auto painter = QPainter {&widget};
+        auto painter = QPainter {this};
         painter.drawImage(QPoint(0, 0), qt_image_);
     }
 }

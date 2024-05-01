@@ -12,7 +12,9 @@
 
 namespace logicsim {
 
-// TODO !!! rename file
+// TODO !!! rename this file
+// TODO !!! move free methods somewhere else ???
+// TODO !!! merge with bl_error_check & context_info ???
 
 /**
  * @brief: A Render Context that own the target image.
@@ -33,9 +35,6 @@ class ImageSurface {
    private:
     BLImage bl_image_ {};
 };
-
-// TODO move somewhere else ???
-// TODO merge with bl_error_check & context_info ???
 
 /**
  * @brief: Create a context from the image and render settings.
