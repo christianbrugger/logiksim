@@ -1,15 +1,12 @@
 #include "component/circuit_widget/circuit_renderer.h"
 
 #include "editable_circuit.h"
-#include "format/blend2d_type.h"  // TODO remove
-#include "logging.h"
-#include "qt/widget_geometry.h"
 #include "render_caches.h"
 #include "render_circuit.h"
 #include "simulation_view.h"
 #include "spatial_simulation.h"
 
-#include <tl/expected.hpp>
+#include <gsl/gsl>
 
 namespace logicsim {
 
@@ -132,18 +129,52 @@ auto set_view_config_device_scale(CircuitRenderer& render_surface, double device
 namespace {
 
 auto render_circuit_background(Context& ctx) {
-    // print_fmt("Layers: {:.3f} MB\n", context_.layers.allocated_size() / 1024. / 1024.);
-
     render_background(ctx);
 }
 
-auto render_circuit_overlay(Context& ctx [[maybe_unused]]) {
-    // context_.ctx.bl_ctx.setFillStyle(BLRgba32(defaults::color_black.value));
-    // context_.ctx.bl_ctx.fillRect(BLRect {0, 0, 1, 100});
-    // context_.ctx.bl_ctx.fillRect(BLRect {context_.ctx.bl_image.width() - 1.0, 0, 1,
-    // 100}); context_.ctx.bl_ctx.fillRect(BLRect {0, 0, 100, 1});
-    // context_.ctx.bl_ctx.fillRect(
-    //     BLRect {0, context_.ctx.bl_image.height() - 1.0, 100, 1});
+namespace {
+
+/**
+ * @brief: Draw narrow lines around the target borders to ensure all is visible.
+ */
+auto draw_target_outline(Context& ctx, int margin, color_t color) {
+    if (margin < 0) [[unlikely]] {
+        throw std::runtime_error("margin needs to be positive");
+    }
+
+    const auto size = ctx.bl_ctx.targetSize();
+
+    // length of marker
+    const auto d = double {100};
+
+    // first x and y
+    const auto x1 = gsl::narrow<double>(0 + margin);
+    const auto y1 = gsl::narrow<double>(0 + margin);
+    // last x and y
+    const auto x2 = gsl::narrow<double>(size.w - 1 - margin);
+    const auto y2 = gsl::narrow<double>(size.h - 1 - margin);
+
+    // upper left
+    ctx.bl_ctx.fillRect(BLRect {x1, y1, 0 + 1, d + 1}, color);
+    ctx.bl_ctx.fillRect(BLRect {x1, y1, d + 1, 0 + 1}, color);
+    // lower left
+    ctx.bl_ctx.fillRect(BLRect {x1, y2 - d, 0 + 1, d + 1}, color);
+    ctx.bl_ctx.fillRect(BLRect {x1, y2 + 0, d + 1, 0 + 1}, color);
+    // upper right
+    ctx.bl_ctx.fillRect(BLRect {x2 - d, y1, d + 1, 0 + 1}, color);
+    ctx.bl_ctx.fillRect(BLRect {x2 + 0, y1, 0 + 1, d + 1}, color);
+    // lower right
+    ctx.bl_ctx.fillRect(BLRect {x2 - d, y2 + 0, d + 1, 0 + 1}, color);
+    ctx.bl_ctx.fillRect(BLRect {x2 + 0, y2 - d, 0 + 1, d + 1}, color);
+}
+
+}  // namespace
+
+auto render_circuit_overlay(Context& ctx, const WidgetRenderConfig& render_config) {
+    if (render_config.show_render_borders) {
+        draw_target_outline(ctx, 1, defaults::color_red);
+        draw_target_outline(ctx, 0, defaults::color_lime);
+    }
 }
 
 }  // namespace
@@ -158,7 +189,7 @@ auto render_to_context(Context& ctx, ImageSurface& surface,
         render_layout(ctx, surface, layout);
     }
 
-    render_circuit_overlay(ctx);
+    render_circuit_overlay(ctx, render_config);
 }
 
 auto render_to_context(Context& ctx, ImageSurface& surface,
@@ -202,7 +233,7 @@ auto render_to_context(Context& ctx, ImageSurface& surface,
         render_editable_circuit_selection_cache(ctx, editable_circuit);
     }
 
-    render_circuit_overlay(ctx);
+    render_circuit_overlay(ctx, render_config);
 }
 
 auto render_to_context(Context& ctx, const WidgetRenderConfig& render_config,
@@ -215,7 +246,7 @@ auto render_to_context(Context& ctx, const WidgetRenderConfig& render_config,
                           SimulationView {spatial_simulation});
     }
 
-    render_circuit_overlay(ctx);
+    render_circuit_overlay(ctx, render_config);
 }
 
 }  // namespace circuit_widget

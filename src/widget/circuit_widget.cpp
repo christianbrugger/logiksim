@@ -6,6 +6,7 @@
 #include "component/circuit_widget/simulation_runner.h"
 #include "component/circuit_widget/zoom.h"
 #include "copy_paste_clipboard.h"
+#include "format/qt_type.h"
 #include "geometry/scene.h"
 #include "load_save_file.h"
 #include "logging.h"
@@ -537,6 +538,7 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
     Expects(class_invariant_holds());
 
     const auto position = get_mouse_position(this, event_);
+    print("get_mouse_position ", position);
 
     if ((event_->buttons() & Qt::MiddleButton) != 0) {
         set_view_config_offset(
@@ -865,6 +867,12 @@ auto set_thread_count(CircuitWidget& circuit_widget, int new_count) -> void {
 auto set_direct_rendering(CircuitWidget& circuit_widget, bool use_store) -> void {
     auto config = circuit_widget.render_config();
     config.direct_rendering = use_store;
+    circuit_widget.set_render_config(config);
+}
+
+auto set_show_render_borders(CircuitWidget& circuit_widget, bool value) -> void {
+    auto config = circuit_widget.render_config();
+    config.show_render_borders = value;
     circuit_widget.set_render_config(config);
 }
 

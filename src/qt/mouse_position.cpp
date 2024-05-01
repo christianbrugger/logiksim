@@ -1,5 +1,8 @@
 #include "qt/mouse_position.h"
 
+#include "format/qt_type.h"
+#include "logging.h"
+
 #include <gsl/gsl>
 
 namespace logicsim {
@@ -14,7 +17,17 @@ auto get_mouse_position(const QWidget* widget, const QSinglePointEvent* event_)
 
 auto get_mouse_position(const QWidget& widget, const QSinglePointEvent& event_)
     -> QPointF {
-    return widget.mapFromGlobal(event_.globalPosition());
+    // return widget.mapFromGlobal(event_.globalPosition());
+
+    if (event_.type() == QEvent::Wheel) {
+        // Wheel events scenePosition returns the same as position.
+        // I don't know why, it seems to be a bug.
+        return event_.scenePosition();
+    }
+
+    // scenePosition is the only function of event_ that returns non-rounded
+    // positions with display-scaling > 1.
+    return widget.mapFrom(widget.topLevelWidget(), event_.scenePosition());
 }
 
 auto get_mouse_position(const QWidget& widget) -> QPointF {

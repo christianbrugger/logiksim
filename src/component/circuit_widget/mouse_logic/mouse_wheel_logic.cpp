@@ -1,7 +1,9 @@
 #include "component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
 
 #include "component/circuit_widget/zoom.h"
+#include "format/qt_type.h"
 #include "geometry/scene.h"
+#include "logging.h"
 #include "qt/mouse_position.h"
 #include "qt/point_conversion.h"
 #include "vocabulary/view_config.h"
@@ -112,6 +114,8 @@ auto wheel_scroll_zoom(QPointF position, Qt::KeyboardModifiers modifiers,
 auto wheel_scroll_zoom(const QWidget& widget, const QWheelEvent& event_,
                        const ViewConfig& view_config) -> std::optional<ViewPoint> {
     const auto position = get_mouse_position(widget, event_);
+    print(position);
+
     const auto pixel_delta =
         event_.hasPixelDelta() ? std::make_optional(event_.pixelDelta()) : std::nullopt;
 

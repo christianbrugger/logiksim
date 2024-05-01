@@ -14,6 +14,7 @@ struct WidgetRenderConfig {
     bool show_connection_cache {false};
     bool show_selection_cache {false};
 
+    bool show_render_borders {false};
     bool direct_rendering {true};
     int thread_count {4};
 

@@ -145,6 +145,9 @@ namespace {
             return std::filesystem::path {"icons/lucide/network.svg"};
         }
 
+        case show_render_borders: {
+            return std::filesystem::path {"icons/lucide/scan.svg"};
+        }
         case non_interactive_mode: {
             return std::filesystem::path {"icons/lucide/circle-slash.svg"};
         }

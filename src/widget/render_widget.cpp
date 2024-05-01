@@ -119,7 +119,8 @@ auto bl_image_from_qt_image(QImage& qt_image) -> BLImage {
     auto bl_image = BLImage {};
 
     Expects(bl_image.createFromData(qt_image.width(), qt_image.height(), BL_FORMAT_PRGB32,
-                                    qt_image.bits(), qt_image.bytesPerLine()));
+                                    qt_image.bits(),
+                                    qt_image.bytesPerLine()) == BL_SUCCESS);
 
     return bl_image;
 }
@@ -138,8 +139,17 @@ struct get_bl_image_result_t {
 
 auto _get_bl_image(QBackingStore* backing_store, QImage& qt_image,
                    GeometryInfo geometry_info, RenderMode requested_mode)
-
     -> get_bl_image_result_t {
+    // handle zero sizes
+    if (const auto size = to_device_rounded(geometry_info);
+        size.width() == 0 || size.height() == 0) {
+        return get_bl_image_result_t {
+            .bl_image = BLImage {},
+            .mode = requested_mode,
+            .fallback_info = {},
+        };
+    }
+
     switch (requested_mode) {
         case RenderMode::direct: {
             auto result_ = bl_image_from_backing_store(backing_store, geometry_info);

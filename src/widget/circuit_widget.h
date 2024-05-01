@@ -195,6 +195,7 @@ auto set_show_selection_cache(CircuitWidget& circuit_widget, bool value) -> void
 
 auto set_thread_count(CircuitWidget& circuit_widget, int new_count) -> void;
 auto set_direct_rendering(CircuitWidget& circuit_widget, bool use_store) -> void;
+auto set_show_render_borders(CircuitWidget& circuit_widget, bool value) -> void;
 
 //
 // SimulationConfig

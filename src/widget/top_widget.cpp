@@ -415,10 +415,20 @@ auto MainWidget::create_menu() -> void {
         }
 
         menu->addSeparator();
-        actions_.non_interactive_mode = add_action(
+
+        actions_.show_render_borders = add_action_checkable(
+            menu, tr("Show Render Borders"),
+            ActionAttributes {.icon = icon_t::show_render_borders},
+            [this](bool checked) { set_show_render_borders(*circuit_widget_, checked); });
+
+        actions_.non_interactive_mode = add_action_checkable(
             menu, tr("Enter Non-In&teractive Mode"),
             ActionAttributes {.icon = icon_t::non_interactive_mode},
-            [this]() { circuit_widget_->set_circuit_state(NonInteractiveState {}); });
+            [this](bool checked) {
+                if (checked) {
+                    circuit_widget_->set_circuit_state(NonInteractiveState {});
+                }
+            });
 
         menu->addSeparator();
         actions_.direct_rendering = add_action_checkable(
@@ -697,6 +707,9 @@ void MainWidget::on_circuit_state_changed(CircuitWidgetState new_state) {
     if (actions_.wire_delay_checkbox != nullptr) {
         actions_.wire_delay_checkbox->setEnabled(!simulation_active);
     }
+
+    // non-interactive
+    actions_.non_interactive_mode->setChecked(is_non_interactive(new_state));
 }
 
 void MainWidget::on_timer_process_app_arguments_once() {
@@ -867,6 +880,9 @@ Q_SLOT void MainWidget::on_render_config_changed(WidgetRenderConfig new_config) 
         }
     }
 
+    if (actions_.show_render_borders != nullptr) {
+        actions_.show_render_borders->setChecked(new_config.show_render_borders);
+    }
     if (actions_.direct_rendering != nullptr) {
         actions_.direct_rendering->setChecked(new_config.direct_rendering);
     }
