@@ -502,6 +502,7 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     Expects(class_invariant_holds());
 
     const auto position = get_mouse_position(this, event_);
+    print("P", position);
 
     if (event_->button() == Qt::MiddleButton) {
         mouse_drag_logic_.mouse_press(to(position));
@@ -538,7 +539,7 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
     Expects(class_invariant_holds());
 
     const auto position = get_mouse_position(this, event_);
-    print("get_mouse_position ", position);
+    print("M", position);
 
     if ((event_->buttons() & Qt::MiddleButton) != 0) {
         set_view_config_offset(
@@ -563,6 +564,7 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
     Expects(class_invariant_holds());
 
     const auto position = get_mouse_position(this, event_);
+    print("R", position);
 
     if (event_->button() == Qt::MiddleButton) {
         set_view_config_offset(circuit_renderer_,

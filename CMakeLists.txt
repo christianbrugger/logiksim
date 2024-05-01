@@ -341,6 +341,7 @@ set(LS_GUI_SOURCES
     src/format/qt_type.cpp
 
     src/qt/clipboard_access.cpp
+    src/qt/enum_to_string.cpp
     src/qt/mouse_position.cpp
     src/qt/path_conversion.cpp
     src/qt/point_conversion.cpp
