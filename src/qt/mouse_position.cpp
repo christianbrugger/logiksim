@@ -17,7 +17,10 @@ auto get_mouse_position(const QWidget* widget, const QSinglePointEvent* event_)
 
 auto get_mouse_position(const QWidget& widget, const QSinglePointEvent& event_)
     -> QPointF {
-    // return widget.mapFromGlobal(event_.globalPosition());
+    print("position", event_.position());
+    print("scene", event_.scenePosition());
+    print("global", event_.globalPosition());
+    print();
 
     if (event_.type() == QEvent::Wheel) {
         // Wheel events scenePosition returns the same as position.

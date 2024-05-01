@@ -1,6 +1,9 @@
 #ifndef LOGICSIM_RENDER_CONTEXT_CACHE_H
 #define LOGICSIM_RENDER_CONTEXT_CACHE_H
 
+#include <memory>
+#include <concepts>
+
 namespace logicsim {
 
 class TextCache;
