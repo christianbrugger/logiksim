@@ -1,6 +1,9 @@
 #include "component/circuit_widget/circuit_renderer.h"
 
 #include "editable_circuit.h"
+#include "geometry/scene.h"
+#include "logging.h"
+#include "render/text_cache.h"
 #include "render_caches.h"
 #include "render_circuit.h"
 #include "simulation_view.h"
@@ -57,6 +60,11 @@ auto CircuitRenderer::set_device_pixel_ratio(double device_pixel_ratio) -> void 
     context_settings_.view_config.set_device_pixel_ratio(device_pixel_ratio);
 }
 
+auto CircuitRenderer::set_mouse_position_info(std::optional<MousePositionInfo> info)
+    -> void {
+    mouse_position_info_ = std::move(info);
+}
+
 auto CircuitRenderer::statistics() const -> SurfaceStatistics {
     return SurfaceStatistics {
         .frames_per_second = fps_counter_.events_per_second(),
@@ -76,6 +84,7 @@ auto CircuitRenderer::render_layout(BLImage& bl_image, const Layout& layout) -> 
 
     render_to_image(bl_image, context_settings_, context_cache_, [&](Context& ctx) {
         render_to_context(ctx, context_surface_, render_config_, layout);
+        render_mouse_position_info(ctx, render_config_, mouse_position_info_);
     });
 
     count_frame(bl_image.size());
@@ -90,6 +99,7 @@ auto CircuitRenderer::render_editable_circuit(BLImage& bl_image,
     render_to_image(bl_image, context_settings_, context_cache_, [&](Context& ctx) {
         render_to_context(ctx, context_surface_, render_config_, editable_circuit,
                           show_size_handles);
+        render_mouse_position_info(ctx, render_config_, mouse_position_info_);
     });
 
     count_frame(bl_image.size());
@@ -103,15 +113,10 @@ auto CircuitRenderer::render_simulation(BLImage& bl_image,
 
     render_to_image(bl_image, context_settings_, context_cache_, [&](Context& ctx) {
         render_to_context(ctx, render_config_, spatial_simulation);
+        render_mouse_position_info(ctx, render_config_, mouse_position_info_);
     });
 
     count_frame(bl_image.size());
-}
-
-auto CircuitRenderer::render_mouse_position_info(BLImage& bl_image,
-                                                 const MousePositionInfo& info) -> void {
-    static_cast<void>(bl_image);
-    static_cast<void>(info);
 }
 
 //
@@ -253,6 +258,54 @@ auto render_to_context(Context& ctx, const WidgetRenderConfig& render_config,
     }
 
     render_circuit_overlay(ctx, render_config);
+}
+
+namespace {
+
+auto render_mouse_info_position(Context& ctx, const MousePositionInfo& info) -> void {
+    const auto line_color = defaults::color_red;
+
+    const auto pos = to_context(info.position, ctx);
+    const auto size = ctx.settings.view_config.size();
+
+    const auto w = gsl::narrow<double>(size.w);
+    const auto h = gsl::narrow<double>(size.h);
+
+    // cross
+    ctx.bl_ctx.fillRect(BLRect {pos.x, 0, 1, h}, line_color);
+    ctx.bl_ctx.fillRect(BLRect {0, pos.y, w, 1}, line_color);
+}
+
+auto render_mouse_info_labels(Context& ctx, const MousePositionInfo& info) -> void {
+    const auto font_size = 16.0f;
+    const auto attrs = TextCache::TextAttributes {.style = FontStyle::monospace};
+
+    const auto pos = to_context(info.position, ctx);
+    const auto text_x = pos.x + 20.0;
+    const auto text_y = pos.y + font_size;
+
+    auto draw_label = [&, y_ = text_y](std::string_view label_) mutable {
+        ctx.cache.text_cache().draw_text(ctx.bl_ctx, BLPoint {text_x, y_}, label_,
+                                         font_size, attrs);
+        y_ += font_size;
+    };
+
+    for (const auto& label : info.labels) {
+        draw_label(label);
+    }
+    draw_label(mouse_position_label("context", "BLPoint", pos));
+    draw_label(mouse_position_label("grid", "point_fine_t",
+                                    to_grid_fine(info.position, ctx.view_config())));
+}
+
+}  // namespace
+
+auto render_mouse_position_info(Context& ctx, const WidgetRenderConfig& render_config,
+                                const std::optional<MousePositionInfo>& info) -> void {
+    if (info.has_value() && render_config.show_mouse_position) {
+        render_mouse_info_position(ctx, *info);
+        render_mouse_info_labels(ctx, *info);
+    }
 }
 
 }  // namespace circuit_widget

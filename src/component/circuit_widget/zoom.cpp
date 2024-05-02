@@ -28,11 +28,6 @@ auto zoom(ViewConfig view_config, double steps, point_device_fine_t center) -> V
     return view_config.view_point();
 }
 
-auto zoom(const QWidget& widget, ViewConfig view_config, double steps) -> ViewPoint {
-    const auto center = to(get_mouse_position_inside_widget(widget));
-    return zoom(view_config, steps, center);
-}
-
 }  // namespace circuit_widget
 
 }  // namespace logicsim

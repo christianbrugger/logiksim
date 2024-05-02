@@ -2,6 +2,8 @@
 
 #include "geometry/scene.h"
 #include "render/context_guard.h"
+#include "vocabulary/point_device.h"
+#include "vocabulary/point_device_fine.h"
 
 namespace logicsim {
 
@@ -26,6 +28,14 @@ auto to_context(point_t position, const Context& context) -> BLPoint {
 }
 
 auto to_context(point_fine_t position, const Context& context) -> BLPoint {
+    return to_context(position, context.settings.view_config);
+}
+
+auto to_context(point_device_fine_t position, const Context& context) -> BLPoint {
+    return to_context(position, context.settings.view_config);
+}
+
+auto to_context(point_device_t position, const Context& context) -> BLPoint {
     return to_context(position, context.settings.view_config);
 }
 

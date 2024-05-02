@@ -114,7 +114,6 @@ auto wheel_scroll_zoom(QPointF position, Qt::KeyboardModifiers modifiers,
 auto wheel_scroll_zoom(const QWidget& widget, const QWheelEvent& event_,
                        const ViewConfig& view_config) -> std::optional<ViewPoint> {
     const auto position = get_mouse_position(widget, event_);
-    print("W", position);
 
     const auto pixel_delta =
         event_.hasPixelDelta() ? std::make_optional(event_.pixelDelta()) : std::nullopt;

@@ -154,9 +154,12 @@ class CircuitWidget : public CircuitWidgetBase {
 
     auto select_all() -> void;
     auto delete_selected() -> void;
-    [[nodiscard]] auto copy_paste_position() const -> point_t;
+    [[nodiscard]] auto copy_paste_position() -> point_t;
     auto copy_selected() -> void;
     auto paste_clipboard() -> void;
+    auto zoom(double steps) -> void;
+    auto log_mouse_position(std::string_view source, QPointF position,
+                            QSinglePointEvent* event_ = nullptr) -> void;
 
     [[nodiscard]] auto class_invariant_holds() const -> bool;
     /* only at the end of mutable methods, except paintEvent */
@@ -196,6 +199,7 @@ auto set_show_selection_cache(CircuitWidget& circuit_widget, bool value) -> void
 auto set_thread_count(CircuitWidget& circuit_widget, int new_count) -> void;
 auto set_direct_rendering(CircuitWidget& circuit_widget, bool use_store) -> void;
 auto set_show_render_borders(CircuitWidget& circuit_widget, bool value) -> void;
+auto set_show_mouse_position(CircuitWidget& circuit_widget, bool value) -> void;
 
 //
 // SimulationConfig

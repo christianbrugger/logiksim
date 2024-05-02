@@ -2,8 +2,16 @@
 
 #include "format/qt_type.h"
 #include "logging.h"
+#include "qt/point_conversion.h"
+#include "vocabulary/mouse_postion_info.h"
 
 #include <gsl/gsl>
+
+#include <QMouseEvent>
+#include <QPointF>
+#include <QSinglePointEvent>
+#include <QWheelEvent>
+#include <QWidget>
 
 namespace logicsim {
 
@@ -54,6 +62,26 @@ auto get_mouse_position_inside_widget(const QWidget& widget) -> QPointF {
     }
 
     return QPointF {widget.width() / 2., widget.height() / 2.};
+}
+
+auto create_mouse_position_info(std::string_view source, QPointF position,
+                                QSinglePointEvent* event_) -> MousePositionInfo {
+    auto info = MousePositionInfo {
+        .position = to(position),
+        .labels = {std::string(source),
+                   mouse_position_label("device", "point_device_fine_t", to(position))},
+    };
+
+    if (event_ != nullptr) {
+        info.labels.emplace_back(
+            mouse_position_label("event->position", "QPointF", to(event_->position())));
+        info.labels.emplace_back(mouse_position_label("event->scenePosition", "QPointF",
+                                                      to(event_->scenePosition())));
+        info.labels.emplace_back(mouse_position_label("event->globalPosition", "QPointF",
+                                                      to(event_->globalPosition())));
+    }
+
+    return info;
 }
 
 }  // namespace logicsim

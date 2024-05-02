@@ -148,6 +148,9 @@ namespace {
         case show_render_borders: {
             return std::filesystem::path {"icons/lucide/scan.svg"};
         }
+        case show_mouse_position: {
+            return std::filesystem::path {"icons/lucide/mouse-pointer-click.svg"};
+        }
         case non_interactive_mode: {
             return std::filesystem::path {"icons/lucide/circle-slash.svg"};
         }

@@ -61,6 +61,7 @@ struct MainActions {
     QAction* show_selection_cache;
 
     QAction* show_render_borders;
+    QAction* show_mouse_position;
     QAction* non_interactive_mode;
     QAction* direct_rendering;
 

@@ -374,15 +374,11 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         }
 
         case zoom_in: {
-            circuit_renderer_.set_view_point(
-                circuit_widget::zoom(*this, circuit_renderer_.view_config(), +1));
-            update();
+            this->zoom(+1);
             break;
         }
         case zoom_out: {
-            circuit_renderer_.set_view_point(
-                circuit_widget::zoom(*this, circuit_renderer_.view_config(), -1));
-            update();
+            this->zoom(-1);
             break;
         }
         case reset_view: {
@@ -502,7 +498,7 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     Expects(class_invariant_holds());
 
     const auto position = get_mouse_position(this, event_);
-    print("P", position);
+    log_mouse_position("mousePressEvent", position, event_);
 
     if (event_->button() == Qt::MiddleButton) {
         mouse_drag_logic_.mouse_press(to(position));
@@ -539,7 +535,7 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
     Expects(class_invariant_holds());
 
     const auto position = get_mouse_position(this, event_);
-    print("M", position);
+    log_mouse_position("mouseMoveEvent", position, event_);
 
     if ((event_->buttons() & Qt::MiddleButton) != 0) {
         set_view_config_offset(
@@ -564,7 +560,7 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
     Expects(class_invariant_holds());
 
     const auto position = get_mouse_position(this, event_);
-    print("R", position);
+    log_mouse_position("mouseReleaseEvent", position, event_);
 
     if (event_->button() == Qt::MiddleButton) {
         set_view_config_offset(circuit_renderer_,
@@ -595,6 +591,9 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
 
 auto CircuitWidget::wheelEvent(QWheelEvent* event_) -> void {
     Expects(class_invariant_holds());
+
+    // TODO use actually used value from wheel_scroll_zoom
+    log_mouse_position("wheelEvent", get_mouse_position(this, event_), event_);
 
     if (const auto view_point = circuit_widget::wheel_scroll_zoom(
             *this, *event_, circuit_renderer_.view_config())) {
@@ -723,12 +722,14 @@ auto CircuitWidget::delete_selected() -> void {
     Ensures(expensive_invariant_holds());
 }
 
-auto CircuitWidget::copy_paste_position() const -> point_t {
+auto CircuitWidget::copy_paste_position() -> point_t {
     Expects(class_invariant_holds());
 
-    const auto result = to_closest_grid_position(to(get_mouse_position(*this)),
-                                                 to(get_size_device(*this)),
+    const auto position = get_mouse_position(*this);
+    const auto result = to_closest_grid_position(to(position), to(get_size_device(*this)),
                                                  circuit_renderer_.view_config());
+
+    log_mouse_position("copy_paste_position", position);
 
     Ensures(class_invariant_holds());
     return result;
@@ -788,6 +789,32 @@ auto CircuitWidget::paste_clipboard() -> void {
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+}
+
+/**
+ * @brief: Find a position within the widget and zoom by given steps.
+ *
+ * Note, this the current mouse position or the center of the widget, if the
+ * mouse is outside of the widget.
+ */
+auto CircuitWidget::zoom(double steps) -> void {
+    const auto center = get_mouse_position_inside_widget(*this);
+    log_mouse_position("zoom", center);
+
+    circuit_renderer_.set_view_point(
+        circuit_widget::zoom(circuit_renderer_.view_config(), steps, to(center)));
+
+    update();
+}
+
+auto CircuitWidget::log_mouse_position(std::string_view source, QPointF position,
+                                       QSinglePointEvent* event_) -> void {
+    if (render_config_.show_mouse_position) {
+        circuit_renderer_.set_mouse_position_info(
+            create_mouse_position_info(source, position, event_));
+    } else {
+        circuit_renderer_.set_mouse_position_info(std::nullopt);
+    }
 }
 
 auto CircuitWidget::class_invariant_holds() const -> bool {
@@ -875,6 +902,12 @@ auto set_direct_rendering(CircuitWidget& circuit_widget, bool use_store) -> void
 auto set_show_render_borders(CircuitWidget& circuit_widget, bool value) -> void {
     auto config = circuit_widget.render_config();
     config.show_render_borders = value;
+    circuit_widget.set_render_config(config);
+}
+
+auto set_show_mouse_position(CircuitWidget& circuit_widget, bool value) -> void {
+    auto config = circuit_widget.render_config();
+    config.show_mouse_position = value;
     circuit_widget.set_render_config(config);
 }
 

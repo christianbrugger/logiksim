@@ -55,6 +55,11 @@ struct size_device_t;
 [[nodiscard]] auto to_context(point_fine_t position, const ViewConfig& config) -> BLPoint;
 [[nodiscard]] auto to_context(point_t position, const ViewConfig& config) -> BLPoint;
 
+[[nodiscard]] auto to_context(point_device_fine_t position, const ViewConfig& config)
+    -> BLPoint;
+[[nodiscard]] auto to_context(point_device_t position, const ViewConfig& config)
+    -> BLPoint;
+
 [[nodiscard]] auto to_context(grid_fine_t length, const ViewConfig& config) -> double;
 [[nodiscard]] auto to_context(grid_t length, const ViewConfig& config) -> double;
 

@@ -421,6 +421,11 @@ auto MainWidget::create_menu() -> void {
             ActionAttributes {.icon = icon_t::show_render_borders},
             [this](bool checked) { set_show_render_borders(*circuit_widget_, checked); });
 
+        actions_.show_mouse_position = add_action_checkable(
+            menu, tr("Show Mouse Position"),
+            ActionAttributes {.icon = icon_t::show_mouse_position},
+            [this](bool checked) { set_show_mouse_position(*circuit_widget_, checked); });
+
         actions_.non_interactive_mode = add_action_checkable(
             menu, tr("Enter Non-In&teractive Mode"),
             ActionAttributes {.icon = icon_t::non_interactive_mode},
@@ -882,6 +887,9 @@ Q_SLOT void MainWidget::on_render_config_changed(WidgetRenderConfig new_config) 
 
     if (actions_.show_render_borders != nullptr) {
         actions_.show_render_borders->setChecked(new_config.show_render_borders);
+    }
+    if (actions_.show_mouse_position != nullptr) {
+        actions_.show_mouse_position->setChecked(new_config.show_mouse_position);
     }
     if (actions_.direct_rendering != nullptr) {
         actions_.direct_rendering->setChecked(new_config.direct_rendering);

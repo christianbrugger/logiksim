@@ -3,11 +3,14 @@
 
 #include "event_counter.h"
 #include "render_circuit.h"
+#include "vocabulary/mouse_postion_info.h"
 #include "vocabulary/widget_render_config.h"
 
 #include <QImage>
 #include <QPaintEvent>
 #include <QResizeEvent>
+
+#include <optional>
 
 class QWidget;
 class QBackingStore;
@@ -61,6 +64,7 @@ class CircuitRenderer {
     auto set_view_point(const ViewPoint& view_point) -> void;
     auto set_device_pixel_ratio(double device_pixel_ratio) -> void;
 
+    auto set_mouse_position_info(std::optional<MousePositionInfo> info) -> void;
     [[nodiscard]] auto statistics() const -> SurfaceStatistics;
 
    public:
@@ -69,8 +73,6 @@ class CircuitRenderer {
                                  const EditableCircuit& editable_circuit,
                                  bool show_size_handles) -> void;
     auto render_simulation(BLImage& bl_image, const SpatialSimulation& spatial_simulation)
-        -> void;
-    auto render_mouse_position_info(BLImage& bl_image, const MousePositionInfo& info)
         -> void;
 
    private:
@@ -89,6 +91,8 @@ class CircuitRenderer {
     EventCounter fps_counter_ {};
     // to report render sizes in statistics
     BLSize last_render_size_ {};
+    // to draw mouse position debug information
+    std::optional<MousePositionInfo> mouse_position_info_ {};
 };
 
 //
@@ -123,6 +127,13 @@ auto render_to_context(Context& ctx, ImageSurface& surface,
 // TODO move to renderer folder
 auto render_to_context(Context& ctx, const WidgetRenderConfig& render_config,
                        const SpatialSimulation& spatial_simulation) -> void;
+
+/**
+ * @brief: Renders mouse position debug info.
+ */
+// TODO move to renderer folder
+auto render_mouse_position_info(Context& ctx, const WidgetRenderConfig& render_config,
+                                const std::optional<MousePositionInfo>& info) -> void;
 
 }  // namespace circuit_widget
 

@@ -52,6 +52,7 @@ enum class icon_t {
     load_elements_and_wires_example,
     // --
     show_render_borders,
+    show_mouse_position,
     non_interactive_mode,
     direct_rendering,
 

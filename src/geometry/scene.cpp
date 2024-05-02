@@ -152,6 +152,14 @@ auto to_context(point_t position, const ViewConfig &config) -> BLPoint {
     return to_context(point_fine_t {position}, config);
 }
 
+auto to_context(point_device_fine_t position, const ViewConfig &config) -> BLPoint {
+    return to_context(to_grid_fine(position, config), config);
+}
+
+auto to_context(point_device_t position, const ViewConfig &config) -> BLPoint {
+    return to_context(to_grid_fine(position, config), config);
+}
+
 auto to_context(grid_fine_t length, const ViewConfig &config) -> double {
     const auto scale = config.pixel_scale();
     return round_fast(double {length} * scale);
