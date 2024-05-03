@@ -4,6 +4,8 @@
 #include <fmt/core.h>
 
 #include <QPoint>
+#include <QRect>
+#include <QSize>
 #include <QString>
 
 //
@@ -36,10 +38,6 @@ struct fmt::formatter<QPoint, Char> {
     }
 };
 
-//
-// QPointF
-//
-
 template <typename Char>
 struct fmt::formatter<QPointF, Char> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
@@ -48,6 +46,61 @@ struct fmt::formatter<QPointF, Char> {
 
     static auto format(const QPointF &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "({:.3f}, {:.3f})", obj.x(), obj.y());
+    }
+};
+
+//
+// QRect
+//
+
+template <typename Char>
+struct fmt::formatter<QRect, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const QRect &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "QRect(x={}, y={}, w={}, h={})", obj.x(),
+                              obj.y(), obj.width(), obj.height());
+    }
+};
+
+template <typename Char>
+struct fmt::formatter<QRectF, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const QRectF &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "QRectF(x={:.3f}, y={:.3f}, w={:.3f}, h={:.3f})",
+                              obj.x(), obj.y(), obj.width(), obj.height());
+    }
+};
+
+//
+// QSize
+//
+
+template <typename Char>
+struct fmt::formatter<QSize, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const QSize &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "QSize(w={}, h={})", obj.width(), obj.height());
+    }
+};
+
+template <typename Char>
+struct fmt::formatter<QSizeF, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const QSizeF &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "QSizeF(w={:.3f}, h={:.3f})", obj.width(),
+                              obj.height());
     }
 };
 

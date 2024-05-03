@@ -1,6 +1,5 @@
 #include "widget/render_widget.h"
 
-#include "logging.h"
 #include "qt/widget_geometry.h"
 #include "vocabulary/device_pixel_ratio.h"
 #include "vocabulary/fallback_info.h"
