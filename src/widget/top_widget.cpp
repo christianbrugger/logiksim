@@ -67,7 +67,8 @@ auto ElementButton::minimumSizeHint() const -> QSize {
 
 MainWidget::MainWidget(QWidget* parent)
     : QMainWindow(parent),
-      circuit_widget_ {new CircuitWidget(this)},
+      circuit_widget_ {new CircuitWidget {this}},
+      circuit_widget_layout_ {new QHBoxLayout {}},
       last_saved_data_ {circuit_widget_->serialized_circuit()} {
     setWindowIcon(QIcon(to_qt(get_icon_path(icon_t::app_icon))));
     setAcceptDrops(true);
@@ -76,19 +77,22 @@ MainWidget::MainWidget(QWidget* parent)
     create_toolbar();
     // create_statusbar();
 
-    const auto layout = new QVBoxLayout();
+    const auto layout = new QVBoxLayout {};
 
-    const auto hlayout = new QHBoxLayout();
+    const auto hlayout = new QHBoxLayout {};
     layout->addLayout(hlayout, 1);
     hlayout->addWidget(build_element_buttons(), 0);
-    hlayout->addWidget(circuit_widget_, 1);
+    hlayout->addLayout(circuit_widget_layout_, 1);
+    circuit_widget_layout_->addWidget(circuit_widget_, 1);
 
+    circuit_widget_layout_->setContentsMargins(0, 0, 0, 0);
+    circuit_widget_layout_->setSpacing(0);
     hlayout->setContentsMargins(0, 0, 0, 0);
     hlayout->setSpacing(0);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
-    const auto frame = new QWidget(this);
+    const auto frame = new QWidget {this};
     frame->setLayout(layout);
     this->setCentralWidget(frame);
 
@@ -132,6 +136,7 @@ constexpr static int SLIDER_MAX_VALUE = 700'000;
 constexpr static int SLIDER_TICK_INTERVAL = 100'000;
 
 constexpr static auto TIME_RATE_MENU_ITEMS = std::array {
+    // anything from 0 - 1us is set to 0, so minimum is 1.001us
     time_rate_t {0ns},   time_rate_t {1001ns}, time_rate_t {10us},
     time_rate_t {100us}, time_rate_t {1ms},    time_rate_t {10ms},
     time_rate_t {100ms}, time_rate_t {1s},     time_rate_t {10s},
@@ -348,7 +353,7 @@ auto MainWidget::create_menu() -> void {
             auto* submenu = menu->addMenu(tr("Simulation Speed"));
             submenu->setIcon(QIcon(to_qt(get_icon_path(icon_t::simulation_speed))));
 
-            for (auto time_rate : detail::time_slider::TIME_RATE_MENU_ITEMS) {
+            for (const auto& time_rate : detail::time_slider::TIME_RATE_MENU_ITEMS) {
                 const auto text = fmt::format("{}", time_rate);
                 add_action(submenu, QString::fromStdString(text), {},
                            [this, time_rate] { set_time_rate_slider(time_rate); });
@@ -435,10 +440,50 @@ auto MainWidget::create_menu() -> void {
                 }
             });
 
+        {
+            auto* submenu = menu->addMenu(tr("Content Margins"));
+            // submenu->setIcon(QIcon(to_qt(get_icon_path(icon_t::simulation_speed))));
+
+            add_action(submenu, "Add 1 horizontal margin",
+                       ActionAttributes {
+                           .shortcut = QKeySequence {Qt::CTRL | Qt::SHIFT | Qt::Key_H},
+                           .shortcut_auto_repeat = true,
+                       },
+                       [this] {
+                           auto margins = this->circuit_widget_layout_->contentsMargins();
+                           margins.setLeft(margins.left() + 1);
+                           this->circuit_widget_layout_->setContentsMargins(margins);
+                           this->circuit_widget_layout_->update();
+                       });
+            add_action(submenu, "Add 1 vertical margin",
+                       ActionAttributes {
+                           .shortcut = QKeySequence {Qt::CTRL | Qt::SHIFT | Qt::Key_V},
+                           .shortcut_auto_repeat = true,
+                       },
+                       [this] {
+                           auto margins = this->circuit_widget_layout_->contentsMargins();
+                           margins.setTop(margins.top() + 1);
+                           this->circuit_widget_layout_->setContentsMargins(margins);
+                           this->circuit_widget_layout_->update();
+                       });
+            add_action(submenu, "Reset content margin",
+                       ActionAttributes {
+                           .shortcut = QKeySequence {Qt::CTRL | Qt::SHIFT | Qt::Key_R},
+                           .shortcut_auto_repeat = true,
+                       },
+                       [this] {
+                           this->circuit_widget_layout_->setContentsMargins(0, 0, 0, 0);
+                           this->circuit_widget_layout_->update();
+                       });
+        }
+
         menu->addSeparator();
         actions_.direct_rendering = add_action_checkable(
             menu, tr("&Direct Rendering"),
-            ActionAttributes {.icon = icon_t::direct_rendering},
+            ActionAttributes {
+                .shortcut = QKeySequence {Qt::CTRL | Qt::SHIFT | Qt::Key_B},
+                .icon = icon_t::direct_rendering,
+            },
             [this](bool checked) { set_direct_rendering(*circuit_widget_, checked); });
 
         // Thread Count
@@ -467,6 +512,7 @@ auto MainWidget::create_menu() -> void {
                                  [this]() { set_thread_count(*circuit_widget_, 8); });
         }
     }
+
     {
         // Tools
         auto* menu = menuBar()->addMenu(tr("&Tools"));

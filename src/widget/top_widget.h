@@ -121,6 +121,7 @@ class MainWidget : public QMainWindow {
 
    private:
     gsl::not_null<CircuitWidget*> circuit_widget_;
+    gsl::not_null<QHBoxLayout*> circuit_widget_layout_;
 
     QTimer timer_update_title_ {};
     QTimer timer_process_app_arguments_once_ {};

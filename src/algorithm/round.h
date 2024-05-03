@@ -52,6 +52,13 @@ auto clamp_to(double value) -> result_type {
     return gsl::narrow_cast<result_type>(value);
 }
 
+/**
+ * @brief: Computes the nearest integer value, rounding halfway cases away from zero.
+ */
+// auto round_towards_zero(double value) -> double {
+//     return std::ceil(value - std::copysign(0.5, value));
+// }
+
 }  // namespace logicsim
 
 #endif

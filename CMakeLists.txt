@@ -344,6 +344,7 @@ set(LS_GUI_SOURCES
     src/qt/clipboard_access.cpp
     src/qt/enum_to_string.cpp
     src/qt/mouse_position.cpp
+    src/qt/mouse_position_p.cpp
     src/qt/path_conversion.cpp
     src/qt/point_conversion.cpp
     src/qt/setting_location.cpp
@@ -1002,6 +1003,7 @@ target_link_libraries(${MAIN_GUI_TARGET} PRIVATE
     
     Qt6::Core
     Qt6::Widgets
+    Qt6::GuiPrivate
 )
 set_property(TARGET ${MAIN_GUI_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 

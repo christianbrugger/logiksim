@@ -34,27 +34,22 @@ namespace {
 
 auto round_logical_to_device(QPointF p, double pixel_ratio,
                              std::optional<QRect> clip = {}) -> QPoint {
-    auto dx = gsl::narrow<int>(std::floor(p.x() * pixel_ratio + 0.5));
-    auto dy = gsl::narrow<int>(std::floor(p.y() * pixel_ratio + 0.5));
+    auto rounded = (p * pixel_ratio).toPoint();
 
     if (clip) {
-        dx = std::clamp(dx, clip->x(), clip->x() + clip->width());
-        dy = std::clamp(dy, clip->y(), clip->y() + clip->height());
+        return QPoint {
+            std::clamp(rounded.x(), clip->x(), clip->x() + clip->width()),
+            std::clamp(rounded.y(), clip->y(), clip->y() + clip->height()),
+        };
     }
 
-    return QPoint {dx, dy};
+    return rounded;
 }
 
 auto round_logical_to_device(QRectF rect, double pixel_ratio,
                              std::optional<QRect> clip = {}) -> QRect {
-    const auto p0_logic = QPoint {
-        round_to<int>(rect.x()),
-        round_to<int>(rect.y()),
-    };
-    const auto p1_logic = QPoint {
-        round_to<int>(rect.x() + rect.width()),
-        round_to<int>(rect.y() + rect.height()),
-    };
+    const auto p0_logic = rect.topLeft().toPoint();
+    const auto p1_logic = rect.bottomRight().toPoint();
 
     const auto p0 = round_logical_to_device(p0_logic, pixel_ratio, clip);
     const auto p1 = round_logical_to_device(p1_logic, pixel_ratio, clip);

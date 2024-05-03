@@ -1,5 +1,6 @@
 #include "render/managed_context.h"
 
+#include "algorithm/round.h"
 #include "render/bl_error_check.h"
 #include "render/context_info.h"
 
@@ -14,6 +15,9 @@ auto create_context(BLImage &bl_image, const ContextRenderSettings &render_setti
     if (bl_image.size() != render_settings.view_config.size()) {
         throw std::runtime_error("Given bl_image does not match size of settings.");
     }
+
+    // our render code depends on rounding mode
+    Expects(correct_round_mode());
 
     return BLContext {bl_image, context_info(render_settings)};
 }

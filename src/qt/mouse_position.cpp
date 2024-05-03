@@ -2,6 +2,7 @@
 
 #include "format/qt_type.h"
 #include "logging.h"
+#include "qt/mouse_position_p.h"
 #include "qt/point_conversion.h"
 #include "vocabulary/mouse_postion_info.h"
 
@@ -15,14 +16,6 @@
 
 namespace logicsim {
 
-[[nodiscard]] auto get_mouse_position(const QWidget* widget, const QWheelEvent* event_)
-    -> QPointF {
-    Expects(widget);
-    Expects(event_);
-
-    return get_mouse_position(*widget, *event_);
-}
-
 [[nodiscard]] auto get_mouse_position(const QWidget* widget, const QMouseEvent* event_)
     -> QPointF {
     Expects(widget);
@@ -31,27 +24,63 @@ namespace logicsim {
     return get_mouse_position(*widget, *event_);
 }
 
-[[nodiscard]] auto get_mouse_position(const QWidget& widget, const QWheelEvent& event_)
+[[nodiscard]] auto get_mouse_position(const QWidget* widget, const QWheelEvent* event_)
     -> QPointF {
-    // print();
-    // print("position      ", event_.position());
-    // print("scenePosition ", event_.scenePosition());
-    // print("globalPosition", event_.globalPosition());
+    Expects(widget);
+    Expects(event_);
 
-    // for WheelEvents globalPosition is the only function of event_ that returns
-    // non-rounded positions for display scaling.
-    return widget.mapFromGlobal(event_.globalPosition());
+    return get_mouse_position(*widget, *event_);
 }
+
+namespace {
+
+auto map_from_top_level_widget(const QWidget& widget, QPointF scene_position) -> QPointF {
+    // Simply calling widget.mapFrom(widget.topLevelWidget(), ..) unfortunately doesn't
+    // work for 150% display scaling as `mapFrom` works on rounded geometry. The rounding
+    // needs to be reverted by transforming (0,0).
+
+    const auto offset_rounded = widget.mapTo(widget.topLevelWidget(), QPointF {0, 0});
+    const auto ratio = widget.devicePixelRatioF();
+    const auto offset = QPointF {(offset_rounded * ratio).toPoint()} / ratio;
+
+    return scene_position - offset;
+}
+
+auto map_from_global(const QWidget& widget, QPointF global_position) -> QPointF {
+    // `widget.mapFromGlobal` uses rounded geometry to map from the top level widget
+    // to the widget. We therefore need to use our fixed method for that.
+
+    const auto scene_position = widget.topLevelWidget()->mapFromGlobal(global_position);
+    return map_from_top_level_widget(widget, scene_position);
+}
+
+}  // namespace
 
 [[nodiscard]] auto get_mouse_position(const QWidget& widget, const QMouseEvent& event_)
     -> QPointF {
     // for MouseEvents scenePosition is the only function of event_ that returns
     // non-rounded positions for display scaling.
-    return widget.mapFrom(widget.topLevelWidget(), event_.scenePosition());
+    return map_from_top_level_widget(widget, event_.scenePosition());
 }
 
+[[nodiscard]] auto get_mouse_position(const QWidget& widget, const QWheelEvent& event_)
+    -> QPointF {
+    // for WheelEvents globalPosition is the only function of event_ that returns
+    // non-rounded positions for display scaling.
+    return map_from_global(widget, event_.globalPosition());
+}
+
+/**
+ * @brief: Get current cursor position in relation to the widget.
+ *
+ * Uses private cursor_position implementation to get accurate global mouse position.
+ *
+ * Portable alternative, with integer rounding:
+ *
+ *      return widget.mapFromGlobal(QPointF {QCursor::pos()});
+ */
 auto get_mouse_position(const QWidget& widget) -> QPointF {
-    return widget.mapFromGlobal(QPointF {QCursor::pos()});
+    return map_from_global(widget, cursor_position_p());
 }
 
 auto get_mouse_position_inside_widget(const QWidget& widget) -> QPointF {
