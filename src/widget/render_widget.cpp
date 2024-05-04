@@ -1,5 +1,7 @@
 #include "widget/render_widget.h"
 
+#include "format/blend2d_type.h"
+#include "format/qt_type.h"
 #include "qt/widget_geometry.h"
 #include "vocabulary/device_pixel_ratio.h"
 #include "vocabulary/fallback_info.h"
@@ -74,8 +76,13 @@ auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geom
                         image->bitPlaneCount()));
     }
 
-    const auto rect = to_device_rounded(geometry_info, image->rect());
-    Expects(image->rect().contains(rect));
+    const auto rect = to_device_rounded(geometry_info);
+
+    if (!image->rect().contains(rect)) {
+        return tl::unexpected(
+            fmt::format("Image with size {} is not able to contain device rect {}.",
+                        image->rect(), rect));
+    }
 
     // get pointer
     auto pixels_direct = image->constScanLine(rect.y());
@@ -204,7 +211,6 @@ auto get_bl_image(QBackingStore* backing_store, QImage& qt_image,
 
     const auto size_device_qt = to_size_device(geometry_info);
     const auto size_device_bl = BLSizeI {size_device_qt.width(), size_device_qt.height()};
-
     using enum RenderMode;
     Ensures(result.bl_image.size() == size_device_bl);
     Ensures(qt_image.size() == expected_qt_image_size(result.mode, size_device_qt));

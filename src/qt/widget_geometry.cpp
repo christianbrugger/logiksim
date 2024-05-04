@@ -30,28 +30,13 @@ auto get_geometry_info(const QWidget& widget) -> GeometryInfo {
 
 namespace {
 
-auto round_logical_to_device(QPointF p, double pixel_ratio,
-                             std::optional<QRect> clip = {}) -> QPoint {
-    auto rounded = (p * pixel_ratio).toPoint();
-
-    if (clip) {
-        return QPoint {
-            std::clamp(rounded.x(), clip->x(), clip->x() + clip->width()),
-            std::clamp(rounded.y(), clip->y(), clip->y() + clip->height()),
-        };
-    }
-
-    return rounded;
-}
-
-auto round_logical_to_device(QRect rect, double pixel_ratio,
-                             std::optional<QRect> clip = {}) -> QRect {
+auto round_logical_to_device(QRect rect, double pixel_ratio) -> QRect {
     const auto p0_logic = rect.topLeft();
     // note QPoint::bottomRight() substracts one
     const auto p1_logic = QPoint {rect.x() + rect.width(), rect.y() + rect.height()};
 
-    const auto p0 = round_logical_to_device(p0_logic, pixel_ratio, clip);
-    const auto p1 = round_logical_to_device(p1_logic, pixel_ratio, clip);
+    const auto p0 = (QPointF {p0_logic} * pixel_ratio).toPoint();
+    const auto p1 = (QPointF {p1_logic} * pixel_ratio).toPoint();
 
     return QRect {p0.x(), p0.y(), p1.x() - p0.x(), p1.y() - p0.y()};
 }
@@ -61,14 +46,6 @@ auto round_logical_to_device(QRect rect, double pixel_ratio,
 auto to_device_rounded(GeometryInfo geometry_info) -> QRect {
     return round_logical_to_device(geometry_info.geometry_top_level_logical,
                                    geometry_info.device_pixel_ratio);
-}
-
-auto to_device_rounded(GeometryInfo geometry_info, QRect clip) -> QRect {
-    const auto result = round_logical_to_device(geometry_info.geometry_top_level_logical,
-                                                geometry_info.device_pixel_ratio, clip);
-
-    Ensures(clip.contains(result));
-    return result;
 }
 
 auto to_size_device(GeometryInfo geometry_info) -> QSize {

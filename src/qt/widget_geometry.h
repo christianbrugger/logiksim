@@ -32,7 +32,6 @@ auto get_geometry_info(const QWidget& widget) -> GeometryInfo;
 auto get_geometry_top_level_logical(const QWidget& widget) -> QRect;
 
 auto to_device_rounded(GeometryInfo geometry_info) -> QRect;
-auto to_device_rounded(GeometryInfo geometry_info, QRect clip) -> QRect;
 auto to_size_device(GeometryInfo geometry_info) -> QSize;
 
 auto get_size_device(const QWidget& widget) -> QSize;
