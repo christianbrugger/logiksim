@@ -14,8 +14,11 @@ namespace logicsim {
  *
  * Source: qtbase/src/gui/kernel/qcursor.cpp
  */
-[[nodiscard]] auto cursor_position_p(const QScreen* screen) -> QPointF;
-[[nodiscard]] auto cursor_position_p() -> QPointF;
+[[nodiscard]] auto cursor_position_high_dpi(const QScreen* screen) -> QPointF;
+[[nodiscard]] auto cursor_position_high_dpi() -> QPointF;
+
+// auto set_cursor_position_high_dpi(QScreen* screen, QPointF position) -> void;
+// auto set_cursor_position_high_dpi(QPointF position) -> void;
 
 }  // namespace logicsim
 

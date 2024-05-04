@@ -20,7 +20,7 @@ namespace logicsim {
  * Git:
  * https://github.com/qt/qtbase/blob/e7362764d4931f255d2377462df8ac7a0d4e7c84/src/gui/kernel/qcursor.cpp#L157-L168
  */
-[[nodiscard]] auto cursor_position_p(const QScreen* screen) -> QPointF {
+[[nodiscard]] auto cursor_position_high_dpi(const QScreen* screen) -> QPointF {
     if (screen) {
         if (const QPlatformCursor* cursor = screen->handle()->cursor()) {
             const QPlatformScreen* ps = screen->handle();
@@ -32,8 +32,32 @@ namespace logicsim {
     return QPointF {QGuiApplicationPrivate::lastCursorPosition};
 }
 
-[[nodiscard]] auto cursor_position_p() -> QPointF {
-    return cursor_position_p(QGuiApplication::primaryScreen());
+[[nodiscard]] auto cursor_position_high_dpi() -> QPointF {
+    return cursor_position_high_dpi(QGuiApplication::primaryScreen());
 }
+
+/*
+auto set_cursor_position_high_dpi(QScreen* screen, QPointF position) -> void {
+    if (screen) {
+        if (QPlatformCursor* cursor = screen->handle()->cursor()) {
+            const QPoint devicePos =
+                QHighDpi::toNativePixels(position,
+                                         screen->virtualSiblingAt(position.toPoint()))
+                    .toPoint();
+
+            // Need to check, since some X servers generate null mouse move
+            // events, causing looping in applications which call setPos() on
+            // every mouse move event.
+            if (devicePos != cursor->pos()) {
+                cursor->setPos(devicePos);
+            };
+        }
+    }
+}
+
+auto set_cursor_position_high_dpi(QPointF position) -> void {
+    set_cursor_position_high_dpi(QGuiApplication::primaryScreen(), position);
+}
+*/
 
 }  // namespace logicsim
