@@ -23,9 +23,28 @@
 	url = https://github.com/boostorg/boost
 	ignore = dirty
 
+[submodule "external/cppcodec"]
+	path = external/cppcodec
+	url = https://github.com/tplgy/cppcodec
+	ignore = dirty
+[submodule "external/expected"]
+	path = external/expected
+	url = https://github.com/TartanLlama/expected.git
+	ignore = dirty
+
 [submodule "external/fmt"]
 	path = external/fmt
 	url = https://github.com/fmtlib/fmt
+	ignore = dirty
+
+[submodule "external/gcem"]
+	path = external/gcem
+	url = https://github.com/kthohr/gcem.git
+	ignore = dirty
+
+[submodule "external/glaze"]
+	path = external/glaze
+	url = https://github.com/stephenberry/glaze
 	ignore = dirty
 
 [submodule "external/googletest"]
@@ -37,15 +56,20 @@
 	path = external/GSL
 	url = https://github.com/microsoft/GSL.git
 	ignore = dirty
+
+[submodule "external/harfbuzz"]
+	path = external/harfbuzz
+	url = https://github.com/harfbuzz/harfbuzz
+	ignore = dirty
+
+[submodule "external/llvm-project"]
+	path = external/llvm-project
+	url = https://github.com/llvm/llvm-project.git
+	ignore = dirty
 	
 [submodule "external/my_folly"]
 	path = external/my_folly
 	url = https://github.com/christianbrugger/my_folly
-	ignore = dirty
-	
-[submodule "external/unordered_dense"]
-	path = external/unordered_dense
-	url = https://github.com/martinus/unordered_dense
 	ignore = dirty
 
 [submodule "external/range-v3"]
@@ -53,57 +77,22 @@
 	url = https://github.com/ericniebler/range-v3
 	ignore = dirty
 
-[submodule "external/glaze"]
-	path = external/glaze
-	url = https://github.com/stephenberry/glaze
+[submodule "external/svg2b2d"]
+	path = external/svg2b2d
+	url = https://github.com/christianbrugger/svg2b2d
+	ignore = dirty
+	
+[submodule "external/unordered_dense"]
+	path = external/unordered_dense
+	url = https://github.com/martinus/unordered_dense
+	ignore = dirty
+	
+[submodule "external/whereami"]
+	path = external/whereami
+	url = https://github.com/gpakosz/whereami.git
 	ignore = dirty
 	
 [submodule "external/zlib"]
 	path = external/zlib
 	url = https://github.com/madler/zlib
 	ignore = dirty
-
-[submodule "external/cppcodec"]
-	path = external/cppcodec
-	url = https://github.com/tplgy/cppcodec
-	ignore = dirty
-
-[submodule "external/harfbuzz"]
-	path = external/harfbuzz
-	url = https://github.com/harfbuzz/harfbuzz
-	ignore = dirty
-
-[submodule "external/gcem"]
-	path = external/gcem
-	url = https://github.com/kthohr/gcem.git
-	ignore = dirty
-
-[submodule "external/svg2b2d"]
-	path = external/svg2b2d
-	url = https://github.com/christianbrugger/svg2b2d
-	ignore = dirty
-
-[submodule "external/my_safe_numerics"]
-	path = external/my_safe_numerics
-	url = https://github.com/christianbrugger/my_safe_numerics.git
-
-[submodule "external/cppcoro"]
-	path = external/cppcoro
-	url = https://github.com/andreasbuhr/cppcoro.git
-	ignore = dirty
-
-[submodule "external/expected"]
-	path = external/expected
-	url = https://github.com/TartanLlama/expected.git
-	ignore = dirty
-
-[submodule "external/whereami"]
-	path = external/whereami
-	url = https://github.com/gpakosz/whereami.git
-	ignore = dirty
-
-[submodule "external/llvm-project"]
-	path = external/llvm-project
-	url = https://github.com/llvm/llvm-project.git
-	ignore = dirty
-

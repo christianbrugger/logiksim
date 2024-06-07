@@ -817,9 +817,6 @@ add_subdirectory(external/svg2b2d EXCLUDE_FROM_ALL SYSTEM)
 set(EXPECTED_BUILD_TESTS OFF)
 add_subdirectory(external/expected EXCLUDE_FROM_ALL SYSTEM)
 
-# cppcoro (cppcoro)
-# add_subdirectory(external/cppcoro EXCLUDE_FROM_ALL SYSTEM)
-
 # whereami - has no cmake
 add_library(whereami STATIC EXCLUDE_FROM_ALL
     external/whereami/src/whereami.c
