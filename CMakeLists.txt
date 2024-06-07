@@ -746,10 +746,8 @@ set(BOOST_INCLUDE_LIBRARIES
     container 
     geometry
     iostreams
-    mpl 
     random 
     safe_numerics
-    unordered
 )
 add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
 
@@ -913,10 +911,8 @@ set(LS_CORE_LIBRARIES
     Boost::container
     Boost::geometry
     Boost::iostreams
-    Boost::mpl
     Boost::random
 	Boost::safe_numerics
-    Boost::unordered
     
     cppcodec
     fmt::fmt
