@@ -1,0 +1,22 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="240"
+  height="240"
+  viewBox="0 0 240 240"
+  fill="silver"
+  stroke="currentColor"
+  stroke-width="15"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect x="40" y="40" width="160" height="160" rx="20" />
+  <rect x="90" y="90" width="60" height="60" />
+  <path d="M150 20v20" />
+  <path d="M150 200v20" />
+  <path d="M20 150h20" />
+  <path d="M20 90h20" />
+  <path d="M200 150h20" />
+  <path d="M200 90h20" />
+  <path d="M90 20v20" />
+  <path d="M90 200v20" />
+</svg>
