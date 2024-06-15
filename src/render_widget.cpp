@@ -1060,6 +1060,11 @@ auto RendererWidget::view_config() const noexcept -> const ViewConfig& {
 // Use the Qt backend store image directly for best performance
 // This is not always available on all platforms.
 auto RendererWidget::_init_surface_from_backing_store() -> bool {
+    const auto platform_name = QGuiApplication::platformName();
+    if (platform_name != QString("xcb") && platform_name != QString("windows")) {
+       return false;
+    }
+
     const auto backing_store = backingStore();
 
     if (backing_store == nullptr) {

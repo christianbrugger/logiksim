@@ -142,7 +142,7 @@ if (MSVC)
 	add_compile_options(/arch:AVX2)
 	# add_compile_options(/arch:AVX512)
 else()
-	add_compile_options(-march=native)
+	# add_compile_options(-march=native)
 endif()
 
 # global profiling
@@ -183,8 +183,8 @@ if (MSVC)
     list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
 else()
     # -Wthread-safety 
-    list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 
-                             -Wstrict-aliasing) # -Wconversion) # -Wsign-conversion)
+    # list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 
+    #                          -Wstrict-aliasing) # -Wconversion) # -Wsign-conversion)
 endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # clang 16 warns on brace elision, why?
@@ -239,9 +239,9 @@ add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
 
 # Zlib
 # on Windows
-add_subdirectory(external/zlib EXCLUDE_FROM_ALL SYSTEM)
-set(ZLIB_USE_STATIC_LIBS ON)
-set(LS_ZLIB_NAME zlibstatic)
+# add_subdirectory(external/zlib EXCLUDE_FROM_ALL SYSTEM)
+# set(ZLIB_USE_STATIC_LIBS ON)
+# set(LS_ZLIB_NAME zlibstatic)
 # on Linux/Ubuntu
 # set(LS_ZLIB_NAME )
 
@@ -256,20 +256,20 @@ set(BOOST_INCLUDE_LIBRARIES
     iostreams
     mpl 
     random 
-    stacktrace
+    # stacktrace
     unordered
 )
 add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
-if (WIN32)
-    # Boost::stacktrace_windbg
-    add_library(boost_stacktrace ALIAS boost_stacktrace_windbg)
-    target_compile_definitions(boost_stacktrace_windbg PRIVATE 
-        BOOST_STACKTRACE_USE_WINDBG
-    )
-else()
-    # Boost::stacktrace_basic
-    add_library(boost_stacktrace ALIAS boost_stacktrace_basic)   
-endif()
+# if (WIN32)
+#     # Boost::stacktrace_windbg
+#     add_library(boost_stacktrace ALIAS boost_stacktrace_windbg)
+#     target_compile_definitions(boost_stacktrace_windbg PRIVATE 
+#         BOOST_STACKTRACE_USE_WINDBG
+#     )
+# else()
+#     # Boost::stacktrace_basic
+#     add_library(boost_stacktrace ALIAS boost_stacktrace_basic)   
+# endif()
 
 
 # Qt 6
@@ -414,7 +414,7 @@ set(LS_CORE_LIBRARIES
     Boost::iostreams
     Boost::mpl
     Boost::random
-    boost_stacktrace 
+    # boost_stacktrace 
     Boost::unordered
     
     cppcodec
@@ -427,7 +427,7 @@ set(LS_CORE_LIBRARIES
     range-v3
     Blend2D::Blend2D
     glaze::glaze
-    ${LS_ZLIB_NAME}
+    # ${LS_ZLIB_NAME}
     harfbuzz
     gcem
     svg2b2d
