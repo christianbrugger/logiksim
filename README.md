@@ -26,6 +26,12 @@ Install it with:
 ```
 sudo snap install logiksim
 ```
+Start it through the app menu or with:
+```
+logiksim
+```
+
+If you get the message "sudo: snap: command not found", read [here](https://snapcraft.io/docs/installing-snapd) how to install snap on your distribution.
 
 
 
