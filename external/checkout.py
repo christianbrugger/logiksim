@@ -370,22 +370,16 @@ async def main_async():
 
 
 def main() -> int:
-    returncode = 0
+    return_code = 0
 
     try:
         asyncio.run(main_async())
-    except ExceptionGroup as group:
+    except* subprocess.CalledProcessError as exc:
         for exc in group.exceptions:
-            if isinstance(exc, subprocess.CalledProcessError):
-                print("ERROR", exc)
-                returncode = 1
-            else:
-                raise
-    except subprocess.CalledProcessError as exc:
-        print("ERROR", exc)
-        returncode = 1
-
-    return returncode
+            print("ERROR", exc)
+        return_code = 1
+        
+    return return_code
 
 
 if __name__ == "__main__":

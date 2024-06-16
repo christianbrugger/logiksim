@@ -57,7 +57,7 @@ Libraries
 * GoogleTest ([BSD-3-Clause](https://github.com/google/googletest?tab=BSD-3-Clause-1-ov-file))
 * GSL ([MIT](https://github.com/microsoft/GSL?tab=License-1-ov-file))
 * HarfBuzz ([MIT-0](https://github.com/harfbuzz/harfbuzz?tab=License-1-ov-file))
-* Qt 6 ([LGPL](http://doc.qt.io/qt-6/lgpl.html))
+* Qt 6 ([LGPL-3.0](http://doc.qt.io/qt-6/lgpl.html))
 * range-v3 ([BSL-1.0](https://github.com/ericniebler/range-v3?tab=License-1-ov-file))
 * svg2b2d ([MIT](https://github.com/Wiladams/svg2b2d?tab=MIT-1-ov-file))
 * whereami ([WTFPL](https://github.com/gpakosz/whereami?tab=License-2-ov-file))
@@ -71,9 +71,13 @@ Ressources
 
 Build Tools (not packaged)
 
+* CCache ([GPL-3.0](https://github.com/ccache/ccache?tab=License-1-ov-file))
 * CMake ([BSD-3-Clause](https://github.com/Kitware/CMake?tab=License-1-ov-file))
+* Git ([GPL-2.0](https://github.com/git/git?tab=License-1-ov-file))
 * Inno Setup ([InnoSetup](https://github.com/jrsoftware/issrc?tab=License-1-ov-file))
 * LLVM Project ([Apache-2.0](https://github.com/llvm/llvm-project?tab=License-1-ov-file))
 * Ninja ([Apache-2.0](https://github.com/ninja-build/ninja?tab=Apache-2.0-1-ov-file))
+* Python ([Python-2.0](https://github.com/python/cpython?tab=License-1-ov-file))
 * Snapcraft ([GPL-3.0](https://github.com/canonical/snapcraft?tab=GPL-3.0-1-ov-file))
 * snapcraft.yaml Qt6 template ([GPL-3.0](https://github.com/telegramdesktop/tdesktop/tree/dev?tab=License-1-ov-file))
+* Visual Studio Community 2022 ([VS-COMMUNITY-2022](https://visualstudio.microsoft.com/license-terms/vs2022-ga-community/))
