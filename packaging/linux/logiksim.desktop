@@ -1,0 +1,14 @@
+# https://specifications.freedesktop.org/desktop-entry-spec/latest/ar01s06.html
+
+[Desktop Entry]
+Name=LogikSim
+Comment=Design and simulation circuits with predefined logic items.
+TryExec=logiksim
+Exec=logiksim %u
+Icon=${SNAP}/usr/share/applications/logiksim.svg
+Terminal=false
+Type=Application
+Categories=Science;Education;Electronics;Simulation;Qt;
+MimeType=x-scheme-handler/ls2;
+Keywords=logiksim;circuit;simulator;simulation;logic;ls2;
+

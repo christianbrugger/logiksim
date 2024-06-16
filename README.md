@@ -63,15 +63,17 @@ Libraries
 * whereami ([WTFPL](https://github.com/gpakosz/whereami?tab=License-2-ov-file))
 * Zlib ([Zlib](https://github.com/madler/zlib?tab=License-1-ov-file))
 
-Build Tools
-
-* CMake ([BSD-3-Clause](https://github.com/Kitware/CMake?tab=License-1-ov-file))
-* LLVM Project ([Apache-2.0](https://github.com/llvm/llvm-project?tab=License-1-ov-file))
-* MSVC Runtime ([MS-Runtime-EULA](https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/))
-* Ninja ([Apache-2.0](https://github.com/ninja-build/ninja?tab=Apache-2.0-1-ov-file))
-
 Ressources
 
 * Lucide Icons ([ICS](https://github.com/lucide-icons/lucide?tab=ISC-1-ov-file))
 * NotoSans Font ([OFL-1.1](https://github.com/notofonts/latin-greek-cyrillic?tab=OFL-1.1-1-ov-file))
+* MSVC Runtime ([MS-Runtime-EULA](https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/))
 
+Build Tools (not packaged)
+
+* CMake ([BSD-3-Clause](https://github.com/Kitware/CMake?tab=License-1-ov-file))
+* Inno Setup ([InnoSetup](https://github.com/jrsoftware/issrc?tab=License-1-ov-file))
+* LLVM Project ([Apache-2.0](https://github.com/llvm/llvm-project?tab=License-1-ov-file))
+* Ninja ([Apache-2.0](https://github.com/ninja-build/ninja?tab=Apache-2.0-1-ov-file))
+* Snapcraft ([GPL-3.0](https://github.com/canonical/snapcraft?tab=GPL-3.0-1-ov-file))
+* snapcraft.yaml Qt6 template ([GPL-3.0](https://github.com/telegramdesktop/tdesktop/tree/dev?tab=License-1-ov-file))
