@@ -102,11 +102,11 @@ Alternatively for custom builds you can follow the build steps here.
 
 #### Environment Variables
 
-Add Qt to `PATH` and `CMAKE_PREFIX_PATH`:
+Add Qt to `PATH` and `CMAKE_PREFIX_PATH`. Replace the version as needed, e.g `6.7.1`:
 
 ```cmd
-set PATH=C:/Qt/6.7.1/msvc2019_64/bin;%PATH%
-set CMAKE_PREFIX_PATH=C:/Qt/6.7.1/msvc2019_64/lib/cmake
+set PATH=C:/Qt/6.x.x/msvc2019_64/bin;%PATH%
+set CMAKE_PREFIX_PATH=C:/Qt/6.x.x/msvc2019_64/lib/cmake
 ```
 
 Activate the MSVC Compiler. This will make `cmake`, `ninja`, `clang-cl` avaiable:

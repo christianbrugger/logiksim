@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import shlex
 import subprocess
+from collections.abc import Iterable
 
 
 MODULES = [
@@ -163,12 +164,12 @@ STANDARD_RETRY_TAGS = (
 )
 
 
-def matches_retry_tag(stderr, retry_tags: tuple[re.Pattern[str]]) -> bool:
+def matches_retry_tag(stderr, retry_tags: Iterable[re.Pattern[str]]) -> bool:
     return any(tag.search(stderr) for tag in retry_tags)
 
 
 async def call(cmd: str, *, do_print: bool = True, checked: bool = True,
-               retry_tags: tuple[re.Pattern[str]] = STANDARD_RETRY_TAGS,
+               retry_tags: Iterable[re.Pattern[str]] = STANDARD_RETRY_TAGS,
                retry_count: int = 5,
                retry_delay_seconds: float = 0.1) -> CallResult:
     call_count = 0
@@ -190,14 +191,14 @@ async def call(cmd: str, *, do_print: bool = True, checked: bool = True,
         return result
 
 
-def to_context(repo_path: str | None) -> str:
+def to_context(repo_path: Path | str | None) -> str:
     return f"-C {repo_path}" if repo_path is not None else ""
 
 
 @dataclass
 class Submodule:
     name: str
-    is_initialized: True
+    is_initialized: bool
 
 
 def match_submodule_output_line(line: str) -> None | Submodule:
@@ -275,13 +276,13 @@ async def get_initialized_submodules(repo_path: str | None = None) -> list[str]:
 
 
 async def init_submodule(submodule_name: str,
-                         parent_repo: Path | None = None) -> None:
+                         parent_repo: str | Path | None = None) -> None:
     cmd = f'git {to_context(parent_repo)} submodule init "{submodule_name}"'
     await call(cmd)
 
 
 async def deinit_submodule(submodule_name: str,
-                           parent_repo: Path | None = None) -> None:
+                           parent_repo: str | Path | None = None) -> None:
     cmd = f'git {to_context(parent_repo)} submodule deinit -f "{submodule_name}"'
     await call(cmd)
 
@@ -374,7 +375,7 @@ def main() -> int:
 
     try:
         asyncio.run(main_async())
-    except* subprocess.CalledProcessError as exc:
+    except* subprocess.CalledProcessError as group:
         for exc in group.exceptions:
             print("ERROR", exc)
         return_code = 1

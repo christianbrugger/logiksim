@@ -10,9 +10,17 @@ Design and simulation circuits with predefined logic items.
 
 **Windows**
 
-Installer: [Download](https://github.com/christianbrugger/logiksim/releases/download/2.1.0/LogikSim_2.1.0_win_x64.exe)
+[LogikSim_2.1.0_win_x64.exe](https://github.com/christianbrugger/logiksim/releases/download/2.1.0/LogikSim_2.1.0_win_x64.exe) (10.3 MB, [changelog](https://github.com/christianbrugger/logiksim/releases/tag/2.1.0))
+Version: 2.1.0
+Note: Install Logiksim for all or current user (without Admin rights).
 
-Portable Zip: [Download](https://github.com/christianbrugger/logiksim/releases/download/2.1.0/LogikSim_2.1.0_win_x64_portable.zip)
+</br>
+
+[LogikSim_2.1.0_win_x64_portable.zip](https://github.com/christianbrugger/logiksim/releases/download/2.1.0/LogikSim_2.1.0_win_x64_portable.zip) (12.1 MB, [changelog](https://github.com/christianbrugger/logiksim/releases/tag/2.1.0))
+Version: 2.1.0
+Note: Can be used without installation or on USB drives. Zip needs to be extracted.
+
+</br>
 
 **Linux**
 
@@ -57,7 +65,7 @@ Libraries
 * GoogleTest ([BSD-3-Clause](https://github.com/google/googletest?tab=BSD-3-Clause-1-ov-file))
 * GSL ([MIT](https://github.com/microsoft/GSL?tab=License-1-ov-file))
 * HarfBuzz ([MIT-0](https://github.com/harfbuzz/harfbuzz?tab=License-1-ov-file))
-* Qt 6 ([LGPL-3.0](http://doc.qt.io/qt-6/lgpl.html))
+* Qt6 ([LGPL-3.0](http://doc.qt.io/qt-6/lgpl.html))
 * range-v3 ([BSL-1.0](https://github.com/ericniebler/range-v3?tab=License-1-ov-file))
 * svg2b2d ([MIT](https://github.com/Wiladams/svg2b2d?tab=MIT-1-ov-file))
 * whereami ([WTFPL](https://github.com/gpakosz/whereami?tab=License-2-ov-file))
@@ -69,9 +77,8 @@ Ressources
 * NotoSans Font ([OFL-1.1](https://github.com/notofonts/latin-greek-cyrillic?tab=OFL-1.1-1-ov-file))
 * MSVC Runtime ([MS-Runtime-EULA](https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/))
 
-Build Tools (not packaged)
+Build & Package Tools
 
-* CCache ([GPL-3.0](https://github.com/ccache/ccache?tab=License-1-ov-file))
 * CMake ([BSD-3-Clause](https://github.com/Kitware/CMake?tab=License-1-ov-file))
 * Git ([GPL-2.0](https://github.com/git/git?tab=License-1-ov-file))
 * Inno Setup ([InnoSetup](https://github.com/jrsoftware/issrc?tab=License-1-ov-file))
