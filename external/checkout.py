@@ -139,14 +139,15 @@ async def call_once(cmd: str, *, do_print: bool = True,
 
     stdout = stdout_raw.decode('utf-8')
     stderr = stderr_raw.decode('utf-8')
+    assert process.returncode is not None
 
     if do_print:
         print(f"CALL ({process.returncode}): {cmd}")
     if do_print and len(stdout) > 0:
-        print(f"stdout:")
+        print("stdout:")
         print(stdout)
     if do_print and len(stderr) > 0:
-        print(f"stderr:")
+        print("stderr:")
         print(stderr)
 
     if checked and process.returncode != 0:
@@ -298,8 +299,8 @@ class InitChangeset:
 async def get_initialize_changeset(expected_paths: list[str],
                                    parent_repo: str | None = None,
                                    do_print: bool = False) -> InitChangeset:
-    available_paths: dict = await get_available_submodules(parent_repo)
-    initialized_names: list = await get_initialized_submodules(parent_repo)
+    available_paths: dict[str, str] = await get_available_submodules(parent_repo)
+    initialized_names: list[str] = await get_initialized_submodules(parent_repo)
     initialized_paths = {
         name: available_paths[name]
         for name in initialized_names
@@ -385,3 +386,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
