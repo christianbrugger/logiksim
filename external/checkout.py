@@ -126,7 +126,7 @@ class CallResult:
     returncode: int
 
 
-async def call_once(cmd: str, *, do_print: bool = True,
+async def call_once(cmd: str, *, do_print: bool = False,
                     checked: bool = True) -> CallResult:
     async with CALL_SEMA:
         process = await asyncio.create_subprocess_exec(
@@ -169,7 +169,7 @@ def matches_retry_tag(stderr, retry_tags: Iterable[re.Pattern[str]]) -> bool:
     return any(tag.search(stderr) for tag in retry_tags)
 
 
-async def call(cmd: str, *, do_print: bool = True, checked: bool = True,
+async def call(cmd: str, *, do_print: bool = False, checked: bool = True,
                retry_tags: Iterable[re.Pattern[str]] = STANDARD_RETRY_TAGS,
                retry_count: int = 5,
                retry_delay_seconds: float = 0.1) -> CallResult:
@@ -180,7 +180,8 @@ async def call(cmd: str, *, do_print: bool = True, checked: bool = True,
         call_count += 1
 
         if call_count <= retry_count + 1 and matches_retry_tag(result.stderr, retry_tags):
-            print("WAIT", cmd)
+            if do_print:
+                print("WAIT", cmd)
             await asyncio.sleep(retry_delay_seconds)
             continue
 
@@ -254,7 +255,7 @@ def parse_config_as_dict(stdout: str, key: str) -> dict[str, str]:
 async def get_available_submodules(repo_path: str | None = None) -> dict[str, str]:
     prefix = repo_path + '/' if repo_path is not None else ''
     cmd = f'git config -f {prefix}.gitmodules --get-regexp path'
-    result = await call(cmd, do_print=False)
+    result = await call(cmd)
 
     # {name: path}
     return parse_config_as_dict(result.stdout, 'path')
@@ -262,7 +263,7 @@ async def get_available_submodules(repo_path: str | None = None) -> dict[str, st
 
 async def get_initialized_submodules(repo_path: str | None = None) -> list[str]:
     cmd = f'git {to_context(repo_path)} config --local --get-regexp (active|url)'
-    result = await call(cmd, do_print=False)
+    result = await call(cmd)
 
     params_active = parse_config_as_dict(result.stdout, 'active')
     params_url = parse_config_as_dict(result.stdout, 'url')
@@ -280,16 +281,19 @@ async def init_submodule(submodule_name: str,
                          parent_repo: str | Path | None = None) -> None:
     cmd = f'git {to_context(parent_repo)} submodule init "{submodule_name}"'
     await call(cmd)
+    print(f"initalized module '{submodule_name}'{repo_path_to_msg(parent_repo)}")
 
 
 async def deinit_submodule(submodule_name: str,
                            parent_repo: str | Path | None = None) -> None:
     cmd = f'git {to_context(parent_repo)} submodule deinit -f "{submodule_name}"'
     await call(cmd)
+    print(f"de-initalized module '{submodule_name}'{repo_path_to_msg(parent_repo)}")
 
 
 @dataclass(frozen=True)
 class InitChangeset:
+    expected_paths: list[str]  # path
     available_paths: dict[str, str]  # name: path
     initialized_paths: dict[str, str]  # name: path
     to_init: set
@@ -311,7 +315,7 @@ async def get_initialize_changeset(expected_paths: list[str],
         .intersection(available_paths.values()) \
         .difference(initialized_paths.values())
     to_deinit = set(initialized_paths.values()) \
-        .intersection(available_paths) \
+        .intersection(available_paths.values()) \
         .difference(expected_paths)
 
     if do_print:
@@ -321,17 +325,30 @@ async def get_initialize_changeset(expected_paths: list[str],
         print("To de-initialize =", to_deinit)
 
     return InitChangeset(
-        available_paths, initialized_paths, to_init, to_deinit)
+        expected_paths, available_paths, initialized_paths, to_init, to_deinit)
+
+
+def parent_repo_to_msg(parent_repo: str | None) -> str:
+    if parent_repo is None:
+        return "modules"
+    return f"submodules of '{parent_repo}'"
+
+
+def repo_path_to_msg(parent_repo: str | None) -> str:
+    if parent_repo is None:
+        return ""
+    return f" of '{parent_repo}'"
 
 
 async def initialize_modules(expected_submodules: list[str],
                              parent_repo: str | None = None) -> list[str]:
     changes = await get_initialize_changeset(
-        expected_submodules, parent_repo, do_print=True)
+        expected_submodules, parent_repo)
 
     if len(changes.to_init) + len(changes.to_deinit) == 0:
+        print(f"All {parent_repo_to_msg(parent_repo)} initalized.")
         return sorted(changes.initialized_paths.values())
-
+    
     async with asyncio.TaskGroup() as tg:
         for path in changes.to_init:
             tg.create_task(init_submodule(path, parent_repo))
@@ -342,16 +359,22 @@ async def initialize_modules(expected_submodules: list[str],
     result = await get_initialize_changeset(expected_submodules, parent_repo)
     if len(result.to_init) + len(result.to_deinit) > 0:
         raise Exception("Init / Deinit failed")
-
+    
     return sorted(result.initialized_paths.values())
+
+
+async def update_module(module_path: str, repo_path: str | None = None) -> None:
+    cmd = f"git {to_context(repo_path)} submodule update --depth 1 {module_path}"
+    result = await call(cmd)
+    if len(result.stdout) > 0:
+        print(f"Updated '{module_path}'{repo_path_to_msg(repo_path)}")
 
 
 async def update_modules(module_paths: list[str],
                          repo_path: str | None = None) -> None:
     async with asyncio.TaskGroup() as tg:
         for module in module_paths:
-            cmd = f"git {to_context(repo_path)} submodule update --depth 1 {module}"
-            tg.create_task(call(cmd))
+            tg.create_task(update_module(module, repo_path))
 
 
 async def initialize_and_update_modules(module_paths: list[str],
@@ -380,6 +403,8 @@ def main() -> int:
         for exc in group.exceptions:
             print("ERROR", exc)
         return_code = 1
+
+    print("DONE")
         
     return return_code
 
