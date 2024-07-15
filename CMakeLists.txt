@@ -616,11 +616,11 @@ if (LS_ENABLE_TIME_TRACE)
     endif()
 endif()
 
-
-
-if (LS_ENABLE_CCACHE)
+# use ccache if available and enabled
+find_program(CCACHE_PROGRAM ccache)
+if (LS_ENABLE_CCACHE AND CCACHE_PROGRAM)
     message(NOTICE "LOGIKSIM: Enabling ccache.")
-    set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
     # ccache only supports /Z7, not /Zi
     string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
     string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
@@ -629,6 +629,17 @@ if (LS_ENABLE_CCACHE)
 else()
     message(NOTICE "LOGIKSIM: Disabling ccache.")
 endif()
+
+# select linker
+if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # for debug build the MSVC linker is much faster then lld-link from clang
+    set(CMAKE_LINKER "link.exe")
+else()
+endif ()
+
+
+
+
 cmake_print_variables(CMAKE_C_FLAGS_DEBUG)
 cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
 cmake_print_variables(CMAKE_C_FLAGS_RELWITHDEBINFO)
