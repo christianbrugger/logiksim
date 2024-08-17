@@ -25,7 +25,9 @@ Make sure to install the following components:
 
 *tested with Visual Studio Community 17.10.2*
 
-### Python 3.11+
+### Python 3.11+ (optional)
+
+This is optional, only used for some scripts, not the main build.
 
 Download the Installer from here:
 
@@ -80,7 +82,7 @@ python3 external/checkout.py
 
 The script initializes and updates all required submodules for the platform to the SHA specified by the current commit.
 
-As we have almost 100 submodules the script parallizes the git operations and should finish within 1-2 minutes depending on the download speed.
+The project has almost 100 submodules the script parallizes the git operations and should finish within 1-2 minutes depending on the download speed.
 
 Re-run the script in case a different tag / branch / commit is checked out.
 
