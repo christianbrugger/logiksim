@@ -6,6 +6,7 @@
 .python-version
 
 build/
+build_*/
 _build_*/
 out/
 out_clion/

@@ -172,6 +172,7 @@ set(LS_CORE_SOURCES
     src/render/primitive/stroke.cpp
     src/render/primitive/text.cpp
     src/render/bl_error_check.cpp
+    src/render/bl_glyph_placement.cpp
     src/render/context.cpp
     src/render/context_cache.cpp
     src/render/context_guard.cpp
