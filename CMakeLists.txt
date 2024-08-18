@@ -13,11 +13,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 include(CMakePrintHelpers)
+
+include(cmake/ccache.cmake)
 include(cmake/debug_print.cmake)
 include(cmake/project_options.cmake)
 
 ls_define_program_options()
-# ls_print_program_options()
+ls_print_program_options()
+
+ls_setup_ccache(${LS_ENABLE_CCACHE})
 
 # TODO: move to presets
 # global architecture
@@ -121,19 +125,6 @@ if (LS_ENABLE_TIME_TRACE)
     endif()
 endif()
 
-# setup ccache
-find_program(LS_CCACHE_PROGRAM ccache)
-if (LS_ENABLE_CCACHE AND LS_CCACHE_PROGRAM)
-    message(NOTICE "LOGIKSIM: Enabling ccache.")
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${LS_CCACHE_PROGRAM})
-    # ccache only supports /Z7, not /Zi
-    string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-    string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-    string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
-    string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-else()
-    message(NOTICE "LOGIKSIM: Disabling ccache.")
-endif()
 
 # select linker
 if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

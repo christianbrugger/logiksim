@@ -30,12 +30,7 @@ function(ls_define_program_options)
         set(LS_USE_LIBCXX_BOOL_result FALSE)
     endif()
 
-    set(LS_USE_LIBCXX_BOOL ${LS_USE_LIBCXX_BOOL_result} CACHE BOOL "Compile with clang libc++")
-
-    # message("TEST LS_SANITIZE = ${LS_SANITIZE}")
-    # message("TEST LS_USE_LIBCXX = ${LS_USE_LIBCXX}")
-    # message("TEST LS_USE_LIBCXX_BOOL = ${LS_USE_LIBCXX_BOOL}")
-    #
+    set(LS_USE_LIBCXX_BOOL ${LS_USE_LIBCXX_BOOL_result} CACHE INTERNAL "")
 endfunction()
 
 function(ls_print_program_options)
