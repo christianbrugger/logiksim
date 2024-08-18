@@ -5,9 +5,11 @@ This tools caches the output of compiler calls and improve build times on clean 
 ## Usage
 
 ```bat
-ccache -C    # clear cache
 ccache -s    # view stats
+ccache --show-config
+
 ccache -z    # zero stats
+ccache -C    # clear cache
 ```
 
 ## Installation
