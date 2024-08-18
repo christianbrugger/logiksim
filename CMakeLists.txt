@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
 
-
-
-
-
 cmake_policy(PUSH)
 
 if(POLICY CMP0092)
@@ -297,108 +293,20 @@ endif()
 # set(BLEND2D_NO_JIT ON)
 
 
-
-
-###### Dependencies
-
-# Zlib
-set(ZLIB_USE_STATIC_LIBS ON)
-find_package(ZLIB REQUIRED)
-
-# Boost
-set(BOOST_IOSTREAMS_ENABLE_ZLIB ON)
-set(BOOST_INCLUDE_LIBRARIES 
-    algorithm 
-    container 
-    geometry
-    iostreams
-    random 
-    safe_numerics
-)
-add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
-
-# Blend2D
-set(BLEND2D_STATIC TRUE)
-set(BLEND2D_NO_INSTALL TRUE)
-# set(BLEND2D_NO_JIT ON)
-add_subdirectory(external/blend2d EXCLUDE_FROM_ALL SYSTEM)
-
-# fmt
-set(FMT_INSTALL FALSE)
-add_subdirectory(external/fmt EXCLUDE_FROM_ALL SYSTEM)
-
-# range-v3
-add_subdirectory(external/range-v3 EXCLUDE_FROM_ALL SYSTEM)
-
-# GSL
-add_subdirectory(external/GSL EXCLUDE_FROM_ALL SYSTEM)
-
-# abseil
-set(ABSL_PROPAGATE_CXX_STD ON)
-add_subdirectory(external/abseil-cpp EXCLUDE_FROM_ALL SYSTEM)
-
-# Folly - we build a minimal version of the library, only what we need
-set(FOLLY_DIR_NAME my_folly)
-add_library(folly
-    external/${FOLLY_DIR_NAME}/folly/memory/detail/MallocImpl.cpp
-    external/${FOLLY_DIR_NAME}/folly/lang/SafeAssert.cpp
-    external/${FOLLY_DIR_NAME}/folly/ScopeGuard.cpp
-    external/${FOLLY_DIR_NAME}/folly/lang/ToAscii.cpp
-)
-target_include_directories(folly SYSTEM PUBLIC 
-    external/${FOLLY_DIR_NAME}
-)
-target_compile_definitions(folly PUBLIC FOLLY_NO_CONFIG)
-
-# unordered_dense (ankerl)
-add_subdirectory(external/unordered_dense EXCLUDE_FROM_ALL SYSTEM)
-
-# glaze
-add_subdirectory(external/glaze EXCLUDE_FROM_ALL SYSTEM)
-
-# cppcodec / base64
-add_subdirectory(external/cppcodec EXCLUDE_FROM_ALL SYSTEM)
-
-# harfbuzz
-set(SKIP_INSTALL_ALL TRUE)
-add_subdirectory(external/harfbuzz EXCLUDE_FROM_ALL SYSTEM)
-
-# GCE-Math
-add_subdirectory(external/gcem EXCLUDE_FROM_ALL SYSTEM)
-
-# svg2b2d
-add_subdirectory(external/svg2b2d EXCLUDE_FROM_ALL SYSTEM)
-
-# expected
-set(EXPECTED_BUILD_TESTS OFF)
-add_subdirectory(external/expected EXCLUDE_FROM_ALL SYSTEM)
-
-# whereami - has no cmake
-add_library(whereami STATIC EXCLUDE_FROM_ALL
-    external/whereami/src/whereami.c
-)
-set_source_files_properties(
-    external/whereami/src/whereami.c
-    PROPERTIES LANGUAGE CXX
-)
-target_include_directories(whereami PUBLIC
-    external/whereami/src
-)
-
-
 ###################################################
 # needed to run clang-tidy outside, generates compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-if (false)
-    set(CMAKE_CXX_CLANG_TIDY
-        clang-tidy;
-        -extra-arg=/permissive-;
-        -extra-arg=/EHsc;
-        -warnings-as-errors=*;
-        -checks=${CLANG_TIDY_CHECKS};
-    )
-    #-header-filter=\\src\\[a-z0-9_]+\.h$;
-endif()
+
+# if (false)
+#     set(CMAKE_CXX_CLANG_TIDY
+#         clang-tidy;
+#         -extra-arg=/permissive-;
+#         -extra-arg=/EHsc;
+#         -warnings-as-errors=*;
+#         -checks=${CLANG_TIDY_CHECKS};
+#     )
+#     #-header-filter=\\src\\[a-z0-9_]+\.h$;
+# endif()
 
 
 
@@ -406,89 +314,6 @@ endif()
 
 # Main Library
 
-add_library(logicsim_pch INTERFACE)
-if (LS_ENABLE_PCH)
-    message(NOTICE "LOGIKSIM: Enabling pre-compiled headers.")
-
-    target_precompile_headers(logicsim_pch INTERFACE
-        <ankerl/unordered_dense.h>
-        <blend2d.h>
-        <boost/algorithm/string/join.hpp>
-        <boost/container/small_vector.hpp>
-        <boost/container/vector.hpp>
-        <boost/geometry.hpp>
-        <boost/random/mersenne_twister.hpp>
-        <boost/random/uniform_int_distribution.hpp>
-        <boost/safe_numerics/safe_integer.hpp>
-        <fmt/core.h>
-        <fmt/format.h>
-        <folly/small_vector.h>
-        <gcem.hpp>
-        <gsl/gsl>
-    
-        <algorithm>
-        <chrono>
-        <cmath>
-        <concepts>
-        <cstdint>
-        <exception>
-        <filesystem>
-        <functional>
-        <iterator>
-        <locale>
-        <optional>
-        <ostream>
-        <queue>
-        <random>
-        <ranges>
-        <ratio>
-        <string>
-        <string_view>
-        <type_traits>
-        <utility>
-        <variant>
-        <vector>
-    )
-
-    # this is needed so ccache works with PCH files, see:
-    # https://ccache.dev/manual/latest.html#_precompiled_headers
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        target_compile_options(logicsim_pch INTERFACE
-            -Xclang -fno-pch-timestamp
-        )
-    endif()
-else()
-    message(NOTICE "LOGIKSIM: Disabling pre-compiled headers.")
-endif()
-
-set(LS_CORE_INCLUDE_DIRS
-    src
-)
-set(LS_CORE_LIBRARIES
-    Boost::algorithm
-    Boost::container
-    Boost::geometry
-    Boost::iostreams
-    Boost::random
-	Boost::safe_numerics
-    
-    cppcodec
-    fmt::fmt
-    folly
-    absl::base
-    absl::flat_hash_map
-    unordered_dense::unordered_dense
-    GSL
-    range-v3
-    Blend2D::Blend2D
-    glaze::glaze
-    ZLIB::ZLIB
-    harfbuzz
-    gcem
-    svg2b2d
-    tl::expected
-    whereami
-)
 
 # Resources
 file(GLOB_RECURSE
