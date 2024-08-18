@@ -309,41 +309,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # endif()
 
 
-
-
-
-# Main Library
-
-
-# Resources
-file(GLOB_RECURSE
-    LS_RESOURCE_FILES
-    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
-    CONFIGURE_DEPENDS
-
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/**.ttf
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/**.svg
-)
-FOREACH(LS_RESOURCE_FILE ${LS_RESOURCE_FILES})
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${LS_RESOURCE_FILE}
-        COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_CURRENT_SOURCE_DIR}/${LS_RESOURCE_FILE}
-            ${CMAKE_CURRENT_BINARY_DIR}/${LS_RESOURCE_FILE}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${LS_RESOURCE_FILE}
-  )
-ENDFOREACH()
-list(TRANSFORM LS_RESOURCE_FILES PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
-
-# MAIN LIBRARY
-
 # TODO: remove ?
 set(MAIN_LIBRARY "simulation_srp")
 
 # MAIN
-
 add_subdirectory(src)
-
 add_subdirectory(test)
 
 # end of file
