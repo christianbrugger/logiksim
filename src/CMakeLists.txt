@@ -1,2 +1,3 @@
-add_subdirectory(benchmark2)
+add_subdirectory(gui)
 add_subdirectory(cli)
+add_subdirectory(benchmark2)

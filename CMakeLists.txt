@@ -321,53 +321,7 @@ set(LS_CORE_SOURCES
     src/wyhash.cpp
 )
 
-set(LS_GUI_SOURCES
-    src/component/circuit_widget/mouse_logic/editing_logic_concept.cpp
-    src/component/circuit_widget/mouse_logic/editing_logic_manager.cpp
-    src/component/circuit_widget/mouse_logic/editing_logic_variant.cpp
-    src/component/circuit_widget/mouse_logic/handle_resize.cpp
-    src/component/circuit_widget/mouse_logic/handle_setting.cpp
-    src/component/circuit_widget/mouse_logic/insert_logic_item.cpp
-    src/component/circuit_widget/mouse_logic/insert_wire.cpp
-    src/component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
-    src/component/circuit_widget/mouse_logic/mouse_wheel_logic.cpp
-    src/component/circuit_widget/mouse_logic/selection_area.cpp
-    src/component/circuit_widget/mouse_logic/selection_move.cpp
-    src/component/circuit_widget/mouse_logic/selection_single.cpp
-    src/component/circuit_widget/checked_editable_circuit.cpp
-    src/component/circuit_widget/circuit_renderer.cpp
-    src/component/circuit_widget/circuit_store.cpp
-    src/component/circuit_widget/simulation_runner.cpp
-    src/component/circuit_widget/zoom.cpp
 
-    src/format/qt_type.cpp
-
-    src/qt/clipboard_access.cpp
-    src/qt/enum_to_string.cpp
-    src/qt/mouse_position.cpp
-    src/qt/mouse_position_p.cpp
-    src/qt/path_conversion.cpp
-    src/qt/point_conversion.cpp
-    src/qt/setting_location.cpp
-    src/qt/widget_geometry.cpp
-
-    src/widget/circuit_widget.cpp
-    src/widget/circuit_widget_base.cpp
-    src/widget/render_widget.cpp
-    src/widget/setting_dialog.cpp
-    src/widget/setting_dialog_manager.cpp
-    src/widget/top_widget.cpp
-)
-
-# any file that contains Q_OBJECT
-# list them manually to speedup compilation
-set(MOC_FILES
-    src/widget/circuit_widget_base.h
-    src/widget/render_widget.h
-    src/widget/setting_dialog.h
-    src/widget/setting_dialog_manager.h
-    src/widget/top_widget.h
-)
 
 
 cmake_policy(PUSH)
@@ -683,14 +637,6 @@ set(BOOST_INCLUDE_LIBRARIES
 )
 add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
 
-# Qt 6
-set(CMAKE_AUTOMOC FALSE)  # takes too much time, not parallelized
-find_package(Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-message(NOTICE "Qt version: ${Qt6_VERSION}")
-
-QT6_WRAP_CPP(MOC_SOURCES ${MOC_FILES})
-
 # Blend2D
 set(BLEND2D_STATIC TRUE)
 set(BLEND2D_NO_INSTALL TRUE)
@@ -906,40 +852,6 @@ target_compile_options(${MAIN_LIBRARY} PUBLIC ${MAIN_COMPILE_OPTIONS})
 # MAIN
 
 add_subdirectory(src)
-
-# MAIN GUI
-
-set(MAIN_GUI_TARGET "simulation_srp_gui")
-add_executable(${MAIN_GUI_TARGET}
-    ${LS_GUI_SOURCES}
-    ${MOC_SOURCES}
-
-    src/main_gui.cpp
-)
-target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
-    ${MAIN_LIBRARY}
-    
-    Qt6::Core
-    Qt6::Widgets
-    Qt6::GuiPrivate
-)
-set_property(TARGET ${MAIN_GUI_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
-
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE 
-        LS_EXCEPTION_MESSAGE_BOX
-    )
-    if (WIN32)
-        # set_property(TARGET ${MAIN_GUI_TARGET} PROPERTY WIN32_EXECUTABLE true)
-        # target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE LS_LOG_TO_FILE)
-    endif ()
-endif ()
-
-
-# MAIN BENCHMARK
-
-
-# Google Test
 
 add_subdirectory(test)
 

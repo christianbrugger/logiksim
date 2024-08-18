@@ -1,3 +1,4 @@
+include(source_list.cmake)
 
 ###### Dependencies
 
@@ -13,9 +14,8 @@ add_subdirectory(
 
 ###### Test Executable
 
-include(source_list.cmake)
-
 set(MAIN_TEST_TARGET "simulation_srp_test")
+
 add_executable(${MAIN_TEST_TARGET}
     ${LS_TEST_SOURCES}
 )
@@ -27,6 +27,9 @@ target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
 )
 target_include_directories(${MAIN_TEST_TARGET} PUBLIC
     ${PROJECT_SOURCE_DIR}
+)
+set_property(TARGET ${MAIN_TEST_TARGET} PROPERTY RUNTIME_OUTPUT_DIRECTORY 
+    ${CMAKE_BINARY_DIR}
 )
 set_property(TARGET ${MAIN_TEST_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
