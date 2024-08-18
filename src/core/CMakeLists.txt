@@ -289,7 +289,7 @@ add_library(${MAIN_LIBRARY}
     ${LS_CORE_SOURCES}
     ${LS_RESOURCE_FILES}
 )
-# TODO: remove this and add prefix gui to all includes?
+# TODO: remove this and add prefix core to all includes?
 target_include_directories(${MAIN_LIBRARY} PUBLIC
     ${PROJECT_SOURCE_DIR}/src/core
 )

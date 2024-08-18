@@ -1,21 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
 
-cmake_policy(PUSH)
-
-if(POLICY CMP0092)
-  # Don't add -W3 warning level by default.
-  cmake_policy(SET CMP0092 NEW)
-endif()
-if(POLICY CMP0141)
-  # don't use 'MSVC_DEBUG_INFORMATION_FORMAT (BOOST bug 2022-12-14)  # TODO check 
-  cmake_policy(SET CMP0141 OLD)
-endif()
-if(POLICY CMP0069)
-  # enforce link time optimization is used when enabled
-  cmake_policy(SET CMP0069 NEW)
-  set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
-endif()
-
 project(simulation_srp C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -316,5 +300,3 @@ set(MAIN_LIBRARY "simulation_srp")
 add_subdirectory(src)
 add_subdirectory(test)
 
-# end of file
-cmake_policy(POP)
