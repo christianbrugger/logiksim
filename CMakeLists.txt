@@ -5,61 +5,21 @@ project(simulation_srp C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# TODO: investiate this
 # strongly encouraged to enable this globally to avoid conflicts between
 # -Wpedantic being enabled and -std=c++20 and -std=gnu++20 for example
 # when compiling with PCH enabled
 # set(CMAKE_CXX_EXTENSIONS OFF)
 
 
-
-
 include(CMakePrintHelpers)
-cmake_print_variables(CMAKE_C_COMPILER)
-cmake_print_variables(CMAKE_CXX_COMPILER)
+include(cmake/debug_print.cmake)
+include(cmake/project_options.cmake)
 
-option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF)
-option(LS_ENABLE_CCACHE "Enable ccache." OFF)
-option(LS_ENABLE_LTO "Enable link time optimization." OFF)
-option(LS_ENABLE_PCH "Enable pre-compiled headers." ON)
-option(LS_ENABLE_COVERAGE "Enable coverage for tests under Clang" OFF)
+ls_define_program_options()
+# ls_print_program_options()
 
-# option for sanitizers
-set(LS_SANITIZE "" CACHE STRING
-    "Enable sanitizers (Options: Address Undefined Address;Undefined 
-    Memory MemoryWithOrigins Thread). Defaults to empty string.")
-set_property(
-    CACHE LS_SANITIZE PROPERTY STRINGS 
-    "" Address Undefined Address;Undefined Memory Thread
-)
-
-# option for libc++
-set(LS_USE_LIBCXX AUTO CACHE STRING "Compile all dependencies against clang libc++.")
-set_property(CACHE LS_USE_LIBCXX PROPERTY STRINGS AUTO ON OFF)
-
-if ((LS_USE_LIBCXX STREQUAL "AUTO" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
-       (LS_SANITIZE STREQUAL "Memory" OR  LS_SANITIZE STREQUAL "MemoryWithOrigins" OR 
-        LS_SANITIZE STREQUAL "Thread")) 
-    OR (NOT LS_USE_LIBCXX STREQUAL "AUTO" AND LS_USE_LIBCXX)
-)
-    set(LS_USE_LIBCXX_BOOL TRUE)
-else()
-    set(LS_USE_LIBCXX_BOOL FALSE)
-endif()
-
-#message("TEST LS_SANITIZE = ${LS_SANITIZE}")
-#message("TEST LS_USE_LIBCXX = ${LS_USE_LIBCXX}")
-#message("TEST LS_USE_LIBCXX_BOOL = ${LS_USE_LIBCXX_BOOL}")
-
-
-
-# global exceptions
-if (MSVC)
-	add_compile_options(/EHsc)
-else()
-	add_compile_options(-fexceptions)
-endif()
-
-
+# TODO: move to presets
 # global architecture
 if (MSVC)
 	# add_compile_options(/arch:AVX)
@@ -124,7 +84,7 @@ else()
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
         (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
-        # g++ generates those in library headers for sanitized builds
+        # g++imgenerates those in library headers for sanitized builds
         list(APPEND MAIN_COMPILE_OPTIONS -Wno-maybe-uninitialized)
         # also happens in benchmark which uses Werror
         set(BENCHMARK_ENABLE_WERROR OFF)
@@ -186,12 +146,8 @@ message(NOTICE "LOGIKSIM: Using linker ${CMAKE_LINKER}.")
 
 
 
-cmake_print_variables(CMAKE_C_FLAGS_DEBUG)
-cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
-cmake_print_variables(CMAKE_C_FLAGS_RELWITHDEBINFO)
-cmake_print_variables(CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-
-
+# print compiler flags
+ls_print_compiler_and_flags()
 cmake_print_variables(MAIN_COMPILE_OPTIONS)
 
 
