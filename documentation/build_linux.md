@@ -4,13 +4,15 @@ Any modern linux distrubtion that supports Qt 6 should work. Both X11 and Waylan
 
 *tested with Ubuntu 24.04*
 
-### Build Dependencies
+
+
+## Build Dependencies
 
 External tools needed for building, not included in this repository.
 
 ### Compiler
 
-Both **Clang** and **gcc** are supported. 
+Both **Clang** and **GCC** are supported. 
 
 #### Clang 17+
 
@@ -120,8 +122,6 @@ sudo apt install qt6-base-private-dev
 
 *tested with Qt 6.4.2*
 
-
-
 ## External Libraries
 
 External libraries are part of the git repository as submodules.
@@ -138,15 +138,11 @@ The project has almost 100 submodules the script parallizes the git operations a
 
 Re-run the script in case a different tag / branch / commit is checked out.
 
-
-
 ## Build Scripts
 
 If you installed the compilers and Qt in the standard locations and want to make a release build you can use the script `scripts/build_linux_clang_release.bat`
 
 The result will be in the `logiksim/_build_linux_clang_release` folders.
-
-
 
 ## Build Steps
 
@@ -162,8 +158,6 @@ export CMAKE_PREFIX_PATH=~/Qt/6.x.x/gcc_64/lib/cmake
 
 This works for both clang and gcc.
 
-
-
 ### Prepare Build Folder
 
 Create an emtpy build folder inside the logiksim git repostiroy root:
@@ -172,8 +166,6 @@ Create an emtpy build folder inside the logiksim git repostiroy root:
 mkdir build
 cd build
 ```
-
- 
 
 #### Configure
 
