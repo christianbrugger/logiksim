@@ -1,3 +1,8 @@
-add_subdirectory(gui)
+# libraries
+add_subdirectory(core)
+
+# executables
+add_subdirectory(benchmark)
 add_subdirectory(cli)
-add_subdirectory(benchmark2)
+add_subdirectory(gui)
+

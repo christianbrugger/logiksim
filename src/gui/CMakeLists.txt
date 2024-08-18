@@ -1,5 +1,5 @@
-include(source_moc.cmake)
 include(source_list.cmake)
+include(source_moc.cmake)
 
 
 ###### Dependencies
