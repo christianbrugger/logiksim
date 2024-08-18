@@ -16,6 +16,8 @@ set PATH=%LS_QT_PATH%/bin;%PATH%
 set CMAKE_PREFIX_PATH=%LS_QT_PATH%/lib/cmake
 CALL "%LS_VS_PATH%\VC\Auxiliary\Build\vcvars64.bat" || goto :error
 
+REM # set PATH=C:/Qt/6.7.1/msvc2019_64/bin;%PATH%
+REM # CALL "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 rmdir /Q /S %LS_BUILD_FOLDER%
 
