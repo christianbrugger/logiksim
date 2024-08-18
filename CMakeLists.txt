@@ -369,77 +369,6 @@ set(MOC_FILES
     src/widget/top_widget.h
 )
 
-set(LS_TEST_SOURCES
-    test/algorithm/fmt_join_test.cpp
-    test/algorithm/range_extended_test.cpp
-    test/algorithm/range_step_test.cpp
-    test/algorithm/range_test.cpp
-    test/algorithm/shuffle_test.cpp
-    test/algorithm/transform_to_vector_test.cpp
-    test/algorithm/uniform_int_distribution_test.cpp
-
-    test/component/simulation/history_index_test.cpp
-    test/component/simulation/history_view_test.cpp
-    test/component/simulation/simulation_event_test.cpp
-
-    test/container/graph/depth_first_search_test.cpp
-    test/container/circular_buffer_test.cpp
-    test/container/static_vector_test.cpp
-    test/container/value_pointer_pimpl.cpp
-    test/container/value_pointer_pimpl_test.cpp
-    test/container/value_pointer_test.cpp
-
-    test/editable_circuit/modifier/logic_item_test.cpp
-    test/editable_circuit/modifier/modifier_config_test.cpp
-    test/editable_circuit/modifier/wire_random_test.cpp
-    test/editable_circuit/modifier/wire_test.cpp
-    test/editable_circuit/editable_circuit_random_test.cpp
-
-    test/format/container_test.cpp
-
-    test/geometry/connection_count_test.cpp
-    test/geometry/line_test.cpp
-    test/geometry/part_selections.cpp
-    test/geometry/part_test.cpp
-
-    test/iterator_adaptor/enumerate_test.cpp
-    test/iterator_adaptor/enumerate_transform_view_test.cpp
-    test/iterator_adaptor/polling_iterator_test.cpp
-    test/iterator_adaptor/transform_view_test.cpp
-
-    test/logic_item/layout_test.cpp
-    test/logic_item/schematic_info_test.cpp
-
-    test/random/generator_test.cpp
-
-    test/vocabulary/color_test.cpp
-    test/vocabulary/connection_count_test.cpp
-    test/vocabulary/connection_id_test.cpp
-    test/vocabulary/delay_test.cpp
-    test/vocabulary/element_id_test.cpp
-    test/vocabulary/grid_fine_test.cpp
-    test/vocabulary/grid_test.cpp
-    test/vocabulary/line_fine_test.cpp
-    test/vocabulary/line_test.cpp
-    test/vocabulary/offset_test.cpp
-    test/vocabulary/ordered_line_test.cpp
-    test/vocabulary/part_test.cpp
-    test/vocabulary/point_fine_test.cpp
-    test/vocabulary/point_test.cpp
-    test/vocabulary/rect_fine_test.cpp
-    test/vocabulary/rect_test.cpp
-    test/vocabulary/segment_index_test.cpp
-    test/vocabulary/segment_test.cpp
-    test/vocabulary/time_test.cpp
-
-    test/layout_test.cpp
-    test/line_tree_test.cpp
-    test/part_selection_test.cpp
-    test/schematic_test.cpp
-    test/segment_tree_test.cpp
-    test/simulation_test.cpp
-    test/timer_test.cpp
-)
 
 cmake_policy(PUSH)
 
@@ -745,6 +674,7 @@ set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 set(BENCHMARK_ENABLE_INSTALL OFF)
 add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
 
+# TODO: move to test subdirectory
 # Google Test
 set(INSTALL_GTEST OFF)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
@@ -1033,46 +963,7 @@ set_property(TARGET ${MAIN_BENCHMARK_TARGET} PROPERTY POSITION_INDEPENDENT_CODE 
 
 # Google Test
 
-set(MAIN_TEST_TARGET "simulation_srp_test")
-add_executable(${MAIN_TEST_TARGET}
-    ${LS_TEST_SOURCES}
-)
-target_link_libraries(${MAIN_TEST_TARGET} PRIVATE 
-    ${MAIN_LIBRARY} 
-    GTest::gtest
-    GTest::gmock
-    GTest::gtest_main
-)
-target_include_directories(${MAIN_TEST_TARGET} PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
-set_property(TARGET ${MAIN_TEST_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
-
-if (LS_ENABLE_COVERAGE)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")  #  AND CMAKE_BUILD_TYPE MATCHES Debug
-        message(NOTICE "LOGIKSIM: Enabling Clang Coverage for Tests.")
-        target_compile_options(${MAIN_TEST_TARGET} PRIVATE 
-            -fprofile-instr-generate 
-            -fcoverage-mapping
-        )
-        target_link_options(${MAIN_TEST_TARGET} PRIVATE 
-            -fprofile-instr-generate 
-            -fcoverage-mapping
-        )
-    else()
-        message(FATAL_ERROR "Coverage only works for Clang!" )
-    endif()
-endif()
-
-
-enable_testing()
-include(GoogleTest)
-gtest_discover_tests(${MAIN_TEST_TARGET})
-
-
-
-
-
+add_subdirectory(test)
 
 # end of file
 cmake_policy(POP)
