@@ -102,8 +102,8 @@ class TextCache {
                                               FontStyle style) const -> BLBox;
 
    private:
-    [[nodiscard]] auto get_scaled_bl_font(float font_size, FontStyle style) const
-        -> const BLFont &;
+    [[nodiscard]] auto get_scaled_bl_font(float font_size,
+                                          FontStyle style) const -> const BLFont &;
     [[nodiscard]] auto get_entry(std::string_view text, float font_size, FontStyle style,
                                  HTextAlignment horizontal_alignment,
                                  VTextAlignment vertical_alignment) const

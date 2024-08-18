@@ -83,8 +83,8 @@ class MainWidget : public QMainWindow {
     auto create_statusbar() -> void;
 
     [[nodiscard]] auto build_element_buttons() -> QWidget*;
-    [[nodiscard]] auto new_button(const QString& label, CircuitWidgetState state)
-        -> QWidget*;
+    [[nodiscard]] auto new_button(const QString& label,
+                                  CircuitWidgetState state) -> QWidget*;
 
     // circuit_widget slots
     Q_SLOT void on_circuit_state_changed(CircuitWidgetState new_state);

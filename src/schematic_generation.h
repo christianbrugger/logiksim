@@ -28,12 +28,12 @@ auto add_missing_placeholders(Schematic& schematic) -> void;
                                       const std::vector<LineTree>& line_trees,
                                       delay_t wire_delay_per_distance) -> Schematic;
 
-[[nodiscard]] auto to_element_id(const Layout& layout, logicitem_id_t logicitem_id)
-    -> element_id_t;
+[[nodiscard]] auto to_element_id(const Layout& layout,
+                                 logicitem_id_t logicitem_id) -> element_id_t;
 [[nodiscard]] auto to_element_id(const Layout& layout, wire_id_t wire_id) -> element_id_t;
 
-[[nodiscard]] auto to_logicitem_id(const Layout& layout, element_id_t element_id)
-    -> logicitem_id_t;
+[[nodiscard]] auto to_logicitem_id(const Layout& layout,
+                                   element_id_t element_id) -> logicitem_id_t;
 [[nodiscard]] auto to_wire_id(const Layout& layout, element_id_t element_id) -> wire_id_t;
 
 }  // namespace logicsim

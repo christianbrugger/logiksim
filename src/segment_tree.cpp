@@ -43,8 +43,8 @@ auto input_position(const segment_vector_t& segments) -> std::optional<point_t> 
     return result;
 }
 
-auto count_point_type(const segment_vector_t& segments, SegmentPointType type)
-    -> vector_size_t {
+auto count_point_type(const segment_vector_t& segments,
+                      SegmentPointType type) -> vector_size_t {
     const auto count_type = [type](const segment_info_t& info) -> vector_size_t {
         return (info.p0_type == type ? vector_size_t {1} : vector_size_t {0}) +
                (info.p1_type == type ? vector_size_t {1} : vector_size_t {0});
@@ -103,8 +103,8 @@ namespace segment_tree {
 
 namespace {
 
-auto sort_segments(segment_vector_t& segments, valid_vector_t& valid_parts_vector)
-    -> void {
+auto sort_segments(segment_vector_t& segments,
+                   valid_vector_t& valid_parts_vector) -> void {
     // we sort by line
     const auto vectors = ranges::zip_view(segments, valid_parts_vector);
 
@@ -120,14 +120,12 @@ auto sort_point_types(segment_vector_t& segments) -> void {
     using wrapped = std::pair<point_t, std::reference_wrapper<SegmentPointType>>;
     std::vector<wrapped> wrapped_data;
 
-    std::ranges::transform(segments, std::back_inserter(wrapped_data),
-                           [](segment_info_t& info) {
-                               return wrapped {info.line.p0, info.p0_type};
-                           });
-    std::ranges::transform(segments, std::back_inserter(wrapped_data),
-                           [](segment_info_t& info) {
-                               return wrapped {info.line.p1, info.p1_type};
-                           });
+    std::ranges::transform(
+        segments, std::back_inserter(wrapped_data),
+        [](segment_info_t& info) { return wrapped {info.line.p0, info.p0_type}; });
+    std::ranges::transform(
+        segments, std::back_inserter(wrapped_data),
+        [](segment_info_t& info) { return wrapped {info.line.p1, info.p1_type}; });
 
     // the direct view is able to change the segment points itself
     // we use a zip_view, as only it works with sorting
@@ -250,8 +248,8 @@ auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) 
     assert(output_count_ == segment_tree::count_outputs(segments_));
 }
 
-auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index)
-    -> segment_index_t {
+auto SegmentTree::copy_segment(const SegmentTree& tree,
+                               segment_index_t index) -> segment_index_t {
     const auto new_index = add_segment(tree.info(index));
     valid_parts_vector_.at(new_index.value) = tree.valid_parts_vector_.at(index.value);
 
@@ -435,8 +433,8 @@ auto SegmentTree::mark_valid(segment_index_t segment_index, part_t marked_part) 
     assert(output_count_ == segment_tree::count_outputs(segments_));
 }
 
-auto SegmentTree::unmark_valid(segment_index_t segment_index, part_t unmarked_part)
-    -> void {
+auto SegmentTree::unmark_valid(segment_index_t segment_index,
+                               part_t unmarked_part) -> void {
     if (unmarked_part.end > part(segment_index).end) [[unlikely]] {
         throw std::runtime_error("cannot unmark outside of line");
     }
@@ -523,8 +521,8 @@ auto calculate_normal_lines(const SegmentTree& tree) -> std::vector<ordered_line
     return result;
 }
 
-auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)
-    -> boost::container::vector<bool> {
+auto calculate_connected_segments_mask(const SegmentTree& tree,
+                                       point_t p0) -> boost::container::vector<bool> {
     const auto graph = AdjacencyGraph<SegmentTree::vector_size_t> {all_lines(tree)};
     const auto result =
         depth_first_search_visited(graph, EmptyVisitor {}, graph.to_index(p0).value());

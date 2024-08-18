@@ -70,8 +70,8 @@ constexpr history_min_index_t::operator history_index_t() const {
 // Free Functions
 //
 
-constexpr auto operator==(const history_min_index_t &left, const history_index_t &right)
-    -> bool {
+constexpr auto operator==(const history_min_index_t &left,
+                          const history_index_t &right) -> bool {
     return left.index == right;
 }
 
@@ -80,8 +80,8 @@ constexpr auto operator<=>(const history_min_index_t &left,
     return left.index <=> right;
 }
 
-constexpr auto operator==(const history_index_t &left, const history_min_index_t &right)
-    -> bool {
+constexpr auto operator==(const history_index_t &left,
+                          const history_min_index_t &right) -> bool {
     return left == right.index;
 }
 

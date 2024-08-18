@@ -29,11 +29,11 @@ struct size_handle_t {
     point_fine_t point;
 };
 
-auto size_handle_positions(const Layout& layout, logicitem_id_t logicitem_id)
-    -> std::vector<size_handle_t>;
+auto size_handle_positions(const Layout& layout,
+                           logicitem_id_t logicitem_id) -> std::vector<size_handle_t>;
 
-auto size_handle_positions(const Layout& layout, const Selection& selection)
-    -> std::vector<size_handle_t>;
+auto size_handle_positions(const Layout& layout,
+                           const Selection& selection) -> std::vector<size_handle_t>;
 
 auto size_handle_rect_px(size_handle_t handle, const ViewConfig& config) -> BLRect;
 
@@ -44,11 +44,11 @@ auto get_colliding_size_handle(point_fine_t position,
                                const ViewConfig& config) -> std::optional<size_handle_t>;
 
 auto get_colliding_size_handle(point_fine_t position, const Layout& layout,
-                               const Selection& selection, const ViewConfig& config)
-    -> std::optional<size_handle_t>;
+                               const Selection& selection,
+                               const ViewConfig& config) -> std::optional<size_handle_t>;
 
-auto get_resized_element(const PlacedElement& original, size_handle_t handle, int delta)
-    -> PlacedElement;
+auto get_resized_element(const PlacedElement& original, size_handle_t handle,
+                         int delta) -> PlacedElement;
 
 auto get_single_placed_element(const EditableCircuit& editable_circuit) -> PlacedElement;
 

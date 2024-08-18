@@ -273,13 +273,12 @@ namespace {
 
 using IterPartsResult = std::vector<std::pair<part_t, bool>>;
 
-auto iter_parts_result(part_t full_part, std::initializer_list<part_t> list)
-    -> IterPartsResult {
+auto iter_parts_result(part_t full_part,
+                       std::initializer_list<part_t> list) -> IterPartsResult {
     auto result = IterPartsResult {};
 
-    iter_parts(full_part, to_selection(list), [&](part_t part, bool selected) {
-        result.push_back({part, selected});
-    });
+    iter_parts(full_part, to_selection(list),
+               [&](part_t part, bool selected) { result.push_back({part, selected}); });
 
     return result;
 }

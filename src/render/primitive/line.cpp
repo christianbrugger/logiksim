@@ -53,8 +53,8 @@ auto draw_orthogonal_line(Context& ctx, BLLine line, LineAttributes attributes) 
     _draw_orthogonal_line_ordered(ctx, line, attributes);
 }
 
-auto draw_line(Context& ctx, const ordered_line_t line, LineAttributes attributes)
-    -> void {
+auto draw_line(Context& ctx, const ordered_line_t line,
+               LineAttributes attributes) -> void {
     draw_line(ctx, line_fine_t {line}, attributes);
 }
 

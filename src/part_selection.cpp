@@ -292,8 +292,8 @@ auto PartSelection::class_invariant_holds() const -> bool {
 // Free functions
 //
 
-auto copy_parts(const PartSelection& source, part_copy_definition_t copy_definition)
-    -> PartSelection {
+auto copy_parts(const PartSelection& source,
+                part_copy_definition_t copy_definition) -> PartSelection {
     auto result = PartSelection {};
     result.copy_parts(source, copy_definition);
     return result;

@@ -58,8 +58,8 @@ auto get_dirty_rect(rect_t bounding_rect, const ViewConfig &view_config) -> BLRe
 
 // to grid fine
 
-auto to_grid_fine(point_device_fine_t position, const ViewConfig &config)
-    -> point_fine_t {
+auto to_grid_fine(point_device_fine_t position,
+                  const ViewConfig &config) -> point_fine_t {
     const auto scale = config.device_scale();
     const auto offset = config.offset();
 
@@ -79,8 +79,8 @@ auto to_grid_fine(BLPoint point, const ViewConfig &config) -> point_fine_t {
 
 // to grid
 
-auto to_grid(point_device_fine_t position, const ViewConfig &config)
-    -> std::optional<point_t> {
+auto to_grid(point_device_fine_t position,
+             const ViewConfig &config) -> std::optional<point_t> {
     const auto fine = to_grid_fine(position, config);
 
     const auto x = round(fine.x);
@@ -93,8 +93,8 @@ auto to_grid(point_device_fine_t position, const ViewConfig &config)
     return std::nullopt;
 }
 
-auto to_grid(point_device_t position, const ViewConfig &config)
-    -> std::optional<point_t> {
+auto to_grid(point_device_t position,
+             const ViewConfig &config) -> std::optional<point_t> {
     return to_grid(point_device_fine_t {position}, config);
 }
 

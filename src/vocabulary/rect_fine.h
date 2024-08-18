@@ -77,22 +77,22 @@ constexpr auto rect_fine_t::operator-=(const point_fine_like auto &other)
     return *this;
 }
 
-constexpr auto operator+(const rect_fine_t &left, const point_fine_like auto &right)
-    -> rect_fine_t {
+constexpr auto operator+(const rect_fine_t &left,
+                         const point_fine_like auto &right) -> rect_fine_t {
     auto result = left;
     result += right;
     return result;
 }
 
-constexpr auto operator-(const rect_fine_t &left, const point_fine_like auto &right)
-    -> rect_fine_t {
+constexpr auto operator-(const rect_fine_t &left,
+                         const point_fine_like auto &right) -> rect_fine_t {
     auto result = left;
     result -= right;
     return result;
 }
 
-constexpr auto operator+(const point_fine_like auto &left, const rect_fine_t &right)
-    -> rect_fine_t {
+constexpr auto operator+(const point_fine_like auto &left,
+                         const rect_fine_t &right) -> rect_fine_t {
     return operator+(right, left);
 }
 

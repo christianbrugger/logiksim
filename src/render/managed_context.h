@@ -41,9 +41,8 @@ class ImageSurface {
  *
  * Throws an exception if the given image is not the size of the render settings.
  */
-[[nodiscard]] auto create_context(BLImage &bl_image,
-                                  const ContextRenderSettings &render_settings)
-    -> BLContext;
+[[nodiscard]] auto create_context(
+    BLImage &bl_image, const ContextRenderSettings &render_settings) -> BLContext;
 
 /**
  * @brief: Allocates a new image if the size is different, without copying data.
@@ -64,16 +63,16 @@ inline auto render_to_image(BLImage &bl_image, const ContextRenderSettings &sett
  *
  * Throws if source and target don't have the same size.
  */
-auto blit_layer(Context &target_ctx, const BLImage &source_image, BLRectI dirty_rect)
-    -> void;
+auto blit_layer(Context &target_ctx, const BLImage &source_image,
+                BLRectI dirty_rect) -> void;
 
 /**
  * @brief: Copies the data from the source layer to the target context.
  *
  * Throws if source and target don't have the same size.
  */
-auto blit_layer(Context &target_ctx, const ImageSurface &source_layer, BLRectI dirty_rect)
-    -> void;
+auto blit_layer(Context &target_ctx, const ImageSurface &source_layer,
+                BLRectI dirty_rect) -> void;
 
 /**
  * @brief: Renders the function first to the layer and then to the target within

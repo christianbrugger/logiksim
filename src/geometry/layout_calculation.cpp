@@ -12,8 +12,8 @@
 
 namespace logicsim {
 
-auto connector_point(point_t position, orientation_t orientation, grid_fine_t offset)
-    -> point_fine_t {
+auto connector_point(point_t position, orientation_t orientation,
+                     grid_fine_t offset) -> point_fine_t {
     const auto p0 = point_fine_t {position};
 
     switch (orientation) {
@@ -39,8 +39,8 @@ auto connector_point(point_t position, orientation_t orientation, grid_fine_t of
     std::terminate();
 }
 
-auto connector_point(BLPoint position, orientation_t orientation, double offset)
-    -> BLPoint {
+auto connector_point(BLPoint position, orientation_t orientation,
+                     double offset) -> BLPoint {
     switch (orientation) {
         using enum orientation_t;
 
@@ -64,8 +64,8 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
     std::terminate();
 }
 
-auto transform(point_t element_position, orientation_t orientation, point_t offset)
-    -> point_t {
+auto transform(point_t element_position, orientation_t orientation,
+               point_t offset) -> point_t {
     switch (orientation) {
         using enum orientation_t;
 
@@ -88,8 +88,8 @@ auto transform(point_t element_position, orientation_t orientation, point_t offs
     std::terminate();
 }
 
-auto transform(point_t element_position, orientation_t orientation, point_fine_t offset)
-    -> point_fine_t {
+auto transform(point_t element_position, orientation_t orientation,
+               point_fine_t offset) -> point_fine_t {
     switch (orientation) {
         using enum orientation_t;
 
@@ -112,8 +112,8 @@ auto transform(point_t element_position, orientation_t orientation, point_fine_t
     std::terminate();
 }
 
-auto transform(orientation_t element_orientation, orientation_t connector)
-    -> orientation_t {
+auto transform(orientation_t element_orientation,
+               orientation_t connector) -> orientation_t {
     switch (element_orientation) {
         using enum orientation_t;
 
@@ -159,8 +159,8 @@ auto transform(point_t position, orientation_t orientation, rect_t rect) -> rect
     std::terminate();
 }
 
-auto transform(point_t position, orientation_t orientation, rect_fine_t rect)
-    -> rect_fine_t {
+auto transform(point_t position, orientation_t orientation,
+               rect_fine_t rect) -> rect_fine_t {
     switch (orientation) {
         using enum orientation_t;
 

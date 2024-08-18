@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 
-CLANG_FORMAT = "clang-format-17"
+CLANG_FORMAT = "clang-format-18"
 SOURCE_FOLDERS = ("src", "test")
 EXTENSIONS = ("*.h", "*.cpp")
 

@@ -13,8 +13,8 @@ namespace circuit_widget {
 namespace {
 
 auto add_to_selection(Selection& selection, const Layout& layout,
-                      std::span<const SpatialIndex::value_t> items, bool whole_tree)
-    -> void {
+                      std::span<const SpatialIndex::value_t> items,
+                      bool whole_tree) -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
             selection.add_logicitem(item.logicitem());
@@ -77,8 +77,8 @@ auto SelectionMoveLogic::mouse_press(EditableCircuit& editable_circuit,
     }
 }
 
-auto SelectionMoveLogic::mouse_move(EditableCircuit& editable_circuit, point_fine_t point)
-    -> void {
+auto SelectionMoveLogic::mouse_move(EditableCircuit& editable_circuit,
+                                    point_fine_t point) -> void {
     if (state_ != State::move_selection) {
         return;
     }

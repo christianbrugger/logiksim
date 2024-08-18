@@ -187,8 +187,8 @@ auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void {
 }
 
 auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
-                                logicitem_id_t logicitem_id, ElementDrawState state)
-    -> void {
+                                logicitem_id_t logicitem_id,
+                                ElementDrawState state) -> void {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
 
     for (auto info : input_locations_and_id(layout_data)) {
@@ -419,8 +419,8 @@ auto get_logic_item_text_color(ElementDrawState state) -> color_t {
 }
 
 auto draw_logic_item_rect(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-                          ElementDrawState state, LogicItemRectAttributes attributes)
-    -> void {
+                          ElementDrawState state,
+                          LogicItemRectAttributes attributes) -> void {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
     const auto rect = element_body_draw_rect(layout_data);
     draw_logic_item_rect(ctx, rect, state, attributes);
@@ -446,8 +446,8 @@ auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, ElementDrawState state
               });
 }
 
-auto get_logic_item_center(const Layout& layout, logicitem_id_t logicitem_id)
-    -> point_fine_t {
+auto get_logic_item_center(const Layout& layout,
+                           logicitem_id_t logicitem_id) -> point_fine_t {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
     const auto rect = element_body_draw_rect(layout_data);
     return get_center(rect);
@@ -455,15 +455,15 @@ auto get_logic_item_center(const Layout& layout, logicitem_id_t logicitem_id)
 
 auto draw_logic_item_label(Context& ctx, const Layout& layout,
                            logicitem_id_t logicitem_id, std::string_view text,
-                           ElementDrawState state, LogicItemTextAttributes attributes)
-    -> void {
+                           ElementDrawState state,
+                           LogicItemTextAttributes attributes) -> void {
     const auto center = get_logic_item_center(layout, logicitem_id);
     draw_logic_item_label(ctx, center, text, state, attributes);
 }
 
 auto draw_logic_item_label(Context& ctx, point_fine_t center, std::string_view text,
-                           ElementDrawState state, LogicItemTextAttributes attributes)
-    -> void {
+                           ElementDrawState state,
+                           LogicItemTextAttributes attributes) -> void {
     if (text.empty()) {
         return;
     }
@@ -1243,15 +1243,15 @@ auto draw_size_handle(Context& ctx, const size_handle_t& position) -> void {
         });
 }
 
-auto draw_size_handles(Context& ctx, std::span<const size_handle_t> handle_positions)
-    -> void {
+auto draw_size_handles(Context& ctx,
+                       std::span<const size_handle_t> handle_positions) -> void {
     for (const auto& position : handle_positions) {
         draw_size_handle(ctx, position);
     }
 }
 
-auto render_size_handles(Context& ctx, const Layout& layout, const Selection& selection)
-    -> void {
+auto render_size_handles(Context& ctx, const Layout& layout,
+                         const Selection& selection) -> void {
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
     draw_size_handles(ctx, size_handle_positions(layout, selection));
 }
@@ -1283,8 +1283,8 @@ auto draw_setting_handle(Context& ctx, setting_handle_t handle) -> void {
               });
 }
 
-auto render_setting_handle(Context& ctx, const Layout& layout, const Selection& selection)
-    -> void {
+auto render_setting_handle(Context& ctx, const Layout& layout,
+                           const Selection& selection) -> void {
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
     if (const auto handle = setting_handle_position(layout, selection)) {
@@ -1507,8 +1507,8 @@ auto update_bounding_rect(std::optional<rect_t>& target, rect_t new_rect) -> voi
     }
 }
 
-auto update_bounding_rect(std::optional<rect_t>& target, ordered_line_t new_line)
-    -> void {
+auto update_bounding_rect(std::optional<rect_t>& target,
+                          ordered_line_t new_line) -> void {
     if (!target) {
         target = rect_t {new_line.p0, new_line.p1};
     } else {
@@ -1623,8 +1623,8 @@ auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers&
 }
 
 auto render_interactive_layers(Context& ctx, const Layout& layout,
-                               const InteractiveLayers& layers, ImageSurface& surface)
-    -> void {
+                               const InteractiveLayers& layers,
+                               ImageSurface& surface) -> void {
     if (layers.has_inserted()) {
         render_inserted(ctx, layout, layers);
     }
@@ -1801,8 +1801,8 @@ auto build_interactive_layers(const Layout& layout, const Selection* selection,
     return layers;
 }
 
-auto build_simulation_layers(const Layout& layout, rect_t scene_rect)
-    -> SimulationLayers {
+auto build_simulation_layers(const Layout& layout,
+                             rect_t scene_rect) -> SimulationLayers {
     // const auto t = Timer {};
 
     auto layers = SimulationLayers {};
@@ -1894,8 +1894,8 @@ auto render_layout(Context& ctx, ImageSurface& surface, const Layout& layout,
 
 auto render_layout_to_file(const Layout& layout, BLSizeI size,
                            const std::filesystem::path& filename,
-                           const ViewConfig& view_config, const ContextCache& cache)
-    -> void {
+                           const ViewConfig& view_config,
+                           const ContextCache& cache) -> void {
     auto surface = ImageSurface {};
 
     render_circuit_to_file(size, filename, view_config, cache, [&](Context& ctx) {
@@ -1906,8 +1906,8 @@ auto render_layout_to_file(const Layout& layout, BLSizeI size,
 
 auto render_layout_to_file(const Layout& layout, const Selection& selection, BLSizeI size,
                            const std::filesystem::path& filename,
-                           const ViewConfig& view_config, const ContextCache& cache)
-    -> void {
+                           const ViewConfig& view_config,
+                           const ContextCache& cache) -> void {
     auto surface = ImageSurface {};
 
     render_circuit_to_file(size, filename, view_config, cache, [&](Context& ctx) {
@@ -1920,8 +1920,8 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, BLS
 // Simulation
 //
 
-auto render_simulation(Context& ctx, const Layout& layout, SimulationView simulation_view)
-    -> void {
+auto render_simulation(Context& ctx, const Layout& layout,
+                       SimulationView simulation_view) -> void {
     const auto scene_rect = get_scene_rect(ctx.view_config());
     const auto layers = build_simulation_layers(layout, scene_rect);
 
@@ -1930,8 +1930,8 @@ auto render_simulation(Context& ctx, const Layout& layout, SimulationView simula
 
 auto render_simulation_to_file(const Layout& layout, SimulationView simulation_view,
                                BLSizeI size, const std::filesystem::path& filename,
-                               const ViewConfig& view_config, const ContextCache& cache)
-    -> void {
+                               const ViewConfig& view_config,
+                               const ContextCache& cache) -> void {
     render_circuit_to_file(size, filename, view_config, cache, [&](Context& ctx) {
         render_background(ctx);
         render_simulation(ctx, layout, simulation_view);

@@ -18,8 +18,8 @@ namespace logicsim {
 
 namespace {
 
-auto calculate_output_delays(const LineTree& line_tree, delay_t wire_delay_per_distance)
-    -> output_delays_t {
+auto calculate_output_delays(const LineTree& line_tree,
+                             delay_t wire_delay_per_distance) -> output_delays_t {
     const auto lengths = line_tree.calculate_output_lengths();
 
     return transform_to_container<output_delays_t>(
@@ -58,8 +58,8 @@ auto add_unused_element(Schematic& schematic) -> void {
     });
 }
 
-auto logic_item_output_delays(const Layout& layout, logicitem_id_t logicitem_id)
-    -> output_delays_t {
+auto logic_item_output_delays(const Layout& layout,
+                              logicitem_id_t logicitem_id) -> output_delays_t {
     const auto logicitem_type = layout.logic_items().type(logicitem_id);
     const auto delay = element_output_delay(logicitem_type);
 
@@ -329,8 +329,8 @@ auto generate_schematic(const Layout& layout, const std::vector<LineTree>& line_
     return schematic;
 }
 
-auto to_element_id(const Layout& layout [[maybe_unused]], logicitem_id_t logicitem_id)
-    -> element_id_t {
+auto to_element_id(const Layout& layout [[maybe_unused]],
+                   logicitem_id_t logicitem_id) -> element_id_t {
     static_assert(std::is_same_v<element_id_t::value_type, logicitem_id_t::value_type>);
 
     return element_id_t {logicitem_id.value};

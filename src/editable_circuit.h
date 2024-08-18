@@ -40,15 +40,15 @@ class EditableCircuit {
 
     auto change_insertion_mode(selection_id_t selection_id,
                                InsertionMode new_insertion_mode) -> void;
-    auto change_insertion_mode(Selection selection, InsertionMode new_insertion_mode)
-        -> void;
+    auto change_insertion_mode(Selection selection,
+                               InsertionMode new_insertion_mode) -> void;
 
-    auto move_or_delete_temporary(selection_id_t selection_id, int delta_x, int delta_y)
-        -> void;
+    auto move_or_delete_temporary(selection_id_t selection_id, int delta_x,
+                                  int delta_y) -> void;
     auto move_or_delete_temporary(Selection selection, int delta_x, int delta_y) -> void;
 
-    auto move_temporary_unchecked(const Selection& selection, int delta_x, int delta_y)
-        -> void;
+    auto move_temporary_unchecked(const Selection& selection, int delta_x,
+                                  int delta_y) -> void;
 
     auto delete_all(selection_id_t selection_id) -> void;
     auto delete_all(Selection selection) -> void;
@@ -59,8 +59,8 @@ class EditableCircuit {
 
     auto toggle_inverter(point_t point) -> void;
     auto toggle_wire_crosspoint(point_t point) -> void;
-    auto set_attributes(logicitem_id_t logicitem_id, attributes_clock_generator_t attrs)
-        -> void;
+    auto set_attributes(logicitem_id_t logicitem_id,
+                        attributes_clock_generator_t attrs) -> void;
 
     //
     // Wire Regularization
@@ -101,14 +101,14 @@ class EditableCircuit {
     [[nodiscard]] auto selection(selection_id_t selection_id) const -> const Selection&;
     auto set_selection(selection_id_t selection_id, Selection selection) -> void;
 
-    auto add_to_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
-        -> void;
-    auto add_to_selection(selection_id_t selection_id, segment_part_t segment_part)
-        -> void;
-    auto remove_from_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
-        -> void;
-    auto remove_from_selection(selection_id_t selection_id, segment_part_t segment_part)
-        -> void;
+    auto add_to_selection(selection_id_t selection_id,
+                          logicitem_id_t logicitem_id) -> void;
+    auto add_to_selection(selection_id_t selection_id,
+                          segment_part_t segment_part) -> void;
+    auto remove_from_selection(selection_id_t selection_id,
+                               logicitem_id_t logicitem_id) -> void;
+    auto remove_from_selection(selection_id_t selection_id,
+                               segment_part_t segment_part) -> void;
 
     //
     // Visible Selections
@@ -161,8 +161,8 @@ auto add_example(Rng& rng, EditableCircuit& editable_circuit) -> void;
                                              const Selection& selection)
     -> std::vector<point_t>;
 
-auto save_delete_all(EditableCircuit& editable_circuit, selection_id_t selection_id)
-    -> void;
+auto save_delete_all(EditableCircuit& editable_circuit,
+                     selection_id_t selection_id) -> void;
 
 auto save_destroy_selection(EditableCircuit& editable_circuit,
                             selection_id_t selection_id) -> void;

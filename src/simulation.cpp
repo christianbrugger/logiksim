@@ -179,8 +179,8 @@ auto Simulation::submit_events_for_changed_outputs(
     }
 }
 
-auto invert_inputs(logic_small_vector_t &values, const logic_small_vector_t &inverters)
-    -> void {
+auto invert_inputs(logic_small_vector_t &values,
+                   const logic_small_vector_t &inverters) -> void {
     if (std::size(values) != std::size(inverters)) [[unlikely]] {
         throw std::runtime_error("Inputs and inverters need to have same size.");
     }
@@ -213,8 +213,8 @@ namespace {
 /**
  * @brief: Returns outputs of switched-off circuit
  */
-auto get_outputs_switched_off(const Simulation &simulation, element_id_t element_id)
-    -> logic_small_vector_t {
+auto get_outputs_switched_off(const Simulation &simulation,
+                              element_id_t element_id) -> logic_small_vector_t {
     const auto get_output_value = [&](output_t output) -> bool {
         if (const auto input = simulation.schematic().input(output)) {
             return simulation.input_value(input);
@@ -229,10 +229,9 @@ auto get_outputs_switched_off(const Simulation &simulation, element_id_t element
 }  // namespace
 
 template <Simulation::Outputs OutputFrom>
-auto Simulation::update_with_internal_state(element_id_t element_id,
-                                            const logic_small_vector_t &old_inputs,
-                                            const logic_small_vector_t &new_inputs)
-    -> void {
+auto Simulation::update_with_internal_state(
+    element_id_t element_id, const logic_small_vector_t &old_inputs,
+    const logic_small_vector_t &new_inputs) -> void {
     const auto element_type = schematic_.element_type(element_id);
     const auto output_count = schematic_.output_count(element_id);
     auto &internal_state = internal_states_.at(element_id.value);
@@ -257,10 +256,9 @@ auto Simulation::update_with_internal_state(element_id_t element_id,
 }
 
 template <Simulation::Outputs OutputFrom>
-auto Simulation::update_no_internal_state(element_id_t element_id,
-                                          const logic_small_vector_t &old_inputs,
-                                          const logic_small_vector_t &new_inputs)
-    -> void {
+auto Simulation::update_no_internal_state(
+    element_id_t element_id, const logic_small_vector_t &old_inputs,
+    const logic_small_vector_t &new_inputs) -> void {
     const auto element_type = schematic_.element_type(element_id);
     const auto output_count = schematic_.output_count(element_id);
 
@@ -338,8 +336,8 @@ using event_count_t = simulation::event_count_t;
 using RunConfig = simulation::RunConfig;
 
 // TODO remove current_event_count ???
-auto validate(RunConfig config, event_count_t current_event_count [[maybe_unused]])
-    -> void {
+auto validate(RunConfig config,
+              event_count_t current_event_count [[maybe_unused]]) -> void {
     if (config.simulate_for < delay_t {0us}) [[unlikely]] {
         throw std::runtime_error("simulation_time needs to be positive.");
     }
@@ -358,8 +356,8 @@ auto simulation_end_time(RunConfig config, time_t current_time) -> time_t {
     return current_time + config.simulate_for;
 }
 
-auto stop_event_count(RunConfig config, event_count_t current_event_count)
-    -> event_count_t {
+auto stop_event_count(RunConfig config,
+                      event_count_t current_event_count) -> event_count_t {
     if (config.max_events == simulation::defaults::no_max_events) {
         return std::numeric_limits<event_count_t>::max();
     }
@@ -377,8 +375,8 @@ auto stop_event_count(RunConfig config, event_count_t current_event_count)
  */
 constexpr inline auto timer_check_interval = event_count_t {1'000};
 
-auto first_check_count(RunConfig config, event_count_t current_event_count)
-    -> event_count_t {
+auto first_check_count(RunConfig config,
+                       event_count_t current_event_count) -> event_count_t {
     if (config.realtime_timeout == no_realtime_timeout) {
         return std::numeric_limits<event_count_t>::max();
     }

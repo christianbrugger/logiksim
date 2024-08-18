@@ -47,10 +47,9 @@ auto update_internal_state(const logic_small_vector_t &old_input,
                                                 connection_count_t output_count,
                                                 ElementType type) -> logic_small_vector_t;
 
-[[nodiscard]] auto calculate_outputs_from_inputs(const logic_small_vector_t &input,
-                                                 connection_count_t output_count,
-                                                 ElementType type)
-    -> logic_small_vector_t;
+[[nodiscard]] auto calculate_outputs_from_inputs(
+    const logic_small_vector_t &input, connection_count_t output_count,
+    ElementType type) -> logic_small_vector_t;
 
 }  // namespace logicsim
 

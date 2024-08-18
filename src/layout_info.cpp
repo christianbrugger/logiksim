@@ -47,8 +47,8 @@ auto is_input_output_count_valid(LogicItemType logicitem_type,
                                                     output_count);
 }
 
-auto is_orientation_valid(LogicItemType logicitem_type, orientation_t orientation)
-    -> bool {
+auto is_orientation_valid(LogicItemType logicitem_type,
+                          orientation_t orientation) -> bool {
     const auto info = get_layout_info(logicitem_type);
 
     switch (info.direction_type) {

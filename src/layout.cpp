@@ -188,14 +188,14 @@ auto get_segment_info(const Layout &layout, segment_t segment) -> segment_info_t
     return layout.wires().segment_tree(segment.wire_id).info(segment.segment_index);
 }
 
-auto get_segment_point_type(const Layout &layout, segment_t segment, point_t position)
-    -> SegmentPointType {
+auto get_segment_point_type(const Layout &layout, segment_t segment,
+                            point_t position) -> SegmentPointType {
     const auto info = get_segment_info(layout, segment);
     return get_segment_point_type(info, position);
 }
 
-auto get_segment_valid_parts(const Layout &layout, segment_t segment)
-    -> const PartSelection & {
+auto get_segment_valid_parts(const Layout &layout,
+                             segment_t segment) -> const PartSelection & {
     return layout.wires()
         .segment_tree(segment.wire_id)
         .valid_parts(segment.segment_index);
@@ -253,13 +253,13 @@ auto to_layout_calculation_data(const Layout &layout, logicitem_id_t logicitem_i
     return layout::to_layout_calculation_data(layout.logic_items(), logicitem_id);
 }
 
-auto to_logicitem_definition(const Layout &layout, logicitem_id_t logicitem_id)
-    -> LogicItemDefinition {
+auto to_logicitem_definition(const Layout &layout,
+                             logicitem_id_t logicitem_id) -> LogicItemDefinition {
     return layout::to_logicitem_definition(layout.logic_items(), logicitem_id);
 }
 
-auto to_placed_element(const Layout &layout, logicitem_id_t logicitem_id)
-    -> PlacedElement {
+auto to_placed_element(const Layout &layout,
+                       logicitem_id_t logicitem_id) -> PlacedElement {
     return PlacedElement {
         .definition = to_logicitem_definition(layout, logicitem_id),
         .position = layout.logic_items().position(logicitem_id),

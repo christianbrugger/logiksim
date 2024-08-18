@@ -122,8 +122,8 @@ auto EditableCircuit::set_attributes(logicitem_id_t logicitem_id,
 //
 
 auto EditableCircuit::regularize_temporary_selection(
-    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
-    -> std::vector<point_t> {
+    const Selection& selection,
+    std::optional<std::vector<point_t>> true_cross_points) -> std::vector<point_t> {
     return modifier_.regularize_temporary_selection(selection,
                                                     std::move(true_cross_points));
 }
@@ -184,8 +184,8 @@ auto EditableCircuit::selection(selection_id_t selection_id) const -> const Sele
     return modifier_.circuit_data().selection_store.at(selection_id);
 }
 
-auto EditableCircuit::set_selection(selection_id_t selection_id, Selection selection)
-    -> void {
+auto EditableCircuit::set_selection(selection_id_t selection_id,
+                                    Selection selection) -> void {
     modifier_.set_selection(selection_id, std::move(selection));
 }
 
@@ -305,8 +305,8 @@ auto add_example(Rng& rng, EditableCircuit& editable_circuit) -> void {
 }
 
 auto new_positions_representable(const EditableCircuit& editable_circuit,
-                                 const Selection& selection, int delta_x, int delta_y)
-    -> bool {
+                                 const Selection& selection, int delta_x,
+                                 int delta_y) -> bool {
     return editable_circuit::new_positions_representable(editable_circuit.layout(),
                                                          selection, delta_x, delta_y);
 }
@@ -317,8 +317,8 @@ auto get_inserted_cross_points(const EditableCircuit& editable_circuit,
                                                        selection);
 }
 
-auto save_delete_all(EditableCircuit& editable_circuit, selection_id_t selection_id)
-    -> void {
+auto save_delete_all(EditableCircuit& editable_circuit,
+                     selection_id_t selection_id) -> void {
     if (editable_circuit.selection_exists(selection_id)) {
         editable_circuit.delete_all(selection_id);
     }

@@ -77,11 +77,11 @@ class Modifier {
     auto delete_temporary_logicitem(logicitem_id_t& logicitem_id,
                                     logicitem_id_t* preserve_element = nullptr) -> void;
 
-    auto move_temporary_logicitem_unchecked(logicitem_id_t logicitem_id, int dx, int dy)
-        -> void;
+    auto move_temporary_logicitem_unchecked(logicitem_id_t logicitem_id, int dx,
+                                            int dy) -> void;
 
-    auto move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, int dx, int dy)
-        -> void;
+    auto move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, int dx,
+                                            int dy) -> void;
 
     auto change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
                                          InsertionMode new_insertion_mode) -> void;
@@ -91,8 +91,8 @@ class Modifier {
 
     auto toggle_inverter(point_t point) -> void;
 
-    auto set_attributes(logicitem_id_t logicitem_id, attributes_clock_generator_t attrs)
-        -> void;
+    auto set_attributes(logicitem_id_t logicitem_id,
+                        attributes_clock_generator_t attrs) -> void;
 
     //
     // Wires
@@ -100,8 +100,8 @@ class Modifier {
 
     auto delete_temporary_wire_segment(segment_part_t& segment_part) -> void;
 
-    auto add_wire_segment(ordered_line_t line, InsertionMode insertion_mode)
-        -> segment_part_t;
+    auto add_wire_segment(ordered_line_t line,
+                          InsertionMode insertion_mode) -> segment_part_t;
 
     auto change_wire_insertion_mode(segment_part_t& segment_part,
                                     InsertionMode new_insertion_mode) -> void;
@@ -109,8 +109,8 @@ class Modifier {
     auto move_temporary_wire_unchecked(segment_t segment, part_t verify_full_part, int dx,
                                        int dy) -> void;
 
-    auto move_or_delete_temporary_wire(segment_part_t& segment_part, int dx, int dy)
-        -> void;
+    auto move_or_delete_temporary_wire(segment_part_t& segment_part, int dx,
+                                       int dy) -> void;
 
     auto toggle_wire_crosspoint(point_t point) -> void;
 
@@ -119,8 +119,8 @@ class Modifier {
     //
 
     auto regularize_temporary_selection(
-        const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
-        -> std::vector<point_t>;
+        const Selection& selection,
+        std::optional<std::vector<point_t>> true_cross_points) -> std::vector<point_t>;
 
     auto split_temporary_segments(const Selection& selection,
                                   std::span<const point_t> split_points) -> void;
@@ -135,14 +135,14 @@ class Modifier {
     auto destroy_selection(selection_id_t selection_id) -> void;
     auto set_selection(selection_id_t selection_id, Selection selection) -> void;
 
-    auto add_to_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
-        -> void;
-    auto add_to_selection(selection_id_t selection_id, segment_part_t segment_part)
-        -> void;
-    auto remove_from_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
-        -> void;
-    auto remove_from_selection(selection_id_t selection_id, segment_part_t segment_part)
-        -> void;
+    auto add_to_selection(selection_id_t selection_id,
+                          logicitem_id_t logicitem_id) -> void;
+    auto add_to_selection(selection_id_t selection_id,
+                          segment_part_t segment_part) -> void;
+    auto remove_from_selection(selection_id_t selection_id,
+                               logicitem_id_t logicitem_id) -> void;
+    auto remove_from_selection(selection_id_t selection_id,
+                               segment_part_t segment_part) -> void;
 
     //
     // Visible Selection
@@ -178,13 +178,11 @@ using ModifierSelectionGuard = SelectionGuardTemplate<Modifier>;
  */
 [[nodiscard]] auto is_valid(const Modifier& modifier) -> bool;
 
-[[nodiscard]] auto get_inserted_cross_points(const Modifier& modifier,
-                                             const Selection& selection)
-    -> std::vector<point_t>;
+[[nodiscard]] auto get_inserted_cross_points(
+    const Modifier& modifier, const Selection& selection) -> std::vector<point_t>;
 
-[[nodiscard]] auto get_temporary_selection_splitpoints(const Modifier& modifier,
-                                                       const Selection& selection)
-    -> std::vector<point_t>;
+[[nodiscard]] auto get_temporary_selection_splitpoints(
+    const Modifier& modifier, const Selection& selection) -> std::vector<point_t>;
 
 //
 // Selection Based

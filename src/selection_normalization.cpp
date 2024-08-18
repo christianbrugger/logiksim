@@ -77,8 +77,8 @@ auto find_lower(offset_t offset, const CrossingCache &cache, offset_t limit) -> 
     return offset;
 }
 
-auto find_higher(offset_t offset, const CrossingCache &cache, offset_t limit)
-    -> offset_t {
+auto find_higher(offset_t offset, const CrossingCache &cache,
+                 offset_t limit) -> offset_t {
     while (offset < limit) {
         if (!cache.is_colliding(++offset)) {
             return offset;

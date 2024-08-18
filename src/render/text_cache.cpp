@@ -51,8 +51,8 @@ auto TextCache::clear() const -> void {
     Ensures(glyph_map_.values().capacity() == 0);
 }
 
-auto TextCache::get_scaled_bl_font(float font_size, FontStyle style) const
-    -> const BLFont& {
+auto TextCache::get_scaled_bl_font(float font_size,
+                                   FontStyle style) const -> const BLFont& {
     // reuse font to avoid allocation in every draw call
     auto& font = fonts_.get(style);
     font.set_font_size(font_size);
@@ -115,23 +115,23 @@ auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_v
 auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_view text,
                           float font_size, color_t color,
                           HTextAlignment horizontal_alignment,
-                          VTextAlignment vertical_alignment, FontStyle style) const
-    -> void {
+                          VTextAlignment vertical_alignment,
+                          FontStyle style) const -> void {
     draw_text(ctx, position, text, font_size,
               TextAttributes {color, horizontal_alignment, vertical_alignment, style});
 }
 
 namespace {
 
-auto text_width(const TextCache& glyph_cache, std::string_view text, FontStyle style)
-    -> double {
+auto text_width(const TextCache& glyph_cache, std::string_view text,
+                FontStyle style) -> double {
     const auto font_size = float {16};
     const auto box = glyph_cache.calculate_bounding_box(text, font_size, style);
     return (box.x1 - box.x0) / font_size;
 }
 
-auto character_width(const TextCache& glyph_cache, char character, FontStyle style)
-    -> double {
+auto character_width(const TextCache& glyph_cache, char character,
+                     FontStyle style) -> double {
     const auto fill = '0';
 
     return text_width(glyph_cache, std::string {fill, character, fill}, style) -

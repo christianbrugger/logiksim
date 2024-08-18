@@ -320,14 +320,14 @@ auto LogicItemStore::set_attributes(logicitem_id_t logicitem_id,
 }
 
 auto LogicItemStore::set_input_inverter(logicitem_id_t logicitem_id,
-                                        connection_id_t connection_id, bool value)
-    -> void {
+                                        connection_id_t connection_id,
+                                        bool value) -> void {
     input_inverters_.at(logicitem_id.value).at(connection_id.value) = value;
 }
 
 auto LogicItemStore::set_output_inverter(logicitem_id_t logicitem_id,
-                                         connection_id_t connection_id, bool value)
-    -> void {
+                                         connection_id_t connection_id,
+                                         bool value) -> void {
     output_inverters_.at(logicitem_id.value).at(connection_id.value) = value;
 }
 
@@ -380,8 +380,8 @@ auto to_layout_calculation_data(const LogicItemStore &store, logicitem_id_t logi
     };
 }
 
-auto to_logicitem_definition(const LogicItemStore &store, logicitem_id_t logicitem_id)
-    -> LogicItemDefinition {
+auto to_logicitem_definition(const LogicItemStore &store,
+                             logicitem_id_t logicitem_id) -> LogicItemDefinition {
     return LogicItemDefinition {
         .logicitem_type = store.type(logicitem_id),
         .input_count = store.input_count(logicitem_id),

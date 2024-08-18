@@ -276,8 +276,8 @@ auto update_internal_state(const logic_small_vector_t &old_input,
 }
 
 auto calculate_outputs_from_state(const logic_small_vector_t &state,
-                                  connection_count_t output_count, const ElementType type)
-    -> logic_small_vector_t {
+                                  connection_count_t output_count,
+                                  const ElementType type) -> logic_small_vector_t {
     switch (type) {
         using enum ElementType;
 

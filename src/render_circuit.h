@@ -132,8 +132,8 @@ consteval auto with_alpha(color_t color, ElementDrawState state) noexcept -> col
     return color_t {color.r(), color.g(), color.b(), state_alpha(state)};
 }
 
-constexpr auto with_alpha_runtime(color_t color, ElementDrawState state) noexcept
-    -> color_t {
+constexpr auto with_alpha_runtime(color_t color,
+                                  ElementDrawState state) noexcept -> color_t {
     return color_t {color.r(), color.g(), color.b(), state_alpha(state)};
 }
 
@@ -158,8 +158,8 @@ struct ConnectorAttributes {
 auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void;
 
 auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
-                                logicitem_id_t logicitem_id, ElementDrawState state)
-    -> void;
+                                logicitem_id_t logicitem_id,
+                                ElementDrawState state) -> void;
 
 auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
                                 logicitem_id_t logicitem_id, ElementDrawState state,
@@ -209,8 +209,8 @@ struct LogicItemRectAttributes {
 };
 
 auto draw_logic_item_rect(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-                          ElementDrawState state, LogicItemRectAttributes attributes = {})
-    -> void;
+                          ElementDrawState state,
+                          LogicItemRectAttributes attributes = {}) -> void;
 
 auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, ElementDrawState state,
                           LogicItemRectAttributes attributes = {}) -> void;
@@ -277,11 +277,11 @@ auto draw_line_segment(Context& ctx, segment_info_t info, bool is_enabled,
 // Handles
 //
 
-auto render_size_handles(Context& ctx, const Layout& layout, const Selection& selection)
-    -> void;
+auto render_size_handles(Context& ctx, const Layout& layout,
+                         const Selection& selection) -> void;
 
-auto render_setting_handle(Context& ctx, const Layout& layout, const Selection& selection)
-    -> void;
+auto render_setting_handle(Context& ctx, const Layout& layout,
+                           const Selection& selection) -> void;
 
 //
 // Overlay
@@ -396,8 +396,8 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, BLS
 // Simulation
 //
 
-auto render_simulation(Context& ctx, const Layout& layout, SimulationView simulation_view)
-    -> void;
+auto render_simulation(Context& ctx, const Layout& layout,
+                       SimulationView simulation_view) -> void;
 
 auto render_simulation_to_file(const Layout& layout, SimulationView simulation_view,
                                BLSizeI size, const std::filesystem::path& filename,

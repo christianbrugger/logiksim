@@ -61,8 +61,8 @@ auto render_svg_icon_impl(BLContext &bl_ctx, const svg2b2d::SVGDocument &documen
     document.draw(bl_ctx);
 }
 
-auto calculate_offset_x(double width, HorizontalAlignment horizontal_alignment)
-    -> double {
+auto calculate_offset_x(double width,
+                        HorizontalAlignment horizontal_alignment) -> double {
     switch (horizontal_alignment) {
         using enum HorizontalAlignment;
 

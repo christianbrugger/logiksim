@@ -147,8 +147,8 @@ class SegmentTree {
      *
      * Returns segment index of the added entry.
      */
-    auto copy_segment(const SegmentTree &tree, segment_index_t index, part_t part)
-        -> segment_index_t;
+    auto copy_segment(const SegmentTree &tree, segment_index_t index,
+                      part_t part) -> segment_index_t;
 
     /**
      * @brief: Shrinks the specified segment to the new part.

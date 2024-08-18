@@ -18,8 +18,8 @@ auto mouse_position_label(std::string_view label, std::string_view type,
     return fmt::format("{:.2f}, {:.2f}  {}{{}} {}", position.x, position.y, type, label);
 }
 
-auto mouse_position_label(std::string_view label, std::string_view type, BLPoint position)
-    -> std::string {
+auto mouse_position_label(std::string_view label, std::string_view type,
+                          BLPoint position) -> std::string {
     return fmt::format("{:.2f}, {:.2f}  {}{{}} {}", position.x, position.y, type, label);
 }
 

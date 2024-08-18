@@ -60,10 +60,10 @@ static_assert(std::is_trivially_copyable_v<delay_t>);
 static_assert(std::is_trivially_copy_constructible_v<delay_t>);
 static_assert(std::is_trivially_copy_assignable_v<delay_t>);
 
-[[nodiscard]] constexpr auto operator+(const delay_t &left, const delay_t &right)
-    -> delay_t;
-[[nodiscard]] constexpr auto operator-(const delay_t &left, const delay_t &right)
-    -> delay_t;
+[[nodiscard]] constexpr auto operator+(const delay_t &left,
+                                       const delay_t &right) -> delay_t;
+[[nodiscard]] constexpr auto operator-(const delay_t &left,
+                                       const delay_t &right) -> delay_t;
 // int
 [[nodiscard]] constexpr auto operator*(const delay_t &left, const int &right) -> delay_t;
 [[nodiscard]] constexpr auto operator/(const delay_t &left, const int &right) -> delay_t;

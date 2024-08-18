@@ -24,8 +24,8 @@ namespace editing {
 // Delete Wires
 //
 
-auto delete_temporary_wire_segment(CircuitData& circuit, segment_part_t& segment_part)
-    -> void {
+auto delete_temporary_wire_segment(CircuitData& circuit,
+                                   segment_part_t& segment_part) -> void {
     if (!segment_part) [[unlikely]] {
         throw std::runtime_error("segment part is invalid");
     }
@@ -41,8 +41,8 @@ auto delete_temporary_wire_segment(CircuitData& circuit, segment_part_t& segment
 //
 
 auto is_wire_position_representable(const Layout& layout,
-                                    const segment_part_t segment_part, int dx, int dy)
-    -> bool {
+                                    const segment_part_t segment_part, int dx,
+                                    int dy) -> bool {
     if (!segment_part) [[unlikely]] {
         throw std::runtime_error("segment part is invalid");
     }
@@ -160,8 +160,8 @@ auto _find_wire_for_inserting_segment(CircuitData& circuit,
     return circuit.layout.wires().add_wire();
 }
 
-auto _insert_temporary_segment(CircuitData& circuit, segment_part_t& segment_part)
-    -> void {
+auto _insert_temporary_segment(CircuitData& circuit,
+                               segment_part_t& segment_part) -> void {
     if (is_inserted(segment_part.segment.wire_id)) {
         throw std::runtime_error("segment is already inserted");
     }
@@ -194,8 +194,8 @@ auto _wire_change_temporary_to_colliding(CircuitData& circuit,
     }
 }
 
-auto _wire_change_colliding_to_insert(CircuitData& circuit, segment_part_t& segment_part)
-    -> void {
+auto _wire_change_colliding_to_insert(CircuitData& circuit,
+                                      segment_part_t& segment_part) -> void {
     const auto wire_id = segment_part.segment.wire_id;
 
     // from valid
@@ -213,8 +213,8 @@ auto _wire_change_colliding_to_insert(CircuitData& circuit, segment_part_t& segm
     }
 }
 
-auto _wire_change_insert_to_colliding(Layout& layout, const segment_part_t segment_part)
-    -> void {
+auto _wire_change_insert_to_colliding(Layout& layout,
+                                      const segment_part_t segment_part) -> void {
     mark_valid(layout, segment_part);
 }
 
@@ -428,8 +428,8 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
     return cross_points;
 }
 
-auto get_inserted_cross_points(const CircuitData& circuit, const Selection& selection)
-    -> std::vector<point_t> {
+auto get_inserted_cross_points(const CircuitData& circuit,
+                               const Selection& selection) -> std::vector<point_t> {
     auto cross_points = std::vector<point_t> {};
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
@@ -487,9 +487,8 @@ auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
     }
 }
 
-auto get_temporary_selection_splitpoints(const CircuitData& circuit,
-                                         const Selection& selection)
-    -> std::vector<point_t> {
+auto get_temporary_selection_splitpoints(
+    const CircuitData& circuit, const Selection& selection) -> std::vector<point_t> {
     auto result = std::vector<point_t> {};
 
     const auto add_candidate = [&](point_t point) {

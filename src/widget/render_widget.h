@@ -51,8 +51,8 @@ class RenderWidget : public QWidget {
      * Note, this function needs to be implemented in derived classes.
      */
     virtual auto renderEvent(BLImage bl_image, device_pixel_ratio_t device_pixel_ratio,
-                             RenderMode render_mode, fallback_info_t fallback_info)
-        -> void = 0;
+                             RenderMode render_mode,
+                             fallback_info_t fallback_info) -> void = 0;
 
    private:
     QImage qt_image_ {};

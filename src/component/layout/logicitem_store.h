@@ -75,10 +75,10 @@ class LogicItemStore {
 
     // setters
     auto set_position(logicitem_id_t logicitem_id, point_t position) -> void;
-    auto set_display_state(logicitem_id_t logicitem_id, display_state_t display_state)
-        -> void;
-    auto set_attributes(logicitem_id_t logicitem_id, attributes_clock_generator_t attrs)
-        -> void;
+    auto set_display_state(logicitem_id_t logicitem_id,
+                           display_state_t display_state) -> void;
+    auto set_attributes(logicitem_id_t logicitem_id,
+                        attributes_clock_generator_t attrs) -> void;
     auto set_input_inverter(logicitem_id_t logicitem_id, connection_id_t connection_id,
                             bool value) -> void;
     auto set_output_inverter(logicitem_id_t logicitem_id, connection_id_t connection_id,
@@ -113,14 +113,12 @@ class LogicItemStore {
                                               logicitem_id_t logicitem_id)
     -> layout_calculation_data_t;
 
-[[nodiscard]] auto to_layout_calculation_data(const LogicItemStore &store,
-                                              logicitem_id_t logicitem_id,
-                                              point_t position)
-    -> layout_calculation_data_t;
+[[nodiscard]] auto to_layout_calculation_data(
+    const LogicItemStore &store, logicitem_id_t logicitem_id,
+    point_t position) -> layout_calculation_data_t;
 
-[[nodiscard]] auto to_logicitem_definition(const LogicItemStore &store,
-                                           logicitem_id_t logicitem_id)
-    -> LogicItemDefinition;
+[[nodiscard]] auto to_logicitem_definition(
+    const LogicItemStore &store, logicitem_id_t logicitem_id) -> LogicItemDefinition;
 
 }  // namespace layout
 

@@ -287,14 +287,14 @@ auto element_ids(const Schematic &schematic) -> range_extended_t<element_id_t> {
     return range_extended<element_id_t>(schematic.size());
 }
 
-auto input_ids(const Schematic &schematic, element_id_t element_id)
-    -> range_extended_t<connection_id_t> {
+auto input_ids(const Schematic &schematic,
+               element_id_t element_id) -> range_extended_t<connection_id_t> {
     return range_extended<connection_id_t>(
         std::size_t {schematic.input_count(element_id)});
 }
 
-auto output_ids(const Schematic &schematic, element_id_t element_id)
-    -> range_extended_t<connection_id_t> {
+auto output_ids(const Schematic &schematic,
+                element_id_t element_id) -> range_extended_t<connection_id_t> {
     return range_extended<connection_id_t>(
         std::size_t {schematic.output_count(element_id)});
 }
@@ -309,8 +309,8 @@ auto format_element(const Schematic &schematic, element_id_t element_id) -> std:
         schematic.output_count(element_id), schematic.element_type(element_id));
 }
 
-auto format_element_with_connections(const Schematic &schematic, element_id_t element_id)
-    -> std::string {
+auto format_element_with_connections(const Schematic &schematic,
+                                     element_id_t element_id) -> std::string {
     const auto input_connections =
         transform_view(inputs(schematic, element_id),
                        [&](input_t input) { return schematic.output(input); });

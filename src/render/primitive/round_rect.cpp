@@ -7,8 +7,8 @@
 
 namespace logicsim {
 
-auto draw_round_rect(Context& ctx, rect_fine_t rect, RoundRectAttributes attributes)
-    -> void {
+auto draw_round_rect(Context& ctx, rect_fine_t rect,
+                     RoundRectAttributes attributes) -> void {
     const auto&& [x0, y0] = to_context(rect.p0, ctx);
     const auto&& [x1, y1] = to_context(rect.p1, ctx);
 

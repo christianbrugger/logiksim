@@ -123,8 +123,8 @@ auto move_temporary_logicitem_unchecked(Layout& layout, const logicitem_id_t log
 }
 
 auto move_or_delete_temporary_logicitem(CircuitData& circuit,
-                                        logicitem_id_t& logicitem_id, int dx, int dy)
-    -> void {
+                                        logicitem_id_t& logicitem_id, int dx,
+                                        int dy) -> void {
     if (circuit.layout.logic_items().display_state(logicitem_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("Only temporary items can be freely moved.");

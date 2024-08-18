@@ -22,8 +22,8 @@
 
 namespace logicsim {
 
-auto size_handle_positions(const Layout& layout, logicitem_id_t logicitem_id)
-    -> std::vector<size_handle_t> {
+auto size_handle_positions(const Layout& layout,
+                           logicitem_id_t logicitem_id) -> std::vector<size_handle_t> {
     switch (layout.logic_items().type(logicitem_id)) {
         using enum LogicItemType;
 
@@ -101,8 +101,8 @@ auto get_single_logic_item(const Selection& selection) -> logicitem_id_t {
 
 }  // namespace
 
-auto size_handle_positions(const Layout& layout, const Selection& selection)
-    -> std::vector<size_handle_t> {
+auto size_handle_positions(const Layout& layout,
+                           const Selection& selection) -> std::vector<size_handle_t> {
     // only show handles when a single item is selected
     const auto logicitem_id = get_single_logic_item(selection);
     if (!logicitem_id) {
@@ -128,8 +128,8 @@ auto size_handle_rect_px(size_handle_t handle, const ViewConfig& config) -> BLRe
     return BLRect {x0, y0, s, s};
 }
 
-auto size_handle_rect_grid(size_handle_t handle, const ViewConfig& config)
-    -> rect_fine_t {
+auto size_handle_rect_grid(size_handle_t handle,
+                           const ViewConfig& config) -> rect_fine_t {
     const auto rect = size_handle_rect_px(handle, config);
     return rect_fine_t {
         to_grid_fine(BLPoint {rect.x, rect.y}, config),
@@ -158,8 +158,8 @@ auto get_colliding_size_handle(point_fine_t position,
 }
 
 auto get_colliding_size_handle(point_fine_t position, const Layout& layout,
-                               const Selection& selection, const ViewConfig& config)
-    -> std::optional<size_handle_t> {
+                               const Selection& selection,
+                               const ViewConfig& config) -> std::optional<size_handle_t> {
     const auto handles = size_handle_positions(layout, selection);
     return get_colliding_size_handle(position, handles, config);
 }
@@ -224,8 +224,8 @@ auto adjust_height(const PlacedElement& original, size_handle_t handle, int delt
 
 }  // namespace
 
-auto get_resized_element(const PlacedElement& original, size_handle_t handle, int delta)
-    -> PlacedElement {
+auto get_resized_element(const PlacedElement& original, size_handle_t handle,
+                         int delta) -> PlacedElement {
     switch (original.definition.logicitem_type) {
         using enum LogicItemType;
 

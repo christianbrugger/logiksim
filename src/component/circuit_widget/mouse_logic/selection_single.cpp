@@ -10,8 +10,8 @@ namespace circuit_widget {
 namespace {
 
 auto add_selection(Selection& selection, const Layout& layout,
-                   std::span<const SpatialIndex::value_t> items, point_fine_t point)
-    -> void {
+                   std::span<const SpatialIndex::value_t> items,
+                   point_fine_t point) -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
             selection.add_logicitem(item.logicitem());
@@ -22,8 +22,8 @@ auto add_selection(Selection& selection, const Layout& layout,
 }
 
 auto remove_selection(Selection& selection, const Layout& layout,
-                      std::span<const SpatialIndex::value_t> items, point_fine_t point)
-    -> void {
+                      std::span<const SpatialIndex::value_t> items,
+                      point_fine_t point) -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
             selection.remove_logicitem(item.logicitem());

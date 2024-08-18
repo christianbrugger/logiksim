@@ -17,11 +17,11 @@ class SegmentTree;
  * @brief: finds tree with at least one segment or returns null_element
  */
 [[nodiscard]] auto get_random_segment_tree(Rng& rng, const Layout& layout) -> wire_id_t;
-[[nodiscard]] auto get_random_segment(Rng& rng, const SegmentTree& tree)
-    -> segment_index_t;
+[[nodiscard]] auto get_random_segment(Rng& rng,
+                                      const SegmentTree& tree) -> segment_index_t;
 [[nodiscard]] auto get_random_segment(Rng& rng, const Layout& layout) -> segment_t;
-[[nodiscard]] auto get_random_segment_part(Rng& rng, const Layout& layout)
-    -> segment_part_t;
+[[nodiscard]] auto get_random_segment_part(Rng& rng,
+                                           const Layout& layout) -> segment_part_t;
 
 auto add_random_segment(Rng& rng, SegmentTree& tree) -> segment_index_t;
 

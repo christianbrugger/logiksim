@@ -49,11 +49,10 @@ static_assert(sizeof(wire_connections_t) == 40);
 // Check Convertible Inputs
 //
 
-[[nodiscard]] auto is_convertible_to_input(const Layout& layout, wire_id_t wire_id)
-    -> bool;
-[[nodiscard]] auto all_convertible_to_input(const Layout& layout,
-                                            const wire_connections_t& connections)
-    -> bool;
+[[nodiscard]] auto is_convertible_to_input(const Layout& layout,
+                                           wire_id_t wire_id) -> bool;
+[[nodiscard]] auto all_convertible_to_input(
+    const Layout& layout, const wire_connections_t& connections) -> bool;
 
 struct convertible_inputs_result_t {
     wire_connections_t convertible_inputs {};
@@ -81,8 +80,8 @@ auto convert_to_inputs(CircuitData& circuit, const wire_connections_t& outputs) 
 
 auto convert_to_output(CircuitData& circuit, wire_connection_t output) -> void;
 
-auto convert_wires_at_outputs_to_inputs(CircuitData& circuit, logicitem_id_t logicitem_id)
-    -> void;
+auto convert_wires_at_outputs_to_inputs(CircuitData& circuit,
+                                        logicitem_id_t logicitem_id) -> void;
 
 auto convert_wires_at_outputs_to_outputs(CircuitData& circuit,
                                          logicitem_id_t logicitem_id) -> void;
@@ -94,8 +93,8 @@ auto convert_wires_at_outputs_to_outputs(CircuitData& circuit,
 auto is_logicitem_colliding(const CircuitData& circuit,
                             const layout_calculation_data_t& data) -> bool;
 
-auto is_logicitem_colliding(const CircuitData& circuit, logicitem_id_t logicitem_id)
-    -> bool;
+auto is_logicitem_colliding(const CircuitData& circuit,
+                            logicitem_id_t logicitem_id) -> bool;
 
 }  // namespace editing
 

@@ -40,8 +40,8 @@ struct move_delta_t {
     int y;
 };
 
-auto to_line(const SerializedLine& obj, move_delta_t delta = {})
-    -> std::optional<line_t> {
+auto to_line(const SerializedLine& obj,
+             move_delta_t delta = {}) -> std::optional<line_t> {
     if (!is_orthogonal_line(obj.p0, obj.p1)) [[unlikely]] {
         return std::nullopt;
     }
@@ -53,9 +53,8 @@ auto to_line(const SerializedLine& obj, move_delta_t delta = {})
     return add_unchecked(line_t {obj.p0, obj.p1}, delta.x, delta.y);
 }
 
-auto parse_attr_clock_generator(
-    const std::optional<SerializedAttributesClockGenerator>& obj)
-    -> std::optional<attributes_clock_generator_t> {
+auto parse_attr_clock_generator(const std::optional<SerializedAttributesClockGenerator>&
+                                    obj) -> std::optional<attributes_clock_generator_t> {
     if (obj.has_value()) {
         static_assert(std::is_same_v<delay_t::period, std::nano>);
         static_assert(std::is_same_v<delay_t::rep, decltype(obj->time_symmetric_ns)>);
@@ -93,8 +92,8 @@ auto to_connection_count(connection_count_t::value_type_rep value)
 }
 }  // namespace
 
-auto to_placed_element(const SerializedLogicItem& obj, move_delta_t delta = {})
-    -> std::optional<PlacedElement> {
+auto to_placed_element(const SerializedLogicItem& obj,
+                       move_delta_t delta = {}) -> std::optional<PlacedElement> {
     // definition
     const auto input_count = to_connection_count(obj.input_count);
     const auto output_count = to_connection_count(obj.output_count);
@@ -174,8 +173,8 @@ auto add_element(SerializedLayout& data, const Layout& layout,
     });
 }
 
-auto add_element(SerializedLayout& data, const Layout& layout, wire_id_t wire_id)
-    -> void {
+auto add_element(SerializedLayout& data, const Layout& layout,
+                 wire_id_t wire_id) -> void {
     for (const auto& info : layout.wires().segment_tree(wire_id)) {
         data.wire_segments.push_back(SerializedLine {info.line.p0, info.line.p1});
     }
@@ -291,8 +290,8 @@ auto unserialize_data(const std::string& binary) -> std::optional<SerializedLayo
     return json_loads(json_text);
 }
 
-auto calculate_move_delta(point_t save_position, std::optional<point_t> load_position)
-    -> move_delta_t {
+auto calculate_move_delta(point_t save_position,
+                          std::optional<point_t> load_position) -> move_delta_t {
     if (!load_position) {
         return move_delta_t {0, 0};
     }

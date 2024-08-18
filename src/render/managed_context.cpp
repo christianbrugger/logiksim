@@ -10,8 +10,8 @@
 
 namespace logicsim {
 
-auto create_context(BLImage &bl_image, const ContextRenderSettings &render_settings)
-    -> BLContext {
+auto create_context(BLImage &bl_image,
+                    const ContextRenderSettings &render_settings) -> BLContext {
     if (bl_image.size() != render_settings.view_config.size()) {
         throw std::runtime_error("Given bl_image does not match size of settings.");
     }
@@ -40,8 +40,8 @@ auto ImageSurface::bl_image() const -> const BLImage & {
 // Free Functions
 //
 
-auto blit_layer(Context &target_ctx, const BLImage &source_image, BLRectI dirty_rect)
-    -> void {
+auto blit_layer(Context &target_ctx, const BLImage &source_image,
+                BLRectI dirty_rect) -> void {
     if (target_ctx.bl_ctx.targetSize() != source_image.size()) [[unlikely]] {
         throw std::runtime_error("target_ctx and source_image need to have same size.");
     }
@@ -52,8 +52,8 @@ auto blit_layer(Context &target_ctx, const BLImage &source_image, BLRectI dirty_
     target_ctx.bl_ctx.blitImage(dirty_rect, source_image, dirty_rect);
 }
 
-auto blit_layer(Context &target_ctx, const ImageSurface &source_layer, BLRectI dirty_rect)
-    -> void {
+auto blit_layer(Context &target_ctx, const ImageSurface &source_layer,
+                BLRectI dirty_rect) -> void {
     blit_layer(target_ctx, source_layer.bl_image(), dirty_rect);
 }
 

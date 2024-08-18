@@ -44,8 +44,8 @@ auto get_selected_logic_item(const EditableCircuit& editable_circuit,
 }
 
 auto create_setting_dialog(const EditableCircuit& editable_circuit,
-                           selection_id_t selection_id, QWidget* parent)
-    -> SettingDialog* {
+                           selection_id_t selection_id,
+                           QWidget* parent) -> SettingDialog* {
     const auto logicitem_id = get_selected_logic_item(editable_circuit, selection_id);
     Expects(logicitem_id);
 
@@ -212,8 +212,8 @@ auto SettingDialogManager::class_invariant_holds() const -> bool {
 //
 
 auto change_setting_attributes(EditableCircuit& editable_circuit,
-                               selection_id_t selection_id, SettingAttributes attributes)
-    -> void {
+                               selection_id_t selection_id,
+                               SettingAttributes attributes) -> void {
     const auto element_id = get_selected_logic_item(editable_circuit, selection_id);
     if (!element_id) {
         return;

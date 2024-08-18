@@ -24,8 +24,8 @@ struct CircuitData;
 
 namespace editing {
 
-auto delete_temporary_wire_segment(CircuitData& circuit, segment_part_t& segment_part)
-    -> void;
+auto delete_temporary_wire_segment(CircuitData& circuit,
+                                   segment_part_t& segment_part) -> void;
 
 [[nodiscard]] auto is_wire_position_representable(const Layout& layout,
                                                   segment_part_t segment_part, int dx,
@@ -58,16 +58,14 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
                                     std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t>;
 
-[[nodiscard]] auto get_inserted_cross_points(const CircuitData& circuit,
-                                             const Selection& selection)
-    -> std::vector<point_t>;
+[[nodiscard]] auto get_inserted_cross_points(
+    const CircuitData& circuit, const Selection& selection) -> std::vector<point_t>;
 
 auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
                               std::span<const point_t> split_points) -> void;
 
-[[nodiscard]] auto get_temporary_selection_splitpoints(const CircuitData& circuit,
-                                                       const Selection& selection)
-    -> std::vector<point_t>;
+[[nodiscard]] auto get_temporary_selection_splitpoints(
+    const CircuitData& circuit, const Selection& selection) -> std::vector<point_t>;
 
 }  // namespace editing
 

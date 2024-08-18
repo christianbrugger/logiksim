@@ -416,8 +416,8 @@ auto _remove_splitting_segment_from_tree(CircuitData& circuit,
 }  // namespace
 
 // TODO does this only work for temporary wires ?
-auto remove_segment_from_tree(CircuitData& circuit, segment_part_t& segment_part)
-    -> void {
+auto remove_segment_from_tree(CircuitData& circuit,
+                              segment_part_t& segment_part) -> void {
     if (is_inserted(segment_part.segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("can only remove from non-inserted segments");
     }
@@ -549,9 +549,8 @@ auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t se
     }
 }
 
-auto merge_all_line_segments(CircuitData& circuit,
-                             std::vector<std::pair<segment_t, segment_t>>& pairs)
-    -> void {
+auto merge_all_line_segments(
+    CircuitData& circuit, std::vector<std::pair<segment_t, segment_t>>& pairs) -> void {
     // merging deletes the segment with highest segment index,
     // so for this to work with multiple segments
     // we need to be sort them in descendant order
@@ -740,8 +739,8 @@ auto reset_segment_endpoints(Layout& layout, const segment_t segment) -> void {
     m_tree.update_segment(segment.segment_index, new_info);
 }
 
-auto set_segment_crosspoint(Layout& layout, const segment_t segment, point_t point)
-    -> void {
+auto set_segment_crosspoint(Layout& layout, const segment_t segment,
+                            point_t point) -> void {
     if (is_inserted(segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("cannot set endpoints of inserted wire segment");
     }
@@ -791,8 +790,8 @@ auto update_segment_point_types(CircuitData& circuit, wire_id_t wire_id,
 namespace {
 
 auto _sort_through_lines_first(
-    std::span<std::pair<ordered_line_t, segment_index_t>> lines, const point_t point)
-    -> void {
+    std::span<std::pair<ordered_line_t, segment_index_t>> lines,
+    const point_t point) -> void {
     std::ranges::sort(lines, {},
                       [point](std::pair<ordered_line_t, segment_index_t> item) {
                           return is_endpoint(point, item.first);
@@ -996,8 +995,8 @@ auto is_wire_colliding(const CircuitData& circuit, const ordered_line_t line) ->
 // Connections
 //
 
-auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit, segment_t segment)
-    -> void {
+auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit,
+                                          segment_t segment) -> void {
     const auto line = get_line(circuit.layout, segment);
 
     // find LogicItem outputs

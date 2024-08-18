@@ -51,16 +51,16 @@ static_assert(std::is_trivially_copyable_v<time_t>);
 static_assert(std::is_trivially_copy_constructible_v<time_t>);
 static_assert(std::is_trivially_copy_assignable_v<time_t>);
 
-[[nodiscard]] constexpr auto operator-(const time_t &left, const time_t &right)
-    -> delay_t;
+[[nodiscard]] constexpr auto operator-(const time_t &left,
+                                       const time_t &right) -> delay_t;
 // int
-[[nodiscard]] constexpr auto operator+(const time_t &left, const delay_t &right)
-    -> time_t;
-[[nodiscard]] constexpr auto operator-(const time_t &left, const delay_t &right)
-    -> time_t;
+[[nodiscard]] constexpr auto operator+(const time_t &left,
+                                       const delay_t &right) -> time_t;
+[[nodiscard]] constexpr auto operator-(const time_t &left,
+                                       const delay_t &right) -> time_t;
 // symmetric
-[[nodiscard]] constexpr auto operator+(const delay_t &left, const time_t &right)
-    -> time_t;
+[[nodiscard]] constexpr auto operator+(const delay_t &left,
+                                       const time_t &right) -> time_t;
 
 //
 // Implementation
@@ -118,8 +118,8 @@ constexpr auto time_t::operator-=(const delay_t &right) -> time_t & {
 // Free functions
 //
 
-[[nodiscard]] constexpr auto operator-(const time_t &left, const time_t &right)
-    -> delay_t {
+[[nodiscard]] constexpr auto operator-(const time_t &left,
+                                       const time_t &right) -> delay_t {
     using T = std::chrono::duration<time_t::rep, time_t::period>;
     const auto left_duration = T {time_t::rep {left.safe_value().count()}};
     const auto right_duration = T {time_t::rep {right.safe_value().count()}};

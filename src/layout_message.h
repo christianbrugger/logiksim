@@ -36,8 +36,8 @@ struct LogicItemIdUpdated {
     logicitem_id_t new_logicitem_id;
     logicitem_id_t old_logicitem_id;
 
-    [[nodiscard]] auto operator==(const LogicItemIdUpdated &other) const
-        -> bool = default;
+    [[nodiscard]] auto operator==(const LogicItemIdUpdated &other) const -> bool =
+                                                                                default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -72,8 +72,8 @@ struct LogicItemUninserted {
     logicitem_id_t logicitem_id;
     layout_calculation_data_t data;
 
-    [[nodiscard]] auto operator==(const LogicItemUninserted &other) const
-        -> bool = default;
+    [[nodiscard]] auto operator==(const LogicItemUninserted &other) const -> bool =
+                                                                                 default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -106,8 +106,8 @@ struct SegmentPartMoved {
 struct SegmentPartDeleted {
     segment_part_t segment_part;
 
-    [[nodiscard]] auto operator==(const SegmentPartDeleted &other) const
-        -> bool = default;
+    [[nodiscard]] auto operator==(const SegmentPartDeleted &other) const -> bool =
+                                                                                default;
     [[nodiscard]] auto format() const -> std::string;
 };
 

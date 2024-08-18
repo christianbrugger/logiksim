@@ -25,9 +25,8 @@ using ValidationGraph = AdjacencyGraph<std::size_t>;
 
 using ordered_lines_t = folly::small_vector<ordered_line_t, 16>;
 
-[[nodiscard]] auto split_segment(ordered_line_t segment,
-                                 std::ranges::input_range auto&& points)
-    -> ordered_lines_t {
+[[nodiscard]] auto split_segment(
+    ordered_line_t segment, std::ranges::input_range auto&& points) -> ordered_lines_t {
     auto result = ordered_lines_t {};
     result.push_back(segment);
 
@@ -63,8 +62,8 @@ using ordered_lines_t = folly::small_vector<ordered_line_t, 16>;
 enum class Lines { horizontal, vertical };
 
 template <Lines which, class OutputIterator>
-auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator result)
-    -> void {
+auto merge_lines_1d(std::span<const ordered_line_t> segments,
+                    OutputIterator result) -> void {
     constexpr static auto X = which == Lines::horizontal ? &point_t::x : &point_t::y;
     constexpr static auto Y = which == Lines::horizontal ? &point_t::y : &point_t::x;
 
@@ -199,8 +198,8 @@ auto add_points_of_type(std::vector<point_t>& container, const SegmentTree& tree
     }
 }
 
-auto has_same_inputs_outputs(const SegmentTree& tree, const ValidationGraph& graph)
-    -> bool {
+auto has_same_inputs_outputs(const SegmentTree& tree,
+                             const ValidationGraph& graph) -> bool {
     // tree
     auto tree_points = std::vector<point_t> {};
     add_points_of_type(tree_points, tree, SegmentPointType::input);
@@ -220,8 +219,8 @@ auto has_same_inputs_outputs(const SegmentTree& tree, const ValidationGraph& gra
     return compare_sorted(std::move(tree_points), std::move(graph_points));
 }
 
-auto has_same_cross_points(const SegmentTree& tree, const ValidationGraph& graph)
-    -> bool {
+auto has_same_cross_points(const SegmentTree& tree,
+                           const ValidationGraph& graph) -> bool {
     // tree
     auto tree_points = std::vector<point_t> {};
     add_points_of_type(tree_points, tree, SegmentPointType::cross_point);
@@ -237,8 +236,8 @@ auto has_same_cross_points(const SegmentTree& tree, const ValidationGraph& graph
     return compare_sorted(std::move(tree_points), std::move(graph_points));
 }
 
-auto has_same_corner_points(const SegmentTree& tree, const ValidationGraph& graph)
-    -> bool {
+auto has_same_corner_points(const SegmentTree& tree,
+                            const ValidationGraph& graph) -> bool {
     // tree
     auto tree_points = std::vector<point_t> {};
     add_points_of_type(tree_points, tree, SegmentPointType::corner_point);
@@ -254,8 +253,8 @@ auto has_same_corner_points(const SegmentTree& tree, const ValidationGraph& grap
     return compare_sorted(std::move(tree_points), std::move(graph_points));
 }
 
-auto has_same_shadow_points(const SegmentTree& tree, const ValidationGraph& graph)
-    -> bool {
+auto has_same_shadow_points(const SegmentTree& tree,
+                            const ValidationGraph& graph) -> bool {
     const auto shadow_point_allowed = [&](point_t point) -> bool {
         const auto index = graph.to_index(point).value();
         // allowed for corners and cross_point
@@ -285,8 +284,8 @@ auto has_no_unknown_points(const SegmentTree& tree) -> bool {
     return true;
 }
 
-auto has_correct_endpoints(const SegmentTree& tree, const ValidationGraph& graph)
-    -> bool {
+auto has_correct_endpoints(const SegmentTree& tree,
+                           const ValidationGraph& graph) -> bool {
     return has_same_inputs_outputs(tree, graph) &&  //
            has_same_cross_points(tree, graph) &&    //
            has_same_corner_points(tree, graph) &&   //

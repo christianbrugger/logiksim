@@ -52,9 +52,8 @@ static_assert(std::is_aggregate_v<extended_input_info_t>);
  *
  * Note we don't use a constructor, so  extended_connector_info stays an aggregate.
  */
-[[nodiscard]] constexpr inline auto extend_input_info(connection_id_t input_id,
-                                                      simple_input_info_t simple_info)
-    -> extended_input_info_t;
+[[nodiscard]] constexpr inline auto extend_input_info(
+    connection_id_t input_id, simple_input_info_t simple_info) -> extended_input_info_t;
 
 /**
  * @brief: Output id, position and orientation.
@@ -82,9 +81,8 @@ static_assert(std::is_aggregate_v<extended_output_info_t>);
 // Implementation
 //
 
-constexpr inline auto extend_input_info(connection_id_t input_id,
-                                        simple_input_info_t simple_info)
-    -> extended_input_info_t {
+constexpr inline auto extend_input_info(
+    connection_id_t input_id, simple_input_info_t simple_info) -> extended_input_info_t {
     return extended_input_info_t {
         .position = simple_info.position,
         .input_id = input_id,

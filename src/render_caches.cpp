@@ -79,9 +79,8 @@ auto render_output_marker(Context& ctx, point_t position, color_t color,
     }
 }
 
-auto render_editable_circuit_connection_cache(Context& ctx,
-                                              const EditableCircuit& editable_circuit)
-    -> void {
+auto render_editable_circuit_connection_cache(
+    Context& ctx, const EditableCircuit& editable_circuit) -> void {
     const auto scene_rect = get_scene_rect(ctx.settings.view_config);
     const auto& index = editable_circuit.modifier().circuit_data().index;
 
@@ -121,9 +120,8 @@ auto render_editable_circuit_connection_cache(Context& ctx,
     }
 }
 
-auto render_editable_circuit_collision_cache(Context& ctx,
-                                             const EditableCircuit& editable_circuit)
-    -> void {
+auto render_editable_circuit_collision_cache(
+    Context& ctx, const EditableCircuit& editable_circuit) -> void {
     constexpr static auto color = defaults::color_orange;
     constexpr static auto size = grid_fine_t {0.25};
 
@@ -182,9 +180,8 @@ auto render_editable_circuit_collision_cache(Context& ctx,
     }
 }
 
-auto render_editable_circuit_selection_cache(Context& ctx,
-                                             const EditableCircuit& editable_circuit)
-    -> void {
+auto render_editable_circuit_selection_cache(
+    Context& ctx, const EditableCircuit& editable_circuit) -> void {
     const auto scene_rect = get_scene_rect_fine(ctx.settings.view_config);
     const auto& index = editable_circuit.modifier().circuit_data().index;
 

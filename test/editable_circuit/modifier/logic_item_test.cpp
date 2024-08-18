@@ -524,8 +524,8 @@ TEST(EditableCircuitModifierLogicItem, LogicItemAddElement) {
 // logic item combinations
 //
 
-auto add_xor_element(Modifier &modifier, point_t position, InsertionMode insertion_mode)
-    -> logicitem_id_t {
+auto add_xor_element(Modifier &modifier, point_t position,
+                     InsertionMode insertion_mode) -> logicitem_id_t {
     const auto definition = LogicItemDefinition {
         .logicitem_type = LogicItemType::xor_element,
         .input_count = connection_count_t {3},

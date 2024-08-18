@@ -276,8 +276,8 @@ auto collision_item_type(SegmentPointType type) -> std::optional<ItemType> {
 /**
  * @brief: Adds collision points of the segment endpoints to the buffer.
  */
-auto add_collision_end_points(collision_points_t& buffer, segment_info_t segment)
-    -> void {
+auto add_collision_end_points(collision_points_t& buffer,
+                              segment_info_t segment) -> void {
     if (const auto p0_type = collision_item_type(segment.p0_type)) {
         buffer.push_back({segment.line.p0, *p0_type});
     }
@@ -356,8 +356,8 @@ auto set_wire_cross_point_tag(collision_index::collision_data_t& data) {
 
 auto set_logic_item_state(CollisionIndex::map_type& map, point_t position,
                           collision_index::ItemType item_type,
-                          logicitem_id_t verify_old_id, logicitem_id_t set_new_id)
-    -> void {
+                          logicitem_id_t verify_old_id,
+                          logicitem_id_t set_new_id) -> void {
     const auto check_and_update = [&](logicitem_id_t& obj) {
         if (obj != verify_old_id) {
             throw std::runtime_error("unexpected collision state");

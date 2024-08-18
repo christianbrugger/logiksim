@@ -66,8 +66,8 @@ auto has_duplicates_quadratic(std::ranges::input_range auto&& range, Proj proj =
  */
 template <class Comp>
 auto has_duplicates_quadratic_iterator(std::bidirectional_iterator auto begin,
-                                       std::bidirectional_iterator auto end, Comp comp)
-    -> bool {
+                                       std::bidirectional_iterator auto end,
+                                       Comp comp) -> bool {
     if (begin == end) {
         return false;
     }

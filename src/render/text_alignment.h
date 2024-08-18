@@ -47,16 +47,15 @@ struct BaselineOffset {
 
 static_assert(std::regular<BaselineOffset>);
 
-auto calculate_baseline_offset(FontStyle style [[maybe_unused]], const FontFace &face)
-    -> BaselineOffset;
+auto calculate_baseline_offset(FontStyle style [[maybe_unused]],
+                               const FontFace &face) -> BaselineOffset;
 
 //
 // Alignment Calculations
 //
 
-[[nodiscard]] auto calculate_horizontal_offset(const BLBox &bounding_box,
-                                               HTextAlignment horizontal_alignment)
-    -> double;
+[[nodiscard]] auto calculate_horizontal_offset(
+    const BLBox &bounding_box, HTextAlignment horizontal_alignment) -> double;
 
 [[nodiscard]] auto calculate_vertical_offset(const BLBox &bounding_box,
                                              const ScaledBaselineOffset &baseline_offsets,
@@ -84,8 +83,8 @@ struct BaselineOffsets {
     [[nodiscard]] constexpr auto operator==(const BaselineOffsets &other) const
         -> bool = default;
 
-    [[nodiscard]] auto get(FontStyle style, float font_size) const
-        -> ScaledBaselineOffset;
+    [[nodiscard]] auto get(FontStyle style,
+                           float font_size) const -> ScaledBaselineOffset;
     [[nodiscard]] auto get(FontStyle style) const -> const BaselineOffset &;
 
     auto set(FontStyle style, BaselineOffset offset) -> void;

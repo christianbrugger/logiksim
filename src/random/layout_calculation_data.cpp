@@ -14,8 +14,8 @@ auto get_random_layout_calculation_data(Rng& rng) -> layout_calculation_data_t {
     return get_random_layout_calculation_data(rng, grid_t::min(), grid_t::max());
 }
 
-auto get_random_layout_calculation_data(Rng& rng, grid_t min, grid_t max)
-    -> layout_calculation_data_t {
+auto get_random_layout_calculation_data(Rng& rng, grid_t min,
+                                        grid_t max) -> layout_calculation_data_t {
     const auto type = get_random_logic_item_type(rng);
 
     const auto data = layout_calculation_data_t {

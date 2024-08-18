@@ -31,8 +31,8 @@ namespace editing {
 // Segment Operations
 //
 
-auto add_segment_to_tree(CircuitData& circuit, wire_id_t wire_id, ordered_line_t line)
-    -> segment_part_t;
+auto add_segment_to_tree(CircuitData& circuit, wire_id_t wire_id,
+                         ordered_line_t line) -> segment_part_t;
 
 /**
  * @brief: Moves the segment_part to the destination tree.
@@ -53,8 +53,8 @@ auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_pa
  */
 auto remove_segment_from_tree(CircuitData& circuit, segment_part_t& segment_part) -> void;
 
-auto split_line_segment(CircuitData& circuit, segment_t segment, point_t position)
-    -> segment_part_t;
+auto split_line_segment(CircuitData& circuit, segment_t segment,
+                        point_t position) -> segment_part_t;
 
 auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
                          segment_part_t* preserve_segment) -> void;
@@ -111,15 +111,15 @@ auto unmark_valid(Layout& layout, segment_part_t segment_part) -> void;
 // Collisions
 //
 
-[[nodiscard]] auto is_wire_colliding(const CircuitData& circuit, ordered_line_t line)
-    -> bool;
+[[nodiscard]] auto is_wire_colliding(const CircuitData& circuit,
+                                     ordered_line_t line) -> bool;
 
 //
 // Connections
 //
 
-auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit, segment_t segment)
-    -> void;
+auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit,
+                                          segment_t segment) -> void;
 
 }  // namespace editing
 

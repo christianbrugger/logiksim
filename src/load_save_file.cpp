@@ -5,8 +5,8 @@
 
 namespace logicsim {
 
-auto serialize_circuit(const Layout& layout, SimulationConfig simulation_config)
-    -> std::string {
+auto serialize_circuit(const Layout& layout,
+                       SimulationConfig simulation_config) -> std::string {
     auto relevant_config = SimulationConfig {
         .use_wire_delay = simulation_config.use_wire_delay,
     };

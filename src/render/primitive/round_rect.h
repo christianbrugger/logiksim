@@ -23,8 +23,8 @@ struct RoundRectAttributes {
     color_t stroke_color {defaults::color_black};
 };
 
-auto draw_round_rect(Context& ctx, rect_fine_t rect, RoundRectAttributes attributes)
-    -> void;
+auto draw_round_rect(Context& ctx, rect_fine_t rect,
+                     RoundRectAttributes attributes) -> void;
 
 }  // namespace logicsim
 

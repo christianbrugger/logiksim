@@ -111,8 +111,8 @@ auto HbBufferDeleter::operator()(hb_buffer_t *hb_buffer) -> void {
     return font;
 }
 
-[[nodiscard]] auto shape_text(std::string_view text_utf8, hb_font_t *hb_font)
-    -> HbBufferPointer {
+[[nodiscard]] auto shape_text(std::string_view text_utf8,
+                              hb_font_t *hb_font) -> HbBufferPointer {
     Expects(hb_font != nullptr);
 
     // TODO set const

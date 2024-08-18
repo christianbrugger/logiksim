@@ -59,18 +59,16 @@ class VisibleSelection {
     auto set_selection(Selection selection) -> void;
     [[nodiscard]] auto operation_count() const -> std::size_t;
 
-    auto apply_all_operations(const Layout &layout, const LayoutIndex &layout_index)
-        -> void;
-    [[nodiscard]] auto selection(const Layout &layout,
-                                 const LayoutIndex &layout_index) const
-        -> const Selection &;
+    auto apply_all_operations(const Layout &layout,
+                              const LayoutIndex &layout_index) -> void;
+    [[nodiscard]] auto selection(
+        const Layout &layout, const LayoutIndex &layout_index) const -> const Selection &;
 
     auto submit(const InfoMessage &message) -> void;
 
    private:
-    [[nodiscard]] auto calculate_selection(const Layout &layout,
-                                           const LayoutIndex &layout_index) const
-        -> Selection;
+    [[nodiscard]] auto calculate_selection(
+        const Layout &layout, const LayoutIndex &layout_index) const -> Selection;
 
     [[nodiscard]] auto class_invariant_holds() const -> bool;
 

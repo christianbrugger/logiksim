@@ -75,12 +75,12 @@ class AdjacencyGraph {
 //
 
 template <typename index_t>
-[[nodiscard]] auto is_leaf(const AdjacencyGraph<index_t>& graph, index_t vertex_id)
-    -> bool;
+[[nodiscard]] auto is_leaf(const AdjacencyGraph<index_t>& graph,
+                           index_t vertex_id) -> bool;
 
 template <typename index_t>
-[[nodiscard]] auto is_corner(const AdjacencyGraph<index_t>& graph, index_t vertex_id)
-    -> bool;
+[[nodiscard]] auto is_corner(const AdjacencyGraph<index_t>& graph,
+                             index_t vertex_id) -> bool;
 
 //
 // Implementation

@@ -39,8 +39,8 @@ namespace logicsim {
 template <typename VisitedStore, typename DiscoverConnected, typename EdgeVisitor,
           typename IndexType>
 auto depth_first_visitor(IndexType start_node, VisitedStore& visited,
-                         DiscoverConnected discover_connections, EdgeVisitor visit_edge)
-    -> bool {
+                         DiscoverConnected discover_connections,
+                         EdgeVisitor visit_edge) -> bool {
     std::vector<std::pair<IndexType, IndexType>> edges_stack {};
 
     const auto result = transform_output_iterator(

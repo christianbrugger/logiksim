@@ -33,10 +33,10 @@ struct point_t {
 static_assert(std::is_trivially_copyable_v<point_t>);
 static_assert(std::is_trivially_copy_assignable_v<point_t>);
 
-[[nodiscard]] constexpr auto operator+(const point_t &left, const point_t &right)
-    -> point_t;
-[[nodiscard]] constexpr auto operator-(const point_t &left, const point_t &right)
-    -> point_t;
+[[nodiscard]] constexpr auto operator+(const point_t &left,
+                                       const point_t &right) -> point_t;
+[[nodiscard]] constexpr auto operator-(const point_t &left,
+                                       const point_t &right) -> point_t;
 
 /**
  * @brief: Returns if the line from p0 to p1 is horizontal or vertical.

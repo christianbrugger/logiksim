@@ -72,8 +72,8 @@ class SettingDialogManager : public QObject {
 //
 
 auto change_setting_attributes(EditableCircuit& editable_circuit,
-                               selection_id_t selection_id, SettingAttributes attributes)
-    -> void;
+                               selection_id_t selection_id,
+                               SettingAttributes attributes) -> void;
 
 }  // namespace logicsim
 

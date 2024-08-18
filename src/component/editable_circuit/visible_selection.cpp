@@ -198,8 +198,8 @@ auto add_segment_to_selection(segment_t segment, VisibleSelection::operation_t o
 }
 
 auto apply_function(Selection& selection, const SpatialIndex& selection_index,
-                    const Layout& layout, VisibleSelection::operation_t operation)
-    -> void {
+                    const Layout& layout,
+                    VisibleSelection::operation_t operation) -> void {
     const auto selected_elements = selection_index.query_selection(operation.rect);
 
     for (const auto& element : selected_elements) {
@@ -213,9 +213,8 @@ auto apply_function(Selection& selection, const SpatialIndex& selection_index,
 
 }  // namespace
 
-auto VisibleSelection::calculate_selection(const Layout& layout,
-                                           const LayoutIndex& layout_index) const
-    -> Selection {
+auto VisibleSelection::calculate_selection(
+    const Layout& layout, const LayoutIndex& layout_index) const -> Selection {
     Expects(class_invariant_holds());
 
     auto selection = Selection {initial_selection_};
@@ -237,9 +236,8 @@ auto VisibleSelection::calculate_selection(const Layout& layout,
     return selection;
 }
 
-auto VisibleSelection::selection(const Layout& layout,
-                                 const LayoutIndex& layout_index) const
-    -> const Selection& {
+auto VisibleSelection::selection(
+    const Layout& layout, const LayoutIndex& layout_index) const -> const Selection& {
     Expects(class_invariant_holds());
 
     if (cached_selection_) {

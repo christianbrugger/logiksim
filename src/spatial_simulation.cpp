@@ -49,18 +49,18 @@ auto to_element_id(const SpatialSimulation &spatial_simulation,
     return to_element_id(spatial_simulation.layout(), logicitem_id);
 }
 
-auto to_element_id(const SpatialSimulation &spatial_simulation, wire_id_t wire_id)
-    -> element_id_t {
+auto to_element_id(const SpatialSimulation &spatial_simulation,
+                   wire_id_t wire_id) -> element_id_t {
     return to_element_id(spatial_simulation.layout(), wire_id);
 }
 
-auto to_logicitem_id(const SpatialSimulation &spatial_simulation, element_id_t element_id)
-    -> logicitem_id_t {
+auto to_logicitem_id(const SpatialSimulation &spatial_simulation,
+                     element_id_t element_id) -> logicitem_id_t {
     return to_logicitem_id(spatial_simulation.layout(), element_id);
 }
 
-auto to_wire_id(const SpatialSimulation &spatial_simulation, element_id_t element_id)
-    -> wire_id_t {
+auto to_wire_id(const SpatialSimulation &spatial_simulation,
+                element_id_t element_id) -> wire_id_t {
     return to_wire_id(spatial_simulation.layout(), element_id);
 }
 

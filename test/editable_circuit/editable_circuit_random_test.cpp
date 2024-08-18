@@ -85,8 +85,8 @@ auto validate_inserted_lines(const AddResult &result) {
     }
 }
 
-auto add_random_line(Rng &rng, EditableCircuit &editable_circuit, bool random_modes)
-    -> AddResult {
+auto add_random_line(Rng &rng, EditableCircuit &editable_circuit,
+                     bool random_modes) -> AddResult {
     const auto min = grid_t {5};
     const auto max = grid_t {10};
 
@@ -131,8 +131,8 @@ auto verify_selections(const EditableCircuit &editable_circuit,
     }
 }
 
-auto add_many_wires(Rng &rng, EditableCircuit &editable_circuit, bool random_modes)
-    -> std::vector<AddResult> {
+auto add_many_wires(Rng &rng, EditableCircuit &editable_circuit,
+                    bool random_modes) -> std::vector<AddResult> {
     auto data = std::vector<AddResult> {};
 
     const auto tries = uint_distribution(5, 100)(rng);  // TODO re-enable

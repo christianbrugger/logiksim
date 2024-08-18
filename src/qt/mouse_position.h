@@ -13,15 +13,15 @@ namespace logicsim {
 
 struct MousePositionInfo;
 
-[[nodiscard]] auto get_mouse_position(const QWidget* widget, const QMouseEvent* event_)
-    -> QPointF;
-[[nodiscard]] auto get_mouse_position(const QWidget& widget, const QMouseEvent& event_)
-    -> QPointF;
+[[nodiscard]] auto get_mouse_position(const QWidget* widget,
+                                      const QMouseEvent* event_) -> QPointF;
+[[nodiscard]] auto get_mouse_position(const QWidget& widget,
+                                      const QMouseEvent& event_) -> QPointF;
 
-[[nodiscard]] auto get_mouse_position(const QWidget* widget, const QWheelEvent* event_)
-    -> QPointF;
-[[nodiscard]] auto get_mouse_position(const QWidget& widget, const QWheelEvent& event_)
-    -> QPointF;
+[[nodiscard]] auto get_mouse_position(const QWidget* widget,
+                                      const QWheelEvent* event_) -> QPointF;
+[[nodiscard]] auto get_mouse_position(const QWidget& widget,
+                                      const QWheelEvent& event_) -> QPointF;
 
 [[nodiscard]] auto get_mouse_position(const QWidget& widget) -> QPointF;
 

@@ -25,10 +25,9 @@ struct SimulationConfig;
  *
  * Throws an exception if any element is not display state normal.
  */
-[[nodiscard]] auto serialize_all(const Layout& layout,
-                                 std::optional<ViewPoint> view_point,
-                                 std::optional<SimulationConfig> simulation_config)
-    -> std::string;
+[[nodiscard]] auto serialize_all(
+    const Layout& layout, std::optional<ViewPoint> view_point,
+    std::optional<SimulationConfig> simulation_config) -> std::string;
 
 /**
  * @brief: Serialize the selected elements.
@@ -38,8 +37,8 @@ struct SimulationConfig;
  * Throws an exception if any selected element is not display state normal.
  */
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
-                                      point_t save_position = point_t {0, 0})
-    -> std::string;
+                                      point_t save_position = point_t {0,
+                                                                       0}) -> std::string;
 
 namespace serialize {
 struct SerializedLayout;

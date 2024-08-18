@@ -144,8 +144,8 @@ struct get_bl_image_result_t {
 };
 
 auto _get_bl_image(QBackingStore* backing_store, QImage& qt_image,
-                   GeometryInfo geometry_info, RenderMode requested_mode)
-    -> get_bl_image_result_t {
+                   GeometryInfo geometry_info,
+                   RenderMode requested_mode) -> get_bl_image_result_t {
     // handle zero sizes
     if (const auto size = to_device_rounded(geometry_info);
         size.width() == 0 || size.height() == 0) {
@@ -204,8 +204,8 @@ auto expected_qt_image_size(RenderMode actual_mode, QSize size_device) -> QSize 
 }
 
 auto get_bl_image(QBackingStore* backing_store, QImage& qt_image,
-                  GeometryInfo geometry_info, RenderMode requested_mode)
-    -> get_bl_image_result_t {
+                  GeometryInfo geometry_info,
+                  RenderMode requested_mode) -> get_bl_image_result_t {
     const auto result =
         _get_bl_image(backing_store, qt_image, geometry_info, requested_mode);
 

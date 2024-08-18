@@ -73,8 +73,8 @@ auto to_points(R inputs) -> std::vector<point_t> {
 }
 
 auto all_points_present(grid_t width, grid_t height, std::span<const point_t> body_points,
-                        std::span<const point_t> inputs, std::span<const point_t> outputs)
-    -> bool {
+                        std::span<const point_t> inputs,
+                        std::span<const point_t> outputs) -> bool {
     auto expected = std::vector<point_t> {};
     for (auto x : range(width + grid_t {1})) {
         for (auto y : range(height + grid_t {1})) {

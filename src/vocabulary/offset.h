@@ -58,18 +58,18 @@ static_assert(std::is_standard_layout_v<offset_t>);
 static_assert(std::is_nothrow_default_constructible_v<offset_t>);
 static_assert(explicitly_convertible_to<offset_t, offset_t::difference_type>);
 
-[[nodiscard]] constexpr auto operator+(const offset_t &left, const offset_t &right)
-    -> offset_t;
-[[nodiscard]] constexpr auto operator-(const offset_t &left, const offset_t &right)
-    -> offset_t;
+[[nodiscard]] constexpr auto operator+(const offset_t &left,
+                                       const offset_t &right) -> offset_t;
+[[nodiscard]] constexpr auto operator-(const offset_t &left,
+                                       const offset_t &right) -> offset_t;
 // int
-[[nodiscard]] constexpr auto operator*(const offset_t &left, const int &right)
-    -> offset_t;
-[[nodiscard]] constexpr auto operator/(const offset_t &left, const int &right)
-    -> offset_t;
+[[nodiscard]] constexpr auto operator*(const offset_t &left,
+                                       const int &right) -> offset_t;
+[[nodiscard]] constexpr auto operator/(const offset_t &left,
+                                       const int &right) -> offset_t;
 // symmetric
-[[nodiscard]] constexpr auto operator*(const int &left, const offset_t &right)
-    -> offset_t;
+[[nodiscard]] constexpr auto operator*(const int &left,
+                                       const offset_t &right) -> offset_t;
 
 //
 // Concepts
@@ -167,15 +167,15 @@ constexpr auto offset_t::operator/=(const int &right) -> offset_t & {
 // free functions
 //
 
-[[nodiscard]] constexpr auto operator+(const offset_t &left, const offset_t &right)
-    -> offset_t {
+[[nodiscard]] constexpr auto operator+(const offset_t &left,
+                                       const offset_t &right) -> offset_t {
     auto result = left;
     result += right;
     return result;
 }
 
-[[nodiscard]] constexpr auto operator-(const offset_t &left, const offset_t &right)
-    -> offset_t {
+[[nodiscard]] constexpr auto operator-(const offset_t &left,
+                                       const offset_t &right) -> offset_t {
     auto result = left;
     result -= right;
     return result;

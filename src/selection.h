@@ -93,26 +93,26 @@ class Selection {
 // Free Functions
 //
 
-[[nodiscard]] auto is_valid_selection(const Selection &selection, const Layout &layout)
-    -> bool;
+[[nodiscard]] auto is_valid_selection(const Selection &selection,
+                                      const Layout &layout) -> bool;
 
 //
 //
 //
 
 [[nodiscard]] auto has_logic_items(const Selection &selection) -> bool;
-[[nodiscard]] auto get_lines(const Selection &selection, const Layout &layout)
-    -> std::vector<ordered_line_t>;
+[[nodiscard]] auto get_lines(const Selection &selection,
+                             const Layout &layout) -> std::vector<ordered_line_t>;
 [[nodiscard]] auto all_normal_display_state(const Selection &selection,
                                             const Layout &layout) -> bool;
-[[nodiscard]] auto anything_colliding(const Selection &selection, const Layout &layout)
-    -> bool;
-[[nodiscard]] auto anything_temporary(const Selection &selection, const Layout &layout)
-    -> bool;
-[[nodiscard]] auto anything_valid(const Selection &selection, const Layout &layout)
-    -> bool;
-[[nodiscard]] auto display_states(const Selection &selection, const Layout &layout)
-    -> DisplayStateMap;
+[[nodiscard]] auto anything_colliding(const Selection &selection,
+                                      const Layout &layout) -> bool;
+[[nodiscard]] auto anything_temporary(const Selection &selection,
+                                      const Layout &layout) -> bool;
+[[nodiscard]] auto anything_valid(const Selection &selection,
+                                  const Layout &layout) -> bool;
+[[nodiscard]] auto display_states(const Selection &selection,
+                                  const Layout &layout) -> DisplayStateMap;
 
 [[nodiscard]] auto is_selected(const Selection &selection, const Layout &layout,
                                segment_t segment, point_fine_t point) -> bool;
@@ -122,13 +122,13 @@ class Selection {
 //
 
 auto add_segment(Selection &selection, segment_t segment, const Layout &layout) -> void;
-auto add_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)
-    -> void;
+auto add_segment_tree(Selection &selection, wire_id_t wire_id,
+                      const Layout &layout) -> void;
 
-auto remove_segment(Selection &selection, segment_t segment, const Layout &layout)
-    -> void;
-auto remove_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)
-    -> void;
+auto remove_segment(Selection &selection, segment_t segment,
+                    const Layout &layout) -> void;
+auto remove_segment_tree(Selection &selection, wire_id_t wire_id,
+                         const Layout &layout) -> void;
 
 auto add_segment_part(Selection &selection, const Layout &layout, segment_t segment,
                       point_fine_t point) -> void;

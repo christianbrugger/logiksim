@@ -13,8 +13,8 @@ namespace logicsim {
 template <std::input_iterator I, std::sentinel_for<I> S, class Proj = std::identity,
           std::indirect_binary_predicate<std::projected<I, Proj>, std::projected<I, Proj>>
               Pred = std::ranges::equal_to>
-constexpr auto adjacent_count_if(I first, S last, Pred pred = {}, Proj proj = {})
-    -> std::iter_difference_t<I> {
+constexpr auto adjacent_count_if(I first, S last, Pred pred = {},
+                                 Proj proj = {}) -> std::iter_difference_t<I> {
     static_assert(std::input_iterator<I>);
     static_assert(std::sentinel_for<I, S>);
     static_assert(std::indirect_binary_predicate<Pred, std::projected<I, Proj>,

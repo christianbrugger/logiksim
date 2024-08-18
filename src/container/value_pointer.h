@@ -78,8 +78,8 @@ class value_pointer {
     auto operator=(const value_pointer& other) -> value_pointer&;
 
     template <typename T_, equality_comparable_tag C_, ordering_or_void O_>
-    friend auto swap(value_pointer<T_, C_, O_>& a, value_pointer<T_, C_, O_>& b) noexcept
-        -> void;
+    friend auto swap(value_pointer<T_, C_, O_>& a,
+                     value_pointer<T_, C_, O_>& b) noexcept -> void;
 
     // const preserving access
     [[nodiscard]] auto operator->() const noexcept -> const T*;

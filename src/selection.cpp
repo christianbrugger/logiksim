@@ -409,8 +409,8 @@ auto has_logic_items(const Selection &selection) -> bool {
     return !selection.selected_logic_items().empty();
 }
 
-auto get_lines(const Selection &selection, const Layout &layout)
-    -> std::vector<ordered_line_t> {
+auto get_lines(const Selection &selection,
+               const Layout &layout) -> std::vector<ordered_line_t> {
     auto result = std::vector<ordered_line_t> {};
 
     for (const auto &entry : selection.selected_segments()) {
@@ -542,22 +542,22 @@ auto add_segment(Selection &selection, segment_t segment, const Layout &layout) 
     selection.add_segment(segment_part_t {segment, part});
 }
 
-auto add_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)
-    -> void {
+auto add_segment_tree(Selection &selection, wire_id_t wire_id,
+                      const Layout &layout) -> void {
     const auto &tree = layout.wires().segment_tree(wire_id);
     for (const auto &segment_index : tree.indices()) {
         add_segment(selection, segment_t {wire_id, segment_index}, layout);
     }
 }
 
-auto remove_segment(Selection &selection, segment_t segment, const Layout &layout)
-    -> void {
+auto remove_segment(Selection &selection, segment_t segment,
+                    const Layout &layout) -> void {
     const auto part = to_part(get_line(layout, segment));
     selection.remove_segment(segment_part_t {segment, part});
 }
 
-auto remove_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)
-    -> void {
+auto remove_segment_tree(Selection &selection, wire_id_t wire_id,
+                         const Layout &layout) -> void {
     const auto &tree = layout.wires().segment_tree(wire_id);
     for (const auto &segment_index : tree.indices()) {
         remove_segment(selection, segment_t {wire_id, segment_index}, layout);

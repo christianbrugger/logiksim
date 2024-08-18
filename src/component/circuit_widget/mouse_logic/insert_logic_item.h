@@ -18,12 +18,12 @@ class InsertLogicItemLogic {
    public:
     explicit InsertLogicItemLogic(LogicItemDefinition element_definition_);
 
-    auto mouse_press(EditableCircuit& editable_circuit, std::optional<point_t> position)
-        -> void;
-    auto mouse_move(EditableCircuit& editable_circuit, std::optional<point_t> position)
-        -> void;
-    auto mouse_release(EditableCircuit& editable_circuit, std::optional<point_t> position)
-        -> void;
+    auto mouse_press(EditableCircuit& editable_circuit,
+                     std::optional<point_t> position) -> void;
+    auto mouse_move(EditableCircuit& editable_circuit,
+                    std::optional<point_t> position) -> void;
+    auto mouse_release(EditableCircuit& editable_circuit,
+                       std::optional<point_t> position) -> void;
 
     auto finalize(EditableCircuit& editable_circuit) -> void;
 

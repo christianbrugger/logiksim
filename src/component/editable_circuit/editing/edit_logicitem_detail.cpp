@@ -40,8 +40,8 @@ auto is_convertible_to_input(const Layout& layout, wire_id_t wire_id) -> bool {
     return !layout.wires().segment_tree(wire_id).has_input();
 }
 
-auto all_convertible_to_input(const Layout& layout, const wire_connections_t& connections)
-    -> bool {
+auto all_convertible_to_input(const Layout& layout,
+                              const wire_connections_t& connections) -> bool {
     return std::ranges::all_of(connections, [&](wire_connection_t input) {
         return is_convertible_to_input(layout, input.segment.wire_id);
     });
@@ -205,8 +205,8 @@ auto is_logicitem_colliding(const CircuitData& circuit,
            _any_logicitem_outputs_colliding(circuit, data);
 }
 
-auto is_logicitem_colliding(const CircuitData& circuit, const logicitem_id_t logicitem_id)
-    -> bool {
+auto is_logicitem_colliding(const CircuitData& circuit,
+                            const logicitem_id_t logicitem_id) -> bool {
     const auto data = to_layout_calculation_data(circuit.layout, logicitem_id);
     return is_logicitem_colliding(circuit, data);
 }

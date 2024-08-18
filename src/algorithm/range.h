@@ -150,8 +150,8 @@ struct range_t {
         }
     }
 
-    [[nodiscard]] constexpr auto empty() const noexcept(noexcept(begin() == end()))
-        -> bool {
+    [[nodiscard]] constexpr auto empty() const
+        noexcept(noexcept(begin() == end())) -> bool {
         return begin() == end();
     }
 

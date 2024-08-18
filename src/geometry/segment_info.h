@@ -24,14 +24,14 @@ struct point_t;
 [[nodiscard]] auto to_point_and_type(const segment_info_t &segment_info)
     -> std::array<std::pair<point_t, SegmentPointType>, 2>;
 
-auto set_segment_point_type(segment_info_t &info, point_t position, SegmentPointType type)
-    -> void;
+auto set_segment_point_type(segment_info_t &info, point_t position,
+                            SegmentPointType type) -> void;
 
 [[nodiscard]] auto updated_segment_info(segment_info_t segment_info, point_t position,
                                         SegmentPointType type) -> segment_info_t;
 
-[[nodiscard]] auto get_segment_point_type(const segment_info_t &info, point_t position)
-    -> SegmentPointType;
+[[nodiscard]] auto get_segment_point_type(const segment_info_t &info,
+                                          point_t position) -> SegmentPointType;
 
 }  // namespace logicsim
 

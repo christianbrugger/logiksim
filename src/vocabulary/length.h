@@ -33,10 +33,10 @@ static_assert(std::is_trivially_constructible_v<length_t>);
 static_assert(std::is_trivially_copyable_v<length_t>);
 static_assert(std::is_trivially_copy_assignable_v<length_t>);
 
-[[nodiscard]] constexpr auto operator+(const length_t &left, const length_t &right)
-    -> length_t;
-[[nodiscard]] constexpr auto operator-(const length_t &left, const length_t &right)
-    -> length_t;
+[[nodiscard]] constexpr auto operator+(const length_t &left,
+                                       const length_t &right) -> length_t;
+[[nodiscard]] constexpr auto operator-(const length_t &left,
+                                       const length_t &right) -> length_t;
 
 //
 // Implementation
