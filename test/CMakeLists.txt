@@ -1,4 +1,18 @@
 
+###### Dependencies
+
+# Google Test
+set(INSTALL_GTEST OFF)
+add_subdirectory(
+    ${PROJECT_SOURCE_DIR}/external/googletest
+    ${CMAKE_BINARY_DIR}/external/googletest
+    EXCLUDE_FROM_ALL
+    SYSTEM
+)
+
+
+###### Test Executable
+
 include(source_list.cmake)
 
 set(MAIN_TEST_TARGET "simulation_srp_test")
@@ -16,6 +30,10 @@ target_include_directories(${MAIN_TEST_TARGET} PUBLIC
 )
 set_property(TARGET ${MAIN_TEST_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
+
+###### Coverage for Tests
+
+# TODO: move to function and cmake folder
 if (LS_ENABLE_COVERAGE)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")  #  AND CMAKE_BUILD_TYPE MATCHES Debug
         message(NOTICE "LOGIKSIM: Enabling Clang Coverage for Tests.")
@@ -33,7 +51,10 @@ if (LS_ENABLE_COVERAGE)
 endif()
 
 
+###### CMake Test Discovery
+
 enable_testing()
 include(GoogleTest)
 gtest_discover_tests(${MAIN_TEST_TARGET})
+
 

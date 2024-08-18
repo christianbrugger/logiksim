@@ -667,18 +667,6 @@ endif()
 
 ###### Dependencies
 
-# Google Benchmark
-set(BENCHMARK_ENABLE_LTO OFF)
-set(BENCHMARK_ENABLE_TESTING OFF)
-set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
-set(BENCHMARK_ENABLE_INSTALL OFF)
-add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
-
-# TODO: move to test subdirectory
-# Google Test
-set(INSTALL_GTEST OFF)
-add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
-
 # Zlib
 set(ZLIB_USE_STATIC_LIBS ON)
 find_package(ZLIB REQUIRED)
@@ -949,16 +937,6 @@ endif ()
 
 
 # MAIN BENCHMARK
-
-set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
-add_executable(${MAIN_BENCHMARK_TARGET}
-    src/main_bechmark.cpp
-)
-target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
-    ${MAIN_LIBRARY}
-    benchmark::benchmark
-)
-set_property(TARGET ${MAIN_BENCHMARK_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 
 # Google Test
