@@ -1,8 +1,8 @@
 #ifndef LOGIKSIM_RENDER_TEXT_SHAPING_H
 #define LOGIKSIM_RENDER_TEXT_SHAPING_H
 
-#include "render/bl_glyph_placement.h"
 #include "format/struct.h"
+#include "render/bl_glyph_placement.h"
 
 #include <blend2d.h>
 

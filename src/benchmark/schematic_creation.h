@@ -18,8 +18,7 @@ constexpr inline auto logic_element_count = 10'000;
  * Each element has 2 inputs. The output is connected both inputs via a wire to the next.
  */
 auto benchmark_schematic(
-    int n_elements = schematic_benchmark::defaults::logic_element_count)
-    -> Schematic;
+    int n_elements = schematic_benchmark::defaults::logic_element_count) -> Schematic;
 
 }  // namespace logicsim
 

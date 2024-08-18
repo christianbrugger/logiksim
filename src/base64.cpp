@@ -1,7 +1,8 @@
 #include "base64.h"
 
-#include <cppcodec/base64_rfc4648.hpp>
 #include "logging.h"
+
+#include <cppcodec/base64_rfc4648.hpp>
 
 namespace logicsim {
 
