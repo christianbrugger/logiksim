@@ -1,5 +1,5 @@
 
-include(sources.cmake)
+include(source_list.cmake)
 
 set(MAIN_TEST_TARGET "simulation_srp_test")
 add_executable(${MAIN_TEST_TARGET}
