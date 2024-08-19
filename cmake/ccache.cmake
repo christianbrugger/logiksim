@@ -1,5 +1,8 @@
 
 function(ls_setup_ccache do_enable)
+    include(cmake/utils.cmake)
+    ls_require_bool(do_enable)
+
     find_program(LS_CCACHE_PROGRAM ccache)
 
     if (do_enable AND LS_CCACHE_PROGRAM)

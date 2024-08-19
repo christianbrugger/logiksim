@@ -17,11 +17,14 @@ include(CMakePrintHelpers)
 include(cmake/ccache.cmake)
 include(cmake/debug_print.cmake)
 include(cmake/project_options.cmake)
+include(cmake/link_time_optimization.cmake)
+include(cmake/utils.cmake)
 
 ls_define_program_options()
 ls_print_program_options()
 
 ls_setup_ccache(${LS_ENABLE_CCACHE})
+ls_setup_link_time_optimization(${LS_ENABLE_LTO})
 
 # TODO: move to presets
 # global architecture
@@ -99,13 +102,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     list(APPEND MAIN_COMPILE_OPTIONS -Wno-missing-braces)
 endif()
 
-if (LS_ENABLE_LTO)
-    message(NOTICE "LOGIKSIM: Enabling link time optimization.")
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-else()
-    message(NOTICE "LOGIKSIM: Disabling link time optimization.")
-endif()
-
+# TODO: to presets?
 # better debugging profile
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")  # AND LS_SANITIZE
     if (MSVC)
