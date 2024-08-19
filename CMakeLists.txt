@@ -11,22 +11,31 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # when compiling with PCH enabled
 # set(CMAKE_CXX_EXTENSIONS OFF)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
 include(CMakePrintHelpers)
 
 include(cmake/ccache.cmake)
+include(cmake/compiler_warnings.cmake)
 include(cmake/debug_print.cmake)
 include(cmake/link_time_optimization.cmake)
 include(cmake/linker.cmake)
 include(cmake/project_options.cmake)
 include(cmake/utils.cmake)
 
+
 ls_define_program_options()
 ls_print_program_options()
 
-ls_setup_ccache(${LS_ENABLE_CCACHE})
 ls_setup_link_time_optimization(${LS_ENABLE_LTO})
 ls_setup_linker()
+ls_setup_ccache(${LS_ENABLE_CCACHE})
+
+ls_get_compiler_warnings(MAIN_COMPILE_OPTIONS)
+
+# needed by a lot of tools
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 
 # TODO: move to presets
 # global architecture
@@ -44,64 +53,13 @@ endif()
 #endif()
 
 
-set(MAIN_COMPILE_OPTIONS)
-
-# utf-8
-if (MSVC)
-	list(APPEND MAIN_COMPILE_OPTIONS /utf-8)
-else()
-endif()
-
-# our library: needs to be standard complient
-if (MSVC)
-    list(APPEND MAIN_COMPILE_OPTIONS /permissive-)
-else()
-    list(APPEND MAIN_COMPILE_OPTIONS -pedantic)
-endif()
-
-# our library: enable warnings
-if (MSVC)
-    list(APPEND MAIN_COMPILE_OPTIONS /WX /W4 /external:W0)
-    # list(APPEND MAIN_COMPILE_OPTIONS /analyze /analyze:external-)
-    
-    # list(APPEND MAIN_COMPILE_OPTIONS /we4062 /we4826 /we5204 /we5219 /we5240)
-    # list(APPEND MAIN_COMPILE_OPTIONS /we4242 /we4254 /we4287 /we4388)
-    # list(APPEND MAIN_COMPILE_OPTIONS /we4263 /we4264 /we4265 /we4266 /we4355)
-    # list(APPEND MAIN_COMPILE_OPTIONS /we4296 /we4437 /we4471 /we4545 /we4582 /we4583)
-    list(APPEND MAIN_COMPILE_OPTIONS /we5263)
-
-    # list(APPEND MAIN_COMPILE_OPTIONS /we4365)
-    
-    # disable Spectre mitigation code generation warnings in external files
-    list(APPEND MAIN_COMPILE_OPTIONS /wd5045)
-    # disable left-to-right evaluation order in braced initializer list
-    # list(APPEND MAIN_COMPILE_OPTIONS /wd4868)
-    
-
-    if (CMAKE_BUILD_TYPE STREQUAL "Release")
-        # unreachable code warnings when using folly::small_vector in release
-        list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
-    else()
-        # disable unused parameters in debug
-        list(APPEND MAIN_COMPILE_OPTIONS /wd4100)
-    endif()
-else()
-    # -Wthread-safety 
-    list(APPEND MAIN_COMPILE_OPTIONS -W -Wall -Wextra -Wshadow -Werror 
-                             -Wstrict-aliasing) # -Wconversion) # -Wsign-conversion)
-
-
+if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
         (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
         # g++imgenerates those in library headers for sanitized builds
-        list(APPEND MAIN_COMPILE_OPTIONS -Wno-maybe-uninitialized)
         # also happens in benchmark which uses Werror
         set(BENCHMARK_ENABLE_WERROR OFF)
     endif()
-endif()
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # clang 16 warns on brace elision, why?
-    list(APPEND MAIN_COMPILE_OPTIONS -Wno-missing-braces)
 endif()
 
 # TODO: to presets?
@@ -132,11 +90,6 @@ endif()
 ls_print_compiler_and_flags()
 cmake_print_variables(MAIN_COMPILE_OPTIONS)
 
-
-
-
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
 
 if (LS_USE_LIBCXX_BOOL)
@@ -211,24 +164,6 @@ if (LS_SANITIZE)
     add_compile_options(-fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
     add_link_options(-fno-sanitize-recover=all)
 endif()
-
-# set(BLEND2D_NO_JIT ON)
-
-
-###################################################
-# needed to run clang-tidy outside, generates compile_commands.json
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# if (false)
-#     set(CMAKE_CXX_CLANG_TIDY
-#         clang-tidy;
-#         -extra-arg=/permissive-;
-#         -extra-arg=/EHsc;
-#         -warnings-as-errors=*;
-#         -checks=${CLANG_TIDY_CHECKS};
-#     )
-#     #-header-filter=\\src\\[a-z0-9_]+\.h$;
-# endif()
 
 
 # TODO: remove ?
