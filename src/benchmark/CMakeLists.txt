@@ -2,6 +2,15 @@
 ###### Dependencies
 
 # Google Benchmark
+
+# TODO: investigate
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
+    (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
+    # g++ generates those in library headers for sanitized builds
+    # also happens in benchmark which uses Werror
+    set(BENCHMARK_ENABLE_WERROR OFF)
+endif()
+
 set(BENCHMARK_ENABLE_LTO OFF)
 set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)

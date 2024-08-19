@@ -57,16 +57,6 @@ else()
 	add_compile_options(-march=native)
 endif()
 
-
-if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
-        (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
-        # g++imgenerates those in library headers for sanitized builds
-        # also happens in benchmark which uses Werror
-        set(BENCHMARK_ENABLE_WERROR OFF)
-    endif()
-endif()
-
 # TODO: to presets?
 # better debugging profile
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")  # AND LS_SANITIZE
