@@ -16,8 +16,9 @@ include(CMakePrintHelpers)
 
 include(cmake/ccache.cmake)
 include(cmake/debug_print.cmake)
-include(cmake/project_options.cmake)
 include(cmake/link_time_optimization.cmake)
+include(cmake/linker.cmake)
+include(cmake/project_options.cmake)
 include(cmake/utils.cmake)
 
 ls_define_program_options()
@@ -25,6 +26,7 @@ ls_print_program_options()
 
 ls_setup_ccache(${LS_ENABLE_CCACHE})
 ls_setup_link_time_optimization(${LS_ENABLE_LTO})
+ls_setup_linker()
 
 # TODO: move to presets
 # global architecture
@@ -122,14 +124,6 @@ if (LS_ENABLE_TIME_TRACE)
     endif()
 endif()
 
-
-# select linker
-if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # for debug build the MSVC linker is much faster then lld-link from clang
-    find_program(LS_LINK_PROGRAM link)
-    set(CMAKE_LINKER ${LS_LINK_PROGRAM})
-endif ()
-message(NOTICE "LOGIKSIM: Using linker ${CMAKE_LINKER}.")
 
 
 
