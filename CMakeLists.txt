@@ -11,6 +11,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # when compiling with PCH enabled
 # set(CMAKE_CXX_EXTENSIONS OFF)
 
+#
+# Include
+#
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
 include(CMakePrintHelpers)
@@ -27,9 +31,44 @@ include(cmake/time_tracing.cmake)
 include(cmake/utils.cmake)
 
 
-# options
-ls_define_program_options()
-ls_print_program_options()
+#
+# CMake Options
+#
+
+option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF)
+option(LS_ENABLE_CCACHE "Enable ccache." OFF)
+option(LS_ENABLE_LTO "Enable link time optimization." OFF)
+option(LS_ENABLE_PCH "Enable pre-compiled headers." ON)
+option(LS_ENABLE_COVERAGE "Enable coverage for tests under Clang" OFF)
+
+# LS_SANITIZE
+set(LS_SANITIZE "" CACHE STRING
+    "Enable sanitizers (Options: Address Undefined Address;Undefined 
+    Memory MemoryWithOrigins Thread). Defaults to empty string.")
+set_property(
+    CACHE LS_SANITIZE PROPERTY STRINGS 
+    "" Address Undefined Address;Undefined Memory Thread
+)
+
+# LS_USE_LIBCXX
+set(LS_USE_LIBCXX AUTO CACHE STRING "Compile all dependencies against clang libc++.")
+set_property(CACHE LS_USE_LIBCXX PROPERTY STRINGS AUTO ON OFF)
+
+if ((LS_USE_LIBCXX STREQUAL "AUTO" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+       (LS_SANITIZE STREQUAL "Memory" OR  LS_SANITIZE STREQUAL "MemoryWithOrigins" OR 
+        LS_SANITIZE STREQUAL "Thread")) 
+    OR (NOT LS_USE_LIBCXX STREQUAL "AUTO" AND LS_USE_LIBCXX)
+)
+    set(LS_USE_LIBCXX_BOOL TRUE)
+else()
+    set(LS_USE_LIBCXX_BOOL FALSE)
+endif()
+
+ls_print_project_options()
+
+#
+# Project Setup
+#
 
 # lto, linker, ccache
 ls_setup_link_time_optimization("${LS_ENABLE_LTO}")
@@ -46,6 +85,13 @@ ls_get_time_tracing(MAIN_COMPILE_OPTIONS "${LS_ENABLE_TIME_TRACE}")
 # needed by a lot of tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# print compiler flags
+ls_print_compiler_and_flags()
+cmake_print_variables(MAIN_COMPILE_OPTIONS)
+
+#
+# Presets
+#
 
 # TODO: move to presets
 # global architecture
@@ -67,11 +113,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")  # AND LS_SANITIZE
     endif()
 endif()
 
-
-# print compiler flags
-ls_print_compiler_and_flags()
-cmake_print_variables(MAIN_COMPILE_OPTIONS)
-
+#
+# LogikSim Targets
+#
 
 # TODO: remove ?
 set(MAIN_LIBRARY "simulation_srp")
