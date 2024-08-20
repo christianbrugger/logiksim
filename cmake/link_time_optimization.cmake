@@ -9,7 +9,8 @@ function(ls_setup_link_time_optimization do_enable)
 
         if (result)
             message(NOTICE "LOGIKSIM: Enabling link time optimization.")
-            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+            # TODO: check if cache works better FORCR
+            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE PARENT_SCOPE)
         else()
             message(FATAL_ERROR 
                     "LOGIKSIM: Unable to enable link time optimiaztion." 

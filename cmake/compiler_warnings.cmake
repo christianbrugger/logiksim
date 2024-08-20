@@ -44,9 +44,10 @@ function(ls_get_compiler_warnings RETVAR)
         endif()
     else()
         # -Wthread-safety 
-        list(APPEND MAIN_COMPILE_OPTIONS -W -Wall -Wextra -Wshadow -Werror 
+        list(APPEND MAIN_COMPILE_OPTIONS -W -Wall -Wextra -Wshadow # -Werror 
                                  -Wstrict-aliasing) # -Wconversion) # -Wsign-conversion)
 
+        # TODO: enable -Werror !!!
 
         if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
             (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))

@@ -8,6 +8,8 @@ function(ls_print_compiler_and_flags)
     cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
     cmake_print_variables(CMAKE_C_FLAGS_RELWITHDEBINFO)
     cmake_print_variables(CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+    cmake_print_variables(CMAKE_C_FLAGS_RELEASE)
+    cmake_print_variables(CMAKE_CXX_FLAGS_RELEASE)
 
 endfunction()
 

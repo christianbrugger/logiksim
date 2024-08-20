@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.25)
 
+# TODO: move to LTO library code
+# for blend2d to work with older cmake required
+set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+
 project(simulation_srp C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -88,6 +92,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # print compiler flags
 ls_print_compiler_and_flags()
 cmake_print_variables(MAIN_COMPILE_OPTIONS)
+cmake_print_variables(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
 
 #
 # Presets
@@ -100,7 +105,7 @@ if (MSVC)
 	add_compile_options(/arch:AVX2)
 	# add_compile_options(/arch:AVX512)
 else()
-	add_compile_options(-march=native)
+	# add_compile_options(-march=native)
 endif()
 
 # TODO: to presets?
