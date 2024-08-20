@@ -2,37 +2,37 @@
 
 Do `AVX2` instructions have benefits to execution speed?
 
-=> It actually makes things **worse**. Best to compile without `-march`  flags. 
+* It actually makes things **worse**. Best to compile without `-march`  flags. 
 
-=> This is strange, but repeatable in all tests. Architecture and `-mtune`  is set correctly.
+* This is strange, but repeatable in all tests. Architecture and `-mtune`  is set correctly.
 
 
 
 Is `-O3` superior to `-O2`?
 
-=> **Yes** `-O3` increases performance by 5-20%
+* **Yes** `-O3` increases performance by 5-20%
 
 
 
 Is there is significant difference between `gcc`  and `clang`?
 
-=> Not really. It depends.
+* Not really. It depends.
 
-=> `gcc`  is up to 10% **faster** than `clang` in some tests
+* `gcc`  is up to 10% **faster** than `clang` in some tests
 
-=> `gcc`  is up to 5% **slower** than `clang` in some tests
+* `gcc`  is up to 5% **slower** than `clang` in some tests
 
 
 
 Does **position independent code** decrease performance?
 
-=> **No**, within margins of errors.
+* **No**, within margins of errors.
 
 
 
 Does **link time optimization** increase performance?
 
-=> **Yes** significantly, by up to 70%
+* **Yes** significantly, by up to 70%
 
 
 
@@ -48,8 +48,8 @@ Does **link time optimization** increase performance?
 * Units in M/s
 
 * Release Build
-  * g++ XXX
-  * clang XXX
+  * g++ 13.2.0
+  * clang 18.1.3
   * Qt 6.4
   
 * No LTO
