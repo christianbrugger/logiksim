@@ -10,7 +10,7 @@ Do `AVX2` instructions have benefits to execution speed?
 
 Is `-O3` superior to `-O2`?
 
-=> **Yes** `-O3` increases performance by 
+=> **Yes** `-O3` increases performance by 5-20%
 
 
 
@@ -18,9 +18,9 @@ Is there is significant difference between `gcc`  and `clang`?
 
 => Not really. It depends.
 
-=> `gcc`  is up to `10%` **faster** than `clang` in some tests
+=> `gcc`  is up to 10% **faster** than `clang` in some tests
 
-=> `gcc`  is up to `5%` **slower** than `clang` in some tests
+=> `gcc`  is up to 5% **slower** than `clang` in some tests
 
 
 
@@ -32,7 +32,7 @@ Does **position independent code** decrease performance?
 
 Does **link time optimization** increase performance?
 
-=> **Yes** significantly, by about XX %
+=> **Yes** significantly, by up to 70%
 
 
 
