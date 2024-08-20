@@ -68,6 +68,21 @@ Anything else can be disabled
 
 *tested with Qt 6.7.1*
 
+Add a system wide environment variable:
+
+```
+CMAKE_PREFIX_PATH
+C:\Qt\6.7.1\msvc2019_64\lib\cmake\
+```
+
+Add this to `PATH`:
+
+```
+C:\Qt\6.7.1\msvc2019_64\bin\
+```
+
+
+
 
 
 ## External Libraries
