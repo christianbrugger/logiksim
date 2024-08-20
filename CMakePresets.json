@@ -86,5 +86,11 @@
                 "LS_ENABLE_LTO": "ON"
             }
         }
+    ],
+    "buildPresets": [
+        {
+            "name": "linux-clang-debug",
+            "configurePreset": "linux-clang-debug"
+        }
     ]
 }
