@@ -13,3 +13,18 @@ function(ls_print_compiler_and_flags)
 
 endfunction()
 
+
+function(ls_print_project_options)
+    include(CMakePrintHelpers)
+
+    cmake_print_variables(LS_ENABLE_TIME_TRACE)
+    cmake_print_variables(LS_ENABLE_CCACHE)
+    cmake_print_variables(LS_ENABLE_LTO)
+    cmake_print_variables(LS_ENABLE_PCH)
+    cmake_print_variables(LS_ENABLE_COVERAGE)
+
+    cmake_print_variables(LS_SANITIZE)
+    cmake_print_variables(LS_USE_LIBCXX)
+    cmake_print_variables(LS_USE_LIBCXX_BOOL)
+endfunction()
+

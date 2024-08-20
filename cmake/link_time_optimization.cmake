@@ -9,8 +9,12 @@ function(ls_setup_link_time_optimization do_enable)
 
         if (result)
             message(NOTICE "LOGIKSIM: Enabling link time optimization.")
-            # TODO: check if cache works better FORCR
-            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE PARENT_SCOPE)
+
+            ls_set_global(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+
+            # some libraries use old cmake versions in requires
+            # leading to warnings, e.g. blend2d
+            ls_set_global(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
         else()
             message(FATAL_ERROR 
                     "LOGIKSIM: Unable to enable link time optimiaztion." 
