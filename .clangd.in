@@ -1,0 +1,15 @@
+# Clang Language Server Configuration
+
+# Select one of and store it in '.clangd'
+
+CompileFlags:
+  CompilationDatabase: build/linux-gcc-debug
+
+CompileFlags:
+  CompilationDatabase: build/linux-clang-debug
+
+CompileFlags:
+  CompilationDatabase: build/windows-msvc-debug
+
+CompileFlags:
+  CompilationDatabase: build/windows-clang-debug

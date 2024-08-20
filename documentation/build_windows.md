@@ -143,30 +143,24 @@ cd build
 
 #### Configure
 
-First configure with cmake.
+Open `Developer Command Prompt for VS 2022`
 
 For **debug** builds use:
 
 ```cmd
-cmake .. -G Ninja ^
-    -DCMAKE_BUILD_TYPE=Debug ^
-    -DLS_ENABLE_CCACHE=OFF ^
-    -DLS_ENABLE_PCH=ON ^
-    -DLS_ENABLE_LTO=OFF ^
-    -DCMAKE_C_COMPILER=clang-cl ^
-    -DCMAKE_CXX_COMPILER=clang-cl
+cmake --preset windows-clang-debug
+
+cd build\windows-clang-debug
+ninja
 ```
 
 For **release** builds use:
 
 ```cmd
-cmake .. -G Ninja ^
-    -DCMAKE_BUILD_TYPE=Release ^
-    -DLS_ENABLE_CCACHE=OFF ^
-    -DLS_ENABLE_PCH=ON ^
-    -DLS_ENABLE_LTO=ON ^
-    -DCMAKE_C_COMPILER=clang-cl ^
-    -DCMAKE_CXX_COMPILER=clang-cl
+cmake --preset windows-clang-release
+
+cd build\windows-clang-release
+ninja
 ```
 
 Configuration should take 30 - 60 seconds.

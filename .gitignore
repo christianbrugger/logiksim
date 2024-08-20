@@ -1,6 +1,8 @@
 CMakeUserPresets.json
+.clangd
 
 
+.cache
 .idea
 .vs
 .vscode/browse.vc.db
