@@ -4,8 +4,6 @@ Any modern linux distrubtion that supports Qt 6 should work. Both X11 and Waylan
 
 *tested with Ubuntu 24.04*
 
-
-
 ## Build Dependencies
 
 External tools needed for building, not included in this repository.
@@ -21,6 +19,21 @@ sudo apt install clang
 ```
 
 *tested with clang++ 18.1.3*
+
+On olders versions manual installation is necessary:
+
+```shell
+wget https://apt.llvm.org/llvm.sh
+chmod +x llvm.sh
+
+sudo ./llvm.sh 18
+```
+
+This installs `apt-get install -y clang-18 lldb-18 lld-18 clangd-18`
+
+Uninstallation:
+
+https://ubuntuhandbook.org/index.php/2023/09/how-to-install-clang-17-or-16-in-ubuntu-22-04-20-04/
 
 #### GCC 12+
 
@@ -39,6 +52,14 @@ sudo apt install python3
 ```
 
 *tested with Python 3.12.3*
+
+Manual installation on older Ubuntu versions:
+
+```shell
+sudo add-apt-repository ppa:deadsnakes/ppa
+
+sudo apt install python3.11
+```
 
 ### Git
 
@@ -69,6 +90,18 @@ sudo apt install cmake
 ```
 
 *version 3.28.3*
+
+Manual installation is best done through the pip package
+
+```shell
+sudo apt install python3-venv
+
+
+python3 -m venv env
+. env\bin\activate
+
+python -m pip install cmake
+```
 
 ### CCache (optional)
 
@@ -179,8 +212,8 @@ cmake .. -G Ninja \
     -DLS_ENABLE_CCACHE=OFF \
     -DLS_ENABLE_PCH=ON \
     -DLS_ENABLE_LTO=OFF \
-    -DCMAKE_C_COMPILER=clang \
-    -DCMAKE_CXX_COMPILER=clang++
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++
 ```
 
 For **release** builds use:
@@ -191,8 +224,8 @@ cmake .. -G Ninja \
     -DLS_ENABLE_CCACHE=OFF \
     -DLS_ENABLE_PCH=ON \
     -DLS_ENABLE_LTO=ON \
-    -DCMAKE_C_COMPILER=clang \
-    -DCMAKE_CXX_COMPILER=clang++
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++
 ```
 
 Configuration should take 15 - 30 seconds.

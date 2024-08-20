@@ -134,10 +134,10 @@ For **debug** builds use:
 
 ```cmd
 cmake .. -G Ninja ^
-	-DCMAKE_BUILD_TYPE=Debug ^
-	-DLS_ENABLE_CCACHE=OFF ^
-	-DLS_ENABLE_PCH=ON ^
-	-DLS_ENABLE_LTO=OFF ^
+    -DCMAKE_BUILD_TYPE=Debug ^
+    -DLS_ENABLE_CCACHE=OFF ^
+    -DLS_ENABLE_PCH=ON ^
+    -DLS_ENABLE_LTO=OFF ^
     -DCMAKE_C_COMPILER=clang-cl ^
     -DCMAKE_CXX_COMPILER=clang-cl
 ```
@@ -146,10 +146,10 @@ For **release** builds use:
 
 ```cmd
 cmake .. -G Ninja ^
-	-DCMAKE_BUILD_TYPE=Release ^
-	-DLS_ENABLE_CCACHE=OFF ^
-	-DLS_ENABLE_PCH=ON ^
-	-DLS_ENABLE_LTO=ON ^
+    -DCMAKE_BUILD_TYPE=Release ^
+    -DLS_ENABLE_CCACHE=OFF ^
+    -DLS_ENABLE_PCH=ON ^
+    -DLS_ENABLE_LTO=ON ^
     -DCMAKE_C_COMPILER=clang-cl ^
     -DCMAKE_CXX_COMPILER=clang-cl
 ```

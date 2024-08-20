@@ -1,24 +1,12 @@
-
-
 # CMake Language
 
 Here the features of the CMake language are documented used by the project.
-
-
-
-
-
-
 
 References:
 
 * [cmake-language](https://cmake.org/cmake/help/latest/manual/cmake-language.7.html)
 
 * [Learn CMake's Scripting Language in 15 Minutes](https://preshing.com/20170522/learn-cmakes-scripting-language-in-15-minutes/)
-
-
-
-
 
 ### Statements / Commands
 
@@ -135,8 +123,6 @@ set_property(GLOBAL PROPERTY NAME VALUE)
 List of all properties:
 
 [cmake-properties](https://cmake.org/cmake/help/latest/manual/cmake-properties.7.html)
-
-
 
 ### Lists
 
@@ -269,8 +255,6 @@ The content of `if`, `elseif`,  `while` are specially evaluated:
 
 [Condition-Syntax](https://cmake.org/cmake/help/latest/command/if.html#condition-syntax)
 
-
-
 #### Conditionals
 
 ```cmake
@@ -398,11 +382,17 @@ test("abc" "cde")    # prints abc;cde
 
 Recommended: **Better use ARGC and ARG#**, see [function](https://cmake.org/cmake/help/latest/command/function.html#arguments)
 
+### Return Value
+
+Functions can have a return value:
+
+```cmake
+return()
+```
+
 ### Generator Expressions
 
 * Only evaluated during initial cmake run
-
-
 
 ### Buildin Functions
 
