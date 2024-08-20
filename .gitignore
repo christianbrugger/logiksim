@@ -1,9 +1,13 @@
+CMakeUserPresets.json
+
+
 .idea
 .vs
 .vscode/browse.vc.db
 .vscode/browse.vc.db-shm
 .vscode/browse.vc.db-wal
 .python-version
+
 
 env/
 build/

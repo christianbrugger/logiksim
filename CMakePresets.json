@@ -1,0 +1,90 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "common",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}"
+        },
+        {
+            "name": "common-linux",
+            "hidden": true,
+            "inherits": "common",
+            "condition": {"type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux"}
+        },
+        {
+            "name": "common-windows",
+            "hidden": true,
+            "inherits": "common",
+            "condition": {"type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows"}
+        },
+
+        {
+            "name": "linux-gcc-debug",
+            "displayName": "GCC Debug",
+            "description": "Compile debug build type with GCC compiler",
+            "inherits": "common-linux",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_COMPILER": "gcc-13",
+                "CMAKE_CXX_COMPILER": "g++-13",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "linux-gcc-release",
+            "displayName": "GCC Debug",
+            "description": "Compile release build type with GCC compiler",
+            "inherits": "common-linux",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_C_COMPILER": "gcc-13",
+                "CMAKE_CXX_COMPILER": "g++-13",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "ON"
+            }
+        },
+
+        {
+            "name": "linux-clang-debug",
+            "displayName": "Clang Debug",
+            "description": "Compile debug build type with Clang compiler",
+            "inherits": "common-linux",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_COMPILER": "clang-18",
+                "CMAKE_CXX_COMPILER": "clang++-18",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "linux-clang-release",
+            "displayName": "Clang Debug",
+            "description": "Compile release build type with Clang compiler",
+            "inherits": "common-linux",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_C_COMPILER": "clang-18",
+                "CMAKE_CXX_COMPILER": "clang++-18",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "ON"
+            }
+        }
+    ]
+}
