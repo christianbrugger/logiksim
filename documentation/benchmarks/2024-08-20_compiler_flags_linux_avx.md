@@ -6,13 +6,9 @@ Do `AVX2` instructions have benefits to execution speed?
 
 * This is strange, but repeatable in all tests. Architecture and `-mtune`  is set correctly.
 
-
-
 Is `-O3` superior to `-O2`?
 
 * **Yes** `-O3` increases performance by 5-20%
-
-
 
 Is there is significant difference between `gcc`  and `clang`?
 
@@ -22,36 +18,29 @@ Is there is significant difference between `gcc`  and `clang`?
 
 * `gcc`  is up to 5% **slower** than `clang` in some tests
 
-
-
 Does **position independent code** decrease performance?
 
 * **No**, within margins of errors.
 
-
-
 Does **link time optimization** increase performance?
 
 * **Yes** significantly, by up to 70%
-
-
 
 ## System
 
 * AMD Ryzen 7 5800H
 * White Power Profile
 
-
-
 ## Kubuntu 24.04 - VMWare
 
 * Units in M/s
 
 * Release Build
+  
   * g++ 13.2.0
   * clang 18.1.3
   * Qt 6.4
-  
+
 * No LTO
 
 | Compiler |                        | Simulation_0 | Inverter_Loop | RenderScene_0 | Load Elemens |
@@ -61,19 +50,32 @@ Does **link time optimization** increase performance?
 | gcc-13   | -O3                    | 9.6          | 11.7          | 8.2           |              |
 | gcc-13   | -O3<br/>-march=znver3  | 8.6          | 11.0          | 7.0           |              |
 
+* With LTO
+- With position independent code
+
+| Compiler |     | Simulation_0 | Inverter_Loop | RenderScene_0 | Load Elements | Uninsert / Insert   |
+| -------- | --- | ------------ | ------------- | ------------- | ------------- | ------------------- |
+| clang-18 | -O3 | 15.06        | 17.20         | 12.06         | 1361 ms       | 2414 ms<br/>2704 ms |
+| gcc-13   | -O3 | 16.13        | 18.71         | 11.32         | 1404 ms       | 2400 ms<br/>2842 ms |
+| gcc-14   | -O3 | 15.59        | 19.33         | 11.59         | 1365 ms       | 2325 ms<br/>2753 ms |
+
 ## Ubuntu 22.04 - VMWare
 
 * Units in M/s
 
 * Release Build
-
+  
   * g++ 13.1.0
-
+  
+  * g++ 14.0.1 (experimental)
+  
   * clang 18.1.8
-
+  
   * Qt 6.2 with commenting out 3 lines
 
 * No LTO
+
+* With position independent code
 
 | Compiler |                       | Simulation_0 | Inverter_Loop | RenderScene_0 | Load Elements |
 | -------- | --------------------- | ------------ | ------------- | ------------- | ------------- |
@@ -81,19 +83,18 @@ Does **link time optimization** increase performance?
 | clang-18 | -O3<br/>-march=native | 9.7          | 11.6          | 7.8           |               |
 | gcc-13   | -O3                   | 9.8          | 12.2          | 8.9           |               |
 
-
-
 ## Ubuntu 22.04 - Laptop
 
 * Units in M/s
 
 * Release Build
-
+  
   * g++ 13.1.0
-
+  
   * clang 18.1.8
 
 * No LTO
+
 * With position independent code
 
 | Compiler |                       | Simulation_0 | Inverter_Loop | RenderScene_0 | Load Elements | Uninsert / Insert    |

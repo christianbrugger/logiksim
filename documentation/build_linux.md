@@ -12,10 +12,10 @@ External tools needed for building, not included in this repository.
 
 Both **Clang** and **GCC** are supported. 
 
-#### Clang 17+
+#### Clang 18
 
 ```bash
-sudo apt install clang
+sudo apt install clang-18
 ```
 
 *tested with clang++ 18.1.3*
@@ -35,10 +35,10 @@ Uninstallation:
 
 https://ubuntuhandbook.org/index.php/2023/09/how-to-install-clang-17-or-16-in-ubuntu-22-04-20-04/
 
-#### GCC 12+
+#### GCC 13
 
 ```bash
-sudo apt install g++
+sudo apt install g++-13
 ```
 
 *tested with g++ 13.2.0*
@@ -207,25 +207,19 @@ First configure with cmake.
 For **debug** builds use:
 
 ```bash
-cmake .. -G Ninja \
-    -DCMAKE_BUILD_TYPE=Debug \
-    -DLS_ENABLE_CCACHE=OFF \
-    -DLS_ENABLE_PCH=ON \
-    -DLS_ENABLE_LTO=OFF \
-    -DCMAKE_C_COMPILER=clang \
-    -DCMAKE_CXX_COMPILER=clang++
+cmake --profile linux-clang-debug
+
+cd build/linux-clang-debug
+ninja
 ```
 
 For **release** builds use:
 
 ```bash
-cmake .. -G Ninja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DLS_ENABLE_CCACHE=OFF \
-    -DLS_ENABLE_PCH=ON \
-    -DLS_ENABLE_LTO=ON \
-    -DCMAKE_C_COMPILER=clang \
-    -DCMAKE_CXX_COMPILER=clang++
+cmake --profile linux-clang-release
+
+cd build/linux-clang-release
+ninja
 ```
 
 Configuration should take 15 - 30 seconds.
