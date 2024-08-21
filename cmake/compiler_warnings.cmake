@@ -43,8 +43,8 @@ function(ls_set_compiler_warnings target_name)
         endif()
     else()
         # -Wthread-safety 
-        list(APPEND warnings -W -Wall -Wextra -Wshadow # -Werror 
-                                 -Wstrict-aliasing) # -Wconversion) # -Wsign-conversion)
+        list(APPEND warnings -W -Wall -Wextra -Wshadow -Wstrict-aliasing)
+        # -Wconversion) # -Wsign-conversion)
 
         if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
             (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
@@ -59,7 +59,6 @@ function(ls_set_compiler_warnings target_name)
         # clang 16 warns on brace elision, why?
         list(APPEND warnings -Wno-missing-braces)
     endif()
-
 
     target_compile_options("${target_name}" INTERFACE ${warnings})
 endfunction()
