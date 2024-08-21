@@ -19,9 +19,14 @@ function(ls_set_compiler_warnings target_name)
 
     if (MSVC)
         # disable warnings in external header files
-        # does not work for the C47XX backend warnings
-        # does not work for code analysis violations
-        list(APPEND warnings /external:anglebrackets /external:W0)
+        #  * does not work for the C47XX backend warnings
+        #  * does not work for code analysis violations
+        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+            list(APPEND warnings /external:anglebrackets /external:W0)
+        else()
+            # clang-cl does not support this flag
+            list(APPEND warnings /external:W0)
+        endif()
 
         # base level
         list(APPEND warnings /W4)
@@ -98,7 +103,7 @@ function(ls_set_compiler_warnings target_name)
         endif()
     endif()
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang") 
+    if (NOT MSVC)
         # base level
         list(APPEND warnings -Wall)
         # standard extensions
@@ -148,7 +153,7 @@ function(ls_set_compiler_warnings target_name)
         endif()
     endif()
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if ((NOT MSVC) AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # warn if indentation implies blocks where blocks do not exist
         list(APPEND warnings -Wmisleading-indentation)
         # warn if if / else chain has duplicated conditions
