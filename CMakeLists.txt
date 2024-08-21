@@ -90,8 +90,8 @@ add_library(logiksim_options INTERFACE)
 # Project Setup
 #
 
-# lto, linker, ccache
-ls_setup_link_time_optimization(logiksim_global_options "${LS_ENABLE_LTO}")
+# global options
+ls_setup_link_time_optimization("${LS_ENABLE_LTO}")
 ls_setup_linker()
 ls_setup_ccache("${LS_ENABLE_CCACHE}")
 
