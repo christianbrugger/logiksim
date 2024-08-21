@@ -199,11 +199,11 @@ set(LS_CORE_LIBRARIES
 
 ###### PCH Setup
 
-add_library(logicsim_pch INTERFACE)
+add_library(logiksim_pch INTERFACE)
 if (LS_ENABLE_PCH)
     message(NOTICE "LOGIKSIM: Enabling pre-compiled headers.")
 
-    target_precompile_headers(logicsim_pch INTERFACE
+    target_precompile_headers(logiksim_pch INTERFACE
         <ankerl/unordered_dense.h>
         <blend2d.h>
         <boost/algorithm/string/join.hpp>
@@ -246,7 +246,7 @@ if (LS_ENABLE_PCH)
     # this is needed so ccache works with PCH files, see:
     # https://ccache.dev/manual/latest.html#_precompiled_headers
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        target_compile_options(logicsim_pch INTERFACE
+        target_compile_options(logiksim_pch INTERFACE
             -Xclang -fno-pch-timestamp
         )
     endif()
@@ -299,8 +299,10 @@ target_include_directories(${MAIN_LIBRARY} PUBLIC
 target_link_libraries(${MAIN_LIBRARY} PUBLIC 
     ${LS_CORE_LIBRARIES}
 )
-target_link_libraries(${MAIN_LIBRARY} PRIVATE 
-    logicsim_pch
+target_link_libraries(${MAIN_LIBRARY} PUBLIC 
+    logiksim_options
 )
-target_compile_options(${MAIN_LIBRARY} PUBLIC ${MAIN_COMPILE_OPTIONS})
+target_link_libraries(${MAIN_LIBRARY} PRIVATE 
+    logiksim_pch
+)
 

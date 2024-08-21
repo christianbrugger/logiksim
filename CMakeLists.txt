@@ -20,6 +20,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 include(CMakePrintHelpers)
 
 include(cmake/ccache.cmake)
+include(cmake/compiler_options.cmake)
 include(cmake/compiler_warnings.cmake)
 include(cmake/debug_print.cmake)
 include(cmake/link_time_optimization.cmake)
@@ -99,15 +100,18 @@ ls_setup_ccache("${LS_ENABLE_CCACHE}")
 ls_setup_standard_library("${LS_USE_LIBCXX_BOOL}")
 ls_setup_sanitizers("${LS_SANITIZE}")
 
-ls_set_compiler_warnings(MAIN_COMPILE_OPTIONS)
-ls_get_time_tracing(MAIN_COMPILE_OPTIONS "${LS_ENABLE_TIME_TRACE}")
+# options for logiksim targets
+ls_set_compiler_options_utf8(logiksim_options)
+ls_set_compiler_options_compliant(logiksim_options)
+ls_set_compiler_warnings(logiksim_options)
+# ls_set_compiler_warnings_as_errors(logiksim_options)
+ls_set_time_tracing(logiksim_options "${LS_ENABLE_TIME_TRACE}")
 
 # needed by a lot of tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # print compiler flags
 ls_print_compiler_and_flags()
-cmake_print_variables(MAIN_COMPILE_OPTIONS)
 cmake_print_variables(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
 
 #
