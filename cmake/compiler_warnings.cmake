@@ -39,6 +39,49 @@ function(ls_set_compiler_warnings target_name)
         # list(APPEND warnings /we4296 /we4437 /we4471 /we4545 /we4582 /we4583)
 
         # list(APPEND warnings /we4365)
+
+
+        # 'identifier': conversion from 'type1' to 'type2', possible loss of data
+        list(APPEND warnings /w14242)
+        # 'operator': conversion from 'type1:field_bits' to 'type2:field_bits'
+        list(APPEND warnings /w14254)
+        # 'function': member function does not override any base class virtual member
+        list(APPEND warnings /w14263)
+        # 'classname': class has virtual functions, but destructor is not virtual
+        list(APPEND warnings /w14265)
+        # 'operator': unsigned/negative constant mismatch
+        list(APPEND warnings /w14287)
+        # loop control variable declared in the for-loop is used outside loop scope
+        list(APPEND warnings /we4289)
+        # 'operator': expression is always 'boolean_value'
+        list(APPEND warnings /w14296)
+        # 'variable': pointer truncation from 'type1' to 'type2'
+        list(APPEND warnings /w14311)
+        # expression before comma evaluates to a function which is missing arguments
+        list(APPEND warnings /w14545)
+        # function call before comma missing argument list
+        list(APPEND warnings /w14546)
+        # 'operator': operator before comma has no effect
+        list(APPEND warnings /w14547)
+        # 'operator': operator before comma has no effect; did you intend 'operator'?
+        list(APPEND warnings /w14549)
+        # expression has no effect; expected expression with side- effect
+        list(APPEND warnings /w14555)
+        # pragma warning: there is no warning number 'number'
+        list(APPEND warnings /w14619)
+        # Enable warning on thread un-safe static member initialization
+        list(APPEND warnings /w14640)
+        # Conversion from 'type1' to 'type2' is sign-extended.
+        list(APPEND warnings /w14826)
+        # wide string literal cast to 'LPSTR'
+        list(APPEND warnings /w14905)
+        # string literal cast to 'LPWSTR'
+        list(APPEND warnings /w14906)
+        # illegal copy-initialization; more than one user-defined conversion
+        list(APPEND warnings /w14928)
+
+
+        ############################3
         
         # disable Spectre mitigation code generation warnings in external files
         list(APPEND warnings /wd5045)
@@ -55,7 +98,7 @@ function(ls_set_compiler_warnings target_name)
         endif()
     endif()
 
-    if (NOT MSVC)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang") 
         # base level
         list(APPEND warnings -Wall)
         # standard extensions
@@ -65,6 +108,31 @@ function(ls_set_compiler_warnings target_name)
         list(APPEND warnings -Wshadow)
         # violate optimizer strict aliasing rules
         list(APPEND warnings -Wstrict-aliasing)
+
+        # warn the user if a class with virtual functions has a non-virtual destructor.
+        list(APPEND warnings -Wnon-virtual-dtor)
+        # warn for c-style casts
+        list(APPEND warnings -Wold-style-cast)
+        # warn for potential performance problem casts
+        list(APPEND warnings -Wcast-align)
+        # warn on anything being unused
+        list(APPEND warnings -Wunused)
+        # warn if you overload (not override) a virtual function
+        list(APPEND warnings -Woverloaded-virtual)
+        # warn if non-standard C++ is used
+        list(APPEND warnings -Wpedantic)
+        # warn on type conversions that may lose data
+        # list(APPEND warnings -Wconversion)
+        # warn on sign conversions
+        # list(APPEND warnings -Wsign-conversion)
+        # warn if a null dereference is detected
+        list(APPEND warnings -Wnull-dereference)
+        # warn if float is implicit promoted to double
+        # list(APPEND warnings -Wdouble-promotion)
+        # warn on security issues around functions that format output (ie printf)
+        list(APPEND warnings -Wformat=2)
+        # warn on statements that fallthrough without an explicit annotation
+        list(APPEND warnings -Wimplicit-fallthrough)
         
         # -Wconversion
         # -Wsign-conversion)
@@ -78,6 +146,21 @@ function(ls_set_compiler_warnings target_name)
             # TODO: move out of here !!!
             set(BENCHMARK_ENABLE_WERROR OFF)
         endif()
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # warn if indentation implies blocks where blocks do not exist
+        list(APPEND warnings -Wmisleading-indentation)
+        # warn if if / else chain has duplicated conditions
+        list(APPEND warnings -Wduplicated-cond)
+        # warn if if / else branches have duplicated code
+        list(APPEND warnings -Wduplicated-branches)
+        # warn about logical operations being used where bitwise were probably wanted
+        list(APPEND warnings -Wlogical-op)
+        # warn if you perform a cast to the same type
+        # list(APPEND warnings -Wuseless-cast)
+        # warn if an overridden member function is not marked 'override' or 'final'
+        list(APPEND warnings -Wsuggest-override)
     endif()
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

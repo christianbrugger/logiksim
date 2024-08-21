@@ -104,7 +104,7 @@ ls_setup_sanitizers("${LS_SANITIZE}")
 ls_set_compiler_options_utf8(logiksim_options)
 ls_set_compiler_options_conformant(logiksim_options)
 ls_set_compiler_warnings(logiksim_options)
-# ls_set_compiler_warnings_as_errors(logiksim_options)
+ls_set_compiler_warnings_as_errors(logiksim_options)
 ls_set_time_tracing(logiksim_options "${LS_ENABLE_TIME_TRACE}")
 
 # needed by a lot of tools
@@ -129,15 +129,6 @@ else()
     # See documentation/benchmarks/2024-08-20_compiler_flags_linux_avx.md
 endif()
 
-# TODO: to presets?
-# better debugging profile
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")  # AND LS_SANITIZE
-    if (MSVC)
-        # add_compile_options(/O1)
-    else()
-        add_compile_options(-O1 -fno-optimize-sibling-calls)
-    endif()
-endif()
 
 #
 # LogikSim Targets
