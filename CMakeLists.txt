@@ -104,6 +104,7 @@ ls_setup_sanitizers("${LS_SANITIZE}")
 ls_set_compiler_options_utf8(logiksim_options)
 ls_set_compiler_options_conformant(logiksim_options)
 ls_set_compiler_warnings(logiksim_options)
+ls_set_compiler_warnings_disabled(logiksim_options)
 ls_set_compiler_warnings_as_errors(logiksim_options)
 ls_set_time_tracing(logiksim_options "${LS_ENABLE_TIME_TRACE}")
 

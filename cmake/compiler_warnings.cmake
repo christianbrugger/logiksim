@@ -31,10 +31,12 @@ function(ls_set_compiler_warnings target_name)
         # base level
         list(APPEND warnings /W4)
 
+        # initialization needs to be in order for classes
+        list(APPEND warnings /w15038)
         # require explicit [[fallthrough]] for case
-        list(APPEND warnings /we5262)
+        list(APPEND warnings /w15262)
         # calling 'std::move' on a temporary object prevents copy elision
-        list(APPEND warnings /we5263)
+        list(APPEND warnings /w15263)
         
         # list(APPEND warnings /analyze /analyze:external-)
 
@@ -89,17 +91,17 @@ function(ls_set_compiler_warnings target_name)
         ############################3
         
         # disable Spectre mitigation code generation warnings in external files
-        list(APPEND warnings /wd5045)
+        # list(APPEND warnings /wd5045)
         # disable left-to-right evaluation order in braced initializer list
         # list(APPEND warnings /wd4868)
         
 
         if (CMAKE_BUILD_TYPE STREQUAL "Release")
             # unreachable code warnings when using folly::small_vector in release
-            list(APPEND warnings /wd4702)
+            # list(APPEND warnings /wd4702)
         else()
             # disable unused parameters in debug
-            list(APPEND warnings /wd4100)
+            # list(APPEND warnings /wd4100)
         endif()
     endif()
 
@@ -167,6 +169,27 @@ function(ls_set_compiler_warnings target_name)
         # warn if an overridden member function is not marked 'override' or 'final'
         list(APPEND warnings -Wsuggest-override)
     endif()
+
+    target_compile_options("${target_name}" INTERFACE ${warnings})
+endfunction()
+
+
+#
+# Disable specific warnings that are problematic for the target.`
+#
+# Its a good practice to re-check them from time to time
+#
+function(ls_set_compiler_warnings_disabled target_name)
+    set(warnings "")
+
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+        # unreachable code warnings are not excluded by /extern:W0
+        # as they happen during code generation
+        # last-check: 2024-08-21
+        list(APPEND warnings /wd4702)
+    endif()
+
 
     target_compile_options("${target_name}" INTERFACE ${warnings})
 endfunction()

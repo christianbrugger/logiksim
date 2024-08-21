@@ -19,7 +19,7 @@
             "condition": {"type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux"}
         },
         {
-            "name": "common-windows",
+            "name": "common-win",
             "hidden": true,
             "inherits": "common",
             "condition": {"type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows"},
@@ -98,10 +98,10 @@
         },
 		
         {
-            "name": "windows-msvc-debug",
+            "name": "win-msvc-debug",
             "displayName": "MSVC Debug",
             "description": "Compile debug build type with MSVC compiler",
-            "inherits": "common-windows",
+            "inherits": "common-win",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "cl",
@@ -118,10 +118,10 @@
             }
         },
         {
-            "name": "windows-msvc-release",
+            "name": "win-msvc-release",
             "displayName": "MSVC Release",
             "description": "Compile release build type with MSVC compiler",
-            "inherits": "common-windows",
+            "inherits": "common-win",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_C_COMPILER": "cl",
@@ -139,10 +139,10 @@
         },
         
         {
-            "name": "windows-clang-debug",
+            "name": "win-clang-debug",
             "displayName": "Clang Debug",
             "description": "Compile debug build type with Clang compiler",
-            "inherits": "common-windows",
+            "inherits": "common-win",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "clang-cl",
@@ -160,10 +160,10 @@
             }
         },
         {
-            "name": "windows-clang-release",
+            "name": "win-clang-release",
             "displayName": "Clang Release",
             "description": "Compile release build type with Clang compiler",
-            "inherits": "common-windows",
+            "inherits": "common-win",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_C_COMPILER": "clang-cl",
