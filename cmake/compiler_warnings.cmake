@@ -1,5 +1,5 @@
 
-function(ls_get_compiler_warnings RETVAR)
+function(ls_set_compiler_warnings RETVAR)
 
     set(MAIN_COMPILE_OPTIONS)
 

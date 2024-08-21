@@ -1,5 +1,8 @@
 
-function(ls_setup_link_time_optimization do_enable)
+#
+# Enables LTO on the given target
+#
+function(ls_setup_link_time_optimization target_name do_enable)
     include(cmake/utils.cmake)
     ls_require_bool(do_enable)
 
@@ -10,11 +13,14 @@ function(ls_setup_link_time_optimization do_enable)
         if (result)
             message(NOTICE "LOGIKSIM: Enabling link time optimization.")
 
-            ls_set_global(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+            set_target_properties(
+                "${target_name}" PROPERTIES
+                INTERPROCEDURAL_OPTIMIZATION TRUE
+            )
 
             # some libraries use old cmake versions in requires
             # leading to warnings, e.g. blend2d
-            ls_set_global(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+            set(CMAKE_POLICY_DEFAULT_CMP0069 NEW PARENT_SCOPE)
         else()
             message(FATAL_ERROR 
                     "LOGIKSIM: Unable to enable link time optimiaztion." 

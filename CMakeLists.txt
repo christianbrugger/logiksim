@@ -39,8 +39,14 @@ option(LS_ENABLE_CCACHE "Enable ccache." OFF)
 option(LS_ENABLE_LTO "Enable link time optimization." OFF)
 option(LS_ENABLE_PCH "Enable pre-compiled headers." ON)
 option(LS_ENABLE_COVERAGE "Enable coverage for tests under Clang" OFF)
+option(LS_ENABLE_BLEND2D_JIT "Enable JIT for blend2d backend" ON)
 
 # LS_SANITIZE
+#    * Address
+#    * Undefined
+#    * Address;Undefined
+#    * Memory
+#    * Thread
 set(LS_SANITIZE "" CACHE STRING
     "Enable sanitizers (Options: Address Undefined Address;Undefined 
     Memory MemoryWithOrigins Thread). Defaults to empty string.")
@@ -50,9 +56,11 @@ set_property(
 )
 
 # LS_USE_LIBCXX
+#    * AUTO - uses libc++ with Memory and Thread sanitizers
+#    * ON
+#    * OFF
 set(LS_USE_LIBCXX AUTO CACHE STRING "Compile all dependencies against clang libc++.")
 set_property(CACHE LS_USE_LIBCXX PROPERTY STRINGS AUTO ON OFF)
-
 if ((LS_USE_LIBCXX STREQUAL "AUTO" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
        (LS_SANITIZE STREQUAL "Memory" OR  LS_SANITIZE STREQUAL "MemoryWithOrigins" OR 
         LS_SANITIZE STREQUAL "Thread")) 
@@ -66,11 +74,24 @@ endif()
 ls_print_project_options()
 
 #
+# Helper Targets
+#
+
+# Options added to logiksim targets and any dependency
+add_library(logiksim_global_options INTERFACE)
+export(TARGETS logiksim_global_options FILE "${CMAKE_BINARY_DIR}/cmake/LSGlobal.cmake")
+# Automatically add it to all newly defined targets
+link_libraries(logiksim_global_options)
+
+# Options added to logiksim targets
+add_library(logiksim_options INTERFACE)
+
+#
 # Project Setup
 #
 
 # lto, linker, ccache
-ls_setup_link_time_optimization("${LS_ENABLE_LTO}")
+ls_setup_link_time_optimization(logiksim_global_options "${LS_ENABLE_LTO}")
 ls_setup_linker()
 ls_setup_ccache("${LS_ENABLE_CCACHE}")
 
@@ -78,7 +99,7 @@ ls_setup_ccache("${LS_ENABLE_CCACHE}")
 ls_setup_standard_library("${LS_USE_LIBCXX_BOOL}")
 ls_setup_sanitizers("${LS_SANITIZE}")
 
-ls_get_compiler_warnings(MAIN_COMPILE_OPTIONS)
+ls_set_compiler_warnings(MAIN_COMPILE_OPTIONS)
 ls_get_time_tracing(MAIN_COMPILE_OPTIONS "${LS_ENABLE_TIME_TRACE}")
 
 # needed by a lot of tools
