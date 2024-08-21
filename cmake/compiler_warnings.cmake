@@ -140,7 +140,7 @@ function(ls_set_compiler_warnings target_name)
 
         if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
             (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
-            # g++imgenerates those in library headers for sanitized builds
+            # g++ generates those in library headers for sanitized builds - WHY ???
             list(APPEND warnings -Wno-maybe-uninitialized)
             # also happens in benchmark which uses Werror
             # TODO: move out of here !!!
@@ -161,11 +161,6 @@ function(ls_set_compiler_warnings target_name)
         # list(APPEND warnings -Wuseless-cast)
         # warn if an overridden member function is not marked 'override' or 'final'
         list(APPEND warnings -Wsuggest-override)
-    endif()
-
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        # clang 16 warns on brace elision, why?
-        list(APPEND warnings -Wno-missing-braces)
     endif()
 
     target_compile_options("${target_name}" INTERFACE ${warnings})
