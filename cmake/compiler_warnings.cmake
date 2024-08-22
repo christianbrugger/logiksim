@@ -2,12 +2,21 @@
 #
 # Treat warnings as errors on the given target
 #
-function(ls_set_compiler_warnings_as_errors target_name)
-    if (MSVC)
-        target_compile_options("${target_name}" INTERFACE "/WX")
+function(ls_set_compiler_warnings_as_errors target_name do_enable)
+    include(cmake/utils.cmake)
+    ls_require_bool(do_enable)
+
+    if (do_enable)
+        message(NOTICE "LOGIKSIM: Enabling warnings as errors.")
+        if (MSVC)
+            target_compile_options("${target_name}" INTERFACE "/WX")
+        else()
+            target_compile_options("${target_name}" INTERFACE "-Werror")
+        endif()
     else()
-        target_compile_options("${target_name}" INTERFACE "-Werror")
+        message(NOTICE "LOGIKSIM: Disabling warnings as errors.")
     endif()
+
 endfunction()
 
 
