@@ -188,6 +188,7 @@ function(ls_set_compiler_warnings_disabled target_name)
 
     # g++ generates those in folly headers for sanitized builds
     # last-check: 2024-03-21
+    # TODO: update folly library and see if its still there
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
         (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
         list(APPEND warnings -Wno-maybe-uninitialized)

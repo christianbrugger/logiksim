@@ -1,5 +1,4 @@
 
-
 #
 # Set Sanitizer flags
 #
@@ -7,8 +6,6 @@
 # uses cmake config to set them.
 #
 function(ls_setup_sanitizers target_name sanitizer_selection)
-    # TODO -fsanitize=float-divide-by-zero
-
     if (sanitizer_selection STREQUAL "")
         # nothing to do
 

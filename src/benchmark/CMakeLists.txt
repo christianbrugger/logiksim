@@ -3,11 +3,10 @@
 
 # Google Benchmark
 
-# TODO: investigate
+# Causes errors in g++ build with address sanitizer
+# Last checked: 2024-03-20
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
     (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
-    # g++ generates those in library headers for sanitized builds
-    # also happens in benchmark which uses Werror
     set(BENCHMARK_ENABLE_WERROR OFF)
 endif()
 

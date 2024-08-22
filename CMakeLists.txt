@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # when compiling with PCH enabled
 # set(CMAKE_CXX_EXTENSIONS OFF)
 
+
 #
 # Include
 #
@@ -67,6 +68,7 @@ option(LS_USE_LIBCXX "Compile clang libc++ from source and link everything with 
 
 ls_print_project_options()
 
+
 #
 # Helper Targets
 #
@@ -78,15 +80,10 @@ export(TARGETS logiksim_global_options FILE "${CMAKE_BINARY_DIR}/cmake/LSGlobal.
 # Options added to logiksim targets
 add_library(logiksim_options INTERFACE)
 
+
 #
 # Project Setup
 #
-
-#TODO: test ccache working
-#TODO: enable and fix disabled warnings
-#TODO: mold linker on linux
-#TODO: add coverage for tests
-#TODO: investiaget hardening options
 
 
 # global cmake options
