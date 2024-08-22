@@ -41,6 +41,16 @@ function(ls_setup_sanitizers sanitizer_selection)
     if (sanitizer_selection)
         add_compile_options(-fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
         add_link_options(-fno-sanitize-recover=all)
+
+    endif()
+
+    # better debugging profile
+    if (sanitizer_selection AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+        if (MSVC)
+            add_compile_options(/O1)
+        else()
+            add_compile_options(-O1 -fno-optimize-sibling-calls)
+        endif()
     endif()
 
 endfunction()

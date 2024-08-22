@@ -22,6 +22,8 @@ function(ls_print_project_options)
     cmake_print_variables(LS_ENABLE_LTO)
     cmake_print_variables(LS_ENABLE_PCH)
     cmake_print_variables(LS_ENABLE_COVERAGE)
+    cmake_print_variables(LS_ENABLE_BLEND2D_JIT)
+    cmake_print_variables(LS_ENABLE_WARNINGS_AS_ERRORS)
 
     cmake_print_variables(LS_SANITIZE)
     cmake_print_variables(LS_USE_LIBCXX)

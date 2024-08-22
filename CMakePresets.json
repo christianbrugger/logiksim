@@ -19,6 +19,24 @@
             "condition": {"type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux"}
         },
         {
+            "name": "common-linux-gcc",
+            "hidden": true,
+            "inherits": "common-linux",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "gcc-13",
+                "CMAKE_CXX_COMPILER": "g++-13"
+            }
+        },
+        {
+            "name": "common-linux-clang",
+            "hidden": true,
+            "inherits": "common-linux",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang-18",
+                "CMAKE_CXX_COMPILER": "clang++-18"
+            }
+        },
+        {
             "name": "common-win",
             "hidden": true,
             "inherits": "common",
@@ -39,12 +57,9 @@
             "name": "linux-gcc-debug",
             "displayName": "GCC Debug",
             "description": "Compile debug build type with GCC compiler",
-            "inherits": "common-linux",
+            "inherits": "common-linux-gcc",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_C_COMPILER": "gcc-13",
-                "CMAKE_CXX_COMPILER": "g++-13",
-
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "OFF"
@@ -54,12 +69,9 @@
             "name": "linux-gcc-release",
             "displayName": "GCC Debug",
             "description": "Compile release build type with GCC compiler",
-            "inherits": "common-linux",
+            "inherits": "common-linux-gcc",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "gcc-13",
-                "CMAKE_CXX_COMPILER": "g++-13",
-
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "ON"
@@ -70,12 +82,9 @@
             "name": "linux-clang-debug",
             "displayName": "Clang Debug",
             "description": "Compile debug build type with Clang compiler",
-            "inherits": "common-linux",
+            "inherits": "common-linux-clang",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_C_COMPILER": "clang-18",
-                "CMAKE_CXX_COMPILER": "clang++-18",
-
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "OFF"
@@ -85,15 +94,82 @@
             "name": "linux-clang-release",
             "displayName": "Clang Debug",
             "description": "Compile release build type with Clang compiler",
-            "inherits": "common-linux",
+            "inherits": "common-linux-clang",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "clang-18",
-                "CMAKE_CXX_COMPILER": "clang++-18",
-
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "ON"
+            }
+        },
+        {
+            "name": "linux-clang-address",
+            "displayName": "Clang Address",
+            "description": "Compile with address sanitizier and Clang compiler",
+            "inherits": "common-linux-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Address",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "linux-clang-undefined",
+            "displayName": "Clang Undefined",
+            "description": "Compile with undefined behavior sanitizier and Clang compiler",
+            "inherits": "common-linux-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Undefined",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "linux-clang-address-undefined",
+            "displayName": "Clang Address Undefined",
+            "description": "Compile with address and undefined behavior sanitizier and Clang compiler. This is faster then running them separately.",
+            "inherits": "common-linux-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Address;Undefined",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "linux-clang-memory",
+            "displayName": "Clang Memory",
+            "description": "Compile with memory sanitizier and Clang compiler",
+            "inherits": "common-linux-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Memory",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "linux-clang-thread",
+            "displayName": "Clang Thread",
+            "description": "Compile with thread sanitizier and Clang compiler",
+            "inherits": "common-linux-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Thread",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
             }
         },
 		

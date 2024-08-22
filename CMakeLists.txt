@@ -48,17 +48,18 @@ option(LS_ENABLE_WARNINGS_AS_ERRORS "Report warnings as errors and abort the bui
 #    * Undefined
 #    * Address;Undefined
 #    * Memory
+#    * MemoryWithOrigins
 #    * Thread
 set(LS_SANITIZE "" CACHE STRING
     "Enable sanitizers (Options: Address Undefined Address;Undefined 
     Memory MemoryWithOrigins Thread). Defaults to empty string.")
 set_property(
     CACHE LS_SANITIZE PROPERTY STRINGS 
-    "" Address Undefined Address;Undefined Memory Thread
+    "" Address Undefined Address;Undefined Memory MemoryWithOrigins Thread
 )
 
 # LS_USE_LIBCXX
-#    * AUTO - uses libc++ with Memory and Thread sanitizers
+#    * AUTO - uses libc++ with Memory and Thread sanitizers on Clang
 #    * ON
 #    * OFF
 set(LS_USE_LIBCXX AUTO CACHE STRING "Compile all dependencies against clang libc++.")
@@ -91,6 +92,10 @@ add_library(logiksim_options INTERFACE)
 #
 # Project Setup
 #
+
+#TODO: test sanitizers & stdlib
+#TODO: sanitizer warnings
+#TODO: mold linker on linux
 
 # global options
 ls_setup_link_time_optimization("${LS_ENABLE_LTO}")
