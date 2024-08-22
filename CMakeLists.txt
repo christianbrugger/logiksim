@@ -92,6 +92,7 @@ add_library(logiksim_options INTERFACE)
 # Project Setup
 #
 
+#TODO: test ccache working
 #TODO: enable and fix disabled warnings
 #TODO: mold linker on linux
 #TODO: add coverage for tests

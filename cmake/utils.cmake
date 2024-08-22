@@ -27,6 +27,21 @@ endfunction()
 
 
 #
+# Requires the value in to be of a subset of true values considered boolean.
+#
+function(ls_require_bool_value value)
+    string(TOUPPER "${value}" value_upper)
+
+    foreach(option ON YES TRUE OFF NO FALSE)
+        if ("${value_upper}" STREQUAL "${option}")
+            return()
+        endif()
+    endforeach()
+
+    message(FATAL_ERROR "value ${value} is not a boolean")
+endfunction()
+
+#
 # Throw error if two string values are not equal.
 #
 function(ls_require_equal_str value_a value_b)
