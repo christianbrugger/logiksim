@@ -2,6 +2,8 @@
 #
 # Enable time tracing for the given target
 #
+# Note, the flag is only supported by clang
+#
 function(ls_set_time_tracing target_name do_enable)
     include(cmake/utils.cmake)
     ls_require_bool(do_enable)

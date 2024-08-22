@@ -133,6 +133,19 @@
             }
         },
         {
+            "name": "linux-clang-debug-trace",
+            "displayName": "Clang Debug Trace",
+            "description": "Compile debug build type with Clang compiler and time tracing. Note, does not support ccache.",
+            "inherits": "common-linux-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF",
+                "LS_ENABLE_TIME_TRACE": "ON"
+            }
+        },
+        {
             "name": "linux-clang-release",
             "displayName": "Clang Debug",
             "description": "Compile release build type with Clang compiler",
