@@ -105,13 +105,13 @@ function(ls_set_compiler_warnings target_name)
         # list(APPEND warnings /wd4868)
         
 
-        if (CMAKE_BUILD_TYPE STREQUAL "Release")
+        # if (CMAKE_BUILD_TYPE STREQUAL "Release")
             # unreachable code warnings when using folly::small_vector in release
             # list(APPEND warnings /wd4702)
-        else()
+        # else()
             # disable unused parameters in debug
             # list(APPEND warnings /wd4100)
-        endif()
+        # endif()
     endif()
 
     if (NOT MSVC)
@@ -140,8 +140,6 @@ function(ls_set_compiler_warnings target_name)
         # warn on type conversions that may lose data
         # list(APPEND warnings -Wconversion)
         # warn on sign conversions
-        # list(APPEND warnings -Wsign-conversion)
-        # warn if a null dereference is detected
         list(APPEND warnings -Wnull-dereference)
         # warn if float is implicit promoted to double
         # list(APPEND warnings -Wdouble-promotion)
@@ -150,18 +148,7 @@ function(ls_set_compiler_warnings target_name)
         # warn on statements that fallthrough without an explicit annotation
         list(APPEND warnings -Wimplicit-fallthrough)
         
-        # -Wconversion
-        # -Wsign-conversion)
         # -Wthread-safety 
-
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
-            (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
-            # g++ generates those in library headers for sanitized builds - WHY ???
-            list(APPEND warnings -Wno-maybe-uninitialized)
-            # also happens in benchmark which uses Werror
-            # TODO: move out of here !!!
-            set(BENCHMARK_ENABLE_WERROR OFF)
-        endif()
     endif()
 
     if ((NOT MSVC) AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -192,13 +179,20 @@ function(ls_set_compiler_warnings_disabled target_name)
     set(warnings "")
 
 
+    # unreachable code warnings are not excluded by /extern:W0
+    # as they happen during code generation
+    # last-check: 2024-08-21
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_BUILD_TYPE STREQUAL "Release")
-        # unreachable code warnings are not excluded by /extern:W0
-        # as they happen during code generation
-        # last-check: 2024-08-21
         list(APPEND warnings /wd4702)
     endif()
 
+    # g++ generates those in folly headers for sanitized builds
+    # last-check: 2024-03-21
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
+        (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
+        list(APPEND warnings -Wno-maybe-uninitialized)
+    endif()
 
     target_compile_options("${target_name}" INTERFACE ${warnings})
 endfunction()
+

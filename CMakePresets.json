@@ -77,6 +77,48 @@
                 "LS_ENABLE_LTO": "ON"
             }
         },
+        {
+            "name": "linux-gcc-address",
+            "displayName": "GCC Address",
+            "description": "Compile with address sanitizier and GCC compiler",
+            "inherits": "common-linux-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Address",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "linux-gcc-undefined",
+            "displayName": "GCC Undefined",
+            "description": "Compile with undefined behavior sanitizier and GCC compiler",
+            "inherits": "common-linux-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Undefined",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "linux-gcc-address-undefined",
+            "displayName": "GCC Address Undefined",
+            "description": "Compile with address and undefined behavior sanitizier and GCC compiler. This is faster then running them separately.",
+            "inherits": "common-linux-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Address;Undefined",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
 
         {
             "name": "linux-clang-debug",

@@ -1,52 +1,80 @@
 
 
+#
+# Set Sanitizer flags
+#
+# Sanitizer flags should be added to all targets, except libc++ which
+# uses cmake config to set them.
+#
 function(ls_setup_sanitizers target_name sanitizer_selection)
     # TODO -fsanitize=float-divide-by-zero
 
-    # Set Sanitizer flags
-    #
-    # Set these flags after adding clang libc++. For those we pass
-    # our sanitizer config and the generic settings don't work.
-    #
-
-    # TODO: make sure clang libc++ is not loaded !!!
-
     if (sanitizer_selection STREQUAL "")
         # nothing to do
+
     elseif(sanitizer_selection STREQUAL "Address")
-        add_compile_options(-fsanitize=address) 
-        add_link_options(-fsanitize=address)
+        target_compile_options("${target_name}" INTERFACE "-fsanitize=address") 
+        target_link_options("${target_name}" INTERFACE "-fsanitize=address")
     elseif(sanitizer_selection STREQUAL "Undefined")
-        add_compile_options(-fsanitize=undefined) 
-        add_link_options(-fsanitize=undefined)
+        target_compile_options("${target_name}" INTERFACE "-fsanitize=undefined") 
+        target_link_options("${target_name}" INTERFACE "-fsanitize=undefined")
     elseif(sanitizer_selection STREQUAL "Address;Undefined")
-        add_compile_options(-fsanitize=address -fsanitize=undefined) 
-        add_link_options(-fsanitize=address -fsanitize=undefined)
+        target_compile_options(
+            "${target_name}"
+            INTERFACE
+            "-fsanitize=address"
+            "-fsanitize=undefined"
+        )
+        target_link_options(
+            "${target_name}"
+            INTERFACE
+            "-fsanitize=address"
+            "-fsanitize=undefined"
+        )
     elseif(sanitizer_selection STREQUAL "Memory")
-        add_compile_options(-fsanitize=memory)
-        add_link_options(-fsanitize=memory)
+        target_compile_options("${target_name}" INTERFACE "-fsanitize=memory")
+        target_link_options("${target_name}" INTERFACE "-fsanitize=memory")
     elseif(sanitizer_selection STREQUAL "MemoryWithOrigins")
-        add_compile_options(-fsanitize=memory -fsanitize-memory-track-origins) 
-        add_link_options(-fsanitize=memory -fsanitize-memory-track-origins)
+        target_compile_options(
+            "${target_name}"
+            INTERFACE
+            "-fsanitize=memory"
+            "-fsanitize-memory-track-origins"
+        ) 
+        target_link_options("${target_name}"
+            INTERFACE
+            "-fsanitize=memory"
+            "-fsanitize-memory-track-origins"
+        )
     elseif(sanitizer_selection STREQUAL "Thread")
-        add_compile_options(-fsanitize=thread)
-        add_link_options(-fsanitize=thread)
+        target_compile_options("${target_name}" INTERFACE "-fsanitize=thread")
+        target_link_options("${target_name}" INTERFACE "-fsanitize=thread")
     else()
         message(FATAL_ERROR "Unknown sanitizer_selection Option: ${sanitizer_selection}")
     endif()
 
+    # any sanitizer
     if (sanitizer_selection)
-        add_compile_options(-fno-sanitize-recover=all -fno-omit-frame-pointer -g) 
-        add_link_options(-fno-sanitize-recover=all)
-
+        target_compile_options(
+            "${target_name}"
+            INTERFACE
+            "-fno-sanitize-recover=all"
+            "-fno-omit-frame-pointer" "-g"
+        ) 
+        target_link_options("${target_name}" INTERFACE "-fno-sanitize-recover=all")
     endif()
 
-    # better debugging profile
+    # faster debugging profile
     if (sanitizer_selection AND CMAKE_BUILD_TYPE STREQUAL "Debug")
         if (MSVC)
-            add_compile_options(/O1)
+            target_compile_options("${target_name}" INTERFACE "/O1")
         else()
-            add_compile_options(-O1 -fno-optimize-sibling-calls)
+            target_compile_options(
+                "${target_name}"
+                INTERFACE
+                "-O1"
+                "-fno-optimize-sibling-calls"
+            )
         endif()
     endif()
 

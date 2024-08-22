@@ -84,8 +84,6 @@ ls_print_project_options()
 # Options added to logiksim targets and any dependency
 add_library(logiksim_global_options INTERFACE)
 export(TARGETS logiksim_global_options FILE "${CMAKE_BINARY_DIR}/cmake/LSGlobal.cmake")
-# Automatically add it to all newly defined targets
-link_libraries(logiksim_global_options)
 
 # Options added to logiksim targets
 add_library(logiksim_options INTERFACE)
@@ -94,21 +92,29 @@ add_library(logiksim_options INTERFACE)
 # Project Setup
 #
 
-#TODO: use global target for santizers and libc++
-#TODO: sanitizer warnings
+#TODO: enable and fix disabled warnings
 #TODO: mold linker on linux
 #TODO: add coverage for tests
 #TODO: investiaget hardening options
 
-# global options
+
+# global cmake options
 ls_setup_linker()
 ls_setup_link_time_optimization("${LS_ENABLE_LTO}")
 ls_setup_ccache("${LS_ENABLE_CCACHE}")
 
+
 # global target options
 ls_enable_compiler_colors(logiksim_global_options)
-ls_setup_standard_library(logiksim_global_options "${LS_USE_LIBCXX_BOOL}")
+ls_setup_standard_library(
+    logiksim_global_options 
+    "${LS_USE_LIBCXX_BOOL}" 
+    "${LS_SANITIZE}"
+)
 ls_setup_sanitizers(logiksim_global_options "${LS_SANITIZE}")
+# Automatically add it to all newly defined targets
+link_libraries(logiksim_global_options)
+
 
 # options for logiksim targets
 ls_set_compiler_options_utf8(logiksim_options)
@@ -118,12 +124,15 @@ ls_set_compiler_warnings_disabled(logiksim_options)
 ls_set_compiler_warnings_as_errors(logiksim_options "${LS_WARNINGS_AS_ERRORS}")
 ls_set_time_tracing(logiksim_options "${LS_ENABLE_TIME_TRACE}")
 
+
 # needed by a lot of tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 
 # print compiler flags
 ls_print_compiler_and_flags()
 cmake_print_variables(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
+
 
 #
 # Presets
