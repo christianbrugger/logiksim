@@ -1,7 +1,6 @@
 
 
-
-function(ls_setup_sanitizers sanitizer_selection)
+function(ls_setup_sanitizers target_name sanitizer_selection)
     # TODO -fsanitize=float-divide-by-zero
 
     # Set Sanitizer flags

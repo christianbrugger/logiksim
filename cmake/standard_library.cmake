@@ -1,5 +1,5 @@
 
-function(ls_setup_standard_library use_libcxx)
+function(ls_setup_standard_library target_name use_libcxx)
     include(cmake/utils.cmake)
     ls_require_bool(use_libcxx)
 

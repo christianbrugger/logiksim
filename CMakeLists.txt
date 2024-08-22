@@ -20,6 +20,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 include(CMakePrintHelpers)
 
 include(cmake/ccache.cmake)
+include(cmake/compiler_colors.cmake)
 include(cmake/compiler_options.cmake)
 include(cmake/compiler_warnings.cmake)
 include(cmake/debug_print.cmake)
@@ -93,20 +94,21 @@ add_library(logiksim_options INTERFACE)
 # Project Setup
 #
 
-#TODO: test sanitizers & stdlib
+#TODO: use global target for santizers and libc++
 #TODO: sanitizer warnings
 #TODO: mold linker on linux
 #TODO: add coverage for tests
 #TODO: investiaget hardening options
 
 # global options
-ls_setup_link_time_optimization("${LS_ENABLE_LTO}")
 ls_setup_linker()
+ls_setup_link_time_optimization("${LS_ENABLE_LTO}")
 ls_setup_ccache("${LS_ENABLE_CCACHE}")
 
-# custom stl & santiziers
-ls_setup_standard_library("${LS_USE_LIBCXX_BOOL}")
-ls_setup_sanitizers("${LS_SANITIZE}")
+# global target options
+ls_enable_compiler_colors(logiksim_global_options)
+ls_setup_standard_library(logiksim_global_options "${LS_USE_LIBCXX_BOOL}")
+ls_setup_sanitizers(logiksim_global_options "${LS_SANITIZE}")
 
 # options for logiksim targets
 ls_set_compiler_options_utf8(logiksim_options)
