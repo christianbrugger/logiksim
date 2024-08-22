@@ -171,6 +171,12 @@ The project has almost 100 submodules the script parallizes the git operations a
 
 Re-run the script in case a different tag / branch / commit is checked out.
 
+Note, if you intend to use the memory or thread sanitizer you need to checkout the clang `libc++` standard library by running:
+
+```bash
+python3 external/checkout.py --libc++
+```
+
 ## Build Scripts
 
 If you installed the compilers and Qt in the standard locations and want to make a release build you can use the script `scripts/build_linux_clang_release.bat`

@@ -1,0 +1,31 @@
+
+target-version = "py311"
+
+line-length = 90
+
+# enable all diagnostics
+select = ["ALL"]
+
+#disable selected
+ignore = [
+    # Rule: Use of 'assert' detected.
+    # Reason: Asserts are useful for pre-condition, invariant checks, as well
+    #         as for narrowing types for type-checking.
+    "S101", 
+    # Rule: print found, use logging
+    # Reason: For now we use prints, until we re-factor to use logging module
+    # TODO: refactor, then remove
+    "T201",
+
+    # Rule: Missing author in todo
+    # Reason: We don't track responsibility in code, as we don't have many authors.
+    "TD002",
+    # Rule: Missing issue link on the line following this todo
+    # Reason: We don't track todos in issues.
+    "TD003",
+    # Rule: Line contains todo, sondier resolving the issue.
+    # Reason: We have other tools that track and highlight todo.
+    #         Makes it impossible to get to zero warning level, otherwise.
+    "FIX002",
+]
+
