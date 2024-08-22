@@ -94,7 +94,7 @@ ls_setup_ccache("${LS_ENABLE_CCACHE}")
 
 # global target options
 ls_enable_compiler_colors(logiksim_global_options)
-ls_setup_standard_library(
+ls_setup_standard_library_static(
     logiksim_global_options 
     "${LS_USE_LIBCXX}" 
     "${LS_SANITIZE}"
