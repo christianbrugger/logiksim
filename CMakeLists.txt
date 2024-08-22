@@ -41,6 +41,7 @@ option(LS_ENABLE_CCACHE "Enable ccache." OFF)
 option(LS_ENABLE_LTO "Enable link time optimization." OFF)
 option(LS_ENABLE_PCH "Enable pre-compiled headers." ON)
 option(LS_ENABLE_COVERAGE "Enable coverage for tests under Clang" OFF)
+
 option(LS_BLEND2D_NO_JIT "Disable JIT for blend2d backend" OFF)
 option(LS_WARNINGS_AS_ERRORS "Report warnings as errors and abort the build" ON)
 
@@ -60,20 +61,9 @@ set_property(
 )
 
 # LS_USE_LIBCXX
-#    * AUTO - uses libc++ with Memory and Thread sanitizers on Clang
-#    * ON
-#    * OFF
-set(LS_USE_LIBCXX AUTO CACHE STRING "Compile all dependencies against clang libc++.")
-set_property(CACHE LS_USE_LIBCXX PROPERTY STRINGS AUTO ON OFF)
-if ((LS_USE_LIBCXX STREQUAL "AUTO" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
-       (LS_SANITIZE STREQUAL "Memory" OR  LS_SANITIZE STREQUAL "MemoryWithOrigins" OR 
-        LS_SANITIZE STREQUAL "Thread")) 
-    OR (NOT LS_USE_LIBCXX STREQUAL "AUTO" AND LS_USE_LIBCXX)
-)
-    set(LS_USE_LIBCXX_BOOL TRUE)
-else()
-    set(LS_USE_LIBCXX_BOOL FALSE)
-endif()
+#   Memory and Thread sanitizers require the c++ standard library to rebuild.
+#   Use clang libc++ in this case.
+option(LS_USE_LIBCXX "Compile clang libc++ from source and link everything with it." OFF)
 
 ls_print_project_options()
 
@@ -109,11 +99,11 @@ ls_setup_ccache("${LS_ENABLE_CCACHE}")
 ls_enable_compiler_colors(logiksim_global_options)
 ls_setup_standard_library(
     logiksim_global_options 
-    "${LS_USE_LIBCXX_BOOL}" 
+    "${LS_USE_LIBCXX}" 
     "${LS_SANITIZE}"
 )
 ls_setup_sanitizers(logiksim_global_options "${LS_SANITIZE}")
-# Automatically add it to all newly defined targets
+# Automatically add it to all new targets from here on
 link_libraries(logiksim_global_options)
 
 

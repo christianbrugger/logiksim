@@ -1,3 +1,5 @@
+include(../cmake/utils.cmake)
+
 # libraries
 add_subdirectory(core)
 
@@ -5,11 +7,9 @@ add_subdirectory(core)
 add_subdirectory(benchmark)
 add_subdirectory(cli)
 
-# Memory and thread sanitizers require all dependencies to be build with santizers.
-# This is not possible with the GUI, as Qt is not sanitizer clean.
-if (NOT LS_SANITIZE STREQUAL "Memory" AND
-    NOT LS_SANITIZE STREQUAL "MemoryWithOrigins" AND
-    NOT LS_SANITIZE STREQUAL "Thread")
+# Qt is not build from source and is incompatible with clang libc++
+ls_require_bool(LS_USE_LIBCXX)
+if (NOT LS_USE_LIBCXX)
     add_subdirectory(gui)
 endif()
 
