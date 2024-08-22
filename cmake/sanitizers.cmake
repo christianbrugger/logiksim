@@ -32,8 +32,6 @@ function(ls_setup_sanitizers sanitizer_selection)
     elseif(sanitizer_selection STREQUAL "Thread")
         add_compile_options(-fsanitize=thread)
         add_link_options(-fsanitize=thread)
-        # TODO: remove from here !!! Make it an option
-        set(BLEND2D_NO_JIT ON)
     else()
         message(FATAL_ERROR "Unknown sanitizer_selection Option: ${sanitizer_selection}")
     endif()

@@ -40,8 +40,8 @@ option(LS_ENABLE_CCACHE "Enable ccache." OFF)
 option(LS_ENABLE_LTO "Enable link time optimization." OFF)
 option(LS_ENABLE_PCH "Enable pre-compiled headers." ON)
 option(LS_ENABLE_COVERAGE "Enable coverage for tests under Clang" OFF)
-option(LS_ENABLE_BLEND2D_JIT "Enable JIT for blend2d backend" ON)
-option(LS_ENABLE_WARNINGS_AS_ERRORS "Report warnings as errors and abort the build" ON)
+option(LS_BLEND2D_NO_JIT "Disable JIT for blend2d backend" OFF)
+option(LS_WARNINGS_AS_ERRORS "Report warnings as errors and abort the build" ON)
 
 # LS_SANITIZE
 #    * Address
@@ -96,6 +96,8 @@ add_library(logiksim_options INTERFACE)
 #TODO: test sanitizers & stdlib
 #TODO: sanitizer warnings
 #TODO: mold linker on linux
+#TODO: add coverage for tests
+#TODO: investiaget hardening options
 
 # global options
 ls_setup_link_time_optimization("${LS_ENABLE_LTO}")
@@ -111,7 +113,7 @@ ls_set_compiler_options_utf8(logiksim_options)
 ls_set_compiler_options_conformant(logiksim_options)
 ls_set_compiler_warnings(logiksim_options)
 ls_set_compiler_warnings_disabled(logiksim_options)
-ls_set_compiler_warnings_as_errors(logiksim_options "${LS_ENABLE_WARNINGS_AS_ERRORS}")
+ls_set_compiler_warnings_as_errors(logiksim_options "${LS_WARNINGS_AS_ERRORS}")
 ls_set_time_tracing(logiksim_options "${LS_ENABLE_TIME_TRACE}")
 
 # needed by a lot of tools

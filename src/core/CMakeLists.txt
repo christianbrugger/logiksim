@@ -28,7 +28,9 @@ add_subdirectory(
 # Blend2D
 set(BLEND2D_STATIC TRUE)
 set(BLEND2D_NO_INSTALL TRUE)
-# set(BLEND2D_NO_JIT ON)
+if (LS_BLEND2D_NO_JIT)
+    set(BLEND2D_NO_JIT ON)
+endif()
 add_subdirectory(
     ${PROJECT_SOURCE_DIR}/external/blend2d
     ${CMAKE_BINARY_DIR}/external/blend2d

@@ -166,6 +166,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "LS_SANITIZE": "Thread",
+                "LS_BLEND2D_NO_JIT": "ON",
 
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
