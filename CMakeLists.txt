@@ -5,11 +5,8 @@ project(simulation_srp C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# TODO: investiate this
-# strongly encouraged to enable this globally to avoid conflicts between
-# -Wpedantic being enabled and -std=c++20 and -std=gnu++20 for example
-# when compiling with PCH enabled
-# set(CMAKE_CXX_EXTENSIONS OFF)
+# use c++20 instead of gnu++20
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 #

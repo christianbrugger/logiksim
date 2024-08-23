@@ -2,8 +2,6 @@
 #include "algorithm/range_extended.h"
 
 #include "algorithm/to_vector.h"
-#include "logging.h"
-#include "type_trait/numeric_limits_template.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -11,7 +9,7 @@
 #include <fmt/core.h>
 #include <gsl/gsl>
 
-#include <ranges>
+#include <algorithm>
 
 namespace logicsim {
 
@@ -24,7 +22,8 @@ TEST(AlgorithmRangeExtended, SimpleSize) {
 TEST(AlgorithmRangeExtended, SimpleValues) {
     const auto r = range_extended<int, int>(10);
 
-    const auto result = std::vector<int>(r.begin(), r.end());
+    auto result = std::vector<int> {};
+    std::ranges::copy(r, std::back_inserter(result));
 
     ASSERT_THAT(result, testing::ElementsAre(0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
 }
