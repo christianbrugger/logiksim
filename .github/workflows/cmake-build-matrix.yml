@@ -53,14 +53,45 @@ jobs:
       if: runner.os == 'Windows'
       uses: actions/setup-python@v5
       with:
-        # cached on windows-2022
-        # https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md#cached-tools
-        python-version: '3.11.9'
+        python-version: '3.11'
 
+
+
+
+
+
+    - name: Submodule Hash
+      working-directory: ${{ github.workspace }}
+      run: |
+        git submodule status > submodule_hashes.txt
+        cat submodule_hashes.txt
+    - name: Restore Submodule
+      id: cache-submodule-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: .git/modules
+        key: ${{ matrix.os }}-submodule-${{ hashFiles('submodule_hashes.txt') }}-1
     - name: Refresh Submodule
       working-directory: ${{ github.workspace }}
       run: |
         python3 external/checkout.py
+    - name: Cache Submodule
+      if: steps.cache-submodule-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: external/*/
+        key: ${{ steps.cache-submodule-restore.outputs.cache-primary-key }}
+
+
+
+
+
+
+
+    # - name: Refresh Submodule
+    #   working-directory: ${{ github.workspace }}
+    #   run: |
+    #     python3 external/checkout.py
 
     - name: Install Latest Qt
       if: ${{ ! matrix.system_qt }}
