@@ -49,6 +49,14 @@ jobs:
     
     - uses: seanmiddleditch/gha-setup-ninja@v5
 
+    - name: Set up Python 3.11
+      if: runner.os == 'Windows'
+      uses: actions/setup-python@v5
+      with:
+        # cached on windows-2022
+        # https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md#cached-tools
+        python-version: '3.11.9'
+
     - name: Refresh Submodule
       working-directory: ${{ github.workspace }}
       run: |
