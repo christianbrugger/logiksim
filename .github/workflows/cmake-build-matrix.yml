@@ -78,7 +78,8 @@ jobs:
       id: cache-submodule-restore
       uses: actions/cache/restore@v4
       with:
-        path: .git/modules
+        # path: .git/modules
+        path: external/*/
         key: ${{ matrix.os }}-submodule-${{ hashFiles('submodule_hashes.txt') }}-2
     - name: Refresh Submodule
       working-directory: ${{ github.workspace }}
@@ -88,7 +89,8 @@ jobs:
       if: steps.cache-submodule-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
-        path: .git/modules
+        # path: .git/modules
+        path: external/*/
         key: ${{ steps.cache-submodule-restore.outputs.cache-primary-key }}
 
 
