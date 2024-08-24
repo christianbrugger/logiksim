@@ -40,6 +40,16 @@ jobs:
       QT_QPA_PLATFORM: offscreen
 
     steps:
+
+
+    - name: Git Clone
+      run: >
+        git clone --depth 1 
+        --branch ${{ github.ref_name }} 
+        https://github.com/${{ github.repository }}.git 
+        ${{ github.workspace }}
+
+    
     # - uses: actions/checkout@v4
     #  with:
     #    submodules: recursive
@@ -56,13 +66,6 @@ jobs:
         python-version: '3.11'
 
 
-
-    - name: Git Clone
-      run: >
-        git clone --depth 1 
-        --branch ${{ github.ref_name }} 
-        https://github.com/${{ github.repository }}.git 
-        ${{ github.workspace }}
 
 
 
