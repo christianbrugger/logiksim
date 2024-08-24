@@ -83,6 +83,7 @@ jobs:
         path: external/*/
         key: ${{ matrix.os }}-submodule-${{ hashFiles('submodule_hashes.txt') }}-2
     - name: Refresh Submodule
+      if: steps.cache-submodule-restore.outputs.cache-hit != 'true'
       working-directory: ${{ github.workspace }}
       run: |
         python3 external/checkout.py
