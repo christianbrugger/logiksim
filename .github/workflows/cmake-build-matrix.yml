@@ -41,13 +41,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    #  with:
+    #    submodules: recursive
 
     # required so cmake finds MSVC compiler
     - uses: ilammy/msvc-dev-cmd@v1
     
     - uses: seanmiddleditch/gha-setup-ninja@v5
+
+    - name: Refresh Submodule
+      working-directory: ${{ github.workspace }}
+      run: |
+        python3 external/checkout.py
 
     - name: Install Latest Qt
       if: ${{ ! matrix.system_qt }}
