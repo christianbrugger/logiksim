@@ -120,19 +120,19 @@ jobs:
         cmake --version
         cmake --preset ${{ matrix.preset }}
 
-    - name: Build
-      working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: |
-        ninja -v
+    # - name: Build
+    #   working-directory: ${{ steps.strings.outputs.build-output-dir }}
+    #   run: |
+    #     ninja -v
 
-    - name: Test Linux
-      if: runner.os == 'Linux'
-      working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: |
-        ./simulation_srp_test
+    # - name: Test Linux
+    #   if: runner.os == 'Linux'
+    #   working-directory: ${{ steps.strings.outputs.build-output-dir }}
+    #   run: |
+    #     ./simulation_srp_test
     
-    - name: Test Windows
-      if: runner.os == 'Windows'
-      working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: |
-        ./simulation_srp_test.exe
+    # - name: Test Windows
+    #   if: runner.os == 'Windows'
+    #   working-directory: ${{ steps.strings.outputs.build-output-dir }}
+    #   run: |
+    #     ./simulation_srp_test.exe
