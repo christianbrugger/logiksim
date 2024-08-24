@@ -1,0 +1,89 @@
+# Syntax:
+# https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions
+#
+# Contexts:
+# https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs
+
+name: CMake Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  LS_QT_VERSION: 6.7.2
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - preset: win-msvc-debug
+            os: windows-2022
+          - preset: win-clang-debug
+            os: windows-2022
+          - preset: linux-gcc-debug
+            os: ubuntu-24.04
+          - preset: linux-clang-debug
+            os: ubuntu-24.04
+            system_qt: true
+
+    env:
+      # ask apt-get to never interact
+      DEBIAN_FRONTEND: noninteractive
+      # set default platform plugin for qt so the executables can run
+      QT_QPA_PLATFORM: offscreen
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    # required so cmake finds MSVC compiler
+    - uses: ilammy/msvc-dev-cmd@v1
+    
+    - uses: seanmiddleditch/gha-setup-ninja@v5
+
+    - name: Install Latest Qt
+      if: ${{ ! matrix.system_qt }}
+      uses: jurplel/install-qt-action@v4
+      with: 
+        version: ${{ env.LS_QT_VERSION }}
+        archives: 'icu qtbase qtsvg'
+        cache-key-prefix: install-qt-action-v4-${{ env.LS_QT_VERSION }}-${{ matrix.os }}-icu-qtbase-qtsvg
+        cache: true
+        
+    - name: Install System Qt
+      if: runner.os == 'Linux' && matrix.system_qt
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-suggests \
+            qt6-base-dev libqt6svg6 qt6-base-private-dev
+
+    - name: Variables
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build/${{ matrix.preset }}" >> "$GITHUB_OUTPUT"
+    
+    - name: Configure CMake
+      working-directory: ${{ github.workspace }}
+      run: |
+        cmake --version
+        cmake --preset ${{ matrix.preset }}
+
+    - name: Build
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: |
+        ninja -v
+    
+    - name: Test
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      # use wildcard * to capture .exe on windows
+      run: |
+        ./simulation_srp_test*

@@ -9,7 +9,7 @@ CompileFlags:
   CompilationDatabase: build/linux-clang-debug
 
 CompileFlags:
-  CompilationDatabase: build/windows-msvc-debug
+  CompilationDatabase: build/win-msvc-debug
 
 CompileFlags:
-  CompilationDatabase: build/windows-clang-debug
+  CompilationDatabase: build/win-clang-debug
