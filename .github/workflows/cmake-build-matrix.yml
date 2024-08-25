@@ -126,6 +126,7 @@ jobs:
     - name: Configure CCache
       run: |
         ccache --zero-stats
+        ccache --show-stats
       
     #
     # Submodule Checkout (cached)
@@ -190,7 +191,7 @@ jobs:
 
 
     #
-    # Build
+    # Configure & Build
     #
 
     - name: Configure CMake
@@ -199,10 +200,10 @@ jobs:
         cmake --version
         cmake --preset ${{ matrix.preset }}
 
-    # - name: Build
-    #   working-directory: ${{ steps.strings.outputs.build-output-dir }}
-    #   run: |
-    #     ninja -v
+    - name: Build
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: |
+        ninja -v
 
 
 
@@ -210,14 +211,21 @@ jobs:
     # Test
     #
 
-    # - name: Test Linux
-    #   if: runner.os == 'Linux'
-    #   working-directory: ${{ steps.strings.outputs.build-output-dir }}
-    #   run: |
-    #     ./simulation_srp_test
-    
-    # - name: Test Windows
-    #   if: runner.os == 'Windows'
-    #   working-directory: ${{ steps.strings.outputs.build-output-dir }}
-    #   run: |
-    #     ./simulation_srp_test.exe
+    - name: Test Linux
+      if: runner.os == 'Linux'
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: |
+        ./simulation_srp_test
+    - name: Test Windows
+      if: runner.os == 'Windows'
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: |
+        ./simulation_srp_test.exe
+
+
+    #
+    # Stats
+    #
+    - name: CCache Statistics
+      run: |
+        ccache --show-stats
