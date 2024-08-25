@@ -4,11 +4,24 @@
 This is a replacement of the default git checkout process:
     git submodule update --init --recursive --depth 1
 
-The default git checkout takes about 30 minutes.
-This script runs in 2 minutes by:
-    * initializing git modules in parallel
-    * downloading git modules in parallel
-    * only initializing submodules of submodules that we use, not all.
+The default git checkout takes about 30 minutes locally (doe to download latency).
+This script runs in 2 minutes locally by:
+
+    * initializing git modules in parallel.
+    * downloading git modules in parallel.
+    * only downloading submodules that are used, not all.
+
+Using 'git submodule update ...' in Github Actions (4-cores):
+    ubuntu-24.04      5:17 min
+    windows-2022      7:10 min
+
+Using 'checkout.py' in Github Actions (4-cores):
+    ubuntu-24.04      0:15 min   (21.1x speedup)
+    windows-2022      1:05 min   ( 6.6x speedup)
+
+Using 'checkout.py' with caching in Github Actions (4-cores):
+    ubuntu-24.04      0:04 min   (79x speedup)
+    windows-2022      0:14 min   (31x speedup)
 """
 
 from __future__ import annotations
