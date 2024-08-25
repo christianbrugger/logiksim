@@ -14,6 +14,8 @@ on:
 
 env:
   LS_QT_VERSION: 6.7.2
+  LS_CCACHE_VERSION: 4.10.2
+  
 
 jobs:
   build:
@@ -38,6 +40,13 @@ jobs:
       DEBIAN_FRONTEND: noninteractive
       # set default platform plugin for qt so the executables can run
       QT_QPA_PLATFORM: offscreen
+
+      # change cache dir & size of ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPRESS: 'true'
+      CCACHE_COMPRESSLEVEL: '6'
+      CCACHE_MAXSIZE: '1000M'
 
     steps:
 
@@ -82,32 +91,41 @@ jobs:
       with:
         python-version: '3.11'
 
+        
     #
     # Install CCache
     #
 
-    
     - name: Install CCache Linux
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get update
-        sudo apt-get install --yes --no-install-suggests ccache
-
+        wget -q \
+          -O 'ccache.tar.xz' \
+          'https://github.com/ccache/ccache/releases/download/v${{ env.LS_CCACHE_VERSION }}/ccache-${{ env.LS_CCACHE_VERSION }}-linux-x86_64.tar.xz'
+        tar -xf 'ccache.tar.xz'
+        mv 'ccache-${{ env.LS_CCACHE_VERSION }}-linux-x86_64/ccache' '/usr/local/bin/'
+        rm -r 'ccache-${{ env.LS_CCACHE_VERSION }}-linux-x86_64'
+        rm -r 'ccache.tar.xz'
     - name: Install CCache Windows
       if: runner.os == 'Windows'
       run: |
-        Invoke-WebRequest -Uri 'https://github.com/ccache/ccache/releases/download/v4.10.2/ccache-4.10.2-windows-x86_64.zip' -OutFile 'ccache.zip'
+        Invoke-WebRequest `
+          -OutFile 'ccache.zip' `
+          -Uri 'https://github.com/ccache/ccache/releases/download/v${{ env.LS_CCACHE_VERSION }}/ccache-${{ env.LS_CCACHE_VERSION }}-windows-x86_64.zip'
         Expand-Archive -Path 'ccache.zip' -DestinationPath '.'
-        Rename-Item -Path '.\ccache-4.10.2-windows-x86_64\ccache.exe' -NewName 'ccache.exe'
-        $Env:Path = [System.Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::Machine) + ';' + "${{ github.workspace }}"
-        [System.Environment]::SetEnvironmentVariable('Path', $Env:Path, [System.EnvironmentVariableTarget]::Machine)
-
-    - name: Test CCache
-      shell: bash
+        mv 'ccache-${{ env.LS_CCACHE_VERSION }}-windows-x86_64/ccache.exe' 'C:/Windows/System32/'
+        rm -r 'ccache-${{ env.LS_CCACHE_VERSION }}-windows-x86_64'
+        rm 'ccache.zip'
+    - name: Download CCache Cache
+      uses: actions/cache@v4
+      with:
+        key: ${{ matrix.preset }}-ccache-${{ github.event.repository.updated_at }}
+        path: .ccache
+        restore-keys: |
+          ${{ matrix.preset }}-ccache-
+    - name: Configure CCache
       run: |
-        ls -la
-        echo ${PATH}
-        ccache --version
+        ccache --zero-stats
       
     #
     # Submodule Checkout (cached)
