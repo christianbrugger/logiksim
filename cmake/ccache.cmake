@@ -13,6 +13,15 @@ macro(ls_setup_ccache do_enable)
 
         set(CMAKE_CXX_COMPILER_LAUNCHER "${LS_CCACHE_PROGRAM}")
 
+        # https://ccache.dev/manual/latest.html
+        set(ENV{CCACHE_NOHASHDIR} "true")
+        set(ENV{CCACHE_SLOPPINESS} "pch_defines,time_macros,include_file_mtime,include_file_ctime")
+        set(ENV{CCACHE_DEPEND} "true")
+        if (MSVC)
+            # TODO review, do we still need this?
+            set(ENV{CCACHE_COMPILERTYPE} "msvc")
+        endif()
+
         # TODO; review, can we do this another way
         # ccache only supports /Z7, not /Zi
         string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
