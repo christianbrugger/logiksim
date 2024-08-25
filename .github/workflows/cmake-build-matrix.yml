@@ -82,7 +82,27 @@ jobs:
       with:
         python-version: '3.11'
 
+    #
+    # Install CCache
+    #
 
+    
+    - name: Install CCache Linux
+      if: runner.os == 'Linux'
+      run: sudo apt-get install --yes --no-install-suggests ccache
+
+    - name: Install CCache Windows
+      if: runner.os == 'Windows'
+      run: |
+        Invoke-WebRequest -Uri 'https://github.com/ccache/ccache/releases/download/v4.10.2/ccache-4.10.2-windows-x86_64.zip' -OutFile 'ccache.zip'
+        Expand-Archive -Path 'ccache.zip' -DestinationPath '.'
+        Rename-Item -Path '.\ccache-4.10.2-windows-x86_64\ccache.exe' -NewName 'ccache.exe'
+        $Env:Path = [System.Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::Machine) + ';' + "${{ github.workspace }}"
+        [System.Environment]::SetEnvironmentVariable('Path', $Env:Path, [System.EnvironmentVariableTarget]::Machine)
+
+    - name: Test CCache
+      run: ccache --version
+      
     #
     # Submodule Checkout (cached)
     #
@@ -139,7 +159,6 @@ jobs:
     - name: Install System Qt
       if: runner.os == 'Linux' && matrix.system_qt
       run: |
-        sudo apt-get update
         sudo apt-get install --yes --no-install-suggests \
             qt6-base-dev libqt6svg6 qt6-base-private-dev
 
