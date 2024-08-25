@@ -17,17 +17,17 @@ macro(ls_setup_ccache do_enable)
         set(ENV{CCACHE_NOHASHDIR} "true")
         set(ENV{CCACHE_SLOPPINESS} "pch_defines,time_macros,include_file_mtime,include_file_ctime")
         set(ENV{CCACHE_DEPEND} "true")
-        if (MSVC)
-            # TODO review, do we still need this?
-            set(ENV{CCACHE_COMPILERTYPE} "msvc")
-        endif()
+        # if (MSVC)
+        #     # TODO review, do we still need this?
+        #     set(ENV{CCACHE_COMPILERTYPE} "msvc")
+        # endif()
 
         # TODO; review, can we do this another way
         # ccache only supports /Z7, not /Zi
-        string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-        string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-        string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
-        string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+        # string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+        # string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+        # string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+        # string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 
     elseif("${do_enable}")
         message(WARNING "LOGIKSIM: Warning, requested ccache, but not found.")
