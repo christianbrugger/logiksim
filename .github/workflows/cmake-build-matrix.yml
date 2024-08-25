@@ -104,7 +104,7 @@ jobs:
 
     - name: Test CCache
       shell: bash
-      run: 
+      run: |
         ls -la
         echo ${PATH}
         ccache --version
