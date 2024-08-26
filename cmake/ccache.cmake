@@ -23,6 +23,8 @@ macro(ls_setup_ccache do_enable)
             # otherwise pre-processor is run twice on cache misses, increasing build time
             # see https://github.com/ccache/ccache/discussions/1420#discussioncomment-8906839
             "depend_mode=true"
+            # instead of hashing files use inode, useful for PCH builds especially
+            "inode_cache=true"
         )
 
         # CMake default to ProgramDatabase (-Zi) debug information format.
