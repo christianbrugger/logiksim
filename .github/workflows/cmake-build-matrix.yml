@@ -45,7 +45,7 @@ jobs:
       CCACHE_BASEDIR: ${{ github.workspace }}
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPRESS: 'true'
-      CCACHE_COMPRESSLEVEL: '6'
+      CCACHE_COMPRESSLEVEL: '4'
       CCACHE_MAXSIZE: '1000M'
 
     steps:
