@@ -27,13 +27,25 @@ jobs:
         include:
           - preset: win-msvc-debug
             os: windows-2022
+          - preset: win-msvc-release
+            os: windows-2022
+            
           - preset: win-clang-debug
             os: windows-2022
+          - preset: win-clang-release
+            os: windows-2022
+            
           - preset: linux-gcc-debug
             os: ubuntu-24.04
+          - preset: linux-gcc-release
+            os: ubuntu-24.04
+            system_qt: true
+            
           - preset: linux-clang-debug
             os: ubuntu-24.04
             system_qt: true
+          - preset: linux-clang-release
+            os: ubuntu-24.04
 
     env:
       # ask apt-get to never interact
