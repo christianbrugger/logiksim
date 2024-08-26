@@ -42,7 +42,6 @@ jobs:
       QT_QPA_PLATFORM: offscreen
 
       # change cache dir & size of ccache
-      CCACHE_BASEDIR: ${{ github.workspace }}
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPRESS: 'true'
       CCACHE_COMPRESSLEVEL: '4'
