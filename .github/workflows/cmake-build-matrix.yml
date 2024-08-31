@@ -27,9 +27,8 @@ jobs:
         include:
           - preset: win-msvc-debug
             os: windows-2022
-          - preset: win-msvc-release
+          - preset: win-msvc-release-no-lto
             os: windows-2022
-            cmake_args: -DLS_ENABLE_LTO=OFF
             
           - preset: win-clang-debug
             os: windows-2022
@@ -38,9 +37,8 @@ jobs:
             
           - preset: linux-gcc-debug
             os: ubuntu-24.04
-          - preset: linux-gcc-release
+          - preset: linux-gcc-release-no-lto
             os: ubuntu-24.04
-            cmake_args: -DLS_ENABLE_LTO=OFF
             system_qt: true
             
           - preset: linux-clang-debug
@@ -213,7 +211,7 @@ jobs:
       working-directory: ${{ github.workspace }}
       run: |
         cmake --version
-        cmake --preset ${{ matrix.preset }} ${{ matrix.cmake_args }}
+        cmake --preset ${{ matrix.preset }}
 
     - name: Build
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
