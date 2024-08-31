@@ -4,30 +4,7 @@ project(simulation_srp C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# use c++20 instead of gnu++20
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-
-#
-# Include
-#
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
-
-include(CMakePrintHelpers)
-
-include(cmake/ccache.cmake)
-include(cmake/compiler_colors.cmake)
-include(cmake/compiler_options.cmake)
-include(cmake/compiler_warnings.cmake)
-include(cmake/debug_print.cmake)
-include(cmake/link_time_optimization.cmake)
-include(cmake/linker.cmake)
-include(cmake/sanitizers.cmake)
-include(cmake/standard_library.cmake)
-include(cmake/time_tracing.cmake)
-include(cmake/utils.cmake)
 
 
 #
@@ -63,7 +40,26 @@ set_property(
 #   Use clang libc++ in this case.
 option(LS_USE_LIBCXX "Compile clang libc++ from source and link everything with it." OFF)
 
-ls_print_project_options()
+
+#
+# Includes
+#
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
+
+include(CMakePrintHelpers)
+
+include(cmake/ccache.cmake)
+include(cmake/compiler_colors.cmake)
+include(cmake/compiler_options.cmake)
+include(cmake/compiler_warnings.cmake)
+include(cmake/debug_print.cmake)
+include(cmake/link_time_optimization.cmake)
+include(cmake/linker.cmake)
+include(cmake/sanitizers.cmake)
+include(cmake/standard_library.cmake)
+include(cmake/time_tracing.cmake)
+include(cmake/utils.cmake)
 
 
 #
@@ -81,6 +77,8 @@ add_library(logiksim_options INTERFACE)
 #
 # Project Setup
 #
+
+ls_print_project_options()
 
 
 # global cmake options

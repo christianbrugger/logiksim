@@ -78,6 +78,18 @@
             }
         },
         {
+            "name": "linux-gcc-release-no-lto",
+            "displayName": "GCC Debug",
+            "description": "Compile release build type with GCC compiler without LTO",
+            "inherits": "common-linux-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
             "name": "linux-gcc-address",
             "displayName": "GCC Address",
             "description": "Compile with address sanitizier and GCC compiler",
@@ -264,6 +276,26 @@
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "ON"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "intelliSenseMode": "windows-msvc-x64"
+                }
+            }
+        },
+        {
+            "name": "win-msvc-release-no-lto",
+            "displayName": "MSVC Release",
+            "description": "Compile release build type with MSVC compiler without LTO",
+            "inherits": "common-win",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_C_COMPILER": "cl",
+                "CMAKE_CXX_COMPILER": "cl",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
