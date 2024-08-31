@@ -186,6 +186,21 @@ function(ls_set_compiler_warnings_disabled target_name)
         list(APPEND warnings /wd4702)
     endif()
 
+    # g++ generates this on release build in folly headers
+    # last-check: 2024-03-21
+    # TODO: update folly library and see if its still there
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+        list(APPEND warnings -Wno-array-bounds)
+        list(APPEND warnings -Wno-stringop-overread)
+    endif()
+
+    # g++ generates this on release build in folly headers
+    # last-check: 2024-03-21
+    # TODO: update folly library and see if its still there
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+        list(APPEND warnings -Wno-maybe-uninitialized)
+    endif()
+
     # g++ generates those in folly headers for sanitized builds
     # last-check: 2024-03-21
     # TODO: update folly library and see if its still there
