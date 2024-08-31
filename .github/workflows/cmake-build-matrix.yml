@@ -29,6 +29,7 @@ jobs:
             os: windows-2022
           - preset: win-msvc-release
             os: windows-2022
+            cmake_args: -DLS_ENABLE_LTO=OFF
             
           - preset: win-clang-debug
             os: windows-2022
@@ -39,6 +40,7 @@ jobs:
             os: ubuntu-24.04
           - preset: linux-gcc-release
             os: ubuntu-24.04
+            cmake_args: -DLS_ENABLE_LTO=OFF
             system_qt: true
             
           - preset: linux-clang-debug
@@ -64,18 +66,18 @@ jobs:
     #
     # Manual Clone the Repository
     #
-    # Replacing the standard checkout with a mnaul clone. The action
-    # sets & unsets credentials for all submodules which is very 
-    # slow on windows and its not needed.
+    # Replacing the standard checkout with a mnaul clone for speed. 
+    # The standard action/checkout sets & unsets credentials for all 
+    # submodules which is very slow on windows runners and its not needed.
     #
     # Standard checkout (including post run action)
     #       uses: actions/checkout@v4
-    #  ubuntu-24.04:    2 seconds
     #  windows-2022:   17 seconds
+    #  ubuntu-24.04:    2 seconds
     #
     # Manual clone:
-    #   ubuntu-24.04:   1 seconds    ( 2x speedup)
     #   windows-2022:   2 seconds    (8.5x speedup)
+    #   ubuntu-24.04:   1 seconds    ( 2x speedup)
     #
     - name: Git Clone
       run: >
@@ -211,7 +213,7 @@ jobs:
       working-directory: ${{ github.workspace }}
       run: |
         cmake --version
-        cmake --preset ${{ matrix.preset }}
+        cmake --preset ${{ matrix.preset }} ${{ matrix.cmake_args }}
 
     - name: Build
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
