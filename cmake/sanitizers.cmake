@@ -73,9 +73,14 @@ function(ls_setup_sanitizers_gnu target_name sanitizer_selection)
             "${target_name}"
             INTERFACE
             "-fno-sanitize-recover=all"
-            "-fno-omit-frame-pointer" "-g"
+            "-fno-omit-frame-pointer"
+            "-g"
         ) 
-        target_link_options("${target_name}" INTERFACE "-fno-sanitize-recover=all")
+        target_link_options(
+            "${target_name}"
+            INTERFACE
+            "-fno-sanitize-recover=all"
+        )
     endif()
 
     # faster debugging profile
@@ -100,29 +105,23 @@ function(ls_setup_sanitizers_msvc target_name sanitizer_selection)
     elseif(sanitizer_selection STREQUAL "Address")
         target_compile_options("${target_name}" INTERFACE "/fsanitize=address") 
         target_link_options("${target_name}" INTERFACE "/fsanitize=address") 
-        # target_link_options("${target_name}" INTERFACE "/INFERASANLIBS")
-        # find_program(LS_LINK_PROGRAM link)
-        # set(CMAKE_LINKER ${LS_LINK_PROGRAM} PARENT_SCOPE)
-        # target_link_directories("${target_name}" INTERFACE "C:/Program Files/llvm/lib/clang/18/lib/windows")
-        # target_link_libraries("${target_name}" INTERFACE
-        #     "clang_rt.asan_cxx-x86_64" 
-        #     "clang_rt.asan_static-x86_64"
-        # )
 
     elseif(sanitizer_selection STREQUAL "Undefined")
-        target_compile_options("${target_name}" INTERFACE "/fsanitize=undefined") 
-        target_link_options("${target_name}" INTERFACE "/fsanitize=undefined")
+        target_compile_options("${target_name}" INTERFACE "-fsanitize=undefined") 
+
+        # UBSan libraries shipped with clang-cl only support /MT runtime
+        if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+            set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded" PARENT_SCOPE)
+        endif()
 
     else()
         message(FATAL_ERROR "Unknown sanitizer_selection Option: ${sanitizer_selection}")
     endif()
 
-    # any sanitizer
-    if (sanitizer_selection)
-        # sanitizers do not support the runtime debug library
-        # set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded" PARENT_SCOPE)
+    # clang-cl
+    if (sanitizer_selection AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        target_compile_options("${target_name}" INTERFACE "-fno-sanitize-recover=all") 
+        target_link_options("${target_name}" INTERFACE "-fno-sanitize-recover=all")
     endif()
-
-
 
 endfunction()

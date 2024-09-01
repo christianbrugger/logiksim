@@ -369,7 +369,7 @@
             "description": "Compile with address sanitizer and Clang Compiler",
             "inherits": "common-win-clang",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "LS_SANITIZE": "Address",
 
                 "LS_ENABLE_CCACHE": "ON",
@@ -384,6 +384,20 @@
             "inherits": "common-win-clang",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Undefined",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "win-clang-undefined-rel",
+            "displayName": "Clang Undefined",
+            "description": "Compile with undefined behavior sanitizer and Clang Compiler",
+            "inherits": "common-win-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "LS_SANITIZE": "Undefined",
 
                 "LS_ENABLE_CCACHE": "ON",

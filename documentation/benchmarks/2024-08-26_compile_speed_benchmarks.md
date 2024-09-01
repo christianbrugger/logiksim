@@ -68,11 +68,11 @@ Second: https://github.com/christianbrugger/logiksim/actions/runs/10644759613
 
 Linux Sanitizers
 
-First: https://github.com/christianbrugger/logiksim/actions/runs/10652376302/job/29526125757
+First Linux: https://github.com/christianbrugger/logiksim/actions/runs/10652376302/job/29526125757
 
-First Thread: https://github.com/christianbrugger/logiksim/actions/runs/10653013996/job/29527610298
+First Linux Clang Thread: https://github.com/christianbrugger/logiksim/actions/runs/10653013996/job/29527610298
 
-
+First MSVC Address: https://github.com/christianbrugger/logiksim/actions/runs/10654447206/job/29530770817
 
 
 

@@ -82,7 +82,7 @@ ls_print_project_options()
 
 
 # global cmake options
-ls_setup_linker()
+ls_setup_linker("${LS_SANITIZE}")
 ls_setup_link_time_optimization("${LS_ENABLE_LTO}")
 ls_setup_ccache("${LS_ENABLE_CCACHE}")
 
