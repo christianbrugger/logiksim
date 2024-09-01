@@ -42,7 +42,7 @@ jobs:
             os: ubuntu-24.04
 
     env:
-      LS_SUBMODULE_KEY: ${{ matrix.libcpp && 'libcpp || '' }}
+      LS_SUBMODULE_KEY: ${{ matrix.libcpp && 'libcpp' || '' }}
       LS_SUBMODULE_ARG: ${{ matrix.libcpp && '--libc++' || '' }}
 
       # ask apt-get to never interact
