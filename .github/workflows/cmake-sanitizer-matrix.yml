@@ -28,6 +28,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - preset: win-msvc-address
+            os: windows-2022
+
           - preset: linux-clang-address-undefined
             os: ubuntu-24.04
           # - preset: linux-clang-memory
