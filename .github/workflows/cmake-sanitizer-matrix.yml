@@ -32,6 +32,8 @@ jobs:
             os: ubuntu-24.04
           - preset: linux-clang-memory
             os: ubuntu-24.04
+            libc++: true
+
           # - preset: linux-clang-thread
           #   os: ubuntu-24.04
             
@@ -149,11 +151,11 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: external/*/
-        key: ${{ matrix.os }}-submodule-${{ hashFiles('submodule_hashes.txt') }}-2
+        key: ${{ matrix.os }}-submodule-${{ hashFiles('submodule_hashes.txt') }}${{ matrix.libc++ == 'true' && 'libc++' || '' }}-2
     - name: Refresh Submodule
       if: steps.cache-submodule-restore.outputs.cache-hit != 'true'
       working-directory: ${{ github.workspace }}
-      run: python3 external/checkout.py
+      run: python3 external/checkout.py ${{ matrix.libc++ == 'true' && '--libc++' || ''}}
     - name: Cache Submodule
       if: steps.cache-submodule-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
