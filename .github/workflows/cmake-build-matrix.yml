@@ -225,19 +225,18 @@ jobs:
 
 
     #
-    # Test
+    # Run Executables
     #
 
-    - name: Test Linux
-      if: runner.os == 'Linux'
+    - name: Run Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
         ./simulation_srp_test
-    - name: Test Windows
-      if: runner.os == 'Windows'
+
+    - name: Run CLI
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
-        ./simulation_srp_test.exe
+        ./simulation_srp_cli
 
 
     #
