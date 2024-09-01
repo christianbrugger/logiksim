@@ -52,6 +52,40 @@
                 }
             }
         },
+        {
+            "name": "common-win-msvc",
+            "hidden": true,
+            "inherits": "common-win",
+            
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl",
+                "CMAKE_CXX_COMPILER": "cl"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "intelliSenseMode": "windows-msvc-x64"
+                }
+            }
+        },
+        {
+            "name": "common-win-clang",
+            "hidden": true,
+            "inherits": "common-win",
+            
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang-cl",
+                "CMAKE_CXX_COMPILER": "clang-cl"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "intelliSenseMode": "windows-clang-x64"
+                }
+            }
+        },
+
+
+
+
 
         {
             "name": "linux-gcc-debug",
@@ -243,16 +277,17 @@
             }
         },
 		
+
+
+
+
         {
             "name": "win-msvc-debug",
             "displayName": "MSVC Debug",
             "description": "Compile debug build type with MSVC compiler",
-            "inherits": "common-win",
+            "inherits": "common-win-msvc",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_C_COMPILER": "cl",
-                "CMAKE_CXX_COMPILER": "cl",
-
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "OFF"
@@ -267,40 +302,38 @@
             "name": "win-msvc-release",
             "displayName": "MSVC Release",
             "description": "Compile release build type with MSVC compiler",
-            "inherits": "common-win",
+            "inherits": "common-win-msvc",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "cl",
-                "CMAKE_CXX_COMPILER": "cl",
-
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "ON"
-            },
-            "vendor": {
-                "microsoft.com/VisualStudioSettings/CMake/1.0": {
-                    "intelliSenseMode": "windows-msvc-x64"
-                }
             }
         },
         {
             "name": "win-msvc-release-no-lto",
             "displayName": "MSVC Release",
             "description": "Compile release build type with MSVC compiler without LTO",
-            "inherits": "common-win",
+            "inherits": "common-win-msvc",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "cl",
-                "CMAKE_CXX_COMPILER": "cl",
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "win-msvc-address",
+            "displayName": "MSVC Address",
+            "description": "Compile with Address sanitizer and MSVC Compiler",
+            "inherits": "common-win-msvc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Address",
 
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "OFF"
-            },
-            "vendor": {
-                "microsoft.com/VisualStudioSettings/CMake/1.0": {
-                    "intelliSenseMode": "windows-msvc-x64"
-                }
             }
         },
         
@@ -308,42 +341,54 @@
             "name": "win-clang-debug",
             "displayName": "Clang Debug",
             "description": "Compile debug build type with Clang compiler",
-            "inherits": "common-win",
+            "inherits": "common-win-clang",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_C_COMPILER": "clang-cl",
-                "CMAKE_CXX_COMPILER": "clang-cl",
-                
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "OFF"
                 
-            },
-            "vendor": {
-                "microsoft.com/VisualStudioSettings/CMake/1.0": {
-                    "intelliSenseMode": "windows-clang-x64"
-                }
             }
         },
         {
             "name": "win-clang-release",
             "displayName": "Clang Release",
             "description": "Compile release build type with Clang compiler",
-            "inherits": "common-win",
+            "inherits": "common-win-clang",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "clang-cl",
-                "CMAKE_CXX_COMPILER": "clang-cl",
-                
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "ON"
                 
-            },
-            "vendor": {
-                "microsoft.com/VisualStudioSettings/CMake/1.0": {
-                    "intelliSenseMode": "windows-clang-x64"
-                }
+            }
+        },
+        {
+            "name": "win-clang-address",
+            "displayName": "Clang Address",
+            "description": "Compile with address sanitizer and Clang Compiler",
+            "inherits": "common-win-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Address",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "win-clang-undefined",
+            "displayName": "Clang Undefined",
+            "description": "Compile with undefined behavior sanitizer and Clang Compiler",
+            "inherits": "common-win-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Undefined",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
             }
         }
     ],

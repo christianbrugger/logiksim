@@ -49,3 +49,48 @@ Second: https://github.com/christianbrugger/logiksim/actions/runs/10556031842
 | Cache Overhead D/U     | 0:16             | 0:05              | 0:06              | 0:04                |
 | Cache Size             | 462 MB           | 89 MB             | 180 MB            | 122 MB              |
 
+First: https://github.com/christianbrugger/logiksim/actions/runs/10644687883
+
+Second: https://github.com/christianbrugger/logiksim/actions/runs/10644759613
+
+| Release                | win-msvc-release-no-lto | linux-gcc-release-no-lto |
+| ---------------------- | ----------------------- | ------------------------ |
+| Cmake Configure        | 0:28<br />0:31          | 0:08<br />0:08           |
+| ccache first<br />PCH  | 9:05                    | 8:34                     |
+| ccache second<br />PCH | 0:14                    | 0:11                     |
+| Misses on second       | 0/803                   | 0/801                    |
+| Cache Overhead D/U     | 0:10                    | 0:03                     |
+| Cache Size             | 136 MB                  | 98 MB                    |
+
+
+
+
+
+Linux Sanitizers
+
+First: https://github.com/christianbrugger/logiksim/actions/runs/10652376302/job/29526125757
+
+First Thread: https://github.com/christianbrugger/logiksim/actions/runs/10653013996/job/29527610298
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

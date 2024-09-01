@@ -182,7 +182,9 @@ function(ls_set_compiler_warnings_disabled target_name)
     # unreachable code warnings are not excluded by /extern:W0
     # as they happen during code generation
     # last-check: 2024-08-21
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND 
+        (CMAKE_BUILD_TYPE STREQUAL "Release" 
+         OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
         list(APPEND warnings /wd4702)
     endif()
 
