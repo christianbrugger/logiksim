@@ -1,6 +1,6 @@
-# Standard release and debug builds for LogikSim and all supported platforms.
+# Sanitizer Builds for LogikSim on compilers that support sanitizers.
 #
-# 
+#
 # Syntax:
 # https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions
 #
@@ -28,26 +28,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - preset: win-msvc-debug
-            os: windows-2022
-          - preset: win-msvc-release-no-lto
-            os: windows-2022
-            
-          - preset: win-clang-debug
-            os: windows-2022
-          - preset: win-clang-release
-            os: windows-2022
-            
-          - preset: linux-gcc-debug
+          - preset: linux-clang-address-undefined
             os: ubuntu-24.04
-          - preset: linux-gcc-release-no-lto
+          - preset: linux-clang-memory
             os: ubuntu-24.04
-            system_qt: true
+          # - preset: linux-clang-thread
+          #   os: ubuntu-24.04
             
-          - preset: linux-clang-debug
-            os: ubuntu-24.04
-            system_qt: true
-          - preset: linux-clang-release
+          - preset: linux-gcc-address-undefined
             os: ubuntu-24.04
 
     env:
@@ -60,7 +48,7 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPRESS: 'true'
       CCACHE_COMPRESSLEVEL: '4'
-      CCACHE_MAXSIZE: '280M'
+      CCACHE_MAXSIZE: '1000M'
 
     steps:
 
@@ -239,6 +227,20 @@ jobs:
       run: |
         ./simulation_srp_test.exe
 
+    #
+    # CLI
+    #
+      
+    - name: CLI Linux
+      if: runner.os == 'Linux'
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: |
+        ./simulation_srp_cli
+    - name: CLI Windows
+      if: runner.os == 'Windows'
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: |
+        ./simulation_srp_cli.exe
 
     #
     # Stats
