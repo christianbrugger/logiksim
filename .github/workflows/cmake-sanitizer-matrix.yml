@@ -245,16 +245,10 @@ jobs:
     # CLI
     #
       
-    - name: CLI Linux
-      if: runner.os == 'Linux'
+    - name: CLI
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
         ./simulation_srp_cli
-    - name: CLI Windows
-      if: runner.os == 'Windows'
-      working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: |
-        ./simulation_srp_cli.exe
 
     #
     # Stats

@@ -74,7 +74,7 @@ First Linux Clang Thread: https://github.com/christianbrugger/logiksim/actions/r
 
 First MSVC Address: https://github.com/christianbrugger/logiksim/actions/runs/10654447206/job/29530770817
 
-
+First Clang-CL ASAN UBSan: https://github.com/christianbrugger/logiksim/actions/runs/10655062490
 
 
 
