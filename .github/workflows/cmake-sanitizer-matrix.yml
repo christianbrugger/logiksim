@@ -30,13 +30,12 @@ jobs:
         include:
           - preset: linux-clang-address-undefined
             os: ubuntu-24.04
-          - preset: linux-clang-memory
-            os: ubuntu-24.04
-            libcpp: true
-
-          # - preset: linux-clang-thread
+          # - preset: linux-clang-memory
           #   os: ubuntu-24.04
           #   libcpp: true
+          - preset: linux-clang-thread
+            os: ubuntu-24.04
+            libcpp: true
             
           - preset: linux-gcc-address-undefined
             os: ubuntu-24.04
