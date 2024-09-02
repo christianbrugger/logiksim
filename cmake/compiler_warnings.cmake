@@ -218,6 +218,13 @@ function(ls_set_compiler_warnings_disabled target_name)
         list(APPEND warnings -Wno-deprecated-declarations)
     endif()
 
+    # msvc generates those in glaze headers for non-pch debug builds
+    # last-check: 2024-03-21
+    # TODO: update glaze library and see if its still there
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        list(APPEND warnings /wd4996)
+    endif()
+
     target_compile_options("${target_name}" INTERFACE ${warnings})
 endfunction()
 
