@@ -47,6 +47,8 @@ jobs:
           - preset: linux-clang-debug
             os: ubuntu-24.04
             system_qt: true
+          - preset: linux-clang-debug-no-pch
+            os: ubuntu-24.04
           - preset: linux-clang-release
             os: ubuntu-24.04
 
