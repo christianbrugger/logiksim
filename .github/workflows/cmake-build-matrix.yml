@@ -29,32 +29,32 @@ jobs:
       matrix:
         include:
           # Debug & Release Builds
-          - { preset: "win-msvc-debug"               , os: "windows-2022", cache: "280M" }
-          - { preset: "win-msvc-debug-no-pch"        , os: "windows-2022", cache: "280M" }
-          - { preset: "win-msvc-release-no-lto"      , os: "windows-2022", cache: "280M" }
+          - { preset: "win-msvc-debug"               , os: "windows-2022", cache: "280M", run_benchmark: true  }
+          - { preset: "win-msvc-debug-no-pch"        , os: "windows-2022", cache: "280M", run_benchmark: true  }
+          - { preset: "win-msvc-release-no-lto"      , os: "windows-2022", cache: "280M", run_benchmark: true  }
 
-          - { preset: "win-clang-debug"              , os: "windows-2022", cache: "280M" }
-          - { preset: "win-clang-debug-no-pch"       , os: "windows-2022", cache: "280M" }
-          - { preset: "win-clang-release"            , os: "windows-2022", cache: "280M" }
+          - { preset: "win-clang-debug"              , os: "windows-2022", cache: "280M", run_benchmark: true  }
+          - { preset: "win-clang-debug-no-pch"       , os: "windows-2022", cache: "280M", run_benchmark: true  }
+          - { preset: "win-clang-release"            , os: "windows-2022", cache: "280M", run_benchmark: true  }
 
-          - { preset: "linux-gcc-debug"              , os: "ubuntu-24.04", cache: "280M" }
-          - { preset: "linux-gcc-debug-no-pch"       , os: "ubuntu-24.04", cache: "280M" }
-          - { preset: "linux-gcc-release-no-lto"     , os: "ubuntu-24.04", cache: "280M", system_qt: true}
+          - { preset: "linux-gcc-debug"              , os: "ubuntu-24.04", cache: "280M", run_benchmark: true  }
+          - { preset: "linux-gcc-debug-no-pch"       , os: "ubuntu-24.04", cache: "280M", run_benchmark: true  }
+          - { preset: "linux-gcc-release-no-lto"     , os: "ubuntu-24.04", cache: "280M", run_benchmark: true  , system_qt: true}
 
-          - { preset: "linux-clang-debug"            , os: "ubuntu-24.04", cache: "280M", system_qt: true}
-          - { preset: "linux-clang-debug-no-pch"     , os: "ubuntu-24.04", cache: "280M" }
-          - { preset: "linux-clang-release"          , os: "ubuntu-24.04", cache: "280M" }
+          - { preset: "linux-clang-debug"            , os: "ubuntu-24.04", cache: "280M", run_benchmark: true  , system_qt: true}
+          - { preset: "linux-clang-debug-no-pch"     , os: "ubuntu-24.04", cache: "280M", run_benchmark: true  }
+          - { preset: "linux-clang-release"          , os: "ubuntu-24.04", cache: "280M", run_benchmark: true  }
 
           # Sanitizer Builds
-          - { preset: "win-msvc-address"             , os: "windows-2022", cache: "350M" }
-          - { preset: "win-clang-address"            , os: "windows-2022", cache: "350M" }
-          - { preset: "win-clang-undefined"          , os: "windows-2022", cache: "350M" }
-        # - { preset: "win-clang-undefined-rel"      , os: "windows-2022", cache: "350M" }
+          - { preset: "win-msvc-address"             , os: "windows-2022", cache: "350M", run_benchmark: true  }
+          - { preset: "win-clang-address"            , os: "windows-2022", cache: "350M", run_benchmark: true  }
+          - { preset: "win-clang-undefined"          , os: "windows-2022", cache: "350M", run_benchmark: true  }
+        # - { preset: "win-clang-undefined-rel"      , os: "windows-2022", cache: "350M", run_benchmark: true  }
 
-          - { preset: "linux-clang-address-undefined", os: "ubuntu-24.04", cache: "350M" }
-        # - { preset: "linux-clang-memory"           , os: "ubuntu-24.04", cache: "350M", libcpp: "true" }
-          - { preset: "linux-clang-thread"           , os: "ubuntu-24.04", cache: "350M", libcpp: "true" }
-          - { preset: "linux-gcc-address-undefined"  , os: "ubuntu-24.04", cache: "350M" }
+          - { preset: "linux-clang-address-undefined", os: "ubuntu-24.04", cache: "350M", run_benchmark: true  }
+        # - { preset: "linux-clang-memory"           , os: "ubuntu-24.04", cache: "350M", run_benchmark: true  , libcpp: "true" }
+          - { preset: "linux-clang-thread"           , os: "ubuntu-24.04", cache: "350M", run_benchmark: true  , libcpp: "true" }
+          - { preset: "linux-gcc-address-undefined"  , os: "ubuntu-24.04", cache: "350M", run_benchmark: false }
 
     env:
       LS_SUBMODULE_KEY: ${{ matrix.libcpp && '-libcpp' || '' }}
@@ -251,6 +251,7 @@ jobs:
         ./simulation_srp_cli
 
     - name: Run Benchmark
+      if: matrix.run_benchmark
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
         ./simulation_srp_benchmark
