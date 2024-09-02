@@ -85,10 +85,11 @@ add_subdirectory(
 set(FOLLY_DIR_NAME my_folly)
 add_library(folly
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/memory/detail/MallocImpl.cpp
-    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/ScopeGuard.cpp
+    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/memory/SanitizeLeak.cpp
+    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/Exception.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/SafeAssert.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/ToAscii.cpp
-    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/Exception.cpp
+    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/ScopeGuard.cpp
 )
 target_link_libraries(folly PUBLIC 
     Boost::preprocessor
