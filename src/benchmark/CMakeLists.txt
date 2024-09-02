@@ -3,12 +3,9 @@
 
 # Google Benchmark
 
-# Causes errors in g++ build with address sanitizer
-# Last checked: 2024-03-20
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
-    (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
-    set(BENCHMARK_ENABLE_WERROR OFF)
-endif()
+# Benchmark is not error clean on windows or sanitizer builds.
+# We can't really do much about it, so we disable errors as warnings for the library.
+set(BENCHMARK_ENABLE_WERROR OFF)
 
 set(BENCHMARK_ENABLE_LTO OFF)
 set(BENCHMARK_ENABLE_TESTING OFF)

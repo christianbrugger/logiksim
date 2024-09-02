@@ -250,6 +250,11 @@ jobs:
       run: |
         ./simulation_srp_cli
 
+    - name: Run Benchmark
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: |
+        ./simulation_srp_benchmark
+
 
 
     #
