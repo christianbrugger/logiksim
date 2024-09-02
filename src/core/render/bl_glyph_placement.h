@@ -3,6 +3,8 @@
 
 #include <blend2d.h>
 
+#include <concepts>
+
 // for now the library does not provide an equality operator,
 // if this changes, remove this module
 static_assert(!std::equality_comparable<BLGlyphPlacement>);
