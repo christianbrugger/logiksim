@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_ALGORITHM_U8_CONVERSION_H
 #define LOGICSIM_ALGORITHM_U8_CONVERSION_H
 
+#include <string>
 #include <string_view>
 
 namespace logicsim {
