@@ -211,6 +211,13 @@ function(ls_set_compiler_warnings_disabled target_name)
         list(APPEND warnings -Wno-maybe-uninitialized)
     endif()
 
+    # clang generates those in boost headers for non-pch debug builds
+    # last-check: 2024-03-21
+    # TODO: update boost library and see if its still there
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        list(APPEND warnings -Wno-deprecated-declarations)
+    endif()
+
     target_compile_options("${target_name}" INTERFACE ${warnings})
 endfunction()
 
