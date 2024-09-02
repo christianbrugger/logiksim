@@ -1,4 +1,4 @@
-# Standard release and debug builds for LogikSim and all supported platforms.
+# All builds for LogikSim and all supported platforms.
 #
 # 
 # Syntax:
@@ -28,37 +28,38 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - preset: win-msvc-debug
-            os: windows-2022
-          - preset: win-msvc-debug-no-pch
-            os: windows-2022
-          - preset: win-msvc-release-no-lto
-            os: windows-2022
-            
-          - preset: win-clang-debug
-            os: windows-2022
-          - preset: win-clang-debug-no-pch
-            os: windows-2022
-          - preset: win-clang-release
-            os: windows-2022
-            
-          - preset: linux-gcc-debug
-            os: ubuntu-24.04
-          - preset: linux-gcc-debug-no-pch
-            os: ubuntu-24.04
-          - preset: linux-gcc-release-no-lto
-            os: ubuntu-24.04
-            system_qt: true
-            
-          - preset: linux-clang-debug
-            os: ubuntu-24.04
-            system_qt: true
-          - preset: linux-clang-debug-no-pch
-            os: ubuntu-24.04
-          - preset: linux-clang-release
-            os: ubuntu-24.04
+          # Debug & Release Builds
+          - { preset: "win-msvc-debug"               , os: "windows-2022", cache: "280M" }
+          - { preset: "win-msvc-debug-no-pch"        , os: "windows-2022", cache: "280M" }
+          - { preset: "win-msvc-release-no-lto"      , os: "windows-2022", cache: "280M" }
+
+          - { preset: "win-clang-debug"              , os: "windows-2022", cache: "280M" }
+          - { preset: "win-clang-debug-no-pch"       , os: "windows-2022", cache: "280M" }
+          - { preset: "win-clang-release"            , os: "windows-2022", cache: "280M" }
+
+          - { preset: "linux-gcc-debug"              , os: "ubuntu-24.04", cache: "280M" }
+          - { preset: "linux-gcc-debug-no-pch"       , os: "ubuntu-24.04", cache: "280M" }
+          - { preset: "linux-gcc-release-no-lto"     , os: "ubuntu-24.04", cache: "280M", system_qt: true}
+
+          - { preset: "linux-clang-debug"            , os: "ubuntu-24.04", cache: "280M", system_qt: true}
+          - { preset: "linux-clang-debug-no-pch"     , os: "ubuntu-24.04", cache: "280M" }
+          - { preset: "linux-clang-release"          , os: "ubuntu-24.04", cache: "280M" }
+
+          # Sanitizer Builds
+          - { preset: "win-msvc-address"             , os: "windows-2022", cache: "350M" }
+          - { preset: "win-clang-address"            , os: "windows-2022", cache: "350M" }
+          - { preset: "win-clang-undefined"          , os: "windows-2022", cache: "350M" }
+        # - { preset: "win-clang-undefined-rel"      , os: "windows-2022", cache: "350M" }
+
+          - { preset: "linux-clang-address-undefined", os: "ubuntu-24.04", cache: "350M" }
+        # - { preset: "linux-clang-memory"           , os: "ubuntu-24.04", cache: "350M", libcpp: "true" }
+          - { preset: "linux-clang-thread"           , os: "ubuntu-24.04", cache: "350M", libcpp: "true" }
+          - { preset: "linux-gcc-address-undefined"  , os: "ubuntu-24.04", cache: "350M" }
 
     env:
+      LS_SUBMODULE_KEY: ${{ matrix.libcpp && '-libcpp' || '' }}
+      LS_SUBMODULE_ARG: ${{ matrix.libcpp && '--libc++' || '' }}
+
       # ask apt-get to never interact
       DEBIAN_FRONTEND: noninteractive
       # set default platform plugin for qt so the executables can run
@@ -68,7 +69,7 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPRESS: 'true'
       CCACHE_COMPRESSLEVEL: '4'
-      CCACHE_MAXSIZE: '280M'
+      CCACHE_MAXSIZE: ${{ matrix.cache }}
 
     steps:
 
@@ -94,7 +95,6 @@ jobs:
         --branch ${{ github.ref_name }} 
         https://github.com/${{ github.repository }}.git 
         ${{ github.workspace }}
-
 
 
 
@@ -152,7 +152,9 @@ jobs:
       run: |
         ccache --zero-stats
         ccache --show-stats
-      
+
+
+
     #
     # Submodule Checkout (cached)
     #
@@ -169,17 +171,18 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: external/*/
-        key: ${{ matrix.os }}-submodule-${{ hashFiles('submodule_hashes.txt') }}-2
+        key: ${{ matrix.os }}-submodule-${{ hashFiles('submodule_hashes.txt') }}${{ env.LS_SUBMODULE_KEY }}-2
     - name: Refresh Submodule
       if: steps.cache-submodule-restore.outputs.cache-hit != 'true'
       working-directory: ${{ github.workspace }}
-      run: python3 external/checkout.py
+      run: python3 external/checkout.py ${{ env.LS_SUBMODULE_ARG }}
     - name: Cache Submodule
       if: steps.cache-submodule-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
         path: external/*/
         key: ${{ steps.cache-submodule-restore.outputs.cache-primary-key }}
+
 
 
     #
@@ -192,6 +195,7 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build/${{ matrix.preset }}" >> "$GITHUB_OUTPUT"
     
+
 
     #
     # Install Qt
@@ -247,9 +251,11 @@ jobs:
         ./simulation_srp_cli
 
 
+
     #
     # Stats
     #
     - name: CCache Statistics
       run: |
         ccache --show-stats
+
