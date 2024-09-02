@@ -100,6 +100,18 @@
             }
         },
         {
+            "name": "linux-gcc-debug-no-pch",
+            "displayName": "GCC Debug No-PCH",
+            "description": "Compile debug build type with GCC compiler without PCH",
+            "inherits": "common-linux-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "OFF",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
             "name": "linux-gcc-release",
             "displayName": "GCC Release",
             "description": "Compile release build type with GCC compiler",
@@ -303,11 +315,18 @@
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "OFF"
-            },
-            "vendor": {
-                "microsoft.com/VisualStudioSettings/CMake/1.0": {
-                    "intelliSenseMode": "windows-msvc-x64"
-                }
+            }
+        },
+        {
+            "name": "win-msvc-debug-no-pch",
+            "displayName": "MSVC Debug No-PCH",
+            "description": "Compile debug build type with MSVC compiler without PCH",
+            "inherits": "common-win-msvc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "OFF",
+                "LS_ENABLE_LTO": "OFF"
             }
         },
         {
@@ -358,6 +377,19 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+                
+            }
+        },
+        {
+            "name": "win-clang-debug-no-pch",
+            "displayName": "Clang Debug No-PCH",
+            "description": "Compile debug build type with Clang compiler without PCH",
+            "inherits": "common-win-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "OFF",
                 "LS_ENABLE_LTO": "OFF"
                 
             }
