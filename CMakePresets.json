@@ -278,6 +278,7 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "LS_SANITIZE": "Memory",
                 "LS_USE_LIBCXX": "ON",
+                "LS_BLEND2D_NO_JIT": "ON",
 
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
