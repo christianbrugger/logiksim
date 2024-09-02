@@ -78,15 +78,17 @@ First Clang-CL ASAN UBSan: https://github.com/christianbrugger/logiksim/actions/
 
 Second: https://github.com/christianbrugger/logiksim/actions/runs/10655196329
 
-| Release                | win-msvc-address | win-clang-address | win-clang-undefined | linux-clang-address-undefined | linux-clang-thread | linux-gcc-address-undefined |
-| ---------------------- | ---------------- | ----------------- | ------------------- | ----------------------------- | ------------------ | --------------------------- |
-| Cmake Configure        | 0:47<br />1:06   | 1:14<br />1:21    | 2:01<br />1:27      | 0:13<br />0:14                | 0:21<br />0:20     | 0:08<br />0:09              |
-| ccache first<br />PCH  | 6:43             | 9:02              | 7:06                | 10:36                         | 7:14               | 14:07                       |
-| ccache second<br />PCH | 0:22             | 0:19              | 0:25                | 0:15                          | 0:13               | 0:19                        |
-| Run Test + CLI         | 0:34             | 0:04              | 0:11                | 0:01                          | 0:02               | 0:05                        |
-| Misses on second       | 0/803            | 0/803             | 0/803               | 0/800                         | 0/771              | 0/800                       |
-| Cache Overhead D/U     | 0:10             | 0:09              | 0:12                | 0:06                          | 0:07               | 0:10                        |
-| Cache Size             | 242 MB           | 130 MB            | 157 MB              | 176 MB                        | 177 MB             | **293 MB**                  |
+First Clang MSan: https://github.com/christianbrugger/logiksim/actions/runs/10669879237/job/29572726681
+
+| Release                | win-msvc-address | win-clang-address | win-clang-undefined | linux-clang-address-undefined | linux-clang-memory | linux-clang-thread | linux-gcc-address-undefined |
+| ---------------------- | ---------------- | ----------------- | ------------------- | ----------------------------- | ------------------ | ------------------ | --------------------------- |
+| Cmake Configure        | 0:47<br />1:06   | 1:14<br />1:21    | 2:01<br />1:27      | 0:13<br />0:14                | 0:20               | 0:21<br />0:20     | 0:08<br />0:09              |
+| ccache first<br />PCH  | 6:43             | 9:02              | 7:06                | 10:36                         | 8:35               | 7:14               | 14:07                       |
+| ccache second<br />PCH | 0:22             | 0:19              | 0:25                | 0:15                          |                    | 0:13               | 0:19                        |
+| Run Test + CLI         | 0:34             | 0:04              | 0:11                | 0:01                          |                    | 0:02               | 0:05                        |
+| Misses on second       | 0/803            | 0/803             | 0/803               | 0/800                         |                    | 0/771              | 0/800                       |
+| Cache Overhead D/U     | 0:10             | 0:09              | 0:12                | 0:06                          |                    | 0:07               | 0:10                        |
+| Cache Size             | 242 MB           | 130 MB            | 157 MB              | 176 MB                        | 188 MB             | 177 MB             | **293 MB**                  |
 
 
 
