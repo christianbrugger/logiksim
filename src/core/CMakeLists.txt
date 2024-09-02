@@ -11,6 +11,9 @@ find_package(ZLIB REQUIRED)
 # Boost
 set(BOOST_IOSTREAMS_ENABLE_ZLIB ON)
 set(BOOST_INCLUDE_LIBRARIES 
+    # folly
+    preprocessor
+    # logiksim
     algorithm 
     container 
     geometry
@@ -77,13 +80,18 @@ add_subdirectory(
 
 
 # Folly
-# Only build a minimal version of the library, as there is no CMake build script
+# Only build a minimal version of the library, as there was no CMake build script 
+# when this project started.
 set(FOLLY_DIR_NAME my_folly)
 add_library(folly
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/memory/detail/MallocImpl.cpp
-    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/SafeAssert.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/ScopeGuard.cpp
+    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/SafeAssert.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/ToAscii.cpp
+    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/Exception.cpp
+)
+target_link_libraries(folly PUBLIC 
+    Boost::preprocessor
 )
 target_include_directories(folly SYSTEM PUBLIC 
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}
