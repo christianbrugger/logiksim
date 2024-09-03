@@ -3,6 +3,7 @@
 #include "logging.h"
 
 #include <glaze/glaze.hpp>
+#include <glaze/glaze_exceptions.hpp>
 
 template <>
 struct glz::meta<logicsim::LogicItemType> {
@@ -158,11 +159,12 @@ namespace logicsim {
 auto json_dumps(const serialize::SerializedLayout& data) -> std::string {
     constexpr auto debug_json = false;
 
-    if constexpr (debug_json) {
-        print(glz::prettify(glz::write_json(data)));
-    }
+    const auto result = glz::ex::write_json(data);
 
-    return glz::write_json(data);
+    if constexpr (debug_json) {
+        print(glz::prettify_json(result));
+    }
+    return result;
 }
 
 auto json_loads(std::string text) -> std::optional<serialize::SerializedLayout> {
