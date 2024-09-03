@@ -150,9 +150,11 @@ jobs:
         restore-keys: |
           ${{ matrix.preset }}-ccache-
     - name: Configure CCache
+      id: ccache-configure
       run: |
         ccache --zero-stats
         ccache --show-stats
+        python3 -c "import time; print(f'start-time={time.monotonic()}')" >> "$GITHUB_OUTPUT"
 
 
 
@@ -184,6 +186,17 @@ jobs:
         path: external/*/
         key: ${{ steps.cache-submodule-restore.outputs.cache-primary-key }}
 
+
+# TODO REMOVE
+
+    - name: Test Time
+      shell: bash
+      run: |
+        tolerance=10
+        start_time=${{ steps.ccache-configure.outputs.start-time }}
+        echo ${start_time}
+        passed_seconds=$(python3 -c "import time; print(time.monotonic() - ${start_time} + ${tolerance})")
+        echo ${passed_seconds}
 
 
     #
