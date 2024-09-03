@@ -187,17 +187,6 @@ jobs:
         key: ${{ steps.cache-submodule-restore.outputs.cache-primary-key }}
 
 
-# TODO REMOVE
-
-    - name: Test Time
-      shell: bash
-      run: |
-        tolerance=10
-        start_time=${{ steps.ccache-configure.outputs.start-time }}
-        echo ${start_time}
-        passed_seconds=$(python3 -c "import time; print(time.monotonic() - ${start_time} + ${tolerance})")
-        echo ${passed_seconds}
-
 
     #
     # Define Variables
@@ -275,7 +264,24 @@ jobs:
     #
     # Stats
     #
-    - name: CCache Statistics
+    - name: CCache Cleanup
+      shell: bash
+      env:
+        ls_TOLERANCE: 10
+        ls_START_TIME: ${{ steps.ccache-configure.outputs.start-time }}
       run: |
+        echo
+        echo "BEFORE CLEANUP"
         ccache --show-stats
+        
+        echo
+        echo "RUN CLEANUP"
+        ls_PASSED_SECONDS=$(python3 -c "import time; import math; print(math.ceil(time.monotonic() - ${ls_START_TIME} + ${ls_TOLERANCE}))")
+        echo "ls_PASSED_SECONDS=${ls_PASSED_SECONDS}"
+        ccache --evict-older-than ${ls_PASSED_SECONDS}s
+        
+        echo
+        echo "AFTER CLEANUP"
+        ccache --show-stats
+
 
