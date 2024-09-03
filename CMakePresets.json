@@ -187,7 +187,9 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
-                "LS_ENABLE_LTO": "OFF"
+                "LS_ENABLE_LTO": "OFF",
+
+                "LS_BLEND2D_NO_JIT": "ON"
             }
         },
         {
