@@ -178,15 +178,15 @@ endfunction()
 function(ls_set_compiler_warnings_disabled target_name)
     set(warnings "")
 
-    # Unreachable code warnings are not excluded by /extern:W0,
-    # as they happen during code generation.
-    # Note, this probably won't be fixed, as its documented behavior.
+    # Unreachable code warnings in MSVC release LTO builds. 
+    # While they happen in headers they are not excluded with /extern:W0, as
+    # they happen during code generation. Will not be fixed.
     # last-check: 2024-08-21
-    # if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND 
-    #     (CMAKE_BUILD_TYPE STREQUAL "Release" 
-    #      OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
-    #     list(APPEND warnings /wd4702)
-    # endif()
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND 
+        (CMAKE_BUILD_TYPE STREQUAL "Release" 
+         OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
+        list(APPEND warnings /wd4702)
+    endif()
 
     # g++ generates those in folly headers for sanitized builds
     # last-check: 2024-09-02
