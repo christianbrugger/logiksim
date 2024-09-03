@@ -178,15 +178,15 @@ endfunction()
 function(ls_set_compiler_warnings_disabled target_name)
     set(warnings "")
 
-
-    # unreachable code warnings are not excluded by /extern:W0
-    # as they happen during code generation
+    # Unreachable code warnings are not excluded by /extern:W0,
+    # as they happen during code generation.
+    # Note, this probably won't be fixed, as its documented behavior.
     # last-check: 2024-08-21
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND 
-        (CMAKE_BUILD_TYPE STREQUAL "Release" 
-         OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
-        list(APPEND warnings /wd4702)
-    endif()
+    # if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND 
+    #     (CMAKE_BUILD_TYPE STREQUAL "Release" 
+    #      OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
+    #     list(APPEND warnings /wd4702)
+    # endif()
 
     # g++ generates those in folly headers for sanitized builds
     # last-check: 2024-09-02
@@ -195,19 +195,19 @@ function(ls_set_compiler_warnings_disabled target_name)
         list(APPEND warnings -Wno-maybe-uninitialized)
     endif()
 
-    # clang generates those in boost headers for non-pch debug builds
+    # g++ generates this on release non-lto build in folly headers
     # last-check: 2024-09-02
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND 
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+        list(APPEND warnings -Wno-maybe-uninitialized)
+    endif()
+
+    # clang generates those in boost headers for non-pch debug builds on linux
+    # last-check: 2024-09-02
+    if (NOT WIN32 AND
+        CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND 
         CMAKE_BUILD_TYPE STREQUAL "Debug" AND
         NOT LS_ENABLE_PCH)
         list(APPEND warnings -Wno-deprecated-declarations)
-    endif()
-
-    # msvc generates those in glaze headers for non-pch debug builds
-    # last-check: 2024-03-21
-    # TODO: update glaze library and see if its still there
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        list(APPEND warnings /wd4996)
     endif()
 
     target_compile_options("${target_name}" INTERFACE ${warnings})
