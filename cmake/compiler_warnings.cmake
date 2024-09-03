@@ -181,23 +181,30 @@ function(ls_set_compiler_warnings_disabled target_name)
     # Unreachable code warnings in MSVC release LTO builds. 
     # While they happen in headers they are not excluded with /extern:W0, as
     # they happen during code generation. Will not be fixed.
-    # last-check: 2024-08-21
+    # last-check: 2024-09-02
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND 
         (CMAKE_BUILD_TYPE STREQUAL "Release" 
          OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
         list(APPEND warnings /wd4702)
     endif()
 
+    # g++ generates those in folly headers for release builds
+    # last-check: 2024-09-02
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+        list(APPEND warnings -Wno-array-bounds)
+        list(APPEND warnings -Wno-stringop-overread)
+    endif()
+
+    # g++ generates those in folly headers for release non-lto builds
+    # last-check: 2024-09-02
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+        list(APPEND warnings -Wno-maybe-uninitialized)
+    endif()
+
     # g++ generates those in folly headers for sanitized builds
     # last-check: 2024-09-02
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
         (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
-        list(APPEND warnings -Wno-maybe-uninitialized)
-    endif()
-
-    # g++ generates this on release non-lto build in folly headers
-    # last-check: 2024-09-02
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Release")
         list(APPEND warnings -Wno-maybe-uninitialized)
     endif()
 
