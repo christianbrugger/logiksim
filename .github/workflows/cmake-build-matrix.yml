@@ -152,10 +152,11 @@ jobs:
           ${{ matrix.preset }}-ccache-
     - name: Configure CCache
       id: ccache-configure
+      shell: bash
       run: |
         ccache --zero-stats
         ccache --show-stats --verbose
-        python3 -c "import time; print(f'start-time={time.monotonic()}')" >> "$GITHUB_OUTPUT"
+        python3 -c "import time; print(f'start-time={time.monotonic()}')" >> "${GITHUB_OUTPUT}"
 
 
 
