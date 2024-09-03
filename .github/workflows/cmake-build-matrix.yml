@@ -255,7 +255,7 @@ jobs:
         ./simulation_srp_cli
 
     - name: Run Benchmark
-      if: !matrix.skip_benchmark
+      if: "!matrix.skip_benchmark"
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
         ./simulation_srp_benchmark
