@@ -279,6 +279,7 @@ jobs:
         echo
         echo "RUN CLEANUP"
         echo "-----------"
+        echo "ls_START_TIME=${ls_START_TIME}"
         ls_PASSED_SECONDS=$(python3 -c "import time; import math; print(math.ceil(time.monotonic() - ${ls_START_TIME} + ${ls_TOLERANCE}))")
         echo "ls_PASSED_SECONDS=${ls_PASSED_SECONDS}"
         ccache --evict-older-than ${ls_PASSED_SECONDS}s
