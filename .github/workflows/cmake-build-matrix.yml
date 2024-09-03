@@ -70,7 +70,7 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPRESS: 'true'
       CCACHE_COMPRESSLEVEL: '4'
-      CCACHE_MAXSIZE: ${{ matrix.cache }}
+      CCACHE_MAXSIZE: '1000M'
 
     steps:
 
@@ -153,7 +153,7 @@ jobs:
       id: ccache-configure
       run: |
         ccache --zero-stats
-        ccache --show-stats
+        ccache --show-stats --verbose
         python3 -c "import time; print(f'start-time={time.monotonic()}')" >> "$GITHUB_OUTPUT"
 
 
@@ -272,16 +272,19 @@ jobs:
       run: |
         echo
         echo "BEFORE CLEANUP"
-        ccache --show-stats
+        echo "--------------"
+        ccache --show-stats --verbose
         
         echo
         echo "RUN CLEANUP"
+        echo "-----------"
         ls_PASSED_SECONDS=$(python3 -c "import time; import math; print(math.ceil(time.monotonic() - ${ls_START_TIME} + ${ls_TOLERANCE}))")
         echo "ls_PASSED_SECONDS=${ls_PASSED_SECONDS}"
         ccache --evict-older-than ${ls_PASSED_SECONDS}s
         
         echo
         echo "AFTER CLEANUP"
-        ccache --show-stats
+        echo "--------------"
+        ccache --show-stats --verbose
 
 
