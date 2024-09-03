@@ -1571,7 +1571,7 @@ auto SimulationLayers::empty() const -> bool {
 //
 
 auto render_inserted(Context& ctx, const Layout& layout,
-                     const InteractiveLayers& layers) {
+                     const InteractiveLayers& layers) -> void {
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
     draw_logic_items_base(ctx, layout, layers.normal_below);
@@ -1583,7 +1583,7 @@ auto render_inserted(Context& ctx, const Layout& layout,
 }
 
 auto render_uninserted(Context& ctx, const Layout& layout,
-                       const InteractiveLayers& layers, bool layer_enabled) {
+                       const InteractiveLayers& layers, bool layer_enabled) -> void {
     if (layer_enabled) {
         ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
     } else {

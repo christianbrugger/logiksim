@@ -3,6 +3,8 @@
 #include "circuit_example.h"
 #include "default_element_definition.h"
 #include "editable_circuit.h"
+#include "format/blend2d_type.h"
+#include "geometry/scene.h"
 #include "logging.h"
 #include "render/managed_context.h"
 #include "render_circuit.h"
@@ -17,28 +19,44 @@
 
 namespace logicsim {
 
-auto render_to_context(Context& ctx, ImageSurface& surface,
-                       const WidgetRenderConfig& render_config,
-                       const EditableCircuit& editable_circuit,
-                       bool show_size_handles) -> void {
-    render_background(ctx);
+auto render_overlay_simple(BLContext& bl_ctx) -> void {
+    bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    if (render_config.show_circuit) {
-        const auto& target_layout = editable_circuit.layout();
-        const auto& selection = editable_circuit.visible_selection();
+    const auto rect1 = BLRoundRect {81, 81, 55, 55, 5};
+    const auto rect2 = BLRoundRect {171, 81, 55, 55, 5};
+    const auto color = BLRgba32 {0, 128, 255, 96};
 
-        render_layout(ctx, surface, target_layout, selection);
+    bl_ctx.fillRoundRect(rect1, color);
+    bl_ctx.fillRoundRect(rect2, color);
+}
 
-        render_setting_handle(ctx, target_layout, selection);
+auto render_to_context(Context& ctx, ImageSurface& surface) -> void {
+    // background
+    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    ctx.bl_ctx.fillAll(defaults::color_white);
 
-        if (show_size_handles) {
-            render_size_handles(ctx, target_layout, selection);
-        }
-    }
+    // layer
+    const auto rect = BLRectI {79, 79, 149, 59};
+    render_layer(ctx, surface, rect,
+                 [&](Context& layer_ctx) { render_overlay_simple(layer_ctx.bl_ctx); });
 }
 
 auto test_jit() -> void {
-    auto editable_circuit = load_example_with_logging(2);
+    // auto editable_circuit = load_example_with_logging(2);
+
+    auto editable_circuit = EditableCircuit {};
+
+    const auto definition = LogicItemDefinition {
+        .logicitem_type = LogicItemType::or_element,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
+        .orientation = orientation_t::right,
+        .output_inverters = {true},
+    };
+    editable_circuit.add_logicitem(definition, point_t {5, 5},
+                                   InsertionMode::insert_or_discard);
+    editable_circuit.add_logicitem(definition, point_t {10, 5},
+                                   InsertionMode::insert_or_discard);
     visible_selection_select_all(editable_circuit);
 
     auto bl_image = BLImage {800, 600, BL_FORMAT_PRGB32};
@@ -46,15 +64,12 @@ auto test_jit() -> void {
     auto context_settings = ContextRenderSettings {};
     auto context_cache = ContextCache {cache_with_default_fonts()};
     auto context_surface = ImageSurface {};
-    auto render_config = WidgetRenderConfig {};
+    // auto render_config = WidgetRenderConfig {};
 
     context_settings.view_config.set_size(bl_image.size());
 
-    render_to_image(bl_image, context_settings, context_cache, [&](Context& ctx) {
-        const auto show_size_handles = false;
-        render_to_context(ctx, context_surface, render_config, editable_circuit,
-                          show_size_handles);
-    });
+    render_to_image(bl_image, context_settings, context_cache,
+                    [&](Context& ctx) { render_to_context(ctx, context_surface); });
 
     bl_image.writeToFile("test_circuit.png");
 }
