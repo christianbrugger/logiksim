@@ -188,33 +188,18 @@ function(ls_set_compiler_warnings_disabled target_name)
         list(APPEND warnings /wd4702)
     endif()
 
-    # g++ generates this on release build in folly headers
-    # last-check: 2024-03-21
-    # TODO: update folly library and see if its still there
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Release")
-        list(APPEND warnings -Wno-array-bounds)
-        list(APPEND warnings -Wno-stringop-overread)
-    endif()
-
-    # g++ generates this on release build in folly headers
-    # last-check: 2024-03-21
-    # TODO: update folly library and see if its still there
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Release")
-        list(APPEND warnings -Wno-maybe-uninitialized)
-    endif()
-
     # g++ generates those in folly headers for sanitized builds
-    # last-check: 2024-03-21
-    # TODO: update folly library and see if its still there
+    # last-check: 2024-09-02
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
         (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
         list(APPEND warnings -Wno-maybe-uninitialized)
     endif()
 
     # clang generates those in boost headers for non-pch debug builds
-    # last-check: 2024-03-21
-    # TODO: update boost library and see if its still there
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # last-check: 2024-09-02
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND 
+        CMAKE_BUILD_TYPE STREQUAL "Debug" AND
+        NOT LS_ENABLE_PCH)
         list(APPEND warnings -Wno-deprecated-declarations)
     endif()
 

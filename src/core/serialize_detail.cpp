@@ -159,12 +159,12 @@ namespace logicsim {
 auto json_dumps(const serialize::SerializedLayout& data) -> std::string {
     constexpr auto debug_json = false;
 
-    const auto result = glz::ex::write_json(data);
+    const auto json_text = glz::ex::write_json(data);
 
     if constexpr (debug_json) {
-        print(glz::prettify_json(result));
+        print(glz::prettify_json(json_text));
     }
-    return result;
+    return json_text;
 }
 
 auto json_loads(std::string text) -> std::optional<serialize::SerializedLayout> {
