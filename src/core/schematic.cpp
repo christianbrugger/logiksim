@@ -267,20 +267,28 @@ auto swap(Schematic &a, Schematic &b) noexcept -> void {
     a.swap(b);
 }
 
-auto has_input_connections(const Schematic &data, element_id_t element_id) -> bool {
-    const auto is_input_connected = [&](connection_id_t input_id) {
-        return bool {data.output(input_t {element_id, input_id})};
+auto is_input_connected(const Schematic &schematic, input_t input) -> bool {
+    return bool {schematic.output(input)};
+};
+
+auto is_output_connected(const Schematic &schematic, output_t output) -> bool {
+    return bool {schematic.input(output)};
+};
+
+auto has_input_connections(const Schematic &schematic, element_id_t element_id) -> bool {
+    const auto _input_connected = [&](connection_id_t input_id) {
+        return is_input_connected(schematic, input_t {element_id, input_id});
     };
-    return std::ranges::any_of(id_range(data.input_count(element_id)),
-                               is_input_connected);
+    return std::ranges::any_of(id_range(schematic.input_count(element_id)),
+                               _input_connected);
 }
 
-auto has_output_connections(const Schematic &data, element_id_t element_id) -> bool {
-    const auto is_output_connected = [&](connection_id_t output_id) {
-        return bool {data.input(output_t {element_id, output_id})};
+auto has_output_connections(const Schematic &schematic, element_id_t element_id) -> bool {
+    const auto _output_connected = [&](connection_id_t output_id) {
+        return is_output_connected(schematic, output_t {element_id, output_id});
     };
-    return std::ranges::any_of(id_range(data.output_count(element_id)),
-                               is_output_connected);
+    return std::ranges::any_of(id_range(schematic.output_count(element_id)),
+                               _output_connected);
 }
 
 auto element_ids(const Schematic &schematic) -> range_extended_t<element_id_t> {

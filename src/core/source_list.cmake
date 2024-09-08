@@ -309,7 +309,6 @@ set(LS_CORE_SOURCES
     setting_handle.cpp
     simulation.cpp
     simulation_player.cpp
-    simulation_view.cpp
     size_handle.cpp
     spatial_simulation.cpp
     timeout_timer.cpp

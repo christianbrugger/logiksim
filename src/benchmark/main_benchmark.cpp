@@ -17,7 +17,6 @@
 #include "render_circuit.h"
 #include "schematic_generation.h"
 #include "simulation.h"
-#include "simulation_view.h"
 #include "vocabulary.h"
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_id.h"
@@ -273,8 +272,7 @@ static void BM_RenderScene_0(benchmark::State& state) {
         count += scene.total_wire_length_sum;
 
         render_to_image(bl_image, settings, cache, [&](Context& ctx) {
-            render_simulation(ctx, scene.spatial_simulation.layout(),
-                              SimulationView {scene.spatial_simulation});
+            render_simulation(ctx, scene.spatial_simulation);
         });
 
         benchmark::DoNotOptimize(bl_image);

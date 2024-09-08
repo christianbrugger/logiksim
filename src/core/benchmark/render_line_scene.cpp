@@ -17,7 +17,6 @@
 #include "render_circuit.h"
 #include "schematic_generation.h"
 #include "simulation_player.h"
-#include "simulation_view.h"
 #include "spatial_simulation.h"
 #include "timer.h"
 #include "tree_normalization.h"
@@ -273,8 +272,7 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
         render_background(ctx);
 
         const auto timer = Timer {"Render", Timer::Unit::ms, 3};
-        render_simulation(ctx, scene.spatial_simulation.layout(),
-                          SimulationView {scene.spatial_simulation});
+        render_simulation(ctx, scene.spatial_simulation);
     });
 
     if (save_image) {

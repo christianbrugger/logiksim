@@ -4,7 +4,6 @@
 #include "exception.h"
 #include "logic_item/layout_display.h"  // TODO remove
 #include "render_generic.h"
-#include "simulation_view.h"
 #include "vocabulary.h"
 #include "vocabulary/drawable_element.h"
 #include "vocabulary/element_draw_state.h"
@@ -24,13 +23,9 @@ namespace logicsim {
 struct logicitem_id_t;
 class Layout;
 class Selection;
-class SimulationView;
+class SpatialSimulation;
 struct size_handle_t;
 struct segment_info_t;
-
-namespace simulation_view {
-class ConstElement;
-}  // namespace simulation_view
 
 //
 // Defaults
@@ -161,16 +156,15 @@ auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
                                 logicitem_id_t logicitem_id,
                                 ElementDrawState state) -> void;
 
-auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
-                                logicitem_id_t logicitem_id, ElementDrawState state,
-                                simulation_view::ConstElement logic_state) -> void;
+auto draw_logic_item_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
+                                logicitem_id_t logicitem_id) -> void;
 
 auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements) -> void;
 
-auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
-                                 std::span<const logicitem_id_t> elements,
-                                 SimulationView simulation_view) -> void;
+auto draw_logic_items_connectors(Context& ctx,
+                                 const SpatialSimulation& spatial_simulation,
+                                 std::span<const logicitem_id_t> elements) -> void;
 
 template <std::size_t size>
 using string_array = std::array<std::string_view, size>;
@@ -237,16 +231,16 @@ auto draw_binary_value(Context& ctx, point_fine_t point, bool is_enabled,
 auto draw_binary_false(Context& ctx, point_fine_t point, ElementDrawState state) -> void;
 
 auto draw_logic_item_base(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-                          ElementDrawState state,
-                          std::optional<simulation_view::ConstElement> logic_state = {})
-    -> void;
+                          ElementDrawState state) -> void;
 
 auto draw_logic_items_base(Context& ctx, const Layout& layout,
                            std::span<const DrawableElement> elements) -> void;
 
-auto draw_logic_items_base(Context& ctx, const Layout& layout,
-                           std::span<const logicitem_id_t> elements,
-                           SimulationView simulation_view) -> void;
+auto draw_logic_item_base(Context& ctx, const SpatialSimulation& spatial_simulation,
+                          logicitem_id_t logicitem_id) -> void;
+
+auto draw_logic_items_base(Context& ctx, const SpatialSimulation& spatial_simulation,
+                           std::span<const logicitem_id_t> elements) -> void;
 
 //
 // Wires
@@ -420,11 +414,10 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, BLS
 // Simulation
 //
 
-auto render_simulation(Context& ctx, const Layout& layout,
-                       SimulationView simulation_view) -> void;
+auto render_simulation(Context& ctx, const SpatialSimulation& spatial_simulation) -> void;
 
-auto render_simulation_to_file(const Layout& layout, SimulationView simulation_view,
-                               BLSizeI size, const std::filesystem::path& filename,
+auto render_simulation_to_file(const SpatialSimulation& spatial_simulation, BLSizeI size,
+                               const std::filesystem::path& filename,
                                const ViewConfig& view_config = {},
                                const ContextCache& cache = {}) -> void;
 

@@ -2,11 +2,9 @@
 
 #include "editable_circuit.h"
 #include "geometry/scene.h"
-#include "logging.h"
 #include "render/text_cache.h"
 #include "render_caches.h"
 #include "render_circuit.h"
-#include "simulation_view.h"
 #include "spatial_simulation.h"
 
 #include <gsl/gsl>
@@ -251,9 +249,7 @@ auto render_to_context(Context& ctx, const WidgetRenderConfig& render_config,
     render_circuit_background(ctx);
 
     if (render_config.show_circuit) {
-        // TODO Simulation view should contain layout, remove double reference
-        render_simulation(ctx, spatial_simulation.layout(),
-                          SimulationView {spatial_simulation});
+        render_simulation(ctx, spatial_simulation);
     }
 
     render_circuit_overlay(ctx, render_config);

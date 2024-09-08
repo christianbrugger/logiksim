@@ -78,6 +78,10 @@ auto HistoryView::last_value() const -> bool {
     return data_.last_value;
 }
 
+auto HistoryView::simulation_time() const -> time_t {
+    return data_.simulation_time;
+}
+
 }  // namespace simulation
 
 }  // namespace logicsim

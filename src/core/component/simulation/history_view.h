@@ -47,6 +47,8 @@ class HistoryView {
     [[nodiscard]] auto value(time_t value) const -> bool;
     [[nodiscard]] auto last_value() const -> bool;
 
+    [[nodiscard]] auto simulation_time() const -> time_t;
+
    private:
     HistoryCalculationData data_;
 };

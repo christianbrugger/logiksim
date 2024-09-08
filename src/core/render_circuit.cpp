@@ -25,9 +25,9 @@
 #include "selection.h"
 #include "setting_handle.h"
 #include "simulation.h"
-#include "simulation_view.h"
 #include "size_handle.h"
-#include "timer.h"  // TODO remove
+#include "spatial_simulation.h"
+#include "vocabulary/internal_state.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/length.h"
 #include "vocabulary/logicitem_id.h"
@@ -214,39 +214,50 @@ auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
     }
 }
 
-auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
-                                logicitem_id_t logicitem_id, ElementDrawState state,
-                                simulation_view::ConstElement logic_state) -> void {
-    const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
+auto draw_logic_item_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
+                                logicitem_id_t logicitem_id) -> void {
+    const auto& logic_items = spatial_simulation.layout().logic_items();
+
+    const auto element_id = to_element_id(spatial_simulation, logicitem_id);
+    const auto layout_data = to_layout_calculation_data(logic_items, logicitem_id);
 
     for (auto info : input_locations_and_id(layout_data)) {
-        const auto is_inverted =
-            layout.logic_items().input_inverted(logicitem_id, info.input_id);
+        const auto input = input_t {element_id, info.input_id};
 
-        if (is_inverted || !logic_state.has_connected_input(info.input_id)) {
+        const auto is_inverted = logic_items.input_inverted(logicitem_id, info.input_id);
+        const auto is_connected =
+            is_input_connected(spatial_simulation.schematic(), input);
+        const auto is_enabled = spatial_simulation.simulation().input_value(input);
+
+        if (is_inverted || !is_connected) {
             draw_connector(ctx, ConnectorAttributes {
-                                    .state = state,
+                                    .state = ElementDrawState::normal,
                                     .position = info.position,
                                     .orientation = info.orientation,
                                     .is_inverted = is_inverted,
-                                    .is_enabled = logic_state.input_value(info.input_id),
+                                    .is_enabled = is_enabled,
                                 });
         }
     }
 
     for (auto info : output_locations_and_id(layout_data)) {
-        const auto is_inverted =
-            layout.logic_items().output_inverted(logicitem_id, info.output_id);
+        const auto output = output_t {element_id, info.output_id};
 
-        if (is_inverted || !logic_state.has_connected_output(info.output_id)) {
-            draw_connector(
-                ctx, ConnectorAttributes {
-                         .state = state,
-                         .position = info.position,
-                         .orientation = info.orientation,
-                         .is_inverted = is_inverted,
-                         .is_enabled = logic_state.output_value(info.output_id).value(),
-                     });
+        const auto is_inverted =
+            logic_items.output_inverted(logicitem_id, info.output_id);
+        const auto is_connected =
+            is_output_connected(spatial_simulation.schematic(), output);
+        const auto is_enabled =
+            spatial_simulation.simulation().output_value(output).value();
+
+        if (is_inverted || !is_connected) {
+            draw_connector(ctx, ConnectorAttributes {
+                                    .state = ElementDrawState::normal,
+                                    .position = info.position,
+                                    .orientation = info.orientation,
+                                    .is_inverted = is_inverted,
+                                    .is_enabled = is_enabled,
+                                });
         }
     }
 }
@@ -260,14 +271,12 @@ auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
     }
 }
 
-auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
-                                 std::span<const logicitem_id_t> elements,
-                                 SimulationView simulation_view) -> void {
+auto draw_logic_items_connectors(Context& ctx,
+                                 const SpatialSimulation& spatial_simulation,
+                                 std::span<const logicitem_id_t> elements) -> void {
     if (do_draw_connector(ctx.view_config())) {
         for (const auto logicitem_id : elements) {
-            const auto state = ElementDrawState::normal;
-            draw_logic_item_connectors(ctx, layout, logicitem_id, state,
-                                       simulation_view.element(logicitem_id));
+            draw_logic_item_connectors(ctx, spatial_simulation, logicitem_id);
         }
     }
 }
@@ -531,11 +540,14 @@ auto draw_standard_element(Context& ctx, const Layout& layout,
     draw_logic_item_label(ctx, layout, logicitem_id, standard_element_label(type), state);
 }
 
-auto draw_button(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-                 ElementDrawState state,
+auto draw_standard_element(Context& ctx, const SpatialSimulation& spatial_simulation,
+                           logicitem_id_t logicitem_id) -> void {
+    draw_standard_element(ctx, spatial_simulation.layout(), logicitem_id,
+                          ElementDrawState::normal);
+}
 
-                 std::optional<simulation_view::ConstElement> logic_state) -> void {
-    const auto logic_value = logic_state ? logic_state->internal_state(0) : false;
+auto draw_button(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+                 ElementDrawState state, bool logic_value = false) -> void {
     const auto center = get_logic_item_center(layout, logicitem_id);
 
     draw_logic_item_rect(ctx, layout, logicitem_id, state,
@@ -543,13 +555,18 @@ auto draw_button(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id
     draw_binary_value(ctx, center, logic_value, state);
 }
 
+auto draw_button(Context& ctx, const SpatialSimulation& spatial_simulation,
+                 logicitem_id_t logicitem_id) -> void {
+    const auto element_id = to_element_id(spatial_simulation, logicitem_id);
+    const auto is_enabled = spatial_simulation.simulation().internal_state(
+        internal_state_t {element_id, internal_state_index_t {0}});
+
+    draw_button(ctx, spatial_simulation.layout(), logicitem_id, ElementDrawState::normal,
+                is_enabled);
+}
+
 auto draw_led(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-              ElementDrawState state,
-
-              std::optional<simulation_view::ConstElement> logic_state) -> void {
-    const auto logic_value =
-        logic_state ? logic_state->input_value(connection_id_t {0}) : false;
-
+              ElementDrawState state, bool logic_value = false) -> void {
     const auto base_color =
         logic_value ? defaults::led_color_enabled : defaults::led_color_disabled;
 
@@ -560,6 +577,16 @@ auto draw_led(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                     .fill_color = with_alpha_runtime(base_color, state),
                     .stroke_color = get_logic_item_stroke_color(state),
                 });
+}
+
+auto draw_led(Context& ctx, const SpatialSimulation& spatial_simulation,
+              logicitem_id_t logicitem_id) -> void {
+    const auto element_id = to_element_id(spatial_simulation, logicitem_id);
+    const auto is_enabled = spatial_simulation.simulation().input_value(
+        input_t {element_id, connection_id_t {0}});
+
+    draw_led(ctx, spatial_simulation.layout(), logicitem_id, ElementDrawState::normal,
+             is_enabled);
 }
 
 constexpr static auto power_of_two_labels = string_array<64> {
@@ -580,29 +607,26 @@ static_assert(display_ascii::value_inputs <=
               connection_count_t {power_of_two_labels.size()});
 
 auto _is_display_enabled(const Layout& layout, logicitem_id_t logicitem_id,
-                         std::optional<simulation_view::ConstElement> logic_state)
-    -> bool {
-    const auto input_id = display::enable_input_id;
-
-    if (!logic_state) {
+                         const logic_small_vector_t* input_values) -> bool {
+    if (input_values == nullptr) {
         return true;
     }
 
-    const auto inverted = layout.logic_items().input_inverted(logicitem_id, input_id);
-    return logic_state->input_value(input_id) ^ inverted;
+    const auto input_id = display::enable_input_id;
+    const auto is_inverted = layout.logic_items().input_inverted(logicitem_id, input_id);
+    return input_values->at(input_id.value) ^ is_inverted;
 }
 
 auto _is_display_twos_complement(const Layout& layout, logicitem_id_t logicitem_id,
-                                 std::optional<simulation_view::ConstElement> logic_state)
-    -> bool {
+                                 const logic_small_vector_t* input_values) -> bool {
     const auto input_id = display_number::negative_input_id;
-    const auto inverted = layout.logic_items().input_inverted(logicitem_id, input_id);
+    const auto is_inverted = layout.logic_items().input_inverted(logicitem_id, input_id);
 
-    if (!logic_state) {
-        return inverted;
+    if (input_values == nullptr) {
+        return is_inverted;
     }
 
-    return logic_state->input_value(input_id) ^ inverted;
+    return input_values->at(input_id.value) ^ is_inverted;
 }
 
 auto _draw_number_display_input_labels(Context& ctx, const Layout& layout,
@@ -648,18 +672,17 @@ auto _draw_ascii_display_input_labels(Context& ctx, const Layout& layout,
 }
 
 auto _inputs_to_number(const Layout& layout, logicitem_id_t logicitem_id,
-                       simulation_view::ConstElement logic_state,
-                       const connection_count_t control_inputs) -> uint64_t {
-    const auto& values = logic_state.input_values();
+                       const connection_count_t control_inputs,
+                       const logic_small_vector_t& input_values) -> uint64_t {
     const auto& inverters = layout.logic_items().input_inverters(logicitem_id);
 
-    if (values.size() - std::size_t {control_inputs} > std::size_t {64}) {
+    if (input_values.size() - std::size_t {control_inputs} > std::size_t {64}) {
         throw_exception("input size too large");
     }
 
     auto number = uint64_t {0};
-    for (const auto& i : range(std::size_t {control_inputs}, values.size())) {
-        const auto value = values.at(i) ^ inverters.at(i);
+    for (const auto& i : range(std::size_t {control_inputs}, input_values.size())) {
+        const auto value = input_values.at(i) ^ inverters.at(i);
         number |= (static_cast<uint64_t>(value) << (i - std::size_t {control_inputs}));
     }
     return number;
@@ -680,7 +703,7 @@ auto _draw_number_display(Context& ctx, const Layout& layout, logicitem_id_t log
                           grid_fine_t element_height, Func to_text,
                           std::string_view interactive_mode_text,
                           connection_count_t control_inputs,
-                          std::optional<simulation_view::ConstElement> logic_state) {
+                          const logic_small_vector_t* input_values) {
     // TODO handle width / height differently
 
     // white background
@@ -709,10 +732,10 @@ auto _draw_number_display(Context& ctx, const Layout& layout, logicitem_id_t log
         LogicItemRectAttributes {.custom_fill_color = defaults::color_white});
 
     // number
-    if (logic_state) {
-        if (_is_display_enabled(layout, logicitem_id, logic_state)) {
+    if (input_values != nullptr) {
+        if (_is_display_enabled(layout, logicitem_id, input_values)) {
             auto number =
-                _inputs_to_number(layout, logicitem_id, *logic_state, control_inputs);
+                _inputs_to_number(layout, logicitem_id, control_inputs, *input_values);
             const auto text = styled_display_text_t {to_text(number)};
             draw_logic_item_label(ctx, text_position, text.text, state,
                                   LogicItemTextAttributes {
@@ -764,8 +787,7 @@ auto _number_value_to_text(bool two_complement, std::size_t digit_count) {
 
 auto draw_display_number(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                          ElementDrawState state,
-                         std::optional<simulation_view::ConstElement> logic_state)
-    -> void {
+                         const logic_small_vector_t* input_values = nullptr) -> void {
     const auto input_count = layout.logic_items().input_count(logicitem_id);
     // TODO remove
     const auto element_width = grid_fine_t {display_number::width(input_count)};
@@ -774,15 +796,24 @@ auto draw_display_number(Context& ctx, const Layout& layout, logicitem_id_t logi
     draw_logic_item_rect(ctx, layout, logicitem_id, state);
 
     const auto two_complement =
-        _is_display_twos_complement(layout, logicitem_id, logic_state);
+        _is_display_twos_complement(layout, logicitem_id, input_values);
     const auto edit_mode_text = "0";
     const auto control_inputs = display_number::control_inputs;
     const auto value_inputs = display_number::value_inputs(input_count);
     const auto to_text =
         _number_value_to_text(two_complement, std::size_t {value_inputs});
     _draw_number_display(ctx, layout, logicitem_id, state, element_width, element_height,
-                         to_text, edit_mode_text, control_inputs, logic_state);
+                         to_text, edit_mode_text, control_inputs, input_values);
     _draw_number_display_input_labels(ctx, layout, logicitem_id, state, two_complement);
+}
+
+auto draw_display_number(Context& ctx, const SpatialSimulation& spatial_simulation,
+                         logicitem_id_t logicitem_id) -> void {
+    const auto element_id = to_element_id(spatial_simulation, logicitem_id);
+    const auto& input_values = spatial_simulation.simulation().input_values(element_id);
+
+    draw_display_number(ctx, spatial_simulation.layout(), logicitem_id,
+                        ElementDrawState::normal, &input_values);
 }
 
 namespace {
@@ -824,8 +855,7 @@ auto _asci_value_to_text(uint64_t number) -> styled_display_text_t {
 
 auto draw_display_ascii(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                         ElementDrawState state,
-                        std::optional<simulation_view::ConstElement> logic_state)
-    -> void {
+                        const logic_small_vector_t* input_values = nullptr) -> void {
     // TODO remove
     const auto element_width = grid_fine_t {display_ascii::width};
     const auto element_height = grid_fine_t {display_ascii::height};
@@ -836,8 +866,17 @@ auto draw_display_ascii(Context& ctx, const Layout& layout, logicitem_id_t logic
     const auto control_inputs = display_ascii::control_inputs;
     _draw_number_display(ctx, layout, logicitem_id, state, element_width, element_height,
                          _asci_value_to_text, edit_mode_text, control_inputs,
-                         logic_state);
+                         input_values);
     _draw_ascii_display_input_labels(ctx, layout, logicitem_id, state);
+}
+
+auto draw_display_ascii(Context& ctx, const SpatialSimulation& spatial_simulation,
+                        logicitem_id_t logicitem_id) -> void {
+    const auto element_id = to_element_id(spatial_simulation, logicitem_id);
+    const auto& input_values = spatial_simulation.simulation().input_values(element_id);
+
+    draw_display_ascii(ctx, spatial_simulation.layout(), logicitem_id,
+                       ElementDrawState::normal, &input_values);
 }
 
 auto draw_buffer(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
@@ -845,6 +884,11 @@ auto draw_buffer(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id
     draw_logic_item_rect(ctx, layout, logicitem_id, state);
     draw_logic_item_label(ctx, layout, logicitem_id, "1", state,
                           {.custom_font_size = defaults::font::buffer_label_size});
+}
+
+auto draw_buffer(Context& ctx, const SpatialSimulation& spatial_simulation,
+                 logicitem_id_t logicitem_id) -> void {
+    draw_buffer(ctx, spatial_simulation.layout(), logicitem_id, ElementDrawState::normal);
 }
 
 auto draw_clock_generator(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
@@ -882,6 +926,12 @@ auto draw_clock_generator(Context& ctx, const Layout& layout, logicitem_id_t log
                           });
 }
 
+auto draw_clock_generator(Context& ctx, const SpatialSimulation& spatial_simulation,
+                          logicitem_id_t logicitem_id) -> void {
+    draw_clock_generator(ctx, spatial_simulation.layout(), logicitem_id,
+                         ElementDrawState::normal);
+}
+
 auto draw_flipflop_jk(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                       ElementDrawState state) -> void {
     draw_logic_item_rect(ctx, layout, logicitem_id, state);
@@ -892,10 +942,15 @@ auto draw_flipflop_jk(Context& ctx, const Layout& layout, logicitem_id_t logicit
                           ConnectorLabels {input_labels, output_labels}, state);
 }
 
+auto draw_flipflop_jk(Context& ctx, const SpatialSimulation& spatial_simulation,
+                      logicitem_id_t logicitem_id) -> void {
+    draw_flipflop_jk(ctx, spatial_simulation.layout(), logicitem_id,
+                     ElementDrawState::normal);
+}
+
 auto draw_shift_register(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                          ElementDrawState state,
-                         std::optional<simulation_view::ConstElement> logic_state)
-    -> void {
+                         const logic_small_vector_t* internal_state = nullptr) -> void {
     draw_logic_item_rect(ctx, layout, logicitem_id, state);
 
     // content
@@ -906,10 +961,11 @@ auto draw_shift_register(Context& ctx, const Layout& layout, logicitem_id_t logi
     const auto position = layout.logic_items().position(logicitem_id);
     for (auto n : range(output_count, state_size)) {
         const auto point = point_fine_t {
-            -1 + 2.0 * static_cast<double>(n / output_count),
+            -1.0 + 2.0 * static_cast<double>(n / output_count),
             0.25 + 1.5 * static_cast<double>(n % output_count),
         };
-        const auto logic_value = logic_state ? logic_state->internal_state(n) : false;
+        const auto logic_value =
+            internal_state != nullptr ? internal_state->at(n) : false;
         draw_binary_value(ctx, position + point, logic_value, state);
     }
 
@@ -918,6 +974,16 @@ auto draw_shift_register(Context& ctx, const Layout& layout, logicitem_id_t logi
     static constexpr auto output_labels = string_array<2> {"", ""};
     draw_connector_labels(ctx, layout, logicitem_id,
                           ConnectorLabels {input_labels, output_labels}, state);
+}
+
+auto draw_shift_register(Context& ctx, const SpatialSimulation& spatial_simulation,
+                         logicitem_id_t logicitem_id) -> void {
+    const auto element_id = to_element_id(spatial_simulation, logicitem_id);
+    const auto& internal_state =
+        spatial_simulation.simulation().internal_state(element_id);
+
+    draw_shift_register(ctx, spatial_simulation.layout(), logicitem_id,
+                        ElementDrawState::normal, &internal_state);
 }
 
 auto draw_latch_d(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
@@ -930,6 +996,12 @@ auto draw_latch_d(Context& ctx, const Layout& layout, logicitem_id_t logicitem_i
                           ConnectorLabels {input_labels, output_labels}, state);
 }
 
+auto draw_latch_d(Context& ctx, const SpatialSimulation& spatial_simulation,
+                  logicitem_id_t logicitem_id) -> void {
+    draw_latch_d(ctx, spatial_simulation.layout(), logicitem_id,
+                 ElementDrawState::normal);
+}
+
 auto draw_flipflop_d(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                      ElementDrawState state) -> void {
     draw_logic_item_rect(ctx, layout, logicitem_id, state);
@@ -938,6 +1010,12 @@ auto draw_flipflop_d(Context& ctx, const Layout& layout, logicitem_id_t logicite
     static constexpr auto output_labels = string_array<1> {"Q"};
     draw_connector_labels(ctx, layout, logicitem_id,
                           ConnectorLabels {input_labels, output_labels}, state);
+}
+
+auto draw_flipflop_d(Context& ctx, const SpatialSimulation& spatial_simulation,
+                     logicitem_id_t logicitem_id) -> void {
+    draw_flipflop_d(ctx, spatial_simulation.layout(), logicitem_id,
+                    ElementDrawState::normal);
 }
 
 auto draw_flipflop_ms_d(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
@@ -950,14 +1028,18 @@ auto draw_flipflop_ms_d(Context& ctx, const Layout& layout, logicitem_id_t logic
                           ConnectorLabels {input_labels, output_labels}, state);
 }
 
+auto draw_flipflop_ms_d(Context& ctx, const SpatialSimulation& spatial_simulation,
+                        logicitem_id_t logicitem_id) -> void {
+    draw_flipflop_ms_d(ctx, spatial_simulation.layout(), logicitem_id,
+                       ElementDrawState::normal);
+}
+
 //
 // All Elements
 //
 
 auto draw_logic_item_base(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-                          ElementDrawState state,
-                          std::optional<simulation_view::ConstElement> logic_state)
-    -> void {
+                          ElementDrawState state) -> void {
     switch (layout.logic_items().type(logicitem_id)) {
         using enum LogicItemType;
 
@@ -970,20 +1052,20 @@ auto draw_logic_item_base(Context& ctx, const Layout& layout, logicitem_id_t log
             return draw_standard_element(ctx, layout, logicitem_id, state);
 
         case button:
-            return draw_button(ctx, layout, logicitem_id, state, logic_state);
+            return draw_button(ctx, layout, logicitem_id, state);
         case led:
-            return draw_led(ctx, layout, logicitem_id, state, logic_state);
+            return draw_led(ctx, layout, logicitem_id, state);
         case display_number:
-            return draw_display_number(ctx, layout, logicitem_id, state, logic_state);
+            return draw_display_number(ctx, layout, logicitem_id, state);
         case display_ascii:
-            return draw_display_ascii(ctx, layout, logicitem_id, state, logic_state);
+            return draw_display_ascii(ctx, layout, logicitem_id, state);
 
         case clock_generator:
             return draw_clock_generator(ctx, layout, logicitem_id, state);
         case flipflop_jk:
             return draw_flipflop_jk(ctx, layout, logicitem_id, state);
         case shift_register:
-            return draw_shift_register(ctx, layout, logicitem_id, state, logic_state);
+            return draw_shift_register(ctx, layout, logicitem_id, state);
         case latch_d:
             return draw_latch_d(ctx, layout, logicitem_id, state);
         case flipflop_d:
@@ -1004,14 +1086,51 @@ auto draw_logic_items_base(Context& ctx, const Layout& layout,
     }
 }
 
-auto draw_logic_items_base(Context& ctx, const Layout& layout,
-                           std::span<const logicitem_id_t> elements,
-                           SimulationView simulation_view) -> void {
-    const auto state = ElementDrawState::normal;
+auto draw_logic_item_base(Context& ctx, const SpatialSimulation& spatial_simulation,
+                          logicitem_id_t logicitem_id) -> void {
+    switch (spatial_simulation.layout().logic_items().type(logicitem_id)) {
+        using enum LogicItemType;
 
+        case buffer_element:
+            return draw_buffer(ctx, spatial_simulation, logicitem_id);
+
+        case and_element:
+        case or_element:
+        case xor_element:
+            return draw_standard_element(ctx, spatial_simulation, logicitem_id);
+
+        case button:
+            return draw_button(ctx, spatial_simulation, logicitem_id);
+        case led:
+            return draw_led(ctx, spatial_simulation, logicitem_id);
+        case display_number:
+            return draw_display_number(ctx, spatial_simulation, logicitem_id);
+        case display_ascii:
+            return draw_display_ascii(ctx, spatial_simulation, logicitem_id);
+
+        case clock_generator:
+            return draw_clock_generator(ctx, spatial_simulation, logicitem_id);
+        case flipflop_jk:
+            return draw_flipflop_jk(ctx, spatial_simulation, logicitem_id);
+        case shift_register:
+            return draw_shift_register(ctx, spatial_simulation, logicitem_id);
+        case latch_d:
+            return draw_latch_d(ctx, spatial_simulation, logicitem_id);
+        case flipflop_d:
+            return draw_flipflop_d(ctx, spatial_simulation, logicitem_id);
+        case flipflop_ms_d:
+            return draw_flipflop_ms_d(ctx, spatial_simulation, logicitem_id);
+
+        case sub_circuit:
+            return draw_standard_element(ctx, spatial_simulation, logicitem_id);
+    }
+    throw_exception("not supported");
+}
+
+auto draw_logic_items_base(Context& ctx, const SpatialSimulation& spatial_simulation,
+                           std::span<const logicitem_id_t> elements) -> void {
     for (const auto& logicitem_id : elements) {
-        draw_logic_item_base(ctx, layout, logicitem_id, state,
-                             simulation_view.element(logicitem_id));
+        draw_logic_item_base(ctx, spatial_simulation, logicitem_id);
     }
 }
 
@@ -1124,19 +1243,18 @@ auto _draw_line_segment_with_history(Context& ctx, point_t p_from, point_t p_unt
     }
 }
 
-auto _draw_wire_with_history(Context& ctx, const Layout& layout [[maybe_unused]],
-                             wire_id_t wire_id [[maybe_unused]],
-                             simulation_view::ConstElement logic_state,
-                             const simulation::HistoryView& history) -> void {
+auto _draw_wire_with_history(Context& ctx, const LineTree& line_tree,
+                             simulation::HistoryView history,
+                             delay_t wire_delay_per_distance) -> void {
     if (history.size() < 2) [[unlikely]] {
         throw_exception("requires history view with at least 2 entries");
     }
 
-    // TODO access length_.value ?
-    const auto to_time = [time = logic_state.time(),
-                          delay = logic_state.wire_delay_per_distance()](
-                             length_t length_) { return time - length_.value * delay; };
-    const auto& line_tree = logic_state.line_tree();
+    const auto to_time = [time = history.simulation_time(),
+                          delay = wire_delay_per_distance](length_t length_) {
+        // TODO add * operator to delay_t ?
+        return time - length_.value * delay;
+    };
 
     for (auto&& index : indices(line_tree)) {
         const auto line = line_tree.line(index);
@@ -1157,31 +1275,24 @@ auto _draw_wire_with_history(Context& ctx, const Layout& layout [[maybe_unused]]
     }
 }
 
-auto draw_wire(Context& ctx, const Layout& layout, wire_id_t wire_id,
-               simulation_view::ConstElement logic_state) -> void {
-    const auto history = logic_state.input_history();
+auto draw_wire(Context& ctx, const SpatialSimulation& spatial_simulation,
+               wire_id_t wire_id) -> void {
+    const auto element_id = to_element_id(spatial_simulation, wire_id);
+    const auto history = spatial_simulation.simulation().input_history(element_id);
 
     if (history.size() <= 1) {
-        draw_segment_tree(ctx, layout, wire_id, history.last_value(),
+        draw_segment_tree(ctx, spatial_simulation.layout(), wire_id, history.last_value(),
                           ElementDrawState::normal);
         return;
     }
 
-    _draw_wire_with_history(ctx, layout, wire_id, logic_state, history);
+    _draw_wire_with_history(ctx, spatial_simulation.line_tree(wire_id), history,
+                            spatial_simulation.wire_delay_per_distance());
 }
 
 //
 //
 //
-
-/*
-auto draw_wires(Context& ctx, const Layout& layout,
-                std::span<const DrawableElement> elements) -> void {
-    for (const auto entry : elements) {
-        draw_segment_tree(ctx, layout, entry.wire, entry.state);
-    }
-}
-*/
 
 auto draw_wires(Context& ctx, const Layout& layout, std::span<const wire_id_t> elements,
                 ElementDrawState state) -> void {
@@ -1190,10 +1301,10 @@ auto draw_wires(Context& ctx, const Layout& layout, std::span<const wire_id_t> e
     }
 }
 
-auto draw_wires(Context& ctx, const Layout& layout, std::span<const wire_id_t> elements,
-                SimulationView simulation_view) -> void {
+auto draw_wires(Context& ctx, const SpatialSimulation& spatial_simulation,
+                std::span<const wire_id_t> elements) -> void {
     for (const auto& wire_id : elements) {
-        draw_wire(ctx, layout, wire_id, simulation_view.element(wire_id));
+        draw_wire(ctx, spatial_simulation, wire_id);
     }
 }
 
@@ -1650,17 +1761,16 @@ auto render_interactive_layers(Context& ctx, const Layout& layout,
     }
 }
 
-auto render_simulation_layers(Context& ctx, const Layout& layout,
-                              SimulationView simulation_view,
+auto render_simulation_layers(Context& ctx, const SpatialSimulation& spatial_simulation,
                               const SimulationLayers& layers) {
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    draw_logic_items_base(ctx, layout, layers.items_below, simulation_view);
-    draw_wires(ctx, layout, layers.wires, simulation_view);
-    draw_logic_items_base(ctx, layout, layers.items_above, simulation_view);
+    draw_logic_items_base(ctx, spatial_simulation, layers.items_below);
+    draw_wires(ctx, spatial_simulation, layers.wires);
+    draw_logic_items_base(ctx, spatial_simulation, layers.items_above);
 
-    draw_logic_items_connectors(ctx, layout, layers.items_below, simulation_view);
-    draw_logic_items_connectors(ctx, layout, layers.items_above, simulation_view);
+    draw_logic_items_connectors(ctx, spatial_simulation, layers.items_below);
+    draw_logic_items_connectors(ctx, spatial_simulation, layers.items_above);
 };
 
 //
@@ -1795,16 +1905,11 @@ auto build_interactive_layers(const Layout& layout, const Selection* selection,
 
     layers.calculate_overlay_bounding_rect();
 
-    // const auto t = Timer {fmt::format("build_interactive_layers {} items, {:.3f} kb",
-    //                                   layers.size(), layers.allocated_size() / 1024.)};
-
     return layers;
 }
 
 auto build_simulation_layers(const Layout& layout,
                              rect_t scene_rect) -> SimulationLayers {
-    // const auto t = Timer {};
-
     auto layers = SimulationLayers {};
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
@@ -1833,10 +1938,6 @@ auto build_simulation_layers(const Layout& layout,
 
         layers.wires.push_back(wire_id);
     }
-
-    // fmt::format("build_simulation_layers {} items, {:.3f} kb: {}",
-    //                                   layers.size(), layers.allocated_size() / 1024.,
-    //                                   t);
 
     return layers;
 }
@@ -1920,21 +2021,21 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, BLS
 // Simulation
 //
 
-auto render_simulation(Context& ctx, const Layout& layout,
-                       SimulationView simulation_view) -> void {
+auto render_simulation(Context& ctx,
+                       const SpatialSimulation& spatial_simulation) -> void {
     const auto scene_rect = get_scene_rect(ctx.view_config());
-    const auto layers = build_simulation_layers(layout, scene_rect);
+    const auto layers = build_simulation_layers(spatial_simulation.layout(), scene_rect);
 
-    render_simulation_layers(ctx, layout, simulation_view, layers);
+    render_simulation_layers(ctx, spatial_simulation, layers);
 }
 
-auto render_simulation_to_file(const Layout& layout, SimulationView simulation_view,
-                               BLSizeI size, const std::filesystem::path& filename,
+auto render_simulation_to_file(const SpatialSimulation& spatial_simulation, BLSizeI size,
+                               const std::filesystem::path& filename,
                                const ViewConfig& view_config,
                                const ContextCache& cache) -> void {
     render_circuit_to_file(size, filename, view_config, cache, [&](Context& ctx) {
         render_background(ctx);
-        render_simulation(ctx, layout, simulation_view);
+        render_simulation(ctx, spatial_simulation);
     });
 }
 }  // namespace logicsim

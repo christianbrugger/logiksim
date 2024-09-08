@@ -23,7 +23,7 @@ add_subdirectory(
 
 set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
 add_executable(${MAIN_BENCHMARK_TARGET}
-    main_bechmark.cpp
+    main_benchmark.cpp
 )
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
     ${MAIN_LIBRARY}

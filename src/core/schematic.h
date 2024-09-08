@@ -125,9 +125,12 @@ class Schematic {
 
 auto swap(Schematic &a, Schematic &b) noexcept -> void;
 
-[[nodiscard]] auto has_input_connections(const Schematic &data,
+[[nodiscard]] auto is_input_connected(const Schematic &schematic, input_t input) -> bool;
+[[nodiscard]] auto is_output_connected(const Schematic &schematic,
+                                       output_t output) -> bool;
+[[nodiscard]] auto has_input_connections(const Schematic &schematic,
                                          element_id_t element_id) -> bool;
-[[nodiscard]] auto has_output_connections(const Schematic &data,
+[[nodiscard]] auto has_output_connections(const Schematic &schematic,
                                           element_id_t element_id) -> bool;
 
 //
