@@ -1,7 +1,6 @@
 #ifndef LOGIKSIM_RENDER_CIRCUIT_H
 #define LOGIKSIM_RENDER_CIRCUIT_H
 
-#include "exception.h"
 #include "logic_item/layout_display.h"  // TODO remove
 #include "render_generic.h"
 #include "vocabulary.h"
@@ -15,6 +14,7 @@
 #include <gsl/gsl>
 
 #include <span>
+#include <stdexcept>
 #include <string_view>
 
 namespace logicsim {
@@ -120,7 +120,7 @@ constexpr auto state_alpha(ElementDrawState state) noexcept -> color_t::value_ty
         case temporary_selected:
             return defaults::element_state_alpha::temporary;
     }
-    throw_exception("unexcepted draw state in state_alpha");
+    throw std::runtime_error("unexcepted draw state in state_alpha");
 }
 
 consteval auto with_alpha(color_t color, ElementDrawState state) noexcept -> color_t {

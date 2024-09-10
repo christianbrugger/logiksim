@@ -38,6 +38,7 @@
 
 #include <locale>
 #include <numbers>
+#include <stdexcept>
 
 namespace logicsim {
 
@@ -294,9 +295,11 @@ auto connector_horizontal_alignment(orientation_t orientation) -> HTextAlignment
         case down:
             return HTextAlignment::center;
 
-        default:
-            throw_exception("orientation has no horizontal alignment");
+        case undirected:
+            throw std::runtime_error("orientation has no horizontal alignment");
     };
+
+    throw std::runtime_error("unknown orientation type");
 }
 
 auto connector_vertical_alignment(orientation_t orientation) -> VTextAlignment {
@@ -312,9 +315,11 @@ auto connector_vertical_alignment(orientation_t orientation) -> VTextAlignment {
         case down:
             return VTextAlignment::baseline;
 
-        default:
-            throw_exception("orienation has no vertical alignment");
+        case undirected:
+            throw std::runtime_error("orienation has no vertical alignment");
     };
+
+    throw std::runtime_error("unknown orientation type");
 }
 
 auto draw_connector_label(Context& ctx, point_t position, orientation_t orientation,
@@ -394,7 +399,7 @@ auto get_logic_item_state(const Layout& layout, logicitem_id_t logicitem_id,
     if (is_selected()) {
         return ElementDrawState::temporary_selected;
     }
-    throw_exception("cannot draw temporary items");
+    throw std::runtime_error("cannot draw temporary items");
 }
 
 auto get_logic_item_fill_color(ElementDrawState state) -> color_t {
@@ -416,7 +421,7 @@ auto get_logic_item_fill_color(ElementDrawState state) -> color_t {
             return with_alpha(body_fill_color::temporary_selected, temporary_selected);
     };
 
-    throw_exception("draw state has no logic item base color");
+    throw std::runtime_error("draw state has no logic item base color");
 }
 
 auto get_logic_item_stroke_color(ElementDrawState state) -> color_t {
@@ -529,7 +534,7 @@ constexpr auto standard_element_label(LogicItemType element_type) -> std::string
             return "C";
 
         default:
-            throw_exception("element type has no standard label");
+            throw std::runtime_error("element type has no standard label");
     }
 }
 
@@ -676,8 +681,9 @@ auto _inputs_to_number(const Layout& layout, logicitem_id_t logicitem_id,
                        const logic_small_vector_t& input_values) -> uint64_t {
     const auto& inverters = layout.logic_items().input_inverters(logicitem_id);
 
-    if (input_values.size() - std::size_t {control_inputs} > std::size_t {64}) {
-        throw_exception("input size too large");
+    if (input_values.size() - std::size_t {control_inputs} > std::size_t {64})
+        [[unlikely]] {
+        throw std::runtime_error("input size too large");
     }
 
     auto number = uint64_t {0};
@@ -758,7 +764,7 @@ auto _draw_number_display(Context& ctx, const Layout& layout, logicitem_id_t log
 
 auto _number_value_to_text(bool two_complement, std::size_t digit_count) {
     if (digit_count > 64) [[unlikely]] {
-        throw_exception("too many digits");
+        throw std::runtime_error("too many digits");
     }
 
     return [two_complement, digit_count](uint64_t number) -> styled_display_text_t {
@@ -821,7 +827,7 @@ auto _asci_value_to_text(uint64_t number) -> styled_display_text_t {
     constexpr auto vertical_alignment = VTextAlignment::center_baseline;
 
     if (number > 127) [[unlikely]] {
-        throw_exception("value out of range");
+        throw std::runtime_error("value out of range");
     }
 
     const auto control_chars =
@@ -1076,7 +1082,7 @@ auto draw_logic_item_base(Context& ctx, const Layout& layout, logicitem_id_t log
         case sub_circuit:
             return draw_standard_element(ctx, layout, logicitem_id, state);
     }
-    throw_exception("not supported");
+    throw std::runtime_error("not supported");
 }
 
 auto draw_logic_items_base(Context& ctx, const Layout& layout,
@@ -1124,7 +1130,7 @@ auto draw_logic_item_base(Context& ctx, const SpatialSimulation& spatial_simulat
         case sub_circuit:
             return draw_standard_element(ctx, spatial_simulation, logicitem_id);
     }
-    throw_exception("not supported");
+    throw std::runtime_error("not supported");
 }
 
 auto draw_logic_items_base(Context& ctx, const SpatialSimulation& spatial_simulation,
@@ -1247,7 +1253,7 @@ auto _draw_wire_with_history(Context& ctx, const LineTree& line_tree,
                              simulation::HistoryView history,
                              delay_t wire_delay_per_distance) -> void {
     if (history.size() < 2) [[unlikely]] {
-        throw_exception("requires history view with at least 2 entries");
+        throw std::runtime_error("requires history view with at least 2 entries");
     }
 
     const auto to_time = [time = history.simulation_time(),
@@ -1419,7 +1425,7 @@ auto format(shadow_t orientation) -> std::string {
         case colliding:
             return "colliding";
     }
-    throw_exception("Don't know how to convert shadow_t to string.");
+    throw std::runtime_error("Don't know how to convert shadow_t to string.");
 }
 
 auto shadow_color(shadow_t shadow_type) -> color_t {
@@ -1435,7 +1441,7 @@ auto shadow_color(shadow_t shadow_type) -> color_t {
         }
     };
 
-    throw_exception("unknown shadow type");
+    throw std::runtime_error("unknown shadow type");
 }
 
 auto element_shadow_rounding(LogicItemType type) -> grid_fine_t {

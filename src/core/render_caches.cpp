@@ -1,12 +1,12 @@
 #include "render_caches.h"
 
 #include "editable_circuit.h"
-#include "exception.h"
 #include "geometry/orientation.h"
 #include "geometry/rect.h"
 #include "geometry/scene.h"
 
 #include <numbers>
+#include <stdexcept>
 
 namespace logicsim {
 
@@ -91,13 +91,13 @@ auto render_editable_circuit_connection_cache(
     const auto output_size = grid_fine_t {0.8};
 
     // input
-    for (const auto [position, orientation] :
+    for (const auto& [position, orientation] :
          index.logicitem_input_index().positions_and_orientations()) {
         if (is_colliding(position, scene_rect)) {
             render_input_marker(ctx, position, logicitem_color, orientation, input_size);
         }
     }
-    for (const auto [position, orientation] :
+    for (const auto& [position, orientation] :
          index.wire_input_index().positions_and_orientations()) {
         if (is_colliding(position, scene_rect)) {
             render_input_marker(ctx, position, wire_color, orientation, input_size);
@@ -105,14 +105,14 @@ auto render_editable_circuit_connection_cache(
     }
 
     // output
-    for (const auto [position, orientation] :
+    for (const auto& [position, orientation] :
          index.logicitem_output_index().positions_and_orientations()) {
         if (is_colliding(position, scene_rect)) {
             render_output_marker(ctx, position, logicitem_color, orientation,
                                  output_size);
         }
     }
-    for (const auto [position, orientation] :
+    for (const auto& [position, orientation] :
          index.wire_output_index().positions_and_orientations()) {
         if (is_colliding(position, scene_rect)) {
             render_output_marker(ctx, position, wire_color, orientation, output_size);
@@ -128,7 +128,7 @@ auto render_editable_circuit_collision_cache(
     const auto scene_rect = get_scene_rect(ctx.settings.view_config);
     const auto& index = editable_circuit.modifier().circuit_data().index;
 
-    for (auto [point, state] : index.collision_index().states()) {
+    for (const auto& [point, state] : index.collision_index().states()) {
         if (!is_colliding(point, scene_rect)) {
             continue;
         }
@@ -173,7 +173,7 @@ auto render_editable_circuit_collision_cache(
                 break;
             }
             case invalid_state: {
-                throw_exception("invalid state encountered");
+                throw std::runtime_error("invalid state encountered");
                 break;
             }
         }
@@ -186,7 +186,6 @@ auto render_editable_circuit_selection_cache(
     const auto& index = editable_circuit.modifier().circuit_data().index;
 
     for (const rect_fine_t& rect : index.selection_index().rects()) {
-        // TODO introduce is_visible
         if (!is_colliding(rect, scene_rect)) {
             continue;
         }

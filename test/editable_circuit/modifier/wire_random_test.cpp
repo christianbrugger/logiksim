@@ -1,7 +1,6 @@
 #include "algorithm/uniform_int_distribution.h"
 #include "component/editable_circuit/modifier.h"
 #include "editable_circuit.h"
-#include "exception.h"
 #include "geometry/line.h"
 #include "line_tree.h"
 #include "random/bool.h"
@@ -10,7 +9,6 @@
 #include "random/wire.h"
 #include "selection_normalization.h"
 #include "test/editable_circuit/modifier/test_helpers.h"
-#include "timer.h"
 #include "tree_normalization.h"
 #include "vocabulary/segment_part.h"
 
@@ -18,6 +16,8 @@
 #include <gtest/gtest.h>
 
 #include <range/v3/view/zip.hpp>
+
+#include <stdexcept>
 
 namespace logicsim {
 
@@ -66,7 +66,7 @@ auto format(InsertionResult value) -> std::string {
     if (value == InsertionResult::valid) {
         return "valid";
     }
-    throw_exception("unknown InsertionResult value");
+    throw std::runtime_error("unknown InsertionResult value");
 }
 
 namespace {
@@ -198,14 +198,16 @@ auto test_add_wire_states_correct(Rng& rng) {
             modifier.add_wire_segment(entry.line, entry.new_insertion_mode);
 
         if (!segment_part) [[unlikely]] {
-            throw_exception("wasn't able to insert line that should be insertable");
+            throw std::runtime_error(
+                "wasn't able to insert line that should be insertable");
         }
         if (distance(segment_part.part) != distance(entry.line)) [[unlikely]] {
-            throw_exception("returned segment has different size than given line");
+            throw std::runtime_error(
+                "returned segment has different size than given line");
         }
         if (get_line(modifier.circuit_data().layout, segment_part) != entry.line)
             [[unlikely]] {
-            throw_exception("the line the segment points to is different");
+            throw std::runtime_error("the line the segment points to is different");
         }
     }
     Expects(is_valid(modifier));
@@ -262,20 +264,21 @@ auto test_remove_many_wires(Rng& rng, bool random_modes) {
             const auto& selection = editable_circuit.selection(guard.selection_id());
             if (selection.selected_segments().size() != 1 ||
                 selection.selected_segments().front().second.size() != 1 ||
-                selection.selected_segments().front().second.front() != part) {
-                throw_exception("unexpected segment state");
+                selection.selected_segments().front().second.front() != part)
+                [[unlikely]] {
+                throw std::runtime_error("unexpected segment state");
             }
         }
 
         editable_circuit.delete_all(guard.selection_id());
-        if (!editable_circuit.selection(guard.selection_id()).empty()) {
-            throw_exception("selection should be empty");
+        if (!editable_circuit.selection(guard.selection_id()).empty()) [[unlikely]] {
+            throw std::runtime_error("selection should be empty");
         }
         Expects(is_valid(editable_circuit));
     }
 
-    if (has_segments(editable_circuit.layout())) {
-        throw_exception("layout should be empty at this point");
+    if (has_segments(editable_circuit.layout())) [[unlikely]] {
+        throw std::runtime_error("layout should be empty at this point");
     }
 }
 }  // namespace
@@ -317,8 +320,8 @@ auto test_remove_partial_wires(Rng& rng, bool random_modes) {
                                  circuit.index.collision_index(), SanitizeMode::expand);
         }();
 
-        if (!segment_part) {
-            throw_exception("invalid segment part");
+        if (!segment_part) [[unlikely]] {
+            throw std::runtime_error("invalid segment part");
         }
         const auto orig_distance = distance(segment_part.part);
 
@@ -332,20 +335,20 @@ auto test_remove_partial_wires(Rng& rng, bool random_modes) {
             if (selection.selected_segments().size() != 1 ||
                 selection.selected_segments().front().second.size() != 1 ||
                 distance(selection.selected_segments().front().second.front()) !=
-                    orig_distance) {
-                throw_exception("unexpected segment state");
+                    orig_distance) [[unlikely]] {
+                throw std::runtime_error("unexpected segment state");
             }
         }
 
         editable_circuit.delete_all(guard.selection_id());
-        if (!editable_circuit.selection(guard.selection_id()).empty()) {
-            throw_exception("selection should be empty");
+        if (!editable_circuit.selection(guard.selection_id()).empty()) [[unlikely]] {
+            throw std::runtime_error("selection should be empty");
         }
         Expects(is_valid(editable_circuit));
     }
 
-    if (has_segments(editable_circuit.layout())) {
-        throw_exception("layout should be empty at this point");
+    if (has_segments(editable_circuit.layout())) [[unlikely]] {
+        throw std::runtime_error("layout should be empty at this point");
     }
 }
 }  // namespace

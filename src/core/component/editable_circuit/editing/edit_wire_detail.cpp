@@ -8,6 +8,7 @@
 #include "tree_normalization.h"
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace logicsim {
 
@@ -323,7 +324,7 @@ auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_pa
         _move_touching_segment_between_trees(circuit, segment_part, destination_id);
     } else if (a_inside_b_not_touching(moving_part, full_part)) {
         _move_splitting_segment_between_trees(circuit, segment_part, destination_id);
-    } else {
+    } else [[unlikely]] {
         throw std::runtime_error("segment part is invalid");
     }
 }
@@ -432,7 +433,7 @@ auto remove_segment_from_tree(CircuitData& circuit,
         _remove_touching_segment_from_tree(circuit, segment_part);
     } else if (a_inside_b_not_touching(removed_part, full_part)) {
         _remove_splitting_segment_from_tree(circuit, segment_part);
-    } else {
+    } else [[unlikely]] {
         throw std::runtime_error("segment part is invalid");
     }
 }
@@ -683,7 +684,7 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
                            wire_id_t& tree_source) -> void {
     if (tree_destination >= tree_source) [[unlikely]] {
         // optimization
-        throw std::runtime_error("source is deleted and should have larget id");
+        throw std::runtime_error("source is deleted and should have larger id");
     }
 
     if (!is_inserted(tree_source) && !is_inserted(tree_destination)) [[unlikely]] {
@@ -805,9 +806,8 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
     const auto segments = circuit.index.selection_index().query_line_segments(position);
     const auto segment_count = get_segment_count(segments);
 
-    if (segment_count == 0) [[unlikely]] {
+    if (segment_count == 0) {
         return;
-        // throw_exception("Could not find any segments at position.");
     }
     const auto wire_id = get_unique_wire_id(segments);
     const auto indices = get_segment_indices(segments);
@@ -872,8 +872,8 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
         _sort_through_lines_first(lines, position);
         const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
 
-        if (has_through_line_0) {
-            throw std::runtime_error("This is not allowed, segment be split");
+        if (has_through_line_0) [[unlikely]] {
+            throw std::runtime_error("This is not allowed, segment must be split");
         }
 
         update_segment_point_types(

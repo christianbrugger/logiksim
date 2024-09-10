@@ -2,7 +2,6 @@
 
 #include "algorithm/round.h"
 #include "editable_circuit.h"
-#include "exception.h"
 #include "geometry/connection_count.h"
 #include "geometry/layout_calculation.h"
 #include "geometry/point.h"
@@ -19,6 +18,8 @@
 #include "vocabulary/view_config.h"
 
 #include <blend2d.h>
+
+#include <stdexcept>
 
 namespace logicsim {
 
@@ -86,7 +87,7 @@ auto size_handle_positions(const Layout& layout,
             return {};
     };
 
-    throw_exception("unknown ElementType in size_handle_positions");
+    throw std::runtime_error("unknown ElementType in size_handle_positions");
 }
 
 namespace {
@@ -187,7 +188,7 @@ auto element_height(const PlacedElement& element) -> grid_t {
 
 auto adjust_height(const PlacedElement& original, size_handle_t handle, int delta) {
     if (handle.index != 0 && handle.index != 1) {
-        throw_exception("unknown handle index");
+        throw std::runtime_error("unknown handle index");
     }
 
     auto result = PlacedElement {original};
@@ -250,7 +251,7 @@ auto get_resized_element(const PlacedElement& original, size_handle_t handle,
         case flipflop_ms_d:
 
         case sub_circuit:
-            throw_exception("not supported");
+            throw std::runtime_error("element does not supported resizing");
     };
 
     std::terminate();

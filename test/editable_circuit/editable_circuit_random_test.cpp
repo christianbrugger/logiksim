@@ -19,6 +19,8 @@
 
 #include <fmt/core.h>
 
+#include <stdexcept>
+
 namespace logicsim {
 
 namespace {
@@ -66,11 +68,11 @@ auto validate_inserted_lines(const AddResult &result) {
 
     if (result.insertion_mode == InsertionMode::insert_or_discard) {
         if (count > expected_count) {
-            throw_exception("wrong line count");
+            throw std::runtime_error("wrong line count");
         }
     } else {
         if (count != expected_count) {
-            throw_exception("wrong line count");
+            throw std::runtime_error("wrong line count");
         }
     }
 
@@ -80,7 +82,7 @@ auto validate_inserted_lines(const AddResult &result) {
 
     for (const auto line : result.sorted_inserted_lines) {
         if (line.p0 != p0 && line.p0 != p1 && line.p1 != p0 && line.p1 != p1) {
-            throw_exception("line is not related to given points");
+            throw std::runtime_error("line is not related to given points");
         }
     }
 }
@@ -120,7 +122,7 @@ auto verify_selection(const EditableCircuit &editable_circuit, const AddResult &
     // print("ACTUAL =", lines);
 
     if (lines != result.sorted_inserted_lines) {
-        throw_exception("lines are now different than when inserted");
+        throw std::runtime_error("lines are now different than when inserted");
     }
 }
 
@@ -308,7 +310,7 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
         print("final_layout:", final_layout);
         print("expected_layout:", expected_layout);
 
-        throw_exception("final layouts are not the same");
+        throw std::runtime_error("final layouts are not the same");
     }
 
     if (do_render) {

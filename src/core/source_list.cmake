@@ -277,7 +277,6 @@ set(LS_CORE_SOURCES
     editable_circuit.cpp
     event_counter.cpp
     event_counter_multi.cpp
-    exception.cpp
     executable_path.cpp
     file.cpp
     font_style_property.cpp
