@@ -142,5 +142,4 @@ set(MAIN_LIBRARY "simulation_srp")
 
 # MAIN
 add_subdirectory(src)
-add_subdirectory(test)
 

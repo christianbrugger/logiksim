@@ -13,3 +13,5 @@ if (NOT LS_USE_LIBCXX)
     add_subdirectory(gui)
 endif()
 
+add_subdirectory(test)
+
