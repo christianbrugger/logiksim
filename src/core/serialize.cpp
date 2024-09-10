@@ -305,8 +305,8 @@ LoadLayoutResult::LoadLayoutResult(SerializedLayout&& serialize_layout)
     Ensures(data_ != nullptr);
 }
 
-auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
-                           AddParameters parameters) const -> void {
+auto LoadLayoutResult::add_to(EditableCircuit& editable_circuit,
+                              AddParameters parameters) const -> void {
     Expects(data_ != nullptr);
     const auto delta =
         calculate_move_delta(data_->save_position, parameters.load_position);

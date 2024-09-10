@@ -54,7 +54,8 @@ class LoadLayoutResult {
     explicit LoadLayoutResult(SerializedLayout&& layout);
 
    public:
-    auto add(EditableCircuit& editable_circuit, AddParameters parameters) const -> void;
+    auto add_to(EditableCircuit& editable_circuit,
+                AddParameters parameters) const -> void;
     [[nodiscard]] auto view_point() const -> ViewPoint;
     [[nodiscard]] auto simulation_config() const -> SimulationConfig;
 

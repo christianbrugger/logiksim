@@ -36,11 +36,11 @@ auto insert_clipboard_data_as_temporary(EditableCircuit& editable_circuit,
                                         const serialize::LoadLayoutResult& load_result,
                                         point_t paste_position) {
     const auto guard = SelectionGuard(editable_circuit);
-    load_result.add(editable_circuit, serialize::AddParameters {
-                                          .insertion_mode = InsertionMode::temporary,
-                                          .selection_id = guard.selection_id(),
-                                          .load_position = paste_position,
-                                      });
+    load_result.add_to(editable_circuit, serialize::AddParameters {
+                                             .insertion_mode = InsertionMode::temporary,
+                                             .selection_id = guard.selection_id(),
+                                             .load_position = paste_position,
+                                         });
     editable_circuit.set_visible_selection(
         editable_circuit.selection(guard.selection_id()));
 }
