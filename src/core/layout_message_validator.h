@@ -24,6 +24,7 @@ namespace message_validator {
 struct all_logicitem_value_t {
     uint64_t unique_id;
 
+    [[nodiscard]] auto operator==(const all_logicitem_value_t &) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -31,6 +32,8 @@ struct inserted_logicitem_value_t {
     uint64_t unique_id;
     layout_calculation_data_t data;
 
+    [[nodiscard]] auto operator==(const inserted_logicitem_value_t &) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -38,6 +41,7 @@ struct all_segment_value_t {
     uint64_t unique_id;
     part_t part;
 
+    [[nodiscard]] auto operator==(const all_segment_value_t &) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -45,6 +49,8 @@ struct inserted_segment_value_t {
     uint64_t unique_id;
     segment_info_t segment_info;
 
+    [[nodiscard]] auto operator==(const inserted_segment_value_t &) const -> bool =
+                                                                                 default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
