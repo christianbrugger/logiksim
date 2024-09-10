@@ -42,7 +42,7 @@ enum class ItemType {
 /**
  * @brief: The state of the cache at a specific positions.
  *
- * Note that some states are a combination of multiple items inserted at this positions.
+ * Note, some states are a combination of multiple items inserted at the same positions.
  */
 enum class CacheState {
     logicitem_body,

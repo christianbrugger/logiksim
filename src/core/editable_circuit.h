@@ -20,6 +20,7 @@ class EditableCircuit {
     [[nodiscard]] explicit EditableCircuit() = default;
     [[nodiscard]] explicit EditableCircuit(Layout&& layout, Config config = {});
 
+    [[nodiscard]] auto operator==(const EditableCircuit&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto layout() const -> const Layout&;
@@ -129,6 +130,8 @@ class EditableCircuit {
    private:
     editable_circuit::Modifier modifier_ {};
 };
+
+static_assert(std::regular<EditableCircuit>);
 
 //
 // Selection Guard

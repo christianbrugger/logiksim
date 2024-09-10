@@ -20,7 +20,6 @@ namespace editable_circuit {
 
 #ifdef NDEBUG
 // validation has a 17-30% performance and 50MB memory overhead
-// so we disable it by default
 constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = false;
 #else
 constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = true;
@@ -36,7 +35,7 @@ struct ModifierConfig {
  *
  * Class-invariants:
  *   Logic Items:
- *      + Body is fully representable within the grid.
+ *      + Element body is fully representable within the grid.
  *   Inserted Logic Items:
  *      + Are not colliding with anything.
  *      + All connections with wires are compatible (type & orientation).
@@ -65,6 +64,7 @@ class Modifier {
     [[nodiscard]] explicit Modifier();
     [[nodiscard]] explicit Modifier(Layout&& layout, ModifierConfig config = {});
 
+    [[nodiscard]] auto operator==(const Modifier&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto circuit_data() const -> const CircuitData&;
@@ -159,6 +159,8 @@ class Modifier {
    private:
     CircuitData circuit_data_;
 };
+
+static_assert(std::regular<Modifier>);
 
 //
 // Selection Guard

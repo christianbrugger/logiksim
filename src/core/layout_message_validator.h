@@ -83,6 +83,7 @@ class MessageValidator {
     [[nodiscard]] explicit MessageValidator() = default;
     [[nodiscard]] explicit MessageValidator(const Layout &layout);
 
+    [[nodiscard]] auto operator==(const MessageValidator &) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
@@ -121,6 +122,8 @@ class MessageValidator {
     all_segment_map_t all_segments_ {};
     inserted_segment_map_t inserted_segments_ {};
 };
+
+static_assert(std::regular<MessageValidator>);
 
 }  // namespace logicsim
 

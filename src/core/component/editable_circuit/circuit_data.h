@@ -17,16 +17,9 @@ namespace logicsim {
 namespace editable_circuit {
 
 /**
- * @brief: Contains all editable circuit data.
+ * @brief: Contains complete editable circuit data.
  **/
 struct CircuitData {
-   public:
-    [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto allocated_size() const -> std::size_t;
-
-    auto submit(const InfoMessage& message) -> void;
-
-   public:
     Layout layout {};
     LayoutIndex index {};
     SelectionStore selection_store {};
@@ -34,9 +27,16 @@ struct CircuitData {
 
     std::optional<message_vector_t> messages {std::nullopt};
     std::optional<MessageValidator> message_validator {std::nullopt};
+
+    [[nodiscard]] auto operator==(const CircuitData&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
+
+    auto submit(const InfoMessage& message) -> void;
 };
 
 static_assert(std::is_aggregate_v<CircuitData>);
+static_assert(std::regular<CircuitData>);
 
 }  // namespace editable_circuit
 
