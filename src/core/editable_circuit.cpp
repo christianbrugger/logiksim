@@ -14,6 +14,10 @@ auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", modifier_.circuit_data().layout);
 }
 
+auto EditableCircuit::config() const -> Config {
+    return modifier_.config();
+}
+
 auto EditableCircuit::layout() const -> const Layout& {
     return modifier_.circuit_data().layout;
 }

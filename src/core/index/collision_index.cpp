@@ -111,8 +111,8 @@ auto is_element_wire_connection(collision_data_t data) -> bool {
            && data.wire_id_vertical == connection_tag;
 }
 
-auto to_state(collision_data_t data) -> CacheState {
-    using enum CacheState;
+auto to_state(collision_data_t data) -> IndexState {
+    using enum IndexState;
 
     if (is_element_body(data)) {
         return logicitem_body;
@@ -185,9 +185,9 @@ auto format(collision_index::ItemType type) -> std::string {
 }
 
 template <>
-auto format(collision_index::CacheState state) -> std::string {
+auto format(collision_index::IndexState state) -> std::string {
     switch (state) {
-        using enum collision_index::CacheState;
+        using enum collision_index::IndexState;
 
         case logicitem_body:
             return "logicitem_body";

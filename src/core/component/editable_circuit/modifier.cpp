@@ -74,7 +74,15 @@ auto Modifier::extract_layout() -> Layout {
     const auto layout = Layout {std::move(circuit_data_.layout)};
     *this = Modifier {};
 
+    Ensures(debug_class_invariant_holds(*this));
     return layout;
+}
+
+auto Modifier::config() const -> ModifierConfig {
+    return ModifierConfig {
+        .store_messages = circuit_data_.messages.has_value(),
+        .validate_messages = circuit_data_.message_validator.has_value(),
+    };
 }
 
 //

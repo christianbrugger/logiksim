@@ -1,3 +1,4 @@
+// The data stored is zipped json data.
 //
 // Load clipboard data in python with:
 //
@@ -9,7 +10,7 @@
 //
 //     import json; import gzip;
 //
-//     json.loads(gzip.decompress(open("data.json.gz", 'rb').read()))
+//     json.loads(gzip.decompress(open("circuit.ls2", 'rb').read()))
 //
 
 #include "serialize.h"

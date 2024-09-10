@@ -1,3 +1,6 @@
+//
+// Generate all messages equivalent to build the given layout.
+//
 #ifndef LOGICSIM_LAYOUT_MESSAGE_GENERATION_H
 #define LOGICSIM_LAYOUT_MESSAGE_GENERATION_H
 

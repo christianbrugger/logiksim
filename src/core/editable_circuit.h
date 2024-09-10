@@ -23,6 +23,7 @@ class EditableCircuit {
     [[nodiscard]] auto operator==(const EditableCircuit&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 
+    [[nodiscard]] auto config() const -> Config;
     [[nodiscard]] auto layout() const -> const Layout&;
     [[nodiscard]] auto extract_layout() -> Layout;
     [[nodiscard]] auto modifier() const -> const editable_circuit::Modifier&;

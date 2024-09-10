@@ -69,6 +69,8 @@ class Modifier {
 
     [[nodiscard]] auto circuit_data() const -> const CircuitData&;
     [[nodiscard]] auto extract_layout() -> Layout;
+    // TODO: write test for this one
+    [[nodiscard]] auto config() const -> ModifierConfig;
 
     //
     // Logic Items

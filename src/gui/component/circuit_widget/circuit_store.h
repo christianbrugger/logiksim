@@ -63,6 +63,7 @@ class CircuitStore {
      */
     [[nodiscard]] auto editable_circuit() -> EditableCircuit &;
     [[nodiscard]] auto editable_circuit() const -> const EditableCircuit &;
+    [[nodiscard]] auto extract_editable_circuit() -> EditableCircuit;
 
     /**
      * @brief: Gives access to simulation in simulation.

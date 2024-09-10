@@ -134,7 +134,7 @@ auto render_editable_circuit_collision_cache(
         }
 
         switch (state) {
-            using enum collision_index::CacheState;
+            using enum collision_index::IndexState;
 
             case logicitem_body: {
                 draw_point(ctx, point, PointShape::square, color, size);

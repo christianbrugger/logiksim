@@ -26,6 +26,8 @@ class CheckedEditableCircuit {
 
     [[nodiscard]] auto editable_circuit() -> EditableCircuit &;
     [[nodiscard]] auto editable_circuit() const -> const EditableCircuit &;
+    [[nodiscard]] auto extract_editable_circuit() -> EditableCircuit;
+
     auto set_editable_circuit(EditableCircuit &&editable_circuit) -> void;
 
    private:

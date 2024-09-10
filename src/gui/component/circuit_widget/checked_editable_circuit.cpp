@@ -44,6 +44,16 @@ auto CheckedEditableCircuit::editable_circuit() const -> const EditableCircuit& 
     return editable_circuit_;
 }
 
+auto CheckedEditableCircuit::extract_editable_circuit() -> EditableCircuit {
+    Expects(selection_valid(editable_circuit_, circuit_state_));
+
+    const auto result = std::move(editable_circuit_);
+    editable_circuit_ = EditableCircuit {Layout {}, result.config()};
+
+    Ensures(selection_valid(editable_circuit_, circuit_state_));
+    return result;
+}
+
 auto CheckedEditableCircuit::set_editable_circuit(EditableCircuit&& editable_circuit)
     -> void {
     if (!selection_valid(editable_circuit, circuit_state_)) {

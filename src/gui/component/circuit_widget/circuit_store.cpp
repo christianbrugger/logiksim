@@ -143,6 +143,18 @@ auto CircuitStore::editable_circuit() const -> const EditableCircuit& {
     return checked_editable_circuit_.editable_circuit();
 }
 
+auto CircuitStore::extract_editable_circuit() -> EditableCircuit {
+    Expects(class_invariant_holds());
+
+    if (!is_editing_state(circuit_state_)) {
+        throw std::runtime_error("Editable Circuit is only available in editing state");
+    }
+    const auto result = checked_editable_circuit_.extract_editable_circuit();
+
+    Ensures(class_invariant_holds());
+    return result;
+}
+
 auto CircuitStore::interactive_simulation() -> InteractiveSimulation& {
     Expects(class_invariant_holds());
 

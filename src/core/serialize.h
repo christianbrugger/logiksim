@@ -32,9 +32,9 @@ struct SimulationConfig;
 /**
  * @brief: Serialize the selected elements.
  *
- * Note save position is used for copy & paste to offset the saved positions.
+ * Save position is used for copy & paste to offset the saved positions.
  *
- * Throws an exception if any selected element is not display state normal.
+ * Throws an exception if a selected element does not have display state normal.
  */
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
                                       point_t save_position = point_t {0,

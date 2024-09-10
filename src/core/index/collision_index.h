@@ -44,7 +44,7 @@ enum class ItemType {
  *
  * Note, some states are a combination of multiple items inserted at the same positions.
  */
-enum class CacheState {
+enum class IndexState {
     logicitem_body,
     logicitem_connection,
     wire_connection,
@@ -140,7 +140,7 @@ static_assert(wire_cross_point_tag != wire_corner_point_tag);
 /**
  * @brief: Converts cache state value to enum type.
  */
-[[nodiscard]] auto to_state(collision_data_t data) -> CacheState;
+[[nodiscard]] auto to_state(collision_data_t data) -> IndexState;
 
 }  // namespace collision_index
 
@@ -148,7 +148,7 @@ template <>
 [[nodiscard]] auto format(collision_index::ItemType type) -> std::string;
 
 template <>
-[[nodiscard]] auto format(collision_index::CacheState state) -> std::string;
+[[nodiscard]] auto format(collision_index::IndexState state) -> std::string;
 
 /**
  * @brief: Efficiently store collision information of the Layout
