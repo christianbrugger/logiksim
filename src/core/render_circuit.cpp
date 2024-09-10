@@ -30,7 +30,9 @@
 #include "vocabulary/internal_state.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/length.h"
+#include "vocabulary/line_fine.h"
 #include "vocabulary/logicitem_id.h"
+#include "vocabulary/rect_fine.h"
 
 #include <blend2d.h>
 #include <fmt/format.h>  // TODO why?

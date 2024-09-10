@@ -314,6 +314,5 @@ set(LS_CORE_SOURCES
     timer.cpp
     tree_normalization.cpp
     validate_definition.cpp
-    vocabulary.cpp
     wyhash.cpp
 )

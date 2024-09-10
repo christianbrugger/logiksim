@@ -3,11 +3,11 @@
 
 #include "logic_item/layout_display.h"  // TODO remove
 #include "render_generic.h"
-#include "vocabulary.h"
 #include "vocabulary/drawable_element.h"
 #include "vocabulary/element_draw_state.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/logicitem_type.h"
+#include "vocabulary/rect.h"
 #include "vocabulary/segment_info.h"
 #include "vocabulary/wire_id.h"
 

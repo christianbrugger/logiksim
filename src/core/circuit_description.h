@@ -1,7 +1,9 @@
 #ifndef LOGIKSIM_CIRCUIT_DESCRIPTION_H
 #define LOGIKSIM_CIRCUIT_DESCRIPTION_H
 
-#include "vocabulary.h"
+#include "vocabulary/circuit_id.h"
+#include "vocabulary/color.h"
+#include "vocabulary/connection_count.h"
 
 #include <string>
 #include <vector>

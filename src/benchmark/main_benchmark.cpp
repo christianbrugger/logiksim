@@ -17,7 +17,6 @@
 #include "render_circuit.h"
 #include "schematic_generation.h"
 #include "simulation.h"
-#include "vocabulary.h"
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_id.h"
 
