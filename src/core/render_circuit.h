@@ -120,7 +120,7 @@ constexpr auto state_alpha(ElementDrawState state) noexcept -> color_t::value_ty
         case temporary_selected:
             return defaults::element_state_alpha::temporary;
     }
-    throw std::runtime_error("unexcepted draw state in state_alpha");
+    std::terminate();
 }
 
 consteval auto with_alpha(color_t color, ElementDrawState state) noexcept -> color_t {
