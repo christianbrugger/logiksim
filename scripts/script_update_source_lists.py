@@ -7,7 +7,7 @@ import itertools
 import re
 from pathlib import Path, PurePosixPath
 
-LS_SRC_ROOT = Path(__file__).parent.parent / "src"
+LS_SRC_ROOT = (Path(__file__).parent.parent / "src").resolve()
 LS_SOURCE_EXTENSION = "cpp"
 LS_CMAKE_SOURCE_FILENAME = "source_list.cmake"
 
@@ -78,7 +78,7 @@ def update_source_list(folder: Path) -> None:
     new_content = re.sub(rf"set\({variable_name}[\s\w/_.]+\)", variable, content)
     output.write_text(new_content)
 
-    print(f"updated: {output.relative_to(LS_SRC_ROOT)}")
+    # print(f"updated: {output.relative_to(LS_SRC_ROOT)}")
 
 
 def main() -> None:
