@@ -22,8 +22,8 @@ class ParameterWrongError(Exception):
 class TemplateName(enum.Enum):
     """Available templates."""
 
-    GENERIC = 0
-    COMPONENT = 1
+    GENERIC = enum.auto()
+    COMPONENT = enum.auto()
 
 
 class TemplateType(enum.StrEnum):
@@ -102,6 +102,7 @@ def get_component_name(name: PurePosixPath) -> str | None:
     Components are under the ./component/ folder the subfolder defines the name.
     """
     # components need to have at least 3 folders + name
+    # example: core/component/layout/wire_store => layout
     min_parts = 4
 
     if len(name.parts) >= min_parts and name.parts[1] == "component":
