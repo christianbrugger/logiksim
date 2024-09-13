@@ -96,15 +96,16 @@ def get_template(name: TemplateName, type_: TemplateType) -> str:
     return textwrap.dedent(TEMPLATES[name][type_]).strip("\n")
 
 
-def get_component_name(name: str) -> str | None:
+def get_component_name(name: PurePosixPath) -> str | None:
     """Get name of component.
 
     Components are under the ./component/ folder the subfolder defines the name.
     """
-    suffix = Path(name)
+    # components need to have at least 3 folders + name
+    min_parts = 4
 
-    if len(suffix.parts) >= 3 and suffix.parts[0] == "component":
-        return suffix.parts[1]
+    if len(name.parts) >= min_parts and name.parts[1] == "component":
+        return name.parts[2]
 
     return None
 
