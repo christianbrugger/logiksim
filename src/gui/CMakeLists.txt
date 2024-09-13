@@ -24,8 +24,6 @@ set(MAIN_GUI_TARGET "simulation_srp_gui")
 add_executable(${MAIN_GUI_TARGET}
     ${LS_GUI_SOURCES}
     ${MOC_SOURCES}
-
-    main_gui.cpp
 )
 # TODO: remove this and add prefix gui to all includes?
 target_include_directories(${MAIN_LIBRARY} PUBLIC
