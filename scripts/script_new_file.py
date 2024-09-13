@@ -1,4 +1,7 @@
+#!/usr/bin/env python3
 """Create a new *.cpp and *.h file and add it to the cmake project."""
+
+from __future__ import annotations
 
 import argparse
 import enum

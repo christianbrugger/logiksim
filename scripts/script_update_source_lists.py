@@ -8,8 +8,10 @@ import re
 from pathlib import Path, PurePosixPath
 
 LS_SRC_ROOT = (Path(__file__).parent.parent / "src").resolve()
-LS_SOURCE_EXTENSION = "cpp"
+
 LS_CMAKE_SOURCE_FILENAME = "source_list.cmake"
+
+LS_CPP_EXT = "cpp"
 
 
 def to_dir_group(path: PurePosixPath) -> tuple[list[str], str]:
@@ -22,7 +24,7 @@ def get_source_paths(folder: Path) -> list[PurePosixPath]:
     """Return sorted list of sources in the folder."""
     sources = [
         PurePosixPath(file.relative_to(folder))
-        for file in folder.rglob(f"*.{LS_SOURCE_EXTENSION}")
+        for file in folder.rglob(f"*.{LS_CPP_EXT}")
     ]
 
     return sorted(sources, key=to_dir_group)

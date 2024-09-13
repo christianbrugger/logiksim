@@ -74,6 +74,7 @@ set(LS_CORE_SOURCES
     component/simulation/simulation_event.cpp
     component/simulation/simulation_event_group.cpp
     component/simulation/simulation_queue.cpp
+    component/test.cpp
 
     concept/explicitly_convertible.cpp
     concept/input_range.cpp
