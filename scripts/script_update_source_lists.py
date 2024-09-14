@@ -32,6 +32,10 @@ def get_source_paths(folder: Path) -> list[PurePosixPath]:
 
 def top_folder(path: PurePosixPath) -> str:
     """Return first folder of a relative path or '' for top level files."""
+    # path    ->  'component/layout/wire_store.cpp'
+    # parents ->  ['layout', 'component', '.']
+    # [-2:]   ->  ['component', '.']
+    # [0]     ->  'component'
     result = list(path.parents)[-2:][0].name
 
     assert str(path).startswith(result)
@@ -79,8 +83,6 @@ def update_source_list(folder: Path) -> None:
 
     new_content = re.sub(rf"set\({variable_name}[\s\w/_.]+\)", variable, content)
     output.write_text(new_content)
-
-    # print(f"updated: {output.relative_to(LS_SRC_ROOT)}")
 
 
 def main() -> None:

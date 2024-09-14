@@ -142,6 +142,10 @@ def create_files(
 
 def top_folder(path: PurePosixPath) -> str:
     """Return first folder of a relative path or '' for top level files."""
+    # path    ->  'component/layout/wire_store.cpp'
+    # parents ->  ['layout', 'component', '.']
+    # [-2:]   ->  ['component', '.']
+    # [0]     ->  'component'
     result = list(path.parents)[-2:][0].name
 
     assert str(path).startswith(result)
