@@ -9,7 +9,10 @@ namespace logicsim {
 
 auto context_info(const ContextRenderSettings& settings) -> BLContextCreateInfo {
     auto info = BLContextCreateInfo {};
+    // lower the default value, so that Blend2D uses less memory when rendering
+    // many small entities without compromising speed too much.
     info.commandQueueLimit = 2048;
+
     info.threadCount = gsl::narrow<decltype(info.threadCount)>(settings.thread_count);
 
     if (!settings.jit_rendering) {
