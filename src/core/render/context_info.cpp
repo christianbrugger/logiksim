@@ -11,6 +11,10 @@ auto context_info(const ContextRenderSettings& settings) -> BLContextCreateInfo 
     auto info = BLContextCreateInfo {};
     info.commandQueueLimit = 2048;
     info.threadCount = gsl::narrow<decltype(info.threadCount)>(settings.thread_count);
+
+    if (!settings.jit_rendering) {
+        info.flags |= BL_CONTEXT_CREATE_FLAG_DISABLE_JIT;
+    }
     return info;
 }
 

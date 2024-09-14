@@ -64,6 +64,7 @@ struct MainActions {
     QAction* show_mouse_position;
     QAction* non_interactive_mode;
     QAction* direct_rendering;
+    QAction* jit_rendering;
 
     QAction* thread_count_0;
     QAction* thread_count_2;

@@ -17,6 +17,7 @@ struct WidgetRenderConfig {
     bool show_render_borders {false};
     bool show_mouse_position {false};
     bool direct_rendering {true};
+    bool jit_rendering {true};
     int thread_count {4};
 
     [[nodiscard]] auto format() const -> std::string;

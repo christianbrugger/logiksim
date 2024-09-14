@@ -486,6 +486,14 @@ auto MainWidget::create_menu() -> void {
             },
             [this](bool checked) { set_direct_rendering(*circuit_widget_, checked); });
 
+        actions_.jit_rendering = add_action_checkable(
+            menu, tr("&JIT Rendering"),
+            ActionAttributes {
+                .shortcut = QKeySequence {Qt::CTRL | Qt::SHIFT | Qt::Key_J},
+                .icon = icon_t::jit_rendering,
+            },
+            [this](bool checked) { set_jit_rendering(*circuit_widget_, checked); });
+
         // Thread Count
         menu->addSeparator();
         {
@@ -939,6 +947,9 @@ Q_SLOT void MainWidget::on_render_config_changed(WidgetRenderConfig new_config) 
     }
     if (actions_.direct_rendering != nullptr) {
         actions_.direct_rendering->setChecked(new_config.direct_rendering);
+    }
+    if (actions_.jit_rendering != nullptr) {
+        actions_.jit_rendering->setChecked(new_config.jit_rendering);
     }
 }
 

@@ -55,6 +55,7 @@ enum class icon_t {
     show_mouse_position,
     non_interactive_mode,
     direct_rendering,
+    jit_rendering,
 
     // options
     options,

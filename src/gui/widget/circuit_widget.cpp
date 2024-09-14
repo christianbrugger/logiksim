@@ -899,6 +899,12 @@ auto set_direct_rendering(CircuitWidget& circuit_widget, bool use_store) -> void
     circuit_widget.set_render_config(config);
 }
 
+auto set_jit_rendering(CircuitWidget& circuit_widget, bool enable_jit) -> void {
+    auto config = circuit_widget.render_config();
+    config.jit_rendering = enable_jit;
+    circuit_widget.set_render_config(config);
+}
+
 auto set_show_render_borders(CircuitWidget& circuit_widget, bool value) -> void {
     auto config = circuit_widget.render_config();
     config.show_render_borders = value;

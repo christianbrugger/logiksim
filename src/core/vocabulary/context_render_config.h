@@ -22,6 +22,11 @@ struct ContextRenderSettings {
      */
     int thread_count {4};
 
+    /**
+     * @brief: If true the JIT is used for Blend2D, if available.
+     */
+    bool jit_rendering {true};
+
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const ContextRenderSettings &) const -> bool = default;
 };

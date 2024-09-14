@@ -157,6 +157,9 @@ namespace {
         case direct_rendering: {
             return std::filesystem::path {"icons/lucide/grid-2x2.svg"};
         }
+        case jit_rendering: {
+            return std::filesystem::path {"icons/lucide/circle-gauge.svg"};
+        }
 
         case options: {
             return std::filesystem::path {"icons/lucide/settings.svg"};
