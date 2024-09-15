@@ -2,6 +2,7 @@
 #define LOGIKSIM_RENDER_CIRCUIT_H
 
 #include "logic_item/layout_display.h"  // TODO remove
+#include "render/circuit/render_circuit.h"
 #include "render_generic.h"
 #include "vocabulary/drawable_element.h"
 #include "vocabulary/element_draw_state.h"
@@ -384,41 +385,8 @@ auto render_uninserted(Context& ctx, const Layout& layout,
 auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers& layers,
                     bool layer_enabled) -> void;
 
-//
-// Layout
-//
-
-auto render_layout(Context& ctx, ImageSurface& surface, const Layout& layout) -> void;
-
-auto render_layout(Context& ctx, ImageSurface& surface, const Layout& layout,
-                   const Selection& selection) -> void;
-
-/**
- * @brief: Render the layout to the given PNG file.
- *
- * Note, if fonts are required you need to provide a cache with loaded fonts. E.g:
- *       const auto cache = cache_with_default_fonts();
- *   or
- *       const thread_local auto cache = cache_with_default_fonts();
- */
-auto render_layout_to_file(const Layout& layout, const std::filesystem::path& filename,
-                           const ContextRenderSettings& settings,
-                           ContextCache cache) -> void;
-auto render_layout_to_file(const Layout& layout, const Selection& selection,
-                           const std::filesystem::path& filename,
-                           const ContextRenderSettings& settings,
-                           ContextCache cache) -> void;
-
-//
-// Simulation
-//
-
-auto render_simulation(Context& ctx, const SpatialSimulation& spatial_simulation) -> void;
-
-auto render_simulation_to_file(const SpatialSimulation& spatial_simulation,
-                               const std::filesystem::path& filename,
-                               const ContextRenderSettings& settings,
-                               ContextCache cache) -> void;
+auto render_simulation_layers(Context& ctx, const SpatialSimulation& spatial_simulation,
+                              const SimulationLayers& layers) -> void;
 
 }  // namespace logicsim
 
