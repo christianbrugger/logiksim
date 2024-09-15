@@ -1,6 +1,8 @@
 #ifndef LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_CIRCUIT_H
 #define LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_CIRCUIT_H
 
+#include <filesystem>
+
 namespace logicsim {
 
 class Layout;

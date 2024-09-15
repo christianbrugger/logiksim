@@ -1,5 +1,7 @@
 #include "render/image.h"
 
+#include <gsl/gsl>
+
 namespace logicsim {
 
 auto resize_image_no_copy(BLImage &image, BLSizeI new_size) -> void {

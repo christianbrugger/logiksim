@@ -4,6 +4,7 @@
 #include "geometry/scene.h"
 #include "render/context.h"
 #include "render/image_surface.h"
+#include "render/render_context.h"
 #include "selection.h"
 #include "spatial_simulation.h"
 #include "vocabulary/context_render_settings.h"
