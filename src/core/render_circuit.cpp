@@ -63,10 +63,6 @@ auto draw_grid_space_limit(Context& ctx) {
                           stroke_color);
 }
 
-constexpr auto monochrome(uint8_t value) -> color_t {
-    return color_t {value, value, value, 255};
-}
-
 auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int delta,
                                      color_t color, int width) {
     const auto g0 = point_t {
@@ -1748,7 +1744,7 @@ auto render_interactive_layers(Context& ctx, const Layout& layout,
         render_inserted(ctx, layout, layers);
     }
 
-    const auto layer_enabled = true;
+    const auto layer_enabled = true;  // TODO: remove
 
     if (layers.uninserted_bounding_rect.has_value()) {
         const auto rect =

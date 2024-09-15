@@ -42,6 +42,12 @@ static_assert(std::is_trivially_copyable_v<color_t>);
 static_assert(std::is_trivially_copy_assignable_v<color_t>);
 
 //
+// Free Functions
+//
+
+constexpr auto monochrome(uint8_t value) -> color_t;
+
+//
 // Implementation
 //
 
@@ -67,29 +73,37 @@ constexpr auto color_t::a() const noexcept -> uint32_t {
 }
 
 //
+// Free Functions
+//
+
+constexpr auto monochrome(uint8_t value) -> color_t {
+    return color_t {value, value, value, 255};
+}
+
+//
 // Constants
 //
 
 namespace defaults {
-constexpr static inline auto color_transparent_black = ::logicsim::color_t {0x00000000};
-constexpr static inline auto color_transparent_white = ::logicsim::color_t {0x00FFFFFF};
+constexpr static inline auto color_transparent_black = color_t {0x00000000};
+constexpr static inline auto color_transparent_white = color_t {0x00FFFFFF};
 
-constexpr static inline auto color_black = ::logicsim::color_t {0xFF000000};
-constexpr static inline auto color_white = ::logicsim::color_t {0xFFFFFFFF};
+constexpr static inline auto color_black = color_t {0xFF000000};
+constexpr static inline auto color_white = color_t {0xFFFFFFFF};
 
-constexpr static inline auto color_gray = ::logicsim::color_t {0xFF808080};
-constexpr static inline auto color_light_gray = ::logicsim::color_t {0xFFD3D3D3};
-constexpr static inline auto color_gray_90 = ::logicsim::color_t {0xFFE5E5E5};
+constexpr static inline auto color_gray = color_t {0xFF808080};
+constexpr static inline auto color_light_gray = color_t {0xFFD3D3D3};
+constexpr static inline auto color_gray_90 = color_t {0xFFE5E5E5};
 
-constexpr static inline auto color_red = ::logicsim::color_t {0xFFFF0000};
-constexpr static inline auto color_green = ::logicsim::color_t {0xFF009900};
-constexpr static inline auto color_dark_green = ::logicsim::color_t {0xFF006400};
-constexpr static inline auto color_lime = ::logicsim::color_t {0xFF00FF00};
-constexpr static inline auto color_yellow = ::logicsim::color_t {0xFFFFFF00};
-constexpr static inline auto color_orange = ::logicsim::color_t {0xFFFF8000};
-constexpr static inline auto color_dark_orange = ::logicsim::color_t {0xFFB36200};
-constexpr static inline auto color_blue = ::logicsim::color_t {0xFF0000FF};
-constexpr static inline auto color_cyan = ::logicsim::color_t {0xFF00FFFF};
+constexpr static inline auto color_red = color_t {0xFFFF0000};
+constexpr static inline auto color_green = color_t {0xFF009900};
+constexpr static inline auto color_dark_green = color_t {0xFF006400};
+constexpr static inline auto color_lime = color_t {0xFF00FF00};
+constexpr static inline auto color_yellow = color_t {0xFFFFFF00};
+constexpr static inline auto color_orange = color_t {0xFFFF8000};
+constexpr static inline auto color_dark_orange = color_t {0xFFB36200};
+constexpr static inline auto color_blue = color_t {0xFF0000FF};
+constexpr static inline auto color_cyan = color_t {0xFF00FFFF};
 constexpr static inline auto color_light_blue = color_t {0xFF5097DE};
 constexpr static inline auto color_dark_blue = color_t {0xFF3D85B8};
 }  // namespace defaults
