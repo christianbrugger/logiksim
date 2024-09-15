@@ -177,7 +177,9 @@ set(LS_CORE_SOURCES
     render/context_guard.cpp
     render/context_info.cpp
     render/font.cpp
-    render/managed_context.cpp
+    render/image.cpp
+    render/image_surface.cpp
+    render/render_context.cpp
     render/svg_cache.cpp
     render/text_alignment.cpp
     render/text_cache.cpp
@@ -199,7 +201,7 @@ set(LS_CORE_SOURCES
     vocabulary/connection_id.cpp
     vocabulary/connection_ids.cpp
     vocabulary/connector_info.cpp
-    vocabulary/context_render_config.cpp
+    vocabulary/context_render_settings.cpp
     vocabulary/default_mouse_action.cpp
     vocabulary/delay.cpp
     vocabulary/device_pixel_ratio.cpp

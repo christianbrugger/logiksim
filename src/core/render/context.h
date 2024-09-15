@@ -2,7 +2,7 @@
 #define LOGICSIM_RENDER_CONTEXT2_H
 
 #include "render/context_cache.h"
-#include "vocabulary/context_render_config.h"
+#include "vocabulary/context_render_settings.h"
 
 #include <blend2d.h>
 

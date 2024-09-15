@@ -3,7 +3,7 @@
 
 #include "render/context.h"
 #include "render/context_guard.h"
-#include "render/managed_context.h"
+#include "render/image_surface.h"
 #include "render/primitive/arrow.h"
 #include "render/primitive/circle.h"
 #include "render/primitive/icon.h"
@@ -13,7 +13,8 @@
 #include "render/primitive/round_rect.h"
 #include "render/primitive/stroke.h"
 #include "render/primitive/text.h"
-#include "vocabulary/context_render_config.h"
+#include "render/render_context.h"
+#include "vocabulary/context_render_settings.h"
 #include "vocabulary/font_style.h"
 #include "vocabulary/shape_draw_type.h"
 #include "vocabulary/text_alignment.h"

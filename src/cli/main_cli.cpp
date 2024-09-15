@@ -6,7 +6,7 @@
 #include "format/blend2d_type.h"
 #include "geometry/scene.h"
 #include "logging.h"
-#include "render/managed_context.h"
+#include "render/image_surface.h"
 #include "render_circuit.h"
 #include "timer.h"
 #include "vocabulary/widget_render_config.h"
