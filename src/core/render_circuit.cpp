@@ -1947,32 +1947,6 @@ auto build_simulation_layers(const Layout& layout,
 }
 
 //
-// File Rendering
-//
-
-namespace {
-
-template <std::invocable<Context&> Func>
-auto render_circuit_to_file(BLSizeI size, const std::filesystem::path& filename,
-                            const ViewConfig& view_config, const ContextCache& cache,
-                            Func render_function) {
-    auto bl_image = BLImage {size.w, size.h, BL_FORMAT_PRGB32};
-
-    // TODO !!! generate settings differently
-    auto settings = ContextRenderSettings {.view_config = view_config};
-    settings.view_config.set_size(bl_image.size());
-
-    render_to_image(bl_image, settings, cache, [&render_function](Context& ctx) {
-        std::invoke(render_function, ctx);
-    });
-
-    std::filesystem::create_directories(filename.parent_path());
-    bl_image.writeToFile(to_string(filename.u8string()).c_str());
-}
-
-}  // namespace
-
-//
 // Layout
 //
 
@@ -1997,25 +1971,26 @@ auto render_layout(Context& ctx, ImageSurface& surface, const Layout& layout,
     }
 }
 
-auto render_layout_to_file(const Layout& layout, BLSizeI size,
-                           const std::filesystem::path& filename,
-                           const ViewConfig& view_config,
-                           const ContextCache& cache) -> void {
+auto render_layout_to_file(const Layout& layout, const std::filesystem::path& filename,
+                           const ContextRenderSettings& settings,
+                           ContextCache cache) -> void {
+    // allocation time is small compared to encoding time, so we allocate it here
     auto surface = ImageSurface {};
 
-    render_circuit_to_file(size, filename, view_config, cache, [&](Context& ctx) {
+    render_to_file(filename, settings, std::move(cache), [&](Context& ctx) {
         render_background(ctx);
         render_layout(ctx, surface, layout);
     });
 }
 
-auto render_layout_to_file(const Layout& layout, const Selection& selection, BLSizeI size,
+auto render_layout_to_file(const Layout& layout, const Selection& selection,
                            const std::filesystem::path& filename,
-                           const ViewConfig& view_config,
-                           const ContextCache& cache) -> void {
+                           const ContextRenderSettings& settings,
+                           ContextCache cache) -> void {
+    // allocation time is small compared to encoding time, so we allocate it here
     auto surface = ImageSurface {};
 
-    render_circuit_to_file(size, filename, view_config, cache, [&](Context& ctx) {
+    render_to_file(filename, settings, std::move(cache), [&](Context& ctx) {
         render_background(ctx);
         render_layout(ctx, surface, layout, selection);
     });
@@ -2033,11 +2008,11 @@ auto render_simulation(Context& ctx,
     render_simulation_layers(ctx, spatial_simulation, layers);
 }
 
-auto render_simulation_to_file(const SpatialSimulation& spatial_simulation, BLSizeI size,
+auto render_simulation_to_file(const SpatialSimulation& spatial_simulation,
                                const std::filesystem::path& filename,
-                               const ViewConfig& view_config,
-                               const ContextCache& cache) -> void {
-    render_circuit_to_file(size, filename, view_config, cache, [&](Context& ctx) {
+                               const ContextRenderSettings& settings,
+                               ContextCache cache) -> void {
+    render_to_file(filename, settings, std::move(cache), [&](Context& ctx) {
         render_background(ctx);
         render_simulation(ctx, spatial_simulation);
     });

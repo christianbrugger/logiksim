@@ -21,6 +21,10 @@ ViewConfig::ViewConfig() {
     update();
 }
 
+ViewConfig::ViewConfig(BLSizeI size_px) : size_px_{size_px} {
+    update();
+}
+
 auto ViewConfig::format() const -> std::string {
     return fmt::format(
         "ViewConfig(\n"

@@ -401,14 +401,13 @@ auto render_layout(Context& ctx, ImageSurface& surface, const Layout& layout,
  *   or
  *       const thread_local auto cache = cache_with_default_fonts();
  */
-auto render_layout_to_file(const Layout& layout, BLSizeI size,
+auto render_layout_to_file(const Layout& layout, const std::filesystem::path& filename,
+                           const ContextRenderSettings& settings,
+                           ContextCache cache) -> void;
+auto render_layout_to_file(const Layout& layout, const Selection& selection,
                            const std::filesystem::path& filename,
-                           const ViewConfig& view_config = {},
-                           const ContextCache& cache = {}) -> void;
-auto render_layout_to_file(const Layout& layout, const Selection& selection, BLSizeI size,
-                           const std::filesystem::path& filename,
-                           const ViewConfig& view_config = {},
-                           const ContextCache& cache = {}) -> void;
+                           const ContextRenderSettings& settings,
+                           ContextCache cache) -> void;
 
 //
 // Simulation
@@ -416,10 +415,10 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, BLS
 
 auto render_simulation(Context& ctx, const SpatialSimulation& spatial_simulation) -> void;
 
-auto render_simulation_to_file(const SpatialSimulation& spatial_simulation, BLSizeI size,
+auto render_simulation_to_file(const SpatialSimulation& spatial_simulation,
                                const std::filesystem::path& filename,
-                               const ViewConfig& view_config = {},
-                               const ContextCache& cache = {}) -> void;
+                               const ContextRenderSettings& settings,
+                               ContextCache cache) -> void;
 
 }  // namespace logicsim
 

@@ -31,6 +31,9 @@ struct ContextRenderSettings {
     [[nodiscard]] auto operator==(const ContextRenderSettings &) const -> bool = default;
 };
 
+[[nodiscard]] auto create_context_render_settings(BLSizeI size_px)
+    -> ContextRenderSettings;
+
 }  // namespace logicsim
 
 #endif

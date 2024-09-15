@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_RENDER_MANAGED_CONTEXT_H
 #define LOGICSIM_RENDER_MANAGED_CONTEXT_H
 
+#include "algorithm/u8_conversion.h"
 #include "render/bl_error_check.h"
 #include "render/context.h"
 #include "render/context_guard.h"
@@ -9,6 +10,7 @@
 
 #include <concepts>
 #include <exception>
+#include <filesystem>
 
 namespace logicsim {
 
@@ -59,6 +61,17 @@ inline auto render_to_image(BLImage &bl_image, const ContextRenderSettings &sett
                             ContextCache cache, Func render_function) -> void;
 
 /**
+ * @brief: Renders the given function and stores the image to the file.
+ *
+ * Note only formats supported by BLImage::writeToFile() are supported.
+ * At the moment *.png and *.qoi are supported.
+ */
+template <std::invocable<Context &> Func>
+inline auto render_to_file(const std::filesystem::path &filename,
+                           const ContextRenderSettings &settings, ContextCache cache,
+                           Func render_function);
+
+/**
  * @brief: Copies the data from the source image to the target context.
  *
  * Throws if source and target don't have the same size.
@@ -102,6 +115,21 @@ inline auto render_to_image(BLImage &bl_image, const ContextRenderSettings &sett
 
     ensure_all_saves_restored(context.bl_ctx);
     check_errors(context.bl_ctx);
+}
+
+template <std::invocable<Context &> Func>
+inline auto render_to_file(const std::filesystem::path &filename,
+                           const ContextRenderSettings &settings, ContextCache cache,
+                           Func render_function) {
+    const auto size = settings.view_config.size();
+    auto bl_image = BLImage {size.w, size.h, BL_FORMAT_PRGB32};
+
+    render_to_image(
+        bl_image, settings, std::move(cache),
+        [&render_function](Context &ctx) { std::invoke(render_function, ctx); });
+
+    std::filesystem::create_directories(filename.parent_path());
+    bl_image.writeToFile(to_string(filename.u8string()).c_str());
 }
 
 template <std::invocable<Context &> Func>

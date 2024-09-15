@@ -42,7 +42,8 @@ static_assert(std::is_aggregate_v<ViewPoint>);
  */
 struct ViewConfig {
    public:
-    ViewConfig();
+    [[nodiscard]] explicit ViewConfig();
+    [[nodiscard]] explicit ViewConfig(BLSizeI size_px);
 
     /**
      * brief: Set the offset of the viewed area in grid coordinates.

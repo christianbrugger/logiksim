@@ -315,9 +315,11 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
 
     if (do_render) {
         const thread_local auto cache = cache_with_default_fonts();
+        const auto size_px = BLSizeI {400, 400};
 
-        render_layout_to_file(editable_circuit.layout(), BLSizeI {400, 400},
-                              fmt::format("test_move/{:04d}.png", seed), {}, cache);
+        render_layout_to_file(editable_circuit.layout(),
+                              fmt::format("test_move/{:04d}.png", seed),
+                              create_context_render_settings(size_px), cache);
     }
 };
 }  // namespace
