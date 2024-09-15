@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_RENDER_MANAGED_CONTEXT_H
 #define LOGICSIM_RENDER_MANAGED_CONTEXT_H
 
-#include "algorithm/u8_conversion.h"
 #include "render/bl_error_check.h"
+#include "render/write_file.h"
 #include "render/context.h"
 #include "render/context_guard.h"
 
@@ -128,8 +128,7 @@ inline auto render_to_file(const std::filesystem::path &filename,
         bl_image, settings, std::move(cache),
         [&render_function](Context &ctx) { std::invoke(render_function, ctx); });
 
-    std::filesystem::create_directories(filename.parent_path());
-    bl_image.writeToFile(to_string(filename.u8string()).c_str());
+    write_to_file(bl_image, filename);
 }
 
 template <std::invocable<Context &> Func>

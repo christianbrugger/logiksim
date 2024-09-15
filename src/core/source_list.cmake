@@ -182,6 +182,7 @@ set(LS_CORE_SOURCES
     render/text_alignment.cpp
     render/text_cache.cpp
     render/text_shaping.cpp
+    render/write_file.cpp
 
     type_trait/add_const_to_reference.cpp
     type_trait/const_iterator.cpp
