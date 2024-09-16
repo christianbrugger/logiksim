@@ -58,6 +58,7 @@ jobs:
           - { preset: "linux-clang-thread"           , os: "ubuntu-24.04" , libcpp: "true" }
           - { preset: "linux-gcc-address"            , os: "ubuntu-24.04" }
           - { preset: "linux-gcc-undefined"          , os: "ubuntu-24.04" }
+          - { preset: "linux-gcc-thread"             , os: "ubuntu-24.04" }
 
     env:
       LS_SUBMODULE_KEY: ${{ matrix.libcpp && '-libcpp' || '' }}

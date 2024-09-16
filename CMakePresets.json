@@ -177,6 +177,20 @@
                 "LS_ENABLE_LTO": "OFF"
             }
         },
+        {
+            "name": "linux-gcc-thread",
+            "displayName": "GCC Thread",
+            "description": "Compile with thread sanitizier and GCC compiler",
+            "inherits": "common-linux-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Thread",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
 
         {
             "name": "linux-clang-debug",

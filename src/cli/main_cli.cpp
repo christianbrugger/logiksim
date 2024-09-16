@@ -1,4 +1,5 @@
 
+#include "algorithm/range.h"
 #include "benchmark/render_line_scene.h"
 #include "circuit_example.h"
 #include "default_element_definition.h"
@@ -19,59 +20,18 @@
 
 namespace logicsim {
 
-auto render_overlay_simple(BLContext& bl_ctx) -> void {
-    bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+auto test_render() -> void {
+    auto cache = cache_with_default_fonts();
 
-    const auto rect1 = BLRoundRect {81, 81, 55, 55, 5};
-    const auto rect2 = BLRoundRect {171, 81, 55, 55, 5};
-    const auto color = BLRgba32 {0, 128, 255, 96};
-
-    bl_ctx.fillRoundRect(rect1, color);
-    bl_ctx.fillRoundRect(rect2, color);
-}
-
-auto render_to_context(Context& ctx, ImageSurface& surface) -> void {
-    // background
-    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
-    ctx.bl_ctx.fillAll(defaults::color_white);
-
-    // layer
-    const auto rect = BLRectI {79, 79, 149, 59};
-    render_layer(ctx, surface, rect,
-                 [&](Context& layer_ctx) { render_overlay_simple(layer_ctx.bl_ctx); });
-}
-
-auto test_jit() -> void {
-    // auto editable_circuit = load_example_with_logging(2);
-
-    auto editable_circuit = EditableCircuit {};
-
-    const auto definition = LogicItemDefinition {
-        .logicitem_type = LogicItemType::or_element,
-        .input_count = connection_count_t {3},
-        .output_count = connection_count_t {1},
-        .orientation = orientation_t::right,
-        .output_inverters = {true},
-    };
-    editable_circuit.add_logicitem(definition, point_t {5, 5},
-                                   InsertionMode::insert_or_discard);
-    editable_circuit.add_logicitem(definition, point_t {10, 5},
-                                   InsertionMode::insert_or_discard);
+    auto editable_circuit = load_example_with_logging(2);
     visible_selection_select_all(editable_circuit);
 
-    auto bl_image = BLImage {800, 600, BL_FORMAT_PRGB32};
-
-    auto context_settings = ContextRenderSettings {};
-    auto context_cache = ContextCache {cache_with_default_fonts()};
-    auto context_surface = ImageSurface {};
-    // auto render_config = WidgetRenderConfig {};
-
-    context_settings.view_config.set_size(bl_image.size());
-
-    render_to_image(bl_image, context_settings, context_cache,
-                    [&](Context& ctx) { render_to_context(ctx, context_surface); });
-
-    bl_image.writeToFile("test_circuit.png");
+    for (auto _ [[maybe_unused]] : range(3)) {
+        auto timer = Timer {"Example Circuit Render", Timer::Unit::ms, 3};
+        render_layout_to_file(editable_circuit.layout(),
+                              editable_circuit.visible_selection(), "test_circuit.png",
+                              create_context_render_settings(BLSizeI {800, 600}), cache);
+    }
 }
 
 }  // namespace logicsim
@@ -79,16 +39,16 @@ auto test_jit() -> void {
 auto main() -> int {
     using namespace logicsim;
 
-    bool do_run = false;
+    bool do_run = true;
 
     /// TODO consider: ios_base::sync_with_stdio(false);
     /// SL.io.10 in https://isocpp.github.io/CppCoreGuidelines/
 
-    test_jit();
+    test_render();
 
     if (do_run) {
         try {
-            auto timer = Timer {"Benchmark", Timer::Unit::ms, 3};
+            auto timer = Timer {"Benchmark + Render", Timer::Unit::ms, 3};
             // auto count = benchmark_simulation(6, 10, true);
             // auto count = logicsim::benchmark_simulation(BENCHMARK_DEFAULT_ELEMENTS,
             //                                            BENCHMARK_DEFAULT_EVENTS, true);
