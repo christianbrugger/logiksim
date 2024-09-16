@@ -5,6 +5,7 @@
 #include "vocabulary/element_draw_state.h"
 
 #include <concepts>
+#include <span>
 #include <string>
 #include <type_traits>
 
