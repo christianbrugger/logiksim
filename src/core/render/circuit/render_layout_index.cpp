@@ -1,14 +1,22 @@
-#include "render_caches.h"
+#include "core/render/circuit/render_layout_index.h"
 
 #include "editable_circuit.h"
 #include "geometry/orientation.h"
 #include "geometry/rect.h"
 #include "geometry/scene.h"
+#include "render/context.h"
+#include "render/context_guard.h"
+#include "render/primitive/arrow.h"
+#include "render/primitive/point.h"
+#include "render/primitive/rect.h"
+#include "vocabulary/color.h"
 
 #include <numbers>
 #include <stdexcept>
 
 namespace logicsim {
+
+namespace {
 
 auto _directed_input_marker(Context& ctx, point_t point, color_t color,
                             orientation_t orientation, grid_fine_t size) -> void {
@@ -79,10 +87,10 @@ auto render_output_marker(Context& ctx, point_t position, color_t color,
     }
 }
 
-auto render_editable_circuit_connection_cache(
-    Context& ctx, const EditableCircuit& editable_circuit) -> void {
+}  // namespace
+
+auto render_layout_connection_index(Context& ctx, const LayoutIndex& index) -> void {
     const auto scene_rect = get_scene_rect(ctx.settings.view_config);
-    const auto& index = editable_circuit.modifier().circuit_data().index;
 
     const auto logicitem_color = defaults::color_dark_blue;
     const auto wire_color = defaults::color_green;
@@ -120,15 +128,14 @@ auto render_editable_circuit_connection_cache(
     }
 }
 
-auto render_editable_circuit_collision_cache(
-    Context& ctx, const EditableCircuit& editable_circuit) -> void {
+auto render_layout_collision_index(Context& ctx,
+                                   const CollisionIndex& collision_index) -> void {
     constexpr static auto color = defaults::color_orange;
     constexpr static auto size = grid_fine_t {0.25};
 
     const auto scene_rect = get_scene_rect(ctx.settings.view_config);
-    const auto& index = editable_circuit.modifier().circuit_data().index;
 
-    for (const auto& [point, state] : index.collision_index().states()) {
+    for (const auto& [point, state] : collision_index.states()) {
         if (!is_colliding(point, scene_rect)) {
             continue;
         }
@@ -180,12 +187,11 @@ auto render_editable_circuit_collision_cache(
     }
 }
 
-auto render_editable_circuit_selection_cache(
-    Context& ctx, const EditableCircuit& editable_circuit) -> void {
+auto render_layout_selection_index(Context& ctx,
+                                   const SpatialIndex& selection_index) -> void {
     const auto scene_rect = get_scene_rect_fine(ctx.settings.view_config);
-    const auto& index = editable_circuit.modifier().circuit_data().index;
 
-    for (const rect_fine_t& rect : index.selection_index().rects()) {
+    for (const rect_fine_t& rect : selection_index.rects()) {
         if (!is_colliding(rect, scene_rect)) {
             continue;
         }
@@ -197,6 +203,23 @@ auto render_editable_circuit_selection_cache(
                       .stroke_color = defaults::color_lime,
                   });
     }
+}
+
+auto render_layout_connection_index(Context& ctx,
+                                    const EditableCircuit& editable_circuit) -> void {
+    render_layout_connection_index(ctx, editable_circuit.modifier().circuit_data().index);
+}
+
+auto render_layout_collision_index(Context& ctx,
+                                   const EditableCircuit& editable_circuit) -> void {
+    render_layout_collision_index(
+        ctx, editable_circuit.modifier().circuit_data().index.collision_index());
+}
+
+auto render_layout_selection_index(Context& ctx,
+                                   const EditableCircuit& editable_circuit) -> void {
+    render_layout_selection_index(
+        ctx, editable_circuit.modifier().circuit_data().index.selection_index());
 }
 
 }  // namespace logicsim

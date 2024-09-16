@@ -65,12 +65,6 @@ constexpr static inline auto display_ascii_control_size = grid_fine_t {0.7};
 
 constexpr static inline auto connector_length = grid_fine_t {0.4};
 constexpr static inline auto inverted_circle_radius = grid_fine_t {0.2};
-constexpr static inline auto size_handle_color_fill = defaults::color_orange;
-constexpr static inline auto size_handle_color_stroke = defaults::color_dark_orange;
-constexpr static inline auto setting_handle_color_fill = defaults::color_orange;
-constexpr static inline auto setting_handle_color_stroke = defaults::color_dark_orange;
-constexpr static inline auto setting_handle_color_icon = defaults::color_white;
-constexpr static inline auto setting_handle_icon_scale = 0.7;  // ratio vs button size
 
 namespace element_state_alpha {
 constexpr static inline auto normal = color_t::value_type {255};

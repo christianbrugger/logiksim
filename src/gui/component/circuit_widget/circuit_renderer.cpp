@@ -4,10 +4,10 @@
 #include "geometry/scene.h"
 #include "render/circuit/render_background.h"
 #include "render/circuit/render_circuit.h"
+#include "render/circuit/render_layout_index.h"
 #include "render/circuit/render_setting_handle.h"
 #include "render/circuit/render_size_handle.h"
 #include "render/text_cache.h"
-#include "render_caches.h"
 #include "spatial_simulation.h"
 
 #include <gsl/gsl>
@@ -236,13 +236,13 @@ auto render_to_context(Context& ctx, ImageSurface& surface,
     }
 
     if (render_config.show_collision_cache) {
-        render_editable_circuit_collision_cache(ctx, editable_circuit);
+        render_layout_collision_index(ctx, editable_circuit);
     }
     if (render_config.show_connection_cache) {
-        render_editable_circuit_connection_cache(ctx, editable_circuit);
+        render_layout_connection_index(ctx, editable_circuit);
     }
     if (render_config.show_selection_cache) {
-        render_editable_circuit_selection_cache(ctx, editable_circuit);
+        render_layout_selection_index(ctx, editable_circuit);
     }
 
     render_circuit_overlay(ctx, render_config);

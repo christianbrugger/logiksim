@@ -163,6 +163,7 @@ set(LS_CORE_SOURCES
 
     render/circuit/render_background.cpp
     render/circuit/render_circuit.cpp
+    render/circuit/render_layout_index.cpp
     render/circuit/render_setting_handle.cpp
     render/circuit/render_size_handle.cpp
     render/primitive/arrow.cpp
@@ -300,7 +301,6 @@ set(LS_CORE_SOURCES
     load_save_file.cpp
     logging.cpp
     part_selection.cpp
-    render_caches.cpp
     render_circuit.cpp
     render_generic.cpp
     resource.cpp
