@@ -137,6 +137,9 @@ set(LS_CORE_SOURCES
     iterator_adaptor/transform_output_iterator.cpp
     iterator_adaptor/transform_view.cpp
 
+    logic_item/render/render_logicitem_base.cpp
+    logic_item/render/render_logicitem_layer.cpp
+    logic_item/render/render_logicitem_overlay.cpp
     logic_item/layout.cpp
     logic_item/layout_display.cpp
     logic_item/layout_display_ascii.cpp
@@ -161,11 +164,20 @@ set(LS_CORE_SOURCES
     random/segment.cpp
     random/wire.cpp
 
+    render/circuit/alpha_values.cpp
     render/circuit/render_background.cpp
     render/circuit/render_circuit.cpp
+    render/circuit/render_connector.cpp
+    render/circuit/render_connector_label.cpp
+    render/circuit/render_display_generic.cpp
+    render/circuit/render_interactive_layer.cpp
     render/circuit/render_layout_index.cpp
+    render/circuit/render_logicitem_base_generic.cpp
+    render/circuit/render_overlay.cpp
     render/circuit/render_setting_handle.cpp
+    render/circuit/render_simulation_layer.cpp
     render/circuit/render_size_handle.cpp
+    render/circuit/render_wire.cpp
     render/primitive/arrow.cpp
     render/primitive/circle.cpp
     render/primitive/icon.cpp
@@ -301,8 +313,6 @@ set(LS_CORE_SOURCES
     load_save_file.cpp
     logging.cpp
     part_selection.cpp
-    render_circuit.cpp
-    render_generic.cpp
     resource.cpp
     safe_numeric.cpp
     schematic.cpp

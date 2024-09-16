@@ -1,8 +1,9 @@
 #include "render/circuit/render_circuit.h"
 
-#include "core/render_circuit.h"  // TODO !!! REMOVE
 #include "geometry/scene.h"
 #include "render/circuit/render_background.h"
+#include "render/circuit/render_interactive_layer.h"
+#include "render/circuit/render_simulation_layer.h"
 #include "render/context.h"
 #include "render/image_surface.h"
 #include "render/render_context.h"

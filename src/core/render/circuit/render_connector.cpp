@@ -1,0 +1,170 @@
+#include "render/circuit/render_connector.h"
+
+#include "geometry/layout_calculation.h"
+#include "geometry/orientation.h"
+#include "layout.h"
+#include "layout_info.h"
+#include "render/circuit/alpha_values.h"
+#include "render/circuit/render_wire.h"
+#include "render/context.h"
+#include "render/primitive/line.h"
+#include "render/primitive/stroke.h"
+#include "spatial_simulation.h"
+#include "vocabulary/color.h"
+#include "vocabulary/drawable_element.h"
+#include "vocabulary/layout_calculation_data.h"
+#include "vocabulary/line_fine.h"
+
+namespace logicsim {
+
+namespace defaults {
+
+constexpr static inline auto connector_cutoff_px = 3.0;  // pixels
+constexpr static inline auto connector_length = grid_fine_t {0.4};
+
+constexpr static inline auto inverted_circle_radius = grid_fine_t {0.2};
+constexpr static inline auto inverted_connector_fill = defaults::color_white;
+}  // namespace defaults
+
+// TODO: rename do sounds like doing it
+auto do_draw_connector(const ViewConfig& view_config) {
+    return view_config.pixel_scale() >= defaults::connector_cutoff_px;
+}
+
+auto _draw_connector_inverted(Context& ctx, ConnectorAttributes attributes) {
+    const auto radius = defaults::inverted_circle_radius;
+    const auto width = ctx.view_config().stroke_width();
+    const auto offset = stroke_offset(width);
+
+    const auto r = to_context_unrounded(radius, ctx);
+    const auto p = to_context(attributes.position, ctx);
+    const auto p_center = connector_point(p, attributes.orientation, r + width / 2.0);
+    const auto p_adjusted = is_horizontal(attributes.orientation)
+                                ? BLPoint {p_center.x, p_center.y + offset}
+                                : BLPoint {p_center.x + offset, p_center.y};
+
+    const auto fill_color =
+        with_alpha_runtime(defaults::inverted_connector_fill, attributes.state);
+    const auto stroke_color = wire_color(attributes.is_enabled, attributes.state);
+
+    ctx.bl_ctx.fillCircle(BLCircle {p_adjusted.x, p_adjusted.y, r + width / 2.0},
+                          stroke_color);
+    ctx.bl_ctx.fillCircle(BLCircle {p_adjusted.x, p_adjusted.y, r - width / 2.0},
+                          fill_color);
+}
+
+auto _draw_connector_normal(Context& ctx, ConnectorAttributes attributes) -> void {
+    const auto endpoint = connector_point(attributes.position, attributes.orientation,
+                                          defaults::connector_length);
+    draw_line(ctx, line_fine_t {attributes.position, endpoint},
+              {.color = wire_color(attributes.is_enabled, attributes.state)});
+}
+
+auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void {
+    if (attributes.orientation == orientation_t::undirected) {
+        return;
+    }
+
+    if (attributes.is_inverted) {
+        _draw_connector_inverted(ctx, attributes);
+    } else {
+        _draw_connector_normal(ctx, attributes);
+    }
+}
+
+auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
+                                logicitem_id_t logicitem_id,
+                                ElementDrawState state) -> void {
+    const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
+
+    for (auto info : input_locations_and_id(layout_data)) {
+        draw_connector(ctx, ConnectorAttributes {
+                                .state = state,
+                                .position = info.position,
+                                .orientation = info.orientation,
+                                .is_inverted = layout.logic_items().input_inverted(
+                                    logicitem_id, info.input_id),
+                                .is_enabled = false,
+                            });
+    }
+
+    for (auto info : output_locations_and_id(layout_data)) {
+        draw_connector(ctx, ConnectorAttributes {
+                                .state = state,
+                                .position = info.position,
+                                .orientation = info.orientation,
+                                .is_inverted = layout.logic_items().output_inverted(
+                                    logicitem_id, info.output_id),
+                                .is_enabled = false,
+                            });
+    }
+}
+
+auto draw_logic_item_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
+                                logicitem_id_t logicitem_id) -> void {
+    const auto& logic_items = spatial_simulation.layout().logic_items();
+
+    const auto element_id = to_element_id(spatial_simulation, logicitem_id);
+    const auto layout_data = to_layout_calculation_data(logic_items, logicitem_id);
+
+    for (auto info : input_locations_and_id(layout_data)) {
+        const auto input = input_t {element_id, info.input_id};
+
+        const auto is_inverted = logic_items.input_inverted(logicitem_id, info.input_id);
+        const auto is_connected =
+            is_input_connected(spatial_simulation.schematic(), input);
+        const auto is_enabled = spatial_simulation.simulation().input_value(input);
+
+        if (is_inverted || !is_connected) {
+            draw_connector(ctx, ConnectorAttributes {
+                                    .state = ElementDrawState::normal,
+                                    .position = info.position,
+                                    .orientation = info.orientation,
+                                    .is_inverted = is_inverted,
+                                    .is_enabled = is_enabled,
+                                });
+        }
+    }
+
+    for (auto info : output_locations_and_id(layout_data)) {
+        const auto output = output_t {element_id, info.output_id};
+
+        const auto is_inverted =
+            logic_items.output_inverted(logicitem_id, info.output_id);
+        const auto is_connected =
+            is_output_connected(spatial_simulation.schematic(), output);
+        const auto is_enabled =
+            spatial_simulation.simulation().output_value(output).value();
+
+        if (is_inverted || !is_connected) {
+            draw_connector(ctx, ConnectorAttributes {
+                                    .state = ElementDrawState::normal,
+                                    .position = info.position,
+                                    .orientation = info.orientation,
+                                    .is_inverted = is_inverted,
+                                    .is_enabled = is_enabled,
+                                });
+        }
+    }
+}
+
+auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
+                                 std::span<const DrawableElement> elements) -> void {
+    if (do_draw_connector(ctx.view_config())) {
+        for (const auto entry : elements) {
+            draw_logic_item_connectors(ctx, layout, entry.logicitem_id, entry.state);
+        }
+    }
+}
+
+auto draw_logic_items_connectors(Context& ctx,
+                                 const SpatialSimulation& spatial_simulation,
+                                 std::span<const logicitem_id_t> elements) -> void {
+    if (do_draw_connector(ctx.view_config())) {
+        for (const auto logicitem_id : elements) {
+            draw_logic_item_connectors(ctx, spatial_simulation, logicitem_id);
+        }
+    }
+}
+
+}  // namespace logicsim
