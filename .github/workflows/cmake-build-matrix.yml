@@ -200,7 +200,12 @@ jobs:
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build/${{ matrix.preset }}" >> "$GITHUB_OUTPUT"
-    
+
+    - name: Report randomization
+      if: runner.os == 'Linux'
+      run: |
+        # report address randomization which impacts certain sanitizers
+        sudo sysctl vm.mmap_rnd_bits
 
 
     #
@@ -238,7 +243,7 @@ jobs:
     - name: Build
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
-        ninja -v
+        ninja
 
 
 
