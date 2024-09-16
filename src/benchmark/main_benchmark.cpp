@@ -14,9 +14,11 @@
 #include "random/generator.h"
 #include "random/layout_calculation_data.h"
 #include "random/random_schematic.h"
-#include "render_circuit.h"
+#include "render/circuit/render_circuit.h"
+#include "render/render_context.h"
 #include "schematic_generation.h"
 #include "simulation.h"
+#include "vocabulary/color.h"
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_id.h"
 

@@ -21,7 +21,6 @@
 #include "logging.h"
 #include "logic_item/layout_display_ascii.h"
 #include "logic_item/layout_display_number.h"
-#include "render_circuit.h"
 #include "selection.h"
 #include "setting_handle.h"
 #include "simulation.h"
@@ -43,98 +42,6 @@
 #include <stdexcept>
 
 namespace logicsim {
-
-//
-// Background
-//
-namespace {
-
-auto draw_grid_space_limit(Context& ctx) {
-    constexpr auto stroke_color = defaults::color_gray;
-    constexpr auto stroke_width = grid_fine_t {5.0};
-
-    const auto stroke_width_px = std::max(5.0, to_context(stroke_width, ctx));
-
-    const auto p0 = to_context(point_t {grid_t::min(), grid_t::min()}, ctx);
-    const auto p1 = to_context(point_t {grid_t::max(), grid_t::max()}, ctx);
-
-    ctx.bl_ctx.setStrokeWidth(stroke_width_px);
-    ctx.bl_ctx.strokeRect(BLRect {p0.x + 0.5, p0.y + 0.5, p1.x - p0.x, p1.y - p0.y},
-                          stroke_color);
-}
-
-auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int delta,
-                                     color_t color, int width) {
-    const auto g0 = point_t {
-        to_floored(floor(scene_rect.p0.x / delta) * delta),
-        to_floored(floor(scene_rect.p0.y / delta) * delta),
-    };
-    const auto g1 = point_t {
-        to_ceiled(ceil(scene_rect.p1.x / delta) * delta),
-        to_ceiled(ceil(scene_rect.p1.y / delta) * delta),
-    };
-
-    /*
-    for (int x = int {g0.x}; x <= int {g1.x}; x += delta) {
-        const auto x_grid = grid_t {x};
-        draw_line(ctx, line_t {{x_grid, g0.y}, {x_grid, g1.y}}, {color, width}, config);
-    }
-    for (int y = int {g0.y}; y <= int {g1.y}; y += delta) {
-        const auto y_grid = grid_t {y};
-        draw_line(ctx, line_t {{g0.x, y_grid}, {g1.x, y_grid}}, {color, width}, config);
-    }
-    */
-
-    // this version is a bit faster
-    const auto p0 = to_context(g0, ctx);
-    const auto p1 = to_context(g1, ctx);
-
-    const auto offset = ctx.view_config().offset();
-    const auto scale = ctx.view_config().pixel_scale();
-
-    // vertical
-    for (int x = int {g0.x}; x <= int {g1.x}; x += delta) {
-        const auto cx = round_fast(double {(grid_fine_t {x} + offset.x) * scale});
-        draw_orthogonal_line(ctx, BLLine {cx, p0.y, cx, p1.y}, {color, width});
-    }
-    // horizontal
-    for (int y = int {g0.y}; y <= int {g1.y}; y += delta) {
-        const auto cy = round_fast(double {(grid_fine_t {y} + offset.y) * scale});
-        draw_orthogonal_line(ctx, BLLine {p0.x, cy, p1.x, cy}, {color, width});
-    }
-}
-
-auto draw_background_patterns(Context& ctx) {
-    auto scene_rect = get_scene_rect_fine(ctx.view_config());
-
-    constexpr static auto grid_definition = {
-        std::tuple {1, monochrome(0xF0), 1},    //
-        std::tuple {8, monochrome(0xE4), 1},    //
-        std::tuple {64, monochrome(0xE4), 2},   //
-        std::tuple {512, monochrome(0xD8), 2},  //
-        std::tuple {4096, monochrome(0xC0), 2},
-    };
-
-    for (auto&& [delta, color, width] : grid_definition) {
-        if (delta * ctx.view_config().device_scale() >=
-            ctx.settings.background_grid_min_distance_device) {
-            const auto draw_width_f = width * ctx.view_config().device_pixel_ratio();
-            // we substract a little, as we want 150% scaling to round down
-            const auto epsilon = 0.01;
-            const auto draw_width = std::max(1, round_to<int>(draw_width_f - epsilon));
-            draw_background_pattern_checker(ctx, scene_rect, delta, color, draw_width);
-        }
-    }
-}
-}  // namespace
-
-auto render_background(Context& ctx) -> void {
-    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
-    ctx.bl_ctx.fillAll(defaults::color_white);
-
-    draw_background_patterns(ctx);
-    draw_grid_space_limit(ctx);
-}
 
 //
 // Connectors
@@ -1317,93 +1224,6 @@ auto draw_wires(Context& ctx, std::span<const segment_info_t> segment_infos,
     for (const auto& info : segment_infos) {
         const auto is_enabled = false;
         draw_line_segment(ctx, info, is_enabled, state);
-    }
-}
-
-//
-// Size Handles
-//
-
-namespace {
-
-struct OutlinedRectAttributes {
-    color_t fill_color;
-    color_t stroke_color;
-    double stroke_width_device;
-};
-
-auto draw_outlined_rect_px(Context& ctx, BLRect rect, OutlinedRectAttributes attributes) {
-    auto stroke_width = std::max(1., round_fast(attributes.stroke_width_device *
-                                                ctx.view_config().device_pixel_ratio()));
-
-    // draw square
-    ctx.bl_ctx.fillRect(rect, attributes.stroke_color);
-    rect.x += stroke_width;
-    rect.y += stroke_width;
-    rect.w -= stroke_width * 2;
-    rect.h -= stroke_width * 2;
-    ctx.bl_ctx.fillRect(rect, attributes.fill_color);
-}
-}  // namespace
-
-auto draw_size_handle(Context& ctx, const size_handle_t& position) -> void {
-    auto rect = size_handle_rect_px(position, ctx.view_config());
-
-    draw_outlined_rect_px(
-        ctx, rect,
-        OutlinedRectAttributes {
-            .fill_color = defaults::size_handle_color_fill,
-            .stroke_color = defaults::size_handle_color_stroke,
-            .stroke_width_device = defaults::size_handle_stroke_width_device,
-        });
-}
-
-auto draw_size_handles(Context& ctx,
-                       std::span<const size_handle_t> handle_positions) -> void {
-    for (const auto& position : handle_positions) {
-        draw_size_handle(ctx, position);
-    }
-}
-
-auto render_size_handles(Context& ctx, const Layout& layout,
-                         const Selection& selection) -> void {
-    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
-    draw_size_handles(ctx, size_handle_positions(layout, selection));
-}
-
-//
-// Setting Handle
-//
-
-auto draw_setting_handle(Context& ctx, setting_handle_t handle) -> void {
-    const auto rect = setting_handle_rect(handle);
-    const auto icon_height =
-        defaults::setting_handle_size * defaults::setting_handle_icon_scale;
-
-    // button rect
-    draw_rect(ctx, rect,
-              RectAttributes {
-                  .draw_type = ShapeDrawType::fill_and_stroke,
-                  .fill_color = defaults::setting_handle_color_fill,
-                  .stroke_color = defaults::setting_handle_color_stroke,
-              });
-
-    // button icon
-    draw_icon(ctx, get_center(rect), handle.icon,
-              IconAttributes {
-                  .icon_height = icon_height,
-                  .color = defaults::setting_handle_color_icon,
-                  .horizontal_alignment = HorizontalAlignment::center,
-                  .vertical_alignment = VerticalAlignment::center,
-              });
-}
-
-auto render_setting_handle(Context& ctx, const Layout& layout,
-                           const Selection& selection) -> void {
-    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
-
-    if (const auto handle = setting_handle_position(layout, selection)) {
-        draw_setting_handle(ctx, *handle);
     }
 }
 

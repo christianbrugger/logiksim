@@ -9,14 +9,17 @@
 #include "random/generator.h"
 #include "random/insertion_mode.h"
 #include "random/point.h"
-#include "render_circuit.h"
+#include "render/circuit/render_circuit.h"
+#include "render/context_cache.h"
 #include "test/editable_circuit/modifier/test_helpers.h"  // TODO different folder
 #include "timer.h"
 #include "tree_normalization.h"
+#include "vocabulary/context_render_settings.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <blend2d.h>
 #include <fmt/core.h>
 
 #include <stdexcept>

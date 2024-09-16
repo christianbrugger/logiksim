@@ -2,7 +2,6 @@
 #define LOGIKSIM_RENDER_CIRCUIT_H
 
 #include "logic_item/layout_display.h"  // TODO remove
-#include "render/circuit/render_circuit.h"
 #include "render_generic.h"
 #include "vocabulary/drawable_element.h"
 #include "vocabulary/element_draw_state.h"
@@ -134,12 +133,6 @@ constexpr auto with_alpha_runtime(color_t color,
 }
 
 //
-// Background
-//
-
-auto render_background(Context& ctx) -> void;
-
-//
 // Connectors
 //
 
@@ -267,16 +260,6 @@ auto draw_line_segment(Context& ctx, line_fine_t line, SegmentAttributes attribu
 
 auto draw_line_segment(Context& ctx, segment_info_t info, bool is_enabled,
                        ElementDrawState state) -> void;
-
-//
-// Handles
-//
-
-auto render_size_handles(Context& ctx, const Layout& layout,
-                         const Selection& selection) -> void;
-
-auto render_setting_handle(Context& ctx, const Layout& layout,
-                           const Selection& selection) -> void;
 
 //
 // Overlay

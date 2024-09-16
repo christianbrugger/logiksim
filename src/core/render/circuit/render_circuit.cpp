@@ -2,6 +2,7 @@
 
 #include "core/render_circuit.h"  // TODO !!! REMOVE
 #include "geometry/scene.h"
+#include "render/circuit/render_background.h"
 #include "render/context.h"
 #include "render/image_surface.h"
 #include "render/render_context.h"

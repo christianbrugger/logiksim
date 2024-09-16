@@ -2,9 +2,12 @@
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_RENDER_SURFACE_H
 
 #include "event_counter.h"
-#include "render_circuit.h"
+#include "render/context_cache.h"
+#include "render/image_surface.h"
 #include "vocabulary/mouse_postion_info.h"
 #include "vocabulary/widget_render_config.h"
+
+#include <blend2d.h>
 
 #include <QImage>
 #include <QPaintEvent>
@@ -18,9 +21,13 @@ class QBackingStore;
 namespace logicsim {
 
 struct GeometryInfo;
+struct ViewPoint;
 struct ViewConfig;
+
+class Layout;
 class EditableCircuit;
 class SpatialSimulation;
+
 struct MousePositionInfo;
 
 namespace circuit_widget {

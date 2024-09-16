@@ -161,7 +161,10 @@ set(LS_CORE_SOURCES
     random/segment.cpp
     random/wire.cpp
 
+    render/circuit/render_background.cpp
     render/circuit/render_circuit.cpp
+    render/circuit/render_setting_handle.cpp
+    render/circuit/render_size_handle.cpp
     render/primitive/arrow.cpp
     render/primitive/circle.cpp
     render/primitive/icon.cpp

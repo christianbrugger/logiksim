@@ -2,9 +2,12 @@
 
 #include "editable_circuit.h"
 #include "geometry/scene.h"
+#include "render/circuit/render_background.h"
+#include "render/circuit/render_circuit.h"
+#include "render/circuit/render_setting_handle.h"
+#include "render/circuit/render_size_handle.h"
 #include "render/text_cache.h"
 #include "render_caches.h"
-#include "render_circuit.h"
 #include "spatial_simulation.h"
 
 #include <gsl/gsl>
