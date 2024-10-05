@@ -272,7 +272,9 @@ auto is_input_connected(const Schematic &schematic, input_t input) -> bool {
 };
 
 auto is_output_connected(const Schematic &schematic, output_t output) -> bool {
-    return bool {schematic.input(output)};
+    const auto input = schematic.input(output);
+    return input &&
+           !(schematic.element_type(input.element_id) == ElementType::placeholder);
 };
 
 auto has_input_connections(const Schematic &schematic, element_id_t element_id) -> bool {
