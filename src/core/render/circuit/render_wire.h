@@ -3,6 +3,7 @@
 
 #include "format/struct.h"
 #include "vocabulary/element_draw_state.h"
+#include "vocabulary/wire_render_style.h"
 
 #include <concepts>
 #include <span>
@@ -23,9 +24,13 @@ class SpatialSimulation;
 
 struct Context;
 
-auto wire_color(bool is_enabled) -> color_t;
+[[nodiscard]] auto wire_color(bool is_enabled, WireRenderStyle style) -> color_t;
 
-auto wire_color(bool is_enabled, ElementDrawState state) -> color_t;
+[[nodiscard]] auto wire_color(bool is_enabled, WireRenderStyle style,
+                              ElementDrawState state) -> color_t;
+
+[[nodiscard]] auto wire_stroke_width_px(bool is_enabled, WireRenderStyle style,
+                                        int view_stroke_width_px) -> int;
 
 auto draw_line_cross_point(Context& ctx, point_t point, bool is_enabled,
                            ElementDrawState state) -> void;

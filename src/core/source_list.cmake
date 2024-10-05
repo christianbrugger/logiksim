@@ -288,6 +288,7 @@ set(LS_CORE_SOURCES
     vocabulary/view_config.cpp
     vocabulary/widget_render_config.cpp
     vocabulary/wire_id.cpp
+    vocabulary/wire_render_style.cpp
 
     base64.cpp
     circuit_description.cpp

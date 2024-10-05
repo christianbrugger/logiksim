@@ -4,6 +4,7 @@
 #include "line_tree_generation.h"
 #include "schematic_generation.h"
 
+#include <fmt/core.h>
 #include <gsl/gsl>
 
 namespace logicsim {
@@ -38,6 +39,11 @@ auto SpatialSimulation::line_tree(wire_id_t wire_id) const -> const LineTree & {
 
 auto SpatialSimulation::wire_delay_per_distance() const -> delay_t {
     return wire_delay_per_distance_;
+}
+
+auto SpatialSimulation::format() const -> std::string {
+    return fmt::format("SpatialSimulation(\n  {},\n  {}\n  {}\n)", layout_,
+                       simulation_.schematic(), simulation_);
 }
 
 //

@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_SPATIAL_SIMULATION_H
 #define LOGICSIM_SPATIAL_SIMULATION_H
 
+#include "format/struct.h"
 #include "layout.h"
 #include "line_tree.h"
 #include "simulation.h"
@@ -47,6 +48,8 @@ class SpatialSimulation {
     [[nodiscard]] auto line_tree(wire_id_t wire_id) const -> const LineTree &;
 
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
+
+    [[nodiscard]] auto format() const -> std::string;
 
    private:
     Layout layout_;

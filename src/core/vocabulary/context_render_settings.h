@@ -3,6 +3,7 @@
 
 #include "format/struct.h"
 #include "vocabulary/view_config.h"
+#include "vocabulary/wire_render_style.h"
 
 #include <string>
 
@@ -21,6 +22,12 @@ struct ContextRenderSettings {
      * @brief: Number of render threads used.
      */
     int thread_count {4};
+
+    /**
+     * @brief: Style in wich to draw enabled wires, cross points and connectors
+     *         during simulation.
+     */
+    WireRenderStyle wire_render_style {WireRenderStyle::bold_red};
 
     /**
      * @brief: If true the JIT is used for Blend2D, if available.

@@ -14,20 +14,32 @@
 
 namespace logicsim {
 
-namespace defaults {
-constexpr static inline auto wire_color_disabled = defaults::color_black;
-constexpr static inline auto wire_color_enabled = defaults::color_red;
-}  // namespace defaults
-
-auto wire_color(bool is_enabled) -> color_t {
-    if (is_enabled) {
-        return defaults::wire_color_enabled;
-    }
-    return defaults::wire_color_disabled;
+auto wire_color(bool is_enabled, WireRenderStyle style) -> color_t {
+    switch (style) {
+        case WireRenderStyle::red:
+        case WireRenderStyle::bold_red:
+            return is_enabled ? defaults::color_red : defaults::color_black;
+        case WireRenderStyle::bold:
+            return defaults::color_black;
+    };
+    std::terminate();
 }
 
-auto wire_color(bool is_enabled, ElementDrawState state) -> color_t {
-    return with_alpha_runtime(wire_color(is_enabled), state);
+auto wire_color(bool is_enabled, WireRenderStyle style,
+                ElementDrawState state) -> color_t {
+    return with_alpha_runtime(wire_color(is_enabled, style), state);
+}
+
+auto wire_stroke_width_px(bool is_enabled, WireRenderStyle style,
+                          int view_stroke_width_px) -> int {
+    switch (style) {
+        case WireRenderStyle::red:
+            return view_stroke_width_px;
+        case WireRenderStyle::bold:
+        case WireRenderStyle::bold_red:
+            return is_enabled ? view_stroke_width_px * 3 : view_stroke_width_px;
+    };
+    std::terminate();
 }
 
 auto draw_line_cross_point(Context& ctx, point_t point, bool is_enabled,
@@ -44,7 +56,7 @@ auto draw_line_cross_point(Context& ctx, point_t point, bool is_enabled,
     const int offset = wire_offset + lc_width;
 
     const auto [x, y] = to_context(point, ctx);
-    const auto color = wire_color(is_enabled, state);
+    const auto color = wire_color(is_enabled, ctx.settings.wire_render_style, state);
 
     ctx.bl_ctx.fillRect(BLRect {x - offset, y - offset, 1. * size, 1. * size}, color);
 }
@@ -57,10 +69,16 @@ auto SegmentAttributes::format() const -> std::string {
 
 auto draw_line_segment(Context& ctx, line_fine_t line, SegmentAttributes attributes,
                        ElementDrawState state) -> void {
-    const auto color = wire_color(attributes.is_enabled, state);
+    const auto color =
+        wire_color(attributes.is_enabled, ctx.settings.wire_render_style, state);
+    const auto stroke_width =
+        wire_stroke_width_px(attributes.is_enabled, ctx.settings.wire_render_style,
+                             ctx.view_config().stroke_width());
+
     draw_line(ctx, line,
               LineAttributes {
                   .color = color,
+                  .stroke_width = stroke_width,
                   .p0_endcap = attributes.p0_endcap,
                   .p1_endcap = attributes.p1_endcap,
               });

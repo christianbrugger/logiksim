@@ -45,7 +45,8 @@ auto _draw_connector_inverted(Context& ctx, ConnectorAttributes attributes) {
 
     const auto fill_color =
         with_alpha_runtime(defaults::inverted_connector_fill, attributes.state);
-    const auto stroke_color = wire_color(attributes.is_enabled, attributes.state);
+    const auto stroke_color = wire_color(
+        attributes.is_enabled, ctx.settings.wire_render_style, attributes.state);
 
     ctx.bl_ctx.fillCircle(BLCircle {p_adjusted.x, p_adjusted.y, r + width / 2.0},
                           stroke_color);
@@ -57,7 +58,8 @@ auto _draw_connector_normal(Context& ctx, ConnectorAttributes attributes) -> voi
     const auto endpoint = connector_point(attributes.position, attributes.orientation,
                                           defaults::connector_length);
     draw_line(ctx, line_fine_t {attributes.position, endpoint},
-              {.color = wire_color(attributes.is_enabled, attributes.state)});
+              {.color = wire_color(attributes.is_enabled, ctx.settings.wire_render_style,
+                                   attributes.state)});
 }
 
 auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void {
