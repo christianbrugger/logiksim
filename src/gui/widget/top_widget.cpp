@@ -310,6 +310,33 @@ auto MainWidget::create_menu() -> void {
         menu->addSeparator();
 
         menu_toolbars_ = menu->addMenu(tr("&Toolbars"));
+
+        menu->addSeparator();
+
+        {
+            auto* submenu = menu->addMenu(tr("&Wire Style"));
+            // submenu->setIcon(QIcon(to_qt(get_icon_path(icon_t::simulation_speed))));
+
+            auto* group = new QActionGroup(submenu);
+
+            actions_.wire_render_style_red = add_action_group(
+                submenu, tr("&Red"), ActionAttributes {},
+                GroupAttributes {.group = group}, [this]() {
+                    set_wire_render_style(*circuit_widget_, WireRenderStyle::red);
+                });
+
+            actions_.wire_render_style_bold = add_action_group(
+                submenu, tr("&Bold"), ActionAttributes {},
+                GroupAttributes {.group = group}, [this]() {
+                    set_wire_render_style(*circuit_widget_, WireRenderStyle::bold);
+                });
+
+            actions_.wire_render_style_bold_red = add_action_group(
+                submenu, tr("B&old Red"), ActionAttributes {},
+                GroupAttributes {.group = group}, [this]() {
+                    set_wire_render_style(*circuit_widget_, WireRenderStyle::bold_red);
+                });
+        }
     }
 
     {
@@ -921,6 +948,22 @@ Q_SLOT void MainWidget::on_render_config_changed(WidgetRenderConfig new_config) 
     }
     if (actions_.show_selection_cache != nullptr) {
         actions_.show_selection_cache->setChecked(new_config.show_selection_cache);
+    }
+
+    // wire render style
+    {
+        if (actions_.wire_render_style_red != nullptr) {
+            actions_.wire_render_style_red->setChecked(new_config.wire_render_style ==
+                                                       WireRenderStyle::red);
+        }
+        if (actions_.wire_render_style_bold != nullptr) {
+            actions_.wire_render_style_bold->setChecked(new_config.wire_render_style ==
+                                                        WireRenderStyle::bold);
+        }
+        if (actions_.wire_render_style_bold_red != nullptr) {
+            actions_.wire_render_style_bold_red->setChecked(
+                new_config.wire_render_style == WireRenderStyle::bold_red);
+        }
     }
 
     // thread count

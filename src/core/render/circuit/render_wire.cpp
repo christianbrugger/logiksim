@@ -49,7 +49,8 @@ auto draw_line_cross_point(Context& ctx, point_t point, bool is_enabled,
         return;
     }
 
-    const int wire_width = ctx.view_config().stroke_width();
+    const int wire_width = wire_stroke_width_px(
+        is_enabled, ctx.settings.wire_render_style, ctx.view_config().stroke_width());
     const int wire_offset = (wire_width - 1) / 2;
 
     const int size = 2 * lc_width + wire_width;

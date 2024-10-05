@@ -893,6 +893,12 @@ auto set_thread_count(CircuitWidget& circuit_widget, int new_count) -> void {
     circuit_widget.set_render_config(config);
 }
 
+auto set_wire_render_style(CircuitWidget& circuit_widget, WireRenderStyle style) -> void {
+    auto config = circuit_widget.render_config();
+    config.wire_render_style = style;
+    circuit_widget.set_render_config(config);
+}
+
 auto set_direct_rendering(CircuitWidget& circuit_widget, bool use_store) -> void {
     auto config = circuit_widget.render_config();
     config.direct_rendering = use_store;

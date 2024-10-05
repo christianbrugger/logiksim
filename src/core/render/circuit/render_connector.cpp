@@ -31,9 +31,24 @@ auto do_draw_connector(const ViewConfig& view_config) {
     return view_config.pixel_scale() >= defaults::connector_cutoff_px;
 }
 
+auto inverter_stroke_width_px(bool is_enabled, WireRenderStyle style,
+                              int view_stroke_width_px) -> int {
+    switch (style) {
+        case WireRenderStyle::red:
+            return view_stroke_width_px;
+        case WireRenderStyle::bold:
+            return is_enabled ? view_stroke_width_px * 3 : view_stroke_width_px;
+        case WireRenderStyle::bold_red:
+            return is_enabled ? view_stroke_width_px * 2 : view_stroke_width_px;
+    };
+    std::terminate();
+}
+
 auto _draw_connector_inverted(Context& ctx, ConnectorAttributes attributes) {
     const auto radius = defaults::inverted_circle_radius;
-    const auto width = ctx.view_config().stroke_width();
+    const auto width =
+        inverter_stroke_width_px(attributes.is_enabled, ctx.settings.wire_render_style,
+                                 ctx.view_config().stroke_width());
     const auto offset = stroke_offset(width);
 
     const auto r = to_context_unrounded(radius, ctx);
@@ -57,9 +72,15 @@ auto _draw_connector_inverted(Context& ctx, ConnectorAttributes attributes) {
 auto _draw_connector_normal(Context& ctx, ConnectorAttributes attributes) -> void {
     const auto endpoint = connector_point(attributes.position, attributes.orientation,
                                           defaults::connector_length);
+
+    const auto color = wire_color(attributes.is_enabled, ctx.settings.wire_render_style,
+                                  attributes.state);
+    const auto stroke_width =
+        wire_stroke_width_px(attributes.is_enabled, ctx.settings.wire_render_style,
+                             ctx.view_config().stroke_width());
+
     draw_line(ctx, line_fine_t {attributes.position, endpoint},
-              {.color = wire_color(attributes.is_enabled, ctx.settings.wire_render_style,
-                                   attributes.state)});
+              {.color = color, .stroke_width = stroke_width});
 }
 
 auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void {

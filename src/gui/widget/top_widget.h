@@ -70,6 +70,10 @@ struct MainActions {
     QAction* thread_count_2;
     QAction* thread_count_4;
     QAction* thread_count_8;
+
+    QAction* wire_render_style_red;
+    QAction* wire_render_style_bold;
+    QAction* wire_render_style_bold_red;
 };
 
 class MainWidget : public QMainWindow {

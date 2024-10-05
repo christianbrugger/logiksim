@@ -33,6 +33,7 @@ auto CircuitRenderer::set_render_config(WidgetRenderConfig new_config) -> void {
 
     context_settings_.thread_count = new_config.thread_count;
     context_settings_.jit_rendering = new_config.jit_rendering;
+    context_settings_.wire_render_style = new_config.wire_render_style;
 
     // update
     render_config_ = new_config;
