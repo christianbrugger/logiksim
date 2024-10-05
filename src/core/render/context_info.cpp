@@ -1,6 +1,5 @@
 #include "render/context_info.h"
 
-#include "logging.h"
 #include "vocabulary/context_render_settings.h"
 
 #include <blend2d.h>
@@ -13,7 +12,20 @@ auto context_info(const ContextRenderSettings& settings) -> BLContextCreateInfo 
     // many small entities without compromising speed too much.
     info.commandQueueLimit = 2048;
 
-    info.threadCount = gsl::narrow<decltype(info.threadCount)>(settings.thread_count);
+    info.threadCount = [&] {
+        switch (settings.thread_count) {
+            using enum ThreadCount;
+            case synchronous:
+                return 0;
+            case two:
+                return 2;
+            case four:
+                return 4;
+            case eight:
+                return 8;
+        };
+        std::terminate();
+    }();
 
     if (!settings.jit_rendering) {
         info.flags |= BL_CONTEXT_CREATE_FLAG_DISABLE_JIT;

@@ -2,6 +2,7 @@
 #define LOGICSIM_VOCABULARY_CONTEXT_RENDER_SETTINGS_H
 
 #include "format/struct.h"
+#include "vocabulary/thread_count.h"
 #include "vocabulary/view_config.h"
 #include "vocabulary/wire_render_style.h"
 
@@ -21,7 +22,7 @@ struct ContextRenderSettings {
     /**
      * @brief: Number of render threads used.
      */
-    int thread_count {4};
+    ThreadCount thread_count {ThreadCount::four};
 
     /**
      * @brief: Style in wich to draw enabled wires, cross points and connectors

@@ -8,6 +8,7 @@
 #include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
 #include "vocabulary/fallback_info.h"
 #include "vocabulary/render_mode.h"
+#include "vocabulary/thread_count.h"
 #include "vocabulary/wire_render_style.h"
 
 #include <gsl/gsl>
@@ -196,7 +197,7 @@ auto set_show_collision_cache(CircuitWidget& circuit_widget, bool value) -> void
 auto set_show_connection_cache(CircuitWidget& circuit_widget, bool value) -> void;
 auto set_show_selection_cache(CircuitWidget& circuit_widget, bool value) -> void;
 
-auto set_thread_count(CircuitWidget& circuit_widget, int new_count) -> void;
+auto set_thread_count(CircuitWidget& circuit_widget, ThreadCount new_count) -> void;
 auto set_wire_render_style(CircuitWidget& circuit_widget, WireRenderStyle style) -> void;
 auto set_direct_rendering(CircuitWidget& circuit_widget, bool use_store) -> void;
 auto set_jit_rendering(CircuitWidget& circuit_widget, bool enable_jit) -> void;

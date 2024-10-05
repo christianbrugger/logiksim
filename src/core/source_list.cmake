@@ -282,6 +282,7 @@ set(LS_CORE_SOURCES
     vocabulary/simulation_config.cpp
     vocabulary/size_device.cpp
     vocabulary/text_alignment.cpp
+    vocabulary/thread_count.cpp
     vocabulary/time.cpp
     vocabulary/time_literal.cpp
     vocabulary/time_rate.cpp
@@ -323,6 +324,7 @@ set(LS_CORE_SOURCES
     selection_normalization.cpp
     serialize.cpp
     serialize_detail.cpp
+    serialize_gui_setting.cpp
     setting_handle.cpp
     simulation.cpp
     simulation_player.cpp

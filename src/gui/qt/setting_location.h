@@ -8,6 +8,7 @@ namespace logicsim {
 enum class setting_t {
     gui_geometry,
     gui_state,
+    gui_settings,
 
     logfile,
 };

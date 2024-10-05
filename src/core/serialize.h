@@ -68,7 +68,8 @@ static_assert(std::copyable<LoadLayoutResult>);
 
 }  // namespace serialize
 
-auto load_layout(const std::string& binary) -> std::optional<serialize::LoadLayoutResult>;
+[[nodiscard]] auto load_layout(const std::string& binary)
+    -> std::optional<serialize::LoadLayoutResult>;
 
 }  // namespace logicsim
 

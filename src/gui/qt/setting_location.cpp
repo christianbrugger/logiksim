@@ -35,6 +35,10 @@ auto get_writable_setting_path(setting_t settings) -> std::filesystem::path {
             return writable_standard_path(QStandardPaths::AppConfigLocation,
                                           "gui_state.bin");
         }
+        case gui_settings: {
+            return writable_standard_path(QStandardPaths::AppConfigLocation,
+                                          "gui_settings.json");
+        }
         case logfile: {
             return writable_standard_path(QStandardPaths::AppConfigLocation,
                                           "logging.txt");

@@ -66,10 +66,10 @@ struct MainActions {
     QAction* direct_rendering;
     QAction* jit_rendering;
 
-    QAction* thread_count_0;
-    QAction* thread_count_2;
-    QAction* thread_count_4;
-    QAction* thread_count_8;
+    QAction* thread_count_synchronous;
+    QAction* thread_count_two;
+    QAction* thread_count_four;
+    QAction* thread_count_eight;
 
     QAction* wire_render_style_red;
     QAction* wire_render_style_bold;

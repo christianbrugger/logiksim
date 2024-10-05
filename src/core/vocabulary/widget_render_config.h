@@ -2,6 +2,7 @@
 #define LOGICSIM_VOCABULARY_WIDGET_RENDER_CONFIG_H
 
 #include "format/struct.h"
+#include "vocabulary/thread_count.h"
 #include "vocabulary/wire_render_style.h"
 
 #include <type_traits>
@@ -9,7 +10,7 @@
 namespace logicsim {
 
 struct WidgetRenderConfig {
-    int thread_count {4};
+    ThreadCount thread_count {ThreadCount::four};
     WireRenderStyle wire_render_style {WireRenderStyle::red};
 
     bool do_benchmark {false};

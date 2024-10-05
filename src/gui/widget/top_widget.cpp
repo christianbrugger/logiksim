@@ -10,6 +10,7 @@
 #include "qt/setting_location.h"
 #include "resource.h"
 #include "serialize.h"
+#include "serialize_gui_setting.h"
 #include "timer.h"
 #include "top_widget.h"
 #include "vocabulary/simulation_config.h"
@@ -526,25 +527,26 @@ auto MainWidget::create_menu() -> void {
         {
             auto* group = new QActionGroup(menu);
 
-            actions_.thread_count_0 =
-                add_action_group(menu, tr("S&ynchronous Rendering"), ActionAttributes {},
-                                 GroupAttributes {.group = group},
-                                 [this]() { set_thread_count(*circuit_widget_, 0); });
+            actions_.thread_count_synchronous = add_action_group(
+                menu, tr("S&ynchronous Rendering"), ActionAttributes {},
+                GroupAttributes {.group = group}, [this]() {
+                    set_thread_count(*circuit_widget_, ThreadCount::synchronous);
+                });
 
-            actions_.thread_count_2 =
-                add_action_group(menu, tr("&2 Render Threads"), ActionAttributes {},
-                                 GroupAttributes {.group = group},
-                                 [this]() { set_thread_count(*circuit_widget_, 2); });
+            actions_.thread_count_two = add_action_group(
+                menu, tr("&2 Render Threads"), ActionAttributes {},
+                GroupAttributes {.group = group},
+                [this]() { set_thread_count(*circuit_widget_, ThreadCount::two); });
 
-            actions_.thread_count_4 =
-                add_action_group(menu, tr("&4 Render Threads"), ActionAttributes {},
-                                 GroupAttributes {.group = group},
-                                 [this]() { set_thread_count(*circuit_widget_, 4); });
+            actions_.thread_count_four = add_action_group(
+                menu, tr("&4 Render Threads"), ActionAttributes {},
+                GroupAttributes {.group = group},
+                [this]() { set_thread_count(*circuit_widget_, ThreadCount::four); });
 
-            actions_.thread_count_8 =
-                add_action_group(menu, tr("&8 Render Threads"), ActionAttributes {},
-                                 GroupAttributes {.group = group},
-                                 [this]() { set_thread_count(*circuit_widget_, 8); });
+            actions_.thread_count_eight = add_action_group(
+                menu, tr("&8 Render Threads"), ActionAttributes {},
+                GroupAttributes {.group = group},
+                [this]() { set_thread_count(*circuit_widget_, ThreadCount::eight); });
         }
     }
 
@@ -968,17 +970,21 @@ Q_SLOT void MainWidget::on_render_config_changed(WidgetRenderConfig new_config) 
 
     // thread count
     {
-        if (actions_.thread_count_0 != nullptr) {
-            actions_.thread_count_0->setChecked(new_config.thread_count == 0);
+        if (actions_.thread_count_synchronous != nullptr) {
+            actions_.thread_count_synchronous->setChecked(new_config.thread_count ==
+                                                          ThreadCount::synchronous);
         }
-        if (actions_.thread_count_2 != nullptr) {
-            actions_.thread_count_2->setChecked(new_config.thread_count == 2);
+        if (actions_.thread_count_two != nullptr) {
+            actions_.thread_count_two->setChecked(new_config.thread_count ==
+                                                  ThreadCount::two);
         }
-        if (actions_.thread_count_4 != nullptr) {
-            actions_.thread_count_4->setChecked(new_config.thread_count == 4);
+        if (actions_.thread_count_four != nullptr) {
+            actions_.thread_count_four->setChecked(new_config.thread_count ==
+                                                   ThreadCount::four);
         }
-        if (actions_.thread_count_8 != nullptr) {
-            actions_.thread_count_8->setChecked(new_config.thread_count == 8);
+        if (actions_.thread_count_eight != nullptr) {
+            actions_.thread_count_eight->setChecked(new_config.thread_count ==
+                                                    ThreadCount::eight);
         }
     }
 
@@ -1034,6 +1040,19 @@ auto MainWidget::save_gui_state() -> void {
             std::string {bytes.data(), gsl::narrow<std::size_t>(bytes.size())};
         save_file(get_writable_setting_path(setting_t::gui_state), string);
     }
+
+    // settings
+    {
+        const auto render_config = circuit_widget_->render_config();
+        const auto settings = GuiSettings {
+            .thread_count = render_config.thread_count,
+            .wire_render_style = render_config.wire_render_style,
+            .direct_rendering = render_config.direct_rendering,
+            .jit_rendering = render_config.jit_rendering,
+        };
+        const auto string = serialize_gui_settings(settings);
+        save_file(get_writable_setting_path(setting_t::gui_settings), string);
+    }
 }
 
 auto MainWidget::restore_gui_state() -> void {
@@ -1049,6 +1068,21 @@ auto MainWidget::restore_gui_state() -> void {
         !str.empty()) {
         const auto bytes = QByteArray {str.data(), gsl::narrow<qsizetype>(str.size())};
         restoreState(bytes);
+    }
+
+    // settings
+    if (const auto str = load_file(get_writable_setting_path(setting_t::gui_settings));
+        !str.empty()) {
+        if (const auto settings = load_gui_settings(str); settings.has_value()) {
+            auto render_config = circuit_widget_->render_config();
+
+            render_config.thread_count = settings->thread_count;
+            render_config.wire_render_style = settings->wire_render_style;
+            render_config.direct_rendering = settings->direct_rendering;
+            render_config.jit_rendering = settings->jit_rendering;
+
+            circuit_widget_->set_render_config(render_config);
+        }
     }
 }
 

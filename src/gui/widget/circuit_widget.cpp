@@ -887,7 +887,7 @@ auto set_show_selection_cache(CircuitWidget& circuit_widget, bool value) -> void
     circuit_widget.set_render_config(config);
 }
 
-auto set_thread_count(CircuitWidget& circuit_widget, int new_count) -> void {
+auto set_thread_count(CircuitWidget& circuit_widget, ThreadCount new_count) -> void {
     auto config = circuit_widget.render_config();
     config.thread_count = new_count;
     circuit_widget.set_render_config(config);
