@@ -259,7 +259,7 @@ static void BM_RenderScene_0(benchmark::State& state) {
     const auto cache = ContextCache {};
     // TODO generate settings from bl_image, ...
     const auto settings = [&] {
-        auto res = ContextRenderSettings {.thread_count = 0};
+        auto res = ContextRenderSettings {.thread_count = ThreadCount::synchronous};
         res.view_config.set_device_scale(12.);
         res.view_config.set_size(size);
         return res;
