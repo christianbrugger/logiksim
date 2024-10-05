@@ -26,11 +26,11 @@ auto SurfaceStatistics::format() const -> std::string {
         frames_per_second, pixel_scale, image_size.w, image_size.h);
 }
 
-auto CircuitRenderer::set_render_config(WidgetRenderConfig new_config) -> void {
-    if (new_config == render_config_) {
-        return;
-    }
+CircuitRenderer::CircuitRenderer() {
+    set_render_config(render_config_);
+}
 
+auto CircuitRenderer::set_render_config(WidgetRenderConfig new_config) -> void {
     context_settings_.thread_count = new_config.thread_count;
     context_settings_.jit_rendering = new_config.jit_rendering;
     context_settings_.wire_render_style = new_config.wire_render_style;

@@ -27,7 +27,7 @@ struct ContextRenderSettings {
      * @brief: Style in wich to draw enabled wires, cross points and connectors
      *         during simulation.
      */
-    WireRenderStyle wire_render_style {WireRenderStyle::bold_red};
+    WireRenderStyle wire_render_style {WireRenderStyle::red};
 
     /**
      * @brief: If true the JIT is used for Blend2D, if available.

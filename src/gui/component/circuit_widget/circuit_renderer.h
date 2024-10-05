@@ -57,6 +57,8 @@ static_assert(std::regular<SurfaceStatistics>);
  */
 class CircuitRenderer {
    public:
+    explicit CircuitRenderer();
+
     /**
      * @brief: Free temporary memory for layers and caches.
      */
@@ -91,6 +93,7 @@ class CircuitRenderer {
     ContextCache context_cache_ {cache_with_default_fonts()};
 
     // TODO !!! not clear what can be internally set and what not
+    // TODO generate this from WidgetRenderConfig in render calls
     ContextRenderSettings context_settings_ {};
     // setting are only written from external setter, no internal writes
     WidgetRenderConfig render_config_ {};
