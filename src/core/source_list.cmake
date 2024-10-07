@@ -60,6 +60,7 @@ set(LS_CORE_SOURCES
     component/editable_circuit/selection_store.cpp
     component/editable_circuit/visible_selection.cpp
     component/interactive_simulation/interaction_cache.cpp
+    component/layout/decoration_store.cpp
     component/layout/logicitem_store.cpp
     component/layout/wire_store.cpp
     component/line_tree/line_store.cpp
@@ -219,6 +220,9 @@ set(LS_CORE_SOURCES
     vocabulary/connection_ids.cpp
     vocabulary/connector_info.cpp
     vocabulary/context_render_settings.cpp
+    vocabulary/decoration_definition.cpp
+    vocabulary/decoration_id.cpp
+    vocabulary/decoration_type.cpp
     vocabulary/default_mouse_action.cpp
     vocabulary/delay.cpp
     vocabulary/device_pixel_ratio.cpp
@@ -333,6 +337,7 @@ set(LS_CORE_SOURCES
     timeout_timer.cpp
     timer.cpp
     tree_normalization.cpp
-    validate_definition.cpp
+    validate_definition_decoration.cpp
+    validate_definition_logicitem.cpp
     wyhash.cpp
 )

@@ -24,7 +24,7 @@
 #include "layout_info.h"
 #include "selection.h"
 #include "serialize_detail.h"
-#include "validate_definition.h"
+#include "validate_definition_logicitem.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/placed_element.h"

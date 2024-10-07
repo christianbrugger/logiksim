@@ -6,7 +6,7 @@
 #include "allocated_size/std_vector.h"
 #include "component/layout/logicitem_store.h"
 #include "layout_info.h"
-#include "validate_definition.h"
+#include "validate_definition_logicitem.h"
 #include "vocabulary/layout_calculation_data.h"
 
 #include <range/v3/algorithm/sort.hpp>

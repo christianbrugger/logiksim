@@ -5,7 +5,7 @@
 #include "logging.h"
 #include "qt/path_conversion.h"
 #include "resource.h"
-#include "validate_definition.h"
+#include "validate_definition_logicitem.h"
 #include "vocabulary/delay.h"
 #include "vocabulary/logicitem_definition.h"
 

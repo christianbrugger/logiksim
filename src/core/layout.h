@@ -2,6 +2,7 @@
 #define LOGIKSIM_LAYOUT_H
 
 #include "algorithm/range_extended.h"
+#include "component/layout/decoration_store.h"
 #include "component/layout/logicitem_store.h"
 #include "component/layout/wire_store.h"
 #include "format/struct.h"
@@ -44,12 +45,15 @@ class Layout {
     [[nodiscard]] auto logic_items() const -> const layout::LogicItemStore &;
     [[nodiscard]] auto wires() -> layout::WireStore &;
     [[nodiscard]] auto wires() const -> const layout::WireStore &;
+    [[nodiscard]] auto decorations() -> layout::DecorationStore &;
+    [[nodiscard]] auto decorations() const -> const layout::DecorationStore &;
 
     [[nodiscard]] auto circuit_id() const -> circuit_id_t;
 
    private:
     layout::LogicItemStore logic_items_ {};
     layout::WireStore wires_ {};
+    layout::DecorationStore decorations_ {};
 
     circuit_id_t circuit_id_ {0};
 };
@@ -60,23 +64,27 @@ class Layout {
 
 [[nodiscard]] auto logicitem_ids(const Layout &layout)
     -> range_extended_t<logicitem_id_t>;
-
 [[nodiscard]] auto wire_ids(const Layout &layout) -> range_extended_t<wire_id_t>;
+[[nodiscard]] auto decoration_ids(const Layout &layout)
+    -> range_extended_t<decoration_id_t>;
 
 [[nodiscard]] auto inserted_wire_ids(const Layout &layout) -> range_extended_t<wire_id_t>;
 
 [[nodiscard]] auto is_id_valid(logicitem_id_t logicitem_id, const Layout &layout) -> bool;
 [[nodiscard]] auto is_id_valid(wire_id_t wire_id, const Layout &layout) -> bool;
+[[nodiscard]] auto is_id_valid(decoration_id_t decoration_id,
+                               const Layout &layout) -> bool;
 [[nodiscard]] auto is_segment_valid(segment_t segment, const Layout &layout) -> bool;
 [[nodiscard]] auto is_segment_part_valid(segment_part_t segment_part,
                                          const Layout &layout) -> bool;
 
 [[nodiscard]] auto get_uninserted_logicitem_count(const Layout &layout) -> std::size_t;
-
 [[nodiscard]] auto get_inserted_logicitem_count(const Layout &layout) -> std::size_t;
 
-[[nodiscard]] auto get_segment_count(const Layout &layout) -> std::size_t;
+[[nodiscard]] auto get_uninserted_decoration_count(const Layout &layout) -> std::size_t;
+[[nodiscard]] auto get_inserted_decoration_count(const Layout &layout) -> std::size_t;
 
+[[nodiscard]] auto get_segment_count(const Layout &layout) -> std::size_t;
 [[nodiscard]] auto get_inserted_segment_count(const Layout &layout) -> std::size_t;
 
 [[nodiscard]] auto format_stats(const Layout &layout) -> std::string;
@@ -84,8 +92,12 @@ class Layout {
 [[nodiscard]] auto format_logic_item(const Layout &layout,
                                      logicitem_id_t logicitem_id) -> std::string;
 [[nodiscard]] auto format_wire(const Layout &layout, wire_id_t wire_id) -> std::string;
+[[nodiscard]] auto format_decoration(const Layout &layout,
+                                     decoration_id_t decoration_id) -> std::string;
 
 [[nodiscard]] auto is_inserted(const Layout &layout, logicitem_id_t logicitem_id) -> bool;
+[[nodiscard]] auto is_inserted(const Layout &layout,
+                               decoration_id_t decoration_id) -> bool;
 
 [[nodiscard]] auto is_wire_empty(const Layout &layout, wire_id_t wire_id) -> bool;
 
@@ -111,6 +123,8 @@ class Layout {
     const Layout &layout, logicitem_id_t logicitem_id) -> layout_calculation_data_t;
 [[nodiscard]] auto to_logicitem_definition(
     const Layout &layout, logicitem_id_t logicitem_id) -> LogicItemDefinition;
+[[nodiscard]] auto to_decoration_definition(
+    const Layout &layout, decoration_id_t decoration_id) -> DecorationDefinition;
 [[nodiscard]] auto to_placed_element(const Layout &layout,
                                      logicitem_id_t logicitem_id) -> PlacedElement;
 

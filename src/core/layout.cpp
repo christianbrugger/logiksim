@@ -22,12 +22,14 @@ Layout::Layout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {}
 
 auto Layout::allocated_size() const -> std::size_t {
     return get_allocated_size(logic_items_) +  //
-           get_allocated_size(wires_);
+           get_allocated_size(wires_) +        //
+           get_allocated_size(decorations_);
 }
 
 auto Layout::format() const -> std::string {
     auto inner_logic_items = std::string {};
     auto inner_wires = std::string {};
+    auto inner_decorations = std::string {};
 
     if (!logic_items_.empty()) {
         const auto format_single = [&](logicitem_id_t logicitem_id) {
@@ -45,22 +47,31 @@ auto Layout::format() const -> std::string {
         inner_wires = fmt::format(", [\n  {}\n]", lines);
     }
 
-    return fmt::format("<Layout with {} logic items and {} wires{}{}>",
-                       logic_items_.size(), wires_.size(), inner_logic_items,
-                       inner_wires);
+    if (!decorations_.empty()) {
+        const auto format_single = [&](decoration_id_t decoration_id) {
+            return format_decoration(*this, decoration_id);
+        };
+        const auto lines = fmt_join(",\n  ", decoration_ids(*this), "{}", format_single);
+        inner_decorations = fmt::format(", [\n  {}\n]", lines);
+    }
+
+    return fmt::format("<Layout with {} logic items, {} wires, {} decorations{}{}{}>",
+                       logic_items_.size(), wires_.size(), decorations_.size(),
+                       inner_logic_items, inner_wires, inner_decorations);
 }
 
 auto Layout::normalize() -> void {
     logic_items_.normalize();
     wires_.normalize();
+    decorations_.normalize();
 }
 
 auto Layout::empty() const -> bool {
-    return logic_items_.empty() && wires_.empty();
+    return logic_items_.empty() && wires_.empty() && decorations_.empty();
 }
 
 auto Layout::size() const -> std::size_t {
-    return logic_items_.size() + wires_.size();
+    return logic_items_.size() + wires_.size() + decorations_.size();
 }
 
 auto Layout::circuit_id() const -> circuit_id_t {
@@ -83,6 +94,14 @@ auto Layout::wires() const -> const layout::WireStore & {
     return wires_;
 }
 
+auto Layout::decorations() -> layout::DecorationStore & {
+    return decorations_;
+}
+
+auto Layout::decorations() const -> const layout::DecorationStore & {
+    return decorations_;
+}
+
 //
 // Free functions
 //
@@ -93,6 +112,10 @@ auto logicitem_ids(const Layout &layout) -> range_extended_t<logicitem_id_t> {
 
 auto wire_ids(const Layout &layout) -> range_extended_t<wire_id_t> {
     return range_extended<wire_id_t>(layout.wires().size());
+}
+
+auto decoration_ids(const Layout &layout) -> range_extended_t<decoration_id_t> {
+    return range_extended<decoration_id_t>(layout.decorations().size());
 }
 
 auto inserted_wire_ids(const Layout &layout) -> range_extended_t<wire_id_t> {
@@ -107,6 +130,11 @@ auto is_id_valid(logicitem_id_t logicitem_id, const Layout &layout) -> bool {
 
 auto is_id_valid(wire_id_t wire_id, const Layout &layout) -> bool {
     return wire_id >= wire_id_t {0} && std::size_t {wire_id} < layout.wires().size();
+}
+
+auto is_id_valid(decoration_id_t decoration_id, const Layout &layout) -> bool {
+    return decoration_id >= decoration_id_t {0} &&
+           std::size_t {decoration_id} < layout.decorations().size();
 }
 
 auto is_segment_valid(segment_t segment, const Layout &layout) -> bool {
@@ -142,6 +170,22 @@ auto get_inserted_logicitem_count(const Layout &layout) -> std::size_t {
     return gsl::narrow_cast<std::size_t>(count);
 }
 
+auto get_uninserted_decoration_count(const Layout &layout) -> std::size_t {
+    const auto count = std::ranges::count_if(
+        decoration_ids(layout),
+        [&](const auto &decoration_id) { return !is_inserted(layout, decoration_id); });
+
+    return gsl::narrow_cast<std::size_t>(count);
+}
+
+auto get_inserted_decoration_count(const Layout &layout) -> std::size_t {
+    const auto count = std::ranges::count_if(
+        decoration_ids(layout),
+        [&](const auto &decoration_id) { return is_inserted(layout, decoration_id); });
+
+    return gsl::narrow_cast<std::size_t>(count);
+}
+
 auto get_segment_count(const Layout &layout) -> std::size_t {
     return accumulate(wire_ids(layout), std::size_t {0}, [&](wire_id_t wire_id) {
         return layout.wires().segment_tree(wire_id).size();
@@ -157,9 +201,11 @@ auto get_inserted_segment_count(const Layout &layout) -> std::size_t {
 auto format_stats(const Layout &layout) -> std::string {
     const auto logic_item_count = layout.logic_items().size();
     const auto segment_count = get_segment_count(layout);
+    const auto decoration_count = layout.decorations().size();
 
-    return fmt::format("Layout with {} logic items and {} wire segments.\n",
-                       logic_item_count, segment_count);
+    return fmt::format(
+        "Layout with {} logic items, {} wire segments and {} decorations.\n",
+        logic_item_count, segment_count, decoration_count);
 }
 
 auto format_logic_item(const Layout &layout, logicitem_id_t logicitem_id) -> std::string {
@@ -176,8 +222,19 @@ auto format_wire(const Layout &layout, wire_id_t wire_id) -> std::string {
     return fmt::format("<Wire {}: {}", wire_id, layout.wires().segment_tree(wire_id));
 }
 
+auto format_decoration(const Layout &layout,
+                       decoration_id_t decoration_id) -> std::string {
+    return fmt::format("<Decoration {}: {} {}", decoration_id,
+                       layout.decorations().type(decoration_id),
+                       layout.decorations().position(decoration_id));
+}
+
 auto is_inserted(const Layout &layout, logicitem_id_t logicitem_id) -> bool {
     return is_inserted(layout.logic_items().display_state(logicitem_id));
+}
+
+auto is_inserted(const Layout &layout, decoration_id_t decoration_id) -> bool {
+    return is_inserted(layout.decorations().display_state(decoration_id));
 }
 
 auto is_wire_empty(const Layout &layout, const wire_id_t wire_id) -> bool {
@@ -245,6 +302,18 @@ auto moved_layout(Layout layout, int delta_x, int delta_y) -> std::optional<Layo
         }
     }
 
+    // decorations
+    for (const auto decoration_id : decoration_ids(layout)) {
+        const auto position = layout.decorations().position(decoration_id);
+
+        if (!is_representable(position, delta_x, delta_y)) {
+            return std::nullopt;
+        }
+
+        const auto new_position = add_unchecked(position, delta_x, delta_y);
+        layout.decorations().set_position(decoration_id, new_position);
+    }
+
     return std::optional {std::move(layout)};
 }
 
@@ -256,6 +325,11 @@ auto to_layout_calculation_data(const Layout &layout, logicitem_id_t logicitem_i
 auto to_logicitem_definition(const Layout &layout,
                              logicitem_id_t logicitem_id) -> LogicItemDefinition {
     return layout::to_logicitem_definition(layout.logic_items(), logicitem_id);
+}
+
+auto to_decoration_definition(const Layout &layout,
+                              decoration_id_t decoration_id) -> DecorationDefinition {
+    return layout::to_decoration_definition(layout.decorations(), decoration_id);
 }
 
 auto to_placed_element(const Layout &layout,
@@ -310,10 +384,15 @@ auto all_normal_display_state(const Layout &layout) -> bool {
         return std::ranges::all_of(layout.wires().segment_tree(wire_id).valid_parts(),
                                    &PartSelection::empty);
     };
+    const auto decoration_normal = [&](const decoration_id_t &decoration_id) {
+        return layout.decorations().display_state(decoration_id) ==
+               display_state_t::normal;
+    };
 
     return layout.wires().segment_tree(temporary_wire_id).empty() &&
            layout.wires().segment_tree(colliding_wire_id).empty() &&
            std::ranges::all_of(logicitem_ids(layout), logicitem_normal) &&
+           std::ranges::all_of(decoration_ids(layout), decoration_normal) &&
            std::ranges::all_of(inserted_wire_ids(layout), wire_normal);
 }
 
