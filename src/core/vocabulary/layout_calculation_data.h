@@ -17,6 +17,7 @@ namespace logicsim {
 struct LogicItemDefinition;
 struct PlacedElement;
 
+// TODO rename to logicitem_layout_data_t
 /**
  * @brief: Logic item data required to calculate its layout.
  */

@@ -3,6 +3,7 @@
 
 #include "layout_message_forward.h"
 #include "part_selection.h"
+#include "vocabulary/decoration_id.h"
 #include "vocabulary/display_state_map.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/segment.h"
@@ -22,6 +23,7 @@ class Layout;
 namespace detail::selection {
 
 using logicitems_set_t = ankerl::unordered_dense::set<logicitem_id_t>;
+using decorations_set_t = ankerl::unordered_dense::set<decoration_id_t>;
 
 using map_key_t = segment_t;
 using map_value_t = PartSelection;
@@ -39,7 +41,7 @@ using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
  * @brief: A selection of logicitems and segment parts of a Layout.
  *
  * Class-invariants:
- *   + stored logicitem_ids and segments are not null
+ *   + stored logicitem_ids, decoration_ids and segments are not null
  *   + selected segments entries have at least one part in the PartSelection
  */
 class Selection {
@@ -60,14 +62,19 @@ class Selection {
     auto remove_logicitem(logicitem_id_t logicitem_id) -> void;
     auto toggle_logicitem(logicitem_id_t logicitem_id) -> void;
 
+    auto add_decoration(decoration_id_t decoration_id) -> void;
+    auto remove_decoration(decoration_id_t decoration_id) -> void;
+
     auto add_segment(segment_part_t segment_part) -> void;
     auto remove_segment(segment_part_t segment_part) -> void;
     auto set_selection(segment_t segment, PartSelection &&parts) -> void;
 
     [[nodiscard]] auto is_selected(logicitem_id_t logicitem_id) const -> bool;
+    [[nodiscard]] auto is_selected(decoration_id_t decoration_id) const -> bool;
     [[nodiscard]] auto is_selected(segment_t segment) const -> bool;
 
     [[nodiscard]] auto selected_logic_items() const -> std::span<const logicitem_id_t>;
+    [[nodiscard]] auto selected_decorations() const -> std::span<const decoration_id_t>;
     [[nodiscard]] auto selected_segments() const -> std::span<const segment_pair_t>;
     [[nodiscard]] auto selected_segments(segment_t segment) const
         -> const PartSelection &;
@@ -86,6 +93,7 @@ class Selection {
 
    private:
     detail::selection::logicitems_set_t selected_logicitems_ {};
+    detail::selection::decorations_set_t selected_decorations_ {};
     detail::selection::segment_map_t selected_segments_ {};
 };
 

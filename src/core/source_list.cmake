@@ -49,6 +49,8 @@ set(LS_CORE_SOURCES
     benchmark/schematic_creation.cpp
     benchmark/simulation_runtime.cpp
 
+    component/editable_circuit/editing/edit_decoration.cpp
+    component/editable_circuit/editing/edit_decoration_detail.cpp
     component/editable_circuit/editing/edit_logicitem.cpp
     component/editable_circuit/editing/edit_logicitem_detail.cpp
     component/editable_circuit/editing/edit_wire.cpp
@@ -222,6 +224,7 @@ set(LS_CORE_SOURCES
     vocabulary/context_render_settings.cpp
     vocabulary/decoration_definition.cpp
     vocabulary/decoration_id.cpp
+    vocabulary/decoration_layout_data.cpp
     vocabulary/decoration_type.cpp
     vocabulary/default_mouse_action.cpp
     vocabulary/delay.cpp

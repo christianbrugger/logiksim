@@ -4,6 +4,8 @@
 #include "algorithm/fmt_join.h"
 #include "format/struct.h"
 #include "layout_message_forward.h"
+#include "vocabulary/decoration_id.h"
+#include "vocabulary/decoration_layout_data.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/segment.h"
@@ -74,6 +76,61 @@ struct LogicItemUninserted {
 
     [[nodiscard]] auto operator==(const LogicItemUninserted &other) const -> bool =
                                                                                  default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+// Decorations
+
+struct DecorationCreated {
+    decoration_id_t decoration_id;
+
+    [[nodiscard]] auto operator==(const DecorationCreated &other) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct DecorationIdUpdated {
+    decoration_id_t new_decoration_id;
+    decoration_id_t old_decoration_id;
+
+    [[nodiscard]] auto operator==(const DecorationIdUpdated &other) const -> bool =
+                                                                                 default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct DecorationDeleted {
+    decoration_id_t decoration_id;
+
+    [[nodiscard]] auto operator==(const DecorationDeleted &other) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+// Inserted Decorations
+
+struct DecorationInserted {
+    decoration_id_t decoration_id;
+    decoration_layout_data_t data;
+
+    [[nodiscard]] auto operator==(const DecorationInserted &other) const -> bool =
+                                                                                default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct InsertedDecorationIdUpdated {
+    decoration_id_t new_decoration_id;
+    decoration_id_t old_decoration_id;
+    decoration_layout_data_t data;
+
+    [[nodiscard]] auto operator==(const InsertedDecorationIdUpdated &other) const
+        -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct DecorationUninserted {
+    decoration_id_t decoration_id;
+    decoration_layout_data_t data;
+
+    [[nodiscard]] auto operator==(const DecorationUninserted &other) const -> bool =
+                                                                                  default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -153,6 +210,8 @@ struct SegmentUninserted {
 using Message = std::variant<                                                //
     LogicItemCreated, LogicItemDeleted, LogicItemIdUpdated,                  //
     LogicItemInserted, LogicItemUninserted, InsertedLogicItemIdUpdated,      //
+    DecorationCreated, DecorationDeleted, DecorationIdUpdated,               //
+    DecorationInserted, DecorationUninserted, InsertedDecorationIdUpdated,   //
     SegmentCreated, SegmentIdUpdated, SegmentPartMoved, SegmentPartDeleted,  //
     SegmentInserted, InsertedSegmentIdUpdated, InsertedEndPointsUpdated,
     SegmentUninserted>;

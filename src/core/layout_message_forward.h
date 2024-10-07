@@ -16,6 +16,14 @@ struct LogicItemInserted;
 struct InsertedLogicItemIdUpdated;
 struct LogicItemUninserted;
 
+struct DecorationCreated;
+struct DecorationIdUpdated;
+struct DecorationDeleted;
+
+struct DecorationInserted;
+struct InsertedDecorationIdUpdated;
+struct DecorationUninserted;
+
 struct SegmentCreated;
 struct SegmentIdUpdated;
 struct SegmentPartMoved;
@@ -29,6 +37,8 @@ struct SegmentUninserted;
 using Message = std::variant<                                                //
     LogicItemCreated, LogicItemDeleted, LogicItemIdUpdated,                  //
     LogicItemInserted, LogicItemUninserted, InsertedLogicItemIdUpdated,      //
+    DecorationCreated, DecorationDeleted, DecorationIdUpdated,               //
+    DecorationInserted, DecorationUninserted, InsertedDecorationIdUpdated,   //
     SegmentCreated, SegmentIdUpdated, SegmentPartMoved, SegmentPartDeleted,  //
     SegmentInserted, InsertedSegmentIdUpdated, InsertedEndPointsUpdated,
     SegmentUninserted>;

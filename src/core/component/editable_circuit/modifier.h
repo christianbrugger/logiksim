@@ -97,6 +97,28 @@ class Modifier {
                         attributes_clock_generator_t attrs) -> void;
 
     //
+    // Decorations
+    //
+
+    auto delete_temporary_decoration(decoration_id_t& decoration_id,
+                                     decoration_id_t* preserve_element = nullptr) -> void;
+
+    auto move_temporary_decoration_unchecked(decoration_id_t decoration_id, int dx,
+                                             int dy) -> void;
+
+    auto move_or_delete_temporary_decoration(decoration_id_t& decoration_id, int dx,
+                                             int dy) -> void;
+
+    auto change_decoration_insertion_mode(decoration_id_t& decoration_id,
+                                          InsertionMode new_insertion_mode) -> void;
+
+    auto add_decoration(const DecorationDefinition& definition, point_t position,
+                        InsertionMode insertion_mode) -> decoration_id_t;
+
+    auto set_attributes(decoration_id_t decoration_id,
+                        attributes_text_element_t attrs) -> void;
+
+    //
     // Wires
     //
 
@@ -140,9 +162,13 @@ class Modifier {
     auto add_to_selection(selection_id_t selection_id,
                           logicitem_id_t logicitem_id) -> void;
     auto add_to_selection(selection_id_t selection_id,
+                          decoration_id_t decoration_id) -> void;
+    auto add_to_selection(selection_id_t selection_id,
                           segment_part_t segment_part) -> void;
     auto remove_from_selection(selection_id_t selection_id,
                                logicitem_id_t logicitem_id) -> void;
+    auto remove_from_selection(selection_id_t selection_id,
+                               decoration_id_t decoration_id) -> void;
     auto remove_from_selection(selection_id_t selection_id,
                                segment_part_t segment_part) -> void;
 

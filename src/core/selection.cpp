@@ -71,7 +71,7 @@ auto Selection::add_logicitem(logicitem_id_t logicitem_id) -> void {
     Expects(class_invariant_holds());
 
     if (!logicitem_id) [[unlikely]] {
-        throw std::runtime_error("added element_id needs to be valid");
+        throw std::runtime_error("added logicitem_id needs to be valid");
     }
 
     selected_logicitems_.insert(logicitem_id);
@@ -103,6 +103,30 @@ auto Selection::toggle_logicitem(logicitem_id_t logicitem_id) -> void {
     } else {
         add_logicitem(logicitem_id);
     }
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::add_decoration(decoration_id_t decoration_id) -> void {
+    Expects(class_invariant_holds());
+
+    if (!decoration_id) [[unlikely]] {
+        throw std::runtime_error("added decoration_id needs to be valid");
+    }
+
+    selected_decorations_.insert(decoration_id);
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::remove_decoration(decoration_id_t decoration_id) -> void {
+    Expects(class_invariant_holds());
+
+    if (!decoration_id) [[unlikely]] {
+        throw std::runtime_error("removed decoration_id needs to be valid");
+    }
+
+    selected_decorations_.erase(decoration_id);
 
     Ensures(class_invariant_holds());
 }
@@ -174,6 +198,12 @@ auto Selection::is_selected(logicitem_id_t logicitem_id) const -> bool {
     return selected_logicitems_.contains(logicitem_id);
 }
 
+auto Selection::is_selected(decoration_id_t decoration_id) const -> bool {
+    Expects(class_invariant_holds());
+
+    return selected_decorations_.contains(decoration_id);
+}
+
 auto Selection::is_selected(segment_t segment) const -> bool {
     Expects(class_invariant_holds());
 
@@ -184,6 +214,12 @@ auto Selection::selected_logic_items() const -> std::span<const logicitem_id_t> 
     Expects(class_invariant_holds());
 
     return selected_logicitems_.values();
+}
+
+auto Selection::selected_decorations() const -> std::span<const decoration_id_t> {
+    Expects(class_invariant_holds());
+
+    return selected_decorations_.values();
 }
 
 auto Selection::selected_segments() const -> std::span<const segment_pair_t> {
@@ -370,6 +406,8 @@ auto Selection::submit(const InfoMessage &message) -> void {
 auto Selection::class_invariant_holds() const -> bool {
     // logicitem ids are not null
     assert(std::ranges::all_of(selected_logicitems_, &logicitem_id_t::operator bool));
+    // decorations ids are not null
+    assert(std::ranges::all_of(selected_decorations_, &decoration_id_t::operator bool));
     // segment ids are not null
     assert(std::ranges::all_of(std::ranges::views::keys(selected_segments_),
                                &segment_t::operator bool));

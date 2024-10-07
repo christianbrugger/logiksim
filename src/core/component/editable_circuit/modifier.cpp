@@ -1,5 +1,6 @@
 #include "modifier.h"
 
+#include "component/editable_circuit/editing/edit_decoration.h"
 #include "component/editable_circuit/editing/edit_logicitem.h"
 #include "component/editable_circuit/editing/edit_wire.h"
 #include "component/editable_circuit/modifier.h"
@@ -193,6 +194,101 @@ auto Modifier::set_attributes(logicitem_id_t logicitem_id,
 }
 
 //
+// Decorations
+//
+
+auto Modifier::delete_temporary_decoration(decoration_id_t& decoration_id,
+                                           decoration_id_t* preserve_element) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "delete_temporary_decoration(decoration_id = {}, preserve_element = "
+            "{});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, decoration_id, fmt_ptr(preserve_element));
+    }
+
+    editing::delete_temporary_decoration(circuit_data_, decoration_id, preserve_element);
+
+    Ensures(debug_class_invariant_holds(*this));
+}
+
+auto Modifier::move_temporary_decoration_unchecked(const decoration_id_t decoration_id,
+                                                   int dx, int dy) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "move_temporary_decoration_unchecked(decoration_id = {}, dx = {}, dy = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, decoration_id, dx, dy);
+    }
+
+    editing::move_temporary_decoration_unchecked(circuit_data_.layout, decoration_id, dx,
+                                                 dy);
+    Ensures(debug_class_invariant_holds(*this));
+}
+
+auto Modifier::move_or_delete_temporary_decoration(decoration_id_t& decoration_id, int dx,
+                                                   int dy) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "move_or_delete_temporary_decoration(decoration_id = {}, dx = {}, dy = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, decoration_id, dx, dy);
+    }
+
+    editing::move_or_delete_temporary_decoration(circuit_data_, decoration_id, dx, dy);
+    Ensures(debug_class_invariant_holds(*this));
+}
+
+auto Modifier::change_decoration_insertion_mode(
+    decoration_id_t& decoration_id, InsertionMode new_insertion_mode) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "change_decoration_insertion_mode(decoration_id = {}, new_mode = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, decoration_id, new_insertion_mode);
+    }
+
+    editing::change_decoration_insertion_mode(circuit_data_, decoration_id,
+                                              new_insertion_mode);
+    Ensures(debug_class_invariant_holds(*this));
+}
+
+auto Modifier::add_decoration(const DecorationDefinition& definition, point_t position,
+                              InsertionMode insertion_mode) -> decoration_id_t {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "add_decoration(definition = {}, position = {}, insertion_mode = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, definition, position, insertion_mode);
+    }
+
+    const auto decoration_id =
+        editing::add_decoration(circuit_data_, definition, position, insertion_mode);
+
+    Ensures(debug_class_invariant_holds(*this));
+    return decoration_id;
+}
+
+auto Modifier::set_attributes(decoration_id_t decoration_id,
+                              attributes_text_element_t attrs_) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "set_attributes(decoration_id = {}, attrs_ = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, decoration_id, attrs_);
+    }
+
+    circuit_data_.layout.decorations().set_attributes(decoration_id, std::move(attrs_));
+    Ensures(debug_class_invariant_holds(*this));
+}
+
+//
 // Wires
 //
 
@@ -376,6 +472,17 @@ auto Modifier::add_to_selection(selection_id_t selection_id,
 }
 
 auto Modifier::add_to_selection(selection_id_t selection_id,
+                                decoration_id_t decoration_id) -> void {
+    if (!is_id_valid(decoration_id, circuit_data_.layout)) {
+        throw std::runtime_error("Decoration id is not part of layout");
+    }
+
+    circuit_data_.selection_store.at(selection_id).add_decoration(decoration_id);
+
+    Ensures(debug_class_invariant_holds(*this));
+}
+
+auto Modifier::add_to_selection(selection_id_t selection_id,
                                 segment_part_t segment_part) -> void {
     if (!is_segment_part_valid(segment_part, circuit_data_.layout)) {
         throw std::runtime_error("Segment part is not part of layout");
@@ -389,6 +496,13 @@ auto Modifier::add_to_selection(selection_id_t selection_id,
 auto Modifier::remove_from_selection(selection_id_t selection_id,
                                      logicitem_id_t logicitem_id) -> void {
     circuit_data_.selection_store.at(selection_id).remove_logicitem(logicitem_id);
+
+    Ensures(debug_class_invariant_holds(*this));
+}
+
+auto Modifier::remove_from_selection(selection_id_t selection_id,
+                                     decoration_id_t decoration_id) -> void {
+    circuit_data_.selection_store.at(selection_id).remove_decoration(decoration_id);
 
     Ensures(debug_class_invariant_holds(*this));
 }
@@ -565,6 +679,14 @@ namespace {
                 .empty();
 }
 
+[[nodiscard]] auto has_decoration(const Modifier& modifier,
+                                  selection_id_t selection_id) -> bool {
+    return !modifier.circuit_data()
+                .selection_store.at(selection_id)
+                .selected_decorations()
+                .empty();
+}
+
 [[nodiscard]] auto get_first_logicitem(const Selection& selection) -> logicitem_id_t {
     Expects(!selection.selected_logic_items().empty());
     return selection.selected_logic_items().front();
@@ -573,6 +695,16 @@ namespace {
 [[nodiscard]] auto get_first_logicitem(const Modifier& modifier,
                                        selection_id_t selection_id) -> logicitem_id_t {
     return get_first_logicitem(modifier.circuit_data().selection_store.at(selection_id));
+}
+
+[[nodiscard]] auto get_first_decoration(const Selection& selection) -> decoration_id_t {
+    Expects(!selection.selected_decorations().empty());
+    return selection.selected_decorations().front();
+}
+
+[[nodiscard]] auto get_first_decoration(const Modifier& modifier,
+                                        selection_id_t selection_id) -> decoration_id_t {
+    return get_first_decoration(modifier.circuit_data().selection_store.at(selection_id));
 }
 
 [[nodiscard]] auto has_segment(const Modifier& modifier,
@@ -608,6 +740,13 @@ auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selectio
         modifier.change_logicitem_insertion_mode(logicitem_id, new_insertion_mode);
     }
 
+    while (has_decoration(modifier, selection_id)) {
+        auto decoration_id = get_first_decoration(modifier, selection_id);
+        modifier.remove_from_selection(selection_id, decoration_id);
+
+        modifier.change_decoration_insertion_mode(decoration_id, new_insertion_mode);
+    }
+
     while (has_segment(modifier, selection_id)) {
         auto segment_part = get_first_segment(modifier, selection_id);
         modifier.remove_from_selection(selection_id, segment_part);
@@ -620,6 +759,8 @@ auto new_positions_representable(const Layout& layout, const Selection& selectio
                                  int delta_x, int delta_y) -> bool {
     return editing::are_logicitem_positions_representable(layout, selection, delta_x,
                                                           delta_y) &&
+           editing::are_decoration_positions_representable(layout, selection, delta_x,
+                                                           delta_y) &&
            editing::new_wire_positions_representable(layout, selection, delta_x, delta_y);
 }
 
@@ -633,6 +774,16 @@ auto move_temporary_unchecked(Modifier& modifier, const Selection& selection, in
         }
 
         modifier.move_temporary_logicitem_unchecked(logicitem_id, delta_x, delta_y);
+    }
+
+    for (const auto& decoration_id : selection.selected_decorations()) {
+        // TODO move checks to low-level method
+        if (modifier.circuit_data().layout.decorations().display_state(decoration_id) !=
+            display_state_t::temporary) [[unlikely]] {
+            throw std::runtime_error("selected decorations need to be temporary");
+        }
+
+        modifier.move_temporary_decoration_unchecked(decoration_id, delta_x, delta_y);
     }
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
@@ -657,6 +808,13 @@ auto move_or_delete_temporary_consuming(Modifier& modifier, selection_id_t selec
         modifier.move_or_delete_temporary_logicitem(logicitem_id, delta_x, delta_y);
     }
 
+    while (has_decoration(modifier, selection_id)) {
+        auto decoration_id = get_first_decoration(modifier, selection_id);
+        modifier.remove_from_selection(selection_id, decoration_id);
+
+        modifier.move_or_delete_temporary_decoration(decoration_id, delta_x, delta_y);
+    }
+
     while (has_segment(modifier, selection_id)) {
         auto segment_part = get_first_segment(modifier, selection_id);
         modifier.remove_from_selection(selection_id, segment_part);
@@ -672,6 +830,15 @@ auto delete_all(Modifier& modifier, selection_id_t selection_id) -> void {
 
         modifier.change_logicitem_insertion_mode(logicitem_id, InsertionMode::temporary);
         modifier.delete_temporary_logicitem(logicitem_id);
+    }
+
+    while (has_decoration(modifier, selection_id)) {
+        auto decoration_id = get_first_decoration(modifier, selection_id);
+        modifier.remove_from_selection(selection_id, decoration_id);
+
+        modifier.change_decoration_insertion_mode(decoration_id,
+                                                  InsertionMode::temporary);
+        modifier.delete_temporary_decoration(decoration_id);
     }
 
     while (has_segment(modifier, selection_id)) {

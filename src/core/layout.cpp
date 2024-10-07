@@ -6,6 +6,7 @@
 #include "geometry/line.h"
 #include "geometry/point.h"
 #include "geometry/segment_info.h"
+#include "vocabulary/decoration_layout_data.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/placed_element.h"
 #include "vocabulary/segment_part.h"
@@ -320,6 +321,11 @@ auto moved_layout(Layout layout, int delta_x, int delta_y) -> std::optional<Layo
 auto to_layout_calculation_data(const Layout &layout, logicitem_id_t logicitem_id)
     -> layout_calculation_data_t {
     return layout::to_layout_calculation_data(layout.logic_items(), logicitem_id);
+}
+
+auto to_decoration_layout_data(const Layout &layout, decoration_id_t decoration_id)
+    -> decoration_layout_data_t {
+    return layout::to_decoration_layout_data(layout.decorations(), decoration_id);
 }
 
 auto to_logicitem_definition(const Layout &layout,

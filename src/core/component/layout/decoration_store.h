@@ -14,6 +14,8 @@
 
 namespace logicsim {
 
+struct decoration_layout_data_t;
+
 namespace layout {
 
 template <typename T>
@@ -80,6 +82,14 @@ class DecorationStore {
 //
 // Free Functions
 //
+
+[[nodiscard]] auto to_decoration_layout_data(const DecorationStore &store,
+                                             decoration_id_t decoration_id)
+    -> decoration_layout_data_t;
+
+[[nodiscard]] auto to_decoration_layout_data(
+    const DecorationStore &store, decoration_id_t decoration_id,
+    point_t position) -> decoration_layout_data_t;
 
 [[nodiscard]] auto to_decoration_definition(
     const DecorationStore &store, decoration_id_t decoration_id) -> DecorationDefinition;

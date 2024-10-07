@@ -1,7 +1,6 @@
 #include "component/circuit_widget/mouse_logic/insert_decoration.h"
 
 #include "editable_circuit.h"
-#include "logging.h"  //TODO remove
 #include "vocabulary/insertion_mode.h"
 
 #include <optional>
@@ -23,9 +22,8 @@ auto remove_and_insert(EditableCircuit& editable_circuit, selection_id_t selecti
     }
 
     if (position) {
-        // editable_circuit.add_decoration(element_definition, position.value(), mode,
-        //                                 selection_id);
-        print(element_definition, position.value(), mode, selection_id);
+        editable_circuit.add_decoration(element_definition, position.value(), mode,
+                                        selection_id);
     }
 
     return selection_id;

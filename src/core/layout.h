@@ -14,6 +14,7 @@
 namespace logicsim {
 
 struct layout_calculation_data_t;
+struct decoration_layout_data_t;
 struct PlacedElement;
 
 /**
@@ -41,6 +42,7 @@ class Layout {
     [[nodiscard]] auto format() const -> std::string;
 
     // TODO make logic_items and wires simple attributes?
+    // TODO rename to logicitems
     [[nodiscard]] auto logic_items() -> layout::LogicItemStore &;
     [[nodiscard]] auto logic_items() const -> const layout::LogicItemStore &;
     [[nodiscard]] auto wires() -> layout::WireStore &;
@@ -121,6 +123,8 @@ class Layout {
 
 [[nodiscard]] auto to_layout_calculation_data(
     const Layout &layout, logicitem_id_t logicitem_id) -> layout_calculation_data_t;
+[[nodiscard]] auto to_decoration_layout_data(
+    const Layout &layout, decoration_id_t decoration_id) -> decoration_layout_data_t;
 [[nodiscard]] auto to_logicitem_definition(
     const Layout &layout, logicitem_id_t logicitem_id) -> LogicItemDefinition;
 [[nodiscard]] auto to_decoration_definition(

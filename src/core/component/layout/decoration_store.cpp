@@ -4,6 +4,7 @@
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "allocated_size/std_vector.h"
 #include "validate_definition_decoration.h"
+#include "vocabulary/decoration_layout_data.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/zip.hpp>
@@ -41,9 +42,9 @@ auto DecorationStore::add(const DecorationDefinition &definition, point_t positi
         throw std::runtime_error("Reached maximum number of decorations.");
     }
     // throws if its not representable
-    const auto bounding_rect = rect_t {};  // TODO calculate for real
+    const auto bounding_rect = rect_t {position, position};  // TODO calculate for real
     // const auto bounding_rect =
-    //     element_bounding_rect(to_layout_calculation_data(definition, position));
+    //     element_bounding_rect(to_decoration_layout_data(definition, position));
 
     const auto decoration_id =
         decoration_id_t {gsl::narrow_cast<decoration_id_t::value_type>(size())};
@@ -211,9 +212,9 @@ auto DecorationStore::set_position(decoration_id_t decoration_id,
                                    point_t position) -> void {
     // throws if it is not representable
     // const auto bounding_rect =
-    //     element_bounding_rect(to_layout_calculation_data(*this, decoration_id,
+    //     element_bounding_rect(to_decoration_layout_data(*this, decoration_id,
     //     position));
-    const auto bounding_rect = rect_t {};  // TODO calculate
+    const auto bounding_rect = rect_t {position, position};  // TODO calculate
 
     // set new position
     positions_.at(decoration_id.value) = position;
@@ -263,6 +264,22 @@ auto DecorationStore::last_decoration_id() const -> decoration_id_t {
 //
 // Free Functions
 //
+//
+
+auto to_decoration_layout_data(const DecorationStore &store,
+                               decoration_id_t decoration_id)
+    -> decoration_layout_data_t {
+    return to_decoration_layout_data(store, decoration_id, store.position(decoration_id));
+}
+
+auto to_decoration_layout_data(const DecorationStore &store,
+                               decoration_id_t decoration_id,
+                               point_t position) -> decoration_layout_data_t {
+    return decoration_layout_data_t {
+        .bounding_rect = rect_t {position, position},  // TODO calculate
+        .decoration_type = store.type(decoration_id),
+    };
+}
 
 auto to_decoration_definition(const DecorationStore &store,
                               decoration_id_t decoration_id) -> DecorationDefinition {

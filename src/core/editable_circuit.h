@@ -40,6 +40,10 @@ class EditableCircuit {
                           selection_id_t selection_id = null_selection_id)
         -> segment_part_t;
 
+    auto add_decoration(const DecorationDefinition& definition, point_t position,
+                        InsertionMode insertion_mode,
+                        selection_id_t selection_id = null_selection_id) -> void;
+
     auto change_insertion_mode(selection_id_t selection_id,
                                InsertionMode new_insertion_mode) -> void;
     auto change_insertion_mode(Selection selection,

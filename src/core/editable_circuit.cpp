@@ -56,6 +56,17 @@ auto EditableCircuit::add_wire_segment(ordered_line_t line, InsertionMode insert
     return segment_part;
 }
 
+auto EditableCircuit::add_decoration(const DecorationDefinition& definition,
+                                     point_t position, InsertionMode insertion_mode,
+                                     selection_id_t selection_id) -> void {
+    const auto decoration_id =
+        modifier_.add_decoration(definition, position, insertion_mode);
+
+    if (selection_id && decoration_id) {
+        modifier_.add_to_selection(selection_id, decoration_id);
+    }
+}
+
 auto EditableCircuit::change_insertion_mode(selection_id_t selection_id,
                                             InsertionMode new_insertion_mode) -> void {
     using namespace editable_circuit;

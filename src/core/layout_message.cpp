@@ -41,6 +41,38 @@ auto LogicItemUninserted::format() const -> std::string {
     return fmt::format("LogicItemUninserted(logicitem_id = {})", logicitem_id);
 }
 
+// Decoration
+
+auto DecorationCreated::format() const -> std::string {
+    return fmt::format("DecorationCreated(decoration_id = {})", decoration_id);
+}
+
+auto DecorationIdUpdated::format() const -> std::string {
+    return fmt::format(
+        "DecorationIdUpdated(new_decoration_id = {}, old_decoration_id = {})",
+        new_decoration_id, old_decoration_id);
+}
+
+auto DecorationDeleted::format() const -> std::string {
+    return fmt::format("DecorationDeleted(decoration_id = {})", decoration_id);
+}
+
+// Inserted Decoration
+
+auto DecorationInserted::format() const -> std::string {
+    return fmt::format("DecorationInserted(decoration_id = {})", decoration_id);
+}
+
+auto InsertedDecorationIdUpdated::format() const -> std::string {
+    return fmt::format(
+        "InsertedDecorationIdUpdated(new_decoration_id = {}, old_decoration_id = {})",
+        new_decoration_id, old_decoration_id);
+}
+
+auto DecorationUninserted::format() const -> std::string {
+    return fmt::format("DecorationUninserted(decoration_id = {})", decoration_id);
+}
+
 // Segments
 
 auto SegmentCreated::format() const -> std::string {

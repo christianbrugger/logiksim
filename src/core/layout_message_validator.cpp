@@ -20,6 +20,14 @@ auto inserted_logicitem_value_t::format() const -> std::string {
     return fmt::format("(id = {}, data = {})", unique_id, data);
 }
 
+auto all_decoration_value_t::format() const -> std::string {
+    return fmt::format("(id = {})", unique_id);
+}
+
+auto inserted_decoration_value_t::format() const -> std::string {
+    return fmt::format("(id = {}, data = {})", unique_id, data);
+}
+
 auto all_segment_value_t::format() const -> std::string {
     return fmt::format("(id = {}, part = {})", unique_id, part);
 }
@@ -226,6 +234,78 @@ auto MessageValidator::handle(const info_message::LogicItemUninserted &message) 
     Expects(value.unique_id == uninserted.unique_id);
 
     Expects(inserted_logicitems_.erase(message.logicitem_id) == 1);
+}
+
+//
+// Decoration
+//
+
+auto MessageValidator::handle(const info_message::DecorationCreated &message) -> void {
+    const auto value = all_decoration_value_t {
+        .unique_id = get_next_unique_id(),
+    };
+    Expects(all_decorations_.emplace(message.decoration_id, value).second);
+
+    // not inserted yet
+    Expects(!inserted_decorations_.contains(message.decoration_id));
+}
+
+auto MessageValidator::handle(const info_message::DecorationIdUpdated &message) -> void {
+    const auto value = all_decorations_.at(message.old_decoration_id);
+
+    Expects(all_decorations_.erase(message.old_decoration_id) == 1);
+    Expects(all_decorations_.emplace(message.new_decoration_id, value).second);
+
+    // check inserted unique_id
+    if (const auto it = inserted_decorations_.find(message.old_decoration_id);
+        it != inserted_decorations_.end()) {
+        Expects(it->second.unique_id == value.unique_id);
+    }
+}
+
+auto MessageValidator::handle(const info_message::DecorationDeleted &message) -> void {
+    Expects(all_decorations_.erase(message.decoration_id) == 1);
+
+    // not inserted anymore
+    Expects(!inserted_decorations_.contains(message.decoration_id));
+}
+
+//
+// Inserted Decoration
+//
+
+auto MessageValidator::handle(const info_message::DecorationInserted &message) -> void {
+    const auto &uninserted = all_decorations_.at(message.decoration_id);
+
+    const auto value = inserted_decoration_value_t {
+        .unique_id = uninserted.unique_id,
+        .data = message.data,
+    };
+    Expects(inserted_decorations_.emplace(message.decoration_id, value).second);
+}
+
+auto MessageValidator::handle(const info_message::InsertedDecorationIdUpdated &message)
+    -> void {
+    const auto value = inserted_decorations_.at(message.old_decoration_id);
+    Expects(value.data == message.data);
+
+    Expects(inserted_decorations_.erase(message.old_decoration_id) == 1);
+    Expects(inserted_decorations_.emplace(message.new_decoration_id, value).second);
+
+    // check uninserted unique id
+    const auto uninserted = all_decorations_.at(message.new_decoration_id);
+    Expects(value.unique_id == uninserted.unique_id);
+}
+
+auto MessageValidator::handle(const info_message::DecorationUninserted &message) -> void {
+    const auto &value = inserted_decorations_.at(message.decoration_id);
+    Expects(value.data == message.data);
+
+    // check uninserted unique id
+    const auto uninserted = all_decorations_.at(message.decoration_id);
+    Expects(value.unique_id == uninserted.unique_id);
+
+    Expects(inserted_decorations_.erase(message.decoration_id) == 1);
 }
 
 //
