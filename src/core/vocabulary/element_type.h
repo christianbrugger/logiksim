@@ -9,7 +9,7 @@
 namespace logicsim {
 
 /**
- * @brief: The type an element of the schematic & simulation is.
+ * @brief: The type of an element of schematic & simulation.
  */
 enum class ElementType : uint8_t {
     //
