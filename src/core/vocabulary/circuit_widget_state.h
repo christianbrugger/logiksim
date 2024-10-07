@@ -44,11 +44,13 @@ static_assert(std::regular<CircuitWidgetState>);
 
 [[nodiscard]] auto is_insert_logic_item_state(const EditingState &state) -> bool;
 [[nodiscard]] auto is_insert_wire_state(const EditingState &state) -> bool;
+[[nodiscard]] auto is_insert_decoration_state(const EditingState &state) -> bool;
 [[nodiscard]] auto is_selection_state(const EditingState &state) -> bool;
 [[nodiscard]] auto is_inserting_state(const EditingState &editing_state) -> bool;
 
 [[nodiscard]] auto is_insert_logic_item_state(const CircuitWidgetState &state) -> bool;
 [[nodiscard]] auto is_insert_wire_state(const CircuitWidgetState &state) -> bool;
+[[nodiscard]] auto is_insert_decoration_state(const CircuitWidgetState &state) -> bool;
 [[nodiscard]] auto is_selection_state(const CircuitWidgetState &state) -> bool;
 [[nodiscard]] auto is_inserting_state(const CircuitWidgetState &state) -> bool;
 

@@ -155,6 +155,13 @@ auto create_editing_mouse_logic(
         return InsertWireLogic {};
     }
 
+    // insert decorations
+    if (is_insert_decoration_state(editing_state)) {
+        return InsertDecorationLogic {
+            to_decoration_definition(editing_state.default_mouse_action),
+        };
+    }
+
     // selection
     if (is_selection_state(editing_state)) {
         if (const auto size_handle = get_colliding_size_handle(
@@ -208,6 +215,9 @@ auto EditingLogicManager::mouse_press(
                 [&](InsertWireLogic& arg) {
                     arg.mouse_press(editable_circuit, grid_position);
                 },
+                [&](InsertDecorationLogic& arg) {
+                    arg.mouse_press(editable_circuit, grid_position);
+                },
                 [&](SelectionAreaLogic& arg) {
                     arg.mouse_press(editable_circuit, position, view_config, modifiers);
                 },
@@ -245,6 +255,9 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
                                  arg.mouse_move(editable_circuit, grid_position);
                              },
                              [&](InsertWireLogic& arg) {
+                                 arg.mouse_move(editable_circuit, grid_position);
+                             },
+                             [&](InsertDecorationLogic& arg) {
                                  arg.mouse_move(editable_circuit, grid_position);
                              },
                              [&](SelectionAreaLogic& arg) {
@@ -288,6 +301,10 @@ auto EditingLogicManager::mouse_release(
                           arg.mouse_release(editable_circuit, grid_position);
                           return true;
                       },
+                      [&](InsertDecorationLogic& arg) {
+                          arg.mouse_release(editable_circuit, grid_position);
+                          return true;
+                      },
                       [&](SelectionAreaLogic& arg) {
                           arg.mouse_release(editable_circuit, position, view_config,
                                             rubber_band_);
@@ -325,6 +342,8 @@ auto EditingLogicManager::class_invariant_holds() const -> bool {
                                  is_insert_logic_item_state(circuit_state_));
     Expects(!mouse_logic_ ||
             is_insert_wire_logic(*mouse_logic_) == is_insert_wire_state(circuit_state_));
+    Expects(!mouse_logic_ || is_insert_decoration_logic(*mouse_logic_) ==
+                                 is_insert_decoration_state(circuit_state_));
     Expects(!mouse_logic_ ||
             is_selecting_logic(*mouse_logic_) == is_selection_state(circuit_state_));
 

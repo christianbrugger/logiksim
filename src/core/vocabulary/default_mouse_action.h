@@ -6,9 +6,11 @@
 namespace logicsim {
 
 enum class DefaultMouseAction {
+    // other
     selection,
     insert_wire,
 
+    // logic items
     insert_button,
     insert_led,
     insert_display_number,
@@ -29,6 +31,9 @@ enum class DefaultMouseAction {
 
     insert_clock_generator,
     insert_shift_register,
+
+    // decorations
+    insert_decoration_text_element,
 };
 
 template <>
@@ -36,6 +41,7 @@ template <>
 
 [[nodiscard]] auto is_inserting_state(DefaultMouseAction action) -> bool;
 [[nodiscard]] auto is_insert_logic_item_state(DefaultMouseAction action) -> bool;
+[[nodiscard]] auto is_insert_decoration_state(DefaultMouseAction action) -> bool;
 
 }  // namespace logicsim
 

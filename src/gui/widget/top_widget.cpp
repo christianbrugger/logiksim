@@ -714,6 +714,7 @@ auto MainWidget::build_element_buttons() -> QWidget* {
         layout->addWidget(new_button("BTN", ES(insert_button)), ++row, 0);
         layout->addWidget(new_button("Wire", ES(insert_wire)), row, 1);
         layout->addWidget(new_button("LED", ES(insert_led)), ++row, 0);
+        layout->addWidget(new_button("TXT", ES(insert_decoration_text_element)), row, 1);
         layout->addWidget(new_button("NUM", ES(insert_display_number)), ++row, 0);
         layout->addWidget(new_button("ASCII", ES(insert_display_ascii)), row, 1);
         layout->addWidget(line_separator(), ++row, 0, 1, 2);

@@ -38,6 +38,10 @@ auto is_insert_wire_state(const EditingState &editing_state) -> bool {
     return editing_state.default_mouse_action == DefaultMouseAction::insert_wire;
 }
 
+auto is_insert_decoration_state(const EditingState &editing_state) -> bool {
+    return is_insert_decoration_state(editing_state.default_mouse_action);
+}
+
 auto is_selection_state(const EditingState &editing_state) -> bool {
     return editing_state.default_mouse_action == DefaultMouseAction::selection;
 }
@@ -60,6 +64,12 @@ auto is_insert_wire_state(const CircuitWidgetState &state) -> bool {
     const auto editing_state = std::get_if<EditingState>(&state);
 
     return (editing_state != nullptr) && is_insert_wire_state(*editing_state);
+}
+
+auto is_insert_decoration_state(const CircuitWidgetState &state) -> bool {
+    const auto editing_state = std::get_if<EditingState>(&state);
+
+    return (editing_state != nullptr) && is_insert_decoration_state(*editing_state);
 }
 
 auto is_selection_state(const CircuitWidgetState &state) -> bool {

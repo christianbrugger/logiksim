@@ -53,6 +53,9 @@ auto format(DefaultMouseAction action) -> std::string {
             return "insert_clock_generator";
         case insert_shift_register:
             return "insert_shift_register";
+
+        case insert_decoration_text_element:
+            return "insert_decoration_text_element";
     };
 
     std::terminate();
@@ -65,7 +68,13 @@ auto is_inserting_state(DefaultMouseAction action) -> bool {
 
 auto is_insert_logic_item_state(DefaultMouseAction action) -> bool {
     using enum DefaultMouseAction;
-    return action != selection && action != insert_wire;
+    return action != selection && action != insert_wire &&
+           !is_insert_decoration_state(action);
+}
+
+auto is_insert_decoration_state(DefaultMouseAction action) -> bool {
+    using enum DefaultMouseAction;
+    return action == insert_decoration_text_element;
 }
 
 }  // namespace logicsim
