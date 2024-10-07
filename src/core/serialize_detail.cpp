@@ -17,6 +17,7 @@ struct glz::meta<logicsim::LogicItemType> {
 
         "button", button,                  //
         "led", led,                        //
+        "text_element", text_element,      //
         "display_number", display_number,  //
         "display_ascii", display_ascii,    //
 
@@ -156,6 +157,16 @@ struct glz::meta<SerializedLayout> {
 
 namespace logicsim {
 
+auto min_version(int serialized_version) -> std::optional<std::string> {
+    switch (serialized_version) {
+        case 100:
+            return "2.1.0";
+        case 110:
+            return "2.2.0";
+    }
+    return std::nullopt;
+}
+
 auto json_dumps(const serialize::SerializedLayout& data) -> std::string {
     constexpr auto debug_json = false;
 
@@ -177,7 +188,7 @@ auto json_loads(std::string text) -> std::optional<serialize::SerializedLayout> 
         }
         return std::nullopt;
     }
-    if (version.value() != serialize::CURRENT_VERSION) {
+    if (version.value() > serialize::CURRENT_VERSION) {
         print("Error wrong version. Expected", serialize::CURRENT_VERSION, "got",
               version.value());
         return std::nullopt;

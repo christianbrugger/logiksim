@@ -10,7 +10,10 @@
 #include "render/circuit/render_logicitem_base_generic.h"
 #include "render/context.h"
 #include "render/primitive/circle.h"
+#include "render/primitive/point.h"
+#include "render/primitive/text.h"
 #include "spatial_simulation.h"
+#include "vocabulary/color.h"
 #include "vocabulary/drawable_element.h"
 #include "vocabulary/element_draw_state.h"
 #include "vocabulary/grid_fine.h"
@@ -122,6 +125,32 @@ auto draw_led(Context& ctx, const SpatialSimulation& spatial_simulation,
 
     draw_led(ctx, spatial_simulation.layout(), logicitem_id, ElementDrawState::normal,
              is_enabled);
+}
+
+auto draw_text_element(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+                       ElementDrawState state) -> void {
+    const auto position = layout.logic_items().position(logicitem_id);
+    const auto color = with_alpha_runtime(defaults::color_gray, state);
+    const auto size = grid_fine_t {0.25};
+    draw_point(ctx, position, PointShape::diamond, color, size);
+
+    const auto text_anchor = point_fine_t {position.x + grid_fine_t {0.5}, position.y};
+    const auto text_color = with_alpha_runtime(defaults::color_black, state);
+    draw_text(ctx, text_anchor, "test",
+              TextAttributes {
+                  .font_size = grid_fine_t {1.0},
+                  .color = text_color,
+
+                  .horizontal_alignment = HTextAlignment::left,
+                  .vertical_alignment = VTextAlignment::center,
+                  .style = FontStyle::regular,
+              });
+}
+
+auto draw_text_element(Context& ctx, const SpatialSimulation& spatial_simulation,
+                       logicitem_id_t logicitem_id) -> void {
+    draw_text_element(ctx, spatial_simulation.layout(), logicitem_id,
+                      ElementDrawState::normal);
 }
 
 constexpr static auto power_of_two_labels = string_array<64> {
@@ -591,6 +620,8 @@ auto draw_logic_item_base(Context& ctx, const Layout& layout, logicitem_id_t log
             return draw_button(ctx, layout, logicitem_id, state);
         case led:
             return draw_led(ctx, layout, logicitem_id, state);
+        case text_element:
+            return draw_text_element(ctx, layout, logicitem_id, state);
         case display_number:
             return draw_display_number(ctx, layout, logicitem_id, state);
         case display_ascii:
@@ -639,6 +670,8 @@ auto draw_logic_item_base(Context& ctx, const SpatialSimulation& spatial_simulat
             return draw_button(ctx, spatial_simulation, logicitem_id);
         case led:
             return draw_led(ctx, spatial_simulation, logicitem_id);
+        case text_element:
+            return draw_text_element(ctx, spatial_simulation, logicitem_id);
         case display_number:
             return draw_display_number(ctx, spatial_simulation, logicitem_id);
         case display_ascii:

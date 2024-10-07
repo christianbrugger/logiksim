@@ -83,16 +83,22 @@ auto logic_item_output_delays(const Layout& layout,
 
 auto add_logic_item(Schematic& schematic, const Layout& layout,
                     logicitem_id_t logicitem_id) -> void {
-    schematic.add_element(schematic::NewElement {
-        .element_type = to_element_type(layout.logic_items().type(logicitem_id)),
-        .input_count = layout.logic_items().input_count(logicitem_id),
-        .output_count = layout.logic_items().output_count(logicitem_id),
+    const auto element_type = to_element_type(layout.logic_items().type(logicitem_id));
 
-        .sub_circuit_id = layout.logic_items().sub_circuit_id(logicitem_id),
-        .input_inverters = layout.logic_items().input_inverters(logicitem_id),
-        .output_delays = logic_item_output_delays(layout, logicitem_id),
-        .history_length = schematic::defaults::no_history,
-    });
+    if (element_type) {
+        schematic.add_element(schematic::NewElement {
+            .element_type = *element_type,
+            .input_count = layout.logic_items().input_count(logicitem_id),
+            .output_count = layout.logic_items().output_count(logicitem_id),
+
+            .sub_circuit_id = layout.logic_items().sub_circuit_id(logicitem_id),
+            .input_inverters = layout.logic_items().input_inverters(logicitem_id),
+            .output_delays = logic_item_output_delays(layout, logicitem_id),
+            .history_length = schematic::defaults::no_history,
+        });
+    } else {
+        add_unused_element(schematic);
+    }
 }
 
 auto add_wire(Schematic& schematic, const Layout& layout, wire_id_t wire_id,

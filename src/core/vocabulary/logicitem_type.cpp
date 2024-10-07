@@ -23,6 +23,8 @@ auto format(LogicItemType type) -> std::string {
             return "Button";
         case led:
             return "LED";
+        case text_element:
+            return "TextElement";
         case display_number:
             return "display_number";
         case display_ascii:

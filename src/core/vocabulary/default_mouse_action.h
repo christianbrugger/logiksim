@@ -11,6 +11,7 @@ enum class DefaultMouseAction {
 
     insert_button,
     insert_led,
+    insert_text_element,
     insert_display_number,
     insert_display_ascii,
 

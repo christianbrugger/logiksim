@@ -15,12 +15,14 @@
 
 namespace logicsim::serialize {
 
-constexpr static inline auto CURRENT_VERSION = 100;
+constexpr static inline auto CURRENT_VERSION = 110;
 
 struct SerializedLine {
     point_t p0;
     point_t p1;
 };
+
+[[nodiscard]] auto min_version(int serialized_version) -> std::optional<std::string>;
 
 constexpr static inline auto name_max_size = 100;
 

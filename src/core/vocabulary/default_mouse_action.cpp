@@ -20,6 +20,8 @@ auto format(DefaultMouseAction action) -> std::string {
             return "insert_button";
         case insert_led:
             return "insert_led";
+        case insert_text_element:
+            return "insert_text";
         case insert_display_number:
             return "insert_display_number";
         case insert_display_ascii:

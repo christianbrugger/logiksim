@@ -52,6 +52,7 @@ auto setting_handle_position(const Layout& layout, logicitem_id_t logicitem_id)
 
         case button:
         case led:
+        case text_element:
         case display_number:
         case display_ascii:
 

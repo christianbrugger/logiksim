@@ -16,7 +16,12 @@ constexpr inline auto clock_generator_output_delay = delay_t::epsilon();
 
 }  // namespace
 
-auto to_element_type(LogicItemType logicitem_type) -> ElementType {
+auto has_element_type(LogicItemType logicitem_type) -> bool {
+    using enum LogicItemType;
+    return logicitem_type != text_element;
+}
+
+auto to_element_type(LogicItemType logicitem_type) -> std::optional<ElementType> {
     switch (logicitem_type) {
         using enum LogicItemType;
 
@@ -33,6 +38,8 @@ auto to_element_type(LogicItemType logicitem_type) -> ElementType {
             return ElementType::button;
         case led:
             return ElementType::led;
+        case text_element:
+            return std::nullopt;
         case display_number:
             return ElementType::display_number;
         case display_ascii:

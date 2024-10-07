@@ -5,8 +5,11 @@
 
 namespace logicsim {
 
-auto draw_logic_item_above(LogicItemType type) -> bool;
+/**
+ * @brief: Return true if the logic item shall be drawn above wires.
+ */
+[[nodiscard]] auto draw_logic_item_above(LogicItemType type) -> bool;
 
-}
+}  // namespace logicsim
 
 #endif

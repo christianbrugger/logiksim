@@ -29,6 +29,8 @@ auto to_logic_item_definition(DefaultMouseAction mouse_action) -> LogicItemDefin
             return default_element_definition(LogicItemType::button);
         case insert_led:
             return default_element_definition(LogicItemType::led);
+        case insert_text_element:
+            return default_element_definition(LogicItemType::text_element);
         case insert_display_number:
             return default_element_definition(LogicItemType::display_number);
         case insert_display_ascii:

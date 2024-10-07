@@ -10,7 +10,8 @@
 
 namespace logicsim {
 
-[[nodiscard]] auto to_element_type(LogicItemType logicitem_type) -> ElementType;
+[[nodiscard]] auto to_element_type(LogicItemType logicitem_type)
+    -> std::optional<ElementType>;
 [[nodiscard]] auto to_logicitem_type(ElementType logicitem_type) -> LogicItemType;
 
 [[nodiscard]] auto element_enable_input_id(ElementType element_type)

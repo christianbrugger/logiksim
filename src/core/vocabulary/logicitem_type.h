@@ -30,6 +30,12 @@ enum class LogicItemType : uint8_t {
     flipflop_ms_d,  // ms = master slave
 
     sub_circuit,
+
+    //
+    // Types that are not representable in schematic & simulation last
+    //
+
+    text_element,
 };
 
 template <>
@@ -54,6 +60,8 @@ constexpr inline auto all_logicitem_types = std::array {
     LogicItemType::flipflop_ms_d,    //
 
     LogicItemType::sub_circuit,  //
+
+    LogicItemType::text_element,  //
 };
 
 }  // namespace logicsim

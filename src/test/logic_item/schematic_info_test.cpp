@@ -14,7 +14,9 @@ TEST(LogicItemSchematicInfo, LogicItemTypeConversion) {
     // assures that the conversion is transparent
     for (auto logicitem_type : all_logicitem_types) {
         const auto element_type = to_element_type(logicitem_type);
-        EXPECT_EQ(to_underlying(logicitem_type), to_underlying(element_type));
+        if (element_type) {
+            EXPECT_EQ(to_underlying(logicitem_type), to_underlying(*element_type));
+        }
     }
 
     // also test all values are correct

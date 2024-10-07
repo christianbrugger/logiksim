@@ -4,7 +4,7 @@ namespace logicsim {
 
 auto draw_logic_item_above(LogicItemType type) -> bool {
     using enum LogicItemType;
-    return type == button || type == led;
+    return type == button || type == led || type == text_element;
 }
 
 }  // namespace logicsim

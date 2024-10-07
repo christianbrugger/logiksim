@@ -74,6 +74,7 @@ auto size_handle_positions(const Layout& layout,
         case buffer_element:
         case button:
         case led:
+        case text_element:
         case display_ascii:
 
         case clock_generator:
@@ -233,7 +234,6 @@ auto get_resized_element(const PlacedElement& original, size_handle_t handle,
         case and_element:
         case or_element:
         case xor_element:
-
         case display_number: {
             return adjust_height(original, handle, delta);
         }
@@ -241,6 +241,7 @@ auto get_resized_element(const PlacedElement& original, size_handle_t handle,
         case buffer_element:
         case button:
         case led:
+        case text_element:
         case display_ascii:
 
         case clock_generator:

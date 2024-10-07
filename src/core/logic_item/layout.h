@@ -158,6 +158,26 @@ constexpr inline auto get_layout_info(LogicItemType logicitem_type) -> layout_in
 
             };
         }
+        case text_element: {
+            return layout_info_t {
+                .input_count_min = connection_count_t {0},
+                .input_count_max = connection_count_t {0},
+                .input_count_default = connection_count_t {0},
+
+                .output_count_min = connection_count_t {0},
+                .output_count_max = connection_count_t {0},
+                .output_count_default = connection_count_t {0},
+
+                .direction_type = DirectionType::undirected,
+
+                .fixed_width = grid_t {0},
+                .fixed_height = grid_t {0},
+
+                .static_inputs = static_inputs_t {},
+                .static_outputs = static_outputs_t {},
+
+            };
+        }
         case display_number: {
             return layout_info_t {
                 .input_count_min = display_number::min_inputs,

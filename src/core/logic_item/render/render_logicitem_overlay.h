@@ -7,7 +7,10 @@ namespace logicsim {
 
 struct grid_fine_t;
 
-auto element_shadow_rounding(LogicItemType type) -> grid_fine_t;
+/**
+ * @brief: Return shadow rounding of the element type used for the overlay.
+ */
+[[nodiscard]] auto element_shadow_rounding(LogicItemType type) -> grid_fine_t;
 
 }  // namespace logicsim
 
