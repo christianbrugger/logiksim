@@ -146,9 +146,7 @@ auto _decoration_change_temporary_to_colliding(CircuitData& circuit,
         throw std::runtime_error("element is not in the right state.");
     }
 
-    // TODO handle this
-    // if (is_decoration_colliding(circuit, decoration_id)) {
-    if (false) {
+    if (is_decoration_colliding(circuit, decoration_id)) {
         circuit.layout.decorations().set_display_state(decoration_id,
                                                        display_state_t::colliding);
     }
@@ -157,7 +155,9 @@ auto _decoration_change_temporary_to_colliding(CircuitData& circuit,
         circuit.layout.decorations().set_display_state(decoration_id,
                                                        display_state_t::valid);
         circuit.submit(info_message::DecorationInserted {
-            decoration_id, to_decoration_layout_data(circuit.layout, decoration_id)});
+            .decoration_id = decoration_id,
+            .data = to_decoration_layout_data(circuit.layout, decoration_id),
+        });
     }
 };
 
@@ -199,7 +199,9 @@ auto _decoration_change_colliding_to_temporary(CircuitData& circuit,
 
     if (display_state == display_state_t::valid) {
         circuit.submit(info_message::DecorationUninserted {
-            decoration_id, to_decoration_layout_data(circuit.layout, decoration_id)});
+            .decoration_id = decoration_id,
+            .data = to_decoration_layout_data(circuit.layout, decoration_id),
+        });
 
         circuit.layout.decorations().set_display_state(decoration_id,
                                                        display_state_t::temporary);
