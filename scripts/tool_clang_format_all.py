@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 
-CLANG_FORMAT = "clang-format-18"
+CLANG_FORMAT = "clang-format-19"
 SOURCE_FOLDERS = ("src", "test")
 EXTENSIONS = ("*.h", "*.cpp")
 
@@ -21,9 +21,7 @@ class SharedState:
 
 async def format_file(state: SharedState, filename: Path):
     async with state.semaphore:
-        process = await asyncio.create_subprocess_exec(
-            CLANG_FORMAT, "-i", str(filename)
-        )
+        process = await asyncio.create_subprocess_exec(CLANG_FORMAT, "-i", str(filename))
         await process.wait()
 
         state.processed += 1

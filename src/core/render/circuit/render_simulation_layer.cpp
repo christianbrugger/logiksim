@@ -1,11 +1,12 @@
 #include "render/circuit/render_simulation_layer.h"
 
 #include "allocated_size/std_vector.h"
+#include "element/decoration/render_decoration_base.h"
+#include "element/logicitem/render_logicitem_base.h"
+#include "element/logicitem/render_logicitem_layer.h"
 #include "format/container.h"
 #include "geometry/rect.h"
 #include "layout.h"
-#include "element/logicitem/render_logicitem_base.h"
-#include "element/logicitem/render_logicitem_layer.h"
 #include "render/circuit/render_connector.h"
 #include "render/circuit/render_wire.h"
 #include "render/context.h"
@@ -19,32 +20,36 @@ auto SimulationLayers::format() const -> std::string {
         "\n  items_below = {}"
         "\n  wires = {}"
         "\n  items_above = {}"
+        "\n  decorations = {}"
         "\n)",
 
         items_below,  //
         wires,        //
-        items_above   //
+        items_above,  //
+        decorations   //
     );
 }
 
 auto SimulationLayers::allocated_size() const -> std::size_t {
     return get_allocated_size(items_below) +  //
            get_allocated_size(wires) +        //
-           get_allocated_size(items_above);
+           get_allocated_size(items_above) +  //
+           get_allocated_size(decorations);
 }
 
 auto SimulationLayers::size() const -> std::size_t {
     return items_below.size() +  //
            wires.size() +        //
-           items_above.size();   //
+           items_above.size() +  //
+           decorations.size();   //
 }
 
 auto SimulationLayers::empty() const -> bool {
     return this->size() == std::size_t {0};
 }
 
-auto build_simulation_layers(const Layout& layout,
-                             rect_t scene_rect) -> SimulationLayers {
+auto build_simulation_layers(const Layout& layout, rect_t scene_rect)
+    -> SimulationLayers {
     auto layers = SimulationLayers {};
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
@@ -61,6 +66,19 @@ auto build_simulation_layers(const Layout& layout,
             } else {
                 layers.items_below.push_back(logicitem_id);
             }
+        }
+    }
+
+    for (const auto decoration_id : decoration_ids(layout)) {
+        // visibility
+        const auto bounding_rect = layout.decorations().bounding_rect(decoration_id);
+        if (!is_colliding(bounding_rect, scene_rect)) {
+            continue;
+        }
+
+        if (layout.decorations().display_state(decoration_id) ==
+            display_state_t::normal) {
+            layers.decorations.push_back(decoration_id);
         }
     }
 
@@ -87,6 +105,7 @@ auto render_simulation_layers(Context& ctx, const SpatialSimulation& spatial_sim
 
     draw_logicitems_connectors(ctx, spatial_simulation, layers.items_below);
     draw_logicitems_connectors(ctx, spatial_simulation, layers.items_above);
+    draw_decorations_base(ctx, spatial_simulation.layout(), layers.decorations);
 };
 
 }  // namespace logicsim

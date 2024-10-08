@@ -2,6 +2,7 @@
 #define LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_SIMULATION_LAYER_H
 
 #include "format/struct.h"
+#include "vocabulary/decoration_id.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/wire_id.h"
 
@@ -20,6 +21,7 @@ struct SimulationLayers {
     std::vector<logicitem_id_t> items_below;
     std::vector<wire_id_t> wires;
     std::vector<logicitem_id_t> items_above;
+    std::vector<decoration_id_t> decorations;
 
    public:
     [[nodiscard]] auto format() const -> std::string;
@@ -32,8 +34,8 @@ struct SimulationLayers {
 
 static_assert(std::regular<SimulationLayers>);
 
-[[nodiscard]] auto build_simulation_layers(const Layout& layout,
-                                           rect_t scene_rect) -> SimulationLayers;
+[[nodiscard]] auto build_simulation_layers(const Layout& layout, rect_t scene_rect)
+    -> SimulationLayers;
 
 auto render_simulation_layers(Context& ctx, const SpatialSimulation& spatial_simulation,
                               const SimulationLayers& layers) -> void;

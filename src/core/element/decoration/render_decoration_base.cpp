@@ -57,4 +57,12 @@ auto draw_decorations_base(Context& ctx, const Layout& layout,
     }
 }
 
+auto draw_decorations_base(Context& ctx, const Layout& layout,
+                           std::span<const decoration_id_t> elements,
+                           ElementDrawState state) -> void {
+    for (const auto& entry : elements) {
+        draw_decoration_base(ctx, layout, entry, state);
+    }
+}
+
 }  // namespace logicsim
