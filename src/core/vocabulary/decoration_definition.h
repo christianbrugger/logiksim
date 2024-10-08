@@ -17,7 +17,6 @@ namespace logicsim {
  */
 struct attributes_text_element_t {
     std::string text {};
-    offset_t width {};
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
@@ -33,6 +32,8 @@ static_assert(std::is_aggregate_v<attributes_text_element_t>);
  * @brief: Defines all attributes of a layout decoration.
  */
 struct DecorationDefinition {
+    offset_t width;
+    offset_t height;
     DecorationType decoration_type {DecorationType::text_element};
 
     std::optional<attributes_text_element_t> attrs_text_element {};

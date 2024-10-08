@@ -8,8 +8,6 @@
 #include "geometry/orientation.h"
 #include "geometry/point.h"
 #include "geometry/rect.h"
-#include "validate_definition_decoration.h"
-#include "vocabulary/decoration_definition.h"
 #include "vocabulary/decoration_layout_data.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
@@ -70,6 +68,11 @@ auto is_orientation_valid(LogicItemType logicitem_type, orientation_t orientatio
     std::terminate();
 }
 
+auto is_decoration_size_valid(DecorationType decoration_type, offset_t width,
+                              offset_t height) -> bool {
+    return layout_info::is_decoration_size_valid(decoration_type, width, height);
+}
+
 auto is_representable(layout_calculation_data_t data) -> bool {
     const auto position = data.position;
     data.position = point_t {0, 0};
@@ -82,10 +85,8 @@ auto is_representable(layout_calculation_data_t data) -> bool {
                             int {position.y} + int {rect.p1.y});
 }
 
-auto is_representable(const DecorationDefinition &data, point_t position) -> bool {
-    const auto width = decoration_width(data);
-    const auto height = decoration_height(data);
-    return is_representable(position, int {width}, int {height});
+auto is_representable(const decoration_layout_data_t &data) -> bool {
+    return is_representable(data.position, int {data.width}, int {data.height});
 }
 
 auto is_valid(const layout_calculation_data_t &data) -> bool {
@@ -95,8 +96,10 @@ auto is_valid(const layout_calculation_data_t &data) -> bool {
            is_representable(data);
 }
 
-auto is_valid(const DecorationDefinition &data, point_t position) -> bool {
-    return is_valid(data) && is_representable(data, position);
+auto is_valid(const decoration_layout_data_t &data) -> bool {
+    return layout_info::is_decoration_size_valid(data.decoration_type, data.width,
+                                                 data.height) &&
+           is_representable(data);
 }
 
 //
@@ -206,15 +209,9 @@ auto element_bounding_rect(const layout_calculation_data_t &data) -> rect_t {
 }
 
 auto element_bounding_rect(const decoration_layout_data_t &data) -> rect_t {
-    return data.bounding_rect;
-}
-
-auto element_bounding_rect(const DecorationDefinition &data, point_t position) -> rect_t {
-    const auto width = decoration_width(data);
-    const auto height = decoration_height(data);
-
-    const auto p1 = point_t {to_grid(width, position.x), to_grid(height, position.y)};
-    return rect_t {position, p1};
+    const auto p1 = point_t {to_grid(data.width, data.position.x),
+                             to_grid(data.height, data.position.y)};
+    return rect_t {data.position, p1};
 }
 
 auto element_bounding_rect(ordered_line_t line) -> rect_t {
@@ -227,7 +224,7 @@ auto element_selection_rect(const layout_calculation_data_t &data) -> rect_fine_
 }
 
 auto element_selection_rect(const decoration_layout_data_t &data) -> rect_fine_t {
-    const auto rect = data.bounding_rect;
+    const auto rect = element_bounding_rect(data);
     return enlarge_rect(rect, defaults::element_selection_overdraw);
 }
 
@@ -309,7 +306,7 @@ auto element_body_points(const layout_calculation_data_t &data) -> body_points_v
 }
 
 auto element_body_points(const decoration_layout_data_t &data) -> body_points_vector {
-    return decoration_body_points(data);
+    return layout_info::decoration_body_points(data);
 }
 
 }  // namespace logicsim

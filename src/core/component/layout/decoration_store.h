@@ -5,6 +5,7 @@
 #include "vocabulary/decoration_id.h"
 #include "vocabulary/decoration_type.h"
 #include "vocabulary/display_state.h"
+#include "vocabulary/offset.h"
 #include "vocabulary/point.h"
 #include "vocabulary/rect.h"
 
@@ -39,8 +40,8 @@ class DecorationStore {
     auto add(const DecorationDefinition &definition, point_t position,
              display_state_t display_state) -> decoration_id_t;
     auto swap_and_delete(decoration_id_t decoration_id) -> decoration_id_t;
-    auto swap_items(decoration_id_t decoration_id_1,
-                    decoration_id_t decoration_id_2) -> void;
+    auto swap_items(decoration_id_t decoration_id_1, decoration_id_t decoration_id_2)
+        -> void;
 
     /**
      * @brief: brings the store in canonical form,
@@ -50,6 +51,8 @@ class DecorationStore {
     [[nodiscard]] auto operator==(const DecorationStore &) const -> bool = default;
 
     // getters
+    [[nodiscard]] auto width(decoration_id_t decoration_id) const -> offset_t;
+    [[nodiscard]] auto height(decoration_id_t decoration_id) const -> offset_t;
     [[nodiscard]] auto type(decoration_id_t decoration_id) const -> DecorationType;
     [[nodiscard]] auto position(decoration_id_t decoration_id) const -> point_t;
     [[nodiscard]] auto display_state(decoration_id_t decoration_id) const
@@ -60,10 +63,10 @@ class DecorationStore {
 
     // setters
     auto set_position(decoration_id_t decoration_id, point_t position) -> void;
-    auto set_display_state(decoration_id_t decoration_id,
-                           display_state_t display_state) -> void;
-    auto set_attributes(decoration_id_t decoration_id,
-                        attributes_text_element_t attrs) -> void;
+    auto set_display_state(decoration_id_t decoration_id, display_state_t display_state)
+        -> void;
+    auto set_attributes(decoration_id_t decoration_id, attributes_text_element_t attrs)
+        -> void;
 
    private:
     auto delete_last() -> void;
@@ -71,6 +74,8 @@ class DecorationStore {
 
    private:
     std::vector<DecorationType> decoration_types_ {};
+    std::vector<offset_t> widths_ {};
+    std::vector<offset_t> heights_ {};
 
     std::vector<point_t> positions_ {};
     std::vector<display_state_t> display_states_ {};
@@ -87,12 +92,14 @@ class DecorationStore {
                                              decoration_id_t decoration_id)
     -> decoration_layout_data_t;
 
-[[nodiscard]] auto to_decoration_layout_data(
-    const DecorationStore &store, decoration_id_t decoration_id,
-    point_t position) -> decoration_layout_data_t;
+[[nodiscard]] auto to_decoration_layout_data(const DecorationStore &store,
+                                             decoration_id_t decoration_id,
+                                             point_t position)
+    -> decoration_layout_data_t;
 
-[[nodiscard]] auto to_decoration_definition(
-    const DecorationStore &store, decoration_id_t decoration_id) -> DecorationDefinition;
+[[nodiscard]] auto to_decoration_definition(const DecorationStore &store,
+                                            decoration_id_t decoration_id)
+    -> DecorationDefinition;
 
 }  // namespace layout
 

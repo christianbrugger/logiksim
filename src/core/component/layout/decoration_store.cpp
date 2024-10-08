@@ -26,6 +26,8 @@ auto DecorationStore::empty() const -> bool {
 
 auto DecorationStore::allocated_size() const -> std::size_t {
     return get_allocated_size(decoration_types_) +  //
+           get_allocated_size(widths_) +            //
+           get_allocated_size(heights_) +           //
 
            get_allocated_size(positions_) +       //
            get_allocated_size(display_states_) +  //
@@ -51,6 +53,8 @@ auto DecorationStore::add(const DecorationDefinition &definition, point_t positi
 
     // extend vectors
     decoration_types_.push_back(definition.decoration_type);
+    widths_.push_back(definition.width);
+    heights_.push_back(definition.height);
 
     positions_.push_back(position);
     display_states_.push_back(display_state);
@@ -121,6 +125,8 @@ auto DecorationStore::swap_items(decoration_id_t decoration_id_1,
     };
 
     swap_ids(decoration_types_);
+    swap_ids(widths_);
+    swap_ids(heights_);
 
     swap_ids(positions_);
     swap_ids(display_states_);
@@ -168,6 +174,8 @@ auto DecorationStore::normalize() -> void {
     // sort
     const auto vectors = ranges::zip_view(  //
         decoration_types_,                  //
+        widths_,                            //
+        heights_,                           //
                                             //
         positions_,                         //
         display_states_,                    //
@@ -178,6 +186,14 @@ auto DecorationStore::normalize() -> void {
     ranges::sort(vectors);
 
     map_text_element_ = move_from_vector(std::move(vector_text_element));
+}
+
+auto DecorationStore::width(decoration_id_t decoration_id) const -> offset_t {
+    return widths_.at(decoration_id.value);
+}
+
+auto DecorationStore::height(decoration_id_t decoration_id) const -> offset_t {
+    return heights_.at(decoration_id.value);
 }
 
 auto DecorationStore::type(decoration_id_t decoration_id) const -> DecorationType {
@@ -246,6 +262,8 @@ auto DecorationStore::delete_last() -> void {
     const auto last_id = last_decoration_id();
 
     decoration_types_.pop_back();
+    widths_.pop_back();
+    heights_.pop_back();
 
     positions_.pop_back();
     display_states_.pop_back();
@@ -262,7 +280,6 @@ auto DecorationStore::last_decoration_id() const -> decoration_id_t {
 //
 // Free Functions
 //
-//
 
 auto to_decoration_layout_data(const DecorationStore &store,
                                decoration_id_t decoration_id)
@@ -274,8 +291,9 @@ auto to_decoration_layout_data(const DecorationStore &store,
                                decoration_id_t decoration_id, point_t position)
     -> decoration_layout_data_t {
     return decoration_layout_data_t {
-        .bounding_rect = element_bounding_rect(
-            to_decoration_definition(store, decoration_id), position),
+        .position = position,
+        .width = store.width(decoration_id),
+        .height = store.height(decoration_id),
         .decoration_type = store.type(decoration_id),
     };
 }
@@ -285,6 +303,8 @@ auto to_decoration_definition(const DecorationStore &store, decoration_id_t deco
     const auto type = store.type(decoration_id);
 
     return DecorationDefinition {
+        .width = store.width(decoration_id),
+        .height = store.height(decoration_id),
         .decoration_type = type,
 
         .attrs_text_element =

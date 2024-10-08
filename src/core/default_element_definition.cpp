@@ -100,6 +100,8 @@ auto default_decoration_definition(DecorationType decoration_type)
 
         case text_element:
             return DecorationDefinition {
+                .width = offset_t {2},
+                .height = offset_t {0},
                 .decoration_type = DecorationType::text_element,
                 .attrs_text_element = attributes_text_element_t {.text = "new text"},
             };

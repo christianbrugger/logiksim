@@ -4,6 +4,7 @@
 #include "component/editable_circuit/editing/edit_decoration_detail.h"
 #include "format/struct.h"
 #include "geometry/point.h"
+#include "layout_info.h"
 #include "selection.h"
 #include "vocabulary/decoration_layout_data.h"
 
@@ -116,8 +117,8 @@ auto move_temporary_decoration_unchecked(Layout& layout,
 }
 
 auto move_or_delete_temporary_decoration(CircuitData& circuit,
-                                         decoration_id_t& decoration_id, int dx,
-                                         int dy) -> void {
+                                         decoration_id_t& decoration_id, int dx, int dy)
+    -> void {
     if (circuit.layout.decorations().display_state(decoration_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("Only temporary items can be freely moved.");
@@ -137,8 +138,9 @@ auto move_or_delete_temporary_decoration(CircuitData& circuit,
 
 namespace {
 
-auto _decoration_change_temporary_to_colliding(
-    CircuitData& circuit, const decoration_id_t decoration_id) -> void {
+auto _decoration_change_temporary_to_colliding(CircuitData& circuit,
+                                               const decoration_id_t decoration_id)
+    -> void {
     if (circuit.layout.decorations().display_state(decoration_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("element is not in the right state.");
@@ -190,8 +192,9 @@ auto _decoration_change_insert_to_colliding(Layout& layout,
     layout.decorations().set_display_state(decoration_id, display_state_t::valid);
 };
 
-auto _decoration_change_colliding_to_temporary(
-    CircuitData& circuit, const decoration_id_t decoration_id) -> void {
+auto _decoration_change_colliding_to_temporary(CircuitData& circuit,
+                                               const decoration_id_t decoration_id)
+    -> void {
     const auto display_state = circuit.layout.decorations().display_state(decoration_id);
 
     if (display_state == display_state_t::valid) {
@@ -247,15 +250,13 @@ auto change_decoration_insertion_mode(CircuitData& circuit,
 
 auto add_decoration(CircuitData& circuit, const DecorationDefinition& definition,
                     point_t position, InsertionMode insertion_mode) -> decoration_id_t {
-    // TODO !! do this differently
-    // insert into underlying
-    auto decoration_id = circuit.layout.decorations().add(definition, point_t {0, 0},
+    if (!is_representable(to_decoration_layout_data(definition, position))) {
+        return null_decoration_id;
+    }
+    auto decoration_id = circuit.layout.decorations().add(definition, position,
                                                           display_state_t::temporary);
     circuit.submit(info_message::DecorationCreated {decoration_id});
 
-    // assume final position
-    move_or_delete_temporary_decoration(circuit, decoration_id, int {position.x},
-                                        int {position.y});
     if (decoration_id) {
         change_decoration_insertion_mode(circuit, decoration_id, insertion_mode);
     }

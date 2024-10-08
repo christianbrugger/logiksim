@@ -2,7 +2,8 @@
 #define LOGICSIM_CORE_VOCABULARY_DECORATION_LAYOUT_DATA_H
 
 #include "vocabulary/decoration_type.h"
-#include "vocabulary/rect.h"
+#include "vocabulary/offset.h"
+#include "vocabulary/point.h"
 
 namespace logicsim {
 
@@ -12,7 +13,9 @@ struct DecorationDefinition;
  * @brief: Decoration data required to calculate its layout.
  */
 struct decoration_layout_data_t {
-    rect_t bounding_rect {};
+    point_t position;
+    offset_t width;
+    offset_t height;
     DecorationType decoration_type {DecorationType::text_element};
 
     [[nodiscard]] auto format() const -> std::string;
@@ -24,8 +27,13 @@ struct decoration_layout_data_t {
 
 static_assert(std::is_aggregate_v<decoration_layout_data_t>);
 
-[[nodiscard]] auto to_decoration_layout_data(
-    const DecorationDefinition& definition, point_t position) -> decoration_layout_data_t;
+//
+// Public
+//
+
+[[nodiscard]] auto to_decoration_layout_data(const DecorationDefinition& definition,
+                                             point_t position)
+    -> decoration_layout_data_t;
 
 }  // namespace logicsim
 

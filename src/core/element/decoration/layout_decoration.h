@@ -1,26 +1,18 @@
 #ifndef LOGICSIM_CORE_ELEMENT_DECORATION_LAYOUT_DESCRIPTION_H
 #define LOGICSIM_CORE_ELEMENT_DECORATION_LAYOUT_DESCRIPTION_H
 
+#include "vocabulary/decoration_type.h"
 #include "vocabulary/layout_info_vector.h"
 
 namespace logicsim {
 
 struct offset_t;
-struct DecorationDefinition;
 struct decoration_layout_data_t;
 
-[[nodiscard]] auto is_decoration_definition_valid(const DecorationDefinition& data)
-    -> bool;
+namespace layout_info {
 
-/**
- * @brief: Return width of decoration.
- */
-[[nodiscard]] auto decoration_width(const DecorationDefinition& data) -> offset_t;
-
-/**
- * @brief: Return height of the decoration.
- */
-[[nodiscard]] auto decoration_height(const DecorationDefinition& data) -> offset_t;
+[[nodiscard]] auto is_decoration_size_valid(DecorationType decoration_type,
+                                            offset_t width, offset_t height) -> bool;
 
 /**
  * @brief: Returns vector of body points, type point_t.
@@ -29,6 +21,8 @@ struct decoration_layout_data_t;
  */
 [[nodiscard]] auto decoration_body_points(const decoration_layout_data_t& data)
     -> body_points_vector;
+
+}  // namespace layout_info
 
 }  // namespace logicsim
 

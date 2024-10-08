@@ -1,32 +1,20 @@
 #include "element/decoration/layout_decoration.h"
 
 #include "algorithm/range_extended.h"
-#include "vocabulary/decoration_definition.h"
+#include "geometry/offset.h"
 #include "vocabulary/decoration_layout_data.h"
 
 namespace logicsim {
 
-auto is_decoration_definition_valid(const DecorationDefinition& data) -> bool {
-    static_cast<void>(data);
-    return true;
-}
+namespace layout_info {
 
-auto decoration_width(const DecorationDefinition& data) -> offset_t {
-    switch (data.decoration_type) {
+[[nodiscard]] auto is_decoration_size_valid(DecorationType decoration_type,
+                                            offset_t width, offset_t height) -> bool {
+    switch (decoration_type) {
         using enum DecorationType;
 
         case text_element:
-            return data.attrs_text_element.value().width;
-    }
-    std::terminate();
-}
-
-auto decoration_height(const DecorationDefinition& data) -> offset_t {
-    switch (data.decoration_type) {
-        using enum DecorationType;
-
-        case text_element:
-            return offset_t {0};
+            return width >= offset_t {0} && height == offset_t {0};
     }
     std::terminate();
 }
@@ -35,8 +23,11 @@ namespace {
 
 [[nodiscard]] auto decoration_body_points_text_element(
     const decoration_layout_data_t& data) -> body_points_vector {
-    const auto& p0 = data.bounding_rect.p0;
-    const auto& p1 = data.bounding_rect.p1;
+    const auto& p0 = data.position;
+    const auto p1 = point_t {
+        to_grid(data.width, data.position.x),
+        to_grid(data.height, data.position.y),
+    };
 
     auto result = body_points_vector {};
 
@@ -53,10 +44,13 @@ namespace {
 auto decoration_body_points(const decoration_layout_data_t& data) -> body_points_vector {
     switch (data.decoration_type) {
         using enum DecorationType;
+
         case text_element:
             return decoration_body_points_text_element(data);
     }
     std::terminate();
 }
+
+}  // namespace layout_info
 
 }  // namespace logicsim

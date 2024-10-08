@@ -3,6 +3,7 @@
 
 #include "iterator_adaptor/enumerate.h"
 #include "iterator_adaptor/transform_view.h"
+#include "vocabulary/decoration_type.h"
 #include "vocabulary/direction_type.h"
 #include "vocabulary/layout_info_vector.h"
 #include "vocabulary/logicitem_type.h"
@@ -13,6 +14,7 @@
 namespace logicsim {
 
 struct grid_t;
+struct offset_t;
 struct grid_fine_t;
 struct point_t;
 struct rect_t;
@@ -21,7 +23,6 @@ struct ordered_line_t;
 struct connection_count_t;
 struct layout_calculation_data_t;
 struct decoration_layout_data_t;
-struct DecorationDefinition;
 
 //
 // Constants
@@ -49,17 +50,16 @@ struct DecorationDefinition;
                                         orientation_t orientation) -> bool;
 
 /**
+ * brief: Checks if the input and output count is valid.
+ */
+[[nodiscard]] auto is_decoration_size_valid(DecorationType decoration_type,
+                                            offset_t width, offset_t height) -> bool;
+
+/**
  * brief: Checks if a logic item can be fully placed on the grid.
  */
 [[nodiscard]] auto is_representable(layout_calculation_data_t data) -> bool;
-
-/**
- * brief: Checks if a decoration can be fully placed on the grid.
- *
- * Note: decoration_layout_data_t are representable by default.
- */
-[[nodiscard]] auto is_representable(const DecorationDefinition &data, point_t position)
-    -> bool;
+[[nodiscard]] auto is_representable(const decoration_layout_data_t &data) -> bool;
 
 /**
  * brief: Checks if an element is valid.
@@ -70,7 +70,7 @@ struct DecorationDefinition;
  *   * is_representable
  */
 [[nodiscard]] auto is_valid(const layout_calculation_data_t &data) -> bool;
-[[nodiscard]] auto is_valid(const DecorationDefinition &data, point_t position) -> bool;
+[[nodiscard]] auto is_valid(const decoration_layout_data_t &data) -> bool;
 
 //
 // Connection Count
@@ -147,8 +147,6 @@ struct DecorationDefinition;
  */
 [[nodiscard]] auto element_bounding_rect(const layout_calculation_data_t &data) -> rect_t;
 [[nodiscard]] auto element_bounding_rect(const decoration_layout_data_t &data) -> rect_t;
-[[nodiscard]] auto element_bounding_rect(const DecorationDefinition &data,
-                                         point_t position) -> rect_t;
 [[nodiscard]] auto element_bounding_rect(ordered_line_t line) -> rect_t;
 
 /**
