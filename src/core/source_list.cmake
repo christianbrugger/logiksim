@@ -98,7 +98,7 @@ set(LS_CORE_SOURCES
     container/static_vector.cpp
     container/value_pointer.cpp
 
-    element/description/layout_description.cpp
+    element/decoration/layout_decoration.cpp
     element/logicitem/layout.cpp
     element/logicitem/layout_display.cpp
     element/logicitem/layout_display_ascii.cpp

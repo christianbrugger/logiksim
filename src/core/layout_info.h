@@ -20,6 +20,7 @@ struct rect_fine_t;
 struct ordered_line_t;
 struct connection_count_t;
 struct layout_calculation_data_t;
+struct decoration_layout_data_t;
 
 //
 // Constants
@@ -166,9 +167,14 @@ struct layout_calculation_data_t;
     -> outputs_vector;
 
 /**
- * @brief: Returns vector of body points, type point_t.
+ * @brief: Returns vector of body points, type point_t, for logicitems.
  */
 [[nodiscard]] auto element_body_points(const layout_calculation_data_t &data)
+    -> body_points_vector;
+/**
+ * @brief: Returns vector of body points, type point_t, for decorations.
+ */
+[[nodiscard]] auto element_body_points(const decoration_layout_data_t &data)
     -> body_points_vector;
 
 /**

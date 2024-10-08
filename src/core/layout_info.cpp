@@ -1,10 +1,11 @@
 #include "layout_info.h"
 
+#include "element/decoration/layout_decoration.h"
+#include "element/logicitem/layout.h"
 #include "geometry/grid.h"
 #include "geometry/layout_calculation.h"
 #include "geometry/orientation.h"
 #include "geometry/rect.h"
-#include "element/logicitem/layout.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/ordered_line.h"
@@ -47,8 +48,8 @@ auto is_input_output_count_valid(LogicItemType logicitem_type,
                                                     output_count);
 }
 
-auto is_orientation_valid(LogicItemType logicitem_type,
-                          orientation_t orientation) -> bool {
+auto is_orientation_valid(LogicItemType logicitem_type, orientation_t orientation)
+    -> bool {
     const auto info = get_layout_info(logicitem_type);
 
     switch (info.direction_type) {
@@ -278,6 +279,10 @@ auto element_body_points(const layout_calculation_data_t &data) -> body_points_v
     }
 
     return body_points;
+}
+
+auto element_body_points(const decoration_layout_data_t &data) -> body_points_vector {
+    return decoration_body_points(data);
 }
 
 }  // namespace logicsim
