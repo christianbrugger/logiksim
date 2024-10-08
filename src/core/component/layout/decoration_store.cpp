@@ -3,6 +3,7 @@
 #include "algorithm/range_extended.h"
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "allocated_size/std_vector.h"
+#include "layout_info.h"
 #include "validate_definition_decoration.h"
 #include "vocabulary/decoration_layout_data.h"
 
@@ -42,9 +43,8 @@ auto DecorationStore::add(const DecorationDefinition &definition, point_t positi
         throw std::runtime_error("Reached maximum number of decorations.");
     }
     // throws if its not representable
-    const auto bounding_rect = rect_t {position, position};  // TODO calculate for real
-    // const auto bounding_rect =
-    //     element_bounding_rect(to_decoration_layout_data(definition, position));
+    const auto bounding_rect =
+        element_bounding_rect(to_decoration_layout_data(definition, position));
 
     const auto decoration_id =
         decoration_id_t {gsl::narrow_cast<decoration_id_t::value_type>(size())};
@@ -208,13 +208,11 @@ auto DecorationStore::attrs_text_element(decoration_id_t decoration_id) const
     return it->second;
 }
 
-auto DecorationStore::set_position(decoration_id_t decoration_id,
-                                   point_t position) -> void {
+auto DecorationStore::set_position(decoration_id_t decoration_id, point_t position)
+    -> void {
     // throws if it is not representable
-    // const auto bounding_rect =
-    //     element_bounding_rect(to_decoration_layout_data(*this, decoration_id,
-    //     position));
-    const auto bounding_rect = rect_t {position, position};  // TODO calculate
+    const auto bounding_rect =
+        element_bounding_rect(to_decoration_layout_data(*this, decoration_id, position));
 
     // set new position
     positions_.at(decoration_id.value) = position;
@@ -273,21 +271,24 @@ auto to_decoration_layout_data(const DecorationStore &store,
 }
 
 auto to_decoration_layout_data(const DecorationStore &store,
-                               decoration_id_t decoration_id,
-                               point_t position) -> decoration_layout_data_t {
+                               decoration_id_t decoration_id, point_t position)
+    -> decoration_layout_data_t {
     return decoration_layout_data_t {
-        .bounding_rect = rect_t {position, position},  // TODO calculate
+        .bounding_rect = element_bounding_rect(
+            to_decoration_definition(store, decoration_id), position),
         .decoration_type = store.type(decoration_id),
     };
 }
 
-auto to_decoration_definition(const DecorationStore &store,
-                              decoration_id_t decoration_id) -> DecorationDefinition {
+auto to_decoration_definition(const DecorationStore &store, decoration_id_t decoration_id)
+    -> DecorationDefinition {
+    const auto type = store.type(decoration_id);
+
     return DecorationDefinition {
-        .decoration_type = store.type(decoration_id),
+        .decoration_type = type,
 
         .attrs_text_element =
-            store.type(decoration_id) == DecorationType::text_element
+            type == DecorationType::text_element
                 ? std::make_optional(store.attrs_text_element(decoration_id))
                 : std::nullopt,
     };

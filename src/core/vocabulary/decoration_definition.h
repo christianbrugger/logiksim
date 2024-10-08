@@ -3,6 +3,7 @@
 
 #include "format/struct.h"
 #include "vocabulary/decoration_type.h"
+#include "vocabulary/offset.h"
 
 #include <compare>
 #include <optional>
@@ -16,6 +17,7 @@ namespace logicsim {
  */
 struct attributes_text_element_t {
     std::string text {};
+    offset_t width {};
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
@@ -37,8 +39,8 @@ struct DecorationDefinition {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const DecorationDefinition& other) const -> bool =
-                                                                                  default;
+    [[nodiscard]] auto operator==(const DecorationDefinition& other) const
+        -> bool = default;
     [[nodiscard]] auto operator<=>(const DecorationDefinition& other) const = default;
 };
 

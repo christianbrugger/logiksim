@@ -55,6 +55,13 @@ auto get_center(rect_fine_t rect) -> point_fine_t {
     };
 }
 
+auto enlarge_rect(rect_t rect, grid_fine_t margin) -> rect_fine_t {
+    return rect_fine_t {
+        point_fine_t {rect.p0.x - margin, rect.p0.y - margin},
+        point_fine_t {rect.p1.x + margin, rect.p1.y + margin},
+    };
+}
+
 auto is_colliding(point_t point, rect_t rect) noexcept -> bool {
     return rect.p0.x <= point.x && point.x <= rect.p1.x  //
            && rect.p0.y <= point.y && point.y <= rect.p1.y;

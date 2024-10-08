@@ -1,9 +1,35 @@
 #include "element/decoration/layout_decoration.h"
 
 #include "algorithm/range_extended.h"
+#include "vocabulary/decoration_definition.h"
 #include "vocabulary/decoration_layout_data.h"
 
 namespace logicsim {
+
+auto is_decoration_definition_valid(const DecorationDefinition& data) -> bool {
+    static_cast<void>(data);
+    return true;
+}
+
+auto decoration_width(const DecorationDefinition& data) -> offset_t {
+    switch (data.decoration_type) {
+        using enum DecorationType;
+
+        case text_element:
+            return data.attrs_text_element.value().width;
+    }
+    std::terminate();
+}
+
+auto decoration_height(const DecorationDefinition& data) -> offset_t {
+    switch (data.decoration_type) {
+        using enum DecorationType;
+
+        case text_element:
+            return offset_t {0};
+    }
+    std::terminate();
+}
 
 namespace {
 

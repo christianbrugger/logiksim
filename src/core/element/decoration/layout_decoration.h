@@ -5,7 +5,23 @@
 
 namespace logicsim {
 
+struct offset_t;
+struct DecorationDefinition;
 struct decoration_layout_data_t;
+
+[[nodiscard]] auto is_decoration_definition_valid(const DecorationDefinition& data)
+    -> bool;
+
+/**
+ * @brief: Return width of decoration.
+ */
+[[nodiscard]] auto decoration_width(const DecorationDefinition& data) -> offset_t;
+
+/**
+ * @brief: Return height of the decoration.
+ */
+[[nodiscard]] auto decoration_height(const DecorationDefinition& data) -> offset_t;
+
 /**
  * @brief: Returns vector of body points, type point_t.
  *

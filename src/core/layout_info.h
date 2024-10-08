@@ -21,6 +21,7 @@ struct ordered_line_t;
 struct connection_count_t;
 struct layout_calculation_data_t;
 struct decoration_layout_data_t;
+struct DecorationDefinition;
 
 //
 // Constants
@@ -48,9 +49,17 @@ struct decoration_layout_data_t;
                                         orientation_t orientation) -> bool;
 
 /**
- * brief: Checks if an element can be fully placed on the grid.
+ * brief: Checks if a logic item can be fully placed on the grid.
  */
 [[nodiscard]] auto is_representable(layout_calculation_data_t data) -> bool;
+
+/**
+ * brief: Checks if a decoration can be fully placed on the grid.
+ *
+ * Note: decoration_layout_data_t are representable by default.
+ */
+[[nodiscard]] auto is_representable(const DecorationDefinition &data, point_t position)
+    -> bool;
 
 /**
  * brief: Checks if an element is valid.
@@ -61,6 +70,7 @@ struct decoration_layout_data_t;
  *   * is_representable
  */
 [[nodiscard]] auto is_valid(const layout_calculation_data_t &data) -> bool;
+[[nodiscard]] auto is_valid(const DecorationDefinition &data, point_t position) -> bool;
 
 //
 // Connection Count
@@ -132,14 +142,21 @@ struct decoration_layout_data_t;
 
 /**
  * @brief: A rect covering all grid points that the element occupies.
+ *
+ * Throws if it is not representable.
  */
 [[nodiscard]] auto element_bounding_rect(const layout_calculation_data_t &data) -> rect_t;
+[[nodiscard]] auto element_bounding_rect(const decoration_layout_data_t &data) -> rect_t;
+[[nodiscard]] auto element_bounding_rect(const DecorationDefinition &data,
+                                         point_t position) -> rect_t;
 [[nodiscard]] auto element_bounding_rect(ordered_line_t line) -> rect_t;
 
 /**
  * @brief: The selection rect of an element.
  */
 [[nodiscard]] auto element_selection_rect(const layout_calculation_data_t &data)
+    -> rect_fine_t;
+[[nodiscard]] auto element_selection_rect(const decoration_layout_data_t &data)
     -> rect_fine_t;
 [[nodiscard]] auto element_selection_rect(ordered_line_t line) -> rect_fine_t;
 

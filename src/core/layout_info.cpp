@@ -4,8 +4,13 @@
 #include "element/logicitem/layout.h"
 #include "geometry/grid.h"
 #include "geometry/layout_calculation.h"
+#include "geometry/offset.h"
 #include "geometry/orientation.h"
+#include "geometry/point.h"
 #include "geometry/rect.h"
+#include "validate_definition_decoration.h"
+#include "vocabulary/decoration_definition.h"
+#include "vocabulary/decoration_layout_data.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/ordered_line.h"
@@ -23,6 +28,7 @@ namespace defaults {
 constexpr static inline auto line_selection_padding = grid_fine_t {0.3};
 constexpr static inline auto logicitem_body_overdraw = grid_fine_t {0.4};
 constexpr static inline auto button_body_overdraw = grid_fine_t {0.5};
+constexpr static inline auto element_selection_overdraw = grid_fine_t {0.5};
 }  // namespace defaults
 
 auto line_selection_padding() -> grid_fine_t {
@@ -76,11 +82,21 @@ auto is_representable(layout_calculation_data_t data) -> bool {
                             int {position.y} + int {rect.p1.y});
 }
 
+auto is_representable(const DecorationDefinition &data, point_t position) -> bool {
+    const auto width = decoration_width(data);
+    const auto height = decoration_height(data);
+    return is_representable(position, int {width}, int {height});
+}
+
 auto is_valid(const layout_calculation_data_t &data) -> bool {
     return is_input_output_count_valid(data.logicitem_type, data.input_count,
                                        data.output_count) &&
            is_orientation_valid(data.logicitem_type, data.orientation) &&
            is_representable(data);
+}
+
+auto is_valid(const DecorationDefinition &data, point_t position) -> bool {
+    return is_valid(data) && is_representable(data, position);
 }
 
 //
@@ -189,19 +205,30 @@ auto element_bounding_rect(const layout_calculation_data_t &data) -> rect_t {
     return transform(data.position, data.orientation, rect);
 }
 
+auto element_bounding_rect(const decoration_layout_data_t &data) -> rect_t {
+    return data.bounding_rect;
+}
+
+auto element_bounding_rect(const DecorationDefinition &data, point_t position) -> rect_t {
+    const auto width = decoration_width(data);
+    const auto height = decoration_height(data);
+
+    const auto p1 = point_t {to_grid(width, position.x), to_grid(height, position.y)};
+    return rect_t {position, p1};
+}
+
 auto element_bounding_rect(ordered_line_t line) -> rect_t {
     return rect_t {line.p0, line.p1};
 }
 
 auto element_selection_rect(const layout_calculation_data_t &data) -> rect_fine_t {
-    constexpr static auto overdraw = grid_fine_t {0.5};
-
     const auto rect = element_bounding_rect(data);
+    return enlarge_rect(rect, defaults::element_selection_overdraw);
+}
 
-    return rect_fine_t {
-        point_fine_t {rect.p0.x - overdraw, rect.p0.y - overdraw},
-        point_fine_t {rect.p1.x + overdraw, rect.p1.y + overdraw},
-    };
+auto element_selection_rect(const decoration_layout_data_t &data) -> rect_fine_t {
+    const auto rect = data.bounding_rect;
+    return enlarge_rect(rect, defaults::element_selection_overdraw);
 }
 
 auto element_selection_rect(ordered_line_t line) -> rect_fine_t {
