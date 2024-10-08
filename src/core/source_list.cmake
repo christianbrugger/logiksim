@@ -99,6 +99,8 @@ set(LS_CORE_SOURCES
     container/value_pointer.cpp
 
     element/decoration/layout_decoration.cpp
+    element/decoration/render_decoration_base.cpp
+    element/decoration/render_decoration_overlay.cpp
     element/logicitem/layout.cpp
     element/logicitem/layout_display.cpp
     element/logicitem/layout_display_ascii.cpp

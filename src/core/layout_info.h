@@ -163,6 +163,8 @@ struct decoration_layout_data_t;
  */
 [[nodiscard]] auto element_shadow_rect(const layout_calculation_data_t &data)
     -> rect_fine_t;
+[[nodiscard]] auto element_shadow_rect(const decoration_layout_data_t &data)
+    -> rect_fine_t;
 [[nodiscard]] auto element_shadow_rect(ordered_line_t line) -> rect_fine_t;
 
 //

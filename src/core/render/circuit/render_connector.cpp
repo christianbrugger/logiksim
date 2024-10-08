@@ -96,8 +96,8 @@ auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void {
 }
 
 auto draw_logicitem_connectors(Context& ctx, const Layout& layout,
-                                logicitem_id_t logicitem_id,
-                                ElementDrawState state) -> void {
+                               logicitem_id_t logicitem_id, ElementDrawState state)
+    -> void {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
 
     for (auto info : input_locations_and_id(layout_data)) {
@@ -124,7 +124,7 @@ auto draw_logicitem_connectors(Context& ctx, const Layout& layout,
 }
 
 auto draw_logicitem_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
-                                logicitem_id_t logicitem_id) -> void {
+                               logicitem_id_t logicitem_id) -> void {
     const auto& logicitems = spatial_simulation.layout().logicitems();
 
     const auto element_id = to_element_id(spatial_simulation, logicitem_id);
@@ -152,8 +152,7 @@ auto draw_logicitem_connectors(Context& ctx, const SpatialSimulation& spatial_si
     for (auto info : output_locations_and_id(layout_data)) {
         const auto output = output_t {element_id, info.output_id};
 
-        const auto is_inverted =
-            logicitems.output_inverted(logicitem_id, info.output_id);
+        const auto is_inverted = logicitems.output_inverted(logicitem_id, info.output_id);
         const auto is_connected =
             is_output_connected(spatial_simulation.schematic(), output);
         const auto is_enabled =
@@ -172,7 +171,7 @@ auto draw_logicitem_connectors(Context& ctx, const SpatialSimulation& spatial_si
 }
 
 auto draw_logicitems_connectors(Context& ctx, const Layout& layout,
-                                 std::span<const DrawableElement> elements) -> void {
+                                std::span<const DrawableLogicItem> elements) -> void {
     if (do_draw_connector(ctx.view_config())) {
         for (const auto entry : elements) {
             draw_logicitem_connectors(ctx, layout, entry.logicitem_id, entry.state);
@@ -180,9 +179,8 @@ auto draw_logicitems_connectors(Context& ctx, const Layout& layout,
     }
 }
 
-auto draw_logicitems_connectors(Context& ctx,
-                                 const SpatialSimulation& spatial_simulation,
-                                 std::span<const logicitem_id_t> elements) -> void {
+auto draw_logicitems_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
+                                std::span<const logicitem_id_t> elements) -> void {
     if (do_draw_connector(ctx.view_config())) {
         for (const auto logicitem_id : elements) {
             draw_logicitem_connectors(ctx, spatial_simulation, logicitem_id);

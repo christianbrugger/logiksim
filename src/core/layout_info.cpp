@@ -253,6 +253,10 @@ auto element_shadow_rect(const layout_calculation_data_t &data) -> rect_fine_t {
     return element_selection_rect(data);
 }
 
+auto element_shadow_rect(const decoration_layout_data_t &data) -> rect_fine_t {
+    return element_selection_rect(data);
+}
+
 auto element_shadow_rect(ordered_line_t line) -> rect_fine_t {
     constexpr auto padding = grid_fine_t {defaults::line_selection_padding};
 

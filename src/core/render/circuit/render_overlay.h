@@ -11,6 +11,7 @@ struct color_t;
 struct ordered_line_t;
 
 struct logicitem_id_t;
+struct decoration_id_t;
 struct segment_info_t;
 class Layout;
 
@@ -28,10 +29,17 @@ template <>
 auto shadow_color(shadow_t shadow_type) -> color_t;
 
 auto draw_logicitem_shadow(Context& ctx, const Layout& layout,
-                            logicitem_id_t logicitem_id, shadow_t shadow_type) -> void;
+                           logicitem_id_t logicitem_id, shadow_t shadow_type) -> void;
 
 auto draw_logicitem_shadows(Context& ctx, const Layout& layout,
-                             std::span<const logicitem_id_t> elements,
+                            std::span<const logicitem_id_t> elements,
+                            shadow_t shadow_type) -> void;
+
+auto draw_decoration_shadow(Context& ctx, const Layout& layout,
+                            decoration_id_t decoration_id, shadow_t shadow_type) -> void;
+
+auto draw_decoration_shadows(Context& ctx, const Layout& layout,
+                             std::span<const decoration_id_t> elements,
                              shadow_t shadow_type) -> void;
 
 auto draw_wire_shadows(Context& ctx, std::span<const ordered_line_t> lines,

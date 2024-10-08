@@ -2,11 +2,12 @@
 #define LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_INTERACTIVE_LAYER_H
 
 #include "allocated_size/trait.h"
+#include "format/struct.h"
+#include "vocabulary/display_state.h"
 #include "vocabulary/drawable_element.h"
 #include "vocabulary/rect.h"
 #include "vocabulary/segment_info.h"
 #include "vocabulary/wire_id.h"
-#include "format/struct.h"
 
 #include <concepts>
 #include <optional>
@@ -24,26 +25,35 @@ class ImageSurface;
                                          logicitem_id_t logicitem_id,
                                          const Selection* selection) -> ElementDrawState;
 
+[[nodiscard]] auto to_element_draw_state(const Layout& layout,
+                                         decoration_id_t decoration_id,
+                                         const Selection* selection) -> ElementDrawState;
+
 // TODO any class invariants ?
 struct InteractiveLayers {
     // inserted
-    std::vector<DrawableElement> normal_below;
+    std::vector<DrawableLogicItem> normal_below;
     std::vector<wire_id_t> normal_wires;
-    std::vector<DrawableElement> normal_above;
+    std::vector<DrawableLogicItem> normal_above;
+    std::vector<DrawableDecoration> normal_decorations;
 
     // uninserted
-    std::vector<DrawableElement> uninserted_below;
-    std::vector<DrawableElement> uninserted_above;
+    std::vector<DrawableLogicItem> uninserted_below;
+    std::vector<DrawableLogicItem> uninserted_above;
+    std::vector<DrawableDecoration> uninserted_decorations;
 
     // selected & temporary
     std::vector<logicitem_id_t> selected_logicitems;
+    std::vector<decoration_id_t> selected_decorations;
     std::vector<ordered_line_t> selected_wires;
     std::vector<segment_info_t> temporary_wires;
     // valid
     std::vector<logicitem_id_t> valid_logicitems;
+    std::vector<decoration_id_t> valid_decorations;
     std::vector<ordered_line_t> valid_wires;
     // colliding
     std::vector<logicitem_id_t> colliding_logicitems;
+    std::vector<decoration_id_t> colliding_decorations;
     std::vector<segment_info_t> colliding_wires;
 
     // bounding rects
@@ -77,15 +87,15 @@ auto update_overlay_rect(InteractiveLayers& layers, ordered_line_t line) -> void
 //
 
 [[nodiscard]] auto build_interactive_layers(const Layout& layout,
-                                            const Selection* selection,
-                                            rect_t scene_rect) -> InteractiveLayers;
+                                            const Selection* selection, rect_t scene_rect)
+    -> InteractiveLayers;
 
 //
 // Render
 //
 
-auto render_inserted(Context& ctx, const Layout& layout,
-                     const InteractiveLayers& layers) -> void;
+auto render_inserted(Context& ctx, const Layout& layout, const InteractiveLayers& layers)
+    -> void;
 
 auto render_uninserted(Context& ctx, const Layout& layout,
                        const InteractiveLayers& layers, bool layer_enabled) -> void;
@@ -94,8 +104,8 @@ auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers&
                     bool layer_enabled) -> void;
 
 auto render_interactive_layers(Context& ctx, const Layout& layout,
-                               const InteractiveLayers& layers,
-                               ImageSurface& surface) -> void;
+                               const InteractiveLayers& layers, ImageSurface& surface)
+    -> void;
 }  // namespace logicsim
 
 #endif

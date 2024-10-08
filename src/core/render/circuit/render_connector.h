@@ -8,7 +8,7 @@
 namespace logicsim {
 
 struct logicitem_id_t;
-struct DrawableElement;
+struct DrawableLogicItem;
 class Layout;
 class SpatialSimulation;
 
@@ -26,18 +26,17 @@ struct ConnectorAttributes {
 auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void;
 
 auto draw_logicitem_connectors(Context& ctx, const Layout& layout,
-                                logicitem_id_t logicitem_id,
-                                ElementDrawState state) -> void;
+                               logicitem_id_t logicitem_id, ElementDrawState state)
+    -> void;
 
 auto draw_logicitem_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
-                                logicitem_id_t logicitem_id) -> void;
+                               logicitem_id_t logicitem_id) -> void;
 
 auto draw_logicitems_connectors(Context& ctx, const Layout& layout,
-                                 std::span<const DrawableElement> elements) -> void;
+                                std::span<const DrawableLogicItem> elements) -> void;
 
-auto draw_logicitems_connectors(Context& ctx,
-                                 const SpatialSimulation& spatial_simulation,
-                                 std::span<const logicitem_id_t> elements) -> void;
+auto draw_logicitems_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
+                                std::span<const logicitem_id_t> elements) -> void;
 
 }  // namespace logicsim
 

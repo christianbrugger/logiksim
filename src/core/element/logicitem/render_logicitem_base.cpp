@@ -1,10 +1,10 @@
 #include "element/logicitem/render_logicitem_base.h"
 
-#include "layout.h"
-#include "layout_info.h"
 #include "element/logicitem/layout_display.h"         // TODO remove
 #include "element/logicitem/layout_display_ascii.h"   // TODO remove
 #include "element/logicitem/layout_display_number.h"  // TODO remove
+#include "layout.h"
+#include "layout_info.h"
 #include "render/circuit/alpha_values.h"
 #include "render/circuit/render_connector_label.h"
 #include "render/circuit/render_logicitem_base_generic.h"
@@ -86,7 +86,7 @@ auto draw_button(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id
     const auto center = get_logicitem_center(layout, logicitem_id);
 
     draw_logicitem_rect(ctx, layout, logicitem_id, state,
-                         {.custom_fill_color = defaults::button_body_color});
+                        {.custom_fill_color = defaults::button_body_color});
     draw_binary_value(ctx, center, logic_value, state);
 }
 
@@ -274,12 +274,12 @@ auto _draw_number_display(Context& ctx, const Layout& layout, logicitem_id_t log
                 _inputs_to_number(layout, logicitem_id, control_inputs, *input_values);
             const auto text = styled_display_text_t {to_text(number)};
             draw_logicitem_label(ctx, text_position, text.text, state,
-                                  LogicItemTextAttributes {
-                                      .custom_font_size = text.font_size,
-                                      .custom_text_color = text.color,
-                                      .horizontal_alignment = text.horizontal_alignment,
-                                      .vertical_alignment = text.vertical_alignment,
-                                      .style = defaults::font::display_font_style});
+                                 LogicItemTextAttributes {
+                                     .custom_font_size = text.font_size,
+                                     .custom_text_color = text.color,
+                                     .horizontal_alignment = text.horizontal_alignment,
+                                     .vertical_alignment = text.vertical_alignment,
+                                     .style = defaults::font::display_font_style});
         }
     } else {
         draw_logicitem_label(
@@ -419,7 +419,7 @@ auto draw_buffer(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id
                  ElementDrawState state) -> void {
     draw_logicitem_rect(ctx, layout, logicitem_id, state);
     draw_logicitem_label(ctx, layout, logicitem_id, "1", state,
-                          {.custom_font_size = defaults::font::buffer_label_size});
+                         {.custom_font_size = defaults::font::buffer_label_size});
 }
 
 auto draw_buffer(Context& ctx, const SpatialSimulation& spatial_simulation,
@@ -442,24 +442,24 @@ auto draw_clock_generator(Context& ctx, const Layout& layout, logicitem_id_t log
 
     // name
     draw_logicitem_label(ctx, position + point_fine_t {2.5, 0}, attrs.name, state,
-                          LogicItemTextAttributes {
-                              .custom_font_size = defaults::font::clock_name_size,
-                              .custom_text_color = defaults::font::clock_name_color,
-                              .horizontal_alignment = HTextAlignment::center,
-                              .vertical_alignment = VTextAlignment::top_baseline,
-                              .style = defaults::font::clock_name_style,
-                          });
+                         LogicItemTextAttributes {
+                             .custom_font_size = defaults::font::clock_name_size,
+                             .custom_text_color = defaults::font::clock_name_color,
+                             .horizontal_alignment = HTextAlignment::center,
+                             .vertical_alignment = VTextAlignment::top_baseline,
+                             .style = defaults::font::clock_name_style,
+                         });
 
     // generator delay
     const auto duration_text = attrs.format_period();
     draw_logicitem_label(ctx, position + point_fine_t {2.5, 1}, duration_text, state,
-                          LogicItemTextAttributes {
-                              .custom_font_size = defaults::font::clock_period_size,
-                              .custom_text_color = defaults::font::clock_period_color,
-                              .horizontal_alignment = HTextAlignment::center,
-                              .vertical_alignment = VTextAlignment::top_baseline,
-                              .style = defaults::font::clock_period_style,
-                          });
+                         LogicItemTextAttributes {
+                             .custom_font_size = defaults::font::clock_period_size,
+                             .custom_text_color = defaults::font::clock_period_color,
+                             .horizontal_alignment = HTextAlignment::center,
+                             .vertical_alignment = VTextAlignment::top_baseline,
+                             .style = defaults::font::clock_period_style,
+                         });
 }
 
 auto draw_clock_generator(Context& ctx, const SpatialSimulation& spatial_simulation,
@@ -575,7 +575,7 @@ auto draw_flipflop_ms_d(Context& ctx, const SpatialSimulation& spatial_simulatio
 //
 
 auto draw_logicitem_base(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-                          ElementDrawState state) -> void {
+                         ElementDrawState state) -> void {
     switch (layout.logicitems().type(logicitem_id)) {
         using enum LogicItemType;
 
@@ -612,18 +612,18 @@ auto draw_logicitem_base(Context& ctx, const Layout& layout, logicitem_id_t logi
         case sub_circuit:
             return draw_standard_element(ctx, layout, logicitem_id, state);
     }
-    throw std::runtime_error("not supported");
+    std::terminate();
 }
 
 auto draw_logicitems_base(Context& ctx, const Layout& layout,
-                           std::span<const DrawableElement> elements) -> void {
+                          std::span<const DrawableLogicItem> elements) -> void {
     for (const auto& entry : elements) {
         draw_logicitem_base(ctx, layout, entry.logicitem_id, entry.state);
     }
 }
 
 auto draw_logicitem_base(Context& ctx, const SpatialSimulation& spatial_simulation,
-                          logicitem_id_t logicitem_id) -> void {
+                         logicitem_id_t logicitem_id) -> void {
     switch (spatial_simulation.layout().logicitems().type(logicitem_id)) {
         using enum LogicItemType;
 
@@ -660,11 +660,11 @@ auto draw_logicitem_base(Context& ctx, const SpatialSimulation& spatial_simulati
         case sub_circuit:
             return draw_standard_element(ctx, spatial_simulation, logicitem_id);
     }
-    throw std::runtime_error("not supported");
+    std::terminate();
 }
 
 auto draw_logicitems_base(Context& ctx, const SpatialSimulation& spatial_simulation,
-                           std::span<const logicitem_id_t> elements) -> void {
+                          std::span<const logicitem_id_t> elements) -> void {
     for (const auto& logicitem_id : elements) {
         draw_logicitem_base(ctx, spatial_simulation, logicitem_id);
     }

@@ -1,13 +1,13 @@
 #include "render/circuit/render_overlay.h"
 
 #include "concept/input_range.h"
-#include "layout.h"
-// #include "layout_info.h"
-#include "layout_info.h"
 #include "element/logicitem/render_logicitem_overlay.h"
+#include "layout.h"
+#include "layout_info.h"
 #include "render/context.h"
 #include "render/primitive/round_rect.h"
 #include "vocabulary/color.h"
+#include "vocabulary/decoration_layout_data.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/rect_fine.h"
 
@@ -53,7 +53,7 @@ auto shadow_color(shadow_t shadow_type) -> color_t {
 }
 
 auto draw_logicitem_shadow(Context& ctx, const Layout& layout,
-                            logicitem_id_t logicitem_id, shadow_t shadow_type) -> void {
+                           logicitem_id_t logicitem_id, shadow_t shadow_type) -> void {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
     const auto rect = element_shadow_rect(layout_data);
 
@@ -66,10 +66,31 @@ auto draw_logicitem_shadow(Context& ctx, const Layout& layout,
 }
 
 auto draw_logicitem_shadows(Context& ctx, const Layout& layout,
-                             std::span<const logicitem_id_t> elements,
-                             shadow_t shadow_type) -> void {
+                            std::span<const logicitem_id_t> elements,
+                            shadow_t shadow_type) -> void {
     for (const auto& logicitem_id : elements) {
         draw_logicitem_shadow(ctx, layout, logicitem_id, shadow_type);
+    }
+}
+
+auto draw_decoration_shadow(Context& ctx, const Layout& layout,
+                            decoration_id_t decoration_id, shadow_t shadow_type) -> void {
+    const auto layout_data = to_decoration_layout_data(layout, decoration_id);
+    const auto rect = element_shadow_rect(layout_data);
+
+    draw_round_rect(ctx, rect,
+                    {
+                        .draw_type = ShapeDrawType::fill,
+                        .rounding = line_selection_padding(),
+                        .fill_color = shadow_color(shadow_type),
+                    });
+}
+
+auto draw_decoration_shadows(Context& ctx, const Layout& layout,
+                             std::span<const decoration_id_t> elements,
+                             shadow_t shadow_type) -> void {
+    for (const auto& decoration_id : elements) {
+        draw_decoration_shadow(ctx, layout, decoration_id, shadow_type);
     }
 }
 
