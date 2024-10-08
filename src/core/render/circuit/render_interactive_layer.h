@@ -36,14 +36,14 @@ struct InteractiveLayers {
     std::vector<DrawableElement> uninserted_above;
 
     // selected & temporary
-    std::vector<logicitem_id_t> selected_logic_items;
+    std::vector<logicitem_id_t> selected_logicitems;
     std::vector<ordered_line_t> selected_wires;
     std::vector<segment_info_t> temporary_wires;
     // valid
-    std::vector<logicitem_id_t> valid_logic_items;
+    std::vector<logicitem_id_t> valid_logicitems;
     std::vector<ordered_line_t> valid_wires;
     // colliding
-    std::vector<logicitem_id_t> colliding_logic_items;
+    std::vector<logicitem_id_t> colliding_logicitems;
     std::vector<segment_info_t> colliding_wires;
 
     // bounding rects

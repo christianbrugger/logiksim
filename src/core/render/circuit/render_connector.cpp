@@ -95,7 +95,7 @@ auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void {
     }
 }
 
-auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
+auto draw_logicitem_connectors(Context& ctx, const Layout& layout,
                                 logicitem_id_t logicitem_id,
                                 ElementDrawState state) -> void {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
@@ -105,7 +105,7 @@ auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
                                 .state = state,
                                 .position = info.position,
                                 .orientation = info.orientation,
-                                .is_inverted = layout.logic_items().input_inverted(
+                                .is_inverted = layout.logicitems().input_inverted(
                                     logicitem_id, info.input_id),
                                 .is_enabled = false,
                             });
@@ -116,24 +116,24 @@ auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
                                 .state = state,
                                 .position = info.position,
                                 .orientation = info.orientation,
-                                .is_inverted = layout.logic_items().output_inverted(
+                                .is_inverted = layout.logicitems().output_inverted(
                                     logicitem_id, info.output_id),
                                 .is_enabled = false,
                             });
     }
 }
 
-auto draw_logic_item_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
+auto draw_logicitem_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
                                 logicitem_id_t logicitem_id) -> void {
-    const auto& logic_items = spatial_simulation.layout().logic_items();
+    const auto& logicitems = spatial_simulation.layout().logicitems();
 
     const auto element_id = to_element_id(spatial_simulation, logicitem_id);
-    const auto layout_data = to_layout_calculation_data(logic_items, logicitem_id);
+    const auto layout_data = to_layout_calculation_data(logicitems, logicitem_id);
 
     for (auto info : input_locations_and_id(layout_data)) {
         const auto input = input_t {element_id, info.input_id};
 
-        const auto is_inverted = logic_items.input_inverted(logicitem_id, info.input_id);
+        const auto is_inverted = logicitems.input_inverted(logicitem_id, info.input_id);
         const auto is_connected =
             is_input_connected(spatial_simulation.schematic(), input);
         const auto is_enabled = spatial_simulation.simulation().input_value(input);
@@ -153,7 +153,7 @@ auto draw_logic_item_connectors(Context& ctx, const SpatialSimulation& spatial_s
         const auto output = output_t {element_id, info.output_id};
 
         const auto is_inverted =
-            logic_items.output_inverted(logicitem_id, info.output_id);
+            logicitems.output_inverted(logicitem_id, info.output_id);
         const auto is_connected =
             is_output_connected(spatial_simulation.schematic(), output);
         const auto is_enabled =
@@ -171,21 +171,21 @@ auto draw_logic_item_connectors(Context& ctx, const SpatialSimulation& spatial_s
     }
 }
 
-auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
+auto draw_logicitems_connectors(Context& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements) -> void {
     if (do_draw_connector(ctx.view_config())) {
         for (const auto entry : elements) {
-            draw_logic_item_connectors(ctx, layout, entry.logicitem_id, entry.state);
+            draw_logicitem_connectors(ctx, layout, entry.logicitem_id, entry.state);
         }
     }
 }
 
-auto draw_logic_items_connectors(Context& ctx,
+auto draw_logicitems_connectors(Context& ctx,
                                  const SpatialSimulation& spatial_simulation,
                                  std::span<const logicitem_id_t> elements) -> void {
     if (do_draw_connector(ctx.view_config())) {
         for (const auto logicitem_id : elements) {
-            draw_logic_item_connectors(ctx, spatial_simulation, logicitem_id);
+            draw_logicitem_connectors(ctx, spatial_simulation, logicitem_id);
         }
     }
 }

@@ -20,7 +20,7 @@ namespace logicsim {
 
 namespace defaults {
 constexpr static inline auto line_selection_padding = grid_fine_t {0.3};
-constexpr static inline auto logic_item_body_overdraw = grid_fine_t {0.4};
+constexpr static inline auto logicitem_body_overdraw = grid_fine_t {0.4};
 constexpr static inline auto button_body_overdraw = grid_fine_t {0.5};
 }  // namespace defaults
 
@@ -28,8 +28,8 @@ auto line_selection_padding() -> grid_fine_t {
     return defaults::line_selection_padding;
 }
 
-auto logic_item_body_overdraw() -> grid_fine_t {
-    return defaults::logic_item_body_overdraw;
+auto logicitem_body_overdraw() -> grid_fine_t {
+    return defaults::logicitem_body_overdraw;
 }
 
 auto button_body_overdraw() -> grid_fine_t {
@@ -173,8 +173,8 @@ auto element_body_draw_rect_untransformed(const layout_calculation_data_t &data)
     }
 
     return rect_fine_t {
-        point_fine_t {0., -defaults::logic_item_body_overdraw},
-        point_fine_t {size.x, size.y + defaults::logic_item_body_overdraw},
+        point_fine_t {0., -defaults::logicitem_body_overdraw},
+        point_fine_t {size.x, size.y + defaults::logicitem_body_overdraw},
     };
 }
 

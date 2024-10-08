@@ -138,8 +138,8 @@ auto to_placed_element(const SerializedLogicItem& obj,
 
 auto serialize_attr_clock_generator(const Layout& layout, logicitem_id_t logicitem_id)
     -> std::optional<SerializedAttributesClockGenerator> {
-    if (layout.logic_items().type(logicitem_id) == LogicItemType::clock_generator) {
-        const auto& attr = layout.logic_items().attrs_clock_generator(logicitem_id);
+    if (layout.logicitems().type(logicitem_id) == LogicItemType::clock_generator) {
+        const auto& attr = layout.logicitems().attrs_clock_generator(logicitem_id);
 
         static_assert(std::is_same_v<delay_t::period, std::nano>);
 
@@ -160,14 +160,14 @@ auto serialize_attr_clock_generator(const Layout& layout, logicitem_id_t logicit
 
 auto add_element(SerializedLayout& data, const Layout& layout,
                  logicitem_id_t logicitem_id) -> void {
-    data.logic_items.push_back(SerializedLogicItem {
-        .logicitem_type = layout.logic_items().type(logicitem_id),
-        .input_count = layout.logic_items().input_count(logicitem_id).count(),
-        .output_count = layout.logic_items().output_count(logicitem_id).count(),
-        .input_inverters = layout.logic_items().input_inverters(logicitem_id),
-        .output_inverters = layout.logic_items().output_inverters(logicitem_id),
-        .position = layout.logic_items().position(logicitem_id),
-        .orientation = layout.logic_items().orientation(logicitem_id),
+    data.logicitems.push_back(SerializedLogicItem {
+        .logicitem_type = layout.logicitems().type(logicitem_id),
+        .input_count = layout.logicitems().input_count(logicitem_id).count(),
+        .output_count = layout.logicitems().output_count(logicitem_id).count(),
+        .input_inverters = layout.logicitems().input_inverters(logicitem_id),
+        .output_inverters = layout.logicitems().output_inverters(logicitem_id),
+        .position = layout.logicitems().position(logicitem_id),
+        .orientation = layout.logicitems().orientation(logicitem_id),
 
         .attributes_clock_generator =
             serialize_attr_clock_generator(layout, logicitem_id),
@@ -263,7 +263,7 @@ auto serialize_selected(const Layout& layout, const Selection& selection,
         .save_position = save_position,
     };
 
-    for (const auto logicitem_id : selection.selected_logic_items()) {
+    for (const auto logicitem_id : selection.selected_logicitems()) {
         serialize::add_element(data, layout, logicitem_id);
     }
 
@@ -312,7 +312,7 @@ auto LoadLayoutResult::add_to(EditableCircuit& editable_circuit,
         calculate_move_delta(data_->save_position, parameters.load_position);
 
     // logic items
-    for (const auto& item : data_->logic_items) {
+    for (const auto& item : data_->logicitems) {
         if (const auto data = to_placed_element(item, delta)) {
             editable_circuit.add_logicitem(data->definition, data->position,
                                            parameters.insertion_mode,

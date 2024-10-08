@@ -19,8 +19,8 @@ auto visible_selection_colliding(const EditableCircuit& editable_circuit) {
 HandleResizeLogic::HandleResizeLogic(const EditableCircuit& editable_circuit,
                                      size_handle_t size_handle)
     : size_handle_ {size_handle},
-      initial_logic_item_ {get_single_placed_element(editable_circuit)} {
-    Expects(editable_circuit.visible_selection().selected_logic_items().size() == 1);
+      initial_logicitem_ {get_single_placed_element(editable_circuit)} {
+    Expects(editable_circuit.visible_selection().selected_logicitems().size() == 1);
     Expects(editable_circuit.visible_selection().selected_segments().empty());
     Expects(found_states_matches_insertion_mode(
         display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
@@ -61,16 +61,16 @@ auto HandleResizeLogic::finalize(EditableCircuit& editable_circuit) -> void {
 
 namespace {
 
-auto resize_logic_item(EditableCircuit& editable_circuit, const PlacedElement& original,
+auto resize_logicitem(EditableCircuit& editable_circuit, const PlacedElement& original,
                        size_handle_t size_handle, int new_delta) {
     // delete element
     editable_circuit.delete_all(editable_circuit.visible_selection());
 
     // add resized
     {
-        const auto logic_item = get_resized_element(original, size_handle, new_delta);
+        const auto logicitem = get_resized_element(original, size_handle, new_delta);
         const auto guard = SelectionGuard {editable_circuit};
-        editable_circuit.add_logicitem(logic_item.definition, logic_item.position,
+        editable_circuit.add_logicitem(logicitem.definition, logicitem.position,
                                        InsertionMode::collisions, guard.selection_id());
         editable_circuit.set_visible_selection(
             editable_circuit.selection(guard.selection_id()));
@@ -97,7 +97,7 @@ auto HandleResizeLogic::move_handle_to(EditableCircuit& editable_circuit,
     }
     last_delta_ = new_delta;
 
-    resize_logic_item(editable_circuit, initial_logic_item_, size_handle_, new_delta);
+    resize_logicitem(editable_circuit, initial_logicitem_, size_handle_, new_delta);
 }
 
 }  // namespace circuit_widget

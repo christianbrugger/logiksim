@@ -32,7 +32,7 @@ class HandleResizeLogic {
 
    private:
     size_handle_t size_handle_;
-    PlacedElement initial_logic_item_;
+    PlacedElement initial_logicitem_;
 
     std::optional<point_fine_t> first_position_ {};
     std::optional<int> last_delta_ {};

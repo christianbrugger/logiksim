@@ -6,7 +6,7 @@ namespace logicsim {
 
 namespace circuit_widget {
 
-auto is_insert_logic_item_logic(const EditingMouseLogic& logic) -> bool {
+auto is_insert_logicitem_logic(const EditingMouseLogic& logic) -> bool {
     return std::holds_alternative<InsertLogicItemLogic>(logic);
 }
 

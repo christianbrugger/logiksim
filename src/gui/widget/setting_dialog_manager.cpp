@@ -28,34 +28,34 @@ SettingDialogManager::SettingDialogManager(QWidget* parent)
 
 namespace {
 
-auto get_selected_logic_item(const EditableCircuit& editable_circuit,
+auto get_selected_logicitem(const EditableCircuit& editable_circuit,
                              selection_id_t selection_id) -> logicitem_id_t {
     if (!editable_circuit.selection_exists(selection_id)) {
         return null_logicitem_id;
     }
     const auto& selection = editable_circuit.selection(selection_id);
 
-    if (selection.selected_logic_items().size() != 1 ||
+    if (selection.selected_logicitems().size() != 1 ||
         !selection.selected_segments().empty()) {
         return null_logicitem_id;
     }
 
-    return selection.selected_logic_items().front();
+    return selection.selected_logicitems().front();
 }
 
 auto create_setting_dialog(const EditableCircuit& editable_circuit,
                            selection_id_t selection_id,
                            QWidget* parent) -> SettingDialog* {
-    const auto logicitem_id = get_selected_logic_item(editable_circuit, selection_id);
+    const auto logicitem_id = get_selected_logicitem(editable_circuit, selection_id);
     Expects(logicitem_id);
 
     const auto logicitem_type =
-        editable_circuit.layout().logic_items().type(logicitem_id);
+        editable_circuit.layout().logicitems().type(logicitem_id);
 
     if (logicitem_type == LogicItemType::clock_generator) {
         return new ClockGeneratorDialog {
             parent, selection_id,
-            editable_circuit.layout().logic_items().attrs_clock_generator(logicitem_id)};
+            editable_circuit.layout().logicitems().attrs_clock_generator(logicitem_id)};
     }
 
     throw std::runtime_error("type doesn't have dialog");
@@ -69,7 +69,7 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
 
     // find existing dialog
     for (auto&& [selection_id, widget] : map_) {
-        if (get_selected_logic_item(editable_circuit, selection_id) ==
+        if (get_selected_logicitem(editable_circuit, selection_id) ==
             setting_handle.logicitem_id) {
             widget->show();
             widget->activateWindow();
@@ -139,7 +139,7 @@ auto SettingDialogManager::run_cleanup(EditableCircuit& editable_circuit) -> voi
     // close dialogs with deleted logic-items
     for (auto&& [selection_id, widget] : map_) {
         if (widget != nullptr) {
-            if (!get_selected_logic_item(editable_circuit, selection_id)) {
+            if (!get_selected_logicitem(editable_circuit, selection_id)) {
                 widget->deleteLater();
                 widget = nullptr;
             }
@@ -214,12 +214,12 @@ auto SettingDialogManager::class_invariant_holds() const -> bool {
 auto change_setting_attributes(EditableCircuit& editable_circuit,
                                selection_id_t selection_id,
                                SettingAttributes attributes) -> void {
-    const auto element_id = get_selected_logic_item(editable_circuit, selection_id);
+    const auto element_id = get_selected_logicitem(editable_circuit, selection_id);
     if (!element_id) {
         return;
     }
 
-    const auto logicitem_type = editable_circuit.layout().logic_items().type(element_id);
+    const auto logicitem_type = editable_circuit.layout().logicitems().type(element_id);
 
     if (logicitem_type == LogicItemType::clock_generator &&
         attributes.attrs_clock_generator) {

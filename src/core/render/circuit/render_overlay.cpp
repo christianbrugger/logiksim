@@ -52,7 +52,7 @@ auto shadow_color(shadow_t shadow_type) -> color_t {
     throw std::runtime_error("unknown shadow type");
 }
 
-auto draw_logic_item_shadow(Context& ctx, const Layout& layout,
+auto draw_logicitem_shadow(Context& ctx, const Layout& layout,
                             logicitem_id_t logicitem_id, shadow_t shadow_type) -> void {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
     const auto rect = element_shadow_rect(layout_data);
@@ -65,11 +65,11 @@ auto draw_logic_item_shadow(Context& ctx, const Layout& layout,
                     });
 }
 
-auto draw_logic_item_shadows(Context& ctx, const Layout& layout,
+auto draw_logicitem_shadows(Context& ctx, const Layout& layout,
                              std::span<const logicitem_id_t> elements,
                              shadow_t shadow_type) -> void {
     for (const auto& logicitem_id : elements) {
-        draw_logic_item_shadow(ctx, layout, logicitem_id, shadow_type);
+        draw_logicitem_shadow(ctx, layout, logicitem_id, shadow_type);
     }
 }
 

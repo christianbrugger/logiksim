@@ -72,7 +72,7 @@ auto all_logicitems_match(const all_logicitem_map_t &map, const Layout &layout) 
         return map.contains(logicitem_id);
     };
 
-    return map.size() == layout.logic_items().size() &&
+    return map.size() == layout.logicitems().size() &&
            std::ranges::all_of(logicitem_ids(layout), entry_matches);
 }
 

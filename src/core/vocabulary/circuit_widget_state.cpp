@@ -30,8 +30,8 @@ auto is_editing_state(const CircuitWidgetState &state) -> bool {
 // EditingState
 //
 
-auto is_insert_logic_item_state(const EditingState &editing_state) -> bool {
-    return is_insert_logic_item_state(editing_state.default_mouse_action);
+auto is_insert_logicitem_state(const EditingState &editing_state) -> bool {
+    return is_insert_logicitem_state(editing_state.default_mouse_action);
 }
 
 auto is_insert_wire_state(const EditingState &editing_state) -> bool {
@@ -54,10 +54,10 @@ auto is_inserting_state(const EditingState &editing_state) -> bool {
 // CircuitWidgetState
 //
 
-auto is_insert_logic_item_state(const CircuitWidgetState &state) -> bool {
+auto is_insert_logicitem_state(const CircuitWidgetState &state) -> bool {
     const auto editing_state = std::get_if<EditingState>(&state);
 
-    return (editing_state != nullptr) && is_insert_logic_item_state(*editing_state);
+    return (editing_state != nullptr) && is_insert_logicitem_state(*editing_state);
 }
 
 auto is_insert_wire_state(const CircuitWidgetState &state) -> bool {

@@ -1,4 +1,4 @@
-#include "component/circuit_widget/mouse_logic/insert_logic_item.h"
+#include "component/circuit_widget/mouse_logic/insert_logicitem.h"
 
 #include "editable_circuit.h"
 #include "vocabulary/insertion_mode.h"

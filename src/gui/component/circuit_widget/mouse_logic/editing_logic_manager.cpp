@@ -144,9 +144,9 @@ auto create_editing_mouse_logic(
     const auto grid_fine_position = to_grid_fine(to(position), view_config);
 
     // insert logic items
-    if (is_insert_logic_item_state(editing_state)) {
+    if (is_insert_logicitem_state(editing_state)) {
         return InsertLogicItemLogic {
-            to_logic_item_definition(editing_state.default_mouse_action),
+            to_logicitem_definition(editing_state.default_mouse_action),
         };
     }
 
@@ -338,8 +338,8 @@ auto EditingLogicManager::mouse_release(
 auto EditingLogicManager::class_invariant_holds() const -> bool {
     // mouse logic
     Expects(!mouse_logic_ || is_editing_state(circuit_state_));
-    Expects(!mouse_logic_ || is_insert_logic_item_logic(*mouse_logic_) ==
-                                 is_insert_logic_item_state(circuit_state_));
+    Expects(!mouse_logic_ || is_insert_logicitem_logic(*mouse_logic_) ==
+                                 is_insert_logicitem_state(circuit_state_));
     Expects(!mouse_logic_ ||
             is_insert_wire_logic(*mouse_logic_) == is_insert_wire_state(circuit_state_));
     Expects(!mouse_logic_ || is_insert_decoration_logic(*mouse_logic_) ==

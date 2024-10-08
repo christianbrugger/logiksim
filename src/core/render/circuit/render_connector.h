@@ -25,17 +25,17 @@ struct ConnectorAttributes {
 
 auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void;
 
-auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
+auto draw_logicitem_connectors(Context& ctx, const Layout& layout,
                                 logicitem_id_t logicitem_id,
                                 ElementDrawState state) -> void;
 
-auto draw_logic_item_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
+auto draw_logicitem_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
                                 logicitem_id_t logicitem_id) -> void;
 
-auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
+auto draw_logicitems_connectors(Context& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements) -> void;
 
-auto draw_logic_items_connectors(Context& ctx,
+auto draw_logicitems_connectors(Context& ctx,
                                  const SpatialSimulation& spatial_simulation,
                                  std::span<const logicitem_id_t> elements) -> void;
 

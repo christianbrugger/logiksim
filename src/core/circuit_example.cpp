@@ -125,7 +125,7 @@ auto load_example_with_logging(int number) -> EditableCircuit {
         const auto timer_str = timer.format();
         const auto& layout = editable_circuit.layout();
 
-        auto logicitem_count = layout.logic_items().size();
+        auto logicitem_count = layout.logicitems().size();
         auto segment_count = get_segment_count(layout);
 
         if (layout.size() < 10) {

@@ -73,7 +73,7 @@ class Selection {
     [[nodiscard]] auto is_selected(decoration_id_t decoration_id) const -> bool;
     [[nodiscard]] auto is_selected(segment_t segment) const -> bool;
 
-    [[nodiscard]] auto selected_logic_items() const -> std::span<const logicitem_id_t>;
+    [[nodiscard]] auto selected_logicitems() const -> std::span<const logicitem_id_t>;
     [[nodiscard]] auto selected_decorations() const -> std::span<const decoration_id_t>;
     [[nodiscard]] auto selected_segments() const -> std::span<const segment_pair_t>;
     [[nodiscard]] auto selected_segments(segment_t segment) const
@@ -108,7 +108,7 @@ class Selection {
 //
 //
 
-[[nodiscard]] auto has_logic_items(const Selection &selection) -> bool;
+[[nodiscard]] auto has_logicitems(const Selection &selection) -> bool;
 [[nodiscard]] auto get_lines(const Selection &selection,
                              const Layout &layout) -> std::vector<ordered_line_t>;
 [[nodiscard]] auto all_normal_display_state(const Selection &selection,

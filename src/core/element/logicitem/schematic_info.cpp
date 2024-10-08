@@ -9,7 +9,7 @@ namespace logicsim {
 
 namespace {
 
-constexpr inline auto logic_item_delay = delay_t {3us};
+constexpr inline auto logicitem_delay = delay_t {3us};
 
 constexpr inline auto button_delay = delay_t::epsilon();
 constexpr inline auto clock_generator_output_delay = delay_t::epsilon();
@@ -110,7 +110,7 @@ auto to_logicitem_type(ElementType logicitem_type) -> LogicItemType {
 }
 
 auto element_enable_input_id(ElementType element_type) -> std::optional<connection_id_t> {
-    if (is_logic_item(element_type)) {
+    if (is_logicitem(element_type)) {
         const auto logicitem_type = to_logicitem_type(element_type);
         return get_layout_info(logicitem_type).enable_input_id;
     }
@@ -127,7 +127,7 @@ auto element_output_delay(LogicItemType logicitem_type) -> delay_t {
             return clock_generator_output_delay;
 
         default:
-            return logic_item_delay;
+            return logicitem_delay;
     };
 }
 
@@ -154,7 +154,7 @@ auto has_internal_connections(ElementType element_type) -> bool {
 
 auto is_input_output_count_valid(ElementType element_type, connection_count_t input_count,
                                  connection_count_t output_count) -> bool {
-    if (is_logic_item(element_type)) {
+    if (is_logicitem(element_type)) {
         const auto logicitem_type = to_logicitem_type(element_type);
         return layout_info::is_input_output_count_valid(logicitem_type, input_count,
                                                         output_count);

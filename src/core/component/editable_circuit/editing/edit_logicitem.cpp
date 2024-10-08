@@ -52,7 +52,7 @@ auto delete_temporary_logicitem(CircuitData& circuit, logicitem_id_t& logicitem_
         throw std::runtime_error("logic item id is invalid");
     }
 
-    if (circuit.layout.logic_items().display_state(logicitem_id) !=
+    if (circuit.layout.logicitems().display_state(logicitem_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("can only delete temporary objects");
     }
@@ -60,7 +60,7 @@ auto delete_temporary_logicitem(CircuitData& circuit, logicitem_id_t& logicitem_
     circuit.submit(info_message::LogicItemDeleted {logicitem_id});
 
     // delete in underlying
-    auto last_id = circuit.layout.logic_items().swap_and_delete(logicitem_id);
+    auto last_id = circuit.layout.logicitems().swap_and_delete(logicitem_id);
 
     if (logicitem_id != last_id) {
         _notify_logicitem_id_change(circuit, logicitem_id, last_id);
@@ -88,7 +88,7 @@ auto is_logicitem_position_representable(const Layout& layout,
         throw std::runtime_error("element id is invalid");
     }
 
-    const auto position = layout.logic_items().position(logicitem_id);
+    const auto position = layout.logicitems().position(logicitem_id);
 
     if (!is_representable(position, dx, dy)) {
         return false;
@@ -103,29 +103,29 @@ auto is_logicitem_position_representable(const Layout& layout,
 auto are_logicitem_positions_representable(const Layout& layout,
                                            const Selection& selection, int delta_x,
                                            int delta_y) -> bool {
-    const auto logic_item_valid = [&](logicitem_id_t logicitem_id) {
+    const auto logicitem_valid = [&](logicitem_id_t logicitem_id) {
         return is_logicitem_position_representable(layout, logicitem_id, delta_x,
                                                    delta_y);
     };
 
-    return std::ranges::all_of(selection.selected_logic_items(), logic_item_valid);
+    return std::ranges::all_of(selection.selected_logicitems(), logicitem_valid);
 }
 
 auto move_temporary_logicitem_unchecked(Layout& layout, const logicitem_id_t logicitem_id,
                                         int dx, int dy) -> void {
-    assert(std::as_const(layout).logic_items().display_state(logicitem_id) ==
+    assert(std::as_const(layout).logicitems().display_state(logicitem_id) ==
            display_state_t::temporary);
     assert(is_logicitem_position_representable(layout, logicitem_id, dx, dy));
 
     const auto position =
-        add_unchecked(layout.logic_items().position(logicitem_id), dx, dy);
-    layout.logic_items().set_position(logicitem_id, position);
+        add_unchecked(layout.logicitems().position(logicitem_id), dx, dy);
+    layout.logicitems().set_position(logicitem_id, position);
 }
 
 auto move_or_delete_temporary_logicitem(CircuitData& circuit,
                                         logicitem_id_t& logicitem_id, int dx,
                                         int dy) -> void {
-    if (circuit.layout.logic_items().display_state(logicitem_id) !=
+    if (circuit.layout.logicitems().display_state(logicitem_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("Only temporary items can be freely moved.");
     }
@@ -146,17 +146,17 @@ namespace {
 
 auto _element_change_temporary_to_colliding(CircuitData& circuit,
                                             const logicitem_id_t logicitem_id) -> void {
-    if (circuit.layout.logic_items().display_state(logicitem_id) !=
+    if (circuit.layout.logicitems().display_state(logicitem_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("element is not in the right state.");
     }
 
     if (is_logicitem_colliding(circuit, logicitem_id)) {
-        circuit.layout.logic_items().set_display_state(logicitem_id,
+        circuit.layout.logicitems().set_display_state(logicitem_id,
                                                        display_state_t::colliding);
     } else {
         convert_wires_at_outputs_to_inputs(circuit, logicitem_id);
-        circuit.layout.logic_items().set_display_state(logicitem_id,
+        circuit.layout.logicitems().set_display_state(logicitem_id,
                                                        display_state_t::valid);
         circuit.submit(info_message::LogicItemInserted {
             logicitem_id, to_layout_calculation_data(circuit.layout, logicitem_id)});
@@ -165,17 +165,17 @@ auto _element_change_temporary_to_colliding(CircuitData& circuit,
 
 auto _element_change_colliding_to_insert(CircuitData& circuit,
                                          logicitem_id_t& logicitem_id) -> void {
-    const auto display_state = circuit.layout.logic_items().display_state(logicitem_id);
+    const auto display_state = circuit.layout.logicitems().display_state(logicitem_id);
 
     if (display_state == display_state_t::valid) {
-        circuit.layout.logic_items().set_display_state(logicitem_id,
+        circuit.layout.logicitems().set_display_state(logicitem_id,
                                                        display_state_t::normal);
         return;
     }
 
     if (display_state == display_state_t::colliding) [[likely]] {
         // we can only delete temporary elements
-        circuit.layout.logic_items().set_display_state(logicitem_id,
+        circuit.layout.logicitems().set_display_state(logicitem_id,
                                                        display_state_t::temporary);
         delete_temporary_logicitem(circuit, logicitem_id);
         return;
@@ -186,30 +186,30 @@ auto _element_change_colliding_to_insert(CircuitData& circuit,
 
 auto _element_change_insert_to_colliding(Layout& layout,
                                          const logicitem_id_t logicitem_id) -> void {
-    if (layout.logic_items().display_state(logicitem_id) != display_state_t::normal)
+    if (layout.logicitems().display_state(logicitem_id) != display_state_t::normal)
         [[unlikely]] {
         throw std::runtime_error("element is not in the right state.");
     }
 
-    layout.logic_items().set_display_state(logicitem_id, display_state_t::valid);
+    layout.logicitems().set_display_state(logicitem_id, display_state_t::valid);
 };
 
 auto _element_change_colliding_to_temporary(CircuitData& circuit,
                                             const logicitem_id_t logicitem_id) -> void {
-    const auto display_state = circuit.layout.logic_items().display_state(logicitem_id);
+    const auto display_state = circuit.layout.logicitems().display_state(logicitem_id);
 
     if (display_state == display_state_t::valid) {
         circuit.submit(info_message::LogicItemUninserted {
             logicitem_id, to_layout_calculation_data(circuit.layout, logicitem_id)});
 
-        circuit.layout.logic_items().set_display_state(logicitem_id,
+        circuit.layout.logicitems().set_display_state(logicitem_id,
                                                        display_state_t::temporary);
         convert_wires_at_outputs_to_outputs(circuit, logicitem_id);
         return;
     }
 
     if (display_state == display_state_t::colliding) {
-        circuit.layout.logic_items().set_display_state(logicitem_id,
+        circuit.layout.logicitems().set_display_state(logicitem_id,
                                                        display_state_t::temporary);
         return;
     }
@@ -226,7 +226,7 @@ auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logic
     }
 
     const auto old_mode =
-        to_insertion_mode(circuit.layout.logic_items().display_state(logicitem_id));
+        to_insertion_mode(circuit.layout.logicitems().display_state(logicitem_id));
     if (old_mode == new_mode) {
         return;
     }
@@ -252,7 +252,7 @@ auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logic
 auto add_logicitem(CircuitData& circuit, const LogicItemDefinition& definition,
                    point_t position, InsertionMode insertion_mode) -> logicitem_id_t {
     // insert into underlying
-    auto logicitem_id = circuit.layout.logic_items().add(definition, point_t {0, 0},
+    auto logicitem_id = circuit.layout.logicitems().add(definition, point_t {0, 0},
                                                          display_state_t::temporary);
     circuit.submit(info_message::LogicItemCreated {logicitem_id});
 
@@ -277,9 +277,9 @@ auto toggle_inverter(CircuitData& circuit, point_t point) -> void {
         Expects(info.position == point);
 
         if (is_directed(info.orientation)) {
-            const auto value = circuit.layout.logic_items().input_inverted(
+            const auto value = circuit.layout.logicitems().input_inverted(
                 entry->logicitem_id, entry->connection_id);
-            circuit.layout.logic_items().set_input_inverter(entry->logicitem_id,
+            circuit.layout.logicitems().set_input_inverter(entry->logicitem_id,
                                                             entry->connection_id, !value);
         }
     }
@@ -291,9 +291,9 @@ auto toggle_inverter(CircuitData& circuit, point_t point) -> void {
         Expects(info.position == point);
 
         if (is_directed(info.orientation)) {
-            const auto value = circuit.layout.logic_items().output_inverted(
+            const auto value = circuit.layout.logicitems().output_inverted(
                 entry->logicitem_id, entry->connection_id);
-            circuit.layout.logic_items().set_output_inverter(
+            circuit.layout.logicitems().set_output_inverter(
                 entry->logicitem_id, entry->connection_id, !value);
         }
     }

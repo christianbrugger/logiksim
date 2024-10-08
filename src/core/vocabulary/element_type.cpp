@@ -63,7 +63,7 @@ auto format(ElementType type) -> std::string {
     std::terminate();
 }
 
-auto is_logic_item(ElementType element_type) -> bool {
+auto is_logicitem(ElementType element_type) -> bool {
     using enum ElementType;
     return element_type != unused && element_type != placeholder && element_type != wire;
 }

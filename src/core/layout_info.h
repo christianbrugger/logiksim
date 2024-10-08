@@ -26,7 +26,7 @@ struct layout_calculation_data_t;
 //
 
 [[nodiscard]] auto line_selection_padding() -> grid_fine_t;
-[[nodiscard]] auto logic_item_body_overdraw() -> grid_fine_t;
+[[nodiscard]] auto logicitem_body_overdraw() -> grid_fine_t;
 [[nodiscard]] auto button_body_overdraw() -> grid_fine_t;
 
 //

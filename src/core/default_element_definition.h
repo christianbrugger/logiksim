@@ -13,7 +13,7 @@ struct DecorationDefinition;
 [[nodiscard]] auto default_element_definition(LogicItemType logicitem_type)
     -> LogicItemDefinition;
 
-[[nodiscard]] auto to_logic_item_definition(DefaultMouseAction mouse_action)
+[[nodiscard]] auto to_logicitem_definition(DefaultMouseAction mouse_action)
     -> LogicItemDefinition;
 
 [[nodiscard]] auto default_decoration_definition(DecorationType decoration_type)

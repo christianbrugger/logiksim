@@ -91,19 +91,19 @@ inline auto add_and_element(Layout &layout, display_state_t display_type,
         .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     };
-    return layout.logic_items().add(definition, position, display_type);
+    return layout.logicitems().add(definition, position, display_type);
 }
 
 inline auto assert_logicitem_count(const Layout &layout, std::size_t count) -> void {
-    ASSERT_EQ(layout.logic_items().size(), count);
+    ASSERT_EQ(layout.logicitems().size(), count);
 }
 
 inline auto assert_logicitem_equal(
     const Layout &layout, logicitem_id_t logicitem_id,
     connection_count_t input_count = connection_count_t {3},
     point_t position = point_t {0, 0}) -> void {
-    ASSERT_EQ(layout.logic_items().input_count(logicitem_id), input_count);
-    ASSERT_EQ(layout.logic_items().position(logicitem_id), position);
+    ASSERT_EQ(layout.logicitems().input_count(logicitem_id), input_count);
+    ASSERT_EQ(layout.logicitems().position(logicitem_id), position);
 }
 
 namespace editable_circuit {
@@ -122,7 +122,7 @@ inline auto assert_logicitem_equal(
 
 inline auto get_display_state(const Modifier &modifier,
                               logicitem_id_t logicitem_id) -> display_state_t {
-    return modifier.circuit_data().layout.logic_items().display_state(logicitem_id);
+    return modifier.circuit_data().layout.logicitems().display_state(logicitem_id);
 }
 
 inline auto assert_wire_count(const Modifier &modifier, std::size_t count) -> void {

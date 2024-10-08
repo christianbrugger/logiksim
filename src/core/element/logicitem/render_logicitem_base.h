@@ -14,16 +14,16 @@ class SpatialSimulation;
 
 struct Context;
 
-auto draw_logic_item_base(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+auto draw_logicitem_base(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                           ElementDrawState state) -> void;
 
-auto draw_logic_items_base(Context& ctx, const Layout& layout,
+auto draw_logicitems_base(Context& ctx, const Layout& layout,
                            std::span<const DrawableElement> elements) -> void;
 
-auto draw_logic_item_base(Context& ctx, const SpatialSimulation& spatial_simulation,
+auto draw_logicitem_base(Context& ctx, const SpatialSimulation& spatial_simulation,
                           logicitem_id_t logicitem_id) -> void;
 
-auto draw_logic_items_base(Context& ctx, const SpatialSimulation& spatial_simulation,
+auto draw_logicitems_base(Context& ctx, const SpatialSimulation& spatial_simulation,
                            std::span<const logicitem_id_t> elements) -> void;
 
 }  // namespace logicsim

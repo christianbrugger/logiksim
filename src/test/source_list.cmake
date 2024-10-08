@@ -19,11 +19,14 @@ set(LS_TEST_SOURCES
     container/value_pointer_pimpl_test.cpp
     container/value_pointer_test.cpp
 
-    editable_circuit/modifier/logic_item_test.cpp
+    editable_circuit/modifier/logicitem_test.cpp
     editable_circuit/modifier/modifier_config_test.cpp
     editable_circuit/modifier/wire_random_test.cpp
     editable_circuit/modifier/wire_test.cpp
     editable_circuit/editable_circuit_random_test.cpp
+
+    element/logicitem/layout_test.cpp
+    element/logicitem/schematic_info_test.cpp
 
     format/container_test.cpp
 
@@ -36,9 +39,6 @@ set(LS_TEST_SOURCES
     iterator_adaptor/enumerate_transform_view_test.cpp
     iterator_adaptor/polling_iterator_test.cpp
     iterator_adaptor/transform_view_test.cpp
-
-    logic_item/layout_test.cpp
-    logic_item/schematic_info_test.cpp
 
     random/generator_test.cpp
 

@@ -24,7 +24,7 @@ TEST(Layout, EmptyLayout) {
 TEST(Layout, LayoutSingleLogicItem) {
     auto layout = Layout {};
 
-    layout.logic_items().add(
+    layout.logicitems().add(
         LogicItemDefinition {
             .logicitem_type = LogicItemType::buffer_element,
             .input_count = connection_count_t {1},
@@ -54,7 +54,7 @@ TEST(Layout, ElementProperties) {
     const auto input_inverters = logic_small_vector_t {false, true, false};
     const auto output_inverters = logic_small_vector_t {true};
 
-    layout.logic_items().add(
+    layout.logicitems().add(
         LogicItemDefinition {
             .logicitem_type = LogicItemType::and_element,
             .input_count = connection_count_t {3},
@@ -70,17 +70,17 @@ TEST(Layout, ElementProperties) {
     const Layout& layout_const {layout};
     const auto id = logicitem_id_t {0};
 
-    EXPECT_EQ(layout_const.logic_items().type(id), LogicItemType::and_element);
-    EXPECT_EQ(layout_const.logic_items().input_count(id), connection_count_t {3});
-    EXPECT_EQ(layout_const.logic_items().output_count(id), connection_count_t {1});
-    EXPECT_EQ(layout_const.logic_items().orientation(id), orientation_t::right);
+    EXPECT_EQ(layout_const.logicitems().type(id), LogicItemType::and_element);
+    EXPECT_EQ(layout_const.logicitems().input_count(id), connection_count_t {3});
+    EXPECT_EQ(layout_const.logicitems().output_count(id), connection_count_t {1});
+    EXPECT_EQ(layout_const.logicitems().orientation(id), orientation_t::right);
 
-    EXPECT_EQ(layout_const.logic_items().sub_circuit_id(id), circuit_id_t {10});
-    EXPECT_EQ(layout_const.logic_items().input_inverters(id), input_inverters);
-    EXPECT_EQ(layout_const.logic_items().output_inverters(id), output_inverters);
+    EXPECT_EQ(layout_const.logicitems().sub_circuit_id(id), circuit_id_t {10});
+    EXPECT_EQ(layout_const.logicitems().input_inverters(id), input_inverters);
+    EXPECT_EQ(layout_const.logicitems().output_inverters(id), output_inverters);
 
-    EXPECT_EQ(layout_const.logic_items().position(id), point_t(2, 3));
-    EXPECT_EQ(layout_const.logic_items().display_state(id), display_state_t::colliding);
+    EXPECT_EQ(layout_const.logicitems().position(id), point_t(2, 3));
+    EXPECT_EQ(layout_const.logicitems().display_state(id), display_state_t::colliding);
 }
 
 TEST(Layout, EqualityOperators) {
@@ -94,9 +94,9 @@ TEST(Layout, EqualityOperators) {
     };
 
     auto element_0 =
-        layout.logic_items().add(definition, point_t {}, display_state_t::temporary);
+        layout.logicitems().add(definition, point_t {}, display_state_t::temporary);
     auto element_1 =
-        layout.logic_items().add(definition, point_t {}, display_state_t::temporary);
+        layout.logicitems().add(definition, point_t {}, display_state_t::temporary);
 
     EXPECT_NE(element_0, element_1);
     EXPECT_EQ(element_0, logicitem_id_t {0});
@@ -135,12 +135,12 @@ TEST(Layout, TestNormalization) {
     };
 
     auto layout_1 = Layout {};
-    layout_1.logic_items().add(definition_1, point_t {1, 2}, display_state_t::temporary);
-    layout_1.logic_items().add(definition_2, point_t {3, 4}, display_state_t::colliding);
+    layout_1.logicitems().add(definition_1, point_t {1, 2}, display_state_t::temporary);
+    layout_1.logicitems().add(definition_2, point_t {3, 4}, display_state_t::colliding);
 
     auto layout_2 = Layout {};
-    layout_2.logic_items().add(definition_2, point_t {3, 4}, display_state_t::colliding);
-    layout_2.logic_items().add(definition_1, point_t {1, 2}, display_state_t::temporary);
+    layout_2.logicitems().add(definition_2, point_t {3, 4}, display_state_t::colliding);
+    layout_2.logicitems().add(definition_1, point_t {1, 2}, display_state_t::temporary);
 
     EXPECT_NE(layout_1, layout_2);
 

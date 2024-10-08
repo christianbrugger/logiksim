@@ -14,21 +14,21 @@
 namespace logicsim {
 auto setting_handle_position(const Layout& layout, logicitem_id_t logicitem_id)
     -> std::optional<setting_handle_t> {
-    switch (layout.logic_items().type(logicitem_id)) {
+    switch (layout.logicitems().type(logicitem_id)) {
         using enum LogicItemType;
 
         case clock_generator: {
-            // TODO move to logic_item/layout.h
+            // TODO move to logicitem/layout.h
 
-            // constexpr auto overdraw = defaults::logic_item_body_overdraw;
+            // constexpr auto overdraw = defaults::logicitem_body_overdraw;
             constexpr auto handle_size = defaults::setting_handle_size;
             // constexpr auto margin = defaults::setting_handle_margin;
 
             const auto width = element_fixed_width(clock_generator);
             const auto height = element_fixed_height(clock_generator);
 
-            const auto position = layout.logic_items().position(logicitem_id);
-            const auto orientation = layout.logic_items().orientation(logicitem_id);
+            const auto position = layout.logicitems().position(logicitem_id);
+            const auto orientation = layout.logicitems().orientation(logicitem_id);
 
             return setting_handle_t {
                 .position =
@@ -70,23 +70,23 @@ auto setting_handle_position(const Layout& layout, logicitem_id_t logicitem_id)
 
 namespace {
 
-auto get_single_logic_item(const Selection& selection) -> logicitem_id_t {
-    if (selection.selected_logic_items().size() != 1 ||
+auto get_single_logicitem(const Selection& selection) -> logicitem_id_t {
+    if (selection.selected_logicitems().size() != 1 ||
         !selection.selected_segments().empty()) {
         return null_logicitem_id;
     }
-    return selection.selected_logic_items().front();
+    return selection.selected_logicitems().front();
 }
 
 }  // namespace
 
 auto setting_handle_position(const Layout& layout, const Selection& selection)
     -> std::optional<setting_handle_t> {
-    const auto logicitem_id = get_single_logic_item(selection);
+    const auto logicitem_id = get_single_logicitem(selection);
     if (!logicitem_id) {
         return {};
     }
-    if (layout.logic_items().display_state(logicitem_id) != display_state_t::normal) {
+    if (layout.logicitems().display_state(logicitem_id) != display_state_t::normal) {
         return {};
     }
 

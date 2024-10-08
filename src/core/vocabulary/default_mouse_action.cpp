@@ -66,7 +66,7 @@ auto is_inserting_state(DefaultMouseAction action) -> bool {
     return action != selection;
 }
 
-auto is_insert_logic_item_state(DefaultMouseAction action) -> bool {
+auto is_insert_logicitem_state(DefaultMouseAction action) -> bool {
     using enum DefaultMouseAction;
     return action != selection && action != insert_wire &&
            !is_insert_decoration_state(action);

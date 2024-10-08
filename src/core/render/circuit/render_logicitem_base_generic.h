@@ -23,11 +23,11 @@ class Layout;
 
 struct Context;
 
-[[nodiscard]] auto get_logic_item_fill_color(ElementDrawState state) -> color_t;
-[[nodiscard]] auto get_logic_item_stroke_color(ElementDrawState state) -> color_t;
-[[nodiscard]] auto get_logic_item_label_color(ElementDrawState state) -> color_t;
+[[nodiscard]] auto get_logicitem_fill_color(ElementDrawState state) -> color_t;
+[[nodiscard]] auto get_logicitem_stroke_color(ElementDrawState state) -> color_t;
+[[nodiscard]] auto get_logicitem_label_color(ElementDrawState state) -> color_t;
 
-[[nodiscard]] auto get_logic_item_center(const Layout& layout,
+[[nodiscard]] auto get_logicitem_center(const Layout& layout,
                                          logicitem_id_t logicitem_id) -> point_fine_t;
 
 struct LogicItemRectAttributes {
@@ -41,11 +41,11 @@ struct LogicItemRectAttributes {
 static_assert(std::is_aggregate_v<LogicItemRectAttributes>);
 static_assert(std::regular<LogicItemRectAttributes>);
 
-auto draw_logic_item_rect(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+auto draw_logicitem_rect(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                           ElementDrawState state,
                           LogicItemRectAttributes attributes = {}) -> void;
 
-auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, ElementDrawState state,
+auto draw_logicitem_rect(Context& ctx, rect_fine_t rect, ElementDrawState state,
                           LogicItemRectAttributes attributes = {}) -> void;
 
 struct LogicItemTextAttributes {
@@ -62,12 +62,12 @@ struct LogicItemTextAttributes {
 static_assert(std::is_aggregate_v<LogicItemTextAttributes>);
 static_assert(std::regular<LogicItemTextAttributes>);
 
-auto draw_logic_item_label(Context& ctx, const Layout& layout,
+auto draw_logicitem_label(Context& ctx, const Layout& layout,
                            logicitem_id_t logicitem_id, std::string_view text,
                            ElementDrawState state,
                            LogicItemTextAttributes attributes = {}) -> void;
 
-auto draw_logic_item_label(Context& ctx, point_fine_t center, std::string_view text,
+auto draw_logicitem_label(Context& ctx, point_fine_t center, std::string_view text,
                            ElementDrawState state,
                            LogicItemTextAttributes attributes = {}) -> void;
 

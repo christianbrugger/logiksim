@@ -19,7 +19,7 @@ TEST(LogicItemSchematicInfo, LogicItemTypeConversion) {
 
     // also test all values are correct
     for (auto element_type : all_element_types) {
-        if (is_logic_item(element_type)) {
+        if (is_logicitem(element_type)) {
             const auto logicitem_type = to_logicitem_type(element_type);
             EXPECT_EQ(to_underlying(logicitem_type), to_underlying(element_type));
         } else {

@@ -6,14 +6,14 @@
 
 namespace logicsim {
 
-auto get_random_logic_item_type(Rng& rng) -> LogicItemType {
+auto get_random_logicitem_type(Rng& rng) -> LogicItemType {
     const auto type = *random_select(all_logicitem_types, rng);
 
     if (type != LogicItemType::sub_circuit) {
         return type;
     }
 
-    return get_random_logic_item_type(rng);
+    return get_random_logicitem_type(rng);
 }
 
 }  // namespace logicsim

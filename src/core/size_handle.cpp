@@ -25,20 +25,20 @@ namespace logicsim {
 
 auto size_handle_positions(const Layout& layout,
                            logicitem_id_t logicitem_id) -> std::vector<size_handle_t> {
-    switch (layout.logic_items().type(logicitem_id)) {
+    switch (layout.logicitems().type(logicitem_id)) {
         using enum LogicItemType;
 
         case and_element:
         case or_element:
         case xor_element: {
-            // TODO move to logic_item/layout.h
-            const auto overdraw = logic_item_body_overdraw();
+            // TODO move to logicitem/layout.h
+            const auto overdraw = logicitem_body_overdraw();
             const auto data = to_layout_calculation_data(layout, logicitem_id);
             const auto width = element_width(data);
             const auto height = element_height(data);
 
-            const auto position = layout.logic_items().position(logicitem_id);
-            const auto orientation = layout.logic_items().orientation(logicitem_id);
+            const auto position = layout.logicitems().position(logicitem_id);
+            const auto orientation = layout.logicitems().orientation(logicitem_id);
 
             return {
                 size_handle_t {0, transform(position, orientation,
@@ -50,17 +50,17 @@ auto size_handle_positions(const Layout& layout,
         }
 
         case display_number: {
-            // TODO move to logic_item/layout.h
-            const auto overdraw = logic_item_body_overdraw();
-            const auto input_count = layout.logic_items().input_count(logicitem_id);
+            // TODO move to logicitem/layout.h
+            const auto overdraw = logicitem_body_overdraw();
+            const auto input_count = layout.logicitems().input_count(logicitem_id);
             const auto width = display_number::width(input_count);
 
             static_assert(display_number::min_value_inputs >= connection_count_t {1});
             const auto last_input_y = to_grid(display_number::value_inputs(input_count) -
                                               connection_count_t {1});
 
-            const auto position = layout.logic_items().position(logicitem_id);
-            const auto orientation = layout.logic_items().orientation(logicitem_id);
+            const auto position = layout.logicitems().position(logicitem_id);
+            const auto orientation = layout.logicitems().orientation(logicitem_id);
 
             return {
                 size_handle_t {1, transform(position, orientation,
@@ -92,12 +92,12 @@ auto size_handle_positions(const Layout& layout,
 
 namespace {
 
-auto get_single_logic_item(const Selection& selection) -> logicitem_id_t {
-    if (selection.selected_logic_items().size() != 1 ||
+auto get_single_logicitem(const Selection& selection) -> logicitem_id_t {
+    if (selection.selected_logicitems().size() != 1 ||
         !selection.selected_segments().empty()) {
         return null_logicitem_id;
     }
-    return selection.selected_logic_items().front();
+    return selection.selected_logicitems().front();
 }
 
 }  // namespace
@@ -105,11 +105,11 @@ auto get_single_logic_item(const Selection& selection) -> logicitem_id_t {
 auto size_handle_positions(const Layout& layout,
                            const Selection& selection) -> std::vector<size_handle_t> {
     // only show handles when a single item is selected
-    const auto logicitem_id = get_single_logic_item(selection);
+    const auto logicitem_id = get_single_logicitem(selection);
     if (!logicitem_id) {
         return {};
     }
-    if (layout.logic_items().display_state(logicitem_id) != display_state_t::normal) {
+    if (layout.logicitems().display_state(logicitem_id) != display_state_t::normal) {
         return {};
     }
 
@@ -258,7 +258,7 @@ auto get_resized_element(const PlacedElement& original, size_handle_t handle,
 }
 
 auto get_single_placed_element(const EditableCircuit& editable_circuit) -> PlacedElement {
-    const auto element_id = get_single_logic_item(editable_circuit.visible_selection());
+    const auto element_id = get_single_logicitem(editable_circuit.visible_selection());
     Expects(element_id);
 
     return to_placed_element(editable_circuit.layout(), element_id);

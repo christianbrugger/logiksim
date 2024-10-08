@@ -68,7 +68,7 @@ struct SerializedLayout {
     SerializedViewPoint view_point {};
     SerializedSimulationConfig simulation_config {};
 
-    std::vector<SerializedLogicItem> logic_items {};
+    std::vector<SerializedLogicItem> logicitems {};
     std::vector<SerializedLine> wire_segments {};
 };
 

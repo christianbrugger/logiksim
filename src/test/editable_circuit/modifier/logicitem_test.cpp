@@ -134,7 +134,7 @@ TEST(EditableCircuitModifierLogicItem, DeletePreserving2) {
 }
 
 //
-// is_logic_item_position_representable
+// is_logicitem_position_representable
 //
 
 TEST(EditableCircuitModifierLogicItem, IsRepresentableAndElement) {
@@ -166,7 +166,7 @@ TEST(EditableCircuitModifierLogicItem, IsRepresentableAndElement) {
 }
 
 //
-// move_or_delete_logic_item
+// move_or_delete_logicitem
 //
 
 TEST(EditableCircuitModifierLogicItem, MoveLogicItemSuccess) {
@@ -248,7 +248,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemDeleted) {
 }
 
 //
-// change_logic_item_insertion_mode  forward
+// change_logicitem_insertion_mode  forward
 //
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToTempValid) {
@@ -382,7 +382,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeToDiscard) {
 }
 
 //
-// change_logic_item_insertion_mode  backwards
+// change_logicitem_insertion_mode  backwards
 //
 
 TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToValid) {
@@ -480,7 +480,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemChangeModeBToTemporaryPreserving
 }
 
 //
-// add_standard_logic_item
+// add_standard_logicitem
 //
 
 TEST(EditableCircuitModifierLogicItem, LogicItemAddElement) {

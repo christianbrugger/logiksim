@@ -27,10 +27,10 @@ template <>
 
 auto shadow_color(shadow_t shadow_type) -> color_t;
 
-auto draw_logic_item_shadow(Context& ctx, const Layout& layout,
+auto draw_logicitem_shadow(Context& ctx, const Layout& layout,
                             logicitem_id_t logicitem_id, shadow_t shadow_type) -> void;
 
-auto draw_logic_item_shadows(Context& ctx, const Layout& layout,
+auto draw_logicitem_shadows(Context& ctx, const Layout& layout,
                              std::span<const logicitem_id_t> elements,
                              shadow_t shadow_type) -> void;
 

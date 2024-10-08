@@ -40,7 +40,7 @@ template <>
 [[nodiscard]] auto format(DefaultMouseAction action) -> std::string;
 
 [[nodiscard]] auto is_inserting_state(DefaultMouseAction action) -> bool;
-[[nodiscard]] auto is_insert_logic_item_state(DefaultMouseAction action) -> bool;
+[[nodiscard]] auto is_insert_logicitem_state(DefaultMouseAction action) -> bool;
 [[nodiscard]] auto is_insert_decoration_state(DefaultMouseAction action) -> bool;
 
 }  // namespace logicsim

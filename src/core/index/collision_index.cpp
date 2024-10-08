@@ -354,7 +354,7 @@ auto set_wire_cross_point_tag(collision_index::collision_data_t& data) {
     data.logicitem_id_body = collision_index::wire_cross_point_tag;
 };
 
-auto set_logic_item_state(CollisionIndex::map_type& map, point_t position,
+auto set_logicitem_state(CollisionIndex::map_type& map, point_t position,
                           collision_index::ItemType item_type,
                           logicitem_id_t verify_old_id,
                           logicitem_id_t set_new_id) -> void {
@@ -462,7 +462,7 @@ auto CollisionIndex::handle(const info_message::LogicItemInserted& message) -> v
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
-        set_logic_item_state(map_, item.position, item.type, null_logicitem_id,
+        set_logicitem_state(map_, item.position, item.type, null_logicitem_id,
                              message.logicitem_id);
     }
 }
@@ -472,7 +472,7 @@ auto CollisionIndex::handle(const info_message::InsertedLogicItemIdUpdated& mess
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
-        set_logic_item_state(map_, item.position, item.type, message.old_logicitem_id,
+        set_logicitem_state(map_, item.position, item.type, message.old_logicitem_id,
                              message.new_logicitem_id);
     }
 }
@@ -481,7 +481,7 @@ auto CollisionIndex::handle(const info_message::LogicItemUninserted& message) ->
     using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
-        set_logic_item_state(map_, item.position, item.type, message.logicitem_id,
+        set_logicitem_state(map_, item.position, item.type, message.logicitem_id,
                              null_logicitem_id);
     }
 }

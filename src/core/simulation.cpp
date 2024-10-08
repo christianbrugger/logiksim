@@ -33,7 +33,7 @@ auto set_outputs_to_zero(const Schematic &schematic,
     };
 
     for (const auto element_id : element_ids(schematic)) {
-        if (is_logic_item(schematic.element_type(element_id))) {
+        if (is_logicitem(schematic.element_type(element_id))) {
             for (auto output : outputs(schematic, element_id)) {
                 if (const auto input = schematic.input(output);
                     input && schematic.input_inverted(input)) {

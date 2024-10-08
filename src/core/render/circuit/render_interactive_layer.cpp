@@ -23,7 +23,7 @@ auto to_element_draw_state(const Layout& layout, logicitem_id_t logicitem_id,
         return (selection != nullptr) ? selection->is_selected(logicitem_id) : false;
     };
 
-    const auto display_state = layout.logic_items().display_state(logicitem_id);
+    const auto display_state = layout.logicitems().display_state(logicitem_id);
 
     if (is_inserted(display_state)) {
         if (display_state == display_state_t::valid) {
@@ -54,12 +54,12 @@ auto InteractiveLayers::format() const -> std::string {
         "\n  uninserted_below = {}"
         "\n  uninserted_above = {}"
         "\n"
-        "\n  selected_logic_items = {}"
+        "\n  selected_logicitems = {}"
         "\n  selected_wires = {}"
         "\n  temporary_wires = {}"
-        "\n  valid_logic_items = {}"
+        "\n  valid_logicitems = {}"
         "\n  valid_wires = {}"
-        "\n  colliding_logic_items = {}"
+        "\n  colliding_logicitems = {}"
         "\n  colliding_wires = {}"
         "\n"
         "\n  uninserted_bounding_rect = {}"
@@ -73,12 +73,12 @@ auto InteractiveLayers::format() const -> std::string {
         uninserted_below,  //
         uninserted_above,  //
 
-        selected_logic_items,   //
+        selected_logicitems,   //
         selected_wires,         //
         temporary_wires,        //
-        valid_logic_items,      //
+        valid_logicitems,      //
         valid_wires,            //
-        colliding_logic_items,  //
+        colliding_logicitems,  //
         colliding_wires,        //
 
         uninserted_bounding_rect,  //
@@ -94,12 +94,12 @@ auto InteractiveLayers::allocated_size() const -> std::size_t {
            get_allocated_size(uninserted_below) +       //
            get_allocated_size(uninserted_above) +       //
                                                         //
-           get_allocated_size(selected_logic_items) +   //
+           get_allocated_size(selected_logicitems) +   //
            get_allocated_size(selected_wires) +         //
            get_allocated_size(temporary_wires) +        //
-           get_allocated_size(valid_logic_items) +      //
+           get_allocated_size(valid_logicitems) +      //
            get_allocated_size(valid_wires) +            //
-           get_allocated_size(colliding_logic_items) +  //
+           get_allocated_size(colliding_logicitems) +  //
            get_allocated_size(colliding_wires);         //
 }
 
@@ -111,12 +111,12 @@ auto InteractiveLayers::size() const -> std::size_t {
            uninserted_below.size() +       //
            uninserted_above.size() +       //
                                            //
-           selected_logic_items.size() +   //
+           selected_logicitems.size() +   //
            selected_wires.size() +         //
            temporary_wires.size() +        //
-           valid_logic_items.size() +      //
+           valid_logicitems.size() +      //
            valid_wires.size() +            //
-           colliding_logic_items.size() +  //
+           colliding_logicitems.size() +  //
            colliding_wires.size();         //
 }
 
@@ -138,12 +138,12 @@ auto InteractiveLayers::has_uninserted() const -> bool {
 }
 
 auto InteractiveLayers::has_overlay() const -> bool {
-    return !selected_logic_items.empty() ||   //
+    return !selected_logicitems.empty() ||   //
            !selected_wires.empty() ||         //
            !temporary_wires.empty() ||        //
-           !valid_logic_items.empty() ||      //
+           !valid_logicitems.empty() ||      //
            !valid_wires.empty() ||            //
-           !colliding_logic_items.empty() ||  //
+           !colliding_logicitems.empty() ||  //
            !colliding_wires.empty();
 }
 
@@ -234,13 +234,13 @@ auto add_selected_wire_parts(const Layout& layout, wire_id_t wire_id,
     }
 }
 
-auto insert_logic_item(InteractiveLayers& layers, const Layout& layout,
+auto insert_logicitem(InteractiveLayers& layers, const Layout& layout,
                        logicitem_id_t logicitem_id, rect_t bounding_rect,
                        ElementDrawState state) -> void {
-    const auto logicitem_type = layout.logic_items().type(logicitem_id);
+    const auto logicitem_type = layout.logicitems().type(logicitem_id);
 
     if (is_inserted(state)) {
-        if (draw_logic_item_above(logicitem_type)) {
+        if (draw_logicitem_above(logicitem_type)) {
             layers.normal_above.push_back({logicitem_id, state});
         } else {
             layers.normal_below.push_back({logicitem_id, state});
@@ -248,7 +248,7 @@ auto insert_logic_item(InteractiveLayers& layers, const Layout& layout,
     } else {
         update_uninserted_rect(layers, bounding_rect);
 
-        if (draw_logic_item_above(logicitem_type)) {
+        if (draw_logicitem_above(logicitem_type)) {
             layers.uninserted_above.push_back({logicitem_id, state});
         } else {
             layers.uninserted_below.push_back({logicitem_id, state});
@@ -267,13 +267,13 @@ auto insert_logic_item(InteractiveLayers& layers, const Layout& layout,
 
         case normal_selected:
         case temporary_selected:
-            layers.selected_logic_items.push_back(logicitem_id);
+            layers.selected_logicitems.push_back(logicitem_id);
             break;
         case valid:
-            layers.valid_logic_items.push_back(logicitem_id);
+            layers.valid_logicitems.push_back(logicitem_id);
             break;
         case colliding:
-            layers.colliding_logic_items.push_back(logicitem_id);
+            layers.colliding_logicitems.push_back(logicitem_id);
             break;
     }
 }
@@ -286,13 +286,13 @@ auto build_interactive_layers(const Layout& layout, const Selection* selection,
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
         // visibility
-        const auto bounding_rect = layout.logic_items().bounding_rect(logicitem_id);
+        const auto bounding_rect = layout.logicitems().bounding_rect(logicitem_id);
         if (!is_colliding(bounding_rect, scene_rect)) {
             continue;
         }
 
         const auto state = to_element_draw_state(layout, logicitem_id, selection);
-        insert_logic_item(layers, layout, logicitem_id, bounding_rect, state);
+        insert_logicitem(layers, layout, logicitem_id, bounding_rect, state);
     }
 
     for (const auto wire_id : inserted_wire_ids(layout)) {
@@ -339,12 +339,12 @@ auto render_inserted(Context& ctx, const Layout& layout,
                      const InteractiveLayers& layers) -> void {
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    draw_logic_items_base(ctx, layout, layers.normal_below);
+    draw_logicitems_base(ctx, layout, layers.normal_below);
     draw_wires(ctx, layout, layers.normal_wires, ElementDrawState::normal);
-    draw_logic_items_base(ctx, layout, layers.normal_above);
+    draw_logicitems_base(ctx, layout, layers.normal_above);
 
-    draw_logic_items_connectors(ctx, layout, layers.normal_below);
-    draw_logic_items_connectors(ctx, layout, layers.normal_above);
+    draw_logicitems_connectors(ctx, layout, layers.normal_below);
+    draw_logicitems_connectors(ctx, layout, layers.normal_above);
 }
 
 auto render_uninserted(Context& ctx, const Layout& layout,
@@ -355,13 +355,13 @@ auto render_uninserted(Context& ctx, const Layout& layout,
         ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
     }
 
-    draw_logic_items_base(ctx, layout, layers.uninserted_below);
+    draw_logicitems_base(ctx, layout, layers.uninserted_below);
     draw_wires(ctx, layers.temporary_wires, ElementDrawState::temporary_selected);
     draw_wires(ctx, layers.colliding_wires, ElementDrawState::colliding);
-    draw_logic_items_base(ctx, layout, layers.uninserted_above);
+    draw_logicitems_base(ctx, layout, layers.uninserted_above);
 
-    draw_logic_items_connectors(ctx, layout, layers.uninserted_below);
-    draw_logic_items_connectors(ctx, layout, layers.uninserted_above);
+    draw_logicitems_connectors(ctx, layout, layers.uninserted_below);
+    draw_logicitems_connectors(ctx, layout, layers.uninserted_above);
 }
 
 auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers& layers,
@@ -373,16 +373,16 @@ auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers&
     }
 
     // selected & temporary
-    draw_logic_item_shadows(ctx, layout, layers.selected_logic_items, shadow_t::selected);
+    draw_logicitem_shadows(ctx, layout, layers.selected_logicitems, shadow_t::selected);
     draw_wire_shadows(ctx, layers.selected_wires, shadow_t::selected);
     draw_wire_shadows(ctx, layers.temporary_wires, shadow_t::selected);
 
     // valid
-    draw_logic_item_shadows(ctx, layout, layers.valid_logic_items, shadow_t::valid);
+    draw_logicitem_shadows(ctx, layout, layers.valid_logicitems, shadow_t::valid);
     draw_wire_shadows(ctx, layers.valid_wires, shadow_t::valid);
 
     // colliding
-    draw_logic_item_shadows(ctx, layout, layers.colliding_logic_items,
+    draw_logicitem_shadows(ctx, layout, layers.colliding_logicitems,
                             shadow_t::colliding);
     draw_wire_shadows(ctx, layers.colliding_wires, shadow_t::colliding);
 }

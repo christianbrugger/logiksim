@@ -49,14 +49,14 @@ auto build_simulation_layers(const Layout& layout,
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
         // visibility
-        const auto bounding_rect = layout.logic_items().bounding_rect(logicitem_id);
+        const auto bounding_rect = layout.logicitems().bounding_rect(logicitem_id);
         if (!is_colliding(bounding_rect, scene_rect)) {
             continue;
         }
 
-        if (layout.logic_items().display_state(logicitem_id) == display_state_t::normal) {
-            const auto type = layout.logic_items().type(logicitem_id);
-            if (draw_logic_item_above(type)) {
+        if (layout.logicitems().display_state(logicitem_id) == display_state_t::normal) {
+            const auto type = layout.logicitems().type(logicitem_id);
+            if (draw_logicitem_above(type)) {
                 layers.items_above.push_back(logicitem_id);
             } else {
                 layers.items_below.push_back(logicitem_id);
@@ -81,12 +81,12 @@ auto render_simulation_layers(Context& ctx, const SpatialSimulation& spatial_sim
                               const SimulationLayers& layers) -> void {
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    draw_logic_items_base(ctx, spatial_simulation, layers.items_below);
+    draw_logicitems_base(ctx, spatial_simulation, layers.items_below);
     draw_wires(ctx, spatial_simulation, layers.wires);
-    draw_logic_items_base(ctx, spatial_simulation, layers.items_above);
+    draw_logicitems_base(ctx, spatial_simulation, layers.items_above);
 
-    draw_logic_items_connectors(ctx, spatial_simulation, layers.items_below);
-    draw_logic_items_connectors(ctx, spatial_simulation, layers.items_above);
+    draw_logicitems_connectors(ctx, spatial_simulation, layers.items_below);
+    draw_logicitems_connectors(ctx, spatial_simulation, layers.items_above);
 };
 
 }  // namespace logicsim

@@ -27,14 +27,14 @@ constexpr static inline auto temporary_selected = color_t {192, 192, 192};
 }  // namespace body_fill_color
 
 namespace font {
-constexpr static inline auto logic_item_label_color = defaults::color_black;
-constexpr static inline auto logic_item_label_size = grid_fine_t {0.9};
+constexpr static inline auto logicitem_label_color = defaults::color_black;
+constexpr static inline auto logicitem_label_size = grid_fine_t {0.9};
 constexpr static inline auto text_cutoff_px = 3.0;  // pixels
 constexpr static inline auto binary_value_size = grid_fine_t {0.7};
 }  // namespace font
 }  // namespace defaults
 
-auto get_logic_item_fill_color(ElementDrawState state) -> color_t {
+auto get_logicitem_fill_color(ElementDrawState state) -> color_t {
     switch (state) {
         using enum ElementDrawState;
         using namespace defaults;
@@ -56,15 +56,15 @@ auto get_logic_item_fill_color(ElementDrawState state) -> color_t {
     throw std::runtime_error("draw state has no logic item base color");
 }
 
-auto get_logic_item_stroke_color(ElementDrawState state) -> color_t {
+auto get_logicitem_stroke_color(ElementDrawState state) -> color_t {
     return with_alpha_runtime(defaults::body_stroke_color, state);
 }
 
-auto get_logic_item_label_color(ElementDrawState state) -> color_t {
-    return with_alpha_runtime(defaults::font::logic_item_label_color, state);
+auto get_logicitem_label_color(ElementDrawState state) -> color_t {
+    return with_alpha_runtime(defaults::font::logicitem_label_color, state);
 }
 
-auto get_logic_item_center(const Layout& layout,
+auto get_logicitem_center(const Layout& layout,
                            logicitem_id_t logicitem_id) -> point_fine_t {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
     const auto rect = element_body_draw_rect(layout_data);
@@ -77,17 +77,17 @@ auto LogicItemRectAttributes::format() const -> std::string {
         custom_fill_color, custom_stroke_color);
 }
 
-auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, ElementDrawState state,
+auto draw_logicitem_rect(Context& ctx, rect_fine_t rect, ElementDrawState state,
                           LogicItemRectAttributes attributes)
 
     -> void {
     const auto fill_color = attributes.custom_fill_color
                                 ? with_alpha_runtime(*attributes.custom_fill_color, state)
-                                : get_logic_item_fill_color(state);
+                                : get_logicitem_fill_color(state);
     const auto stroke_color =
         attributes.custom_stroke_color
             ? with_alpha_runtime(*attributes.custom_stroke_color, state)
-            : get_logic_item_stroke_color(state);
+            : get_logicitem_stroke_color(state);
 
     draw_rect(ctx, rect,
               RectAttributes {
@@ -97,15 +97,15 @@ auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, ElementDrawState state
               });
 }
 
-auto draw_logic_item_rect(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+auto draw_logicitem_rect(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                           ElementDrawState state,
                           LogicItemRectAttributes attributes) -> void {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
     const auto rect = element_body_draw_rect(layout_data);
-    draw_logic_item_rect(ctx, rect, state, attributes);
+    draw_logicitem_rect(ctx, rect, state, attributes);
 }
 
-auto draw_logic_item_label(Context& ctx, point_fine_t center, std::string_view text,
+auto draw_logicitem_label(Context& ctx, point_fine_t center, std::string_view text,
                            ElementDrawState state,
                            LogicItemTextAttributes attributes) -> void {
     if (text.empty()) {
@@ -114,11 +114,11 @@ auto draw_logic_item_label(Context& ctx, point_fine_t center, std::string_view t
 
     const auto font_size = attributes.custom_font_size
                                ? *attributes.custom_font_size
-                               : defaults::font::logic_item_label_size;
+                               : defaults::font::logicitem_label_size;
 
     const auto text_color = attributes.custom_text_color
                                 ? with_alpha_runtime(*attributes.custom_text_color, state)
-                                : get_logic_item_label_color(state);
+                                : get_logicitem_label_color(state);
 
     draw_text(ctx, center, text,
               TextAttributes {
@@ -139,18 +139,18 @@ auto LogicItemTextAttributes::format() const -> std::string {
         style);
 }
 
-auto draw_logic_item_label(Context& ctx, const Layout& layout,
+auto draw_logicitem_label(Context& ctx, const Layout& layout,
                            logicitem_id_t logicitem_id, std::string_view text,
                            ElementDrawState state,
                            LogicItemTextAttributes attributes) -> void {
-    const auto center = get_logic_item_center(layout, logicitem_id);
-    draw_logic_item_label(ctx, center, text, state, attributes);
+    const auto center = get_logicitem_center(layout, logicitem_id);
+    draw_logicitem_label(ctx, center, text, state, attributes);
 }
 
 auto draw_binary_value(Context& ctx, point_fine_t point, bool is_enabled,
                        ElementDrawState state) -> void {
     const auto text = is_enabled ? std::string_view {"1"} : std::string_view {"0"};
-    draw_logic_item_label(ctx, point, text, state,
+    draw_logicitem_label(ctx, point, text, state,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::binary_value_size,
                           });

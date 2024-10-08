@@ -20,7 +20,7 @@ auto default_element_definition(LogicItemType logicitem_type) -> LogicItemDefini
     };
 }
 
-auto to_logic_item_definition(DefaultMouseAction mouse_action) -> LogicItemDefinition {
+auto to_logicitem_definition(DefaultMouseAction mouse_action) -> LogicItemDefinition {
     switch (mouse_action) {
         using enum DefaultMouseAction;
 

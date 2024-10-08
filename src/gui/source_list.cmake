@@ -7,7 +7,7 @@ set(LS_GUI_SOURCES
     component/circuit_widget/mouse_logic/handle_resize.cpp
     component/circuit_widget/mouse_logic/handle_setting.cpp
     component/circuit_widget/mouse_logic/insert_decoration.cpp
-    component/circuit_widget/mouse_logic/insert_logic_item.cpp
+    component/circuit_widget/mouse_logic/insert_logicitem.cpp
     component/circuit_widget/mouse_logic/insert_wire.cpp
     component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
     component/circuit_widget/mouse_logic/mouse_wheel_logic.cpp

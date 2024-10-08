@@ -11,7 +11,7 @@ namespace logicsim {
  *
  * Each type has equal probability.
  */
-[[nodiscard]] auto get_random_logic_item_type(Rng& rng) -> LogicItemType;
+[[nodiscard]] auto get_random_logicitem_type(Rng& rng) -> LogicItemType;
 
 }  // namespace logicsim
 

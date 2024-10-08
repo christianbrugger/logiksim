@@ -189,7 +189,7 @@ auto Modifier::set_attributes(logicitem_id_t logicitem_id,
             circuit_data_.layout, logicitem_id, attrs_);
     }
 
-    circuit_data_.layout.logic_items().set_attributes(logicitem_id, std::move(attrs_));
+    circuit_data_.layout.logicitems().set_attributes(logicitem_id, std::move(attrs_));
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -675,7 +675,7 @@ namespace {
                                  selection_id_t selection_id) -> bool {
     return !modifier.circuit_data()
                 .selection_store.at(selection_id)
-                .selected_logic_items()
+                .selected_logicitems()
                 .empty();
 }
 
@@ -688,8 +688,8 @@ namespace {
 }
 
 [[nodiscard]] auto get_first_logicitem(const Selection& selection) -> logicitem_id_t {
-    Expects(!selection.selected_logic_items().empty());
-    return selection.selected_logic_items().front();
+    Expects(!selection.selected_logicitems().empty());
+    return selection.selected_logicitems().front();
 }
 
 [[nodiscard]] auto get_first_logicitem(const Modifier& modifier,
@@ -766,9 +766,9 @@ auto new_positions_representable(const Layout& layout, const Selection& selectio
 
 auto move_temporary_unchecked(Modifier& modifier, const Selection& selection, int delta_x,
                               int delta_y) -> void {
-    for (const auto& logicitem_id : selection.selected_logic_items()) {
+    for (const auto& logicitem_id : selection.selected_logicitems()) {
         // TODO move checks to low-level method
-        if (modifier.circuit_data().layout.logic_items().display_state(logicitem_id) !=
+        if (modifier.circuit_data().layout.logicitems().display_state(logicitem_id) !=
             display_state_t::temporary) [[unlikely]] {
             throw std::runtime_error("selected logic items need to be temporary");
         }

@@ -58,16 +58,16 @@ auto add_unused_element(Schematic& schematic) -> void {
     });
 }
 
-auto logic_item_output_delays(const Layout& layout,
+auto logicitem_output_delays(const Layout& layout,
                               logicitem_id_t logicitem_id) -> output_delays_t {
-    const auto logicitem_type = layout.logic_items().type(logicitem_id);
+    const auto logicitem_type = layout.logicitems().type(logicitem_id);
     const auto delay = element_output_delay(logicitem_type);
 
     switch (logicitem_type) {
         using enum LogicItemType;
 
         case clock_generator: {
-            const auto& attrs = layout.logic_items().attrs_clock_generator(logicitem_id);
+            const auto& attrs = layout.logicitems().attrs_clock_generator(logicitem_id);
             if (attrs.is_symmetric) {
                 return {delay, attrs.time_symmetric, attrs.time_symmetric};
             }
@@ -75,22 +75,22 @@ auto logic_item_output_delays(const Layout& layout,
         }
 
         default: {
-            const auto output_count = layout.logic_items().output_count(logicitem_id);
+            const auto output_count = layout.logicitems().output_count(logicitem_id);
             return {output_delays_t(output_count.count(), delay)};
         }
     }
 }
 
-auto add_logic_item(Schematic& schematic, const Layout& layout,
+auto add_logicitem(Schematic& schematic, const Layout& layout,
                     logicitem_id_t logicitem_id) -> void {
     schematic.add_element(schematic::NewElement {
-        .element_type = to_element_type(layout.logic_items().type(logicitem_id)),
-        .input_count = layout.logic_items().input_count(logicitem_id),
-        .output_count = layout.logic_items().output_count(logicitem_id),
+        .element_type = to_element_type(layout.logicitems().type(logicitem_id)),
+        .input_count = layout.logicitems().input_count(logicitem_id),
+        .output_count = layout.logicitems().output_count(logicitem_id),
 
-        .sub_circuit_id = layout.logic_items().sub_circuit_id(logicitem_id),
-        .input_inverters = layout.logic_items().input_inverters(logicitem_id),
-        .output_delays = logic_item_output_delays(layout, logicitem_id),
+        .sub_circuit_id = layout.logicitems().sub_circuit_id(logicitem_id),
+        .input_inverters = layout.logicitems().input_inverters(logicitem_id),
+        .output_delays = logicitem_output_delays(layout, logicitem_id),
         .history_length = schematic::defaults::no_history,
     });
 }
@@ -141,7 +141,7 @@ auto add_layout_elements(Schematic& schematic, const Layout& layout,
     // elements
     for (const auto logicitem_id : logicitem_ids(layout)) {
         if (is_inserted(layout, logicitem_id)) {
-            add_logic_item(schematic, layout, logicitem_id);
+            add_logicitem(schematic, layout, logicitem_id);
         } else {
             add_unused_element(schematic);
         }
@@ -274,7 +274,7 @@ auto set_output_inverters(Schematic& schematic, const Layout& layout,
     const auto element_id = to_element_id(layout, logicitem_id);
 
     for (output_t output : outputs(schematic, element_id)) {
-        if (layout.logic_items().output_inverted(logicitem_id, output.connection_id)) {
+        if (layout.logicitems().output_inverted(logicitem_id, output.connection_id)) {
             // logic items are either connected to wires or output placeholders
             const auto input = schematic.input(output);
             assert(input);
@@ -299,7 +299,7 @@ auto set_output_inverters(Schematic& schematic, const Layout& layout) -> void {
 
 auto add_missing_placeholders(Schematic& schematic) -> void {
     for (auto element_id : element_ids(schematic)) {
-        if (is_logic_item(schematic.element_type(element_id))) {
+        if (is_logicitem(schematic.element_type(element_id))) {
             for (auto output : outputs(schematic, element_id)) {
                 if (!schematic.input(output)) {
                     const auto placeholder_id = add_placeholder_element(schematic);
@@ -340,7 +340,7 @@ auto to_element_id(const Layout& layout, wire_id_t wire_id) -> element_id_t {
     static_assert(std::is_same_v<element_id_t::value_type, wire_id_t::value_type>);
     Expects(wire_id);
 
-    const auto value = static_cast<int64_t>(layout.logic_items().size()) +
+    const auto value = static_cast<int64_t>(layout.logicitems().size()) +
                        static_cast<int64_t>(wire_id.value);
 
     if (value > element_id_t::max().value) [[unlikely]] {
@@ -352,7 +352,7 @@ auto to_element_id(const Layout& layout, wire_id_t wire_id) -> element_id_t {
 auto to_logicitem_id(const Layout& layout, element_id_t element_id) -> logicitem_id_t {
     static_assert(std::is_same_v<element_id_t::value_type, logicitem_id_t::value_type>);
 
-    if (element_id.value >= std::ssize(layout.logic_items())) [[unlikely]] {
+    if (element_id.value >= std::ssize(layout.logicitems())) [[unlikely]] {
         throw std::runtime_error("not a logicitem id");
     }
 
@@ -363,7 +363,7 @@ auto to_wire_id(const Layout& layout, element_id_t element_id) -> wire_id_t {
     static_assert(std::is_same_v<element_id_t::value_type, wire_id_t::value_type>);
 
     const auto value = static_cast<int64_t>(element_id.value) -
-                       static_cast<int64_t>(layout.logic_items().size());
+                       static_cast<int64_t>(layout.logicitems().size());
 
     if (value < 0) [[unlikely]] {
         throw std::runtime_error("not a wire id");

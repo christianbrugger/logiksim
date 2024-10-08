@@ -41,10 +41,10 @@ class Layout {
     [[nodiscard]] auto allocated_size() const -> std::size_t;
     [[nodiscard]] auto format() const -> std::string;
 
-    // TODO make logic_items and wires simple attributes?
+    // TODO make logicitems and wires simple attributes?
     // TODO rename to logicitems
-    [[nodiscard]] auto logic_items() -> layout::LogicItemStore &;
-    [[nodiscard]] auto logic_items() const -> const layout::LogicItemStore &;
+    [[nodiscard]] auto logicitems() -> layout::LogicItemStore &;
+    [[nodiscard]] auto logicitems() const -> const layout::LogicItemStore &;
     [[nodiscard]] auto wires() -> layout::WireStore &;
     [[nodiscard]] auto wires() const -> const layout::WireStore &;
     [[nodiscard]] auto decorations() -> layout::DecorationStore &;
@@ -53,7 +53,7 @@ class Layout {
     [[nodiscard]] auto circuit_id() const -> circuit_id_t;
 
    private:
-    layout::LogicItemStore logic_items_ {};
+    layout::LogicItemStore logicitems_ {};
     layout::WireStore wires_ {};
     layout::DecorationStore decorations_ {};
 
@@ -91,7 +91,7 @@ class Layout {
 
 [[nodiscard]] auto format_stats(const Layout &layout) -> std::string;
 
-[[nodiscard]] auto format_logic_item(const Layout &layout,
+[[nodiscard]] auto format_logicitem(const Layout &layout,
                                      logicitem_id_t logicitem_id) -> std::string;
 [[nodiscard]] auto format_wire(const Layout &layout, wire_id_t wire_id) -> std::string;
 [[nodiscard]] auto format_decoration(const Layout &layout,
