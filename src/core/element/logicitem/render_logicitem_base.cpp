@@ -1,10 +1,10 @@
-#include "logic_item/render/render_logicitem_base.h"
+#include "element/logicitem/render_logicitem_base.h"
 
 #include "layout.h"
 #include "layout_info.h"
-#include "logic_item/layout_display.h"         // TODO remove
-#include "logic_item/layout_display_ascii.h"   // TODO remove
-#include "logic_item/layout_display_number.h"  // TODO remove
+#include "element/logicitem/layout_display.h"         // TODO remove
+#include "element/logicitem/layout_display_ascii.h"   // TODO remove
+#include "element/logicitem/layout_display_number.h"  // TODO remove
 #include "render/circuit/alpha_values.h"
 #include "render/circuit/render_connector_label.h"
 #include "render/circuit/render_logicitem_base_generic.h"

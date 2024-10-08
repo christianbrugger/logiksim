@@ -4,7 +4,7 @@
 #include "algorithm/round.h"
 #include "algorithm/shuffle.h"
 #include "algorithm/uniform_int_distribution.h"
-#include "logic_item/schematic_info.h"
+#include "element/logicitem/schematic_info.h"
 #include "schematic.h"
 
 #include <exception>

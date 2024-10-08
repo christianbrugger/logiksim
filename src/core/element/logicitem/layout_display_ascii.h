@@ -3,7 +3,7 @@
 
 #include "algorithm/range.h"
 #include "geometry/connection_count.h"
-#include "logic_item/layout_display.h"
+#include "element/logicitem/layout_display.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/connection_id.h"
 #include "vocabulary/connector_info.h"

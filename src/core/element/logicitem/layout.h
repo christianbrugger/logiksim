@@ -2,9 +2,9 @@
 #define LOGICSIM_LOGIC_ITEM_LAYOUT_H
 
 #include "container/static_vector.h"
-#include "logic_item/layout_display_ascii.h"
-#include "logic_item/layout_display_number.h"
-#include "logic_item/layout_standard_element.h"
+#include "element/logicitem/layout_display_ascii.h"
+#include "element/logicitem/layout_display_number.h"
+#include "element/logicitem/layout_standard_element.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/connector_info.h"
 #include "vocabulary/direction_type.h"

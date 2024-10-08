@@ -1,7 +1,7 @@
 #include "benchmark/schematic_creation.h"
 
 #include "algorithm/range.h"
-#include "logic_item/schematic_info.h"
+#include "element/logicitem/schematic_info.h"
 #include "schematic.h"
 #include "vocabulary/logicitem_type.h"
 

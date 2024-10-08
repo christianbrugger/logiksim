@@ -1,5 +1,5 @@
 
-#include "logic_item/schematic_info.h"
+#include "element/logicitem/schematic_info.h"
 
 #include "algorithm/to_underlying.h"
 

@@ -9,7 +9,7 @@
 #include "component/simulation/simulation_event_group.h"
 #include "layout_info.h"
 #include "logging.h"
-#include "logic_item/simulation_info.h"
+#include "element/logicitem/simulation_info.h"
 #include "vocabulary/connection_ids.h"
 #include "vocabulary/internal_state.h"
 

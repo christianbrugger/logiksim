@@ -9,7 +9,7 @@
 #include "geometry/scene.h"
 #include "layout.h"
 #include "layout_info.h"
-#include "logic_item/layout_display_number.h"
+#include "element/logicitem/layout_display_number.h"
 #include "safe_numeric.h"
 #include "selection.h"
 #include "vocabulary/layout_calculation_data.h"

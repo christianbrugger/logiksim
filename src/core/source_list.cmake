@@ -98,6 +98,18 @@ set(LS_CORE_SOURCES
     container/static_vector.cpp
     container/value_pointer.cpp
 
+    element/description/layout_description.cpp
+    element/logicitem/layout.cpp
+    element/logicitem/layout_display.cpp
+    element/logicitem/layout_display_ascii.cpp
+    element/logicitem/layout_display_number.cpp
+    element/logicitem/layout_standard_element.cpp
+    element/logicitem/render_logicitem_base.cpp
+    element/logicitem/render_logicitem_layer.cpp
+    element/logicitem/render_logicitem_overlay.cpp
+    element/logicitem/schematic_info.cpp
+    element/logicitem/simulation_info.cpp
+
     format/blend2d_type.cpp
     format/container.cpp
     format/enum.cpp
@@ -139,17 +151,6 @@ set(LS_CORE_SOURCES
     iterator_adaptor/transform_if_output_iterator.cpp
     iterator_adaptor/transform_output_iterator.cpp
     iterator_adaptor/transform_view.cpp
-
-    logic_item/render/render_logicitem_base.cpp
-    logic_item/render/render_logicitem_layer.cpp
-    logic_item/render/render_logicitem_overlay.cpp
-    logic_item/layout.cpp
-    logic_item/layout_display.cpp
-    logic_item/layout_display_ascii.cpp
-    logic_item/layout_display_number.cpp
-    logic_item/layout_standard_element.cpp
-    logic_item/schematic_info.cpp
-    logic_item/simulation_info.cpp
 
     random/bool.cpp
     random/connection_count.cpp

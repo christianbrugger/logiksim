@@ -2,7 +2,7 @@
 #include "schematic.h"
 
 #include "algorithm/to_vector.h"
-#include "logic_item/schematic_info.h"
+#include "element/logicitem/schematic_info.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

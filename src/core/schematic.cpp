@@ -3,7 +3,7 @@
 #include "algorithm/fmt_join.h"
 #include "geometry/connection_count.h"
 #include "iterator_adaptor/transform_view.h"
-#include "logic_item/schematic_info.h"
+#include "element/logicitem/schematic_info.h"
 
 #include <fmt/core.h>
 

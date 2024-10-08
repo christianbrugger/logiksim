@@ -1,6 +1,6 @@
-#include "logic_item/simulation_info.h"
+#include "element/logicitem/simulation_info.h"
 
-#include "logic_item/schematic_info.h"
+#include "element/logicitem/schematic_info.h"
 #include "schematic.h"
 #include "vocabulary/connection.h"
 #include "vocabulary/connection_count.h"

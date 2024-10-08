@@ -10,7 +10,7 @@
 #include "editable_circuit.h"
 #include "layout_info.h"
 #include "logging.h"
-#include "logic_item/layout.h"
+#include "element/logicitem/layout.h"
 #include "random/generator.h"
 #include "random/layout_calculation_data.h"
 #include "random/random_schematic.h"

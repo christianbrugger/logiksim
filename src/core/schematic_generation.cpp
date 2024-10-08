@@ -6,7 +6,7 @@
 #include "layout.h"
 #include "line_tree.h"
 #include "line_tree_generation.h"
-#include "logic_item/schematic_info.h"
+#include "element/logicitem/schematic_info.h"
 #include "schematic.h"
 #include "vocabulary/output_delays.h"
 
