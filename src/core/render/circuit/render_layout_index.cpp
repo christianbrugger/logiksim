@@ -179,7 +179,7 @@ auto render_layout_collision_index(Context& ctx,
                 draw_point(ctx, point, PointShape::plus, color, size);
                 break;
             }
-            case element_wire_connection: {
+            case logicitem_wire_connection: {
                 draw_point(ctx, point, PointShape::full_circle, color, size);
                 break;
             }

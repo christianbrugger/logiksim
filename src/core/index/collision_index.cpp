@@ -61,18 +61,18 @@ auto collision_data_t::format() const -> std::string {
 }
 
 auto collision_data_t::empty() const -> bool {
-    return element_id_ == null_logicitem_id && wire_id_horizontal_ == null_wire_id &&
-           wire_id_vertical_ == null_wire_id;
+    // not all tags are deleted
+    return element_id_ < 0 && !wire_id_horizontal_ && !wire_id_vertical_;
 }
 
-auto collision_data_t::is_element_body() const -> bool {
-    return element_id_                             //
+auto collision_data_t::is_logicitem_body() const -> bool {
+    return element_id_ >= 0                        //
            && wire_id_horizontal_ == null_wire_id  //
            && wire_id_vertical_ == null_wire_id;
 }
 
-auto collision_data_t::is_element_connection() const -> bool {
-    return element_id_                             //
+auto collision_data_t::is_logicitem_connection() const -> bool {
+    return element_id_ >= 0                        //
            && wire_id_horizontal_ == null_wire_id  //
            && wire_id_vertical_ == connection_tag;
 }
@@ -82,19 +82,19 @@ auto collision_data_t::is_decoration() const -> bool {
 }
 
 auto collision_data_t::is_wire_connection() const -> bool {
-    return element_id_ == null_logicitem_id  //
-           && wire_id_horizontal_            //
+    return element_id_ == null_element_tag  //
+           && wire_id_horizontal_           //
            && wire_id_vertical_ == connection_tag;
 }
 
 auto collision_data_t::is_wire_horizontal() const -> bool {
-    return element_id_ == null_logicitem_id  //
-           && wire_id_horizontal_            //
+    return element_id_ == null_element_tag  //
+           && wire_id_horizontal_           //
            && wire_id_vertical_ == null_wire_id;
 }
 
 auto collision_data_t::is_wire_vertical() const -> bool {
-    return element_id_ == null_logicitem_id        //
+    return element_id_ == null_element_tag         //
            && wire_id_horizontal_ == null_wire_id  //
            && wire_id_vertical_;
 }
@@ -116,13 +116,13 @@ auto collision_data_t::is_wire_cross_point() const -> bool {
 // inferred states -> two elements
 
 auto collision_data_t::is_wire_crossing() const -> bool {
-    return element_id_ == null_logicitem_id  //
-           && wire_id_horizontal_            //
+    return element_id_ == null_element_tag  //
+           && wire_id_horizontal_           //
            && wire_id_vertical_;
 }
 
-auto collision_data_t::is_element_wire_connection() const -> bool {
-    return element_id_             //
+auto collision_data_t::is_logicitem_wire_connection() const -> bool {
+    return element_id_ >= 0        //
            && wire_id_horizontal_  //
            && wire_id_vertical_ == connection_tag;
 }
@@ -130,10 +130,10 @@ auto collision_data_t::is_element_wire_connection() const -> bool {
 auto collision_data_t::to_state() const -> IndexState {
     using enum IndexState;
 
-    if (is_element_body()) {
+    if (is_logicitem_body()) {
         return logicitem_body;
     }
-    if (is_element_connection()) {
+    if (is_logicitem_connection()) {
         return logicitem_connection;
     }
     if (is_wire_connection()) {
@@ -156,8 +156,8 @@ auto collision_data_t::to_state() const -> IndexState {
     if (is_wire_crossing()) {
         return wire_crossing;
     }
-    if (is_element_wire_connection()) {
-        return element_wire_connection;
+    if (is_logicitem_wire_connection()) {
+        return logicitem_wire_connection;
     }
 
     if (empty()) {
@@ -187,7 +187,7 @@ auto collision_data_t::set_connection_tag() -> void {
 };
 
 auto collision_data_t::set_wire_corner_point_tag() -> void {
-    if (element_id_ != null_logicitem_id &&
+    if (element_id_ != null_element_tag &&
         element_id_ != collision_index::wire_corner_point_tag) {
         throw std::runtime_error(
             "cannot set wire_corner_point tag, element body is occupied");
@@ -196,7 +196,7 @@ auto collision_data_t::set_wire_corner_point_tag() -> void {
 };
 
 auto collision_data_t::set_wire_cross_point_tag() -> void {
-    if (element_id_ != null_logicitem_id &&
+    if (element_id_ != null_element_tag &&
         element_id_ != collision_index::wire_cross_point_tag) {
         throw std::runtime_error(
             "cannot set wire_corner_point tag, element body is occupied");
@@ -207,11 +207,13 @@ auto collision_data_t::set_wire_cross_point_tag() -> void {
 auto collision_data_t::set_logicitem_state(ItemType item_type,
                                            logicitem_id_t verify_old_id,
                                            logicitem_id_t set_new_id) -> void {
-    const auto check_and_update = [&](logicitem_id_t& obj) {
-        if (obj != verify_old_id) {
+    const auto check_and_update = [&](int32_t& obj) {
+        static_assert(std::is_same_v<logicitem_id_t::value_type,
+                                     std::remove_cvref_t<decltype(obj)>>);
+        if (obj != verify_old_id.value) {
             throw std::runtime_error("unexpected collision state");
         }
-        obj = set_new_id;
+        obj = set_new_id.value;
     };
 
     switch (item_type) {
@@ -331,7 +333,7 @@ auto format(collision_index::IndexState state) -> std::string {
 
         case wire_crossing:
             return "wire_crossing";
-        case element_wire_connection:
+        case logicitem_wire_connection:
             return "element_wire_connection";
     }
     std::terminate();
@@ -618,7 +620,7 @@ auto CollisionIndex::state_colliding(point_t position,
                 return true;
             }
             case wire_connection: {
-                return !data.is_element_connection();
+                return !data.is_logicitem_connection();
             }
             case wire_horizontal: {
                 return !data.is_wire_vertical();
@@ -633,8 +635,8 @@ auto CollisionIndex::state_colliding(point_t position,
                 return true;
             }
             case wire_new_unknown_point: {
-                return data.is_element_body() || data.is_decoration() ||
-                       data.is_element_wire_connection() || data.is_wire_crossing();
+                return data.is_logicitem_body() || data.is_decoration() ||
+                       data.is_logicitem_wire_connection() || data.is_wire_crossing();
             }
         };
     }

@@ -5,6 +5,7 @@
 #include "format/struct.h"
 #include "iterator_adaptor/transform_view.h"
 #include "layout_message_forward.h"
+#include "vocabulary/decoration_id.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/point.h"
 #include "vocabulary/wire_id.h"
@@ -57,8 +58,51 @@ enum class IndexState {
 
     // combination states
     wire_crossing,
-    element_wire_connection,
+    logicitem_wire_connection,
 };
+
+/**
+ * @brief: Indicates element input / output || wire input / output
+ *         is at this position.
+ */
+constexpr static inline auto connection_tag = wire_id_t {-2};
+/**
+ * @brief: Indicates that a decoration is at this position.
+ */
+constexpr static inline auto decoration_tag = wire_id_t {-3};
+/**
+ * @brief: Indicates a element is empty
+ */
+constexpr static inline auto null_element_tag = int32_t {-1};
+/**
+ * @brief: Indicates a wire corner is at this position.
+ */
+constexpr static inline auto wire_corner_point_tag = int32_t {-2};
+/**
+ * @brief: Indicates a wire cross-point is at this position.
+ */
+constexpr static inline auto wire_cross_point_tag = int32_t {-3};
+
+static_assert(!bool {connection_tag});
+static_assert(connection_tag != null_wire_id);
+
+static_assert(!bool {decoration_tag});
+static_assert(decoration_tag != null_wire_id);
+static_assert(decoration_tag != connection_tag);
+
+static_assert(logicitem_id_t {null_element_tag} == null_logicitem_id);
+static_assert(decoration_id_t {null_element_tag} == null_decoration_id);
+
+static_assert(!bool {logicitem_id_t {wire_corner_point_tag}});
+static_assert(!bool {decoration_id_t {wire_corner_point_tag}});
+static_assert(logicitem_id_t {wire_corner_point_tag} != null_logicitem_id);
+static_assert(decoration_id_t {wire_corner_point_tag} != null_decoration_id);
+
+static_assert(!bool {logicitem_id_t {wire_cross_point_tag}});
+static_assert(!bool {decoration_id_t {wire_cross_point_tag}});
+static_assert(logicitem_id_t {wire_cross_point_tag} != null_logicitem_id);
+static_assert(decoration_id_t {wire_cross_point_tag} != null_decoration_id);
+static_assert(wire_cross_point_tag != wire_corner_point_tag);
 
 /**
  * @brief: The stored cache value type.
@@ -72,8 +116,8 @@ class collision_data_t {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto empty() const -> bool;
 
-    [[nodiscard]] auto is_element_body() const -> bool;
-    [[nodiscard]] auto is_element_connection() const -> bool;
+    [[nodiscard]] auto is_logicitem_body() const -> bool;
+    [[nodiscard]] auto is_logicitem_connection() const -> bool;
     [[nodiscard]] auto is_decoration() const -> bool;
     [[nodiscard]] auto is_wire_connection() const -> bool;
     [[nodiscard]] auto is_wire_horizontal() const -> bool;
@@ -82,7 +126,7 @@ class collision_data_t {
     [[nodiscard]] auto is_wire_cross_point() const -> bool;
     // inferred states -> two elements
     [[nodiscard]] auto is_wire_crossing() const -> bool;
-    [[nodiscard]] auto is_element_wire_connection() const -> bool;
+    [[nodiscard]] auto is_logicitem_wire_connection() const -> bool;
 
     /**
      * @brief: Converts cache state value to enum type.
@@ -108,16 +152,16 @@ class collision_data_t {
 
    private:
     /**
-     * @brief: logicitem_id || wire_corner_point_tag || wire_cross_point_tag ||
-     *         null
+     * @brief: null_element_tag || logicitem_id || decoration_id
+     *         wire_corner_point_tag || wire_cross_point_tag ||
      */
-    logicitem_id_t element_id_ {null_logicitem_id};
+    int32_t element_id_ {null_element_tag};
     /**
-     * @brief: horizontal wire || null
+     * @brief: horizontal wire || null_wire_id
      */
     wire_id_t wire_id_horizontal_ {null_wire_id};
     /**
-     * @brief: vertical wire || connection_tag || null
+     * @brief: vertical wire || connection_tag || null_wire_id
      */
     wire_id_t wire_id_vertical_ {null_wire_id};
 };
@@ -125,47 +169,6 @@ class collision_data_t {
 static_assert(std::regular<collision_data_t>);
 
 using map_type = ankerl::unordered_dense::map<point_t, collision_index::collision_data_t>;
-
-/**
- * @brief: Indicates element input / output || wire input / output
- *         is at this position.
- *
- * Set for:
- *      input_location() / output_location() at this position
- *      ItemType::logicitem_connection
- *
- *      SegmentPointType::input
- *      SegmentPointType::output
- *      ItemType::wire_connection
- */
-constexpr static inline auto connection_tag = wire_id_t {-2};
-/**
- * @brief: Indicates a wire corner is at this position.
- *
- * Set for:
- *      SegmentPointType::corner_point
- *      ItemType::wire_corner_point
- */
-constexpr static inline auto wire_corner_point_tag = logicitem_id_t {-2};
-/**
- * @brief: Indicates a wire cross-point is at this position.
- *
- * Set for:
- *      SegmentPointType::cross_point
- *      ItemType::wire_cross_point
- */
-constexpr static inline auto wire_cross_point_tag = logicitem_id_t {-3};
-
-static_assert(!bool {connection_tag});
-static_assert(connection_tag != null_wire_id);
-
-static_assert(!bool {wire_corner_point_tag});
-static_assert(wire_corner_point_tag != null_logicitem_id);
-
-static_assert(!bool {wire_cross_point_tag});
-static_assert(wire_cross_point_tag != null_logicitem_id);
-static_assert(wire_cross_point_tag != wire_corner_point_tag);
-
 }  // namespace collision_index
 
 template <>
