@@ -1,7 +1,7 @@
 #include "layout_info.h"
 
 #include "element/decoration/layout_decoration.h"
-#include "element/logicitem/layout.h"
+#include "element/logicitem/layout_logicitem.h"
 #include "geometry/grid.h"
 #include "geometry/layout_calculation.h"
 #include "geometry/offset.h"

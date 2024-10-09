@@ -1,7 +1,6 @@
 
-#include "element/logicitem/layout.h"
-
 #include "algorithm/range.h"
+#include "element/logicitem/layout_logicitem.h"
 #include "layout_info.h"
 #include "logging.h"
 #include "random/generator.h"

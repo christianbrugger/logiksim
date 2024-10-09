@@ -2,7 +2,7 @@
 #define LOGICSIM_LOGIC_ITEM_LAYOUT_DISPLAY_ASCII_H
 
 #include "algorithm/range.h"
-#include "element/logicitem/layout_display.h"
+#include "element/logicitem/layout_logicitem_display.h"
 #include "geometry/connection_count.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/connection_id.h"

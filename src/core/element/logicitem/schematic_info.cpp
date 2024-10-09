@@ -1,6 +1,6 @@
 #include "element/logicitem/schematic_info.h"
 
-#include "element/logicitem/layout.h"
+#include "element/logicitem/layout_logicitem.h"
 #include "vocabulary/internal_connection.h"
 
 #include <exception>

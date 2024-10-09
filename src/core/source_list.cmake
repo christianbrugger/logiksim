@@ -101,11 +101,11 @@ set(LS_CORE_SOURCES
     element/decoration/layout_decoration.cpp
     element/decoration/render_decoration_base.cpp
     element/decoration/render_decoration_overlay.cpp
-    element/logicitem/layout.cpp
-    element/logicitem/layout_display.cpp
-    element/logicitem/layout_display_ascii.cpp
-    element/logicitem/layout_display_number.cpp
-    element/logicitem/layout_standard_element.cpp
+    element/logicitem/layout_logicitem.cpp
+    element/logicitem/layout_logicitem_display.cpp
+    element/logicitem/layout_logicitem_display_ascii.cpp
+    element/logicitem/layout_logicitem_display_number.cpp
+    element/logicitem/layout_logicitem_standard_element.cpp
     element/logicitem/render_logicitem_base.cpp
     element/logicitem/render_logicitem_layer.cpp
     element/logicitem/render_logicitem_overlay.cpp

@@ -8,7 +8,7 @@
 #include "benchmark/simulation_runtime.h"
 #include "component/editable_circuit/selection_store.h"
 #include "editable_circuit.h"
-#include "element/logicitem/layout.h"
+#include "element/logicitem/layout_logicitem.h"
 #include "layout_info.h"
 #include "logging.h"
 #include "random/generator.h"

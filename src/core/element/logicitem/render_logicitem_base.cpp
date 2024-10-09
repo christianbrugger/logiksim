@@ -1,8 +1,8 @@
 #include "element/logicitem/render_logicitem_base.h"
 
-#include "element/logicitem/layout_display.h"         // TODO remove
-#include "element/logicitem/layout_display_ascii.h"   // TODO remove
-#include "element/logicitem/layout_display_number.h"  // TODO remove
+#include "element/logicitem/layout_logicitem_display.h"         // TODO remove
+#include "element/logicitem/layout_logicitem_display_ascii.h"   // TODO remove
+#include "element/logicitem/layout_logicitem_display_number.h"  // TODO remove
 #include "layout.h"
 #include "layout_info.h"
 #include "render/circuit/alpha_values.h"
