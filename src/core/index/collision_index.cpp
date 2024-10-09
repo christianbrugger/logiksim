@@ -51,54 +51,54 @@ using collision_points_t = folly::small_vector<collision_point_t, collision_poin
 namespace collision_index {
 
 auto is_element_body(collision_data_t data) -> bool {
-    return data.logicitem_id_body                      //
+    return data.element_id                             //
            && data.wire_id_horizontal == null_wire_id  //
            && data.wire_id_vertical == null_wire_id;
 }
 
 auto is_element_connection(collision_data_t data) -> bool {
-    return data.logicitem_id_body                      //
+    return data.element_id                             //
            && data.wire_id_horizontal == null_wire_id  //
            && data.wire_id_vertical == connection_tag;
 }
 
 auto is_wire_connection(collision_data_t data) -> bool {
-    return data.logicitem_id_body == null_logicitem_id  //
-           && data.wire_id_horizontal                   //
+    return data.element_id == null_logicitem_id  //
+           && data.wire_id_horizontal            //
            && data.wire_id_vertical == connection_tag;
 }
 
 auto is_wire_horizontal(collision_data_t data) -> bool {
-    return data.logicitem_id_body == null_logicitem_id  //
-           && data.wire_id_horizontal                   //
+    return data.element_id == null_logicitem_id  //
+           && data.wire_id_horizontal            //
            && data.wire_id_vertical == null_wire_id;
 }
 
 auto is_wire_vertical(collision_data_t data) -> bool {
-    return data.logicitem_id_body == null_logicitem_id  //
-           && data.wire_id_horizontal == null_wire_id   //
+    return data.element_id == null_logicitem_id        //
+           && data.wire_id_horizontal == null_wire_id  //
            && data.wire_id_vertical;
 }
 
 auto is_wire_corner_point(collision_data_t data) -> bool {
-    return data.logicitem_id_body == wire_corner_point_tag  //
-           && data.wire_id_horizontal                       //
-           && data.wire_id_vertical                         //
+    return data.element_id == wire_corner_point_tag  //
+           && data.wire_id_horizontal                //
+           && data.wire_id_vertical                  //
            && data.wire_id_horizontal == data.wire_id_vertical;
 }
 
 auto is_wire_cross_point(collision_data_t data) -> bool {
-    return data.logicitem_id_body == wire_cross_point_tag  //
-           && data.wire_id_horizontal                      //
-           && data.wire_id_vertical                        //
+    return data.element_id == wire_cross_point_tag  //
+           && data.wire_id_horizontal               //
+           && data.wire_id_vertical                 //
            && data.wire_id_horizontal == data.wire_id_vertical;
 }
 
 // inferred states -> two elements
 
 auto is_wire_crossing(collision_data_t data) -> bool {
-    return data.logicitem_id_body == null_logicitem_id  //
-           && data.wire_id_horizontal                   //
+    return data.element_id == null_logicitem_id  //
+           && data.wire_id_horizontal            //
            && data.wire_id_vertical;
 
     // && data.wire_id_horizontal != data.wire_id_vertical
@@ -106,7 +106,7 @@ auto is_wire_crossing(collision_data_t data) -> bool {
 }
 
 auto is_element_wire_connection(collision_data_t data) -> bool {
-    return data.logicitem_id_body      //
+    return data.element_id             //
            && data.wire_id_horizontal  //
            && data.wire_id_vertical == connection_tag;
 }
@@ -144,7 +144,8 @@ auto to_state(collision_data_t data) -> IndexState {
         return element_wire_connection;
     }
 
-    return invalid_state;
+    // invalid state
+    std::terminate();
 }
 
 inline auto collision_point_t::format() const -> std::string {
@@ -152,8 +153,8 @@ inline auto collision_point_t::format() const -> std::string {
 }
 
 auto collision_data_t::format() const -> std::string {
-    return fmt::format("<collision_data: {}, {}, {}, {}>", logicitem_id_body,
-                       wire_id_horizontal, wire_id_vertical, to_state(*this));
+    return fmt::format("<collision_data: {}, {}, {}, {}>", element_id, wire_id_horizontal,
+                       wire_id_vertical, to_state(*this));
 }
 
 }  // namespace collision_index
@@ -208,9 +209,6 @@ auto format(collision_index::IndexState state) -> std::string {
             return "wire_crossing";
         case element_wire_connection:
             return "element_wire_connection";
-
-        case invalid_state:
-            return "invalid_state";
     }
     std::terminate();
 }
@@ -323,7 +321,7 @@ auto collision_points(segment_info_t segment) -> collision_points_t {
 
 auto delete_if_empty(CollisionIndex::map_type& map, point_t position,
                      const collision_index::collision_data_t& data) {
-    if (!data.logicitem_id_body && !data.wire_id_horizontal && !data.wire_id_vertical) {
+    if (!data.element_id && !data.wire_id_horizontal && !data.wire_id_vertical) {
         map.erase(position);
     }
 }
@@ -337,21 +335,21 @@ auto set_connection_tag(collision_index::collision_data_t& data) {
 };
 
 auto set_wire_corner_point_tag(collision_index::collision_data_t& data) {
-    if (data.logicitem_id_body != null_logicitem_id &&
-        data.logicitem_id_body != collision_index::wire_corner_point_tag) {
+    if (data.element_id != null_logicitem_id &&
+        data.element_id != collision_index::wire_corner_point_tag) {
         throw std::runtime_error(
             "cannot set wire_corner_point tag, element body is occupied");
     }
-    data.logicitem_id_body = collision_index::wire_corner_point_tag;
+    data.element_id = collision_index::wire_corner_point_tag;
 };
 
 auto set_wire_cross_point_tag(collision_index::collision_data_t& data) {
-    if (data.logicitem_id_body != null_logicitem_id &&
-        data.logicitem_id_body != collision_index::wire_cross_point_tag) {
+    if (data.element_id != null_logicitem_id &&
+        data.element_id != collision_index::wire_cross_point_tag) {
         throw std::runtime_error(
             "cannot set wire_corner_point tag, element body is occupied");
     }
-    data.logicitem_id_body = collision_index::wire_cross_point_tag;
+    data.element_id = collision_index::wire_cross_point_tag;
 };
 
 auto set_logicitem_state(CollisionIndex::map_type& map, point_t position,
@@ -371,12 +369,12 @@ auto set_logicitem_state(CollisionIndex::map_type& map, point_t position,
         using enum collision_index::ItemType;
 
         case logicitem_body: {
-            check_and_update(data.logicitem_id_body);
+            check_and_update(data.element_id);
             break;
         }
         case logicitem_connection: {
             set_connection_tag(data);
-            check_and_update(data.logicitem_id_body);
+            check_and_update(data.element_id);
             break;
         }
 

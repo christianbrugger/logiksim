@@ -179,10 +179,6 @@ auto render_layout_collision_index(Context& ctx,
                 draw_point(ctx, point, PointShape::full_circle, color, size);
                 break;
             }
-            case invalid_state: {
-                throw std::runtime_error("invalid state encountered");
-                break;
-            }
         }
     }
 }

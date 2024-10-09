@@ -56,9 +56,6 @@ enum class IndexState {
     // combination states
     wire_crossing,
     element_wire_connection,
-
-    // TODO remove this?
-    invalid_state,
 };
 
 /**
@@ -68,9 +65,10 @@ enum class IndexState {
  */
 struct collision_data_t {
     /**
-     * @brief: logicitem_id || wire_corner_point_tag || wire_cross_point_tag || null
+     * @brief: logicitem_id || wire_corner_point_tag || wire_cross_point_tag ||
+     *         null
      */
-    logicitem_id_t logicitem_id_body {null_logicitem_id};
+    logicitem_id_t element_id {null_logicitem_id};
     /**
      * @brief: horizontal wire || null
      */
