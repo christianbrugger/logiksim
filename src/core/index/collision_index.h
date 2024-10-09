@@ -29,6 +29,7 @@ namespace collision_index {
 enum class ItemType {
     logicitem_body,
     logicitem_connection,
+    decoration,
     wire_connection,
     wire_horizontal,
     wire_vertical,
@@ -128,6 +129,7 @@ static_assert(wire_cross_point_tag != wire_corner_point_tag);
 
 [[nodiscard]] auto is_element_body(collision_data_t data) -> bool;
 [[nodiscard]] auto is_element_connection(collision_data_t data) -> bool;
+[[nodiscard]] auto is_decoration(collision_data_t data) -> bool;
 [[nodiscard]] auto is_wire_connection(collision_data_t data) -> bool;
 [[nodiscard]] auto is_wire_horizontal(collision_data_t data) -> bool;
 [[nodiscard]] auto is_wire_vertical(collision_data_t data) -> bool;

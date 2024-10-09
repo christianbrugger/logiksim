@@ -62,6 +62,12 @@ auto is_element_connection(collision_data_t data) -> bool {
            && data.wire_id_vertical == connection_tag;
 }
 
+auto is_decoration(collision_data_t data) -> bool {
+    // TODO !!! implement
+    static_cast<void>(data);
+    return false;
+}
+
 auto is_wire_connection(collision_data_t data) -> bool {
     return data.element_id == null_logicitem_id  //
            && data.wire_id_horizontal            //
@@ -168,6 +174,8 @@ auto format(collision_index::ItemType type) -> std::string {
             return "logicitem_body";
         case logicitem_connection:
             return "logicitem_connection";
+        case decoration:
+            return "decoration_body";
         case wire_connection:
             return "wire_connection";
         case wire_horizontal:
@@ -581,6 +589,9 @@ auto CollisionIndex::state_colliding(point_t position,
             case logicitem_connection: {
                 return !is_wire_connection(data);
             }
+            case decoration: {
+                return true;
+            }
             case wire_connection: {
                 return !is_element_connection(data);
             }
@@ -597,8 +608,8 @@ auto CollisionIndex::state_colliding(point_t position,
                 return true;
             }
             case wire_new_unknown_point: {
-                return is_element_body(data) || is_element_wire_connection(data) ||
-                       is_wire_crossing(data);
+                return is_element_body(data) || is_decoration(data) ||
+                       is_element_wire_connection(data) || is_wire_crossing(data);
             }
         };
     }
