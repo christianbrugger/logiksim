@@ -9,6 +9,7 @@
 #include "geometry/rect.h"
 #include "geometry/scene.h"
 #include "layout.h"
+#include "logging.h"
 #include "render/circuit/render_connector.h"
 #include "render/circuit/render_overlay.h"
 #include "render/circuit/render_wire.h"
@@ -447,7 +448,11 @@ auto render_uninserted(Context& ctx, const Layout& layout,
 
     draw_logicitems_connectors(ctx, layout, layers.uninserted_below);
     draw_logicitems_connectors(ctx, layout, layers.uninserted_above);
-    draw_decorations_base(ctx, layout, layers.uninserted_decorations);
+
+    draw_decorations_base(ctx, layout, layers.selected_decorations,
+                          ElementDrawState::temporary_selected);
+    draw_decorations_base(ctx, layout, layers.colliding_decorations,
+                          ElementDrawState::colliding);
 }
 
 auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers& layers,
@@ -479,6 +484,7 @@ auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers&
 auto render_interactive_layers(Context& ctx, const Layout& layout,
                                const InteractiveLayers& layers,
                                ImageSurface& surface) -> void {
+    // print(layers);
     if (layers.has_inserted()) {
         render_inserted(ctx, layout, layers);
     }

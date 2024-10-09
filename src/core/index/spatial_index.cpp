@@ -162,7 +162,13 @@ auto tree_payload_t::format() const -> std::string {
     if (is_logicitem()) {
         return fmt::format("<LogicItem {}>", logicitem());
     }
-    return fmt::format("<Segment {}>", segment());
+    if (is_segment()) {
+        return fmt::format("<Segment {}>", segment());
+    }
+    if (is_decoration()) {
+        return fmt::format("<Decoration {}>", decoration());
+    }
+    std::terminate();
 }
 
 auto tree_payload_t::hash() const -> uint64_t {
@@ -173,7 +179,7 @@ auto tree_payload_t::hash() const -> uint64_t {
 }
 
 tree_payload_t::tree_payload_t(logicitem_id_t logicitem_id)
-    : element_id_ {logicitem_id.value}, segment_index_ {null_segment_index} {
+    : element_id_ {logicitem_id.value}, segment_index_ {logicitem_tag} {
     static_assert(std::is_same_v<logicitem_id_t::value_type, decltype(element_id_)>);
 
     if (!logicitem_id) [[unlikely]] {
@@ -181,42 +187,63 @@ tree_payload_t::tree_payload_t(logicitem_id_t logicitem_id)
     }
 }
 
+tree_payload_t::tree_payload_t(decoration_id_t decoration_id)
+    : element_id_ {decoration_id.value}, segment_index_ {decoration_tag} {
+    static_assert(std::is_same_v<decoration_id_t::value_type, decltype(element_id_)>);
+
+    if (!decoration_id) [[unlikely]] {
+        throw std::runtime_error("decoration id cannot be null");
+    }
+}
+
 tree_payload_t::tree_payload_t(segment_t segment)
     : element_id_ {segment.wire_id.value}, segment_index_ {segment.segment_index} {
     static_assert(std::is_same_v<wire_id_t::value_type, decltype(element_id_)>);
 
-    if (!segment_index_) [[unlikely]] {
+    if (!segment.wire_id || !segment_index_) [[unlikely]] {
         throw std::runtime_error("segment cannot be null");
     }
 }
 
 auto tree_payload_t::is_logicitem() const -> bool {
-    return segment_index_ == null_segment_index;
+    return segment_index_ == logicitem_tag;
 }
 
 auto tree_payload_t::logicitem() const -> logicitem_id_t {
-    if (!is_logicitem()) [[unlikely]] {
-        throw std::runtime_error("tree payload is not a logic item");
-    }
+    Expects(is_logicitem());
 
     static_assert(std::is_same_v<logicitem_id_t::value_type, decltype(element_id_)>);
     return logicitem_id_t {element_id_};
 }
 
+auto tree_payload_t::is_decoration() const -> bool {
+    return segment_index_ == decoration_tag;
+}
+
+auto tree_payload_t::decoration() const -> decoration_id_t {
+    Expects(is_decoration());
+
+    static_assert(std::is_same_v<decoration_id_t::value_type, decltype(element_id_)>);
+    return decoration_id_t {element_id_};
+}
+
 auto tree_payload_t::is_segment() const -> bool {
-    return !is_logicitem();
+    return bool {segment_index_};
 }
 
 auto tree_payload_t::segment() const -> segment_t {
-    if (!is_segment()) [[unlikely]] {
-        throw std::runtime_error("tree payload is not a segment");
-    }
+    Expects(is_segment());
 
     static_assert(std::is_same_v<wire_id_t::value_type, decltype(element_id_)>);
     return segment_t {wire_id_t {element_id_}, segment_index_};
 }
 
 auto get_selection_box(const layout_calculation_data_t& data) -> tree_box_t {
+    const auto rect = element_selection_rect(data);
+    return to_box(rect);
+}
+
+auto get_selection_box(const decoration_layout_data_t& data) -> tree_box_t {
     const auto rect = element_selection_rect(data);
     return to_box(rect);
 }
@@ -245,8 +272,9 @@ auto to_box(rect_fine_t rect) -> tree_box_t {
 }
 
 auto get_all_tree_values(const Layout& layout) -> std::vector<tree_value_t> {
-    const auto count =
-        get_inserted_logicitem_count(layout) + get_inserted_segment_count(layout);
+    const auto count = get_inserted_logicitem_count(layout) +
+                       get_inserted_decoration_count(layout) +
+                       get_inserted_segment_count(layout);
     auto values = std::vector<tree_value_t> {};
     values.reserve(count);
 
@@ -255,6 +283,14 @@ auto get_all_tree_values(const Layout& layout) -> std::vector<tree_value_t> {
             const auto data = to_layout_calculation_data(layout, logicitem_id);
             const auto box = get_selection_box(data);
             values.emplace_back(box, tree_payload_t {logicitem_id});
+        }
+    }
+
+    for (const auto& decoration_id : decoration_ids(layout)) {
+        if (is_inserted(layout, decoration_id)) {
+            const auto data = to_decoration_layout_data(layout, decoration_id);
+            const auto box = get_selection_box(data);
+            values.emplace_back(box, tree_payload_t {decoration_id});
         }
     }
 
@@ -286,6 +322,10 @@ auto SpatialIndex::allocated_size() const -> std::size_t {
     return tree_->resource.allocated_size();
 }
 
+//
+// LogicItem
+//
+
 auto SpatialIndex::handle(const info_message::LogicItemInserted& message) -> void {
     const auto box = spatial_index::get_selection_box(message.data);
     tree_->value.insert({box, value_t {message.logicitem_id}});
@@ -308,6 +348,37 @@ auto SpatialIndex::handle(const info_message::InsertedLogicItemIdUpdated& messag
     handle(LogicItemUninserted {message.old_logicitem_id, message.data});
     handle(LogicItemInserted {message.new_logicitem_id, message.data});
 }
+
+//
+// Decoration
+//
+
+auto SpatialIndex::handle(const info_message::DecorationInserted& message) -> void {
+    const auto box = spatial_index::get_selection_box(message.data);
+    tree_->value.insert({box, value_t {message.decoration_id}});
+}
+
+auto SpatialIndex::handle(const info_message::DecorationUninserted& message) -> void {
+    const auto box = spatial_index::get_selection_box(message.data);
+    const auto remove_count = tree_->value.remove({box, value_t {message.decoration_id}});
+
+    if (remove_count != 1) [[unlikely]] {
+        throw std::runtime_error("Not able to find element to remove.");
+    }
+}
+
+auto SpatialIndex::handle(const info_message::InsertedDecorationIdUpdated& message)
+    -> void {
+    using namespace info_message;
+
+    // r-tree data is immutable
+    handle(DecorationUninserted {message.old_decoration_id, message.data});
+    handle(DecorationInserted {message.new_decoration_id, message.data});
+}
+
+//
+// Wire Segment
+//
 
 auto SpatialIndex::handle(const info_message::SegmentInserted& message) -> void {
     const auto box = spatial_index::get_selection_box(message.segment_info.line);
@@ -348,6 +419,20 @@ auto SpatialIndex::submit(const InfoMessage& message) -> void {
         return;
     }
     if (auto pointer = std::get_if<InsertedLogicItemIdUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
+
+    // decorations
+    if (auto pointer = std::get_if<DecorationInserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<DecorationUninserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<InsertedDecorationIdUpdated>(&message)) {
         handle(*pointer);
         return;
     }
@@ -483,10 +568,9 @@ auto get_unique_wire_id(SpatialIndex::queried_segments_t result) -> wire_id_t {
 
 auto is_selected(const SpatialIndex::value_t& item, point_fine_t point,
                  const Selection& selection, const Layout& layout) -> bool {
-    bool is_logicitem = item.is_logicitem();
-
-    return (is_logicitem && selection.is_selected(item.logicitem())) ||
-           (!is_logicitem && is_selected(selection, layout, item.segment(), point));
+    return (item.is_logicitem() && selection.is_selected(item.logicitem())) ||
+           (item.is_segment() && is_selected(selection, layout, item.segment(), point)) ||
+           (item.is_decoration() && selection.is_selected(item.decoration()));
 }
 
 auto anything_selected(std::span<const SpatialIndex::value_t> items, point_fine_t point,

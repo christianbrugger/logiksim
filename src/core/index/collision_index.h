@@ -118,12 +118,14 @@ constexpr static inline auto wire_corner_point_tag = logicitem_id_t {-2};
  */
 constexpr static inline auto wire_cross_point_tag = logicitem_id_t {-3};
 
+static_assert(!bool {connection_tag});
 static_assert(connection_tag != null_wire_id);
-static_assert(connection_tag < wire_id_t {0});
+
+static_assert(!bool {wire_corner_point_tag});
 static_assert(wire_corner_point_tag != null_logicitem_id);
-static_assert(wire_corner_point_tag < logicitem_id_t {0});
+
+static_assert(!bool {wire_cross_point_tag});
 static_assert(wire_cross_point_tag != null_logicitem_id);
-static_assert(wire_cross_point_tag < logicitem_id_t {0});
 static_assert(wire_cross_point_tag != wire_corner_point_tag);
 
 [[nodiscard]] auto is_element_body(collision_data_t data) -> bool;

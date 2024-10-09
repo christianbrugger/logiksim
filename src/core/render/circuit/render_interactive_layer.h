@@ -35,12 +35,12 @@ struct InteractiveLayers {
     std::vector<DrawableLogicItem> normal_below;
     std::vector<wire_id_t> normal_wires;
     std::vector<DrawableLogicItem> normal_above;
-    std::vector<DrawableDecoration> normal_decorations;
+    std::vector<DrawableDecoration> normal_decorations;  // TODO !!! decoration_id_t ?
 
     // uninserted
     std::vector<DrawableLogicItem> uninserted_below;
     std::vector<DrawableLogicItem> uninserted_above;
-    std::vector<DrawableDecoration> uninserted_decorations;
+    std::vector<DrawableDecoration> uninserted_decorations;  // TODO !!! remove
 
     // selected & temporary
     std::vector<logicitem_id_t> selected_logicitems;

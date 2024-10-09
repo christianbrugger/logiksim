@@ -18,12 +18,14 @@ auto add_to_selection(Selection& selection, const Layout& layout,
     for (const auto& item : items) {
         if (item.is_logicitem()) {
             selection.add_logicitem(item.logicitem());
-        } else {
+        } else if (item.is_segment()) {
             if (whole_tree) {
                 add_segment_tree(selection, item.segment().wire_id, layout);
             } else {
                 add_segment(selection, item.segment(), layout);
             }
+        } else if (item.is_decoration()) {
+            selection.add_decoration(item.decoration());
         }
     }
 }

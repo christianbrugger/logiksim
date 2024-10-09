@@ -30,25 +30,30 @@ auto Selection::format() const -> std::string {
         "Slection(\n"
         "  logicitems = {},\n"
         "  segments = {},\n"
+        "  decorations = {},\n"
         ")",
-        selected_logicitems_.values(), selected_segments_.values());
+        selected_logicitems_.values(), selected_segments_.values(),
+        selected_decorations_.values());
 }
 
 auto Selection::format_info(bool as_selection) const -> std::string {
     Expects(class_invariant_holds());
 
     if (as_selection) {
-        return fmt::format("Slection({} logic items, {} segments)",
-                           selected_logicitems_.size(), selected_segments_.size());
+        return fmt::format("Slection({} logic items, {} segments, {} decorations)",
+                           selected_logicitems_.size(), selected_segments_.size(),
+                           selected_decorations_.size());
     }
-    return fmt::format("{} logic items and {} segments", selected_logicitems_.size(),
-                       selected_segments_.size());
+    return fmt::format("{} logic items, {} segments and {} decorations",
+                       selected_logicitems_.size(), selected_segments_.size(),
+                       selected_decorations_.size());
 }
 
 auto Selection::empty() const noexcept -> bool {
     Expects(class_invariant_holds());
 
-    return selected_logicitems_.empty() && selected_segments_.empty();
+    return selected_logicitems_.empty() && selected_segments_.empty() &&
+           selected_decorations_.empty();
 }
 
 auto Selection::clear() -> void {
@@ -56,6 +61,7 @@ auto Selection::clear() -> void {
 
     selected_logicitems_.clear();
     selected_segments_.clear();
+    selected_decorations_.clear();
 
     Ensures(class_invariant_holds());
 }
@@ -64,7 +70,8 @@ auto Selection::allocated_size() const -> std::size_t {
     Expects(class_invariant_holds());
 
     return get_allocated_size(selected_logicitems_) +
-           get_allocated_size(selected_segments_);
+           get_allocated_size(selected_segments_) +
+           get_allocated_size(selected_decorations_);
 }
 
 auto Selection::add_logicitem(logicitem_id_t logicitem_id) -> void {
@@ -268,6 +275,26 @@ auto Selection::handle(const info_message::LogicItemIdUpdated &message) -> void 
     Ensures(class_invariant_holds());
 }
 
+auto Selection::handle(const info_message::DecorationDeleted &message) -> void {
+    Expects(class_invariant_holds());
+
+    remove_decoration(message.decoration_id);
+
+    Ensures(class_invariant_holds());
+}
+
+auto Selection::handle(const info_message::DecorationIdUpdated &message) -> void {
+    Expects(class_invariant_holds());
+
+    const auto found = selected_decorations_.erase(message.old_decoration_id);
+    if (found != 0) {
+        const auto added = selected_decorations_.insert(message.new_decoration_id).second;
+        Expects(added);
+    }
+
+    Ensures(class_invariant_holds());
+}
+
 auto Selection::handle(const info_message::SegmentIdUpdated &message) -> void {
     Expects(class_invariant_holds());
 
@@ -388,6 +415,16 @@ auto Selection::submit(const InfoMessage &message) -> void {
         return;
     }
 
+    // decoration
+    if (const auto pointer = std::get_if<DecorationDeleted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (const auto pointer = std::get_if<DecorationIdUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
+
     // segments
     if (const auto pointer = std::get_if<SegmentIdUpdated>(&message)) {
         handle(*pointer);
@@ -428,6 +465,10 @@ auto is_valid_selection(const Selection &selection, const Layout &layout) -> boo
         return is_id_valid(logicitem_id, layout);
     };
 
+    const auto decoration_valid = [&](const decoration_id_t &decoration_id) -> bool {
+        return is_id_valid(decoration_id, layout);
+    };
+
     const auto segment_valid = [&](const Selection::segment_pair_t &entry) -> bool {
         const auto &[segment, parts] = entry;
         const auto segment_part =
@@ -436,6 +477,7 @@ auto is_valid_selection(const Selection &selection, const Layout &layout) -> boo
     };
 
     return std::ranges::all_of(selection.selected_logicitems(), logicitem_valid) &&
+           std::ranges::all_of(selection.selected_decorations(), decoration_valid) &&
            std::ranges::all_of(selection.selected_segments(), segment_valid);
 }
 
@@ -445,6 +487,10 @@ auto is_valid_selection(const Selection &selection, const Layout &layout) -> boo
 
 auto has_logicitems(const Selection &selection) -> bool {
     return !selection.selected_logicitems().empty();
+}
+
+auto has_decorations(const Selection &selection) -> bool {
+    return !selection.selected_decorations().empty();
 }
 
 auto get_lines(const Selection &selection,
@@ -466,12 +512,17 @@ auto all_normal_display_state(const Selection &selection, const Layout &layout) 
     const auto logicitem_normal = [&](const logicitem_id_t &logicitem_id) {
         return layout.logicitems().display_state(logicitem_id) == display_state_t::normal;
     };
+    const auto decoration_normal = [&](const decoration_id_t &decoration_id) {
+        return layout.decorations().display_state(decoration_id) ==
+               display_state_t::normal;
+    };
     const auto wire_normal = [&](const Selection::segment_pair_t &pair) {
         return is_inserted(pair.first.wire_id) &&
                a_disjoint_b(pair.second, get_segment_valid_parts(layout, pair.first));
     };
 
     return std::ranges::all_of(selection.selected_logicitems(), logicitem_normal) &&
+           std::ranges::all_of(selection.selected_decorations(), decoration_normal) &&
            std::ranges::all_of(selection.selected_segments(), wire_normal);
 }
 
@@ -480,11 +531,16 @@ auto anything_colliding(const Selection &selection, const Layout &layout) -> boo
         return layout.logicitems().display_state(logicitem_id) ==
                display_state_t::colliding;
     };
+    const auto decoration_colliding = [&](const decoration_id_t &decoration_id) {
+        return layout.decorations().display_state(decoration_id) ==
+               display_state_t::colliding;
+    };
     const auto wire_colliding = [&](const Selection::segment_pair_t &pair) {
         return pair.first.wire_id == colliding_wire_id;
     };
 
     return std::ranges::any_of(selection.selected_segments(), wire_colliding) ||
+           std::ranges::any_of(selection.selected_decorations(), decoration_colliding) ||
            std::ranges::any_of(selection.selected_logicitems(), logicitem_colliding);
 }
 
@@ -493,17 +549,26 @@ auto anything_temporary(const Selection &selection, const Layout &layout) -> boo
         return layout.logicitems().display_state(logicitem_id) ==
                display_state_t::temporary;
     };
+    const auto decoration_temporary = [&](const decoration_id_t &decoration_id) {
+        return layout.decorations().display_state(decoration_id) ==
+               display_state_t::temporary;
+    };
     const auto wire_temporary = [&](const Selection::segment_pair_t &pair) {
         return pair.first.wire_id == temporary_wire_id;
     };
 
     return std::ranges::any_of(selection.selected_segments(), wire_temporary) ||
+           std::ranges::any_of(selection.selected_decorations(), decoration_temporary) ||
            std::ranges::any_of(selection.selected_logicitems(), logicitem_temporary);
 }
 
 auto anything_valid(const Selection &selection, const Layout &layout) -> bool {
     const auto logicitem_valid = [&](const logicitem_id_t &logicitem_id) {
         return layout.logicitems().display_state(logicitem_id) == display_state_t::valid;
+    };
+    const auto decoration_valid = [&](const decoration_id_t &decoration_id) {
+        return layout.decorations().display_state(decoration_id) ==
+               display_state_t::valid;
     };
     const auto wire_valid = [&](const Selection::segment_pair_t &pair) {
         const auto &valid_parts = layout.wires()
@@ -514,6 +579,7 @@ auto anything_valid(const Selection &selection, const Layout &layout) -> bool {
     };
 
     return std::ranges::any_of(selection.selected_segments(), wire_valid) ||
+           std::ranges::any_of(selection.selected_decorations(), decoration_valid) ||
            std::ranges::any_of(selection.selected_logicitems(), logicitem_valid);
 }
 
@@ -523,6 +589,11 @@ auto display_states(const Selection &selection, const Layout &layout) -> Display
     // logic items
     for (const auto &logicitem_id : selection.selected_logicitems()) {
         result.at(layout.logicitems().display_state(logicitem_id)) = true;
+    }
+
+    // decorations
+    for (const auto &decoration_id : selection.selected_decorations()) {
+        result.at(layout.decorations().display_state(decoration_id)) = true;
     }
 
     // wires

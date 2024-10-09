@@ -18,6 +18,7 @@ struct point_fine_t;
 struct rect_fine_t;
 
 struct logicitem_id_t;
+struct decoration_id_t;
 struct wire_id_t;
 struct segment_index_t;
 struct segment_t;
@@ -30,6 +31,7 @@ namespace spatial_index {
 
 struct tree_payload_t {
     [[nodiscard]] explicit tree_payload_t(logicitem_id_t logicitem_id);
+    [[nodiscard]] explicit tree_payload_t(decoration_id_t decoration_id);
     [[nodiscard]] explicit tree_payload_t(segment_t segment);
 
     [[nodiscard]] auto format() const -> std::string;
@@ -38,6 +40,9 @@ struct tree_payload_t {
     [[nodiscard]] auto is_logicitem() const -> bool;
     [[nodiscard]] auto logicitem() const -> logicitem_id_t;
 
+    [[nodiscard]] auto is_decoration() const -> bool;
+    [[nodiscard]] auto decoration() const -> decoration_id_t;
+
     [[nodiscard]] auto is_segment() const -> bool;
     [[nodiscard]] auto segment() const -> segment_t;
 
@@ -45,12 +50,29 @@ struct tree_payload_t {
     [[nodiscard]] auto operator<=>(const tree_payload_t &other) const = default;
 
    private:
-    // logicitem_id_t | wire_id_t
+    // logicitem_id_t | wire_id_t | decoration_id_t
     int32_t element_id_;
+    // valid segment | logicitem_tag | element_tag
     segment_index_t segment_index_;
 };
 
 struct tree_container;
+
+/**
+ * @brief: Indicates element_id is a logicitem.
+ */
+constexpr static inline auto logicitem_tag = segment_index_t {-2};
+/**
+ * @brief: Indicates element_id is a decoration.
+ */
+constexpr static inline auto decoration_tag = segment_index_t {-3};
+
+static_assert(!bool {logicitem_tag});
+static_assert(logicitem_tag != null_segment_index);
+
+static_assert(!bool {decoration_tag});
+static_assert(decoration_tag != null_segment_index);
+static_assert(decoration_tag != logicitem_tag);
 
 }  // namespace spatial_index
 
@@ -87,6 +109,10 @@ class SpatialIndex {
     auto handle(const info_message::LogicItemInserted &message) -> void;
     auto handle(const info_message::LogicItemUninserted &message) -> void;
     auto handle(const info_message::InsertedLogicItemIdUpdated &message) -> void;
+
+    auto handle(const info_message::DecorationInserted &message) -> void;
+    auto handle(const info_message::DecorationUninserted &message) -> void;
+    auto handle(const info_message::InsertedDecorationIdUpdated &message) -> void;
 
     auto handle(const info_message::SegmentInserted &message) -> void;
     auto handle(const info_message::SegmentUninserted &message) -> void;

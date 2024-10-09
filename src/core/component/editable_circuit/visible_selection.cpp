@@ -8,10 +8,8 @@
 #include "format/std_type.h"
 #include "layout.h"
 #include "layout_message.h"
-#include "logging.h"
 #include "selection.h"
 #include "selection_normalization.h"
-#include "timer.h"
 
 #include <gsl/gsl>
 
@@ -172,6 +170,23 @@ auto add_element_to_selection(logicitem_id_t logicitem_id, SelectionFunction fun
     std::terminate();
 }
 
+auto add_element_to_selection(decoration_id_t decoration_id, SelectionFunction function,
+                              Selection& selection) {
+    switch (function) {
+        using enum SelectionFunction;
+
+        case add: {
+            selection.add_decoration(decoration_id);
+            return;
+        }
+        case substract: {
+            selection.remove_decoration(decoration_id);
+            return;
+        }
+    }
+    std::terminate();
+}
+
 auto add_segment_to_selection(segment_t segment, VisibleSelection::operation_t operation,
                               Selection& selection, const Layout& layout) {
     const auto line = get_line(layout, segment);
@@ -205,8 +220,10 @@ auto apply_function(Selection& selection, const SpatialIndex& selection_index,
     for (const auto& element : selected_elements) {
         if (element.is_logicitem()) {
             add_element_to_selection(element.logicitem(), operation.function, selection);
-        } else {
+        } else if (element.is_segment()) {
             add_segment_to_selection(element.segment(), operation, selection, layout);
+        } else if (element.is_decoration()) {
+            add_element_to_selection(element.decoration(), operation.function, selection);
         }
     }
 }

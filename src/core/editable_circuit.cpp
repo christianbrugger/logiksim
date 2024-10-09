@@ -210,6 +210,11 @@ auto EditableCircuit::add_to_selection(selection_id_t selection_id,
 }
 
 auto EditableCircuit::add_to_selection(selection_id_t selection_id,
+                                       decoration_id_t decoration_id) -> void {
+    modifier_.add_to_selection(selection_id, decoration_id);
+}
+
+auto EditableCircuit::add_to_selection(selection_id_t selection_id,
                                        segment_part_t segment_part) -> void {
     modifier_.add_to_selection(selection_id, segment_part);
 }
@@ -217,6 +222,11 @@ auto EditableCircuit::add_to_selection(selection_id_t selection_id,
 auto EditableCircuit::remove_from_selection(selection_id_t selection_id,
                                             logicitem_id_t logicitem_id) -> void {
     modifier_.add_to_selection(selection_id, logicitem_id);
+}
+
+auto EditableCircuit::remove_from_selection(selection_id_t selection_id,
+                                            decoration_id_t decoration_id) -> void {
+    modifier_.add_to_selection(selection_id, decoration_id);
 }
 
 auto EditableCircuit::remove_from_selection(selection_id_t selection_id,

@@ -15,8 +15,10 @@ auto add_selection(Selection& selection, const Layout& layout,
     for (const auto& item : items) {
         if (item.is_logicitem()) {
             selection.add_logicitem(item.logicitem());
-        } else {
+        } else if (item.is_segment()) {
             add_segment_part(selection, layout, item.segment(), point);
+        } else if (item.is_decoration()) {
+            selection.add_decoration(item.decoration());
         }
     }
 }
@@ -27,8 +29,10 @@ auto remove_selection(Selection& selection, const Layout& layout,
     for (const auto& item : items) {
         if (item.is_logicitem()) {
             selection.remove_logicitem(item.logicitem());
-        } else {
+        } else if (item.is_segment()) {
             remove_segment_part(selection, layout, item.segment(), point);
+        } else if (item.is_decoration()) {
+            selection.remove_decoration(item.decoration());
         }
     }
 }

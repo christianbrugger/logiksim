@@ -85,6 +85,9 @@ class Selection {
     auto handle(const info_message::LogicItemDeleted &message) -> void;
     auto handle(const info_message::LogicItemIdUpdated &message) -> void;
 
+    auto handle(const info_message::DecorationDeleted &message) -> void;
+    auto handle(const info_message::DecorationIdUpdated &message) -> void;
+
     auto handle(const info_message::SegmentIdUpdated &message) -> void;
     auto handle(const info_message::SegmentPartMoved &message) -> void;
     auto handle(const info_message::SegmentPartDeleted &message) -> void;
@@ -109,6 +112,7 @@ class Selection {
 //
 
 [[nodiscard]] auto has_logicitems(const Selection &selection) -> bool;
+[[nodiscard]] auto has_decorations(const Selection &selection) -> bool;
 [[nodiscard]] auto get_lines(const Selection &selection,
                              const Layout &layout) -> std::vector<ordered_line_t>;
 [[nodiscard]] auto all_normal_display_state(const Selection &selection,
