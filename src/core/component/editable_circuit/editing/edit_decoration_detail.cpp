@@ -14,10 +14,7 @@ namespace editing {
 
 auto is_decoration_colliding(const CircuitData& circuit,
                              const decoration_layout_data_t& data) -> bool {
-    static_cast<void>(circuit);
-    static_cast<void>(data);
-    // return circuit.index.collision_index().is_colliding(data);
-    return false;
+    return circuit.index.collision_index().is_colliding(data);
 }
 
 auto is_decoration_colliding(const CircuitData& circuit,

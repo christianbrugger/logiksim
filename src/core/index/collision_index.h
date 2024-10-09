@@ -18,6 +18,7 @@ namespace logicsim {
 
 struct ordered_line_t;
 struct layout_calculation_data_t;
+struct decoration_layout_data_t;
 class Layout;
 
 namespace collision_index {
@@ -114,6 +115,7 @@ class collision_data_t {
    public:
     auto operator==(const collision_data_t& other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    // TODO delete all tags and re-define empty method
     [[nodiscard]] auto empty() const -> bool;
 
     [[nodiscard]] auto is_logicitem_body() const -> bool;
@@ -142,11 +144,14 @@ class collision_data_t {
 
     auto set_logicitem_state(ItemType item_type, logicitem_id_t verify_old_id,
                              logicitem_id_t set_new_id) -> void;
+    auto set_decoration_state(ItemType item_type, decoration_id_t verify_old_id,
+                              decoration_id_t set_new_id) -> void;
     auto set_wire_state(ItemType item_type, wire_id_t verify_old_id,
                         wire_id_t set_new_id) -> void;
 
    private:
     auto set_connection_tag() -> void;
+    auto set_decoration_tag() -> void;
     auto set_wire_corner_point_tag() -> void;
     auto set_wire_cross_point_tag() -> void;
 
@@ -201,6 +206,7 @@ class CollisionIndex {
     [[nodiscard]] auto operator==(const CollisionIndex&) const -> bool = default;
 
     [[nodiscard]] auto is_colliding(const layout_calculation_data_t& data) const -> bool;
+    [[nodiscard]] auto is_colliding(const decoration_layout_data_t& data) const -> bool;
     [[nodiscard]] auto is_colliding(ordered_line_t line) const -> bool;
     [[nodiscard]] auto is_wires_crossing(point_t point) const -> bool;
     [[nodiscard]] auto is_wire_cross_point(point_t point) const -> bool;
@@ -222,6 +228,10 @@ class CollisionIndex {
     auto handle(const info_message::LogicItemInserted& message) -> void;
     auto handle(const info_message::InsertedLogicItemIdUpdated& message) -> void;
     auto handle(const info_message::LogicItemUninserted& message) -> void;
+
+    auto handle(const info_message::DecorationInserted& message) -> void;
+    auto handle(const info_message::InsertedDecorationIdUpdated& message) -> void;
+    auto handle(const info_message::DecorationUninserted& message) -> void;
 
     auto handle(const info_message::SegmentInserted& message) -> void;
     auto handle(const info_message::InsertedSegmentIdUpdated& message) -> void;

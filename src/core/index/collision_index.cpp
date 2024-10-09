@@ -78,7 +78,9 @@ auto collision_data_t::is_logicitem_connection() const -> bool {
 }
 
 auto collision_data_t::is_decoration() const -> bool {
-    return false;
+    return element_id_ >= 0                        //
+           && wire_id_horizontal_ == null_wire_id  //
+           && wire_id_vertical_ == decoration_tag;
 }
 
 auto collision_data_t::is_wire_connection() const -> bool {
@@ -136,6 +138,9 @@ auto collision_data_t::to_state() const -> IndexState {
     if (is_logicitem_connection()) {
         return logicitem_connection;
     }
+    if (is_decoration()) {
+        return decoration;
+    }
     if (is_wire_connection()) {
         return wire_connection;
     }
@@ -186,6 +191,14 @@ auto collision_data_t::set_connection_tag() -> void {
     wire_id_vertical_ = collision_index::connection_tag;
 };
 
+auto collision_data_t::set_decoration_tag() -> void {
+    if (wire_id_vertical_ != null_wire_id &&
+        wire_id_vertical_ != collision_index::decoration_tag) {
+        throw std::runtime_error("cannot set decoration tag, wire_id_vertical occupied");
+    }
+    wire_id_vertical_ = collision_index::decoration_tag;
+};
+
 auto collision_data_t::set_wire_corner_point_tag() -> void {
     if (element_id_ != null_element_tag &&
         element_id_ != collision_index::wire_corner_point_tag) {
@@ -231,6 +244,33 @@ auto collision_data_t::set_logicitem_state(ItemType item_type,
 
         default: {
             throw std::runtime_error("Item type not a logic item");
+        }
+    }
+}
+
+auto collision_data_t::set_decoration_state(ItemType item_type,
+                                            decoration_id_t verify_old_id,
+                                            decoration_id_t set_new_id) -> void {
+    const auto check_and_update = [&](int32_t& obj) {
+        static_assert(std::is_same_v<decoration_id_t::value_type,
+                                     std::remove_cvref_t<decltype(obj)>>);
+        if (obj != verify_old_id.value) {
+            throw std::runtime_error("unexpected collision state");
+        }
+        obj = set_new_id.value;
+    };
+
+    switch (item_type) {
+        using enum collision_index::ItemType;
+
+        case decoration: {
+            set_decoration_tag();
+            check_and_update(element_id_);
+            break;
+        }
+
+        default: {
+            throw std::runtime_error("Item type not a decoration");
         }
     }
 }
@@ -458,6 +498,19 @@ auto set_logicitem_state(CollisionIndex::map_type& map, point_t position,
     }
 }
 
+auto set_decoration_state(CollisionIndex::map_type& map, point_t position,
+                          collision_index::ItemType item_type,
+                          decoration_id_t verify_old_id,
+                          decoration_id_t set_new_id) -> void {
+    // creates new entry, if it doesn't exist
+    auto& data = map[position];
+    data.set_decoration_state(item_type, verify_old_id, set_new_id);
+
+    if (data.empty()) {
+        map.erase(position);
+    }
+}
+
 auto set_wire_state(CollisionIndex::map_type& map, point_t position,
                     collision_index::ItemType item_type, wire_id_t verify_old_id,
                     wire_id_t set_new_id) -> void {
@@ -516,6 +569,34 @@ auto CollisionIndex::handle(const info_message::LogicItemUninserted& message) ->
     for (const auto& item : collision_points(message.data)) {
         set_logicitem_state(map_, item.position, item.type, message.logicitem_id,
                             null_logicitem_id);
+    }
+}
+
+auto CollisionIndex::handle(const info_message::DecorationInserted& message) -> void {
+    using namespace collision_index;
+
+    for (const auto& position : element_body_points(message.data)) {
+        set_decoration_state(map_, position, ItemType::decoration, null_decoration_id,
+                             message.decoration_id);
+    }
+}
+
+auto CollisionIndex::handle(const info_message::InsertedDecorationIdUpdated& message)
+    -> void {
+    using namespace collision_index;
+
+    for (const auto& position : element_body_points(message.data)) {
+        set_decoration_state(map_, position, ItemType::decoration,
+                             message.old_decoration_id, message.new_decoration_id);
+    }
+}
+
+auto CollisionIndex::handle(const info_message::DecorationUninserted& message) -> void {
+    using namespace collision_index;
+
+    for (const auto& position : element_body_points(message.data)) {
+        set_decoration_state(map_, position, ItemType::decoration, message.decoration_id,
+                             null_decoration_id);
     }
 }
 
@@ -578,6 +659,20 @@ auto CollisionIndex::submit(const InfoMessage& message) -> void {
         return;
     }
     if (auto pointer = std::get_if<LogicItemUninserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+
+    // decorations
+    if (auto pointer = std::get_if<DecorationInserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<InsertedDecorationIdUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<DecorationUninserted>(&message)) {
         handle(*pointer);
         return;
     }
@@ -651,6 +746,16 @@ auto CollisionIndex::is_colliding(const layout_calculation_data_t& data) const -
     };
 
     return std::ranges::any_of(collision_points(data), is_colliding);
+}
+
+auto CollisionIndex::is_colliding(const decoration_layout_data_t& data) const -> bool {
+    using namespace collision_index;
+
+    const auto is_colliding = [&](const point_t& position) {
+        return state_colliding(position, ItemType::decoration);
+    };
+
+    return std::ranges::any_of(element_body_points(data), is_colliding);
 }
 
 auto CollisionIndex::get_first_wire(point_t position) const -> wire_id_t {
