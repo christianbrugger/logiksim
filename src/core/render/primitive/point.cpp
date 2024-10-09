@@ -8,6 +8,8 @@
 #include "vocabulary/point.h"
 #include "vocabulary/rect_fine.h"
 
+#include <gcem.hpp>
+
 #include <exception>
 
 namespace logicsim {
