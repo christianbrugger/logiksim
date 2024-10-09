@@ -151,6 +151,10 @@ auto render_layout_collision_index(Context& ctx,
                 draw_point(ctx, point, PointShape::circle, color, size);
                 break;
             }
+            case decoration: {
+                draw_point(ctx, point, PointShape::triangle_up, color, size);
+                break;
+            }
             case wire_connection: {
                 draw_point(ctx, point, PointShape::full_square, color, size * (2. / 3));
                 break;

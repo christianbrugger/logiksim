@@ -48,6 +48,7 @@ enum class ItemType {
 enum class IndexState {
     logicitem_body,
     logicitem_connection,
+    decoration,
     wire_connection,
     wire_horizontal,
     wire_vertical,

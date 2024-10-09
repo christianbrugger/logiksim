@@ -202,6 +202,8 @@ auto format(collision_index::IndexState state) -> std::string {
             return "logicitem_body";
         case logicitem_connection:
             return "logicitem_connection";
+        case decoration:
+            return "decoration";
         case wire_connection:
             return "wire_connection";
         case wire_horizontal:

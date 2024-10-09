@@ -35,6 +35,8 @@ auto format(PointShape type) -> std::string {
             return "horizontal";
         case vertical:
             return "vertical";
+        case triangle_up:
+            return "triangle_up";
     }
     std::terminate();
 }
@@ -132,6 +134,24 @@ auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color,
             const auto attrs = LineAttributes {color, stroke_width};
 
             draw_orthogonal_line(ctx, BLLine {x, y + d, x, y - d}, attrs);
+            return;
+        }
+        case triangle_up: {
+            const auto [x, y] = to_context(point, ctx);
+            const auto d = to_context(size, ctx);
+            // make all sides equal
+            constexpr static auto h_factor = gcem::sqrt(3) - 1;
+            const auto h = d * h_factor;
+
+            const auto poly = std::array {
+                BLPoint {x, y - d},
+                BLPoint {x + d, y + h},
+                BLPoint {x - d, y + h},
+            };
+            const auto view = BLArrayView<BLPoint> {poly.data(), poly.size()};
+
+            ctx.bl_ctx.setStrokeWidth(stroke_width);
+            ctx.bl_ctx.strokePolygon(BLArrayView<BLPoint>(view), color);
             return;
         }
     }

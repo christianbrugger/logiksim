@@ -22,7 +22,8 @@ enum class PointShape {
     full_square,
     diamond,
     horizontal,
-    vertical
+    vertical,
+    triangle_up
 };
 
 template <>
