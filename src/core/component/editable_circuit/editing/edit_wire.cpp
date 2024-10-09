@@ -493,9 +493,8 @@ auto get_temporary_selection_splitpoints(
 
     const auto add_candidate = [&](point_t point) {
         const auto state = circuit.index.collision_index().query(point);
-        if (collision_index::is_wire_corner_point(state) ||
-            collision_index::is_wire_connection(state) ||
-            collision_index::is_wire_cross_point(state)) {
+        if (state.is_wire_corner_point() || state.is_wire_connection() ||
+            state.is_wire_cross_point()) {
             result.push_back(point);
         }
     };

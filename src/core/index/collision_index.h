@@ -63,28 +63,66 @@ enum class IndexState {
 /**
  * @brief: The stored cache value type.
  *
- * For each state a CacheState can be derived.
+ * Class Invariants:
+ *  - Makes sure collision_data contains one of the states or is empty
  */
-struct collision_data_t {
+class collision_data_t {
+   public:
+    auto operator==(const collision_data_t& other) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto empty() const -> bool;
+
+    [[nodiscard]] auto is_element_body() const -> bool;
+    [[nodiscard]] auto is_element_connection() const -> bool;
+    [[nodiscard]] auto is_decoration() const -> bool;
+    [[nodiscard]] auto is_wire_connection() const -> bool;
+    [[nodiscard]] auto is_wire_horizontal() const -> bool;
+    [[nodiscard]] auto is_wire_vertical() const -> bool;
+    [[nodiscard]] auto is_wire_corner_point() const -> bool;
+    [[nodiscard]] auto is_wire_cross_point() const -> bool;
+    // inferred states -> two elements
+    [[nodiscard]] auto is_wire_crossing() const -> bool;
+    [[nodiscard]] auto is_element_wire_connection() const -> bool;
+
+    /**
+     * @brief: Converts cache state value to enum type.
+     *
+     * Precondition: Not to be called on an empty state.
+     */
+    [[nodiscard]] auto to_state() const -> IndexState;
+
+    /**
+     * @brief: Return first wire or null_wire_id.
+     */
+    [[nodiscard]] auto get_first_wire() const -> wire_id_t;
+
+    auto set_logicitem_state(ItemType item_type, logicitem_id_t verify_old_id,
+                             logicitem_id_t set_new_id) -> void;
+    auto set_wire_state(ItemType item_type, wire_id_t verify_old_id,
+                        wire_id_t set_new_id) -> void;
+
+   private:
+    auto set_connection_tag() -> void;
+    auto set_wire_corner_point_tag() -> void;
+    auto set_wire_cross_point_tag() -> void;
+
+   private:
     /**
      * @brief: logicitem_id || wire_corner_point_tag || wire_cross_point_tag ||
      *         null
      */
-    logicitem_id_t element_id {null_logicitem_id};
+    logicitem_id_t element_id_ {null_logicitem_id};
     /**
      * @brief: horizontal wire || null
      */
-    wire_id_t wire_id_horizontal {null_wire_id};
+    wire_id_t wire_id_horizontal_ {null_wire_id};
     /**
      * @brief: vertical wire || connection_tag || null
      */
-    wire_id_t wire_id_vertical {null_wire_id};
-
-    auto operator==(const collision_data_t& other) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
+    wire_id_t wire_id_vertical_ {null_wire_id};
 };
 
-static_assert(std::is_aggregate_v<collision_data_t>);
+static_assert(std::regular<collision_data_t>);
 
 using map_type = ankerl::unordered_dense::map<point_t, collision_index::collision_data_t>;
 
@@ -127,23 +165,6 @@ static_assert(wire_corner_point_tag != null_logicitem_id);
 static_assert(!bool {wire_cross_point_tag});
 static_assert(wire_cross_point_tag != null_logicitem_id);
 static_assert(wire_cross_point_tag != wire_corner_point_tag);
-
-[[nodiscard]] auto is_element_body(collision_data_t data) -> bool;
-[[nodiscard]] auto is_element_connection(collision_data_t data) -> bool;
-[[nodiscard]] auto is_decoration(collision_data_t data) -> bool;
-[[nodiscard]] auto is_wire_connection(collision_data_t data) -> bool;
-[[nodiscard]] auto is_wire_horizontal(collision_data_t data) -> bool;
-[[nodiscard]] auto is_wire_vertical(collision_data_t data) -> bool;
-[[nodiscard]] auto is_wire_corner_point(collision_data_t data) -> bool;
-[[nodiscard]] auto is_wire_cross_point(collision_data_t data) -> bool;
-// inferred states -> two elements
-[[nodiscard]] auto is_wire_crossing(collision_data_t data) -> bool;
-[[nodiscard]] auto is_element_wire_connection(collision_data_t data) -> bool;
-
-/**
- * @brief: Converts cache state value to enum type.
- */
-[[nodiscard]] auto to_state(collision_data_t data) -> IndexState;
 
 }  // namespace collision_index
 
@@ -188,7 +209,7 @@ class CollisionIndex {
     // std::tuple<point_t, CollisionState>
     [[nodiscard]] auto states() const {
         return transform_view(map_, [](const map_type::value_type& value) {
-            return std::make_tuple(value.first, to_state(value.second));
+            return std::make_tuple(value.first, value.second.to_state());
         });
     }
 
