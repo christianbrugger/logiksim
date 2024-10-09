@@ -61,7 +61,8 @@ auto collision_data_t::format() const -> std::string {
 }
 
 auto collision_data_t::empty() const -> bool {
-    return !element_id_ && !wire_id_horizontal_ && !wire_id_vertical_;
+    return element_id_ == null_logicitem_id && wire_id_horizontal_ == null_wire_id &&
+           wire_id_vertical_ == null_wire_id;
 }
 
 auto collision_data_t::is_element_body() const -> bool {
@@ -118,9 +119,6 @@ auto collision_data_t::is_wire_crossing() const -> bool {
     return element_id_ == null_logicitem_id  //
            && wire_id_horizontal_            //
            && wire_id_vertical_;
-
-    // && wire_id_horizontal_ != wire_id_vertical_
-    // && wire_id_horizontal_ == wire_id_vertical_
 }
 
 auto collision_data_t::is_element_wire_connection() const -> bool {
