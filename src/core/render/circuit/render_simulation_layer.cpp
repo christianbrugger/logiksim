@@ -48,8 +48,8 @@ auto SimulationLayers::empty() const -> bool {
     return this->size() == std::size_t {0};
 }
 
-auto build_simulation_layers(const Layout& layout, rect_t scene_rect)
-    -> SimulationLayers {
+auto build_simulation_layers(const Layout& layout,
+                             rect_t scene_rect) -> SimulationLayers {
     auto layers = SimulationLayers {};
 
     for (const auto logicitem_id : logicitem_ids(layout)) {

@@ -13,8 +13,8 @@ namespace logicsim {
 namespace {
 
 auto draw_decoration_text_element(Context& ctx, const Layout& layout,
-                                  decoration_id_t decoration_id, ElementDrawState state)
-    -> void {
+                                  decoration_id_t decoration_id,
+                                  ElementDrawState state) -> void {
     const auto position = layout.decorations().position(decoration_id);
     const auto color = with_alpha_runtime(defaults::color_gray, state);
     const auto size = grid_fine_t {0.25};

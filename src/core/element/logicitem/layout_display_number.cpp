@@ -1,8 +1,8 @@
 #include "element/logicitem/layout_display_number.h"
 
 #include "algorithm/range.h"
-#include "geometry/connection_count.h"
 #include "element/logicitem/layout_display.h"
+#include "geometry/connection_count.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/point.h"

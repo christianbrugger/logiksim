@@ -1,12 +1,12 @@
 #include "schematic_generation.h"
 
 #include "algorithm/transform_to_container.h"
+#include "element/logicitem/schematic_info.h"
 #include "geometry/orientation.h"
 #include "index/connection_index.h"
 #include "layout.h"
 #include "line_tree.h"
 #include "line_tree_generation.h"
-#include "element/logicitem/schematic_info.h"
 #include "schematic.h"
 #include "vocabulary/output_delays.h"
 
@@ -59,7 +59,7 @@ auto add_unused_element(Schematic& schematic) -> void {
 }
 
 auto logicitem_output_delays(const Layout& layout,
-                              logicitem_id_t logicitem_id) -> output_delays_t {
+                             logicitem_id_t logicitem_id) -> output_delays_t {
     const auto logicitem_type = layout.logicitems().type(logicitem_id);
     const auto delay = element_output_delay(logicitem_type);
 
@@ -82,7 +82,7 @@ auto logicitem_output_delays(const Layout& layout,
 }
 
 auto add_logicitem(Schematic& schematic, const Layout& layout,
-                    logicitem_id_t logicitem_id) -> void {
+                   logicitem_id_t logicitem_id) -> void {
     schematic.add_element(schematic::NewElement {
         .element_type = to_element_type(layout.logicitems().type(logicitem_id)),
         .input_count = layout.logicitems().input_count(logicitem_id),

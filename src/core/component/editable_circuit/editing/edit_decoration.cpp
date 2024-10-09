@@ -117,8 +117,8 @@ auto move_temporary_decoration_unchecked(Layout& layout,
 }
 
 auto move_or_delete_temporary_decoration(CircuitData& circuit,
-                                         decoration_id_t& decoration_id, int dx, int dy)
-    -> void {
+                                         decoration_id_t& decoration_id, int dx,
+                                         int dy) -> void {
     if (circuit.layout.decorations().display_state(decoration_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("Only temporary items can be freely moved.");
@@ -138,9 +138,8 @@ auto move_or_delete_temporary_decoration(CircuitData& circuit,
 
 namespace {
 
-auto _decoration_change_temporary_to_colliding(CircuitData& circuit,
-                                               const decoration_id_t decoration_id)
-    -> void {
+auto _decoration_change_temporary_to_colliding(
+    CircuitData& circuit, const decoration_id_t decoration_id) -> void {
     if (circuit.layout.decorations().display_state(decoration_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("element is not in the right state.");
@@ -192,9 +191,8 @@ auto _decoration_change_insert_to_colliding(Layout& layout,
     layout.decorations().set_display_state(decoration_id, display_state_t::valid);
 };
 
-auto _decoration_change_colliding_to_temporary(CircuitData& circuit,
-                                               const decoration_id_t decoration_id)
-    -> void {
+auto _decoration_change_colliding_to_temporary(
+    CircuitData& circuit, const decoration_id_t decoration_id) -> void {
     const auto display_state = circuit.layout.decorations().display_state(decoration_id);
 
     if (display_state == display_state_t::valid) {

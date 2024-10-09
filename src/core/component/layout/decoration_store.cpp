@@ -224,8 +224,8 @@ auto DecorationStore::attrs_text_element(decoration_id_t decoration_id) const
     return it->second;
 }
 
-auto DecorationStore::set_position(decoration_id_t decoration_id, point_t position)
-    -> void {
+auto DecorationStore::set_position(decoration_id_t decoration_id,
+                                   point_t position) -> void {
     // throws if it is not representable
     const auto bounding_rect =
         element_bounding_rect(to_decoration_layout_data(*this, decoration_id, position));
@@ -288,8 +288,8 @@ auto to_decoration_layout_data(const DecorationStore &store,
 }
 
 auto to_decoration_layout_data(const DecorationStore &store,
-                               decoration_id_t decoration_id, point_t position)
-    -> decoration_layout_data_t {
+                               decoration_id_t decoration_id,
+                               point_t position) -> decoration_layout_data_t {
     return decoration_layout_data_t {
         .position = position,
         .width = store.width(decoration_id),
@@ -298,8 +298,8 @@ auto to_decoration_layout_data(const DecorationStore &store,
     };
 }
 
-auto to_decoration_definition(const DecorationStore &store, decoration_id_t decoration_id)
-    -> DecorationDefinition {
+auto to_decoration_definition(const DecorationStore &store,
+                              decoration_id_t decoration_id) -> DecorationDefinition {
     const auto type = store.type(decoration_id);
 
     return DecorationDefinition {

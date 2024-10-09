@@ -2,6 +2,7 @@
 
 #include "algorithm/round.h"
 #include "editable_circuit.h"
+#include "element/logicitem/layout_display_number.h"
 #include "geometry/connection_count.h"
 #include "geometry/layout_calculation.h"
 #include "geometry/point.h"
@@ -9,7 +10,6 @@
 #include "geometry/scene.h"
 #include "layout.h"
 #include "layout_info.h"
-#include "element/logicitem/layout_display_number.h"
 #include "safe_numeric.h"
 #include "selection.h"
 #include "vocabulary/layout_calculation_data.h"

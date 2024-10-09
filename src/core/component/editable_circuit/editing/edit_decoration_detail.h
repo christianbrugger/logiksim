@@ -19,8 +19,8 @@ namespace editing {
 auto is_decoration_colliding(const CircuitData& circuit,
                              const decoration_layout_data_t& data) -> bool;
 
-auto is_decoration_colliding(const CircuitData& circuit, decoration_id_t decoration_id)
-    -> bool;
+auto is_decoration_colliding(const CircuitData& circuit,
+                             decoration_id_t decoration_id) -> bool;
 
 }  // namespace editing
 

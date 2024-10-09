@@ -153,11 +153,11 @@ auto _element_change_temporary_to_colliding(CircuitData& circuit,
 
     if (is_logicitem_colliding(circuit, logicitem_id)) {
         circuit.layout.logicitems().set_display_state(logicitem_id,
-                                                       display_state_t::colliding);
+                                                      display_state_t::colliding);
     } else {
         convert_wires_at_outputs_to_inputs(circuit, logicitem_id);
         circuit.layout.logicitems().set_display_state(logicitem_id,
-                                                       display_state_t::valid);
+                                                      display_state_t::valid);
         circuit.submit(info_message::LogicItemInserted {
             logicitem_id, to_layout_calculation_data(circuit.layout, logicitem_id)});
     }
@@ -169,14 +169,14 @@ auto _element_change_colliding_to_insert(CircuitData& circuit,
 
     if (display_state == display_state_t::valid) {
         circuit.layout.logicitems().set_display_state(logicitem_id,
-                                                       display_state_t::normal);
+                                                      display_state_t::normal);
         return;
     }
 
     if (display_state == display_state_t::colliding) [[likely]] {
         // we can only delete temporary elements
         circuit.layout.logicitems().set_display_state(logicitem_id,
-                                                       display_state_t::temporary);
+                                                      display_state_t::temporary);
         delete_temporary_logicitem(circuit, logicitem_id);
         return;
     }
@@ -203,14 +203,14 @@ auto _element_change_colliding_to_temporary(CircuitData& circuit,
             logicitem_id, to_layout_calculation_data(circuit.layout, logicitem_id)});
 
         circuit.layout.logicitems().set_display_state(logicitem_id,
-                                                       display_state_t::temporary);
+                                                      display_state_t::temporary);
         convert_wires_at_outputs_to_outputs(circuit, logicitem_id);
         return;
     }
 
     if (display_state == display_state_t::colliding) {
         circuit.layout.logicitems().set_display_state(logicitem_id,
-                                                       display_state_t::temporary);
+                                                      display_state_t::temporary);
         return;
     }
 
@@ -253,7 +253,7 @@ auto add_logicitem(CircuitData& circuit, const LogicItemDefinition& definition,
                    point_t position, InsertionMode insertion_mode) -> logicitem_id_t {
     // insert into underlying
     auto logicitem_id = circuit.layout.logicitems().add(definition, point_t {0, 0},
-                                                         display_state_t::temporary);
+                                                        display_state_t::temporary);
     circuit.submit(info_message::LogicItemCreated {logicitem_id});
 
     // assume final position
@@ -280,7 +280,7 @@ auto toggle_inverter(CircuitData& circuit, point_t point) -> void {
             const auto value = circuit.layout.logicitems().input_inverted(
                 entry->logicitem_id, entry->connection_id);
             circuit.layout.logicitems().set_input_inverter(entry->logicitem_id,
-                                                            entry->connection_id, !value);
+                                                           entry->connection_id, !value);
         }
     }
 
@@ -293,8 +293,8 @@ auto toggle_inverter(CircuitData& circuit, point_t point) -> void {
         if (is_directed(info.orientation)) {
             const auto value = circuit.layout.logicitems().output_inverted(
                 entry->logicitem_id, entry->connection_id);
-            circuit.layout.logicitems().set_output_inverter(
-                entry->logicitem_id, entry->connection_id, !value);
+            circuit.layout.logicitems().set_output_inverter(entry->logicitem_id,
+                                                            entry->connection_id, !value);
         }
     }
 }

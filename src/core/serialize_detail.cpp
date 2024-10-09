@@ -149,7 +149,7 @@ struct glz::meta<SerializedLayout> {
         "view_config", &T::view_point,                 //
         "simulation_settings", &T::simulation_config,  //
 
-        "logicitems", &T::logicitems,     //
+        "logicitems", &T::logicitems,       //
         "wire_segments", &T::wire_segments  //
     );
 };

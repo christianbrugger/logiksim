@@ -31,9 +31,8 @@ static_assert(std::is_aggregate_v<decoration_layout_data_t>);
 // Public
 //
 
-[[nodiscard]] auto to_decoration_layout_data(const DecorationDefinition& definition,
-                                             point_t position)
-    -> decoration_layout_data_t;
+[[nodiscard]] auto to_decoration_layout_data(
+    const DecorationDefinition& definition, point_t position) -> decoration_layout_data_t;
 
 }  // namespace logicsim
 

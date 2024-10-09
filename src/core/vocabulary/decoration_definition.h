@@ -40,8 +40,8 @@ struct DecorationDefinition {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const DecorationDefinition& other) const
-        -> bool = default;
+    [[nodiscard]] auto operator==(const DecorationDefinition& other) const -> bool =
+                                                                                  default;
     [[nodiscard]] auto operator<=>(const DecorationDefinition& other) const = default;
 };
 

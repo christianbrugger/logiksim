@@ -74,8 +74,8 @@ class Layout {
 
 [[nodiscard]] auto is_id_valid(logicitem_id_t logicitem_id, const Layout &layout) -> bool;
 [[nodiscard]] auto is_id_valid(wire_id_t wire_id, const Layout &layout) -> bool;
-[[nodiscard]] auto is_id_valid(decoration_id_t decoration_id, const Layout &layout)
-    -> bool;
+[[nodiscard]] auto is_id_valid(decoration_id_t decoration_id,
+                               const Layout &layout) -> bool;
 [[nodiscard]] auto is_segment_valid(segment_t segment, const Layout &layout) -> bool;
 [[nodiscard]] auto is_segment_part_valid(segment_part_t segment_part,
                                          const Layout &layout) -> bool;
@@ -91,50 +91,46 @@ class Layout {
 
 [[nodiscard]] auto format_stats(const Layout &layout) -> std::string;
 
-[[nodiscard]] auto format_logicitem(const Layout &layout, logicitem_id_t logicitem_id)
-    -> std::string;
+[[nodiscard]] auto format_logicitem(const Layout &layout,
+                                    logicitem_id_t logicitem_id) -> std::string;
 [[nodiscard]] auto format_wire(const Layout &layout, wire_id_t wire_id) -> std::string;
-[[nodiscard]] auto format_decoration(const Layout &layout, decoration_id_t decoration_id)
-    -> std::string;
+[[nodiscard]] auto format_decoration(const Layout &layout,
+                                     decoration_id_t decoration_id) -> std::string;
 
 [[nodiscard]] auto is_inserted(const Layout &layout, logicitem_id_t logicitem_id) -> bool;
-[[nodiscard]] auto is_inserted(const Layout &layout, decoration_id_t decoration_id)
-    -> bool;
+[[nodiscard]] auto is_inserted(const Layout &layout,
+                               decoration_id_t decoration_id) -> bool;
 
 [[nodiscard]] auto is_wire_empty(const Layout &layout, wire_id_t wire_id) -> bool;
 
-[[nodiscard]] auto get_segment_info(const Layout &layout, segment_t segment)
-    -> segment_info_t;
+[[nodiscard]] auto get_segment_info(const Layout &layout,
+                                    segment_t segment) -> segment_info_t;
 
 [[nodiscard]] auto get_segment_point_type(const Layout &layout, segment_t segment,
                                           point_t position) -> SegmentPointType;
 
-[[nodiscard]] auto get_segment_valid_parts(const Layout &layout, segment_t segment)
-    -> const PartSelection &;
+[[nodiscard]] auto get_segment_valid_parts(const Layout &layout,
+                                           segment_t segment) -> const PartSelection &;
 
 [[nodiscard]] auto get_line(const Layout &layout, segment_t segment) -> ordered_line_t;
-[[nodiscard]] auto get_line(const Layout &layout, segment_part_t segment_part)
-    -> ordered_line_t;
+[[nodiscard]] auto get_line(const Layout &layout,
+                            segment_part_t segment_part) -> ordered_line_t;
 
 [[nodiscard]] auto has_segments(const Layout &layout) -> bool;
 
-[[nodiscard]] auto moved_layout(Layout layout, int delta_x, int delta_y)
-    -> std::optional<Layout>;
+[[nodiscard]] auto moved_layout(Layout layout, int delta_x,
+                                int delta_y) -> std::optional<Layout>;
 
-[[nodiscard]] auto to_layout_calculation_data(const Layout &layout,
-                                              logicitem_id_t logicitem_id)
-    -> layout_calculation_data_t;
-[[nodiscard]] auto to_decoration_layout_data(const Layout &layout,
-                                             decoration_id_t decoration_id)
-    -> decoration_layout_data_t;
-[[nodiscard]] auto to_logicitem_definition(const Layout &layout,
-                                           logicitem_id_t logicitem_id)
-    -> LogicItemDefinition;
-[[nodiscard]] auto to_decoration_definition(const Layout &layout,
-                                            decoration_id_t decoration_id)
-    -> DecorationDefinition;
-[[nodiscard]] auto to_placed_element(const Layout &layout, logicitem_id_t logicitem_id)
-    -> PlacedElement;
+[[nodiscard]] auto to_layout_calculation_data(
+    const Layout &layout, logicitem_id_t logicitem_id) -> layout_calculation_data_t;
+[[nodiscard]] auto to_decoration_layout_data(
+    const Layout &layout, decoration_id_t decoration_id) -> decoration_layout_data_t;
+[[nodiscard]] auto to_logicitem_definition(
+    const Layout &layout, logicitem_id_t logicitem_id) -> LogicItemDefinition;
+[[nodiscard]] auto to_decoration_definition(
+    const Layout &layout, decoration_id_t decoration_id) -> DecorationDefinition;
+[[nodiscard]] auto to_placed_element(const Layout &layout,
+                                     logicitem_id_t logicitem_id) -> PlacedElement;
 
 [[nodiscard]] auto get_display_states(const Layout &layout, segment_part_t segment_part)
     -> std::pair<display_state_t, display_state_t>;

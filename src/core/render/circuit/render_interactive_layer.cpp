@@ -20,8 +20,8 @@ namespace logicsim {
 
 namespace {
 template <class Func>
-auto to_element_draw_state(display_state_t display_state, Func is_selected)
-    -> ElementDrawState {
+auto to_element_draw_state(display_state_t display_state,
+                           Func is_selected) -> ElementDrawState {
     if (is_inserted(display_state)) {
         if (display_state == display_state_t::valid) {
             return ElementDrawState::valid;
@@ -208,8 +208,8 @@ auto update_bounding_rect(std::optional<rect_t>& target, rect_t new_rect) -> voi
     }
 }
 
-auto update_bounding_rect(std::optional<rect_t>& target, ordered_line_t new_line)
-    -> void {
+auto update_bounding_rect(std::optional<rect_t>& target,
+                          ordered_line_t new_line) -> void {
     if (!target) {
         target = rect_t {new_line.p0, new_line.p1};
     } else {
@@ -419,8 +419,8 @@ auto build_interactive_layers(const Layout& layout, const Selection* selection,
 // Render
 //
 
-auto render_inserted(Context& ctx, const Layout& layout, const InteractiveLayers& layers)
-    -> void {
+auto render_inserted(Context& ctx, const Layout& layout,
+                     const InteractiveLayers& layers) -> void {
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
     draw_logicitems_base(ctx, layout, layers.normal_below);
@@ -477,8 +477,8 @@ auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers&
 }
 
 auto render_interactive_layers(Context& ctx, const Layout& layout,
-                               const InteractiveLayers& layers, ImageSurface& surface)
-    -> void {
+                               const InteractiveLayers& layers,
+                               ImageSurface& surface) -> void {
     if (layers.has_inserted()) {
         render_inserted(ctx, layout, layers);
     }

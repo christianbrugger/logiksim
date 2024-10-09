@@ -29,7 +29,7 @@ SettingDialogManager::SettingDialogManager(QWidget* parent)
 namespace {
 
 auto get_selected_logicitem(const EditableCircuit& editable_circuit,
-                             selection_id_t selection_id) -> logicitem_id_t {
+                            selection_id_t selection_id) -> logicitem_id_t {
     if (!editable_circuit.selection_exists(selection_id)) {
         return null_logicitem_id;
     }
@@ -49,8 +49,7 @@ auto create_setting_dialog(const EditableCircuit& editable_circuit,
     const auto logicitem_id = get_selected_logicitem(editable_circuit, selection_id);
     Expects(logicitem_id);
 
-    const auto logicitem_type =
-        editable_circuit.layout().logicitems().type(logicitem_id);
+    const auto logicitem_type = editable_circuit.layout().logicitems().type(logicitem_id);
 
     if (logicitem_type == LogicItemType::clock_generator) {
         return new ClockGeneratorDialog {

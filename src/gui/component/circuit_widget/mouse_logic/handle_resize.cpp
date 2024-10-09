@@ -62,7 +62,7 @@ auto HandleResizeLogic::finalize(EditableCircuit& editable_circuit) -> void {
 namespace {
 
 auto resize_logicitem(EditableCircuit& editable_circuit, const PlacedElement& original,
-                       size_handle_t size_handle, int new_delta) {
+                      size_handle_t size_handle, int new_delta) {
     // delete element
     editable_circuit.delete_all(editable_circuit.visible_selection());
 

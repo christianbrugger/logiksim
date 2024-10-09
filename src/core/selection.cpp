@@ -464,8 +464,7 @@ auto get_lines(const Selection &selection,
 
 auto all_normal_display_state(const Selection &selection, const Layout &layout) -> bool {
     const auto logicitem_normal = [&](const logicitem_id_t &logicitem_id) {
-        return layout.logicitems().display_state(logicitem_id) ==
-               display_state_t::normal;
+        return layout.logicitems().display_state(logicitem_id) == display_state_t::normal;
     };
     const auto wire_normal = [&](const Selection::segment_pair_t &pair) {
         return is_inserted(pair.first.wire_id) &&

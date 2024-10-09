@@ -34,8 +34,8 @@ struct SimulationLayers {
 
 static_assert(std::regular<SimulationLayers>);
 
-[[nodiscard]] auto build_simulation_layers(const Layout& layout, rect_t scene_rect)
-    -> SimulationLayers;
+[[nodiscard]] auto build_simulation_layers(const Layout& layout,
+                                           rect_t scene_rect) -> SimulationLayers;
 
 auto render_simulation_layers(Context& ctx, const SpatialSimulation& spatial_simulation,
                               const SimulationLayers& layers) -> void;

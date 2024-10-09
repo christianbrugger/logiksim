@@ -87,15 +87,15 @@ auto update_overlay_rect(InteractiveLayers& layers, ordered_line_t line) -> void
 //
 
 [[nodiscard]] auto build_interactive_layers(const Layout& layout,
-                                            const Selection* selection, rect_t scene_rect)
-    -> InteractiveLayers;
+                                            const Selection* selection,
+                                            rect_t scene_rect) -> InteractiveLayers;
 
 //
 // Render
 //
 
-auto render_inserted(Context& ctx, const Layout& layout, const InteractiveLayers& layers)
-    -> void;
+auto render_inserted(Context& ctx, const Layout& layout,
+                     const InteractiveLayers& layers) -> void;
 
 auto render_uninserted(Context& ctx, const Layout& layout,
                        const InteractiveLayers& layers, bool layer_enabled) -> void;
@@ -104,8 +104,8 @@ auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers&
                     bool layer_enabled) -> void;
 
 auto render_interactive_layers(Context& ctx, const Layout& layout,
-                               const InteractiveLayers& layers, ImageSurface& surface)
-    -> void;
+                               const InteractiveLayers& layers,
+                               ImageSurface& surface) -> void;
 }  // namespace logicsim
 
 #endif

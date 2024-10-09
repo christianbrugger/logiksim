@@ -21,7 +21,7 @@ ViewConfig::ViewConfig() {
     update();
 }
 
-ViewConfig::ViewConfig(BLSizeI size_px) : size_px_{size_px} {
+ViewConfig::ViewConfig(BLSizeI size_px) : size_px_ {size_px} {
     update();
 }
 

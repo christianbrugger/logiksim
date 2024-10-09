@@ -96,8 +96,8 @@ auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void {
 }
 
 auto draw_logicitem_connectors(Context& ctx, const Layout& layout,
-                               logicitem_id_t logicitem_id, ElementDrawState state)
-    -> void {
+                               logicitem_id_t logicitem_id,
+                               ElementDrawState state) -> void {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
 
     for (auto info : input_locations_and_id(layout_data)) {

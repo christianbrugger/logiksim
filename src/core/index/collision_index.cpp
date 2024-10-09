@@ -355,9 +355,9 @@ auto set_wire_cross_point_tag(collision_index::collision_data_t& data) {
 };
 
 auto set_logicitem_state(CollisionIndex::map_type& map, point_t position,
-                          collision_index::ItemType item_type,
-                          logicitem_id_t verify_old_id,
-                          logicitem_id_t set_new_id) -> void {
+                         collision_index::ItemType item_type,
+                         logicitem_id_t verify_old_id,
+                         logicitem_id_t set_new_id) -> void {
     const auto check_and_update = [&](logicitem_id_t& obj) {
         if (obj != verify_old_id) {
             throw std::runtime_error("unexpected collision state");
@@ -463,7 +463,7 @@ auto CollisionIndex::handle(const info_message::LogicItemInserted& message) -> v
 
     for (const auto& item : collision_points(message.data)) {
         set_logicitem_state(map_, item.position, item.type, null_logicitem_id,
-                             message.logicitem_id);
+                            message.logicitem_id);
     }
 }
 
@@ -473,7 +473,7 @@ auto CollisionIndex::handle(const info_message::InsertedLogicItemIdUpdated& mess
 
     for (const auto& item : collision_points(message.data)) {
         set_logicitem_state(map_, item.position, item.type, message.old_logicitem_id,
-                             message.new_logicitem_id);
+                            message.new_logicitem_id);
     }
 }
 
@@ -482,7 +482,7 @@ auto CollisionIndex::handle(const info_message::LogicItemUninserted& message) ->
 
     for (const auto& item : collision_points(message.data)) {
         set_logicitem_state(map_, item.position, item.type, message.logicitem_id,
-                             null_logicitem_id);
+                            null_logicitem_id);
     }
 }
 
