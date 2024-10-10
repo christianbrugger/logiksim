@@ -64,10 +64,10 @@ auto to_element_draw_state(const Layout& layout, decoration_id_t decoration_id,
 auto InteractiveLayers::format() const -> std::string {
     return fmt::format(
         "InteractiveLayers("
-        "\n  normal_below = {}"
-        "\n  normal_wires = {}"
-        "\n  normal_above = {}"
-        "\n  normal_decorations = {}"
+        "\n  inserted_below = {}"
+        "\n  inserted_above = {}"
+        "\n  inserted_decorations = {}"
+        "\n  inserted_wires = {}"
         "\n"
         "\n  uninserted_below = {}"
         "\n  uninserted_above = {}"
@@ -76,7 +76,7 @@ auto InteractiveLayers::format() const -> std::string {
         "\n  selected_logicitems = {}"
         "\n  selected_decorations = {}"
         "\n  selected_wires = {}"
-        "\n  temporary_wires = {}"
+        "\n  selected_temporary_wires = {}"
         "\n  valid_logicitems = {}"
         "\n  valid_decorations = {}"
         "\n  valid_wires = {}"
@@ -88,25 +88,25 @@ auto InteractiveLayers::format() const -> std::string {
         "\n  overlay_bounding_rect = {}"
         "\n)",
 
-        normal_below,        //
-        normal_wires,        //
-        normal_above,        //
-        normal_decorations,  //
+        inserted_below,        //
+        inserted_above,        //
+        inserted_decorations,  //
+        inserted_wires,        //
 
         uninserted_below,        //
         uninserted_above,        //
         uninserted_decorations,  //
 
-        selected_logicitems,    //
-        selected_decorations,   //
-        selected_wires,         //
-        temporary_wires,        //
-        valid_logicitems,       //
-        valid_decorations,      //
-        valid_wires,            //
-        colliding_logicitems,   //
-        colliding_decorations,  //
-        colliding_wires,        //
+        selected_logicitems,       //
+        selected_decorations,      //
+        selected_wires,            //
+        selected_temporary_wires,  //
+        valid_logicitems,          //
+        valid_decorations,         //
+        valid_wires,               //
+        colliding_logicitems,      //
+        colliding_decorations,     //
+        colliding_wires,           //
 
         uninserted_bounding_rect,  //
         overlay_bounding_rect      //
@@ -114,47 +114,47 @@ auto InteractiveLayers::format() const -> std::string {
 }
 
 auto InteractiveLayers::allocated_size() const -> std::size_t {
-    return get_allocated_size(normal_below) +            //
-           get_allocated_size(normal_wires) +            //
-           get_allocated_size(normal_above) +            //
-           get_allocated_size(normal_decorations) +      //
-                                                         //
-           get_allocated_size(uninserted_below) +        //
-           get_allocated_size(uninserted_above) +        //
-           get_allocated_size(uninserted_decorations) +  //
-                                                         //
-           get_allocated_size(selected_logicitems) +     //
-           get_allocated_size(selected_decorations) +    //
-           get_allocated_size(selected_wires) +          //
-           get_allocated_size(temporary_wires) +         //
-           get_allocated_size(valid_logicitems) +        //
-           get_allocated_size(valid_decorations) +       //
-           get_allocated_size(valid_wires) +             //
-           get_allocated_size(colliding_logicitems) +    //
-           get_allocated_size(colliding_decorations) +   //
-           get_allocated_size(colliding_wires);          //
+    return get_allocated_size(inserted_below) +            //
+           get_allocated_size(inserted_above) +            //
+           get_allocated_size(inserted_decorations) +      //
+           get_allocated_size(inserted_wires) +            //
+                                                           //
+           get_allocated_size(uninserted_below) +          //
+           get_allocated_size(uninserted_above) +          //
+           get_allocated_size(uninserted_decorations) +    //
+                                                           //
+           get_allocated_size(selected_logicitems) +       //
+           get_allocated_size(selected_decorations) +      //
+           get_allocated_size(selected_wires) +            //
+           get_allocated_size(selected_temporary_wires) +  //
+           get_allocated_size(valid_logicitems) +          //
+           get_allocated_size(valid_decorations) +         //
+           get_allocated_size(valid_wires) +               //
+           get_allocated_size(colliding_logicitems) +      //
+           get_allocated_size(colliding_decorations) +     //
+           get_allocated_size(colliding_wires);            //
 }
 
 auto InteractiveLayers::size() const -> std::size_t {
-    return normal_below.size() +            //
-           normal_wires.size() +            //
-           normal_above.size() +            //
-           normal_decorations.size() +      //
-                                            //
-           uninserted_below.size() +        //
-           uninserted_above.size() +        //
-           uninserted_decorations.size() +  //
-                                            //
-           selected_logicitems.size() +     //
-           selected_decorations.size() +    //
-           selected_wires.size() +          //
-           temporary_wires.size() +         //
-           valid_logicitems.size() +        //
-           valid_decorations.size() +       //
-           valid_wires.size() +             //
-           colliding_logicitems.size() +    //
-           colliding_decorations.size() +   //
-           colliding_wires.size();          //
+    return inserted_below.size() +            //
+           inserted_above.size() +            //
+           inserted_decorations.size() +      //
+           inserted_wires.size() +            //
+                                              //
+           uninserted_below.size() +          //
+           uninserted_above.size() +          //
+           uninserted_decorations.size() +    //
+                                              //
+           selected_logicitems.size() +       //
+           selected_decorations.size() +      //
+           selected_wires.size() +            //
+           selected_temporary_wires.size() +  //
+           valid_logicitems.size() +          //
+           valid_decorations.size() +         //
+           valid_wires.size() +               //
+           colliding_logicitems.size() +      //
+           colliding_decorations.size() +     //
+           colliding_wires.size();            //
 }
 
 auto InteractiveLayers::empty() const -> bool {
@@ -162,30 +162,30 @@ auto InteractiveLayers::empty() const -> bool {
 }
 
 auto InteractiveLayers::has_inserted() const -> bool {
-    return !normal_below.empty() ||  //
-           !normal_wires.empty() ||  //
-           !normal_above.empty() ||  //
-           !normal_decorations.empty();
+    return !inserted_below.empty() ||        //
+           !inserted_above.empty() ||        //
+           !inserted_decorations.empty() ||  //
+           !inserted_wires.empty();
 }
 
 auto InteractiveLayers::has_uninserted() const -> bool {
-    return !uninserted_below.empty() ||        //
-           !uninserted_decorations.empty() ||  //
-           !temporary_wires.empty() ||         //
-           !colliding_wires.empty() ||         //
-           !uninserted_above.empty();
+    return !uninserted_below.empty() ||          //
+           !uninserted_above.empty() ||          //
+           !uninserted_decorations.empty() ||    //
+           !selected_temporary_wires.empty() ||  //
+           !colliding_wires.empty();
 }
 
 auto InteractiveLayers::has_overlay() const -> bool {
-    return !selected_logicitems.empty() ||    //
-           !selected_decorations.empty() ||   //
-           !selected_wires.empty() ||         //
-           !temporary_wires.empty() ||        //
-           !valid_logicitems.empty() ||       //
-           !valid_decorations.empty() ||      //
-           !valid_wires.empty() ||            //
-           !colliding_logicitems.empty() ||   //
-           !colliding_decorations.empty() ||  //
+    return !selected_logicitems.empty() ||       //
+           !selected_decorations.empty() ||      //
+           !selected_wires.empty() ||            //
+           !selected_temporary_wires.empty() ||  //
+           !valid_logicitems.empty() ||          //
+           !valid_decorations.empty() ||         //
+           !valid_wires.empty() ||               //
+           !colliding_logicitems.empty() ||      //
+           !colliding_decorations.empty() ||     //
            !colliding_wires.empty();
 }
 
@@ -196,7 +196,7 @@ auto InteractiveLayers::calculate_overlay_bounding_rect() -> void {
     };
 
     std::ranges::for_each(selected_wires, update);
-    std::ranges::for_each(temporary_wires, update_info);
+    std::ranges::for_each(selected_temporary_wires, update_info);
     std::ranges::for_each(valid_wires, update);
     std::ranges::for_each(colliding_wires, update_info);
 }
@@ -283,9 +283,9 @@ auto insert_logicitem(InteractiveLayers& layers, const Layout& layout,
 
     if (is_inserted(state)) {
         if (draw_logicitem_above(logicitem_type)) {
-            layers.normal_above.push_back({logicitem_id, state});
+            layers.inserted_above.push_back({logicitem_id, state});
         } else {
-            layers.normal_below.push_back({logicitem_id, state});
+            layers.inserted_below.push_back({logicitem_id, state});
         }
     } else {
         update_uninserted_rect(layers, bounding_rect);
@@ -323,7 +323,7 @@ auto insert_logicitem(InteractiveLayers& layers, const Layout& layout,
 auto insert_decoration(InteractiveLayers& layers, decoration_id_t decoration_id,
                        rect_t bounding_rect, ElementDrawState state) -> void {
     if (is_inserted(state)) {
-        layers.normal_decorations.push_back({decoration_id, state});
+        layers.inserted_decorations.push_back({decoration_id, state});
     } else {
         update_uninserted_rect(layers, bounding_rect);
         layers.uninserted_decorations.push_back({decoration_id, state});
@@ -387,7 +387,7 @@ auto build_interactive_layers(const Layout& layout, const Selection* selection,
             continue;
         }
 
-        layers.normal_wires.push_back(wire_id);
+        layers.inserted_wires.push_back(wire_id);
 
         // TODO add: tree.has_valid_parts()
         const auto found_valid =
@@ -401,7 +401,7 @@ auto build_interactive_layers(const Layout& layout, const Selection* selection,
     for (const auto& info : layout.wires().segment_tree(temporary_wire_id)) {
         if (is_colliding(info.line, scene_rect)) {
             update_uninserted_rect(layers, info.line);
-            layers.temporary_wires.push_back(info);
+            layers.selected_temporary_wires.push_back(info);
         }
     }
     for (const auto& info : layout.wires().segment_tree(colliding_wire_id)) {
@@ -424,13 +424,13 @@ auto render_inserted(Context& ctx, const Layout& layout,
                      const InteractiveLayers& layers) -> void {
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    draw_logicitems_base(ctx, layout, layers.normal_below);
-    draw_wires(ctx, layout, layers.normal_wires, ElementDrawState::normal);
-    draw_logicitems_base(ctx, layout, layers.normal_above);
+    draw_logicitems_base(ctx, layout, layers.inserted_below);
+    draw_wires(ctx, layout, layers.inserted_wires, ElementDrawState::normal);
+    draw_logicitems_base(ctx, layout, layers.inserted_above);
 
-    draw_logicitems_connectors(ctx, layout, layers.normal_below);
-    draw_logicitems_connectors(ctx, layout, layers.normal_above);
-    draw_decorations_base(ctx, layout, layers.normal_decorations);
+    draw_logicitems_connectors(ctx, layout, layers.inserted_below);
+    draw_logicitems_connectors(ctx, layout, layers.inserted_above);
+    draw_decorations_base(ctx, layout, layers.inserted_decorations);
 }
 
 auto render_uninserted(Context& ctx, const Layout& layout,
@@ -442,17 +442,14 @@ auto render_uninserted(Context& ctx, const Layout& layout,
     }
 
     draw_logicitems_base(ctx, layout, layers.uninserted_below);
-    draw_wires(ctx, layers.temporary_wires, ElementDrawState::temporary_selected);
+    draw_wires(ctx, layers.selected_temporary_wires,
+               ElementDrawState::temporary_selected);
     draw_wires(ctx, layers.colliding_wires, ElementDrawState::colliding);
     draw_logicitems_base(ctx, layout, layers.uninserted_above);
 
     draw_logicitems_connectors(ctx, layout, layers.uninserted_below);
     draw_logicitems_connectors(ctx, layout, layers.uninserted_above);
-
-    draw_decorations_base(ctx, layout, layers.selected_decorations,
-                          ElementDrawState::temporary_selected);
-    draw_decorations_base(ctx, layout, layers.colliding_decorations,
-                          ElementDrawState::colliding);
+    draw_decorations_base(ctx, layout, layers.uninserted_decorations);
 }
 
 auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers& layers,
@@ -467,7 +464,7 @@ auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers&
     draw_logicitem_shadows(ctx, layout, layers.selected_logicitems, shadow_t::selected);
     draw_decoration_shadows(ctx, layout, layers.selected_decorations, shadow_t::selected);
     draw_wire_shadows(ctx, layers.selected_wires, shadow_t::selected);
-    draw_wire_shadows(ctx, layers.temporary_wires, shadow_t::selected);
+    draw_wire_shadows(ctx, layers.selected_temporary_wires, shadow_t::selected);
 
     // valid
     draw_logicitem_shadows(ctx, layout, layers.valid_logicitems, shadow_t::valid);
@@ -484,7 +481,7 @@ auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers&
 auto render_interactive_layers(Context& ctx, const Layout& layout,
                                const InteractiveLayers& layers,
                                ImageSurface& surface) -> void {
-    // print(layers);
+    print(layers);
     if (layers.has_inserted()) {
         render_inserted(ctx, layout, layers);
     }

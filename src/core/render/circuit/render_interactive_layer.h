@@ -32,21 +32,21 @@ class ImageSurface;
 // TODO any class invariants ?
 struct InteractiveLayers {
     // inserted
-    std::vector<DrawableLogicItem> normal_below;
-    std::vector<wire_id_t> normal_wires;
-    std::vector<DrawableLogicItem> normal_above;
-    std::vector<DrawableDecoration> normal_decorations;  // TODO !!! decoration_id_t ?
+    std::vector<DrawableLogicItem> inserted_below;
+    std::vector<DrawableLogicItem> inserted_above;
+    std::vector<DrawableDecoration> inserted_decorations;
+    std::vector<wire_id_t> inserted_wires;
 
     // uninserted
     std::vector<DrawableLogicItem> uninserted_below;
     std::vector<DrawableLogicItem> uninserted_above;
-    std::vector<DrawableDecoration> uninserted_decorations;  // TODO !!! remove
+    std::vector<DrawableDecoration> uninserted_decorations;
 
     // selected & temporary
     std::vector<logicitem_id_t> selected_logicitems;
     std::vector<decoration_id_t> selected_decorations;
     std::vector<ordered_line_t> selected_wires;
-    std::vector<segment_info_t> temporary_wires;
+    std::vector<segment_info_t> selected_temporary_wires;
     // valid
     std::vector<logicitem_id_t> valid_logicitems;
     std::vector<decoration_id_t> valid_decorations;
