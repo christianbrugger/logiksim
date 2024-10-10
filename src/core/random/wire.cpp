@@ -4,11 +4,13 @@
 #include "algorithm/uniform_int_distribution.h"
 #include "editable_circuit.h"
 #include "geometry/part.h"
+#include "logging.h"
 #include "random/bool.h"
 #include "random/insertion_mode.h"
 #include "random/ordered_line.h"
 #include "random/point.h"
 #include "vocabulary/connection_count.h"
+#include "vocabulary/decoration_definition.h"
 #include "vocabulary/insertion_mode.h"
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_id.h"
@@ -49,6 +51,21 @@ auto add_random_button(Rng& rng, EditableCircuit& editable_circuit, grid_t min,
     editable_circuit.add_logicitem(definition, position, mode);
 }
 
+auto add_random_text(Rng& rng, EditableCircuit& editable_circuit, grid_t min, grid_t max,
+                     bool random_modes) -> void {
+    const auto definition = DecorationDefinition {
+        .width = offset_t {0},
+        .height = offset_t {0},
+        .decoration_type = DecorationType::text_element,
+        .attrs_text_element = attributes_text_element_t {.text = ""},
+    };
+    const auto position = get_random_point(rng, min, max);
+    const auto mode =
+        random_modes ? get_random_insertion_mode(rng) : InsertionMode::insert_or_discard;
+
+    editable_circuit.add_decoration(definition, position, mode);
+}
+
 auto add_many_wires(Rng& rng, EditableCircuit& editable_circuit, bool random_modes,
                     int max_tries) -> void {
     const auto min = grid_t {5};
@@ -72,7 +89,11 @@ auto add_many_wires_and_buttons(Rng& rng, EditableCircuit& editable_circuit,
 
     for (auto _ [[maybe_unused]] : range(tries)) {
         if (get_random_bool(rng, 0.1)) {
-            add_random_button(rng, editable_circuit, min, max, params.random_modes);
+            if (get_random_bool(rng, 0.8)) {
+                add_random_button(rng, editable_circuit, min, max, params.random_modes);
+            } else {
+                add_random_text(rng, editable_circuit, min, max, params.random_modes);
+            }
         } else {
             add_random_wire(rng, editable_circuit, min, max, length, params.random_modes);
         }

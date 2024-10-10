@@ -9,7 +9,6 @@
 #include "geometry/rect.h"
 #include "geometry/scene.h"
 #include "layout.h"
-#include "logging.h"
 #include "render/circuit/render_connector.h"
 #include "render/circuit/render_overlay.h"
 #include "render/circuit/render_wire.h"
@@ -481,7 +480,6 @@ auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers&
 auto render_interactive_layers(Context& ctx, const Layout& layout,
                                const InteractiveLayers& layers,
                                ImageSurface& surface) -> void {
-    print(layers);
     if (layers.has_inserted()) {
         render_inserted(ctx, layout, layers);
     }
