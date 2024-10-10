@@ -220,14 +220,24 @@ auto format_logicitem(const Layout &layout, logicitem_id_t logicitem_id) -> std:
 }
 
 auto format_wire(const Layout &layout, wire_id_t wire_id) -> std::string {
-    return fmt::format("<Wire {}: {}", wire_id, layout.wires().segment_tree(wire_id));
+    return fmt::format("<Wire {}: {}>", wire_id, layout.wires().segment_tree(wire_id));
 }
 
 auto format_decoration(const Layout &layout,
                        decoration_id_t decoration_id) -> std::string {
-    return fmt::format("<Decoration {}: {} {}", decoration_id,
-                       layout.decorations().type(decoration_id),
-                       layout.decorations().position(decoration_id));
+    const auto type = layout.decorations().type(decoration_id);
+
+    using enum DecorationType;
+    const auto attr_str =
+        type == text_element
+            ? fmt::format(" \"{}\"",
+                          layout.decorations().attrs_text_element(decoration_id))
+            : std::string {};
+
+    return fmt::format("<Decoration {}: {}x{} {} {}{}>", decoration_id,
+                       layout.decorations().width(decoration_id),
+                       layout.decorations().height(decoration_id), type,
+                       layout.decorations().position(decoration_id), attr_str);
 }
 
 auto is_inserted(const Layout &layout, logicitem_id_t logicitem_id) -> bool {
