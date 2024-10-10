@@ -226,6 +226,7 @@ auto format_wire(const Layout &layout, wire_id_t wire_id) -> std::string {
 auto format_decoration(const Layout &layout,
                        decoration_id_t decoration_id) -> std::string {
     const auto type = layout.decorations().type(decoration_id);
+    const auto size = layout.decorations().size(decoration_id);
 
     using enum DecorationType;
     const auto attr_str =
@@ -233,11 +234,9 @@ auto format_decoration(const Layout &layout,
             ? fmt::format(" \"{}\"",
                           layout.decorations().attrs_text_element(decoration_id))
             : std::string {};
-
-    return fmt::format("<Decoration {}: {}x{} {} {}{}>", decoration_id,
-                       layout.decorations().width(decoration_id),
-                       layout.decorations().height(decoration_id), type,
-                       layout.decorations().position(decoration_id), attr_str);
+    return fmt::format("<Decoration {}: {}x{} {} {}{}>", decoration_id, size.width,
+                       size.height, type, layout.decorations().position(decoration_id),
+                       attr_str);
 }
 
 auto is_inserted(const Layout &layout, logicitem_id_t logicitem_id) -> bool {

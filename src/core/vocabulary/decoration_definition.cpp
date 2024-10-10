@@ -19,8 +19,7 @@ auto DecorationDefinition::format() const -> std::string {
         attrs_text_element ? fmt::format(", attrs_text_element={}", *attrs_text_element)
                            : std::string {};
 
-    return fmt::format("LogicItemDefinition({} ({},{}) {})", decoration_type, width,
-                       height, attr_str);
+    return fmt::format("LogicItemDefinition({} {} {})", decoration_type, size, attr_str);
 }
 
 }  // namespace logicsim

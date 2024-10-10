@@ -9,12 +9,12 @@ namespace logicsim {
 namespace layout_info {
 
 [[nodiscard]] auto is_decoration_size_valid(DecorationType decoration_type,
-                                            offset_t width, offset_t height) -> bool {
+                                            size_2d_t size) -> bool {
     switch (decoration_type) {
         using enum DecorationType;
 
         case text_element:
-            return width >= offset_t {0} && height == offset_t {0};
+            return size.width >= offset_t {0} && size.height == offset_t {0};
     }
     std::terminate();
 }
@@ -25,8 +25,8 @@ namespace {
     const decoration_layout_data_t& data) -> body_points_vector {
     const auto& p0 = data.position;
     const auto p1 = point_t {
-        to_grid(data.width, data.position.x),
-        to_grid(data.height, data.position.y),
+        to_grid(data.size.width, data.position.x),
+        to_grid(data.size.height, data.position.y),
     };
 
     auto result = body_points_vector {};

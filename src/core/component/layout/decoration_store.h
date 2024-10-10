@@ -5,9 +5,9 @@
 #include "vocabulary/decoration_id.h"
 #include "vocabulary/decoration_type.h"
 #include "vocabulary/display_state.h"
-#include "vocabulary/offset.h"
 #include "vocabulary/point.h"
 #include "vocabulary/rect.h"
+#include "vocabulary/size_2d.h"
 
 #include <ankerl/unordered_dense.h>
 
@@ -51,9 +51,8 @@ class DecorationStore {
     [[nodiscard]] auto operator==(const DecorationStore &) const -> bool = default;
 
     // getters
-    [[nodiscard]] auto width(decoration_id_t decoration_id) const -> offset_t;
-    [[nodiscard]] auto height(decoration_id_t decoration_id) const -> offset_t;
     [[nodiscard]] auto type(decoration_id_t decoration_id) const -> DecorationType;
+    [[nodiscard]] auto size(decoration_id_t decoration_id) const -> size_2d_t;
     [[nodiscard]] auto position(decoration_id_t decoration_id) const -> point_t;
     [[nodiscard]] auto display_state(decoration_id_t decoration_id) const
         -> display_state_t;
@@ -74,8 +73,7 @@ class DecorationStore {
 
    private:
     std::vector<DecorationType> decoration_types_ {};
-    std::vector<offset_t> widths_ {};
-    std::vector<offset_t> heights_ {};
+    std::vector<size_2d_t> sizes_ {};
 
     std::vector<point_t> positions_ {};
     std::vector<display_state_t> display_states_ {};

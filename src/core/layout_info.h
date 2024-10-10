@@ -14,7 +14,7 @@
 namespace logicsim {
 
 struct grid_t;
-struct offset_t;
+struct size_2d_t;
 struct grid_fine_t;
 struct point_t;
 struct rect_t;
@@ -53,7 +53,7 @@ struct decoration_layout_data_t;
  * brief: Checks if the input and output count is valid.
  */
 [[nodiscard]] auto is_decoration_size_valid(DecorationType decoration_type,
-                                            offset_t width, offset_t height) -> bool;
+                                            size_2d_t size) -> bool;
 
 /**
  * brief: Checks if a logic item can be fully placed on the grid.

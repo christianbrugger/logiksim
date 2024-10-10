@@ -54,8 +54,7 @@ auto add_random_button(Rng& rng, EditableCircuit& editable_circuit, grid_t min,
 auto add_random_text(Rng& rng, EditableCircuit& editable_circuit, grid_t min, grid_t max,
                      bool random_modes) -> void {
     const auto definition = DecorationDefinition {
-        .width = offset_t {0},
-        .height = offset_t {0},
+        .size = size_2d_t {0, 0},
         .decoration_type = DecorationType::text_element,
         .attrs_text_element = attributes_text_element_t {.text = ""},
     };

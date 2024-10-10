@@ -3,7 +3,7 @@
 
 #include "format/struct.h"
 #include "vocabulary/decoration_type.h"
-#include "vocabulary/offset.h"
+#include "vocabulary/size_2d.h"
 
 #include <compare>
 #include <optional>
@@ -32,8 +32,7 @@ static_assert(std::is_aggregate_v<attributes_text_element_t>);
  * @brief: Defines all attributes of a layout decoration.
  */
 struct DecorationDefinition {
-    offset_t width;
-    offset_t height;
+    size_2d_t size;
     DecorationType decoration_type {DecorationType::text_element};
 
     std::optional<attributes_text_element_t> attrs_text_element {};

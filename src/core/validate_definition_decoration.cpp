@@ -13,7 +13,7 @@ auto is_valid(const attributes_text_element_t& a) -> bool {
 auto is_valid(const DecorationDefinition& d) -> bool {
     using enum DecorationType;
 
-    if (!is_decoration_size_valid(d.decoration_type, d.width, d.height)) {
+    if (!is_decoration_size_valid(d.decoration_type, d.size)) {
         return false;
     }
 

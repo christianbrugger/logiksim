@@ -290,6 +290,7 @@ set(LS_CORE_SOURCES
     vocabulary/setting_attribute.cpp
     vocabulary/shape_draw_type.cpp
     vocabulary/simulation_config.cpp
+    vocabulary/size_2d.cpp
     vocabulary/size_device.cpp
     vocabulary/text_alignment.cpp
     vocabulary/thread_count.cpp

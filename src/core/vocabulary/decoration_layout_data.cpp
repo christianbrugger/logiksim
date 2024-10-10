@@ -7,9 +7,9 @@ namespace logicsim {
 auto decoration_layout_data_t::format() const -> std::string {
     return fmt::format(
         "decoration_layout_data_t("
-        "position = {}, width = {}, height = {}, type={}"
+        "position = {}, size = {}, type={}"
         ")",
-        position, width, height, decoration_type);
+        position, size, decoration_type);
 }
 
 //
@@ -20,8 +20,7 @@ auto to_decoration_layout_data(const DecorationDefinition& definition,
                                point_t position) -> decoration_layout_data_t {
     return decoration_layout_data_t {
         .position = position,
-        .width = definition.width,
-        .height = definition.height,
+        .size = definition.size,
         .decoration_type = definition.decoration_type,
     };
 }

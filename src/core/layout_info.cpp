@@ -68,9 +68,8 @@ auto is_orientation_valid(LogicItemType logicitem_type,
     std::terminate();
 }
 
-auto is_decoration_size_valid(DecorationType decoration_type, offset_t width,
-                              offset_t height) -> bool {
-    return layout_info::is_decoration_size_valid(decoration_type, width, height);
+auto is_decoration_size_valid(DecorationType decoration_type, size_2d_t size) -> bool {
+    return layout_info::is_decoration_size_valid(decoration_type, size);
 }
 
 auto is_representable(layout_calculation_data_t data) -> bool {
@@ -86,7 +85,7 @@ auto is_representable(layout_calculation_data_t data) -> bool {
 }
 
 auto is_representable(const decoration_layout_data_t &data) -> bool {
-    return is_representable(data.position, int {data.width}, int {data.height});
+    return is_representable(data.position, int {data.size.width}, int {data.size.height});
 }
 
 auto is_valid(const layout_calculation_data_t &data) -> bool {
@@ -97,8 +96,7 @@ auto is_valid(const layout_calculation_data_t &data) -> bool {
 }
 
 auto is_valid(const decoration_layout_data_t &data) -> bool {
-    return layout_info::is_decoration_size_valid(data.decoration_type, data.width,
-                                                 data.height) &&
+    return layout_info::is_decoration_size_valid(data.decoration_type, data.size) &&
            is_representable(data);
 }
 
@@ -209,8 +207,8 @@ auto element_bounding_rect(const layout_calculation_data_t &data) -> rect_t {
 }
 
 auto element_bounding_rect(const decoration_layout_data_t &data) -> rect_t {
-    const auto p1 = point_t {to_grid(data.width, data.position.x),
-                             to_grid(data.height, data.position.y)};
+    const auto p1 = point_t {to_grid(data.size.width, data.position.x),
+                             to_grid(data.size.height, data.position.y)};
     return rect_t {data.position, p1};
 }
 
