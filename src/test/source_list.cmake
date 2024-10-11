@@ -64,6 +64,7 @@ set(LS_TEST_SOURCES
 
     layout_test.cpp
     line_tree_test.cpp
+    load_save_file_test.cpp
     part_selection_test.cpp
     schematic_test.cpp
     segment_tree_test.cpp

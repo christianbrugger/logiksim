@@ -11,6 +11,7 @@
 #include <ranges>
 
 namespace logicsim {
+
 TEST(Schematic, EmptySchematic) {
     const auto schematic = Schematic {};
 
