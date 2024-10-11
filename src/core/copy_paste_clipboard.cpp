@@ -25,7 +25,7 @@ auto parse_clipboard_text(const std::string& text)
     -> std::optional<serialize::LoadLayoutResult> {
     const auto binary = base64_decode(text);
     if (binary.empty()) {
-        return std::nullopt;
+        return load_layout(text);
     }
     return load_layout(binary);
 }
