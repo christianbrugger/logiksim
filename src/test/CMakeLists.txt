@@ -21,6 +21,7 @@ add_executable(${MAIN_TEST_TARGET}
 )
 target_link_libraries(${MAIN_TEST_TARGET} PRIVATE 
     ${MAIN_LIBRARY} 
+    logiksim_example_circuits
     GTest::gtest
     GTest::gmock
     GTest::gtest_main
