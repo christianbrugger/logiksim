@@ -4,13 +4,15 @@
 #include "editable_circuit.h"
 #include "serialize.h"
 #include "vocabulary/point.h"
+#include "vocabulary/save_format.h"
 
 namespace logicsim {
 
 auto selection_to_clipboard_text(const Layout& layout, const Selection& selection,
                                  point_t copy_position) -> std::string {
     if (!selection.empty()) {
-        return base64_encode(serialize_selected(layout, selection, copy_position));
+        return serialize_selected(layout, selection, copy_position,
+                                  SaveFormat::base64_gzip);
     }
     return std::string {};
 }
@@ -23,11 +25,7 @@ auto visible_selection_to_clipboard_text(const EditableCircuit& editable_circuit
 
 auto parse_clipboard_text(const std::string& text)
     -> std::optional<serialize::LoadLayoutResult> {
-    const auto binary = base64_decode(text);
-    if (binary.empty()) {
-        return load_layout(text);
-    }
-    return load_layout(binary);
+    return load_layout(text);
 }
 
 namespace {

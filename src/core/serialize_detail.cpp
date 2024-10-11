@@ -239,7 +239,7 @@ auto json_loads(std::string text) -> std::optional<serialize::SerializedLayout> 
         }
         return std::nullopt;
     }
-    if (version.value() != serialize::CURRENT_VERSION) {
+    if (version.value() > serialize::CURRENT_VERSION) {
         print("Error wrong version. Expected", serialize::CURRENT_VERSION, "got",
               version.value());
         return std::nullopt;

@@ -3,6 +3,7 @@
 
 #include "vocabulary/insertion_mode.h"
 #include "vocabulary/point.h"
+#include "vocabulary/save_format.h"
 #include "vocabulary/selection_id.h"
 
 #include <gsl/gsl>
@@ -25,9 +26,10 @@ struct SimulationConfig;
  *
  * Throws an exception if any element is not display state normal.
  */
-[[nodiscard]] auto serialize_all(
-    const Layout& layout, std::optional<ViewPoint> view_point,
-    std::optional<SimulationConfig> simulation_config) -> std::string;
+[[nodiscard]] auto serialize_all(const Layout& layout,
+                                 std::optional<ViewPoint> view_point,
+                                 std::optional<SimulationConfig> simulation_config,
+                                 SaveFormat format) -> std::string;
 
 /**
  * @brief: Serialize the selected elements.
@@ -37,8 +39,8 @@ struct SimulationConfig;
  * Throws an exception if a selected element does not have display state normal.
  */
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
-                                      point_t save_position = point_t {0,
-                                                                       0}) -> std::string;
+                                      std::optional<point_t> save_position,
+                                      SaveFormat format) -> std::string;
 
 namespace serialize {
 struct SerializedLayout;
@@ -68,6 +70,9 @@ static_assert(std::copyable<LoadLayoutResult>);
 
 }  // namespace serialize
 
+/**
+ * @brief: Load layout form json data that is optionall gzipped and base64 encoded.
+ */
 [[nodiscard]] auto load_layout(const std::string& binary)
     -> std::optional<serialize::LoadLayoutResult>;
 

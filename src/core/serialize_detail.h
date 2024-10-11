@@ -17,7 +17,20 @@
 
 namespace logicsim::serialize {
 
-constexpr static inline auto CURRENT_VERSION = 100;
+/**
+ * @brief: Save file version, always increasing.
+ *
+ * 100: LogikSim 2.1.0
+ * 200: LogikSim 2.2.0
+ */
+constexpr static inline auto CURRENT_VERSION = 200;
+
+/**
+ * @brief: Minimum LogikSim version for the save-file version
+ *
+ * Stored in the json, so older version know what to upgrade to.
+ */
+constexpr static inline auto MIN_LS_APP_VERSION_STR = "2.2.0";
 
 struct SerializedLine {
     point_t p0;
@@ -77,6 +90,7 @@ struct SerializedSimulationConfig {
 
 struct SerializedLayout {
     int version {CURRENT_VERSION};
+    std::string minimum_logiksim_version {MIN_LS_APP_VERSION_STR};
     // used for copy & paste
     point_t save_position {0, 0};
     // used for file loading

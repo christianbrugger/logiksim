@@ -11,13 +11,14 @@ auto serialize_circuit(const Layout& layout,
         .use_wire_delay = simulation_config.use_wire_delay,
     };
 
-    return serialize_all(layout, {}, relevant_config);
+    return serialize_all(layout, {}, relevant_config, SaveFormat::gzip);
 }
 
 auto save_circuit_to_file(const Layout& layout, const std::filesystem::path& filename,
                           std::optional<ViewPoint> view_point,
                           std::optional<SimulationConfig> simulation_config) -> bool {
-    const auto binary = serialize_all(layout, view_point, simulation_config);
+    const auto binary =
+        serialize_all(layout, view_point, simulation_config, SaveFormat::gzip);
     return save_file(filename, binary);
 }
 

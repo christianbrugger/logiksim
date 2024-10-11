@@ -282,6 +282,7 @@ set(LS_CORE_SOURCES
     vocabulary/rect.cpp
     vocabulary/rect_fine.cpp
     vocabulary/render_mode.cpp
+    vocabulary/save_format.cpp
     vocabulary/segment.cpp
     vocabulary/segment_index.cpp
     vocabulary/segment_info.cpp

@@ -15,6 +15,7 @@
 
 #include "serialize.h"
 
+#include "base64.h"
 #include "editable_circuit.h"
 #include "file.h"
 #include "geometry/line.h"
@@ -31,6 +32,7 @@
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/placed_decoration.h"
 #include "vocabulary/placed_logicitem.h"
+#include "vocabulary/save_format.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/view_config.h"
 
@@ -97,7 +99,6 @@ struct move_delta_t {
     }
     return std::nullopt;
 }
-}  // namespace
 
 [[nodiscard]] auto to_placed_logicitem(const SerializedLogicItem& obj,
                                        move_delta_t delta = {})
@@ -308,11 +309,29 @@ auto add_element(SerializedLayout& data, const Layout& layout,
     };
 }
 
+[[nodiscard]] auto serialize_to_format(const SerializedLayout& data,
+                                       SaveFormat format) -> std::string {
+    switch (format) {
+        using enum SaveFormat;
+
+        case base64_gzip:
+            return base64_encode(gzip_compress(json_dumps(data)));
+        case gzip:
+            return gzip_compress(json_dumps(data));
+        case json:
+            return json_dumps(data);
+    }
+    std::terminate();
+}
+
+}  // namespace
+
 }  // namespace serialize
 
-[[nodiscard]] auto serialize_all(
-    const Layout& layout, std::optional<ViewPoint> view_point,
-    std::optional<SimulationConfig> simulation_config) -> std::string {
+[[nodiscard]] auto serialize_all(const Layout& layout,
+                                 std::optional<ViewPoint> view_point,
+                                 std::optional<SimulationConfig> simulation_config,
+                                 SaveFormat format) -> std::string {
     if (!all_normal_display_state(layout)) {
         throw std::runtime_error("all items must have display state normal");
     }
@@ -337,17 +356,18 @@ auto add_element(SerializedLayout& data, const Layout& layout,
         serialize::add_element(data, layout, wire_id);
     }
 
-    return gzip_compress(json_dumps(data));
+    return serialize::serialize_to_format(data, format);
 }
 
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
-                                      point_t save_position) -> std::string {
+                                      std::optional<point_t> save_position,
+                                      SaveFormat format) -> std::string {
     if (!all_normal_display_state(selection, layout)) {
         throw std::runtime_error("all selected items must have display state normal");
     }
 
     auto data = serialize::SerializedLayout {
-        .save_position = save_position,
+        .save_position = save_position ? *save_position : point_t {0, 0},
     };
 
     for (const auto logicitem_id : selection.selected_logicitems()) {
@@ -366,20 +386,29 @@ auto add_element(SerializedLayout& data, const Layout& layout,
         }
     }
 
-    return gzip_compress(json_dumps(data));
+    return serialize::serialize_to_format(data, format);
 }
 
 namespace serialize {
 
-auto unserialize_data(const std::string& binary) -> std::optional<SerializedLayout> {
-    // unzip
-    const auto json_text = gzip_decompress(binary);
-    if (json_text.empty()) {
-        // try to load as plain json
-        return json_loads(binary);
-    }
+namespace {
 
-    return json_loads(json_text);
+auto unserialize_base64_gzip_json(const std::string& binary)
+    -> std::optional<SerializedLayout> {
+    if (const auto format = guess_save_format(binary); format.has_value()) {
+        switch (*format) {
+            using enum SaveFormat;
+
+            case base64_gzip:
+                return json_loads(gzip_decompress(base64_decode(binary)));
+            case gzip:
+                return json_loads(gzip_decompress(binary));
+            case json:
+                return json_loads(binary);
+        }
+        std::terminate();
+    }
+    return std::nullopt;
 }
 
 auto calculate_move_delta(point_t save_position,
@@ -390,6 +419,8 @@ auto calculate_move_delta(point_t save_position,
     return {int {load_position->x} - int {save_position.x},
             int {load_position->y} - int {save_position.y}};
 }
+
+}  // namespace
 
 LoadLayoutResult::LoadLayoutResult(SerializedLayout&& serialize_layout)
     : data_ {std::make_shared<SerializedLayout>(std::move(serialize_layout))} {
@@ -444,7 +475,7 @@ auto LoadLayoutResult::simulation_config() const -> SimulationConfig {
 
 auto load_layout(const std::string& binary)
     -> std::optional<serialize::LoadLayoutResult> {
-    auto data = serialize::unserialize_data(binary);
+    auto data = serialize::unserialize_base64_gzip_json(binary);
     if (!data) {
         return std::nullopt;
     }
