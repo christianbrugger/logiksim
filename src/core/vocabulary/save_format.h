@@ -3,6 +3,7 @@
 
 #include "format/enum.h"
 
+#include <optional>
 #include <string>
 
 namespace logicsim {
