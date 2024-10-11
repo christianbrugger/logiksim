@@ -5,6 +5,16 @@
 #include <glaze/glaze.hpp>
 #include <glaze/glaze_exceptions.hpp>
 
+namespace logicsim {
+
+namespace {
+
+constexpr static inline auto debug_print_json = false;
+
+}
+
+}  // namespace logicsim
+
 template <>
 struct glz::meta<logicsim::LogicItemType> {
     using enum logicsim::LogicItemType;
@@ -28,6 +38,15 @@ struct glz::meta<logicsim::LogicItemType> {
         "flipflop_master_slave_d", flipflop_ms_d,  //
 
         "sub_circuit", sub_circuit  //
+    );
+};
+
+template <>
+struct glz::meta<logicsim::DecorationType> {
+    using enum logicsim::DecorationType;
+
+    static constexpr auto value = enumerate(  //
+        "text_element", text_element          //
     );
 };
 
@@ -56,6 +75,23 @@ struct glz::meta<logicsim::point_t> {
     using T = logicsim::point_t;
 
     static constexpr auto value = array(&T::x, &T::y);
+};
+
+template <>
+struct glz::meta<logicsim::offset_t> {
+    using T = logicsim::offset_t;
+
+    static constexpr auto value = &T::value;
+};
+
+template <>
+struct glz::meta<logicsim::size_2d_t> {
+    using T = logicsim::size_2d_t;
+
+    static constexpr auto value = glz::object(  //
+        "width", &T::width,                     //
+        "height", &T::height                    //
+    );
 };
 
 template <>
@@ -112,6 +148,32 @@ struct glz::meta<SerializedLogicItem> {
     );
 };
 
+using logicsim::serialize::SerializedAttributesTextElement;
+
+template <>
+struct glz::meta<SerializedAttributesTextElement> {
+    using T = SerializedAttributesTextElement;
+
+    static constexpr auto value = glz::object(  //
+        "text", &T::text                        //
+    );
+};
+
+using logicsim::serialize::SerializedDecoration;
+
+template <>
+struct glz::meta<SerializedDecoration> {
+    using T = SerializedDecoration;
+
+    static constexpr auto value = glz::object(   //
+        "decoration_type", &T::decoration_type,  //
+        "position", &T::position,                //
+        "size", &T::size,                        //
+
+        "attributes_text_element", &T::attributes_text_element  //
+    );
+};
+
 using logicsim::serialize::SerializedViewPoint;
 
 template <>
@@ -149,19 +211,19 @@ struct glz::meta<SerializedLayout> {
         "view_config", &T::view_point,                 //
         "simulation_settings", &T::simulation_config,  //
 
-        "logicitems", &T::logicitems,       //
+        "logic_items", &T::logicitems,      //
+        "decorations", &T::decorations,     //
         "wire_segments", &T::wire_segments  //
+
     );
 };
 
 namespace logicsim {
 
 auto json_dumps(const serialize::SerializedLayout& data) -> std::string {
-    constexpr auto debug_json = false;
-
     const auto json_text = glz::ex::write_json(data);
 
-    if constexpr (debug_json) {
+    if constexpr (debug_print_json) {
         print(glz::prettify_json(json_text));
     }
     return json_text;

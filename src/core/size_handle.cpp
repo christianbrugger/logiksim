@@ -14,7 +14,7 @@
 #include "selection.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/logicitem_id.h"
-#include "vocabulary/placed_element.h"
+#include "vocabulary/placed_logicitem.h"
 #include "vocabulary/view_config.h"
 
 #include <blend2d.h>
@@ -181,17 +181,17 @@ auto clamp_connection_count(connection_count_t count, int delta, connection_coun
     return connection_count_t {clamped_count};
 }
 
-auto element_height(const PlacedElement& element) -> grid_t {
+auto element_height(const PlacedLogicItem& element) -> grid_t {
     const auto data = to_layout_calculation_data(element);
     return element_height(data);
 }
 
-auto adjust_height(const PlacedElement& original, size_handle_t handle, int delta) {
+auto adjust_height(const PlacedLogicItem& original, size_handle_t handle, int delta) {
     if (handle.index != 0 && handle.index != 1) {
         throw std::runtime_error("unknown handle index");
     }
 
-    auto result = PlacedElement {original};
+    auto result = PlacedLogicItem {original};
 
     const auto min_inputs = element_input_count_min(original.definition.logicitem_type);
     const auto max_inputs = element_input_count_max(original.definition.logicitem_type);
@@ -225,8 +225,8 @@ auto adjust_height(const PlacedElement& original, size_handle_t handle, int delt
 
 }  // namespace
 
-auto get_resized_element(const PlacedElement& original, size_handle_t handle,
-                         int delta) -> PlacedElement {
+auto get_resized_element(const PlacedLogicItem& original, size_handle_t handle,
+                         int delta) -> PlacedLogicItem {
     switch (original.definition.logicitem_type) {
         using enum LogicItemType;
 
@@ -257,7 +257,8 @@ auto get_resized_element(const PlacedElement& original, size_handle_t handle,
     std::terminate();
 }
 
-auto get_single_placed_element(const EditableCircuit& editable_circuit) -> PlacedElement {
+auto get_single_placed_element(const EditableCircuit& editable_circuit)
+    -> PlacedLogicItem {
     const auto element_id = get_single_logicitem(editable_circuit.visible_selection());
     Expects(element_id);
 

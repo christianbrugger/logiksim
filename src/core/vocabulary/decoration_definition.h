@@ -32,8 +32,8 @@ static_assert(std::is_aggregate_v<attributes_text_element_t>);
  * @brief: Defines all attributes of a layout decoration.
  */
 struct DecorationDefinition {
-    size_2d_t size;
     DecorationType decoration_type {DecorationType::text_element};
+    size_2d_t size {0, 0};
 
     std::optional<attributes_text_element_t> attrs_text_element {};
 

@@ -2,12 +2,14 @@
 #define LOGIKSIM_SERIALIZE_DETAIL_H
 
 #include "vocabulary/connection_count.h"
+#include "vocabulary/decoration_type.h"
 #include "vocabulary/logic_small_vector.h"
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_type.h"
 #include "vocabulary/orientation.h"
 #include "vocabulary/point.h"
 #include "vocabulary/point_fine.h"
+#include "vocabulary/size_2d.h"
 
 #include <cstdint>
 #include <optional>
@@ -22,7 +24,8 @@ struct SerializedLine {
     point_t p1;
 };
 
-constexpr static inline auto name_max_size = 100;
+constexpr static inline auto clock_generator_name_max_size = 100;
+constexpr static inline auto text_element_text_max_size = 10'000;
 
 struct SerializedAttributesClockGenerator {
     std::string name;
@@ -49,6 +52,18 @@ struct SerializedLogicItem {
     std::optional<SerializedAttributesClockGenerator> attributes_clock_generator;
 };
 
+struct SerializedAttributesTextElement {
+    std::string text;
+};
+
+struct SerializedDecoration {
+    DecorationType decoration_type;
+    point_t position;
+    size_2d_t size;
+
+    std::optional<SerializedAttributesTextElement> attributes_text_element;
+};
+
 struct SerializedViewPoint {
     double device_scale {};
     grid_fine_t grid_offset_x {};
@@ -69,6 +84,7 @@ struct SerializedLayout {
     SerializedSimulationConfig simulation_config {};
 
     std::vector<SerializedLogicItem> logicitems {};
+    std::vector<SerializedDecoration> decorations {};
     std::vector<SerializedLine> wire_segments {};
 };
 

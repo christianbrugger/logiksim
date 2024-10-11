@@ -15,7 +15,7 @@ namespace logicsim {
 
 struct layout_calculation_data_t;
 struct decoration_layout_data_t;
-struct PlacedElement;
+struct PlacedLogicItem;
 
 /**
  * @brief: The layout is the visual representation of the circuit, consisting of
@@ -130,7 +130,7 @@ class Layout {
 [[nodiscard]] auto to_decoration_definition(
     const Layout &layout, decoration_id_t decoration_id) -> DecorationDefinition;
 [[nodiscard]] auto to_placed_element(const Layout &layout,
-                                     logicitem_id_t logicitem_id) -> PlacedElement;
+                                     logicitem_id_t logicitem_id) -> PlacedLogicItem;
 
 [[nodiscard]] auto get_display_states(const Layout &layout, segment_part_t segment_part)
     -> std::pair<display_state_t, display_state_t>;

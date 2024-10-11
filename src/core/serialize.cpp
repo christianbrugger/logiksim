@@ -22,12 +22,15 @@
 #include "gzip.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "logging.h"
 #include "selection.h"
 #include "serialize_detail.h"
+#include "validate_definition_decoration.h"
 #include "validate_definition_logicitem.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/logicitem_definition.h"
-#include "vocabulary/placed_element.h"
+#include "vocabulary/placed_decoration.h"
+#include "vocabulary/placed_logicitem.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/view_config.h"
 
@@ -36,13 +39,16 @@
 namespace logicsim {
 
 namespace serialize {
+
+namespace {
+
 struct move_delta_t {
     int x;
     int y;
 };
 
-auto to_line(const SerializedLine& obj,
-             move_delta_t delta = {}) -> std::optional<line_t> {
+[[nodiscard]] auto to_line(const SerializedLine& obj,
+                           move_delta_t delta = {}) -> std::optional<line_t> {
     if (!is_orthogonal_line(obj.p0, obj.p1)) [[unlikely]] {
         return std::nullopt;
     }
@@ -54,8 +60,9 @@ auto to_line(const SerializedLine& obj,
     return add_unchecked(line_t {obj.p0, obj.p1}, delta.x, delta.y);
 }
 
-auto parse_attr_clock_generator(const std::optional<SerializedAttributesClockGenerator>&
-                                    obj) -> std::optional<attributes_clock_generator_t> {
+[[nodiscard]] auto parse_attr_clock_generator(
+    const std::optional<SerializedAttributesClockGenerator>& obj)
+    -> std::optional<attributes_clock_generator_t> {
     if (obj.has_value()) {
         static_assert(std::is_same_v<delay_t::period, std::nano>);
         static_assert(std::is_same_v<delay_t::rep, decltype(obj->time_symmetric_ns)>);
@@ -63,8 +70,8 @@ auto parse_attr_clock_generator(const std::optional<SerializedAttributesClockGen
         static_assert(std::is_same_v<delay_t::rep, decltype(obj->time_off_ns)>);
 
         auto limited_name = obj->name;
-        if (limited_name.size() > name_max_size) {
-            limited_name.resize(name_max_size);
+        if (limited_name.size() > clock_generator_name_max_size) {
+            limited_name.resize(clock_generator_name_max_size);
         }
 
         return attributes_clock_generator_t {
@@ -82,8 +89,7 @@ auto parse_attr_clock_generator(const std::optional<SerializedAttributesClockGen
     return std::nullopt;
 }
 
-namespace {
-auto to_connection_count(connection_count_t::value_type_rep value)
+[[nodiscard]] auto to_connection_count(connection_count_t::value_type_rep value)
     -> std::optional<connection_count_t> {
     if (connection_count_t::min().count() <= value &&
         value <= connection_count_t::max().count()) {
@@ -93,8 +99,9 @@ auto to_connection_count(connection_count_t::value_type_rep value)
 }
 }  // namespace
 
-auto to_placed_element(const SerializedLogicItem& obj,
-                       move_delta_t delta = {}) -> std::optional<PlacedElement> {
+[[nodiscard]] auto to_placed_logicitem(const SerializedLogicItem& obj,
+                                       move_delta_t delta = {})
+    -> std::optional<PlacedLogicItem> {
     // definition
     const auto input_count = to_connection_count(obj.input_count);
     const auto output_count = to_connection_count(obj.output_count);
@@ -130,13 +137,63 @@ auto to_placed_element(const SerializedLogicItem& obj,
         return std::nullopt;
     }
 
-    return PlacedElement {
+    return PlacedLogicItem {
         .definition = definition,
         .position = moved_position,
     };
 }
 
-auto serialize_attr_clock_generator(const Layout& layout, logicitem_id_t logicitem_id)
+[[nodiscard]] auto parse_attr_text_element(
+    const std::optional<SerializedAttributesTextElement>& obj)
+    -> std::optional<attributes_text_element_t> {
+    if (obj.has_value()) {
+        auto limited_text = obj->text;
+        if (limited_text.size() > text_element_text_max_size) {
+            limited_text.resize(text_element_text_max_size);
+        }
+
+        return attributes_text_element_t {
+            .text = limited_text,
+        };
+    }
+
+    return std::nullopt;
+}
+
+[[nodiscard]] auto to_placed_decoration(const SerializedDecoration& obj,
+                                        move_delta_t delta = {})
+    -> std::optional<PlacedDecoration> {
+    // definition
+    const auto definition = DecorationDefinition {
+        .decoration_type = obj.decoration_type,
+        .size = obj.size,
+
+        .attrs_text_element = parse_attr_text_element(obj.attributes_text_element),
+    };
+    if (!is_valid(definition)) {
+        return std::nullopt;
+    }
+
+    // position
+    if (!is_representable(obj.position, delta.x, delta.y)) {
+        return std::nullopt;
+    }
+    const auto moved_position = add_unchecked(obj.position, delta.x, delta.y);
+
+    // layout
+    const auto data = to_decoration_layout_data(definition, moved_position);
+    if (!is_representable(data)) {
+        return std::nullopt;
+    }
+
+    return PlacedDecoration {
+        .definition = definition,
+        .position = moved_position,
+    };
+}
+
+[[nodiscard]] auto serialize_attr_clock_generator(const Layout& layout,
+                                                  logicitem_id_t logicitem_id)
     -> std::optional<SerializedAttributesClockGenerator> {
     if (layout.logicitems().type(logicitem_id) == LogicItemType::clock_generator) {
         const auto& attr = layout.logicitems().attrs_clock_generator(logicitem_id);
@@ -174,6 +231,31 @@ auto add_element(SerializedLayout& data, const Layout& layout,
     });
 }
 
+[[nodiscard]] auto serialize_attr_text_element(const Layout& layout,
+                                               decoration_id_t decoration_id)
+    -> std::optional<SerializedAttributesTextElement> {
+    if (layout.decorations().type(decoration_id) == DecorationType::text_element) {
+        const auto& attr = layout.decorations().attrs_text_element(decoration_id);
+
+        return SerializedAttributesTextElement {
+            .text = attr.text,
+        };
+    }
+
+    return std::nullopt;
+}
+
+auto add_element(SerializedLayout& data, const Layout& layout,
+                 decoration_id_t decoration_id) -> void {
+    data.decorations.push_back(SerializedDecoration {
+        .decoration_type = layout.decorations().type(decoration_id),
+        .position = layout.decorations().position(decoration_id),
+        .size = layout.decorations().size(decoration_id),
+
+        .attributes_text_element = serialize_attr_text_element(layout, decoration_id),
+    });
+}
+
 auto add_element(SerializedLayout& data, const Layout& layout,
                  wire_id_t wire_id) -> void {
     for (const auto& info : layout.wires().segment_tree(wire_id)) {
@@ -181,7 +263,8 @@ auto add_element(SerializedLayout& data, const Layout& layout,
     }
 }
 
-auto serialize_view_point(const ViewPoint& view_point) -> SerializedViewPoint {
+[[nodiscard]] auto serialize_view_point(const ViewPoint& view_point)
+    -> SerializedViewPoint {
     return SerializedViewPoint {
         .device_scale = view_point.device_scale,
         .grid_offset_x = view_point.offset.x,
@@ -189,7 +272,7 @@ auto serialize_view_point(const ViewPoint& view_point) -> SerializedViewPoint {
     };
 }
 
-auto parse_view_point(const SerializedViewPoint& serialized) -> ViewPoint {
+[[nodiscard]] auto parse_view_point(const SerializedViewPoint& serialized) -> ViewPoint {
     return ViewPoint {
         .offset = point_fine_t {serialized.grid_offset_x, serialized.grid_offset_y},
         .device_scale = serialized.device_scale > 0 ? serialized.device_scale
@@ -197,7 +280,7 @@ auto parse_view_point(const SerializedViewPoint& serialized) -> ViewPoint {
     };
 }
 
-auto serialize_simulation_config(const SimulationConfig config)
+[[nodiscard]] auto serialize_simulation_config(const SimulationConfig config)
     -> SerializedSimulationConfig {
     const auto rate = config.simulation_time_rate.rate_per_second;
 
@@ -207,7 +290,7 @@ auto serialize_simulation_config(const SimulationConfig config)
     };
 };
 
-auto parse_simulation_config(const SerializedSimulationConfig& config)
+[[nodiscard]] auto parse_simulation_config(const SerializedSimulationConfig& config)
     -> SimulationConfig {
     using namespace std::chrono_literals;
 
@@ -227,8 +310,9 @@ auto parse_simulation_config(const SerializedSimulationConfig& config)
 
 }  // namespace serialize
 
-auto serialize_all(const Layout& layout, std::optional<ViewPoint> view_point,
-                   std::optional<SimulationConfig> simulation_config) -> std::string {
+[[nodiscard]] auto serialize_all(
+    const Layout& layout, std::optional<ViewPoint> view_point,
+    std::optional<SimulationConfig> simulation_config) -> std::string {
     if (!all_normal_display_state(layout)) {
         throw std::runtime_error("all items must have display state normal");
     }
@@ -246,6 +330,9 @@ auto serialize_all(const Layout& layout, std::optional<ViewPoint> view_point,
     for (const auto logicitem_id : logicitem_ids(layout)) {
         serialize::add_element(data, layout, logicitem_id);
     }
+    for (const auto decoration_id : decoration_ids(layout)) {
+        serialize::add_element(data, layout, decoration_id);
+    }
     for (const auto wire_id : inserted_wire_ids(layout)) {
         serialize::add_element(data, layout, wire_id);
     }
@@ -253,8 +340,8 @@ auto serialize_all(const Layout& layout, std::optional<ViewPoint> view_point,
     return gzip_compress(json_dumps(data));
 }
 
-auto serialize_selected(const Layout& layout, const Selection& selection,
-                        point_t save_position) -> std::string {
+[[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
+                                      point_t save_position) -> std::string {
     if (!all_normal_display_state(selection, layout)) {
         throw std::runtime_error("all selected items must have display state normal");
     }
@@ -265,6 +352,9 @@ auto serialize_selected(const Layout& layout, const Selection& selection,
 
     for (const auto logicitem_id : selection.selected_logicitems()) {
         serialize::add_element(data, layout, logicitem_id);
+    }
+    for (const auto decoration_id : selection.selected_decorations()) {
+        serialize::add_element(data, layout, decoration_id);
     }
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
@@ -282,10 +372,11 @@ auto serialize_selected(const Layout& layout, const Selection& selection,
 namespace serialize {
 
 auto unserialize_data(const std::string& binary) -> std::optional<SerializedLayout> {
-    // unip
+    // unzip
     const auto json_text = gzip_decompress(binary);
     if (json_text.empty()) {
-        return std::nullopt;
+        // try to load as plain json
+        return json_loads(binary);
     }
 
     return json_loads(json_text);
@@ -313,10 +404,19 @@ auto LoadLayoutResult::add_to(EditableCircuit& editable_circuit,
 
     // logic items
     for (const auto& item : data_->logicitems) {
-        if (const auto data = to_placed_element(item, delta)) {
+        if (const auto data = to_placed_logicitem(item, delta)) {
             editable_circuit.add_logicitem(data->definition, data->position,
                                            parameters.insertion_mode,
                                            parameters.selection_id);
+        }
+    }
+
+    // decorations
+    for (const auto& item : data_->decorations) {
+        if (const auto data = to_placed_decoration(item, delta)) {
+            editable_circuit.add_decoration(data->definition, data->position,
+                                            parameters.insertion_mode,
+                                            parameters.selection_id);
         }
     }
 

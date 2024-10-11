@@ -10,17 +10,17 @@
 
 namespace logicsim {
 
-struct PlacedElement {
+struct PlacedLogicItem {
     LogicItemDefinition definition {};
     point_t position {0, 0};
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const PlacedElement& other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const PlacedElement&) const = default;
+    [[nodiscard]] auto operator==(const PlacedLogicItem& other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const PlacedLogicItem&) const = default;
 };
 
-static_assert(std::is_aggregate_v<PlacedElement>);
+static_assert(std::is_aggregate_v<PlacedLogicItem>);
 
 }  // namespace logicsim
 

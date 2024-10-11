@@ -1,7 +1,7 @@
 #include "vocabulary/layout_calculation_data.h"
 
 #include "vocabulary/logicitem_definition.h"
-#include "vocabulary/placed_element.h"
+#include "vocabulary/placed_logicitem.h"
 
 #include <fmt/core.h>
 
@@ -33,7 +33,7 @@ auto to_layout_calculation_data(const LogicItemDefinition& definition,
     };
 }
 
-auto to_layout_calculation_data(const PlacedElement& element)
+auto to_layout_calculation_data(const PlacedLogicItem& element)
     -> layout_calculation_data_t {
     return to_layout_calculation_data(element.definition, element.position);
 }

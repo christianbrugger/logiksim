@@ -293,9 +293,8 @@ auto to_decoration_definition(const DecorationStore &store,
     const auto type = store.type(decoration_id);
 
     return DecorationDefinition {
-        .size = store.size(decoration_id),
         .decoration_type = type,
-
+        .size = store.size(decoration_id),
         .attrs_text_element =
             type == DecorationType::text_element
                 ? std::make_optional(store.attrs_text_element(decoration_id))

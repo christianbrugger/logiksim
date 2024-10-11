@@ -271,7 +271,8 @@ set(LS_CORE_SOURCES
     vocabulary/output_delays.cpp
     vocabulary/part.cpp
     vocabulary/part_copy_definition.cpp
-    vocabulary/placed_element.cpp
+    vocabulary/placed_decoration.cpp
+    vocabulary/placed_logicitem.cpp
     vocabulary/point.cpp
     vocabulary/point_device.cpp
     vocabulary/point_device_fine.cpp

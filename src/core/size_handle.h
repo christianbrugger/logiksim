@@ -14,7 +14,7 @@ class Layout;
 class Selection;
 class EditableCircuit;
 struct ViewConfig;
-struct PlacedElement;
+struct PlacedLogicItem;
 
 struct logicitem_id_t;
 struct rect_fine_t;
@@ -47,10 +47,11 @@ auto get_colliding_size_handle(point_fine_t position, const Layout& layout,
                                const Selection& selection,
                                const ViewConfig& config) -> std::optional<size_handle_t>;
 
-auto get_resized_element(const PlacedElement& original, size_handle_t handle,
-                         int delta) -> PlacedElement;
+auto get_resized_element(const PlacedLogicItem& original, size_handle_t handle,
+                         int delta) -> PlacedLogicItem;
 
-auto get_single_placed_element(const EditableCircuit& editable_circuit) -> PlacedElement;
+auto get_single_placed_element(const EditableCircuit& editable_circuit)
+    -> PlacedLogicItem;
 
 }  // namespace logicsim
 

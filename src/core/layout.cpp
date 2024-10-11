@@ -8,7 +8,7 @@
 #include "geometry/segment_info.h"
 #include "vocabulary/decoration_layout_data.h"
 #include "vocabulary/layout_calculation_data.h"
-#include "vocabulary/placed_element.h"
+#include "vocabulary/placed_logicitem.h"
 #include "vocabulary/segment_part.h"
 
 #include <algorithm>
@@ -348,8 +348,8 @@ auto to_decoration_definition(const Layout &layout,
 }
 
 auto to_placed_element(const Layout &layout,
-                       logicitem_id_t logicitem_id) -> PlacedElement {
-    return PlacedElement {
+                       logicitem_id_t logicitem_id) -> PlacedLogicItem {
+    return PlacedLogicItem {
         .definition = to_logicitem_definition(layout, logicitem_id),
         .position = layout.logicitems().position(logicitem_id),
     };
