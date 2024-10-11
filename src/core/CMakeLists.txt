@@ -266,31 +266,6 @@ else()
 endif()
 
 
-###### Resources
-
-# TODO: move to function / other CMakeLists.txt file ???
-
-# Resources
-file(GLOB_RECURSE
-    LS_RESOURCE_FILES
-    RELATIVE ${PROJECT_SOURCE_DIR} 
-    CONFIGURE_DEPENDS
-
-    ${PROJECT_SOURCE_DIR}/resources/**.ttf
-    ${PROJECT_SOURCE_DIR}/resources/**.svg
-)
-FOREACH(LS_RESOURCE_FILE ${LS_RESOURCE_FILES})
-    add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/${LS_RESOURCE_FILE}
-        COMMAND ${CMAKE_COMMAND} -E copy
-            ${PROJECT_SOURCE_DIR}/${LS_RESOURCE_FILE}
-            ${CMAKE_BINARY_DIR}/${LS_RESOURCE_FILE}
-        DEPENDS ${PROJECT_SOURCE_DIR}/${LS_RESOURCE_FILE}
-  )
-ENDFOREACH()
-list(TRANSFORM LS_RESOURCE_FILES PREPEND ${CMAKE_BINARY_DIR}/)
-
-
 ###### Core Library
 
 
@@ -298,7 +273,6 @@ set(MAIN_LIBRARY "simulation_srp")
 
 add_library(${MAIN_LIBRARY} 
     ${LS_CORE_SOURCES}
-    ${LS_RESOURCE_FILES}
 )
 # TODO: remove this and add prefix core to all includes?
 target_include_directories(${MAIN_LIBRARY} PUBLIC
@@ -309,6 +283,7 @@ target_include_directories(${MAIN_LIBRARY} PUBLIC
 )
 target_link_libraries(${MAIN_LIBRARY} PUBLIC 
     ${LS_CORE_LIBRARIES}
+    logiksim_resource_files
 )
 target_link_libraries(${MAIN_LIBRARY} PUBLIC 
     logiksim_options

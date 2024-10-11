@@ -143,5 +143,6 @@ set(MAIN_LIBRARY "simulation_srp")
 
 # MAIN
 add_subdirectory(example_circuits)
+add_subdirectory(resources)
 add_subdirectory(src)
 
