@@ -127,4 +127,61 @@ TEST(LoadSaveFile, SaveLoadExample1) {
     EXPECT_EQ(layout_orig, layout_load);
 }
 
+//
+// Error Handling
+//
+
+TEST(LoadSaveFile, ErrorMissingFile) {
+    const auto file = to_path("example_circuits/errors/error_missing_file.ls2");
+    auto result = load_circuit_from_file(file);
+    ASSERT_EQ(result.has_value(), false);
+    EXPECT_EQ(result.error().type(), LoadErrorType::file_open_error);
+}
+
+TEST(LoadSaveFile, ErrorBase64Padding) {
+    const auto file = to_path("example_circuits/errors/error_b64_padding.ls2");
+    auto result = load_circuit_from_file(file);
+    ASSERT_EQ(result.has_value(), false);
+    EXPECT_EQ(result.error().type(), LoadErrorType::base64_decode_error);
+}
+
+TEST(LoadSaveFile, ErrorBase64Symbol) {
+    const auto file = to_path("example_circuits/errors/error_b64_symbol.ls2");
+    auto result = load_circuit_from_file(file);
+    ASSERT_EQ(result.has_value(), false);
+    EXPECT_EQ(result.error().type(), LoadErrorType::base64_decode_error);
+}
+
+TEST(LoadSaveFile, ErrorGZipCRC) {
+    const auto file = to_path("example_circuits/errors/error_gzip_crc.ls2");
+    auto result = load_circuit_from_file(file);
+    ASSERT_EQ(result.has_value(), false);
+    EXPECT_EQ(result.error().type(), LoadErrorType::gzip_decompress_error);
+}
+
+TEST(LoadSaveFile, ErrorVersionMissing) {
+    const auto file = to_path("example_circuits/errors/error_version_missing.ls2");
+    auto result = load_circuit_from_file(file);
+    ASSERT_EQ(result.has_value(), false);
+    EXPECT_EQ(result.error().type(), LoadErrorType::json_parse_error);
+}
+
+TEST(LoadSaveFile, ErrorVersion1020) {
+    const auto file = to_path("example_circuits/errors/error_version_10.2.0.ls2");
+    auto result = load_circuit_from_file(file);
+    ASSERT_EQ(result.has_value(), false);
+    EXPECT_EQ(result.error().type(), LoadErrorType::json_version_error);
+
+    const auto message = result.error().format();
+    EXPECT_EQ(message.find("10.2.0") != std::string::npos, true);
+    EXPECT_EQ(message.find("10.3.0") != std::string::npos, false);
+}
+
+TEST(LoadSaveFile, ErrorVersionUnknown) {
+    const auto file = to_path("example_circuits/errors/error_version_unknown.ls2");
+    auto result = load_circuit_from_file(file);
+    ASSERT_EQ(result.has_value(), false);
+    EXPECT_EQ(result.error().type(), LoadErrorType::json_version_error);
+}
+
 }  // namespace logicsim
