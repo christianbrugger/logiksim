@@ -19,7 +19,7 @@ auto format(SaveFormat format) -> std::string {
     std::terminate();
 }
 
-[[nodiscard]] auto guess_save_format(const std::string& binary)
+[[nodiscard]] auto guess_save_format(std::string_view binary)
     -> std::optional<SaveFormat> {
     // detect json that starts with list or dict
     if (binary.size() >= 1 && (binary.at(0) == '{' || binary.at(0) == '[')) {

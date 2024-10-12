@@ -9,6 +9,9 @@
 namespace logicsim {
 
 enum class LoadErrorType {
+    file_open_error,
+    file_read_error,
+
     unknown_file_format_error,
     base64_decode_error,
     gzip_decompress_error,

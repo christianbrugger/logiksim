@@ -9,6 +9,11 @@ auto format(LoadErrorType type) -> std::string {
     switch (type) {
         using enum LoadErrorType;
 
+        case file_open_error:
+            return "file_open_error";
+        case file_read_error:
+            return "file_read_error";
+
         case unknown_file_format_error:
             return "unknown_file_format_error";
         case base64_decode_error:

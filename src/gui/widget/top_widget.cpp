@@ -1056,34 +1056,40 @@ auto MainWidget::save_gui_state() -> void {
     }
 }
 
+namespace {
+
+[[nodiscard]] auto load_gui_settings_from_file() -> tl::expected<GuiSettings, LoadError> {
+    return load_file(get_writable_setting_path(setting_t::gui_settings))
+        .and_then(load_gui_settings);
+}
+
+}  // namespace
+
 auto MainWidget::restore_gui_state() -> void {
     // geometry
     if (const auto str = load_file(get_writable_setting_path(setting_t::gui_geometry));
-        !str.empty()) {
-        const auto bytes = QByteArray {str.data(), gsl::narrow<qsizetype>(str.size())};
+        str) {
+        const auto bytes = QByteArray {str->data(), gsl::narrow<qsizetype>(str->size())};
         restoreGeometry(bytes);
     }
 
     // state
     if (const auto str = load_file(get_writable_setting_path(setting_t::gui_state));
-        !str.empty()) {
-        const auto bytes = QByteArray {str.data(), gsl::narrow<qsizetype>(str.size())};
+        str) {
+        const auto bytes = QByteArray {str->data(), gsl::narrow<qsizetype>(str->size())};
         restoreState(bytes);
     }
 
     // settings
-    if (const auto str = load_file(get_writable_setting_path(setting_t::gui_settings));
-        !str.empty()) {
-        if (const auto settings = load_gui_settings(str); settings.has_value()) {
-            auto render_config = circuit_widget_->render_config();
+    if (const auto settings = load_gui_settings_from_file(); settings) {
+        auto render_config = circuit_widget_->render_config();
 
-            render_config.thread_count = settings->thread_count;
-            render_config.wire_render_style = settings->wire_render_style;
-            render_config.direct_rendering = settings->direct_rendering;
-            render_config.jit_rendering = settings->jit_rendering;
+        render_config.thread_count = settings->thread_count;
+        render_config.wire_render_style = settings->wire_render_style;
+        render_config.direct_rendering = settings->direct_rendering;
+        render_config.jit_rendering = settings->jit_rendering;
 
-            circuit_widget_->set_render_config(render_config);
-        }
+        circuit_widget_->set_render_config(render_config);
     }
 }
 

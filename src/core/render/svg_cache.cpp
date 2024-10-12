@@ -24,13 +24,13 @@ auto load_svg_icon(icon_t icon) -> svg_data_t {
     const auto filename = get_icon_path(icon);
     const auto binary = load_file(filename);
 
-    if (binary.empty()) {
+    if (!binary) {
         print("WARNING: unable to load svg icon", filename);
     }
 
     auto result = svg_data_t {};
 
-    const auto byte_span = svg2b2d::ByteSpan {binary.data(), binary.size()};
+    const auto byte_span = svg2b2d::ByteSpan {binary->data(), binary->size()};
     result.document.readFromData(byte_span);
 
     return result;

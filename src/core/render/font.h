@@ -31,7 +31,7 @@ class FontFace {
 
 static_assert(std::semiregular<FontFace>);
 
-[[nodiscard]] auto load_face_or_warn(const std::filesystem::path &font_file) -> FontFace;
+[[nodiscard]] auto load_face_or_warn(const std::filesystem::path &path) -> FontFace;
 
 /**
  * @brief: Harfbuzz and Blend2d font from the same data.

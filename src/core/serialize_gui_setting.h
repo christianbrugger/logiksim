@@ -2,8 +2,11 @@
 #define LOGICSIM_CORE_SERIALIZE_GUI_SETTING_H
 
 #include "format/struct.h"
+#include "vocabulary/load_error.h"
 #include "vocabulary/thread_count.h"
 #include "vocabulary/wire_render_style.h"
+
+#include <tl/expected.hpp>
 
 #include <optional>
 #include <string>
@@ -40,7 +43,7 @@ static_assert(std::regular<GuiSettings>);
  * @brief: Load Gui settings from serialized json.
  */
 [[nodiscard]] auto load_gui_settings(const std::string& text)
-    -> std::optional<GuiSettings>;
+    -> tl::expected<GuiSettings, LoadError>;
 
 }  // namespace logicsim
 

@@ -50,7 +50,7 @@ namespace {
 
 auto load_circuit_from_file(const std::filesystem::path& filename)
     -> tl::expected<LoadFileResult, LoadError> {
-    return load_layout(load_file(filename)).transform(to_load_file_result);
+    return load_file(filename).and_then(load_layout).transform(to_load_file_result);
 }
 
 }  // namespace logicsim

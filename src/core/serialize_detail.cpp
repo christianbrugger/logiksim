@@ -262,8 +262,7 @@ auto json_loads(std::string_view text)
     }
 
     // parse json
-    auto result =
-        tl::expected<serialize::SerializedLayout, LoadError> {SerializedLayout {}};
+    auto result = tl::expected<SerializedLayout, LoadError> {SerializedLayout {}};
     const auto error = glz::read_json<SerializedLayout>(result.value(), text);
     if (error) {
         return tl::unexpected<LoadError> {

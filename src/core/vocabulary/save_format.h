@@ -5,6 +5,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace logicsim {
 
@@ -17,7 +18,7 @@ enum SaveFormat {
 template <>
 [[nodiscard]] auto format(SaveFormat format) -> std::string;
 
-[[nodiscard]] auto guess_save_format(const std::string& binary)
+[[nodiscard]] auto guess_save_format(std::string_view binary)
     -> std::optional<SaveFormat>;
 
 }  // namespace logicsim

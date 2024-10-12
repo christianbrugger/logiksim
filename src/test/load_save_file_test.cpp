@@ -112,7 +112,8 @@ TEST(LoadSaveFile, SaveLoadExample1) {
 
     // make sure it is gzip
     const auto binary = load_file(file);
-    EXPECT_EQ(guess_save_format(binary), SaveFormat::gzip);
+    ASSERT_EQ(binary.has_value(), true);
+    EXPECT_EQ(guess_save_format(binary.value()).value(), SaveFormat::gzip);
 
     // load
     auto load_result = load_circuit_from_file(file);

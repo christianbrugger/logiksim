@@ -81,12 +81,12 @@ auto load_face_or_warn(const std::filesystem::path& path) -> FontFace {
 
     const auto data = load_file(path);
 
-    if (data.empty()) {
+    if (!data) {
         print("WARNING: could not open font file", path);
         return FontFace {};
     }
 
-    const auto face = FontFace {data};
+    auto face = FontFace {data.value()};
 
     if (face.empty()) {
         print("WARNING: font file resulted in an empty font face", path);
