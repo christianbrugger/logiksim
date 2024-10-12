@@ -14,10 +14,15 @@
 
 namespace logicsim {
 
+/**
+ * @brief: GUI settings file version, always increasing.
+ *
+ * 200: LogikSim 2.2.0
+ */
 constexpr static inline auto CURRENT_GUI_SETTING_VERSION = 200;
 
 /*
- * @brief: Presistent GUI settings that are stored as settings.
+ * @brief: Presistent GUI settings that are stored on disk.
  */
 struct GuiSettings {
     int version {CURRENT_GUI_SETTING_VERSION};

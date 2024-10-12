@@ -280,7 +280,7 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
     Ensures(expensive_invariant_holds());
 }
 
-auto CircuitWidget::load_circuit(const QString& filename) -> bool {
+auto CircuitWidget::load_circuit(const QString& filename) -> std::optional<LoadError> {
     Expects(class_invariant_holds());
 
     // store original layout in case load fails
@@ -290,18 +290,21 @@ auto CircuitWidget::load_circuit(const QString& filename) -> bool {
     do_action(UserAction::clear_circuit);
 
     auto load_result = load_circuit_from_file(to_path(filename));
+
     if (load_result.has_value()) {
         set_editable_circuit(std::move(load_result->editable_circuit),
                              load_result->view_point, load_result->simulation_config);
     } else {
-        // TODO replace bool and pass on this error
-        print(load_result.error());
         set_editable_circuit(EditableCircuit {std::move(orig_layout)});
     }
 
+    const auto result = load_result  //
+                            ? std::nullopt
+                            : std::make_optional(std::move(load_result.error()));
+
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return load_result.has_value();
+    return result;
 }
 
 auto CircuitWidget::save_circuit(const QString& filename) -> bool {
@@ -770,7 +773,11 @@ auto CircuitWidget::paste_clipboard() -> void {
 
     auto load_result = parse_clipboard_text(get_clipboard_text());
     if (!load_result) {
-        print(load_result.error());
+        print("WARNING: Unable to paste clipboard data.");
+        print(load_result.error().type());
+        print(load_result.error().format());
+        print();
+
         Ensures(class_invariant_holds());
         return;
     }

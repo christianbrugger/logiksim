@@ -879,15 +879,26 @@ auto MainWidget::open_circuit(std::optional<QString> filename) -> void {
 
     const auto _ [[maybe_unused]] = Timer("Open");
 
-    if (circuit_widget_->load_circuit(*filename)) {
-        last_saved_filename_ = *filename;
-        last_saved_data_ = circuit_widget_->serialized_circuit();
-    } else {
-        const auto message = fmt::format("Failed to load \"{}\".", filename);
+    if (const auto error = circuit_widget_->load_circuit(*filename); error) {
+        // Version Errors ask the users to update LogikSim to a specific version.
+        // Those are the only ones a user can act upon. Log the rest.
+        const auto suffix = error.value().type() == LoadErrorType::json_version_error  //
+                                ? fmt::format("\n\n{}", error.value())
+                                : "";
+        const auto message = fmt::format("Failed to load \"{}\".{}", filename, suffix);
+
+        print("WARNING: Failed to open:", filename);
+        print(error.value().type());
+        print(error.value().format());
+        print();
+
         QMessageBox::warning(this,                                 //
                              QString::fromStdString(LS_APP_NAME),  //
                              QString::fromStdString(message)       //
         );
+    } else {
+        last_saved_filename_ = *filename;
+        last_saved_data_ = circuit_widget_->serialized_circuit();
     }
 }
 
@@ -1090,6 +1101,8 @@ auto MainWidget::restore_gui_state() -> void {
         render_config.jit_rendering = settings->jit_rendering;
 
         circuit_widget_->set_render_config(render_config);
+    } else {
+        print("WARNING: Unable to read GUI settings:", settings.error());
     }
 }
 

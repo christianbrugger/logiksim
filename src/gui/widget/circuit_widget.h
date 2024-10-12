@@ -7,6 +7,7 @@
 #include "component/circuit_widget/mouse_logic/editing_logic_manager.h"
 #include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
 #include "vocabulary/fallback_info.h"
+#include "vocabulary/load_error.h"
 #include "vocabulary/render_mode.h"
 #include "vocabulary/thread_count.h"
 #include "vocabulary/wire_render_style.h"
@@ -16,6 +17,7 @@
 #include <QTimer>
 
 #include <filesystem>
+#include <optional>
 
 namespace logicsim {
 
@@ -120,7 +122,7 @@ class CircuitWidget : public CircuitWidgetBase {
     // load & save
     [[nodiscard]] auto serialized_circuit() -> std::string;
     auto load_circuit_example(int number) -> void;
-    auto load_circuit(const QString& filename) -> bool;
+    auto load_circuit(const QString& filename) -> std::optional<LoadError>;
     auto save_circuit(const QString& filename) -> bool;
 
     // statistics

@@ -17,7 +17,7 @@ auto base64_decode(const std::string& data) -> tl::expected<std::string, LoadErr
     } catch (const cppcodec::parse_error& error) {
         return tl::unexpected<LoadError> {
             LoadErrorType::base64_decode_error,
-            fmt::format("Base64 {}.", error.what()),
+            std::string {error.what()},
         };
     }
 }

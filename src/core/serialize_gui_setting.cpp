@@ -65,7 +65,7 @@ auto load_gui_settings(const std::string& text) -> tl::expected<GuiSettings, Loa
     if (version.value() > CURRENT_GUI_SETTING_VERSION) {
         return tl::unexpected<LoadError> {
             LoadErrorType::json_version_error,
-            "Setting version is too new.",
+            "GUI Setting version is too new.",
         };
     }
 
