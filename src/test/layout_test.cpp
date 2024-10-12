@@ -1,7 +1,6 @@
 
 #include "layout.h"
 
-#include "logging.h"
 #include "vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
@@ -146,9 +145,6 @@ TEST(Layout, TestNormalization) {
 
     layout_1.normalize();
     layout_2.normalize();
-
-    print(layout_1);
-    print(layout_2);
 
     EXPECT_EQ(layout_1, layout_2);
 }
