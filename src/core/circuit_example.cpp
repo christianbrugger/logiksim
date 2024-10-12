@@ -91,6 +91,8 @@ auto load_circuit_example_4(EditableCircuit& editable_circuit) -> void {
     }
 }
 
+}  // namespace
+
 auto load_circuit_example(EditableCircuit& editable_circuit, int number) -> void {
     switch (number) {
         case 1: {
@@ -112,13 +114,11 @@ auto load_circuit_example(EditableCircuit& editable_circuit, int number) -> void
     }
 }
 
-}  // namespace
-
 auto load_example_with_logging(int number) -> EditableCircuit {
     auto timer = Timer {"", Timer::Unit::ms, 1};
 
     auto editable_circuit = EditableCircuit {};
-    load_circuit_example(editable_circuit, number);
+    logicsim::load_circuit_example(editable_circuit, number);
 
     // count & print
     {

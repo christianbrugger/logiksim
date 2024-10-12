@@ -2,8 +2,10 @@
 #include "load_save_file.h"
 
 #include "algorithm/to_path.h"
-#include "logging.h"
+#include "file.h"
+#include "load_save_file.h"
 #include "spatial_simulation.h"
+#include "vocabulary/save_format.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -90,6 +92,40 @@ TEST(LoadSaveFile, Load210FilesJkFlipFlop) {
 
     visible_selection_select_all(result.editable_circuit);
     EXPECT_EQ(result.editable_circuit.visible_selection().selected_segments().size(), 49);
+}
+
+//
+// Save and load
+//
+
+TEST(LoadSaveFile, SaveLoadExample1) {
+    const auto file = to_path("test_example_1.ls2");
+
+    // generate
+    auto rng = get_random_number_generator(4);
+    auto editable_circuit = EditableCircuit {};
+    add_example(rng, editable_circuit);
+    EXPECT_GT(editable_circuit.layout().logicitems().size(), 0);
+    EXPECT_GT(editable_circuit.layout().decorations().size(), 0);
+
+    // save
+    const auto success = save_circuit_to_file(editable_circuit.layout(), file, {}, {});
+    ASSERT_EQ(success, true);
+
+    // make sure it is gzip
+    const auto binary = load_file(file);
+    EXPECT_EQ(guess_save_format(binary), SaveFormat::gzip);
+
+    // load
+    auto load_result = load_circuit_from_file(file);
+    EXPECT_EQ(load_result.success, true);
+
+    // compare
+    auto layout_orig = editable_circuit.extract_layout();
+    auto layout_load = load_result.editable_circuit.extract_layout();
+    layout_orig.normalize();
+    layout_load.normalize();
+    EXPECT_EQ(layout_orig, layout_load);
 }
 
 }  // namespace logicsim
