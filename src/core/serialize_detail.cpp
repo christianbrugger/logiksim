@@ -249,14 +249,14 @@ auto json_loads(std::string_view text)
         if (min_logiksim_version) {
             return tl::unexpected<LoadError> {
                 LoadErrorType::json_version_error,
-                fmt::format(
-                    "File version is too new. Please update LogikSim to version '{}'.",
-                    min_logiksim_version.value()),
+                fmt::format("File version is too new. "
+                            "Update LogikSim to version '{}' or newer.",
+                            min_logiksim_version.value()),
             };
         }
         return tl::unexpected<LoadError> {
             LoadErrorType::json_version_error,
-            "File version is too new. Please update LogikSim.",
+            "File version is too new. To open the file update LogikSim.",
 
         };
     }
