@@ -14,7 +14,7 @@ auto base64_decode(const std::string& data) -> std::string {
     try {
         return cppcodec::base64_rfc4648::decode<std::string>(data);
     } catch (cppcodec::parse_error&) {
-        print("WARNING: String is not base64 encoded.");
+        print("ERROR: String is not base64 encoded.");
     }
     return "";
 }

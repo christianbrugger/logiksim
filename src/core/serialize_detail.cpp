@@ -205,11 +205,12 @@ template <>
 struct glz::meta<SerializedLayout> {
     using T = SerializedLayout;
 
-    static constexpr auto value = glz::object(         //
-        "version", &T::version,                        //
-        "save_position", &T::save_position,            //
-        "view_config", &T::view_point,                 //
-        "simulation_settings", &T::simulation_config,  //
+    static constexpr auto value = glz::object(                     //
+        "version", &T::version,                                    //
+        "minimum_logiksim_version", &T::minimum_logiksim_version,  //
+        "save_position", &T::save_position,                        //
+        "view_config", &T::view_point,                             //
+        "simulation_settings", &T::simulation_config,              //
 
         "logic_items", &T::logicitems,      //
         "decorations", &T::decorations,     //
@@ -233,14 +234,14 @@ auto json_loads(std::string text) -> std::optional<serialize::SerializedLayout> 
     auto version = glz::get_as_json<int, "/version">(text);
     if (!version.has_value()) {
         try {
-            print(glz::format_error(version.error(), text));
+            print("ERROR:", glz::format_error(version.error(), text));
         } catch (std::runtime_error&) {
-            print("error parsing json");
+            print("ERROR: parsing json");
         }
         return std::nullopt;
     }
     if (version.value() > serialize::CURRENT_VERSION) {
-        print("Error wrong version. Expected", serialize::CURRENT_VERSION, "got",
+        print("ERROR: wrong version. Expected", serialize::CURRENT_VERSION, "got",
               version.value());
         return std::nullopt;
     }
@@ -249,9 +250,9 @@ auto json_loads(std::string text) -> std::optional<serialize::SerializedLayout> 
     const auto error = glz::read_json<SerializedLayout>(result.value(), text);
     if (error) {
         try {
-            print(glz::format_error(error, text));
+            print("ERROR:", glz::format_error(error, text));
         } catch (std::runtime_error&) {
-            print("error parsing json");
+            print("ERROR: parsing json");
         }
         return std::nullopt;
     }

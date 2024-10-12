@@ -1,5 +1,7 @@
 #include "gzip.h"
 
+#include "logging.h"
+
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <gsl/gsl>
@@ -16,19 +18,33 @@ auto gzip_compress(const std::string& input) -> std::string {
         filter_stream.push(output);
         filter_stream.write(input.data(), gsl::narrow<std::streamsize>(input.size()));
         filter_stream.flush();
+        filter_stream.reset();
     }
     return output.str();
 }
 
 auto gzip_decompress(const std::string& input) -> std::string {
     auto output = std::ostringstream {};
-    {
+
+    try {
+        auto params = boost::iostreams::gzip_params {};
+
         auto filter_stream = boost::iostreams::filtering_ostream {};
         filter_stream.push(boost::iostreams::gzip_decompressor());
         filter_stream.push(output);
         filter_stream.write(input.data(), gsl::narrow<std::streamsize>(input.size()));
         filter_stream.flush();
+        filter_stream.reset();
     }
+
+    catch (const boost::iostreams::gzip_error& error) {
+        print_fmt(
+            "ERROR: gzip decompression error. Gzip error code is {}. Zlib error Code is "
+            "{}. Message is {}.",
+            error.error(), error.zlib_error_code(), error.what());
+        return std::string {};
+    }
+
     return output.str();
 }
 
