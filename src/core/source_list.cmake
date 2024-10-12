@@ -113,8 +113,6 @@ set(LS_CORE_SOURCES
     element/logicitem/schematic_info.cpp
     element/logicitem/simulation_info.cpp
 
-    exception/load_error.cpp
-
     format/blend2d_type.cpp
     format/container.cpp
     format/enum.cpp
@@ -259,6 +257,7 @@ set(LS_CORE_SOURCES
     vocabulary/line_fine.cpp
     vocabulary/line_index.cpp
     vocabulary/line_insertion_type.cpp
+    vocabulary/load_error.cpp
     vocabulary/logic_small_vector.cpp
     vocabulary/logic_vector.cpp
     vocabulary/logicitem_connection.cpp

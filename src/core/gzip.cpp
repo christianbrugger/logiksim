@@ -37,9 +37,11 @@ auto gzip_decompress(const std::string& input) -> tl::expected<std::string, Load
         filter_stream.flush();
         filter_stream.reset();
     } catch (const boost::iostreams::gzip_error& error) {
-        return tl::unexpected {LoadError {
+        return tl::unexpected<LoadError> {
+            LoadErrorType::gzip_decompress_error,
             fmt::format("{}. Gzip error code {}. Zlib error code {}.", error.what(),
-                        error.error(), error.zlib_error_code())}};
+                        error.error(), error.zlib_error_code()),
+        };
     }
 
     return output.str();

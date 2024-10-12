@@ -1,9 +1,9 @@
 #ifndef LOGIKSIM_SERIALIZE_DETAIL_H
 #define LOGIKSIM_SERIALIZE_DETAIL_H
 
-#include "exception/load_error.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/decoration_type.h"
+#include "vocabulary/load_error.h"
 #include "vocabulary/logic_small_vector.h"
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_type.h"
@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace logicsim::serialize {
 
@@ -109,7 +110,8 @@ struct SerializedLayout {
 
 namespace logicsim {
 auto json_dumps(const serialize::SerializedLayout& data) -> std::string;
-auto json_loads(std::string text) -> tl::expected<serialize::SerializedLayout, LoadError>;
+auto json_loads(std::string_view text)
+    -> tl::expected<serialize::SerializedLayout, LoadError>;
 
 }  // namespace logicsim
 

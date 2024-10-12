@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_COPY_PASTE_CLIPBOARD_H
 #define LOGICSIM_COPY_PASTE_CLIPBOARD_H
 
-#include "exception/load_error.h"
 #include "serialize.h"
+#include "vocabulary/load_error.h"
 
 #include <tl/expected.hpp>
 

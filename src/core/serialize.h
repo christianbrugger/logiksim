@@ -1,8 +1,8 @@
 #ifndef LOGIKSIM_SERIALIZE_H
 #define LOGIKSIM_SERIALIZE_H
 
-#include "exception/load_error.h"
 #include "vocabulary/insertion_mode.h"
+#include "vocabulary/load_error.h"
 #include "vocabulary/point.h"
 #include "vocabulary/save_format.h"
 #include "vocabulary/selection_id.h"

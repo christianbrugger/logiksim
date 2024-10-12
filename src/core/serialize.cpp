@@ -13,8 +13,6 @@
 //     json.loads(gzip.decompress(open("circuit.ls2", 'rb').read()))
 //
 
-#include "serialize.h"
-
 #include "base64.h"
 #include "editable_circuit.h"
 #include "file.h"
@@ -25,6 +23,7 @@
 #include "layout_info.h"
 #include "logging.h"
 #include "selection.h"
+#include "serialize.h"
 #include "serialize_detail.h"
 #include "validate_definition_decoration.h"
 #include "validate_definition_logicitem.h"
@@ -410,7 +409,10 @@ auto unserialize_base64_gzip_json(const std::string& binary)
         }
         std::terminate();
     }
-    return tl::unexpected {LoadError {"Unknown file format."}};
+    return tl::unexpected<LoadError> {
+        LoadErrorType::unknown_file_format_error,
+        "Unknown file format.",
+    };
 }
 
 auto calculate_move_delta(point_t save_position,

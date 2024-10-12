@@ -2,7 +2,7 @@
 #define LOGICSIM_LOAD_SAVE_FILE_H
 
 #include "editable_circuit.h"
-#include "exception/load_error.h"
+#include "vocabulary/load_error.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/view_config.h"
 

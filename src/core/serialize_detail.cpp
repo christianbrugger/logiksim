@@ -230,34 +230,46 @@ auto json_dumps(const serialize::SerializedLayout& data) -> std::string {
     return json_text;
 }
 
-auto json_loads(std::string text)
+auto json_loads(std::string_view text)
     -> tl::expected<serialize::SerializedLayout, LoadError> {
-    auto version = glz::get_as_json<int, "/version">(text);
+    // read version
+    const auto version = glz::get_as_json<int, "/version">(text);
     if (!version.has_value()) {
-        try {
-            return tl::unexpected<LoadError> {glz::format_error(version.error(), text)};
-        } catch (const std::runtime_error& error) {
-            return tl::unexpected<LoadError> {
-                fmt::format("Error parsing json {}.", error.what())};
-        }
-        return tl::unexpected<LoadError> {"Error parsing json."};
-    }
-    if (version.value() > serialize::CURRENT_VERSION) {
-        return tl::unexpected<LoadError> {"Json has version that is too high."};
+        return tl::unexpected<LoadError> {
+            LoadErrorType::json_parse_error,
+            glz::format_error(version.error(), text),
+        };
     }
 
+    // handle future versions
+    if (version.value() > serialize::CURRENT_VERSION) {
+        const auto min_logiksim_version =
+            glz::get_as_json<std::string, "/minimum_logiksim_version">(text);
+
+        if (min_logiksim_version) {
+            return tl::unexpected<LoadError> {
+                LoadErrorType::json_version_error,
+                fmt::format(
+                    "File version is too new. Please update LogikSim to version '{}'.",
+                    min_logiksim_version.value()),
+            };
+        }
+        return tl::unexpected<LoadError> {
+            LoadErrorType::json_version_error,
+            "File version is too new. Please update LogikSim.",
+
+        };
+    }
+
+    // parse json
     auto result =
         tl::expected<serialize::SerializedLayout, LoadError> {SerializedLayout {}};
-
     const auto error = glz::read_json<SerializedLayout>(result.value(), text);
     if (error) {
-        try {
-            return tl::unexpected<LoadError> {glz::format_error(version.error(), text)};
-        } catch (const std::runtime_error& error) {
-            return tl::unexpected<LoadError> {
-                fmt::format("Error parsing json {}.", error.what())};
-        }
-        return tl::unexpected<LoadError> {"Error parsing json."};
+        return tl::unexpected<LoadError> {
+            LoadErrorType::json_parse_error,
+            glz::format_error(error, text),
+        };
     }
 
     return result;
