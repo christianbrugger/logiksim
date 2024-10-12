@@ -290,16 +290,18 @@ auto CircuitWidget::load_circuit(const QString& filename) -> bool {
     do_action(UserAction::clear_circuit);
 
     auto load_result = load_circuit_from_file(to_path(filename));
-    if (load_result.success) {
-        set_editable_circuit(std::move(load_result.editable_circuit),
-                             load_result.view_point, load_result.simulation_config);
+    if (load_result.has_value()) {
+        set_editable_circuit(std::move(load_result->editable_circuit),
+                             load_result->view_point, load_result->simulation_config);
     } else {
+        // TODO replace bool and pass on this error
+        print(load_result.error());
         set_editable_circuit(EditableCircuit {std::move(orig_layout)});
     }
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return load_result.success;
+    return load_result.has_value();
 }
 
 auto CircuitWidget::save_circuit(const QString& filename) -> bool {
@@ -768,6 +770,7 @@ auto CircuitWidget::paste_clipboard() -> void {
 
     auto load_result = parse_clipboard_text(get_clipboard_text());
     if (!load_result) {
+        print(load_result.error());
         Ensures(class_invariant_holds());
         return;
     }

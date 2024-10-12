@@ -2,8 +2,11 @@
 #define LOGICSIM_LOAD_SAVE_FILE_H
 
 #include "editable_circuit.h"
+#include "exception/load_error.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/view_config.h"
+
+#include <tl/expected.hpp>
 
 #include <filesystem>
 #include <optional>
@@ -24,7 +27,6 @@ auto save_circuit_to_file(const Layout &layout, const std::filesystem::path &fil
                           std::optional<SimulationConfig> simulation_config) -> bool;
 
 struct LoadFileResult {
-    bool success {false};
     EditableCircuit editable_circuit {};
     ViewPoint view_point {};
     SimulationConfig simulation_config {};
@@ -33,7 +35,7 @@ struct LoadFileResult {
 };
 
 [[nodiscard]] auto load_circuit_from_file(const std::filesystem::path &filename)
-    -> LoadFileResult;
+    -> tl::expected<LoadFileResult, LoadError>;
 
 }  // namespace logicsim
 

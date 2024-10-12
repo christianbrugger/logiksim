@@ -1,17 +1,18 @@
 #ifndef LOGIKSIM_SERIALIZE_H
 #define LOGIKSIM_SERIALIZE_H
 
+#include "exception/load_error.h"
 #include "vocabulary/insertion_mode.h"
 #include "vocabulary/point.h"
 #include "vocabulary/save_format.h"
 #include "vocabulary/selection_id.h"
 
 #include <gsl/gsl>
+#include <tl/expected.hpp>
 
 #include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 
 namespace logicsim {
 
@@ -74,7 +75,7 @@ static_assert(std::copyable<LoadLayoutResult>);
  * @brief: Load layout form json data that is optionall gzipped and base64 encoded.
  */
 [[nodiscard]] auto load_layout(const std::string& binary)
-    -> std::optional<serialize::LoadLayoutResult>;
+    -> tl::expected<serialize::LoadLayoutResult, LoadError>;
 
 }  // namespace logicsim
 

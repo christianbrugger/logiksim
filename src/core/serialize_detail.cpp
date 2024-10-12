@@ -230,31 +230,34 @@ auto json_dumps(const serialize::SerializedLayout& data) -> std::string {
     return json_text;
 }
 
-auto json_loads(std::string text) -> std::optional<serialize::SerializedLayout> {
+auto json_loads(std::string text)
+    -> tl::expected<serialize::SerializedLayout, LoadError> {
     auto version = glz::get_as_json<int, "/version">(text);
     if (!version.has_value()) {
         try {
-            print("ERROR:", glz::format_error(version.error(), text));
-        } catch (std::runtime_error&) {
-            print("ERROR: parsing json");
+            return tl::unexpected<LoadError> {glz::format_error(version.error(), text)};
+        } catch (const std::runtime_error& error) {
+            return tl::unexpected<LoadError> {
+                fmt::format("Error parsing json {}.", error.what())};
         }
-        return std::nullopt;
+        return tl::unexpected<LoadError> {"Error parsing json."};
     }
     if (version.value() > serialize::CURRENT_VERSION) {
-        print("ERROR: wrong version. Expected", serialize::CURRENT_VERSION, "got",
-              version.value());
-        return std::nullopt;
+        return tl::unexpected<LoadError> {"Json has version that is too high."};
     }
 
-    auto result = std::optional<SerializedLayout> {SerializedLayout {}};
+    auto result =
+        tl::expected<serialize::SerializedLayout, LoadError> {SerializedLayout {}};
+
     const auto error = glz::read_json<SerializedLayout>(result.value(), text);
     if (error) {
         try {
-            print("ERROR:", glz::format_error(error, text));
-        } catch (std::runtime_error&) {
-            print("ERROR: parsing json");
+            return tl::unexpected<LoadError> {glz::format_error(version.error(), text)};
+        } catch (const std::runtime_error& error) {
+            return tl::unexpected<LoadError> {
+                fmt::format("Error parsing json {}.", error.what())};
         }
-        return std::nullopt;
+        return tl::unexpected<LoadError> {"Error parsing json."};
     }
 
     return result;

@@ -24,7 +24,7 @@ auto visible_selection_to_clipboard_text(const EditableCircuit& editable_circuit
 }
 
 auto parse_clipboard_text(const std::string& text)
-    -> std::optional<serialize::LoadLayoutResult> {
+    -> tl::expected<serialize::LoadLayoutResult, LoadError> {
     return load_layout(text);
 }
 

@@ -394,21 +394,23 @@ namespace serialize {
 namespace {
 
 auto unserialize_base64_gzip_json(const std::string& binary)
-    -> std::optional<SerializedLayout> {
+    -> tl::expected<SerializedLayout, LoadError> {
     if (const auto format = guess_save_format(binary); format.has_value()) {
         switch (*format) {
             using enum SaveFormat;
 
             case base64_gzip:
-                return json_loads(gzip_decompress(base64_decode(binary)));
+                return base64_decode(binary)
+                    .and_then(gzip_decompress)
+                    .and_then(json_loads);
             case gzip:
-                return json_loads(gzip_decompress(binary));
+                return gzip_decompress(binary).and_then(json_loads);
             case json:
                 return json_loads(binary);
         }
         std::terminate();
     }
-    return std::nullopt;
+    return tl::unexpected {LoadError {"Unknown file format."}};
 }
 
 auto calculate_move_delta(point_t save_position,
@@ -474,12 +476,11 @@ auto LoadLayoutResult::simulation_config() const -> SimulationConfig {
 }  // namespace serialize
 
 auto load_layout(const std::string& binary)
-    -> std::optional<serialize::LoadLayoutResult> {
-    auto data = serialize::unserialize_base64_gzip_json(binary);
-    if (!data) {
-        return std::nullopt;
-    }
-    return std::optional<serialize::LoadLayoutResult> {std::move(data.value())};
+    -> tl::expected<serialize::LoadLayoutResult, LoadError> {
+    return serialize::unserialize_base64_gzip_json(binary).transform(
+        [](serialize::SerializedLayout&& data) {
+            return serialize::LoadLayoutResult {std::move(data)};
+        });
 }
 
 }  // namespace logicsim

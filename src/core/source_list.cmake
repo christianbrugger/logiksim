@@ -113,6 +113,8 @@ set(LS_CORE_SOURCES
     element/logicitem/schematic_info.cpp
     element/logicitem/simulation_info.cpp
 
+    exception/load_error.cpp
+
     format/blend2d_type.cpp
     format/container.cpp
     format/enum.cpp

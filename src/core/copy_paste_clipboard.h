@@ -1,7 +1,10 @@
 #ifndef LOGICSIM_COPY_PASTE_CLIPBOARD_H
 #define LOGICSIM_COPY_PASTE_CLIPBOARD_H
 
+#include "exception/load_error.h"
 #include "serialize.h"
+
+#include <tl/expected.hpp>
 
 #include <optional>
 #include <string>
@@ -37,7 +40,7 @@ auto visible_selection_to_clipboard_text(const EditableCircuit& editable_circuit
  * @brief: Parses the clipboard data for insertable elements.
  */
 [[nodiscard]] auto parse_clipboard_text(const std::string& text)
-    -> std::optional<serialize::LoadLayoutResult>;
+    -> tl::expected<serialize::LoadLayoutResult, LoadError>;
 
 struct PasteClipboardResult {
     /**

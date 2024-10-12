@@ -25,29 +25,32 @@ auto save_circuit_to_file(const Layout& layout, const std::filesystem::path& fil
 auto LoadFileResult::format() const -> std::string {
     return fmt::format(
         "LoadFileResult(\n"
-        "  success = {},\n"
         "  editable_circuit = {},\n"
         "  view_point = {},\n"
         "  simulation_config = {}\n"
         ")",
-        success, editable_circuit, view_point, simulation_config);
+        editable_circuit, view_point, simulation_config);
 }
 
-auto load_circuit_from_file(const std::filesystem::path& filename) -> LoadFileResult {
-    const auto load_result = load_layout(load_file(filename));
-    if (!load_result) {
-        return LoadFileResult {};
-    }
+namespace {
 
+[[nodiscard]] auto to_load_file_result(const serialize::LoadLayoutResult& load_result)
+    -> LoadFileResult {
     auto editable_circuit = EditableCircuit {};
-    load_result->add_to(editable_circuit, {InsertionMode::insert_or_discard});
+    load_result.add_to(editable_circuit, {InsertionMode::insert_or_discard});
 
     return LoadFileResult {
-        .success = true,
         .editable_circuit = std::move(editable_circuit),
-        .view_point = load_result->view_point(),
-        .simulation_config = load_result->simulation_config(),
+        .view_point = load_result.view_point(),
+        .simulation_config = load_result.simulation_config(),
     };
+}
+
+}  // namespace
+
+auto load_circuit_from_file(const std::filesystem::path& filename)
+    -> tl::expected<LoadFileResult, LoadError> {
+    return load_layout(load_file(filename)).transform(to_load_file_result);
 }
 
 }  // namespace logicsim
