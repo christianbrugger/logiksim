@@ -56,7 +56,6 @@ Libraries
 * Benchmark ([Apache-2.0](https://github.com/google/benchmark?tab=Apache-2.0-1-ov-file))
 * Blend2D ([Zlib](https://github.com/blend2d/blend2d?tab=Zlib-1-ov-file))
 * Boost ([BSL-1.0](https://github.com/boostorg/boost?tab=BSL-1.0-1-ov-file))
-* cppcodec ([MIT](https://github.com/tplgy/cppcodec?tab=MIT-1-ov-file))
 * expected ([CC0-1.0](https://github.com/TartanLlama/expected?tab=CC0-1.0-1-ov-file))
 * {fmt} ([MIT](https://github.com/fmtlib/fmt?tab=License-1-ov-file))
 * Folly ([Apache-2.0](https://github.com/facebook/folly?tab=Apache-2.0-1-ov-file))

@@ -84,12 +84,17 @@ add_subdirectory(
 # when this project started.
 set(FOLLY_DIR_NAME my_folly)
 add_library(folly
+    # small vector
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/memory/detail/MallocImpl.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/memory/SanitizeLeak.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/Exception.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/SafeAssert.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/ToAscii.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/ScopeGuard.cpp
+    # base64
+    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/detail/base64_detail/Base64Api.cpp
+    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/detail/base64_detail/Base64SWAR.cpp
+    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/detail/base64_detail/Base64_SSE4_2.cpp
 )
 target_link_libraries(folly PUBLIC 
     Boost::preprocessor
@@ -113,15 +118,6 @@ add_subdirectory(
 add_subdirectory(
     ${PROJECT_SOURCE_DIR}/external/glaze
     ${CMAKE_BINARY_DIR}/external/glaze
-    EXCLUDE_FROM_ALL
-    SYSTEM
-)
-
-
-# cppcodec / base64
-add_subdirectory(
-    ${PROJECT_SOURCE_DIR}/external/cppcodec
-    ${CMAKE_BINARY_DIR}/external/cppcodec
     EXCLUDE_FROM_ALL
     SYSTEM
 )
@@ -190,7 +186,6 @@ set(LS_CORE_LIBRARIES
     Boost::random
 	Boost::safe_numerics
     
-    cppcodec
     fmt::fmt
     folly
     absl::base

@@ -23,10 +23,6 @@
 	url = https://github.com/boostorg/boost
 	ignore = dirty
 
-[submodule "external/cppcodec"]
-	path = external/cppcodec
-	url = https://github.com/tplgy/cppcodec
-	ignore = dirty
 [submodule "external/expected"]
 	path = external/expected
 	url = https://github.com/TartanLlama/expected.git

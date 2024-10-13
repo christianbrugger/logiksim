@@ -45,7 +45,6 @@ MODULES = [
     "external/benchmark",
     "external/blend2d",
     "external/boost",
-    "external/cppcodec",
     "external/expected",
     "external/fmt",
     "external/gcem",
