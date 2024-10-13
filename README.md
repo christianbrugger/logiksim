@@ -50,7 +50,6 @@ If you get the message "sudo: snap: command not found", read [here](https://snap
 
 Libraries
 
-* Abseil ([Apache-2.0](https://github.com/abseil/abseil-cpp?tab=Apache-2.0-1-ov-file))
 * ankerl::unordered_dense ([MIT](https://github.com/martinus/unordered_dense?tab=MIT-1-ov-file))
 * AsmJit ([Zlib](https://github.com/asmjit/asmjit?tab=Zlib-1-ov-file))
 * Benchmark ([Apache-2.0](https://github.com/google/benchmark?tab=Apache-2.0-1-ov-file))

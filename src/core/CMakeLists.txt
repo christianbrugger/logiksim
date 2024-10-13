@@ -69,16 +69,6 @@ add_subdirectory(
 )
 
 
-# abseil
-set(ABSL_PROPAGATE_CXX_STD ON)
-add_subdirectory(
-    ${PROJECT_SOURCE_DIR}/external/abseil-cpp
-    ${CMAKE_BINARY_DIR}/external/abseil-cpp
-    EXCLUDE_FROM_ALL
-    SYSTEM
-)
-
-
 # Folly
 # Only build a minimal version of the library, as there was no CMake build script 
 # when this project started.
@@ -188,8 +178,6 @@ set(LS_CORE_LIBRARIES
     
     fmt::fmt
     folly
-    absl::base
-    absl::flat_hash_map
     unordered_dense::unordered_dense
     GSL
     range-v3

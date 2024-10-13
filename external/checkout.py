@@ -40,7 +40,6 @@ if typing.TYPE_CHECKING:
 
 
 MODULES = [
-    "external/abseil-cpp",
     "external/asmjit",
     "external/benchmark",
     "external/blend2d",
