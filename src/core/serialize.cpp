@@ -15,6 +15,7 @@
 
 #include "serialize.h"
 
+#include "algorithm/trim_whitespace.h"
 #include "base64.h"
 #include "editable_circuit.h"
 #include "file.h"
@@ -400,7 +401,7 @@ auto unserialize_base64_gzip_json(const std::string& binary)
             using enum SaveFormat;
 
             case base64_gzip:
-                return base64_decode(binary)
+                return base64_decode(trim(binary))
                     .and_then(gzip_decompress)
                     .and_then(json_loads);
             case gzip:

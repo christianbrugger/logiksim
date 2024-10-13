@@ -1,5 +1,7 @@
 #include "vocabulary/save_format.h"
 
+#include "algorithm/trim_whitespace.h"
+
 #include <exception>
 
 namespace logicsim {
@@ -21,11 +23,6 @@ auto format(SaveFormat format) -> std::string {
 
 [[nodiscard]] auto guess_save_format(std::string_view binary)
     -> std::optional<SaveFormat> {
-    // detect json that starts with list or dict
-    if (binary.size() >= 1 && (binary.at(0) == '{' || binary.at(0) == '[')) {
-        return SaveFormat::json;
-    }
-
     // detect gzip header
     if (binary.size() >= 3 &&                                //
         binary.at(0) == '\x1F' && binary.at(1) == '\x8B' &&  // magic number
@@ -34,12 +31,19 @@ auto format(SaveFormat format) -> std::string {
         return SaveFormat::gzip;
     }
 
+    const auto trimmed = trim_left(binary);
+
+    // detect json that starts with list or dict
+    if (trimmed.size() >= 1 && (trimmed.at(0) == '{' || trimmed.at(0) == '[')) {
+        return SaveFormat::json;
+    }
+
     // detect base64 encoded gzip header "\x1F\x8B\x08" = "H4sI"
-    if (binary.size() >= 4 &&   //
-        binary.at(0) == 'H' &&  //
-        binary.at(1) == '4' &&  //
-        binary.at(2) == 's' &&  //
-        binary.at(3) == 'I') {
+    if (trimmed.size() >= 4 &&   //
+        trimmed.at(0) == 'H' &&  //
+        trimmed.at(1) == '4' &&  //
+        trimmed.at(2) == 's' &&  //
+        trimmed.at(3) == 'I') {
         return SaveFormat::base64_gzip;
     }
 

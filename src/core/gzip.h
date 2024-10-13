@@ -5,12 +5,12 @@
 
 #include <tl/expected.hpp>
 
-#include <string>
+#include <string_view>
 
 namespace logicsim {
 
-auto gzip_compress(const std::string& input) -> std::string;
-auto gzip_decompress(const std::string& input) -> tl::expected<std::string, LoadError>;
+auto gzip_compress(std::string_view input) -> std::string;
+auto gzip_decompress(std::string_view input) -> tl::expected<std::string, LoadError>;
 
 }  // namespace logicsim
 

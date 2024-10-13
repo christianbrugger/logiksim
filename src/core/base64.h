@@ -5,12 +5,12 @@
 
 #include <tl/expected.hpp>
 
-#include <string>
+#include <string_view>
 
 namespace logicsim {
 
-auto base64_encode(const std::string& data) -> std::string;
-auto base64_decode(const std::string& data) -> tl::expected<std::string, LoadError>;
+auto base64_encode(std::string_view data) -> std::string;
+auto base64_decode(std::string_view data) -> tl::expected<std::string, LoadError>;
 
 }  // namespace logicsim
 

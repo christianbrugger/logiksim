@@ -34,6 +34,7 @@ set(LS_CORE_SOURCES
     algorithm/transform_if.cpp
     algorithm/transform_to_container.cpp
     algorithm/transform_to_vector.cpp
+    algorithm/trim_whitespace.cpp
     algorithm/u8_conversion.cpp
     algorithm/uniform_int_distribution.cpp
 

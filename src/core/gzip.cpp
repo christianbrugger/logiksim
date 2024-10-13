@@ -11,7 +11,7 @@
 
 namespace logicsim {
 
-auto gzip_compress(const std::string& input) -> std::string {
+auto gzip_compress(std::string_view input) -> std::string {
     auto output = std::ostringstream {};
     {
         auto filter_stream = boost::iostreams::filtering_ostream {};
@@ -24,7 +24,7 @@ auto gzip_compress(const std::string& input) -> std::string {
     return output.str();
 }
 
-auto gzip_decompress(const std::string& input) -> tl::expected<std::string, LoadError> {
+auto gzip_decompress(std::string_view input) -> tl::expected<std::string, LoadError> {
     auto output = std::ostringstream {};
 
     try {
