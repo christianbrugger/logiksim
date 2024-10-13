@@ -14,10 +14,10 @@ auto base64_encode(const std::string& data) -> std::string {
 auto base64_decode(const std::string& data) -> tl::expected<std::string, LoadError> {
     try {
         return cppcodec::base64_rfc4648::decode<std::string>(data);
-    } catch (const cppcodec::parse_error& error) {
+    } catch (const cppcodec::parse_error&) {
         return tl::unexpected<LoadError> {
-            LoadErrorType::base64_decode_error,
-            std::string {error.what()},
+            LoadErrorType::base64_decode_error, 
+            std::string {"unknown decode error"},
         };
     }
 }
