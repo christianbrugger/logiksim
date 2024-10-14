@@ -26,6 +26,7 @@ set(LS_CORE_SOURCES
     algorithm/round.cpp
     algorithm/shuffle.cpp
     algorithm/sort_pair.cpp
+    algorithm/to_hex.cpp
     algorithm/to_path.cpp
     algorithm/to_underlying.cpp
     algorithm/to_vector.cpp
@@ -122,7 +123,6 @@ set(LS_CORE_SOURCES
     format/std_type.cpp
     format/struct.cpp
     format/time.cpp
-    format/to_hex.cpp
 
     geometry/connection.cpp
     geometry/connection_count.cpp

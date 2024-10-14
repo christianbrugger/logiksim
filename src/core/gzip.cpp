@@ -91,6 +91,11 @@ auto gzip_compress(std::string_view input) -> std::string {
     return output.str();
 }
 
+/**
+ * Note zlib is used directly here instead of boost, due to boost not giving
+ * enough control over error handling. It always uses exceptions that don't 
+ * place nice with sanitizer the sanitizer builds.
+ */
 auto gzip_decompress(std::string_view input) -> tl::expected<std::string, LoadError> {
     const auto t = Timer {"gzip_decompress"};
 
