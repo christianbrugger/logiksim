@@ -11,7 +11,7 @@ namespace logicsim {
 
 struct WidgetRenderConfig {
     ThreadCount thread_count {ThreadCount::four};
-    WireRenderStyle wire_render_style {WireRenderStyle::red};
+    WireRenderStyle wire_render_style {WireRenderStyle::bold_red};
 
     bool do_benchmark {false};
     bool show_circuit {true};
