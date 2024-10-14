@@ -1,12 +1,10 @@
 #include "gzip.h"
 
-#include "logging.h"
 #include "timer.h"
 
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <fmt/core.h>
-#include <folly/memory/UninitializedMemoryHacks.h>
 #include <gsl/gsl>
 #include <zlib.h>
 
@@ -119,8 +117,7 @@ auto gzip_decompress(std::string_view input) -> tl::expected<std::string, LoadEr
     // buffer
     constexpr static auto chunk_size = uInt {16 * 1024};
     auto buffer = std::vector<Bytef> {};
-    folly::resizeWithoutInitialization(buffer, chunk_size);
-    Ensures(std::ssize(buffer) == chunk_size);
+    buffer.resize(chunk_size);
 
     // output
     auto output = std::string {};
@@ -129,7 +126,7 @@ auto gzip_decompress(std::string_view input) -> tl::expected<std::string, LoadEr
     // decompression
     while (true) {
         const auto last_progress = get_progress(stream.value);
-        stream.value.avail_out = chunk_size;
+        stream.value.avail_out = gsl::narrow<uInt>(buffer.size());
         stream.value.next_out = buffer.data();
 
         const auto ret = inflate(&stream.value, Z_NO_FLUSH);
