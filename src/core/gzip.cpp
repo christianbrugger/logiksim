@@ -23,10 +23,6 @@ namespace {
 struct ZInflateStream {
     z_stream value {};
 
-    auto pointer() -> z_stream* {
-        return &value;
-    }
-
     constexpr explicit ZInflateStream() = default;
 
     ~ZInflateStream() {
@@ -59,10 +55,10 @@ struct ZInflateStream {
             return "Z_BUF_ERROR";
         case Z_VERSION_ERROR:
             return "Z_VERSION_ERROR";
+
         default:
             return fmt::format("Unknown Zlib Status Code ({})", code);
     }
-    std::terminate();
 }
 
 struct zlib_progress {
@@ -97,7 +93,7 @@ auto gzip_compress(std::string_view input) -> std::string {
     return output.str();
 }
 
-auto gzip_decompress(std::string_view data) -> tl::expected<std::string, LoadError> {
+auto gzip_decompress(std::string_view input) -> tl::expected<std::string, LoadError> {
     const auto t = Timer {"gzip_decompress"};
 
     // initialize inflate
@@ -114,19 +110,21 @@ auto gzip_decompress(std::string_view data) -> tl::expected<std::string, LoadErr
         };
     }
 
-    // input - copy to not introduce UB
-    auto input = std::vector<Bytef>(data.begin(), data.end());
+    // input
+    // this is defined behavior as long as zlib does not write to next_in
+    static_assert(std::same_as<Bytef, unsigned char>);
+    stream.value.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(input.data()));
     stream.value.avail_in = gsl::narrow<uInt>(input.size());
-    stream.value.next_in = input.data();
 
     // buffer
     constexpr static auto chunk_size = uInt {16 * 1024};
     auto buffer = std::vector<Bytef> {};
     folly::resizeWithoutInitialization(buffer, chunk_size);
+    Ensures(std::ssize(buffer) == chunk_size);
 
     // output
     auto output = std::string {};
-    output.reserve(data.size() * 2);
+    output.reserve(input.size() * 2);
 
     // decompression
     while (true) {
@@ -144,7 +142,7 @@ auto gzip_decompress(std::string_view data) -> tl::expected<std::string, LoadErr
         }
 
         // copy chunk
-        Expects(stream.value.avail_out >= 0);
+        static_assert(std::is_unsigned_v<decltype(stream.value.avail_out)>);
         Expects(stream.value.avail_out <= chunk_size);
         const auto offset = std::ptrdiff_t {chunk_size - stream.value.avail_out};
         output.append(buffer.begin(), std::next(buffer.begin(), offset));
