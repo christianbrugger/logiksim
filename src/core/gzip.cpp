@@ -6,14 +6,39 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <fmt/core.h>
+#include <folly/memory/UninitializedMemoryHacks.h>
 #include <gsl/gsl>
 #include <zlib.h>
 
+#include <iterator>
 #include <sstream>
 
 namespace logicsim {
 
 namespace {
+
+/**
+ * @brief: Resource managed inflate z_stream.
+ */
+struct ZInflateStream {
+    z_stream value {};
+
+    auto pointer() -> z_stream* {
+        return &value;
+    }
+
+    constexpr explicit ZInflateStream() = default;
+
+    ~ZInflateStream() {
+        inflateEnd(&value);
+    };
+
+    ZInflateStream(ZInflateStream&&) = delete;
+    ZInflateStream(const ZInflateStream&) = delete;
+    auto operator=(ZInflateStream&&) = delete;
+    auto operator=(const ZInflateStream&) = delete;
+};
+
 [[nodiscard]] auto format_zlib_status_code(int code) -> std::string {
     switch (code) {
         case Z_OK:
@@ -39,6 +64,22 @@ namespace {
     }
     std::terminate();
 }
+
+struct zlib_progress {
+    uLong total_in;
+    uLong total_out;
+};
+
+[[nodiscard]] auto get_progress(const z_stream& stream) -> zlib_progress {
+    return zlib_progress {stream.total_in, stream.total_out};
+}
+
+[[nodiscard]] auto made_progress(const z_stream& stream,
+                                 zlib_progress last_progress) -> bool {
+    return stream.total_in > last_progress.total_in ||
+           stream.total_out > last_progress.total_out;
+}
+
 }  // namespace
 
 auto gzip_compress(std::string_view input) -> std::string {
@@ -59,13 +100,12 @@ auto gzip_compress(std::string_view input) -> std::string {
 auto gzip_decompress(std::string_view data) -> tl::expected<std::string, LoadError> {
     const auto t = Timer {"gzip_decompress"};
 
-    // TODO make sure inflateEnd is always called
-    auto stream = z_stream {};
-
+    // initialize inflate
+    auto stream = ZInflateStream {};
     constexpr auto window_max_size = 15;
     constexpr auto window_gzip_format = 16;
-
-    if (const auto ret = inflateInit2(&stream, window_max_size + window_gzip_format);
+    if (const auto ret =
+            inflateInit2(&stream.value, window_max_size + window_gzip_format);
         ret != Z_OK) {
         return tl::unexpected<LoadError> {
             LoadErrorType::gzip_decompress_error,
@@ -74,43 +114,45 @@ auto gzip_decompress(std::string_view data) -> tl::expected<std::string, LoadErr
         };
     }
 
-    // Copy to not introduce UB
-    auto input = std::vector<Bytef> {};
-    input.reserve(data.size());
-    std::ranges::copy(data, std::back_inserter(input));
+    // input - copy to not introduce UB
+    auto input = std::vector<Bytef>(data.begin(), data.end());
+    stream.value.avail_in = gsl::narrow<uInt>(input.size());
+    stream.value.next_in = input.data();
 
-    auto output = std::vector<Bytef> {};
-    // TODO protect multiplication
-    output.resize(input.size() * 2);
+    // buffer
+    constexpr static auto chunk_size = uInt {16 * 1024};
+    auto buffer = std::vector<Bytef> {};
+    folly::resizeWithoutInitialization(buffer, chunk_size);
 
-    stream.avail_in = gsl::narrow<uInt>(input.size());
-    stream.next_in = input.data();
+    // output
+    auto output = std::string {};
+    output.reserve(data.size() * 2);
 
+    // decompression
     while (true) {
-        if (stream.total_out >= output.size()) {
-            // TODO protect multiplication
-            output.resize(output.size() * 3);
-        }
+        const auto last_progress = get_progress(stream.value);
+        stream.value.avail_out = chunk_size;
+        stream.value.next_out = buffer.data();
 
-        const auto total_out_start = stream.total_out;
-        const auto total_out = gsl::narrow<std::size_t>(stream.total_out);
-        Expects(stream.total_out < output.size());
-        stream.avail_out = gsl::narrow<uInt>(output.size() - total_out);
-        stream.next_out = &output[total_out];
+        const auto ret = inflate(&stream.value, Z_NO_FLUSH);
 
-        const auto ret = inflate(&stream, Z_NO_FLUSH);
-
-        if (ret == Z_STREAM_END) {
-            output.resize(stream.total_out);
-            break;
-        }
-        if (ret != Z_OK || stream.avail_out != 0) {
+        if (ret != Z_OK && ret != Z_STREAM_END) {
             return tl::unexpected<LoadError> {
                 LoadErrorType::gzip_decompress_error,
                 fmt::format("Zlib decompression error {}.", format_zlib_status_code(ret)),
             };
         }
-        if (stream.total_out <= total_out_start) {
+
+        // copy chunk
+        Expects(stream.value.avail_out >= 0);
+        Expects(stream.value.avail_out <= chunk_size);
+        const auto offset = std::ptrdiff_t {chunk_size - stream.value.avail_out};
+        output.append(buffer.begin(), std::next(buffer.begin(), offset));
+
+        if (ret == Z_STREAM_END) {
+            break;
+        }
+        if (!made_progress(stream.value, last_progress)) {
             return tl::unexpected<LoadError> {
                 LoadErrorType::gzip_decompress_error,
                 fmt::format("Zlib decompression did not make forward progress."),
@@ -118,35 +160,7 @@ auto gzip_decompress(std::string_view data) -> tl::expected<std::string, LoadErr
         }
     };
 
-    auto result = std::string {};
-    result.reserve(output.size());
-    std::ranges::copy(output, std::back_inserter(result));
-
-    return result;
-    /*
-    print(format_zlib_status_code(10));
-
-    auto output = std::ostringstream {};
-
-    try {
-        auto params = boost::iostreams::gzip_params {};
-
-        auto filter_stream = boost::iostreams::filtering_ostream {};
-        filter_stream.push(boost::iostreams::gzip_decompressor());
-        filter_stream.push(output);
-        filter_stream.write(data.data(), gsl::narrow<std::streamsize>(data.size()));
-        filter_stream.flush();
-        filter_stream.reset();
-    } catch (const boost::iostreams::gzip_error& error) {
-        return tl::unexpected<LoadError> {
-            LoadErrorType::gzip_decompress_error,
-            fmt::format("{}. Gzip error code {}. Zlib error code {}.", error.what(),
-                        error.error(), error.zlib_error_code()),
-        };
-    }
-
-    return output.str();
-    */
+    return output;
 }
 
 }  // namespace logicsim

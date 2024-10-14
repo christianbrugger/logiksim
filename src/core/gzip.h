@@ -10,7 +10,7 @@
 namespace logicsim {
 
 auto gzip_compress(std::string_view input) -> std::string;
-auto gzip_decompress(std::string_view input) -> tl::expected<std::string, LoadError>;
+auto gzip_decompress(std::string_view data) -> tl::expected<std::string, LoadError>;
 
 }  // namespace logicsim
 
