@@ -1,7 +1,6 @@
 
 #include "load_save_file.h"
 
-#include "algorithm/to_path.h"
 #include "file.h"
 #include "spatial_simulation.h"
 #include "vocabulary/save_format.h"
@@ -12,7 +11,7 @@
 namespace logicsim {
 
 TEST(LoadSaveFile, Load210Files16BitCounter) {
-    const auto file = to_path("example_circuits/2.1.0/16_bit_counter.ls2");
+    const auto file = std::filesystem::path {"example_circuits/2.1.0/16_bit_counter.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), true);
 
@@ -40,7 +39,7 @@ TEST(LoadSaveFile, Load210Files16BitCounter) {
 }
 
 TEST(LoadSaveFile, Load210FilesAllComponents) {
-    const auto file = to_path("example_circuits/2.1.0/all_components.ls2");
+    const auto file = std::filesystem::path {"example_circuits/2.1.0/all_components.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), true);
 
@@ -51,7 +50,8 @@ TEST(LoadSaveFile, Load210FilesAllComponents) {
 }
 
 TEST(LoadSaveFile, Load210FilesCounterDisplay1To4) {
-    const auto file = to_path("example_circuits/2.1.0/counter_display_1_to_4.ls2");
+    const auto file =
+        std::filesystem::path {"example_circuits/2.1.0/counter_display_1_to_4.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), true);
 
@@ -62,7 +62,8 @@ TEST(LoadSaveFile, Load210FilesCounterDisplay1To4) {
 }
 
 TEST(LoadSaveFile, Load210FilesCounterStopsClock) {
-    const auto file = to_path("example_circuits/2.1.0/counter_stops_clock.ls2");
+    const auto file =
+        std::filesystem::path {"example_circuits/2.1.0/counter_stops_clock.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), true);
 
@@ -82,7 +83,7 @@ TEST(LoadSaveFile, Load210FilesCounterStopsClock) {
 }
 
 TEST(LoadSaveFile, Load210FilesJkFlipFlop) {
-    const auto file = to_path("example_circuits/2.1.0/jk-flip-flop.ls2");
+    const auto file = std::filesystem::path {"example_circuits/2.1.0/jk-flip-flop.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), true);
 
@@ -97,7 +98,7 @@ TEST(LoadSaveFile, Load210FilesJkFlipFlop) {
 //
 
 TEST(LoadSaveFile, SaveLoadExample1) {
-    const auto file = to_path("test_example_1.ls2");
+    const auto file = std::filesystem::path {"test_example_1.ls2"};
 
     // generate
     auto rng = get_random_number_generator(4);
@@ -132,42 +133,48 @@ TEST(LoadSaveFile, SaveLoadExample1) {
 //
 
 TEST(LoadSaveFile, ErrorMissingFile) {
-    const auto file = to_path("example_circuits/errors/error_missing_file.ls2");
+    const auto file =
+        std::filesystem::path {"example_circuits/errors/error_missing_file.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), false);
     EXPECT_EQ(result.error().type(), LoadErrorType::file_open_error);
 }
 
 TEST(LoadSaveFile, ErrorBase64Padding) {
-    const auto file = to_path("example_circuits/errors/error_b64_padding.ls2");
+    const auto file =
+        std::filesystem::path {"example_circuits/errors/error_b64_padding.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), false);
     EXPECT_EQ(result.error().type(), LoadErrorType::base64_decode_error);
 }
 
 TEST(LoadSaveFile, ErrorBase64Symbol) {
-    const auto file = to_path("example_circuits/errors/error_b64_symbol.ls2");
+    const auto file =
+        std::filesystem::path {"example_circuits/errors/error_b64_symbol.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), false);
     EXPECT_EQ(result.error().type(), LoadErrorType::base64_decode_error);
 }
 
 TEST(LoadSaveFile, ErrorGZipCRC) {
-    const auto file = to_path("example_circuits/errors/error_gzip_crc.ls2");
+    const auto file =
+        std::filesystem::path {"example_circuits/errors/error_gzip_crc.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), false);
     EXPECT_EQ(result.error().type(), LoadErrorType::gzip_decompress_error);
 }
 
 TEST(LoadSaveFile, ErrorVersionMissing) {
-    const auto file = to_path("example_circuits/errors/error_version_missing.ls2");
+    const auto file =
+        std::filesystem::path {"example_circuits/errors/error_version_missing.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), false);
     EXPECT_EQ(result.error().type(), LoadErrorType::json_parse_error);
 }
 
 TEST(LoadSaveFile, ErrorVersion1020) {
-    const auto file = to_path("example_circuits/errors/error_version_10.2.0.ls2");
+    const auto file =
+        std::filesystem::path {"example_circuits/errors/error_version_10.2.0.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), false);
     EXPECT_EQ(result.error().type(), LoadErrorType::json_version_error);
@@ -178,7 +185,8 @@ TEST(LoadSaveFile, ErrorVersion1020) {
 }
 
 TEST(LoadSaveFile, ErrorVersionUnknown) {
-    const auto file = to_path("example_circuits/errors/error_version_unknown.ls2");
+    const auto file =
+        std::filesystem::path {"example_circuits/errors/error_version_unknown.ls2"};
     auto result = load_circuit_from_file(file);
     ASSERT_EQ(result.has_value(), false);
     EXPECT_EQ(result.error().type(), LoadErrorType::json_version_error);
