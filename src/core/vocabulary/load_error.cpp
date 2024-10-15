@@ -11,8 +11,6 @@ auto format(LoadErrorType type) -> std::string {
 
         case file_open_error:
             return "file_open_error";
-        case file_read_error:
-            return "file_read_error";
 
         case unknown_file_format_error:
             return "unknown_file_format_error";

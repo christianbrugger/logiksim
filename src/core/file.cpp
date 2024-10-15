@@ -3,6 +3,9 @@
 #include "format/std_type.h"
 #include "timer.h"
 
+#include <boost/filesystem/path.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
+
 #include <filesystem>
 #include <fstream>
 
@@ -22,25 +25,20 @@ auto save_file(const std::filesystem::path &filename, const std::string &binary)
 auto load_file(const std::filesystem::path &filename)
     -> tl::expected<std::string, LoadError> {
     const auto t = Timer {fmt::format("{}", filename)};
+    const auto path = boost::filesystem::path {filename.native()};
 
-    auto file = std::ifstream {filename, std::ios::in | std::ios::binary};
+    auto map = boost::iostreams::mapped_file_source {};
 
-    if (!file.is_open()) {
+    try {
+        map.open(path);
+    } catch (const std::ios::failure &exc) {
         return tl::unexpected<LoadError> {
             LoadErrorType::file_open_error,
-            "Unable to open file.",
+            fmt::format("Unable to open file: {}", exc.what()),
         };
     }
 
-    auto buffer = std::ostringstream {};
-    if (buffer << file.rdbuf()) {
-        return buffer.str();
-    }
-
-    return tl::unexpected<LoadError> {
-        LoadErrorType::file_read_error,
-        "Unable to read file.",
-    };
+    return std::string {map.begin(), map.end()};
 }
 
 }  // namespace logicsim

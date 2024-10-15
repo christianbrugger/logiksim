@@ -16,6 +16,7 @@ set(BOOST_INCLUDE_LIBRARIES
     # logiksim
     algorithm 
     container 
+    filesystem
     geometry
     iostreams
     random 
@@ -171,6 +172,7 @@ target_include_directories(whereami PUBLIC
 set(LS_CORE_LIBRARIES
     Boost::algorithm
     Boost::container
+    Boost::filesystem
     Boost::geometry
     Boost::iostreams
     Boost::random
