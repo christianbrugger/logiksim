@@ -26,7 +26,7 @@ set(LS_CORE_SOURCES
     algorithm/round.cpp
     algorithm/shuffle.cpp
     algorithm/sort_pair.cpp
-    algorithm/to_hex.cpp
+    algorithm/text_escape.cpp
     algorithm/to_underlying.cpp
     algorithm/to_vector.cpp
     algorithm/transform_adjacent.cpp

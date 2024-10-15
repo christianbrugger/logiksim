@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_ALGORITHM_TO_HEX_H
-#define LOGICSIM_ALGORITHM_TO_HEX_H
+#ifndef LOGICSIM_ALGORITHM_TEXT_ESCAPE_H
+#define LOGICSIM_ALGORITHM_TEXT_ESCAPE_H
 
 #include <string>
 #include <string_view>
@@ -19,7 +19,7 @@ namespace logicsim {
 [[nodiscard]] auto to_hex(std::wstring_view text) -> std::string;
 
 /**
- * @brief: Copy ASCII characters and escapes non ASCII characters as HEX.
+ * @brief: Escape non printable ASCII characters as hex.
  *
  * Note '\' characters are escaped as '\\'
  */

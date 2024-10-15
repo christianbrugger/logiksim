@@ -1,4 +1,4 @@
-#include "algorithm/to_hex.h"
+#include "algorithm/text_escape.h"
 
 #include <fmt/core.h>
 #include <gsl/gsl>
@@ -29,8 +29,8 @@ auto generic_char_to_hex(CharType c) -> std::string {
 }
 
 template <typename CharType>
-auto generic_is_ascii(CharType c) -> bool {
-    return 0 <= c && c <= 127;
+auto generic_is_printable_ascii(CharType c) -> bool {
+    return 32 <= c && c <= 126;
 }
 
 template <typename CharType>
@@ -38,7 +38,7 @@ auto generic_char_to_ascii_hex(CharType c) -> std::string {
     if (c == '\\') {
         return std::string {"\\\\"};
     }
-    if (generic_is_ascii(c)) {
+    if (generic_is_printable_ascii(c)) {
         return std::string {gsl::narrow_cast<char>(c)};
     }
     return generic_char_to_hex(c);
