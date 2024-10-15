@@ -1,5 +1,6 @@
 #include "algorithm/to_hex.h"
 
+#include <fmt/core.h>
 #include <gsl/gsl>
 
 #include <cstdint>
