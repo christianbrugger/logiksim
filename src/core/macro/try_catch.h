@@ -21,9 +21,10 @@ namespace logicsim {
  *
  * TODO: Check again with CLang 19. last check Clang 18.1.8.
  */
-#if defined(__has_feature) && defined(__clang__) && defined(_WIN64) && \
-    __has_feature(address_sanitizer)
+#if defined(__has_feature)
+#if defined(__clang__) && defined(_WIN64) && __has_feature(address_sanitizer)
 #define LS_DISABLE_ASAN_TRY_CATCH_NON_EMPTY
+#endif
 #endif
 
 /**
