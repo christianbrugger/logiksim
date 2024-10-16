@@ -155,6 +155,8 @@ set(LS_CORE_SOURCES
     iterator_adaptor/transform_output_iterator.cpp
     iterator_adaptor/transform_view.cpp
 
+    macro/try_catch.cpp
+
     random/bool.cpp
     random/connection_count.cpp
     random/generator.cpp

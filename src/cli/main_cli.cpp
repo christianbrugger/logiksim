@@ -7,6 +7,7 @@
 #include "format/blend2d_type.h"
 #include "geometry/scene.h"
 #include "logging.h"
+#include "macro/try_catch.h"
 #include "render/circuit/render_circuit.h"
 #include "render/image_surface.h"
 #include "timer.h"
@@ -38,6 +39,8 @@ auto test_render() -> void {
 
 auto main() -> int {
     using namespace logicsim;
+
+    print(try_catch_non_empty_status());
 
     bool do_run = true;
 

@@ -1,5 +1,6 @@
 CMakeUserPresets.json
 .clangd
+*.dll
 
 
 .cache

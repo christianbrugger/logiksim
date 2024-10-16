@@ -1,6 +1,7 @@
 #include "file.h"
 
 #include "format/std_type.h"
+#include "macro/try_catch.h"
 #include "timer.h"
 
 #include <boost/filesystem/path.hpp>
@@ -22,23 +23,34 @@ auto save_file(const std::filesystem::path &filename, const std::string &binary)
     return bool {file << binary};
 }
 
-auto load_file(const std::filesystem::path &filename)
-    -> tl::expected<std::string, LoadError> {
-    const auto t = Timer {fmt::format("{}", filename)};
-    const auto path = boost::filesystem::path {filename.native()};
+namespace {
 
-    auto map = boost::iostreams::mapped_file_source {};
-
+[[nodiscard]] LS_TRY_CATCH_NON_EMPTY auto get_mapped_file_source(
+    const boost::filesystem::path &path)
+    -> tl::expected<boost::iostreams::mapped_file_source, LoadError> {
     try {
-        map.open(path);
+        return boost::iostreams::mapped_file_source(path);
     } catch (const std::ios::failure &exc) {
         return tl::unexpected<LoadError> {
             LoadErrorType::file_open_error,
             fmt::format("Unable to open file: {}", exc.what()),
         };
     }
+}
 
+[[nodiscard]] auto mmap_source_to_string(boost::iostreams::mapped_file_source &&map)
+    -> std::string {
     return std::string {map.begin(), map.end()};
+};
+
+}  // namespace
+
+auto load_file(const std::filesystem::path &filename)
+    -> tl::expected<std::string, LoadError> {
+    const auto t = Timer {fmt::format("{}", filename)};
+    const auto path = boost::filesystem::path {filename.native()};
+
+    return get_mapped_file_source(path).transform(mmap_source_to_string);
 }
 
 }  // namespace logicsim
