@@ -170,12 +170,13 @@ jobs:
 
     - name: Submodule Hash
       working-directory: ${{ github.workspace }}
+      shell: pwsh
       run: |
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
+        if ($env:RUNNER_OS -eq 'Windows') {
           $(CertUtil -hashfile external/checkout.py SHA256)[0,1] > submodule_hashes.txt
-        else
+        } else {
           shasum -a 256 external/checkout.py > submodule_hashes.txt
-        fi
+        }
         git submodule status >> submodule_hashes.txt
         cat submodule_hashes.txt
     - name: Restore Submodule
