@@ -8,6 +8,7 @@ file(GLOB_RECURSE
     CONFIGURE_DEPENDS
 
     ${PROJECT_SOURCE_DIR}/example_circuits/**.ls2
+    ${PROJECT_SOURCE_DIR}/example_circuits/**.7z
 )
 FOREACH(LS_EXAMPLE_CIRCUIT_FILE ${LS_EXAMPLE_CIRCUIT_FILES})
     add_custom_command(
