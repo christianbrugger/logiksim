@@ -1,8 +1,7 @@
 #ifndef LOGICSIM_FORMAT_STD_TYPE_H
 #define LOGICSIM_FORMAT_STD_TYPE_H
 
-#include "algorithm/text_escape.h"
-#include "algorithm/u8_conversion.h"
+#include "algorithm/path_conversion.h"
 
 #include <fmt/core.h>
 
@@ -143,15 +142,7 @@ struct fmt::formatter<std::filesystem::path, Char> {
 
     static auto format(const std::filesystem::path &obj, fmt::format_context &ctx) {
         // On windows paths are stored as wchar and need to be converted to utf-8.
-        // This can fail if the wchar contains unpaired surrogate pairs and throws.
-        // For those path names no utf-8 representation exists and a fallback is needed.
-        const auto string = [&] {
-            try {
-                return logicsim::to_string(obj.u8string());
-            } catch (const std::exception &) {
-                return logicsim::to_ascii_or_hex(obj.native());
-            }
-        }();
+        const auto string = logicsim::path_to_utf8_or_escape(obj);
         return fmt::format_to(ctx.out(), "{}", string);
     }
 };

@@ -18,6 +18,7 @@ set(LS_CORE_SOURCES
     algorithm/merged_none_of.cpp
     algorithm/narrow_integral.cpp
     algorithm/overload.cpp
+    algorithm/path_conversion.cpp
     algorithm/pop_while.cpp
     algorithm/random_select.cpp
     algorithm/range.cpp
