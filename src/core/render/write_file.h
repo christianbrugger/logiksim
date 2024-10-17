@@ -11,6 +11,8 @@ namespace logicsim {
  * @brief: Create folder and write image to the file.
  *
  * At the moment *.png and *.qoi are supported.
+ *
+ * Note, only works for valid utf8 paths on Windows.
  */
 auto write_to_file(const BLImage &bl_image,
                    const std::filesystem::path &filename) -> void;

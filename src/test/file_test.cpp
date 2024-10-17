@@ -1,7 +1,6 @@
 #include "file.h"
 
 #include "algorithm/path_conversion.h"
-#include "logging.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

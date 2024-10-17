@@ -1,18 +1,19 @@
 #include "qt/path_conversion.h"
 
-#include "algorithm/u8_conversion.h"
-
 #include <gsl/gsl>
 
 namespace logicsim {
 
 auto to_qt(const std::filesystem::path& path) -> QString {
-    const auto u8string = path.u8string();
-    return QString::fromUtf8(u8string.data(), gsl::narrow<qsizetype>(u8string.size()));
+    // Qt and Windows filesystem::path on Windows uses UTF-16.
+    // On Windows there will be no conversion
+    return QString::fromStdU16String(path.u16string());
 }
 
 auto to_path(const QString& filename) -> std::filesystem::path {
-    return std::filesystem::path {to_u8string(filename.toStdString())};
+    // Qt and Windows filesystem::path on Windows uses UTF-16.
+    // On Windows there will be no conversion
+    return std::filesystem::path {filename.toStdU16String()};
 }
 
 }  // namespace logicsim
