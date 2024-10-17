@@ -52,7 +52,7 @@ endif()
 
 enable_testing()
 include(CTest)
-include(ParseAndAddCatchTests)
-ParseAndAddCatchTests(${LS_GUI_TEST_TARGET})
+include(Catch)
+catch_discover_tests(${LS_GUI_TEST_TARGET})
 
 
