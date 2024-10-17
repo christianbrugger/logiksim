@@ -37,7 +37,5 @@ set(LS_GUI_SOURCES
     widget/setting_dialog.cpp
     widget/setting_dialog_manager.cpp
     widget/top_widget.cpp
-
-    main_gui.cpp
 )
 

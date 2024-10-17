@@ -169,7 +169,7 @@ target_include_directories(whereami PUBLIC
 ###### Library Include
 
 
-set(LS_CORE_LIBRARIES
+set(LS_CORE_DEPENDENCIES
     Boost::algorithm
     Boost::container
     Boost::filesystem
@@ -254,26 +254,24 @@ endif()
 ###### Core Library
 
 
-set(MAIN_LIBRARY "simulation_srp")
-
-add_library(${MAIN_LIBRARY} 
+add_library(${LS_CORE_LIBRARY} 
     ${LS_CORE_SOURCES}
 )
 # TODO: remove this and add prefix core to all includes?
-target_include_directories(${MAIN_LIBRARY} PUBLIC
+target_include_directories(${LS_CORE_LIBRARY} PUBLIC
     ${PROJECT_SOURCE_DIR}/src/core
 )
-target_include_directories(${MAIN_LIBRARY} PUBLIC
+target_include_directories(${LS_CORE_LIBRARY} PUBLIC
     ${PROJECT_SOURCE_DIR}/src
 )
-target_link_libraries(${MAIN_LIBRARY} PUBLIC 
-    ${LS_CORE_LIBRARIES}
+target_link_libraries(${LS_CORE_LIBRARY} PUBLIC 
+    ${LS_CORE_DEPENDENCIES}
     logiksim_resource_files
 )
-target_link_libraries(${MAIN_LIBRARY} PUBLIC 
+target_link_libraries(${LS_CORE_LIBRARY} PUBLIC 
     logiksim_options
 )
-target_link_libraries(${MAIN_LIBRARY} PRIVATE 
+target_link_libraries(${LS_CORE_LIBRARY} PRIVATE 
     logiksim_pch
 )
 

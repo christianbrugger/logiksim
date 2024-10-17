@@ -21,16 +21,15 @@ add_subdirectory(
 
 ###### Benchmark Executable
 
-set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
-add_executable(${MAIN_BENCHMARK_TARGET}
+add_executable(${LS_BENCHMARK_TARGET}
     main_benchmark.cpp
 )
-target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
-    ${MAIN_LIBRARY}
+target_link_libraries(${LS_BENCHMARK_TARGET} PRIVATE 
+    ${LS_CORE_LIBRARY}
     benchmark::benchmark
 )
-set_property(TARGET ${MAIN_BENCHMARK_TARGET} PROPERTY RUNTIME_OUTPUT_DIRECTORY 
+set_property(TARGET ${LS_BENCHMARK_TARGET} PROPERTY RUNTIME_OUTPUT_DIRECTORY 
     ${CMAKE_BINARY_DIR}
 )
-set_property(TARGET ${MAIN_BENCHMARK_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+set_property(TARGET ${LS_BENCHMARK_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 

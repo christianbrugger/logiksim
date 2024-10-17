@@ -2,11 +2,12 @@ include(source_list.cmake)
 
 ###### Dependencies
 
-# Google Test
-set(INSTALL_GTEST OFF)
+# Catch2
+set(CATCH_INSTALL_DOCS OFF)
+set(CATCH_INSTALL_EXTRA OFF)
 add_subdirectory(
-    ${PROJECT_SOURCE_DIR}/external/googletest
-    ${CMAKE_BINARY_DIR}/external/googletest
+    ${PROJECT_SOURCE_DIR}/external/catch2
+    ${CMAKE_BINARY_DIR}/external/catch2
     EXCLUDE_FROM_ALL
     SYSTEM
 )
@@ -14,25 +15,21 @@ add_subdirectory(
 
 ###### Test Executable
 
-set(MAIN_TEST_TARGET "simulation_srp_test")
-
-add_executable(${MAIN_TEST_TARGET}
-    ${LS_TEST_SOURCES}
+add_executable(${LS_GUI_TEST_TARGET}
+    ${LS_GUI_TEST_SOURCES}
 )
-target_link_libraries(${MAIN_TEST_TARGET} PRIVATE 
-    ${MAIN_LIBRARY} 
+target_link_libraries(${LS_GUI_TEST_TARGET} PRIVATE 
+    ${LS_GUI_LIBRARY} 
     logiksim_example_circuits
-    GTest::gtest
-    GTest::gmock
-    GTest::gtest_main
+    Catch2::Catch2WithMain
 )
-target_include_directories(${MAIN_TEST_TARGET} PUBLIC
+target_include_directories(${LS_GUI_TEST_TARGET} PUBLIC
     ${PROJECT_SOURCE_DIR}
 )
-set_property(TARGET ${MAIN_TEST_TARGET} PROPERTY RUNTIME_OUTPUT_DIRECTORY 
+set_property(TARGET ${LS_GUI_TEST_TARGET} PROPERTY RUNTIME_OUTPUT_DIRECTORY 
     ${CMAKE_BINARY_DIR}
 )
-set_property(TARGET ${MAIN_TEST_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+set_property(TARGET ${LS_GUI_TEST_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 
 ###### Coverage for Tests
@@ -41,11 +38,11 @@ set_property(TARGET ${MAIN_TEST_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 if (LS_ENABLE_COVERAGE)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")  #  AND CMAKE_BUILD_TYPE MATCHES Debug
         message(NOTICE "LOGIKSIM: Enabling Clang Coverage for Tests.")
-        target_compile_options(${MAIN_TEST_TARGET} PRIVATE 
+        target_compile_options(${LS_GUI_TEST_TARGET} PRIVATE 
             -fprofile-instr-generate 
             -fcoverage-mapping
         )
-        target_link_options(${MAIN_TEST_TARGET} PRIVATE 
+        target_link_options(${LS_GUI_TEST_TARGET} PRIVATE 
             -fprofile-instr-generate 
             -fcoverage-mapping
         )
@@ -58,7 +55,8 @@ endif()
 ###### CMake Test Discovery
 
 enable_testing()
-include(GoogleTest)
-gtest_discover_tests(${MAIN_TEST_TARGET})
+include(CTest)
+include(ParseAndAddCatchTests)
+ParseAndAddCatchTests(${LS_GUI_TEST_TARGET})
 
 

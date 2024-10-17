@@ -11,7 +11,7 @@
 #include "random/point.h"
 #include "render/circuit/render_circuit.h"
 #include "render/context_cache.h"
-#include "test/editable_circuit/modifier/test_helpers.h"  // TODO different folder
+#include "test_core/editable_circuit/modifier/test_helpers.h"  // TODO different folder
 #include "timer.h"
 #include "tree_normalization.h"
 #include "vocabulary/context_render_settings.h"

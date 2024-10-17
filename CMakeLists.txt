@@ -138,8 +138,16 @@ endif()
 # LogikSim Targets
 #
 
-# TODO: remove ?
-set(MAIN_LIBRARY "simulation_srp")
+set(LS_CORE_LIBRARY "ls_core_lib")
+set(LS_GUI_LIBRARY "ls_gui_lib")
+
+set(LS_BENCHMARK_TARGET "ls_benchmark")
+set(LS_CLI_TARGET "ls_cli")
+set(LS_GUI_TARGET "ls_gui")
+
+set(LS_CORE_TEST_TARGET "ls_core_test")
+set(LS_GUI_TEST_TARGET "ls_gui_test")
+
 
 # MAIN
 add_subdirectory(example_circuits)

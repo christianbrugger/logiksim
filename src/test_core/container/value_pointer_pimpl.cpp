@@ -1,4 +1,4 @@
-#include "test/container/value_pointer_pimpl.h"
+#include "test_core/container/value_pointer_pimpl.h"
 
 namespace logicsim {
 

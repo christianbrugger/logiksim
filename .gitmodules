@@ -18,6 +18,11 @@
 	url = https://github.com/boostorg/boost
 	ignore = dirty
 
+[submodule "external/catch2"]
+	path = external/catch2
+	url = https://github.com/catchorg/Catch2.git
+	ignore = dirty
+
 [submodule "external/expected"]
 	path = external/expected
 	url = https://github.com/TartanLlama/expected.git

@@ -252,21 +252,26 @@ jobs:
     # Run Executables
     #
 
-    - name: Run Test
+    - name: Run Core Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
-        ./simulation_srp_test
+        ./ls_core_test
+
+    # - name: Run GUI Test
+    #   working-directory: ${{ steps.strings.outputs.build-output-dir }}
+    #   run: |
+    #     ./ls_gui_test
 
     - name: Run CLI
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
-        ./simulation_srp_cli
+        ./ls_cli
 
     - name: Run Benchmark
       if: "!matrix.skip_benchmark"
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
-        ./simulation_srp_benchmark
+        ./ls_benchmark
 
 
 

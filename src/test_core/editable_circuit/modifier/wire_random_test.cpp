@@ -8,7 +8,7 @@
 #include "random/segment.h"
 #include "random/wire.h"
 #include "selection_normalization.h"
-#include "test/editable_circuit/modifier/test_helpers.h"
+#include "test_core/editable_circuit/modifier/test_helpers.h"
 #include "tree_normalization.h"
 #include "vocabulary/segment_part.h"
 

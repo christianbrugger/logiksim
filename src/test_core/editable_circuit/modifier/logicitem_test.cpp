@@ -4,7 +4,7 @@
 #include "layout.h"
 #include "layout_message.h"
 #include "logging.h"
-#include "test/editable_circuit/modifier/test_helpers.h"
+#include "test_core/editable_circuit/modifier/test_helpers.h"
 #include "vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>

@@ -19,7 +19,7 @@ AllowShortFunctionsOnASingleLine: Empty
 IncludeBlocks: Regroup
 IncludeIsMainRegex: '(_test)?$'
 IncludeCategories:
-- Regex:    '^<(gtest/|gmock/)'
+- Regex:    '^<(gtest/|gmock/|catch2/)'
   Priority: 2
 - Regex:    '^<(boost/|fmt/|range/|blend2d\.h|benchmark/|folly/|gsl/|ankerl/|glaze/|hb\.h>|hb-|gcem\.hpp|tl/expected|whereami\.h|zlib\.h>)'
   Priority: 3

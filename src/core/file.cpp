@@ -50,6 +50,7 @@ auto load_file(const std::filesystem::path &filename)
     const auto t = Timer {fmt::format("{}", filename)};
     const auto path = boost::filesystem::path {filename.native()};
 
+    // Note, memory mapping files for reading is much faster than ifstream.
     return get_mapped_file_source(path).transform(mmap_source_to_string);
 }
 
