@@ -1,10 +1,10 @@
-#include "component/line_tree/line_store.h"
+#include "core/component/line_tree/line_store.h"
 
-#include "algorithm/contains.h"
-#include "allocated_size/folly_small_vector.h"
-#include "allocated_size/trait.h"
-#include "format/container.h"
-#include "geometry/line.h"
+#include "core/algorithm/contains.h"
+#include "core/allocated_size/folly_small_vector.h"
+#include "core/allocated_size/trait.h"
+#include "core/format/container.h"
+#include "core/geometry/line.h"
 
 #include <gsl/gsl>
 

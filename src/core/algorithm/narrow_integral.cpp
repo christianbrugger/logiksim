@@ -1,4 +1,4 @@
-#include "algorithm/narrow_integral.h"
+#include "core/algorithm/narrow_integral.h"
 
 namespace logicsim {
 

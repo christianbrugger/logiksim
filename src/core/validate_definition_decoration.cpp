@@ -1,7 +1,7 @@
-#include "validate_definition_decoration.h"
+#include "core/validate_definition_decoration.h"
 
-#include "layout_info.h"
-#include "vocabulary/decoration_definition.h"
+#include "core/layout_info.h"
+#include "core/vocabulary/decoration_definition.h"
 
 namespace logicsim {
 

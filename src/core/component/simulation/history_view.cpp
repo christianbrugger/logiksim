@@ -1,8 +1,8 @@
-#include "component/simulation/history_view.h"
+#include "core/component/simulation/history_view.h"
 
-#include "component/simulation/history_buffer.h"
-#include "component/simulation/history_iterator.h"
-#include "vocabulary/delay.h"
+#include "core/component/simulation/history_buffer.h"
+#include "core/component/simulation/history_iterator.h"
+#include "core/vocabulary/delay.h"
 
 #include <gsl/gsl>
 

@@ -1,10 +1,10 @@
-#include "svg_cache.h"
+#include "core/render/svg_cache.h"
 
-#include "file.h"
-#include "logging.h"
-#include "render/context_guard.h"
-#include "render/svg_cache.h"
-#include "resource.h"
+#include "core/file.h"
+#include "core/logging.h"
+#include "core/render/context_guard.h"
+#include "core/render/svg_cache.h"
+#include "core/resource.h"
 
 #include <exception>
 #include <stdexcept>

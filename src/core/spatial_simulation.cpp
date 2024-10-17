@@ -1,8 +1,8 @@
-#include "spatial_simulation.h"
+#include "core/spatial_simulation.h"
 
-#include "layout.h"
-#include "line_tree_generation.h"
-#include "schematic_generation.h"
+#include "core/layout.h"
+#include "core/line_tree_generation.h"
+#include "core/schematic_generation.h"
 
 #include <fmt/core.h>
 #include <gsl/gsl>

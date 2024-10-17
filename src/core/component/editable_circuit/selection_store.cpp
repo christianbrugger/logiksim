@@ -1,11 +1,11 @@
-#include "selection_store.h"
+#include "core/component/editable_circuit/selection_store.h"
 
-#include "algorithm/fmt_join.h"
-#include "algorithm/uniform_int_distribution.h"
-#include "allocated_size/ankerl_unordered_dense.h"
-#include "component/editable_circuit/selection_store.h"
-#include "format/container.h"
-#include "format/std_type.h"
+#include "core/algorithm/fmt_join.h"
+#include "core/algorithm/uniform_int_distribution.h"
+#include "core/allocated_size/ankerl_unordered_dense.h"
+#include "core/component/editable_circuit/selection_store.h"
+#include "core/format/container.h"
+#include "core/format/std_type.h"
 
 #include <fmt/core.h>
 

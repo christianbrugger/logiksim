@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_CIRCUIT_ID_H
 #define LOGICSIM_VOCABULARY_CIRCUIT_ID_H
 
-#include "algorithm/narrow_integral.h"
-#include "concept/integral.h"
-#include "format/struct.h"
-#include "type_trait/safe_difference_type.h"
+#include "core/algorithm/narrow_integral.h"
+#include "core/concept/integral.h"
+#include "core/format/struct.h"
+#include "core/type_trait/safe_difference_type.h"
 
 #include <compare>
 #include <cstdint>

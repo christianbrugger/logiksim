@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_RENDER_SURFACE_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_RENDER_SURFACE_H
 
-#include "event_counter.h"
-#include "render/context_cache.h"
-#include "render/image_surface.h"
-#include "vocabulary/mouse_postion_info.h"
-#include "vocabulary/widget_render_config.h"
+#include "core/event_counter.h"
+#include "core/render/context_cache.h"
+#include "core/render/image_surface.h"
+#include "core/vocabulary/mouse_postion_info.h"
+#include "core/vocabulary/widget_render_config.h"
 
 #include <blend2d.h>
 

@@ -1,13 +1,13 @@
 
-#include "segment_tree.h"
+#include "core/segment_tree.h"
 
-#include "algorithm/range.h"
-#include "algorithm/uniform_int_distribution.h"
-#include "logging.h"
-#include "random/bool.h"
-#include "random/generator.h"
-#include "random/part.h"
-#include "random/segment.h"
+#include "core/algorithm/range.h"
+#include "core/algorithm/uniform_int_distribution.h"
+#include "core/logging.h"
+#include "core/random/bool.h"
+#include "core/random/generator.h"
+#include "core/random/part.h"
+#include "core/random/segment.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

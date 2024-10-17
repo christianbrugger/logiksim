@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_LOGIC_ITEM_LAYOUT_DISPLAY_H
 #define LOGICSIM_LOGIC_ITEM_LAYOUT_DISPLAY_H
 
-#include "vocabulary/connection_id.h"
-#include "vocabulary/font_style.h"
-#include "vocabulary/grid_fine.h"
+#include "core/vocabulary/connection_id.h"
+#include "core/vocabulary/font_style.h"
+#include "core/vocabulary/grid_fine.h"
 
 namespace logicsim {
 

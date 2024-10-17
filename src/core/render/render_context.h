@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_CORE_RENDER_RENDER_CONTEXT_H
 #define LOGICSIM_CORE_RENDER_RENDER_CONTEXT_H
 
-#include "render/bl_error_check.h"
-#include "render/context.h"
-#include "render/context_cache.h"
-#include "render/write_file.h"
-#include "vocabulary/context_render_settings.h"
+#include "core/render/bl_error_check.h"
+#include "core/render/context.h"
+#include "core/render/context_cache.h"
+#include "core/render/write_file.h"
+#include "core/vocabulary/context_render_settings.h"
 
 #include <blend2d.h>
 

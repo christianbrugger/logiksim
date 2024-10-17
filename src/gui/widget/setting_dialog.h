@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_WIDGET_SETTING_DIALOG_H
 #define LOGICSIM_WIDGET_SETTING_DIALOG_H
 
-#include "vocabulary/delay.h"
-#include "vocabulary/selection_id.h"
-#include "vocabulary/setting_attribute.h"
+#include "core/vocabulary/delay.h"
+#include "core/vocabulary/selection_id.h"
+#include "core/vocabulary/setting_attribute.h"
 
 #include <QDoubleValidator>
 #include <QWidget>

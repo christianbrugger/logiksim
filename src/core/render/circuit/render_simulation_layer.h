@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_SIMULATION_LAYER_H
 #define LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_SIMULATION_LAYER_H
 
-#include "format/struct.h"
-#include "vocabulary/decoration_id.h"
-#include "vocabulary/logicitem_id.h"
-#include "vocabulary/wire_id.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/decoration_id.h"
+#include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/wire_id.h"
 
 #include <concepts>
 #include <vector>

@@ -1,6 +1,6 @@
-#include "vocabulary/connection_count.h"
+#include "core/vocabulary/connection_count.h"
 
-#include "logging.h"  // TODO remove
+#include "core/logging.h"  // TODO remove
 
 #include <gsl/gsl>
 

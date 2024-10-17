@@ -1,4 +1,4 @@
-#include "vocabulary/line_fine.h"
+#include "core/vocabulary/line_fine.h"
 
 #include <fmt/core.h>
 

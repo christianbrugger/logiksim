@@ -1,12 +1,12 @@
-#include "element/decoration/render_decoration_base.h"
+#include "core/element/decoration/render_decoration_base.h"
 
-#include "layout.h"
-#include "render/circuit/alpha_values.h"
-#include "render/primitive/point.h"
-#include "render/primitive/text.h"
-#include "vocabulary/decoration_type.h"
-#include "vocabulary/drawable_element.h"
-#include "vocabulary/point_fine.h"
+#include "core/layout.h"
+#include "core/render/circuit/alpha_values.h"
+#include "core/render/primitive/point.h"
+#include "core/render/primitive/text.h"
+#include "core/vocabulary/decoration_type.h"
+#include "core/vocabulary/drawable_element.h"
+#include "core/vocabulary/point_fine.h"
 
 namespace logicsim {
 

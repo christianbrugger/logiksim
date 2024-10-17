@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_PLACED_ELEMENT_H
 #define LOGICSIM_VOCABULARY_PLACED_ELEMENT_H
 
-#include "format/struct.h"
-#include "vocabulary/logicitem_definition.h"
-#include "vocabulary/point.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/logicitem_definition.h"
+#include "core/vocabulary/point.h"
 
 #include <compare>
 #include <type_traits>

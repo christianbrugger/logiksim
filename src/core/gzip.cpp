@@ -1,6 +1,6 @@
-#include "gzip.h"
+#include "core/gzip.h"
 
-#include "timer.h"
+#include "core/timer.h"
 
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>

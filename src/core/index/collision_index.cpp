@@ -1,16 +1,16 @@
-#include "collision_index.h"
+#include "core/index/collision_index.h"
 
-#include "algorithm/fmt_join.h"
-#include "algorithm/range.h"
-#include "allocated_size/ankerl_unordered_dense.h"
-#include "format/container.h"
-#include "format/std_type.h"
-#include "geometry/line.h"
-#include "geometry/orientation.h"
-#include "index/collision_index.h"
-#include "layout_info.h"
-#include "layout_message.h"
-#include "layout_message_generation.h"
+#include "core/algorithm/fmt_join.h"
+#include "core/algorithm/range.h"
+#include "core/allocated_size/ankerl_unordered_dense.h"
+#include "core/format/container.h"
+#include "core/format/std_type.h"
+#include "core/geometry/line.h"
+#include "core/geometry/orientation.h"
+#include "core/index/collision_index.h"
+#include "core/layout_info.h"
+#include "core/layout_message.h"
+#include "core/layout_message_generation.h"
 
 #include <folly/small_vector.h>
 

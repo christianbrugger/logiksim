@@ -1,10 +1,10 @@
 #ifndef LOGIKSIM_SETTING_HANDLE
 #define LOGIKSIM_SETTING_HANDLE
 
-#include "resource.h"
-#include "vocabulary/grid_fine.h"
-#include "vocabulary/logicitem_id.h"
-#include "vocabulary/point_fine.h"
+#include "core/resource.h"
+#include "core/vocabulary/grid_fine.h"
+#include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/point_fine.h"
 
 #include <optional>
 

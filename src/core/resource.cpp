@@ -1,7 +1,7 @@
-#include "resource.h"
+#include "core/resource.h"
 
-#include "executable_path.h"
-#include "timer.h"
+#include "core/executable_path.h"
+#include "core/timer.h"
 
 #include <gsl/gsl>
 

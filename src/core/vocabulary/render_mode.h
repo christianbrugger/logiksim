@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_RENDER_MODE_H
 #define LOGICSIM_VOCABULARY_RENDER_MODE_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 #include <string>
 

@@ -1,4 +1,4 @@
-#include "component/simulation/history_min_index.h"
+#include "core/component/simulation/history_min_index.h"
 
 namespace logicsim {
 

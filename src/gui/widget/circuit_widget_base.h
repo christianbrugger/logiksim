@@ -1,10 +1,11 @@
 #ifndef LOGICSIM_WIDGET_CIRCUIT_WIDGET_BASE_H
 #define LOGICSIM_WIDGET_CIRCUIT_WIDGET_BASE_H
 
-#include "vocabulary/circuit_widget_state.h"
-#include "vocabulary/simulation_config.h"
-#include "vocabulary/widget_render_config.h"
-#include "widget/render_widget.h"
+#include "gui/widget/render_widget.h"
+
+#include "core/vocabulary/circuit_widget_state.h"
+#include "core/vocabulary/simulation_config.h"
+#include "core/vocabulary/widget_render_config.h"
 
 namespace logicsim {
 

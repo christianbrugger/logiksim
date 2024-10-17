@@ -1,9 +1,9 @@
-#include "render/primitive/text.h"
+#include "core/render/primitive/text.h"
 
-#include "render/context.h"
-#include "render/context_cache.h"
-#include "render/text_cache.h"
-#include "vocabulary/point_fine.h"
+#include "core/render/context.h"
+#include "core/render/context_cache.h"
+#include "core/render/text_cache.h"
+#include "core/vocabulary/point_fine.h"
 
 #include <blend2d.h>
 

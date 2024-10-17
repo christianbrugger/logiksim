@@ -1,13 +1,13 @@
 #ifndef LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_CONNECTOR_LABEL_H
 #define LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_CONNECTOR_LABEL_H
 
-#include "layout.h"
-#include "layout_info.h"
-#include "vocabulary/element_draw_state.h"
-#include "vocabulary/layout_calculation_data.h"
-#include "vocabulary/logicitem_id.h"
-#include "vocabulary/orientation.h"
-#include "vocabulary/text_alignment.h"
+#include "core/layout.h"
+#include "core/layout_info.h"
+#include "core/vocabulary/element_draw_state.h"
+#include "core/vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/orientation.h"
+#include "core/vocabulary/text_alignment.h"
 
 #include <gsl/gsl>
 

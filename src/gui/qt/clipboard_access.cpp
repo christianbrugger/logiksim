@@ -1,4 +1,4 @@
-#include "qt/clipboard_access.h"
+#include "gui/qt/clipboard_access.h"
 
 #include <QApplication>
 #include <QClipboard>

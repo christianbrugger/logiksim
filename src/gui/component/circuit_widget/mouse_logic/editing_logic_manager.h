@@ -1,8 +1,9 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_EDITING_LOGIC_MANAGER_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_EDITING_LOGIC_MANAGER_H
 
-#include "component/circuit_widget/mouse_logic/editing_logic_variant.h"
-#include "vocabulary/circuit_widget_state.h"
+#include "gui/component/circuit_widget/mouse_logic/editing_logic_variant.h"
+
+#include "core/vocabulary/circuit_widget_state.h"
 
 #include <QPointF>
 #include <QRubberBand>

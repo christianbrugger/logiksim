@@ -1,5 +1,5 @@
 
-#include "component/simulation/history_index.h"
+#include "core/component/simulation/history_index.h"
 
 #include <gtest/gtest.h>
 

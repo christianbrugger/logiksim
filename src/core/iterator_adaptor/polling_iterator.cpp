@@ -1,4 +1,4 @@
-#include "iterator_adaptor/polling_iterator.h"
+#include "core/iterator_adaptor/polling_iterator.h"
 
 namespace logicsim {
 

@@ -1,7 +1,7 @@
 
-#include "line_tree.h"
+#include "core/line_tree.h"
 
-#include "logging.h"
+#include "core/logging.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -1,4 +1,4 @@
-#include "vocabulary/internal_state.h"
+#include "core/vocabulary/internal_state.h"
 
 #include <fmt/core.h>
 

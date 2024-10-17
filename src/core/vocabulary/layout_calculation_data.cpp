@@ -1,7 +1,7 @@
-#include "vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/layout_calculation_data.h"
 
-#include "vocabulary/logicitem_definition.h"
-#include "vocabulary/placed_logicitem.h"
+#include "core/vocabulary/logicitem_definition.h"
+#include "core/vocabulary/placed_logicitem.h"
 
 #include <fmt/core.h>
 

@@ -1,13 +1,13 @@
 #ifndef LOGICSIM_VOCABULARY_LOGIK_ITEM_DEFINITION_H
 #define LOGICSIM_VOCABULARY_LOGIK_ITEM_DEFINITION_H
 
-#include "format/struct.h"
-#include "vocabulary/circuit_id.h"
-#include "vocabulary/connection_count.h"
-#include "vocabulary/delay.h"
-#include "vocabulary/logic_small_vector.h"
-#include "vocabulary/logicitem_type.h"
-#include "vocabulary/orientation.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/circuit_id.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/delay.h"
+#include "core/vocabulary/logic_small_vector.h"
+#include "core/vocabulary/logicitem_type.h"
+#include "core/vocabulary/orientation.h"
 
 #include <compare>
 #include <optional>

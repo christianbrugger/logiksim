@@ -1,14 +1,14 @@
-#include "render/circuit/render_wire.h"
+#include "core/render/circuit/render_wire.h"
 
-#include "component/simulation/history_view.h"
-#include "geometry/interpolation.h"
-#include "layout.h"
-#include "render/circuit/alpha_values.h"
-#include "render/context.h"
-#include "render/primitive/line.h"
-#include "spatial_simulation.h"
-#include "vocabulary/color.h"
-#include "vocabulary/line_fine.h"
+#include "core/component/simulation/history_view.h"
+#include "core/geometry/interpolation.h"
+#include "core/layout.h"
+#include "core/render/circuit/alpha_values.h"
+#include "core/render/context.h"
+#include "core/render/primitive/line.h"
+#include "core/spatial_simulation.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/line_fine.h"
 
 #include <fmt/core.h>
 

@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_PRINT_EVENTS_H
 #define LOGICSIM_VOCABULARY_PRINT_EVENTS_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 #include <string>
 

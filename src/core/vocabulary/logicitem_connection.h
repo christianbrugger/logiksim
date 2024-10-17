@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_LOGICITEM_CONNECTION_H
 #define LOGICSIM_VOCABULARY_LOGICITEM_CONNECTION_H
 
-#include "format/struct.h"
-#include "vocabulary/connection_id.h"
-#include "vocabulary/logicitem_id.h"
-#include "vocabulary/orientation.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/connection_id.h"
+#include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/orientation.h"
 
 #include <compare>
 #include <string>

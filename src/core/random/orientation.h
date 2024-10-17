@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_RANDOM_ORIENTATION_H
 #define LOGICSIM_RANDOM_ORIENTATION_H
 
-#include "random/generator.h"
-#include "vocabulary/logicitem_type.h"
-#include "vocabulary/orientation.h"
+#include "core/random/generator.h"
+#include "core/vocabulary/logicitem_type.h"
+#include "core/vocabulary/orientation.h"
 
 namespace logicsim {
 

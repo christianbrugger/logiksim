@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_SELECTION_NORMALIZATION_H
 #define LOGICSIM_SELECTION_NORMALIZATION_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 namespace logicsim {
 

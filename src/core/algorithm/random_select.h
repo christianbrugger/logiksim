@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_ALGORITHM_RANDOM_SELECT_H
 #define LOGICSIM_ALGORITHM_RANDOM_SELECT_H
 
-#include "algorithm/uniform_int_distribution.h"
+#include "core/algorithm/uniform_int_distribution.h"
 
 #include <iterator>
 #include <random>

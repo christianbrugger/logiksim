@@ -1,14 +1,14 @@
-#include "geometry/scene.h"
+#include "core/geometry/scene.h"
 
-#include "algorithm/round.h"
-#include "geometry/grid.h"
-#include "geometry/rect.h"
-#include "vocabulary/point_device.h"
-#include "vocabulary/point_device_fine.h"
-#include "vocabulary/rect.h"
-#include "vocabulary/rect_fine.h"
-#include "vocabulary/size_device.h"
-#include "vocabulary/view_config.h"
+#include "core/algorithm/round.h"
+#include "core/geometry/grid.h"
+#include "core/geometry/rect.h"
+#include "core/vocabulary/point_device.h"
+#include "core/vocabulary/point_device_fine.h"
+#include "core/vocabulary/rect.h"
+#include "core/vocabulary/rect_fine.h"
+#include "core/vocabulary/size_device.h"
+#include "core/vocabulary/view_config.h"
 
 #include <gsl/gsl>
 

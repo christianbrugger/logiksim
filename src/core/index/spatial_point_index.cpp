@@ -1,7 +1,7 @@
-#include "index/spatial_point_index.h"
+#include "core/index/spatial_point_index.h"
 
-#include "format/container.h"
-#include "vocabulary/ordered_line.h"
+#include "core/format/container.h"
+#include "core/vocabulary/ordered_line.h"
 
 #include <boost/geometry.hpp>
 

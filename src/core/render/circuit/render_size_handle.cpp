@@ -1,9 +1,9 @@
-#include "render/circuit/render_size_handle.h"
+#include "core/render/circuit/render_size_handle.h"
 
-#include "algorithm/round.h"
-#include "render/context.h"
-#include "size_handle.h"
-#include "vocabulary/color.h"
+#include "core/algorithm/round.h"
+#include "core/render/context.h"
+#include "core/size_handle.h"
+#include "core/vocabulary/color.h"
 
 namespace logicsim {
 

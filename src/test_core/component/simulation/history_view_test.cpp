@@ -1,8 +1,8 @@
 
-#include "component/simulation/history_view.h"
+#include "core/component/simulation/history_view.h"
 
-#include "component/simulation/history_buffer.h"
-#include "vocabulary/time.h"
+#include "core/component/simulation/history_buffer.h"
+#include "core/vocabulary/time.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

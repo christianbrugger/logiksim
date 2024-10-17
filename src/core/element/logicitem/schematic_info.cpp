@@ -1,7 +1,7 @@
-#include "element/logicitem/schematic_info.h"
+#include "core/element/logicitem/schematic_info.h"
 
-#include "element/logicitem/layout_logicitem.h"
-#include "vocabulary/internal_connection.h"
+#include "core/element/logicitem/layout_logicitem.h"
+#include "core/vocabulary/internal_connection.h"
 
 #include <exception>
 

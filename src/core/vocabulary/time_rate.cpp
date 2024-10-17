@@ -1,6 +1,6 @@
-#include "vocabulary/time_rate.h"
+#include "core/vocabulary/time_rate.h"
 
-#include "format/time.h"
+#include "core/format/time.h"
 
 namespace logicsim {
 

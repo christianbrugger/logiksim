@@ -1,4 +1,4 @@
-#include "vocabulary/element_type.h"
+#include "core/vocabulary/element_type.h"
 
 #include <exception>
 #include <string>

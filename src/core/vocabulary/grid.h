@@ -1,12 +1,12 @@
 #ifndef LOGICSIM_VOCABULARY_GRID_H
 #define LOGICSIM_VOCABULARY_GRID_H
 
-#include "algorithm/narrow_integral.h"
-#include "concept/explicitly_convertible.h"
-#include "concept/integral.h"
-#include "format/struct.h"
-#include "type_trait/safe_difference_type.h"
-#include "wyhash.h"
+#include "core/algorithm/narrow_integral.h"
+#include "core/concept/explicitly_convertible.h"
+#include "core/concept/integral.h"
+#include "core/format/struct.h"
+#include "core/type_trait/safe_difference_type.h"
+#include "core/wyhash.h"
 
 #include <ankerl/unordered_dense.h>
 #include <gsl/gsl>

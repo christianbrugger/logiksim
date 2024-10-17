@@ -1,7 +1,7 @@
-#include "render/primitive/round_rect.h"
+#include "core/render/primitive/round_rect.h"
 
-#include "render/context.h"
-#include "vocabulary/rect_fine.h"
+#include "core/render/context.h"
+#include "core/vocabulary/rect_fine.h"
 
 #include <blend2d.h>
 

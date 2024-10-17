@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_COMPONENT_LINE_TREE_LINE_STORE_H
 #define LOGICSIM_COMPONENT_LINE_TREE_LINE_STORE_H
 
-#include "format/struct.h"
-#include "vocabulary/length.h"
-#include "vocabulary/line.h"
-#include "vocabulary/line_index.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/length.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/line_index.h"
 
 #include <folly/small_vector.h>
 

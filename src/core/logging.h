@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_LOGGING_H
 #define LOGICSIM_LOGGING_H
 
-#include "format/container.h"
-#include "format/std_type.h"
+#include "core/format/container.h"
+#include "core/format/std_type.h"
 
 #include <fmt/core.h>
 #include <fmt/os.h>

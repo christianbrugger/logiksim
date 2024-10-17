@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_ORIENTATION_H
 #define LOGICSIM_VOCABULARY_ORIENTATION_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 #include <array>
 #include <cstdint>

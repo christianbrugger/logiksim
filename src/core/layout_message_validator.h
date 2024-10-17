@@ -1,17 +1,17 @@
 #ifndef LOGICSIM_LAYOUT_MESSAGE_VALIDATOR_H
 #define LOGICSIM_LAYOUT_MESSAGE_VALIDATOR_H
 
-#include "format/container.h"
-#include "format/std_type.h"
-#include "format/struct.h"
-#include "layout_message_forward.h"
-#include "vocabulary/decoration_id.h"
-#include "vocabulary/decoration_layout_data.h"
-#include "vocabulary/layout_calculation_data.h"
-#include "vocabulary/logicitem_id.h"
-#include "vocabulary/part.h"
-#include "vocabulary/segment.h"
-#include "vocabulary/segment_info.h"
+#include "core/format/container.h"
+#include "core/format/std_type.h"
+#include "core/format/struct.h"
+#include "core/layout_message_forward.h"
+#include "core/vocabulary/decoration_id.h"
+#include "core/vocabulary/decoration_layout_data.h"
+#include "core/vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/part.h"
+#include "core/vocabulary/segment.h"
+#include "core/vocabulary/segment_info.h"
 
 #include <ankerl/unordered_dense.h>
 

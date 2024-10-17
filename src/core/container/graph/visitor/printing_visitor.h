@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_CONTAINER_GRAPH_VISITOR_PRINTING_VISITOR_H
 #define LOGICSIM_CONTAINER_GRAPH_VISITOR_PRINTING_VISITOR_H
 
-#include "container/graph/adjacency_graph.h"
+#include "core/container/graph/adjacency_graph.h"
 
 namespace logicsim {
 

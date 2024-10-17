@@ -1,4 +1,4 @@
-#include "vocabulary/wire_id.h"
+#include "core/vocabulary/wire_id.h"
 
 namespace logicsim {
 

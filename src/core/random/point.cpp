@@ -1,9 +1,9 @@
-#include "random/point.h"
+#include "core/random/point.h"
 
-#include "random/grid.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/point.h"
-#include "vocabulary/rect.h"
+#include "core/random/grid.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/rect.h"
 
 namespace logicsim {
 

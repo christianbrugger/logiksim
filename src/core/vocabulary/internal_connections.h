@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_INTERNAL_CONNECTIONS_H
 #define LOGICSIM_VOCABULARY_INTERNAL_CONNECTIONS_H
 
-#include "vocabulary/connection_count.h"
-#include "vocabulary/internal_connection.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/internal_connection.h"
 
 #include <folly/small_vector.h>
 

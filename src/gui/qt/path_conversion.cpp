@@ -1,4 +1,4 @@
-#include "qt/path_conversion.h"
+#include "gui/qt/path_conversion.h"
 
 #include <gsl/gsl>
 

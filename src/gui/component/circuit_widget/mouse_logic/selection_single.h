@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_SINGLE_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_SINGLE_H
 
-#include "component/circuit_widget/mouse_logic/editing_logic_concept.h"
+#include "gui/component/circuit_widget/mouse_logic/editing_logic_concept.h"
 
 namespace logicsim {
 

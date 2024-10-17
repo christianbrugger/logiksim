@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_INTERNAL_STATE_INDEX_H
 #define LOGICSIM_VOCABULARY_INTERNAL_STATE_INDEX_H
 
-#include "format/struct.h"
-#include "type_trait/safe_difference_type.h"
+#include "core/format/struct.h"
+#include "core/type_trait/safe_difference_type.h"
 
 #include <compare>
 #include <cstdint>

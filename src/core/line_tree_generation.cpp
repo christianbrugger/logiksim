@@ -1,13 +1,13 @@
-#include "line_tree_generation.h"
+#include "core/line_tree_generation.h"
 
-#include "algorithm/make_unique.h"
-#include "algorithm/transform_if.h"
-#include "algorithm/transform_to_vector.h"
-#include "layout.h"
-#include "line_tree.h"
-#include "logging.h"
-#include "segment_tree.h"
-#include "tree_normalization.h"
+#include "core/algorithm/make_unique.h"
+#include "core/algorithm/transform_if.h"
+#include "core/algorithm/transform_to_vector.h"
+#include "core/layout.h"
+#include "core/line_tree.h"
+#include "core/logging.h"
+#include "core/segment_tree.h"
+#include "core/tree_normalization.h"
 
 #include <stdexcept>
 

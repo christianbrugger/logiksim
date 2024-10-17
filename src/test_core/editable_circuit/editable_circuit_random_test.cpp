@@ -1,20 +1,21 @@
 
-#include "algorithm/range.h"
-#include "algorithm/uniform_int_distribution.h"
-#include "editable_circuit.h"
-#include "format/container.h"
-#include "geometry/display_state_map.h"
-#include "logging.h"
-#include "random/bool.h"
-#include "random/generator.h"
-#include "random/insertion_mode.h"
-#include "random/point.h"
-#include "render/circuit/render_circuit.h"
-#include "render/context_cache.h"
 #include "test_core/editable_circuit/modifier/test_helpers.h"  // TODO different folder
-#include "timer.h"
-#include "tree_normalization.h"
-#include "vocabulary/context_render_settings.h"
+
+#include "core/algorithm/range.h"
+#include "core/algorithm/uniform_int_distribution.h"
+#include "core/editable_circuit.h"
+#include "core/format/container.h"
+#include "core/geometry/display_state_map.h"
+#include "core/logging.h"
+#include "core/random/bool.h"
+#include "core/random/generator.h"
+#include "core/random/insertion_mode.h"
+#include "core/random/point.h"
+#include "core/render/circuit/render_circuit.h"
+#include "core/render/context_cache.h"
+#include "core/timer.h"
+#include "core/tree_normalization.h"
+#include "core/vocabulary/context_render_settings.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

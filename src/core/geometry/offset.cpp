@@ -1,10 +1,10 @@
-#include "geometry/offset.h"
+#include "core/geometry/offset.h"
 
-#include "geometry/orientation.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/offset.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/point.h"
+#include "core/geometry/orientation.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/offset.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/point.h"
 
 namespace logicsim {
 

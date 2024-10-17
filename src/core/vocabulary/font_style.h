@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_FONT_STYLE_H
 #define LOGICSIM_VOCABULARY_FONT_STYLE_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 #include <array>
 #include <cstdint>

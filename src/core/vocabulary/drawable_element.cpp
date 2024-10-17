@@ -1,4 +1,4 @@
-#include "vocabulary/drawable_element.h"
+#include "core/vocabulary/drawable_element.h"
 
 #include <fmt/core.h>
 

@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_GRID_FINE_H
 #define LOGICSIM_VOCABULARY_GRID_FINE_H
 
-#include "format/struct.h"
-#include "vocabulary/grid.h"
-#include "wyhash.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/grid.h"
+#include "core/wyhash.h"
 
 #include <ankerl/unordered_dense.h>
 

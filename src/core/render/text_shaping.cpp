@@ -1,10 +1,10 @@
-#include "render/text_shaping.h"
+#include "core/render/text_shaping.h"
 
-#include "algorithm/range.h"
-#include "algorithm/round.h"
-#include "algorithm/transform_to_vector.h"
-#include "format/blend2d_type.h"
-#include "format/container.h"
+#include "core/algorithm/range.h"
+#include "core/algorithm/round.h"
+#include "core/algorithm/transform_to_vector.h"
+#include "core/format/blend2d_type.h"
+#include "core/format/container.h"
 
 #include <blend2d.h>
 #include <fmt/core.h>

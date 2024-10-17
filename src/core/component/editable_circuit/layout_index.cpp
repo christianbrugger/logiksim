@@ -1,4 +1,4 @@
-#include "component/editable_circuit/layout_index.h"
+#include "core/component/editable_circuit/layout_index.h"
 
 #include <fmt/core.h>
 

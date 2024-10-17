@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_SHAPE_DRAW_TYPE_H
 #define LOGICSIM_VOCABULARY_SHAPE_DRAW_TYPE_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 #include <string>
 

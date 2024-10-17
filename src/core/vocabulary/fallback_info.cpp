@@ -1,6 +1,6 @@
-#include "vocabulary/fallback_info.h"
+#include "core/vocabulary/fallback_info.h"
 
-#include "logging.h"
+#include "core/logging.h"
 
 #include <fmt/core.h>
 

@@ -1,10 +1,10 @@
-#include "index/segment_map.h"
+#include "core/index/segment_map.h"
 
-#include "algorithm/to_underlying.h"
-#include "geometry/orientation.h"
-#include "layout.h"
-#include "selection.h"
-#include "vocabulary/ordered_line.h"
+#include "core/algorithm/to_underlying.h"
+#include "core/geometry/orientation.h"
+#include "core/layout.h"
+#include "core/selection.h"
+#include "core/vocabulary/ordered_line.h"
 
 #include <stdexcept>
 

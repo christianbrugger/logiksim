@@ -1,9 +1,9 @@
-#include "random/orientation.h"
+#include "core/random/orientation.h"
 
-#include "algorithm/random_select.h"
-#include "algorithm/uniform_int_distribution.h"
-#include "layout_info.h"
-#include "vocabulary/direction_type.h"
+#include "core/algorithm/random_select.h"
+#include "core/algorithm/uniform_int_distribution.h"
+#include "core/layout_info.h"
+#include "core/vocabulary/direction_type.h"
 
 #include <exception>
 

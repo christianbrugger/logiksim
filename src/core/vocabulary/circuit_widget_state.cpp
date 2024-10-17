@@ -1,4 +1,4 @@
-#include "vocabulary/circuit_widget_state.h"
+#include "core/vocabulary/circuit_widget_state.h"
 
 namespace logicsim {
 

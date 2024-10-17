@@ -1,4 +1,4 @@
-#include "algorithm/compare_sorted.h"
+#include "core/algorithm/compare_sorted.h"
 
 namespace logicsim {
 

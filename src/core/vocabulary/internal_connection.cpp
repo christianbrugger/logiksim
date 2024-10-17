@@ -1,4 +1,4 @@
-#include "vocabulary/internal_connection.h"
+#include "core/vocabulary/internal_connection.h"
 
 #include <fmt/core.h>
 

@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_ALGORITHM_RANGE_EXTENDED_H
 #define LOGICSIM_ALGORITHM_RANGE_EXTENDED_H
 
-#include "concept/explicitly_convertible.h"
+#include "core/concept/explicitly_convertible.h"
 
 #include <gsl/gsl>
 

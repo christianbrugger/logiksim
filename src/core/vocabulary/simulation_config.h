@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_SIMULATION_CONFIG_H
 #define LOGICSIM_VOCABULARY_SIMULATION_CONFIG_H
 
-#include "format/struct.h"
-#include "vocabulary/delay.h"
-#include "vocabulary/time_literal.h"
-#include "vocabulary/time_rate.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/delay.h"
+#include "core/vocabulary/time_literal.h"
+#include "core/vocabulary/time_rate.h"
 
 #include <string>
 

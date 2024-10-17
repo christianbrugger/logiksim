@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_COMPONENT_LAYOUT_WIRE_STORE_H
 #define LOGICSIM_COMPONENT_LAYOUT_WIRE_STORE_H
 
-#include "segment_tree.h"
-#include "vocabulary/rect.h"
+#include "core/segment_tree.h"
+#include "core/vocabulary/rect.h"
 
 #include <vector>
 

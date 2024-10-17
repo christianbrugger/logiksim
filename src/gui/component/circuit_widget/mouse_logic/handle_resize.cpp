@@ -1,9 +1,9 @@
-#include "component/circuit_widget/mouse_logic/handle_resize.h"
+#include "gui/component/circuit_widget/mouse_logic/handle_resize.h"
 
-#include "algorithm/round.h"
-#include "editable_circuit.h"
-#include "geometry/display_state_map.h"
-#include "vocabulary/point_fine.h"
+#include "core/algorithm/round.h"
+#include "core/editable_circuit.h"
+#include "core/geometry/display_state_map.h"
+#include "core/vocabulary/point_fine.h"
 
 namespace logicsim {
 

@@ -1,9 +1,9 @@
-#include "schematic.h"
+#include "core/schematic.h"
 
-#include "algorithm/fmt_join.h"
-#include "element/logicitem/schematic_info.h"
-#include "geometry/connection_count.h"
-#include "iterator_adaptor/transform_view.h"
+#include "core/algorithm/fmt_join.h"
+#include "core/element/logicitem/schematic_info.h"
+#include "core/geometry/connection_count.h"
+#include "core/iterator_adaptor/transform_view.h"
 
 #include <fmt/core.h>
 

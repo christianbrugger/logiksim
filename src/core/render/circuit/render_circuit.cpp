@@ -1,16 +1,16 @@
-#include "render/circuit/render_circuit.h"
+#include "core/render/circuit/render_circuit.h"
 
-#include "geometry/scene.h"
-#include "render/circuit/render_background.h"
-#include "render/circuit/render_interactive_layer.h"
-#include "render/circuit/render_simulation_layer.h"
-#include "render/context.h"
-#include "render/image_surface.h"
-#include "render/render_context.h"
-#include "selection.h"
-#include "spatial_simulation.h"
-#include "vocabulary/context_render_settings.h"
-#include "vocabulary/rect.h"
+#include "core/geometry/scene.h"
+#include "core/render/circuit/render_background.h"
+#include "core/render/circuit/render_interactive_layer.h"
+#include "core/render/circuit/render_simulation_layer.h"
+#include "core/render/context.h"
+#include "core/render/image_surface.h"
+#include "core/render/render_context.h"
+#include "core/selection.h"
+#include "core/spatial_simulation.h"
+#include "core/vocabulary/context_render_settings.h"
+#include "core/vocabulary/rect.h"
 
 namespace logicsim {
 

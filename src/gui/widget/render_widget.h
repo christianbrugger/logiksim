@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_WIDGET_RENDER_WIDGET_H
 #define LOGICSIM_WIDGET_RENDER_WIDGET_H
 
-#include "vocabulary/render_mode.h"
+#include "core/vocabulary/render_mode.h"
 
 #include <QImage>
 #include <QWidget>

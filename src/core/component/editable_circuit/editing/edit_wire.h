@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_WIRE_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_WIRE_H
 
-#include "vocabulary/insertion_mode.h"
-#include "vocabulary/point.h"
+#include "core/vocabulary/insertion_mode.h"
+#include "core/vocabulary/point.h"
 
 #include <optional>
 #include <span>

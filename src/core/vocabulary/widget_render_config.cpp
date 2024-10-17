@@ -1,4 +1,4 @@
-#include "vocabulary/widget_render_config.h"
+#include "core/vocabulary/widget_render_config.h"
 
 namespace logicsim {
 

@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_LENGTH_VECTOR_H
 #define LOGICSIM_VOCABULARY_LENGTH_VECTOR_H
 
-#include "vocabulary/length.h"
+#include "core/vocabulary/length.h"
 
 #include <folly/small_vector.h>
 

@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_RANDOM_GRID_H
 #define LOGICSIM_RANDOM_GRID_H
 
-#include "random/generator.h"
+#include "core/random/generator.h"
 
 namespace logicsim {
 

@@ -1,4 +1,4 @@
-#include "vocabulary/segment.h"
+#include "core/vocabulary/segment.h"
 
 #include <gtest/gtest.h>
 

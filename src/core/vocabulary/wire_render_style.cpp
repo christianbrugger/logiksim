@@ -1,4 +1,4 @@
-#include "vocabulary/wire_render_style.h"
+#include "core/vocabulary/wire_render_style.h"
 
 namespace logicsim {
 

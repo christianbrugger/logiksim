@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_ALGORITHM_FMT_JOIN_H
 #define LOGICSIM_ALGORITHM_FMT_JOIN_H
 
-#include "iterator_adaptor/transform_view.h"
+#include "core/iterator_adaptor/transform_view.h"
 
 #include <boost/algorithm/string/join.hpp>
 #include <fmt/core.h>

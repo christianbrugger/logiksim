@@ -1,4 +1,4 @@
-#include "algorithm/text_escape.h"
+#include "core/algorithm/text_escape.h"
 
 #include <fmt/core.h>
 #include <gsl/gsl>

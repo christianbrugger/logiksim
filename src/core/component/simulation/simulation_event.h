@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_SIMULATION_EVENT_H
 #define LOGICSIM_COMPONENT_SIMULATION_SIMULATION_EVENT_H
 
-#include "format/struct.h"
-#include "vocabulary/connection.h"
-#include "vocabulary/element_id.h"
-#include "vocabulary/time.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/connection.h"
+#include "core/vocabulary/element_id.h"
+#include "core/vocabulary/time.h"
 
 #include <compare>
 

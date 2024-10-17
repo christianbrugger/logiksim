@@ -1,13 +1,13 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_CIRCUIT_DATA_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_CIRCUIT_DATA_H
 
-#include "component/editable_circuit/layout_index.h"
-#include "component/editable_circuit/selection_store.h"
-#include "component/editable_circuit/visible_selection.h"
-#include "format/struct.h"
-#include "layout.h"
-#include "layout_message_forward.h"
-#include "layout_message_validator.h"
+#include "core/component/editable_circuit/layout_index.h"
+#include "core/component/editable_circuit/selection_store.h"
+#include "core/component/editable_circuit/visible_selection.h"
+#include "core/format/struct.h"
+#include "core/layout.h"
+#include "core/layout_message_forward.h"
+#include "core/layout_message_validator.h"
 
 #include <optional>
 #include <vector>

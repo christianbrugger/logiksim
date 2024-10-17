@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_RANDOM_ORDERED_LINE_H
 #define LOGICSIM_RANDOM_ORDERED_LINE_H
 
-#include "random/generator.h"
+#include "core/random/generator.h"
 
 #include <vector>
 

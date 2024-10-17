@@ -1,14 +1,15 @@
-#include "component/circuit_widget/mouse_logic/editing_logic_manager.h"
+#include "gui/component/circuit_widget/mouse_logic/editing_logic_manager.h"
 
-#include "algorithm/overload.h"
-#include "default_element_definition.h"
-#include "editable_circuit.h"
-#include "geometry/scene.h"
-#include "logging.h"
-#include "qt/point_conversion.h"
-#include "setting_handle.h"
-#include "size_handle.h"
-#include "vocabulary/point.h"
+#include "gui/qt/point_conversion.h"
+
+#include "core/algorithm/overload.h"
+#include "core/default_element_definition.h"
+#include "core/editable_circuit.h"
+#include "core/geometry/scene.h"
+#include "core/logging.h"
+#include "core/setting_handle.h"
+#include "core/size_handle.h"
+#include "core/vocabulary/point.h"
 
 #include <gsl/gsl>
 

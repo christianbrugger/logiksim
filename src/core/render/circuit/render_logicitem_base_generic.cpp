@@ -1,15 +1,15 @@
-#include "render/circuit/render_logicitem_base_generic.h"
+#include "core/render/circuit/render_logicitem_base_generic.h"
 
-#include "format/std_type.h"
-#include "geometry/rect.h"
-#include "layout.h"
-#include "layout_info.h"
-#include "render/circuit/alpha_values.h"
-#include "render/context.h"
-#include "render/primitive/rect.h"
-#include "render/primitive/text.h"
-#include "vocabulary/layout_calculation_data.h"
-#include "vocabulary/rect_fine.h"
+#include "core/format/std_type.h"
+#include "core/geometry/rect.h"
+#include "core/layout.h"
+#include "core/layout_info.h"
+#include "core/render/circuit/alpha_values.h"
+#include "core/render/context.h"
+#include "core/render/primitive/rect.h"
+#include "core/render/primitive/text.h"
+#include "core/vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/rect_fine.h"
 
 #include <fmt/core.h>
 

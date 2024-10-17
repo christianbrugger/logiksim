@@ -1,7 +1,7 @@
-#include "render/bl_error_check.h"
+#include "core/render/bl_error_check.h"
 
-#include "algorithm/round.h"
-#include "algorithm/to_underlying.h"
+#include "core/algorithm/round.h"
+#include "core/algorithm/to_underlying.h"
 
 #include <blend2d.h>
 #include <fmt/core.h>

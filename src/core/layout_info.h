@@ -1,13 +1,13 @@
 #ifndef LOGIKSIM_LAYOUT_INFO_H
 #define LOGIKSIM_LAYOUT_INFO_H
 
-#include "iterator_adaptor/enumerate.h"
-#include "iterator_adaptor/transform_view.h"
-#include "vocabulary/decoration_type.h"
-#include "vocabulary/direction_type.h"
-#include "vocabulary/layout_info_vector.h"
-#include "vocabulary/logicitem_type.h"
-#include "vocabulary/orientation.h"
+#include "core/iterator_adaptor/enumerate.h"
+#include "core/iterator_adaptor/transform_view.h"
+#include "core/vocabulary/decoration_type.h"
+#include "core/vocabulary/direction_type.h"
+#include "core/vocabulary/layout_info_vector.h"
+#include "core/vocabulary/logicitem_type.h"
+#include "core/vocabulary/orientation.h"
 
 #include <optional>
 

@@ -1,4 +1,4 @@
-#include "vocabulary/line_insertion_type.h"
+#include "core/vocabulary/line_insertion_type.h"
 
 #include <exception>
 

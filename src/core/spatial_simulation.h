@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_SPATIAL_SIMULATION_H
 #define LOGICSIM_SPATIAL_SIMULATION_H
 
-#include "format/struct.h"
-#include "layout.h"
-#include "line_tree.h"
-#include "simulation.h"
-#include "vocabulary/simulation_config.h"
+#include "core/format/struct.h"
+#include "core/layout.h"
+#include "core/line_tree.h"
+#include "core/simulation.h"
+#include "core/vocabulary/simulation_config.h"
 
 #include <optional>
 #include <vector>

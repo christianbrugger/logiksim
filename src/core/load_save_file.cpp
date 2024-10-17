@@ -1,7 +1,7 @@
-#include "load_save_file.h"
+#include "core/load_save_file.h"
 
-#include "file.h"
-#include "serialize.h"
+#include "core/file.h"
+#include "core/serialize.h"
 
 namespace logicsim {
 

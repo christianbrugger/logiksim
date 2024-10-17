@@ -1,8 +1,8 @@
-#include "render/primitive/circle.h"
+#include "core/render/primitive/circle.h"
 
-#include "render/context.h"
-#include "vocabulary/grid_fine.h"
-#include "vocabulary/point_fine.h"
+#include "core/render/context.h"
+#include "core/vocabulary/grid_fine.h"
+#include "core/vocabulary/point_fine.h"
 
 #include <blend2d.h>
 

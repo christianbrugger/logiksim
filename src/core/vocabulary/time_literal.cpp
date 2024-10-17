@@ -1,4 +1,4 @@
-#include "vocabulary/time_literal.h"
+#include "core/vocabulary/time_literal.h"
 
 namespace logicsim {
 

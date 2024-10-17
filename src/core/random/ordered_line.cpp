@@ -1,12 +1,12 @@
-#include "random/ordered_line.h"
+#include "core/random/ordered_line.h"
 
-#include "algorithm/range.h"
-#include "random/bool.h"
-#include "random/point.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/line.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/rect.h"
+#include "core/algorithm/range.h"
+#include "core/random/bool.h"
+#include "core/random/point.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/rect.h"
 
 #include <stdexcept>
 

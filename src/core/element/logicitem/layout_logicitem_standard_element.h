@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_LOGIC_ITEM_LAYOUT_STANDARD_ELEMENT_H
 #define LOGICSIM_LOGIC_ITEM_LAYOUT_STANDARD_ELEMENT_H
 
-#include "geometry/connection_count.h"
-#include "vocabulary/connection_count.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/layout_info_vector.h"
+#include "core/geometry/connection_count.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/layout_info_vector.h"
 
 namespace logicsim {
 

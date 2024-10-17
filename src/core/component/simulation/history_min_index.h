@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_HISTORY_MIN_INDEX_H
 #define LOGICSIM_COMPONENT_SIMULATION_HISTORY_MIN_INDEX_H
 
-#include "component/simulation/history_index.h"
+#include "core/component/simulation/history_index.h"
 
 #include <compare>
 

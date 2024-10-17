@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_FORMAT_STRUCT_H
 #define LOGICSIM_FORMAT_STRUCT_H
 
-#include "concept/member_format_function.h"
+#include "core/concept/member_format_function.h"
 
 #include <fmt/core.h>
 

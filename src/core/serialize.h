@@ -1,11 +1,11 @@
 #ifndef LOGIKSIM_SERIALIZE_H
 #define LOGIKSIM_SERIALIZE_H
 
-#include "vocabulary/insertion_mode.h"
-#include "vocabulary/load_error.h"
-#include "vocabulary/point.h"
-#include "vocabulary/save_format.h"
-#include "vocabulary/selection_id.h"
+#include "core/vocabulary/insertion_mode.h"
+#include "core/vocabulary/load_error.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/save_format.h"
+#include "core/vocabulary/selection_id.h"
 
 #include <gsl/gsl>
 #include <tl/expected.hpp>

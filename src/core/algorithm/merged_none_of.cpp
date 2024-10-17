@@ -1,4 +1,4 @@
-#include "algorithm/merged_none_of.h"
+#include "core/algorithm/merged_none_of.h"
 
 namespace logicsim {
 

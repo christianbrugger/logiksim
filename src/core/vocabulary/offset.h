@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_VOCABULARY_OFFSET_H
 #define LOGICSIM_VOCABULARY_OFFSET_H
 
-#include "concept/explicitly_convertible.h"
-#include "concept/integral.h"
-#include "format/struct.h"
-#include "type_trait/safe_difference_type.h"
-#include "vocabulary/grid.h"
+#include "core/concept/explicitly_convertible.h"
+#include "core/concept/integral.h"
+#include "core/format/struct.h"
+#include "core/type_trait/safe_difference_type.h"
+#include "core/vocabulary/grid.h"
 
 #include <gsl/gsl>
 

@@ -1,6 +1,4 @@
-#include "default_mouse_action.h"
-
-#include "vocabulary/default_mouse_action.h"
+#include "core/vocabulary/default_mouse_action.h"
 
 #include <exception>
 

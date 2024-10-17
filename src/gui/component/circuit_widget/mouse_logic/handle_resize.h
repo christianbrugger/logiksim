@@ -1,11 +1,12 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_HANDLE_RESIZE_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_HANDLE_RESIZE_H
 
-#include "component/circuit_widget/mouse_logic/editing_logic_concept.h"
-#include "size_handle.h"
-#include "vocabulary/placed_logicitem.h"
-#include "vocabulary/point_fine.h"
-#include "vocabulary/selection_id.h"
+#include "gui/component/circuit_widget/mouse_logic/editing_logic_concept.h"
+
+#include "core/size_handle.h"
+#include "core/vocabulary/placed_logicitem.h"
+#include "core/vocabulary/point_fine.h"
+#include "core/vocabulary/selection_id.h"
 
 #include <optional>
 

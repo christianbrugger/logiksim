@@ -1,21 +1,21 @@
-#include "element/logicitem/render_logicitem_base.h"
+#include "core/element/logicitem/render_logicitem_base.h"
 
-#include "element/logicitem/layout_logicitem_display.h"         // TODO remove
-#include "element/logicitem/layout_logicitem_display_ascii.h"   // TODO remove
-#include "element/logicitem/layout_logicitem_display_number.h"  // TODO remove
-#include "layout.h"
-#include "layout_info.h"
-#include "render/circuit/alpha_values.h"
-#include "render/circuit/render_connector_label.h"
-#include "render/circuit/render_logicitem_base_generic.h"
-#include "render/context.h"
-#include "render/primitive/circle.h"
-#include "spatial_simulation.h"
-#include "vocabulary/drawable_element.h"
-#include "vocabulary/element_draw_state.h"
-#include "vocabulary/grid_fine.h"
-#include "vocabulary/internal_state.h"
-#include "vocabulary/rect_fine.h"
+#include "core/element/logicitem/layout_logicitem_display.h"         // TODO remove
+#include "core/element/logicitem/layout_logicitem_display_ascii.h"   // TODO remove
+#include "core/element/logicitem/layout_logicitem_display_number.h"  // TODO remove
+#include "core/layout.h"
+#include "core/layout_info.h"
+#include "core/render/circuit/alpha_values.h"
+#include "core/render/circuit/render_connector_label.h"
+#include "core/render/circuit/render_logicitem_base_generic.h"
+#include "core/render/context.h"
+#include "core/render/primitive/circle.h"
+#include "core/spatial_simulation.h"
+#include "core/vocabulary/drawable_element.h"
+#include "core/vocabulary/element_draw_state.h"
+#include "core/vocabulary/grid_fine.h"
+#include "core/vocabulary/internal_state.h"
+#include "core/vocabulary/rect_fine.h"
 
 namespace logicsim {
 

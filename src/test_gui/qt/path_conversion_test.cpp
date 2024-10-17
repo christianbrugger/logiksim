@@ -1,6 +1,6 @@
-#include <catch2/catch_test_macros.hpp>
+#include "gui/qt/path_conversion.h"
 
-#include <gui/qt/path_conversion.h>
+#include <catch2/catch_test_macros.hpp>
 
 namespace logicsim {
 

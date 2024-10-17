@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_RENDER_PRIMITIVE_LINE_H
 #define LOGICSIM_RENDER_PRIMITIVE_LINE_H
 
-#include "render/primitive/stroke.h"
-#include "vocabulary/color.h"
+#include "core/render/primitive/stroke.h"
+#include "core/vocabulary/color.h"
 
 struct BLLine;
 

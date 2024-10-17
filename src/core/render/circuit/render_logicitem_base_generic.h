@@ -1,12 +1,12 @@
 #ifndef LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_LOGIKITEM_BASE_GENERIC_H
 #define LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_LOGIKITEM_BASE_GENERIC_H
 
-#include "format/struct.h"
-#include "vocabulary/color.h"
-#include "vocabulary/element_draw_state.h"
-#include "vocabulary/font_style.h"
-#include "vocabulary/grid_fine.h"
-#include "vocabulary/text_alignment.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/element_draw_state.h"
+#include "core/vocabulary/font_style.h"
+#include "core/vocabulary/grid_fine.h"
+#include "core/vocabulary/text_alignment.h"
 
 #include <concepts>
 #include <optional>

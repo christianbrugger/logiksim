@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_RENDER_TEXT_ALIGNMENT_H
 #define LOGICSIM_RENDER_TEXT_ALIGNMENT_H
 
-#include "format/struct.h"
-#include "vocabulary/font_style.h"
-#include "vocabulary/text_alignment.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/font_style.h"
+#include "core/vocabulary/text_alignment.h"
 
 #include <blend2d.h>
 

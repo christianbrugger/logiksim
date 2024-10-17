@@ -1,15 +1,15 @@
-#include "render/circuit/render_overlay.h"
+#include "core/render/circuit/render_overlay.h"
 
-#include "concept/input_range.h"
-#include "element/logicitem/render_logicitem_overlay.h"
-#include "layout.h"
-#include "layout_info.h"
-#include "render/context.h"
-#include "render/primitive/round_rect.h"
-#include "vocabulary/color.h"
-#include "vocabulary/decoration_layout_data.h"
-#include "vocabulary/layout_calculation_data.h"
-#include "vocabulary/rect_fine.h"
+#include "core/concept/input_range.h"
+#include "core/element/logicitem/render_logicitem_overlay.h"
+#include "core/layout.h"
+#include "core/layout_info.h"
+#include "core/render/context.h"
+#include "core/render/primitive/round_rect.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/decoration_layout_data.h"
+#include "core/vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/rect_fine.h"
 
 namespace logicsim {
 

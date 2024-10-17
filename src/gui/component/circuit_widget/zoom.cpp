@@ -1,10 +1,8 @@
-#include "component/circuit_widget/zoom.h"
+#include "gui/component/circuit_widget/zoom.h"
 
-#include "geometry/scene.h"
-#include "qt/mouse_position.h"
-#include "qt/point_conversion.h"
-#include "vocabulary/point_device_fine.h"
-#include "vocabulary/view_config.h"
+#include "core/geometry/scene.h"
+#include "core/vocabulary/point_device_fine.h"
+#include "core/vocabulary/view_config.h"
 
 namespace logicsim {
 

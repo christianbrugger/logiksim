@@ -1,4 +1,4 @@
-#include "algorithm/contains.h"
+#include "core/algorithm/contains.h"
 
 namespace logicsim {
 

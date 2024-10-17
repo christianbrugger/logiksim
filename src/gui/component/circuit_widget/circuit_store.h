@@ -1,12 +1,13 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_CIRCUIT_STORE_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_CIRCUIT_STORE_H
 
-#include "component/circuit_widget/checked_editable_circuit.h"
-#include "editable_circuit.h"
-#include "format/struct.h"
-#include "interactive_simulation.h"
-#include "vocabulary/circuit_widget_state.h"
-#include "vocabulary/view_config.h"
+#include "gui/component/circuit_widget/checked_editable_circuit.h"
+
+#include "core/editable_circuit.h"
+#include "core/format/struct.h"
+#include "core/interactive_simulation.h"
+#include "core/vocabulary/circuit_widget_state.h"
+#include "core/vocabulary/view_config.h"
 
 #include <optional>
 

@@ -1,4 +1,4 @@
-#include "vocabulary/point.h"
+#include "core/vocabulary/point.h"
 
 namespace logicsim {
 

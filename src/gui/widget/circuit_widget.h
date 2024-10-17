@@ -1,16 +1,17 @@
 #ifndef LOGICSIM_WIDGET_CIRCUIT_WIDGET_H
 #define LOGICSIM_WIDGET_CIRCUIT_WIDGET_H
 
-#include "circuit_widget_base.h"
-#include "component/circuit_widget/circuit_renderer.h"
-#include "component/circuit_widget/circuit_store.h"
-#include "component/circuit_widget/mouse_logic/editing_logic_manager.h"
-#include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
-#include "vocabulary/fallback_info.h"
-#include "vocabulary/load_error.h"
-#include "vocabulary/render_mode.h"
-#include "vocabulary/thread_count.h"
-#include "vocabulary/wire_render_style.h"
+#include "gui/component/circuit_widget/circuit_renderer.h"
+#include "gui/component/circuit_widget/circuit_store.h"
+#include "gui/component/circuit_widget/mouse_logic/editing_logic_manager.h"
+#include "gui/component/circuit_widget/mouse_logic/mouse_drag_logic.h"
+#include "gui/widget/circuit_widget_base.h"
+
+#include "core/vocabulary/fallback_info.h"
+#include "core/vocabulary/load_error.h"
+#include "core/vocabulary/render_mode.h"
+#include "core/vocabulary/thread_count.h"
+#include "core/vocabulary/wire_render_style.h"
 
 #include <gsl/gsl>
 

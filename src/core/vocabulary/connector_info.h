@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_CONNECTOR_INFO_H
 #define LOGICSIM_VOCABULARY_CONNECTOR_INFO_H
 
-#include "format/struct.h"
-#include "vocabulary/connection_id.h"
-#include "vocabulary/orientation.h"
-#include "vocabulary/point.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/connection_id.h"
+#include "core/vocabulary/orientation.h"
+#include "core/vocabulary/point.h"
 
 #include <string>
 

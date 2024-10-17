@@ -1,4 +1,4 @@
-#include "geometry/to_points_sorted_unique.h"
+#include "core/geometry/to_points_sorted_unique.h"
 
 namespace logicsim {
 

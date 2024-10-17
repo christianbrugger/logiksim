@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_QT_POINT_CONVERSION_H
 #define LOGICSIM_QT_POINT_CONVERSION_H
 
-#include "vocabulary/point_device.h"
-#include "vocabulary/point_device_fine.h"
-#include "vocabulary/size_device.h"
+#include "core/vocabulary/point_device.h"
+#include "core/vocabulary/point_device_fine.h"
+#include "core/vocabulary/size_device.h"
 
 #include <QPoint>
 #include <QPointF>

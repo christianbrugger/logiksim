@@ -1,11 +1,11 @@
 #ifndef LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_VISIBLE_SELECTION_H
 #define LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_VISIBLE_SELECTION_H
 
-#include "format/enum.h"
-#include "format/struct.h"
-#include "layout_message.h"
-#include "selection.h"
-#include "vocabulary/rect_fine.h"
+#include "core/format/enum.h"
+#include "core/format/struct.h"
+#include "core/layout_message.h"
+#include "core/selection.h"
+#include "core/vocabulary/rect_fine.h"
 
 #include <optional>
 

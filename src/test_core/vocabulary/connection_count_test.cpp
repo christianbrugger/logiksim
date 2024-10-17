@@ -1,4 +1,4 @@
-#include "vocabulary/connection_count.h"
+#include "core/vocabulary/connection_count.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

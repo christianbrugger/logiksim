@@ -1,6 +1,6 @@
-#include "render/write_file.h"
+#include "core/render/write_file.h"
 
-#include "algorithm/u8_conversion.h"
+#include "core/algorithm/u8_conversion.h"
 
 namespace logicsim {
 

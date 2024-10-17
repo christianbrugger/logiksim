@@ -1,8 +1,8 @@
 
-#include "algorithm/to_vector.h"
-#include "iterator_adaptor/enumerate.h"
-#include "iterator_adaptor/transform_view.h"
-#include "logging.h"
+#include "core/algorithm/to_vector.h"
+#include "core/iterator_adaptor/enumerate.h"
+#include "core/iterator_adaptor/transform_view.h"
+#include "core/logging.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

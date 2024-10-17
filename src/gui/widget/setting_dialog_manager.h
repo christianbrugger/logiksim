@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_WIDGET_SETTING_DIALOG_MANAGER_H
 #define LOGICSIM_WIDGET_SETTING_DIALOG_MANAGER_H
 
-#include "vocabulary/selection_id.h"
-#include "vocabulary/setting_attribute.h"
+#include "core/vocabulary/selection_id.h"
+#include "core/vocabulary/setting_attribute.h"
 
 #include <ankerl/unordered_dense.h>
 

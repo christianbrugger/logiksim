@@ -1,5 +1,5 @@
 
-#include "part_selection.h"
+#include "core/part_selection.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

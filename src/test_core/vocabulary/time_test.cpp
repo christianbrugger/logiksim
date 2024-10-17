@@ -1,4 +1,4 @@
-#include "vocabulary/time.h"
+#include "core/vocabulary/time.h"
 
 #include <gtest/gtest.h>
 

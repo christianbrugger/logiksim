@@ -1,5 +1,5 @@
 
-#include "container/value_pointer.h"
+#include "core/container/value_pointer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

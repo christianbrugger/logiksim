@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_GEOMETRY_PART_SELECTIONS_H
 #define LOGICSIM_GEOMETRY_PART_SELECTIONS_H
 
-#include "geometry/part.h"
-#include "part_selection.h"
-#include "vocabulary/part.h"
+#include "core/geometry/part.h"
+#include "core/part_selection.h"
+#include "core/vocabulary/part.h"
 
 namespace logicsim {
 

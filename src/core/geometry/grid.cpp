@@ -1,8 +1,8 @@
-#include "geometry/grid.h"
+#include "core/geometry/grid.h"
 
-#include "algorithm/round.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/grid_fine.h"
+#include "core/algorithm/round.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/grid_fine.h"
 
 #include <gsl/gsl>
 

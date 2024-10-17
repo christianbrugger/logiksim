@@ -1,4 +1,4 @@
-#include "qt/enum_to_string.h"
+#include "gui/qt/enum_to_string.h"
 
 namespace logicsim {
 

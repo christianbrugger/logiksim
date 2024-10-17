@@ -1,12 +1,12 @@
-#include "geometry/interpolation.h"
+#include "core/geometry/interpolation.h"
 
-#include "geometry/orientation.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/grid_fine.h"
-#include "vocabulary/line.h"
-#include "vocabulary/point.h"
-#include "vocabulary/point_fine.h"
-#include "vocabulary/time.h"
+#include "core/geometry/orientation.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/grid_fine.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/point_fine.h"
+#include "core/vocabulary/time.h"
 
 #include <cassert>
 

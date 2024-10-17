@@ -1,10 +1,10 @@
-#include "component/editable_circuit/editing/edit_logicitem_detail.h"
+#include "core/component/editable_circuit/editing/edit_logicitem_detail.h"
 
-#include "component/editable_circuit/circuit_data.h"
-#include "component/editable_circuit/layout_index.h"
-#include "geometry/orientation.h"
-#include "layout.h"
-#include "layout_info.h"
+#include "core/component/editable_circuit/circuit_data.h"
+#include "core/component/editable_circuit/layout_index.h"
+#include "core/geometry/orientation.h"
+#include "core/layout.h"
+#include "core/layout_info.h"
 
 #include <algorithm>
 #include <functional>

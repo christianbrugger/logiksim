@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_RANDOM_INSERTION_MODE_H
 #define LOGICSIM_RANDOM_INSERTION_MODE_H
 
-#include "random/generator.h"
-#include "vocabulary/insertion_mode.h"
+#include "core/random/generator.h"
+#include "core/vocabulary/insertion_mode.h"
 
 namespace logicsim {
 

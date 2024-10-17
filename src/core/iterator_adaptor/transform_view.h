@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_ITERATOR_ADAPTOR_TRANSFORM_VIEW_H
 #define LOGICSIM_ITERATOR_ADAPTOR_TRANSFORM_VIEW_H
 
-#include "type_trait/const_iterator.h"
+#include "core/type_trait/const_iterator.h"
 
 #include <cassert>
 #include <functional>  // std::invoke

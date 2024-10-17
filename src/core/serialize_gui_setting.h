@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_CORE_SERIALIZE_GUI_SETTING_H
 #define LOGICSIM_CORE_SERIALIZE_GUI_SETTING_H
 
-#include "format/struct.h"
-#include "vocabulary/load_error.h"
-#include "vocabulary/thread_count.h"
-#include "vocabulary/wire_render_style.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/load_error.h"
+#include "core/vocabulary/thread_count.h"
+#include "core/vocabulary/wire_render_style.h"
 
 #include <tl/expected.hpp>
 

@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_CORE_VOCABULARY_THREAD_COUNT_H
 #define LOGICSIM_CORE_VOCABULARY_THREAD_COUNT_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 #include <cstdint>
 #include <string>

@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_LOGICITEM_DETAIL_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_LOGICITEM_DETAIL_H
 
-#include "format/struct.h"
-#include "vocabulary/point.h"
-#include "vocabulary/segment.h"
-#include "vocabulary/segment_point_type.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/segment.h"
+#include "core/vocabulary/segment_point_type.h"
 
 #include <folly/small_vector.h>
 

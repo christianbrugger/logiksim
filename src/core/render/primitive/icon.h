@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_RENDER_PRIMITIVE_ICON_H
 #define LOGICSIM_RENDER_PRIMITIVE_ICON_H
 
-#include "resource.h"
-#include "vocabulary/alignment.h"
-#include "vocabulary/color.h"
-#include "vocabulary/grid_fine.h"
+#include "core/resource.h"
+#include "core/vocabulary/alignment.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/grid_fine.h"
 
 namespace logicsim {
 

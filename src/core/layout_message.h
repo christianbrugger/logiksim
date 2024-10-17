@@ -1,16 +1,16 @@
 #ifndef LOGIKSIM_LAYOUT_MESSAGE_H
 #define LOGIKSIM_LAYOUT_MESSAGE_H
 
-#include "algorithm/fmt_join.h"
-#include "format/struct.h"
-#include "layout_message_forward.h"
-#include "vocabulary/decoration_id.h"
-#include "vocabulary/decoration_layout_data.h"
-#include "vocabulary/layout_calculation_data.h"
-#include "vocabulary/logicitem_id.h"
-#include "vocabulary/segment.h"
-#include "vocabulary/segment_info.h"
-#include "vocabulary/segment_part.h"
+#include "core/algorithm/fmt_join.h"
+#include "core/format/struct.h"
+#include "core/layout_message_forward.h"
+#include "core/vocabulary/decoration_id.h"
+#include "core/vocabulary/decoration_layout_data.h"
+#include "core/vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/segment.h"
+#include "core/vocabulary/segment_info.h"
+#include "core/vocabulary/segment_part.h"
 
 #include <fmt/core.h>
 

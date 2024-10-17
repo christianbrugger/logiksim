@@ -1,6 +1,6 @@
-#include "vocabulary/save_format.h"
+#include "core/vocabulary/save_format.h"
 
-#include "algorithm/trim_whitespace.h"
+#include "core/algorithm/trim_whitespace.h"
 
 #include <exception>
 

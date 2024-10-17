@@ -1,4 +1,4 @@
-#include "algorithm/distance_fast.h"
+#include "core/algorithm/distance_fast.h"
 
 namespace logicsim {
 

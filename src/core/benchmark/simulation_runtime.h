@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_BENCHMARK_SIMULATION_RUNTIME_H
 #define LOGICSIM_BENCHMARK_SIMULATION_RUNTIME_H
 
-#include "random/generator.h"
-#include "random/random_schematic.h"
-#include "vocabulary/print_events.h"
+#include "core/random/generator.h"
+#include "core/random/random_schematic.h"
+#include "core/vocabulary/print_events.h"
 
 namespace logicsim {
 

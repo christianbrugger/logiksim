@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_DEFAULT_MOUSE_ACTION_H
 #define LOGICSIM_VOCABULARY_DEFAULT_MOUSE_ACTION_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 namespace logicsim {
 

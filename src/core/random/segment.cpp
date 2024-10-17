@@ -1,13 +1,13 @@
-#include "random/segment.h"
+#include "core/random/segment.h"
 
-#include "algorithm/uniform_int_distribution.h"
-#include "layout.h"
-#include "random/bool.h"
-#include "random/grid.h"
-#include "random/part.h"
-#include "vocabulary/segment_index.h"
-#include "vocabulary/segment_part.h"
-#include "vocabulary/wire_id.h"
+#include "core/algorithm/uniform_int_distribution.h"
+#include "core/layout.h"
+#include "core/random/bool.h"
+#include "core/random/grid.h"
+#include "core/random/part.h"
+#include "core/vocabulary/segment_index.h"
+#include "core/vocabulary/segment_part.h"
+#include "core/vocabulary/wire_id.h"
 
 #include <stdexcept>
 

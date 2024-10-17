@@ -1,9 +1,9 @@
-#include "render/context.h"
+#include "core/render/context.h"
 
-#include "geometry/scene.h"
-#include "render/context_guard.h"
-#include "vocabulary/point_device.h"
-#include "vocabulary/point_device_fine.h"
+#include "core/geometry/scene.h"
+#include "core/render/context_guard.h"
+#include "core/vocabulary/point_device.h"
+#include "core/vocabulary/point_device_fine.h"
 
 namespace logicsim {
 

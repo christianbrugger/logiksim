@@ -1,7 +1,7 @@
-#include "geometry/line.h"
+#include "core/geometry/line.h"
 
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/point.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/point.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

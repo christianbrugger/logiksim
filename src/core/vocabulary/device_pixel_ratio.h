@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_DEVICE_PIXEL_RATIO_H
 #define LOGICSIM_VOCABULARY_DEVICE_PIXEL_RATIO_H
 
-#include "format/struct.h"
+#include "core/format/struct.h"
 
 #include <compare>
 #include <string>

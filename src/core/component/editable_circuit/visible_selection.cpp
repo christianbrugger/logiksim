@@ -1,15 +1,15 @@
-#include "visible_selection.h"
+#include "core/component/editable_circuit/visible_selection.h"
 
-#include "allocated_size/std_vector.h"
-#include "allocated_size/trait.h"
-#include "component/editable_circuit/layout_index.h"
-#include "component/editable_circuit/visible_selection.h"
-#include "format/container.h"
-#include "format/std_type.h"
-#include "layout.h"
-#include "layout_message.h"
-#include "selection.h"
-#include "selection_normalization.h"
+#include "core/allocated_size/std_vector.h"
+#include "core/allocated_size/trait.h"
+#include "core/component/editable_circuit/layout_index.h"
+#include "core/component/editable_circuit/visible_selection.h"
+#include "core/format/container.h"
+#include "core/format/std_type.h"
+#include "core/layout.h"
+#include "core/layout_message.h"
+#include "core/selection.h"
+#include "core/selection_normalization.h"
 
 #include <gsl/gsl>
 

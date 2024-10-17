@@ -1,14 +1,14 @@
-#include "connection_index.h"
+#include "core/index/connection_index.h"
 
-#include "allocated_size/ankerl_unordered_dense.h"
-#include "allocated_size/trait.h"
-#include "format/container.h"
-#include "format/std_type.h"
-#include "geometry/orientation.h"
-#include "index/connection_index.h"
-#include "layout_info.h"
-#include "layout_message.h"
-#include "layout_message_generation.h"
+#include "core/allocated_size/ankerl_unordered_dense.h"
+#include "core/allocated_size/trait.h"
+#include "core/format/container.h"
+#include "core/format/std_type.h"
+#include "core/geometry/orientation.h"
+#include "core/index/connection_index.h"
+#include "core/layout_info.h"
+#include "core/layout_message.h"
+#include "core/layout_message_generation.h"
 
 #include <fmt/core.h>
 

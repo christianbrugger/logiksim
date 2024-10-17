@@ -1,10 +1,10 @@
 #ifndef LOGIKSIM_TEST_EDITABLE_CIRCUIT_HANDLERS_TEST_HELPERS_H
 #define LOGIKSIM_TEST_EDITABLE_CIRCUIT_HANDLERS_TEST_HELPERS_H
 
-#include "component/editable_circuit/modifier.h"
-#include "editable_circuit.h"
-#include "layout.h"
-#include "vocabulary/logicitem_definition.h"
+#include "core/component/editable_circuit/modifier.h"
+#include "core/editable_circuit.h"
+#include "core/layout.h"
+#include "core/vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

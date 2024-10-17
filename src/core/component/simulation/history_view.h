@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_HISTORY_VIEW_H
 #define LOGICSIM_COMPONENT_SIMULATION_HISTORY_VIEW_H
 
-#include "component/simulation/history_calculation.h"
-#include "component/simulation/history_iterator.h"
+#include "core/component/simulation/history_calculation.h"
+#include "core/component/simulation/history_iterator.h"
 
 #include <cstddef>
 #include <ranges>

@@ -1,4 +1,4 @@
-#include "geometry/connection_count.h"
+#include "core/geometry/connection_count.h"
 
 namespace logicsim {
 

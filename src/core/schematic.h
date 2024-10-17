@@ -1,18 +1,18 @@
 #ifndef LOGICSIM_SCHEMATIC_H
 #define LOGICSIM_SCHEMATIC_H
 
-#include "algorithm/range_extended.h"
-#include "format/container.h"
-#include "format/struct.h"
-#include "geometry/connection.h"
-#include "vocabulary/circuit_id.h"
-#include "vocabulary/connection.h"
-#include "vocabulary/connection_count.h"
-#include "vocabulary/delay.h"
-#include "vocabulary/element_id.h"
-#include "vocabulary/element_type.h"
-#include "vocabulary/logic_small_vector.h"
-#include "vocabulary/output_delays.h"
+#include "core/algorithm/range_extended.h"
+#include "core/format/container.h"
+#include "core/format/struct.h"
+#include "core/geometry/connection.h"
+#include "core/vocabulary/circuit_id.h"
+#include "core/vocabulary/connection.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/delay.h"
+#include "core/vocabulary/element_id.h"
+#include "core/vocabulary/element_type.h"
+#include "core/vocabulary/logic_small_vector.h"
+#include "core/vocabulary/output_delays.h"
 
 #include <folly/small_vector.h>
 

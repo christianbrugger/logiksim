@@ -1,6 +1,4 @@
-#include "vocabulary/segment_index.h"
-
-#include "segment_index.h"
+#include "core/vocabulary/segment_index.h"
 
 #include <fmt/core.h>
 

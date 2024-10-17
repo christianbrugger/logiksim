@@ -1,4 +1,4 @@
-#include "component/editable_circuit/selection_guard.h"
+#include "core/component/editable_circuit/selection_guard.h"
 
 namespace logicsim {
 

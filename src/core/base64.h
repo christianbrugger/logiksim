@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_BASE64_H
 #define LOGICSIM_BASE64_H
 
-#include "vocabulary/load_error.h"
+#include "core/vocabulary/load_error.h"
 
 #include <tl/expected.hpp>
 

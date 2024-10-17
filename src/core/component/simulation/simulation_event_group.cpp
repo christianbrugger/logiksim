@@ -1,6 +1,6 @@
-#include "component/simulation/simulation_event_group.h"
+#include "core/component/simulation/simulation_event_group.h"
 
-#include "algorithm/contains.h"
+#include "core/algorithm/contains.h"
 
 #include <stdexcept>
 

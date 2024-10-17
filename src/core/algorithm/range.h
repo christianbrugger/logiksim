@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_ALGORITHM_RANGE_H
 #define LOGICSIM_ALGORITHM_RANGE_H
 
-#include "concept/explicitly_convertible.h"
-#include "concept/range_value_type.h"
-#include "format/struct.h"
-#include "type_trait/safe_difference_type.h"
+#include "core/concept/explicitly_convertible.h"
+#include "core/concept/range_value_type.h"
+#include "core/format/struct.h"
+#include "core/type_trait/safe_difference_type.h"
 
 #include <fmt/core.h>
 #include <gsl/gsl>

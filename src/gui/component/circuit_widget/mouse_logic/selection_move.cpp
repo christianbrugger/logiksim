@@ -1,10 +1,10 @@
-#include "component/circuit_widget/mouse_logic/selection_move.h"
+#include "gui/component/circuit_widget/mouse_logic/selection_move.h"
 
-#include "algorithm/round.h"
-#include "editable_circuit.h"
-#include "geometry/display_state_map.h"
-#include "geometry/point.h"
-#include "timer.h"
+#include "core/algorithm/round.h"
+#include "core/editable_circuit.h"
+#include "core/geometry/display_state_map.h"
+#include "core/geometry/point.h"
+#include "core/timer.h"
 
 namespace logicsim {
 

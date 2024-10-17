@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_VIEW_CONFIG_H
 #define LOGICSIM_VOCABULARY_VIEW_CONFIG_H
 
-#include "format/struct.h"
-#include "vocabulary/point_fine.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/point_fine.h"
 
 #include <blend2d.h>
 

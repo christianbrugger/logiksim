@@ -1,9 +1,9 @@
-#include "element/logicitem/simulation_info.h"
+#include "core/element/logicitem/simulation_info.h"
 
-#include "element/logicitem/schematic_info.h"
-#include "schematic.h"
-#include "vocabulary/connection.h"
-#include "vocabulary/connection_count.h"
+#include "core/element/logicitem/schematic_info.h"
+#include "core/schematic.h"
+#include "core/vocabulary/connection.h"
+#include "core/vocabulary/connection_count.h"
 
 #include <stdexcept>
 

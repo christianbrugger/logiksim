@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_GEOMETRY_POINT_H
 #define LOGICSIM_GEOMETRY_POINT_H
 
-#include "vocabulary/point.h"
+#include "core/vocabulary/point.h"
 
 #include <span>
 #include <vector>

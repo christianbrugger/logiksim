@@ -1,5 +1,5 @@
 
-#include "iterator_adaptor/enumerate.h"
+#include "core/iterator_adaptor/enumerate.h"
 
 #include <gtest/gtest.h>
 

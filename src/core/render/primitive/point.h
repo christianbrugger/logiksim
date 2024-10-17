@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_RENDER_PRIMITIVE_POINT_H
 #define LOGICSIM_RENDER_PRIMITIVE_POINT_H
 
-#include "concept/input_range.h"
-#include "format/enum.h"
-#include "vocabulary/color.h"
-#include "vocabulary/grid_fine.h"
+#include "core/concept/input_range.h"
+#include "core/format/enum.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/grid_fine.h"
 
 #include <string>
 

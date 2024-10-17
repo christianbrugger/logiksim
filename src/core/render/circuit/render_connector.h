@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_CONNECTOR_H
 #define LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_CONNECTOR_H
 
-#include "vocabulary/element_draw_state.h"
-#include "vocabulary/orientation.h"
-#include "vocabulary/point.h"
+#include "core/vocabulary/element_draw_state.h"
+#include "core/vocabulary/orientation.h"
+#include "core/vocabulary/point.h"
 
 namespace logicsim {
 

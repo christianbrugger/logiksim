@@ -1,8 +1,8 @@
-#include "element/decoration/layout_decoration.h"
+#include "core/element/decoration/layout_decoration.h"
 
-#include "algorithm/range_extended.h"
-#include "geometry/offset.h"
-#include "vocabulary/decoration_layout_data.h"
+#include "core/algorithm/range_extended.h"
+#include "core/geometry/offset.h"
+#include "core/vocabulary/decoration_layout_data.h"
 
 namespace logicsim {
 

@@ -1,4 +1,4 @@
-#include "allocated_size/folly_small_vector.h"
+#include "core/allocated_size/folly_small_vector.h"
 
 namespace logicsim {
 

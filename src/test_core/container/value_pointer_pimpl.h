@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_TEST_CONTAINER_VALUE_POINTER_PIMPL_H
 #define LOGICSIM_TEST_CONTAINER_VALUE_POINTER_PIMPL_H
 
-#include "container/value_pointer.h"
+#include "core/container/value_pointer.h"
 
 namespace logicsim {
 

@@ -1,13 +1,13 @@
-#include "component/line_tree/tree_builder.h"
+#include "core/component/line_tree/tree_builder.h"
 
-#include "component/line_tree/line_store.h"
-#include "container/graph/adjacency_graph.h"
-#include "container/graph/depth_first_search.h"
-#include "container/graph/visitor/calling_visitor.h"
-#include "tree_normalization.h"
-#include "vocabulary/line_index.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/point.h"
+#include "core/component/line_tree/line_store.h"
+#include "core/container/graph/adjacency_graph.h"
+#include "core/container/graph/depth_first_search.h"
+#include "core/container/graph/visitor/calling_visitor.h"
+#include "core/tree_normalization.h"
+#include "core/vocabulary/line_index.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/point.h"
 
 #include <cassert>
 #include <stdexcept>

@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_PART_COPY_DEFINITION_H
 #define LOGICSIM_VOCABULARY_PART_COPY_DEFINITION_H
 
-#include "format/struct.h"
-#include "vocabulary/part.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/part.h"
 
 #include <compare>
 #include <type_traits>

@@ -1,6 +1,6 @@
-#include "file.h"
+#include "core/file.h"
 
-#include "algorithm/path_conversion.h"
+#include "core/algorithm/path_conversion.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

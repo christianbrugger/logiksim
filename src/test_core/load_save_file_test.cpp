@@ -1,9 +1,9 @@
 
-#include "load_save_file.h"
+#include "core/load_save_file.h"
 
-#include "file.h"
-#include "spatial_simulation.h"
-#include "vocabulary/save_format.h"
+#include "core/file.h"
+#include "core/spatial_simulation.h"
+#include "core/vocabulary/save_format.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

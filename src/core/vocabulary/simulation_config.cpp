@@ -1,4 +1,4 @@
-#include "vocabulary/simulation_config.h"
+#include "core/vocabulary/simulation_config.h"
 
 #include <fmt/core.h>
 

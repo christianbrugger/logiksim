@@ -1,4 +1,4 @@
-#include "vocabulary/internal_state_index.h"
+#include "core/vocabulary/internal_state_index.h"
 
 #include <fmt/core.h>
 

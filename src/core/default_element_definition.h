@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_DEFAULT_ELEMENT_DEFINITION_H
 #define LOGICSIM_DEFAULT_ELEMENT_DEFINITION_H
 
-#include "vocabulary/decoration_type.h"
-#include "vocabulary/default_mouse_action.h"
-#include "vocabulary/logicitem_type.h"
+#include "core/vocabulary/decoration_type.h"
+#include "core/vocabulary/default_mouse_action.h"
+#include "core/vocabulary/logicitem_type.h"
 
 namespace logicsim {
 

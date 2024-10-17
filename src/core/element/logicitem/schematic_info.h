@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_LOGIC_ITEM_SCHEMATIC_INFO_H
 #define LOGICSIM_LOGIC_ITEM_SCHEMATIC_INFO_H
 
-#include "vocabulary/delay.h"
-#include "vocabulary/element_type.h"
-#include "vocabulary/internal_connections.h"
-#include "vocabulary/logicitem_type.h"
+#include "core/vocabulary/delay.h"
+#include "core/vocabulary/element_type.h"
+#include "core/vocabulary/internal_connections.h"
+#include "core/vocabulary/logicitem_type.h"
 
 #include <optional>
 

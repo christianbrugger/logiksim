@@ -1,4 +1,4 @@
-#include "vocabulary/rect.h"
+#include "core/vocabulary/rect.h"
 
 #include <fmt/core.h>
 

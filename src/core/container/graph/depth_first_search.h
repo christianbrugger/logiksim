@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_CONTAINER_GRAPH_DEPTH_FIRST_SEARCH_H
 #define LOGICSIM_CONTAINER_GRAPH_DEPTH_FIRST_SEARCH_H
 
-#include "algorithm/depth_first_visitor.h"
-#include "container/graph/adjacency_graph.h"
-#include "container/graph/visitor_concept.h"
-#include "format/enum.h"
-#include "format/struct.h"
+#include "core/algorithm/depth_first_visitor.h"
+#include "core/container/graph/adjacency_graph.h"
+#include "core/container/graph/visitor_concept.h"
+#include "core/format/enum.h"
+#include "core/format/struct.h"
 
 namespace logicsim {
 

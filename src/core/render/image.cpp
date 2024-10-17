@@ -1,4 +1,4 @@
-#include "render/image.h"
+#include "core/render/image.h"
 
 #include <gsl/gsl>
 

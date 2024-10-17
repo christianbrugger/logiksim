@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_CORE_ELEMENT_DECORATION_RENDER_DECORATION_BASE_H
 #define LOGICSIM_CORE_ELEMENT_DECORATION_RENDER_DECORATION_BASE_H
 
-#include "vocabulary/element_draw_state.h"
+#include "core/vocabulary/element_draw_state.h"
 
 #include <span>
 

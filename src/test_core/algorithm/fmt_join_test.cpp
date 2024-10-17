@@ -1,5 +1,5 @@
 
-#include "algorithm/fmt_join.h"
+#include "core/algorithm/fmt_join.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

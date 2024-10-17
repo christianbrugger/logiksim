@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_TIME_RATE_H
 #define LOGICSIM_VOCABULARY_TIME_RATE_H
 
-#include "format/struct.h"
-#include "vocabulary/delay.h"
-#include "vocabulary/time_literal.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/delay.h"
+#include "core/vocabulary/time_literal.h"
 
 #include <compare>
 #include <type_traits>

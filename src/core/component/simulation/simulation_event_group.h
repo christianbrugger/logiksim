@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_SIMULATION_EVENT_GROUP_H
 #define LOGICSIM_COMPONENT_SIMULATION_SIMULATION_EVENT_GROUP_H
 
-#include "component/simulation/simulation_event.h"
-#include "format/container.h"
+#include "core/component/simulation/simulation_event.h"
+#include "core/format/container.h"
 
 #include <folly/small_vector.h>
 

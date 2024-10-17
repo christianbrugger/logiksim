@@ -1,14 +1,14 @@
-#include "geometry/rect.h"
+#include "core/geometry/rect.h"
 
-#include "geometry/grid.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/grid_fine.h"
-#include "vocabulary/line.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/point.h"
-#include "vocabulary/point_fine.h"
-#include "vocabulary/rect.h"
-#include "vocabulary/rect_fine.h"
+#include "core/geometry/grid.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/grid_fine.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/point_fine.h"
+#include "core/vocabulary/rect.h"
+#include "core/vocabulary/rect_fine.h"
 
 namespace logicsim {
 

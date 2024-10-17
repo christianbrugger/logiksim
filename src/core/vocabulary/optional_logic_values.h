@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_OPTIONAL_LOGIC_VALUES_H
 #define LOGICSIM_VOCABULARY_OPTIONAL_LOGIC_VALUES_H
 
-#include "format/container.h"
-#include "vocabulary/optional_logic_value.h"
+#include "core/format/container.h"
+#include "core/vocabulary/optional_logic_value.h"
 
 #include <folly/small_vector.h>
 

@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_CORE_VOCABULARY_SAVE_FORMAT_H
 #define LOGICSIM_CORE_VOCABULARY_SAVE_FORMAT_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 #include <optional>
 #include <string>

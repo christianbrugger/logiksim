@@ -1,12 +1,12 @@
-#include "component/editable_circuit/editing/edit_decoration.h"
+#include "core/component/editable_circuit/editing/edit_decoration.h"
 
-#include "component/editable_circuit/circuit_data.h"
-#include "component/editable_circuit/editing/edit_decoration_detail.h"
-#include "format/struct.h"
-#include "geometry/point.h"
-#include "layout_info.h"
-#include "selection.h"
-#include "vocabulary/decoration_layout_data.h"
+#include "core/component/editable_circuit/circuit_data.h"
+#include "core/component/editable_circuit/editing/edit_decoration_detail.h"
+#include "core/format/struct.h"
+#include "core/geometry/point.h"
+#include "core/layout_info.h"
+#include "core/selection.h"
+#include "core/vocabulary/decoration_layout_data.h"
 
 #include <algorithm>
 #include <cassert>

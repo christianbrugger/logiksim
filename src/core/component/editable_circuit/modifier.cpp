@@ -1,12 +1,12 @@
-#include "modifier.h"
+#include "core/component/editable_circuit/modifier.h"
 
-#include "component/editable_circuit/editing/edit_decoration.h"
-#include "component/editable_circuit/editing/edit_logicitem.h"
-#include "component/editable_circuit/editing/edit_wire.h"
-#include "component/editable_circuit/modifier.h"
-#include "format/pointer.h"
-#include "logging.h"
-#include "tree_normalization.h"
+#include "core/component/editable_circuit/editing/edit_decoration.h"
+#include "core/component/editable_circuit/editing/edit_logicitem.h"
+#include "core/component/editable_circuit/editing/edit_wire.h"
+#include "core/component/editable_circuit/modifier.h"
+#include "core/format/pointer.h"
+#include "core/logging.h"
+#include "core/tree_normalization.h"
 
 #include <fmt/core.h>
 

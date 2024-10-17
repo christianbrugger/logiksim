@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_CONTAINER_STATIC_VECTOR_H
 #define LOGICSIM_CONTAINER_STATIC_VECTOR_H
 
-#include "algorithm/create_array.h"
+#include "core/algorithm/create_array.h"
 
 #include <algorithm>
 #include <array>

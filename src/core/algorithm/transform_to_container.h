@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_ALGORITHM_TRANSFORM_TO_CONTAINER_H
 #define LOGICSIM_ALGORITHM_TRANSFORM_TO_CONTAINER_H
 
-#include "algorithm/distance_fast.h"
+#include "core/algorithm/distance_fast.h"
 
 #include <algorithm>
 #include <functional>

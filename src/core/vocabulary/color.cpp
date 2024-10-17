@@ -1,4 +1,4 @@
-#include "vocabulary/color.h"
+#include "core/vocabulary/color.h"
 
 #include <blend2d.h>
 #include <fmt/core.h>

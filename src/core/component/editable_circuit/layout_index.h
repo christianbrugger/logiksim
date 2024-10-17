@@ -1,11 +1,11 @@
 #ifndef LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_LAYOUT_INDEX_H
 #define LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_LAYOUT_INDEX_H
 
-#include "format/struct.h"
-#include "index/collision_index.h"
-#include "index/connection_index.h"
-#include "index/spatial_index.h"
-#include "layout_message_forward.h"
+#include "core/format/struct.h"
+#include "core/index/collision_index.h"
+#include "core/index/connection_index.h"
+#include "core/index/spatial_index.h"
+#include "core/layout_message_forward.h"
 
 namespace logicsim {
 

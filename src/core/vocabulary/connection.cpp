@@ -1,4 +1,4 @@
-#include "vocabulary/connection.h"
+#include "core/vocabulary/connection.h"
 
 #include <fmt/core.h>
 

@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_ORDERED_LINE_H
 #define LOGICSIM_VOCABULARY_ORDERED_LINE_H
 
-#include "format/struct.h"
-#include "vocabulary/line.h"
-#include "vocabulary/point.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/point.h"
 
 #include <compare>
 #include <type_traits>

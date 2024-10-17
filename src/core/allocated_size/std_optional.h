@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_ALLOCATED_SIZE_STD_OPTIONAL_H
 #define LOGICSIM_ALLOCATED_SIZE_STD_OPTIONAL_H
 
-#include "allocated_size/trait.h"
+#include "core/allocated_size/trait.h"
 
 #include <optional>
 #include <type_traits>

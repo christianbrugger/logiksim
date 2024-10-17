@@ -1,4 +1,4 @@
-#include "vocabulary/device_pixel_ratio.h"
+#include "core/vocabulary/device_pixel_ratio.h"
 
 #include <fmt/core.h>
 

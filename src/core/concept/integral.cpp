@@ -1,4 +1,4 @@
-#include "concept/integral.h"
+#include "core/concept/integral.h"
 
 namespace logicsim {
 

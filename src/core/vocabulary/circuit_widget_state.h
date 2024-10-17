@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_CIRCUIT_WIDGET_STATE_H
 #define LOGICSIM_VOCABULARY_CIRCUIT_WIDGET_STATE_H
 
-#include "algorithm/to_underlying.h"
-#include "format/struct.h"
-#include "vocabulary/default_mouse_action.h"
-#include "wyhash.h"
+#include "core/algorithm/to_underlying.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/default_mouse_action.h"
+#include "core/wyhash.h"
 
 #include <ankerl/unordered_dense.h>
 

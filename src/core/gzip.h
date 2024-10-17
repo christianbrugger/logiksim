@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_GZIP_H
 #define LOGICSIM_GZIP_H
 
-#include "vocabulary/load_error.h"
+#include "core/vocabulary/load_error.h"
 
 #include <tl/expected.hpp>
 

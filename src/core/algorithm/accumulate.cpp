@@ -1,4 +1,4 @@
-#include "algorithm/accumulate.h"
+#include "core/algorithm/accumulate.h"
 
 namespace logicsim {
 

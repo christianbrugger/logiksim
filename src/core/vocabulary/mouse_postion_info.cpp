@@ -1,8 +1,8 @@
-#include "vocabulary/mouse_postion_info.h"
+#include "core/vocabulary/mouse_postion_info.h"
 
-#include "format/container.h"
-#include "vocabulary/point_device_fine.h"
-#include "vocabulary/point_fine.h"
+#include "core/format/container.h"
+#include "core/vocabulary/point_device_fine.h"
+#include "core/vocabulary/point_fine.h"
 
 #include <blend2d.h>
 #include <fmt/core.h>

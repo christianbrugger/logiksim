@@ -1,8 +1,7 @@
-#include "context_cache.h"
+#include "core/render/context_cache.h"
 
-#include "render/context_cache.h"
-#include "render/svg_cache.h"
-#include "render/text_cache.h"
+#include "core/render/svg_cache.h"
+#include "core/render/text_cache.h"
 
 namespace logicsim {
 

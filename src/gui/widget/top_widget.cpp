@@ -1,19 +1,19 @@
-﻿#include "widget/top_widget.h"
+#include "gui/widget/top_widget.h"
 
-#include "algorithm/round.h"
-#include "circuit_widget.h"
-#include "file.h"
-#include "format/qt_type.h"
-#include "format/std_type.h"
-#include "logging.h"
-#include "qt/path_conversion.h"
-#include "qt/setting_location.h"
-#include "resource.h"
-#include "serialize.h"
-#include "serialize_gui_setting.h"
-#include "timer.h"
-#include "top_widget.h"
-#include "vocabulary/simulation_config.h"
+#include "gui/format/qt_type.h"
+#include "gui/qt/path_conversion.h"
+#include "gui/qt/setting_location.h"
+#include "gui/widget/circuit_widget.h"
+
+#include "core/algorithm/round.h"
+#include "core/file.h"
+#include "core/format/std_type.h"
+#include "core/logging.h"
+#include "core/resource.h"
+#include "core/serialize.h"
+#include "core/serialize_gui_setting.h"
+#include "core/timer.h"
+#include "core/vocabulary/simulation_config.h"
 
 #include <QActionGroup>
 #include <QCheckBox>
@@ -39,7 +39,6 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
-#include <locale>
 #include <ranges>
 
 namespace logicsim {

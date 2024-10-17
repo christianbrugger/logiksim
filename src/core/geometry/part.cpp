@@ -1,13 +1,13 @@
-#include "geometry/part.h"
+#include "core/geometry/part.h"
 
-#include "geometry/grid.h"
-#include "geometry/offset.h"
-#include "geometry/orientation.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/part.h"
-#include "vocabulary/rect_fine.h"
-#include "vocabulary/segment.h"
-#include "vocabulary/segment_part.h"
+#include "core/geometry/grid.h"
+#include "core/geometry/offset.h"
+#include "core/geometry/orientation.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/part.h"
+#include "core/vocabulary/rect_fine.h"
+#include "core/vocabulary/segment.h"
+#include "core/vocabulary/segment_part.h"
 
 #include <stdexcept>
 

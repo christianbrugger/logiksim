@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_RANDOM_LAYOUT_CALCULATION_DATA_H
 #define LOGICSIM_RANDOM_LAYOUT_CALCULATION_DATA_H
 
-#include "random/generator.h"
-#include "vocabulary/element_type.h"
+#include "core/random/generator.h"
+#include "core/vocabulary/element_type.h"
 
 namespace logicsim {
 

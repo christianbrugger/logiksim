@@ -1,7 +1,7 @@
-#include "random/grid.h"
+#include "core/random/grid.h"
 
-#include "algorithm/uniform_int_distribution.h"
-#include "vocabulary/grid.h"
+#include "core/algorithm/uniform_int_distribution.h"
+#include "core/vocabulary/grid.h"
 
 namespace logicsim {
 

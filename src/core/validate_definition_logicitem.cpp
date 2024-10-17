@@ -1,9 +1,9 @@
-#include "validate_definition_logicitem.h"
+#include "core/validate_definition_logicitem.h"
 
-#include "layout_info.h"
-#include "vocabulary/delay.h"
-#include "vocabulary/logicitem_definition.h"
-#include "vocabulary/logicitem_type.h"
+#include "core/layout_info.h"
+#include "core/vocabulary/delay.h"
+#include "core/vocabulary/logicitem_definition.h"
+#include "core/vocabulary/logicitem_type.h"
 
 namespace logicsim {
 

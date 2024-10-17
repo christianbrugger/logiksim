@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_SEGMENT_H
 #define LOGICSIM_VOCABULARY_SEGMENT_H
 
-#include "format/struct.h"
-#include "vocabulary/segment_index.h"
-#include "vocabulary/wire_id.h"
-#include "wyhash.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/segment_index.h"
+#include "core/vocabulary/wire_id.h"
+#include "core/wyhash.h"
 
 #include <ankerl/unordered_dense.h>
 

@@ -1,4 +1,4 @@
-#include "format/escape_ascii.h"
+#include "core/format/escape_ascii.h"
 
 namespace logicsim {
 

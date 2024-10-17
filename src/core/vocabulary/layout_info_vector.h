@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_LAYOUT_INFO_VECTOR_H
 #define LOGICSIM_VOCABULARY_LAYOUT_INFO_VECTOR_H
 
-#include "container/static_vector.h"
-#include "format/container.h"
-#include "vocabulary/connector_info.h"
-#include "vocabulary/point.h"
+#include "core/container/static_vector.h"
+#include "core/format/container.h"
+#include "core/vocabulary/connector_info.h"
+#include "core/vocabulary/point.h"
 
 #include <folly/small_vector.h>
 

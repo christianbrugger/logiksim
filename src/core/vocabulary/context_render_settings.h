@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_CONTEXT_RENDER_SETTINGS_H
 #define LOGICSIM_VOCABULARY_CONTEXT_RENDER_SETTINGS_H
 
-#include "format/struct.h"
-#include "vocabulary/thread_count.h"
-#include "vocabulary/view_config.h"
-#include "vocabulary/wire_render_style.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/thread_count.h"
+#include "core/vocabulary/view_config.h"
+#include "core/vocabulary/wire_render_style.h"
 
 #include <string>
 

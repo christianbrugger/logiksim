@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_POINT_H
 #define LOGICSIM_VOCABULARY_POINT_H
 
-#include "format/struct.h"
-#include "vocabulary/grid.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/grid.h"
 
 #include <ankerl/unordered_dense.h>
 

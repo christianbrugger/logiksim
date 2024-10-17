@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_ALGORITHM_SHUFFLE_H
 #define LOGICSIM_ALGORITHM_SHUFFLE_H
 
-#include "algorithm/uniform_int_distribution.h"
+#include "core/algorithm/uniform_int_distribution.h"
 
 #include <algorithm>
 #include <iterator>

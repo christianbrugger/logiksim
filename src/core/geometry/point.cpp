@@ -1,7 +1,7 @@
-#include "geometry/point.h"
+#include "core/geometry/point.h"
 
-#include "geometry/grid.h"
-#include "vocabulary/point.h"
+#include "core/geometry/grid.h"
+#include "core/vocabulary/point.h"
 
 namespace logicsim {
 

@@ -1,15 +1,15 @@
-#include "segment_tree.h"
+#include "core/segment_tree.h"
 
-#include "algorithm/accumulate.h"
-#include "algorithm/transform_to_vector.h"
-#include "allocated_size/folly_small_vector.h"
-#include "container/graph/adjacency_graph.h"
-#include "container/graph/depth_first_search.h"
-#include "container/graph/visitor/empty_visitor.h"
-#include "format/container.h"
-#include "geometry/segment_info.h"
-#include "vocabulary/part_copy_definition.h"
-#include "vocabulary/rect.h"
+#include "core/algorithm/accumulate.h"
+#include "core/algorithm/transform_to_vector.h"
+#include "core/allocated_size/folly_small_vector.h"
+#include "core/container/graph/adjacency_graph.h"
+#include "core/container/graph/depth_first_search.h"
+#include "core/container/graph/visitor/empty_visitor.h"
+#include "core/format/container.h"
+#include "core/geometry/segment_info.h"
+#include "core/vocabulary/part_copy_definition.h"
+#include "core/vocabulary/rect.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/map.hpp>

@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_SELECTION_GUARD_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_SELECTION_GUARD_H
 
-#include "selection.h"
-#include "vocabulary/selection_id.h"
+#include "core/selection.h"
+#include "core/vocabulary/selection_id.h"
 
 #include <gsl/gsl>
 

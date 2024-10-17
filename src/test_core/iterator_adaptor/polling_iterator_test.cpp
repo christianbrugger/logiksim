@@ -1,5 +1,5 @@
 
-#include "iterator_adaptor/polling_iterator.h"
+#include "core/iterator_adaptor/polling_iterator.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

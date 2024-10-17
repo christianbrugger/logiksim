@@ -1,9 +1,9 @@
-#include "random/part.h"
+#include "core/random/part.h"
 
-#include "algorithm/uniform_int_distribution.h"
-#include "geometry/part.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/part.h"
+#include "core/algorithm/uniform_int_distribution.h"
+#include "core/geometry/part.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/part.h"
 
 namespace logicsim {
 

@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_BENCHMARK_RENDER_LINE_SCENE_H
 #define LOGICSIM_BENCHMARK_RENDER_LINE_SCENE_H
 
-#include "spatial_simulation.h"
+#include "core/spatial_simulation.h"
 
 #include <cstdint>
 

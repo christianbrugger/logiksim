@@ -1,8 +1,8 @@
 #ifndef LOGIKSIM_TIMER_H
 #define LOGIKSIM_TIMER_H
 
-#include "format/enum.h"
-#include "format/struct.h"
+#include "core/format/enum.h"
+#include "core/format/struct.h"
 
 #include <chrono>
 #include <functional>

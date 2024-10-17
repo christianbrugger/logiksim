@@ -4,9 +4,9 @@
 /// to make sense these need to be deterministic on all platforms.
 /// We test here that random numbers are still the same.
 
-#include "algorithm/uniform_int_distribution.h"
+#include "core/algorithm/uniform_int_distribution.h"
 
-#include "random/generator.h"
+#include "core/random/generator.h"
 
 #include <gtest/gtest.h>
 

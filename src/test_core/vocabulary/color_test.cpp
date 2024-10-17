@@ -1,4 +1,4 @@
-#include "vocabulary/color.h"
+#include "core/vocabulary/color.h"
 
 #include <gtest/gtest.h>
 

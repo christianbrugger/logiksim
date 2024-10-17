@@ -1,6 +1,6 @@
 /// Make sure that our shuffle is deterministic.
 
-#include "algorithm/shuffle.h"
+#include "core/algorithm/shuffle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

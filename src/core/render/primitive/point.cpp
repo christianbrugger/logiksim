@@ -1,12 +1,12 @@
-#include "render/primitive/point.h"
+#include "core/render/primitive/point.h"
 
-#include "render/context.h"
-#include "render/primitive/line.h"
-#include "render/primitive/rect.h"
-#include "vocabulary/color.h"
-#include "vocabulary/grid_fine.h"
-#include "vocabulary/point.h"
-#include "vocabulary/rect_fine.h"
+#include "core/render/context.h"
+#include "core/render/primitive/line.h"
+#include "core/render/primitive/rect.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/grid_fine.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/rect_fine.h"
 
 #include <gcem.hpp>
 

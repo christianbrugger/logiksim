@@ -1,12 +1,12 @@
 #ifndef LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 #define LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 
-#include "concept/explicitly_convertible.h"
-#include "concept/integral.h"
-#include "format/struct.h"
-#include "safe_numeric.h"
-#include "type_trait/safe_difference_type.h"
-#include "vocabulary/connection_id.h"
+#include "core/concept/explicitly_convertible.h"
+#include "core/concept/integral.h"
+#include "core/format/struct.h"
+#include "core/safe_numeric.h"
+#include "core/type_trait/safe_difference_type.h"
+#include "core/vocabulary/connection_id.h"
 
 #include <compare>
 #include <limits>

@@ -1,4 +1,4 @@
-#include "random/generator.h"
+#include "core/random/generator.h"
 
 #include <boost/random/seed_seq.hpp>
 

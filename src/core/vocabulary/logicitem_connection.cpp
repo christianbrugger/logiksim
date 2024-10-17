@@ -1,4 +1,4 @@
-#include "vocabulary/logicitem_connection.h"
+#include "core/vocabulary/logicitem_connection.h"
 
 #include <fmt/core.h>
 

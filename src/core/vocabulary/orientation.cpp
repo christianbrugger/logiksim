@@ -1,4 +1,4 @@
-#include "vocabulary/orientation.h"
+#include "core/vocabulary/orientation.h"
 
 #include <exception>
 #include <string>

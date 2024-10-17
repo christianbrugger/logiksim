@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_CONNECTION_H
 #define LOGICSIM_VOCABULARY_CONNECTION_H
 
-#include "format/struct.h"
-#include "vocabulary/connection_id.h"
-#include "vocabulary/element_id.h"
-#include "wyhash.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/connection_id.h"
+#include "core/vocabulary/element_id.h"
+#include "core/wyhash.h"
 
 #include <ankerl/unordered_dense.h>
 

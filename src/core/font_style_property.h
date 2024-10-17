@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_FONT_STYLE_PROPERTY_H
 #define LOGICSIM_FONT_STYLE_PROPERTY_H
 
-#include "vocabulary/font_style.h"
+#include "core/vocabulary/font_style.h"
 
 #include <exception>
 

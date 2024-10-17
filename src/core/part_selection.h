@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_PART_SELECTION_H
 #define LOGICSIM_PART_SELECTION_H
 
-#include "format/struct.h"
-#include "vocabulary/part.h"
-#include "vocabulary/part_copy_definition.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/part.h"
+#include "core/vocabulary/part_copy_definition.h"
 
 #include <folly/small_vector.h>
 

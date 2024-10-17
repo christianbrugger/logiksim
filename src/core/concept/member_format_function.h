@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_CONCEPT_MEMBER_FORMAT_FUNCTION_H
 #define LOGICSIM_CONCEPT_MEMBER_FORMAT_FUNCTION_H
 
-#include "concept/string_view.h"
+#include "core/concept/string_view.h"
 
 #include <concepts>
 #include <string>

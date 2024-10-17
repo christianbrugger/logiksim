@@ -1,7 +1,7 @@
-#include "simulation_player.h"
+#include "core/simulation_player.h"
 
-#include "logging.h"
-#include "simulation.h"
+#include "core/logging.h"
+#include "core/simulation.h"
 
 #include <algorithm>
 #include <ranges>

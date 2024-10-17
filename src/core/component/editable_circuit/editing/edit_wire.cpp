@@ -1,16 +1,16 @@
-#include "component/editable_circuit/editing/edit_wire.h"
+#include "core/component/editable_circuit/editing/edit_wire.h"
 
-#include "algorithm/make_unique.h"
-#include "algorithm/sort_pair.h"
-#include "algorithm/transform_to_vector.h"
-#include "component/editable_circuit/circuit_data.h"
-#include "component/editable_circuit/editing/edit_wire_detail.h"
-#include "geometry/line.h"
-#include "geometry/orientation.h"
-#include "index/segment_map.h"
-#include "index/spatial_point_index.h"
-#include "layout.h"
-#include "tree_normalization.h"
+#include "core/algorithm/make_unique.h"
+#include "core/algorithm/sort_pair.h"
+#include "core/algorithm/transform_to_vector.h"
+#include "core/component/editable_circuit/circuit_data.h"
+#include "core/component/editable_circuit/editing/edit_wire_detail.h"
+#include "core/geometry/line.h"
+#include "core/geometry/orientation.h"
+#include "core/index/segment_map.h"
+#include "core/index/spatial_point_index.h"
+#include "core/layout.h"
+#include "core/tree_normalization.h"
 
 #include <algorithm>
 

@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_LINE_FINE_H
 #define LOGICSIM_VOCABULARY_LINE_FINE_H
 
-#include "format/struct.h"
-#include "vocabulary/line.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/point_fine.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/point_fine.h"
 
 #include <compare>
 #include <stdexcept>

@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_OUTPUT_DELAYS_H
 #define LOGICSIM_VOCABULARY_OUTPUT_DELAYS_H
 
-#include "vocabulary/delay.h"
+#include "core/vocabulary/delay.h"
 
 #include <folly/small_vector.h>
 

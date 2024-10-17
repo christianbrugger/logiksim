@@ -1,8 +1,8 @@
-﻿#include "text_cache.h"
+#include "core/render/text_cache.h"
 
-#include "logging.h"
-#include "render/text_cache.h"
-#include "timer.h"  // TODO remove
+#include "core/logging.h"
+#include "core/render/text_cache.h"
+#include "core/timer.h"  // TODO remove
 
 #include <fmt/core.h>
 #include <gsl/gsl>

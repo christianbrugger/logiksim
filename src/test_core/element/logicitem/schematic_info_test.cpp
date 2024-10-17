@@ -1,7 +1,7 @@
 
-#include "element/logicitem/schematic_info.h"
+#include "core/element/logicitem/schematic_info.h"
 
-#include "algorithm/to_underlying.h"
+#include "core/algorithm/to_underlying.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

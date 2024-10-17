@@ -1,4 +1,4 @@
-#include "vocabulary/display_state.h"
+#include "core/vocabulary/display_state.h"
 
 #include <exception>
 #include <string>

@@ -1,4 +1,4 @@
-#include "vocabulary/text_alignment.h"
+#include "core/vocabulary/text_alignment.h"
 
 #include <exception>
 

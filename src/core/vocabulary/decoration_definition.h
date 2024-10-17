@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_CORE_VOCABULARY_DECORATION_DEFINITION_H
 #define LOGICSIM_CORE_VOCABULARY_DECORATION_DEFINITION_H
 
-#include "format/struct.h"
-#include "vocabulary/decoration_type.h"
-#include "vocabulary/size_2d.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/decoration_type.h"
+#include "core/vocabulary/size_2d.h"
 
 #include <compare>
 #include <optional>

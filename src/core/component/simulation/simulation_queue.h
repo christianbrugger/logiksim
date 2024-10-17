@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_SIMULATION_QUEUE_H
 #define LOGICSIM_COMPONENT_SIMULATION_SIMULATION_QUEUE_H
 
-#include "component/simulation/simulation_event.h"
-#include "vocabulary/time.h"
+#include "core/component/simulation/simulation_event.h"
+#include "core/vocabulary/time.h"
 
 #include <queue>
 

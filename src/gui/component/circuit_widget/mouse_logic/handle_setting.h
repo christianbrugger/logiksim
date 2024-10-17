@@ -1,9 +1,10 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_HANDLE_SETTING_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_HANDLE_SETTING_H
 
-#include "component/circuit_widget/mouse_logic/editing_logic_concept.h"
-#include "setting_handle.h"
-#include "vocabulary/point_fine.h"
+#include "gui/component/circuit_widget/mouse_logic/editing_logic_concept.h"
+
+#include "core/setting_handle.h"
+#include "core/vocabulary/point_fine.h"
 
 #include <functional>
 #include <optional>

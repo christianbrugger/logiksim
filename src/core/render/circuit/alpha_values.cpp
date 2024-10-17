@@ -1,4 +1,4 @@
-#include "render/circuit/alpha_values.h"
+#include "core/render/circuit/alpha_values.h"
 
 namespace logicsim {
 

@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_VOCABULARY_POINT_FINE_H
 #define LOGICSIM_VOCABULARY_POINT_FINE_H
 
-#include "concept/explicitly_convertible.h"
-#include "format/struct.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/grid_fine.h"
-#include "vocabulary/point.h"
+#include "core/concept/explicitly_convertible.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/grid_fine.h"
+#include "core/vocabulary/point.h"
 
 #include <compare>
 #include <type_traits>

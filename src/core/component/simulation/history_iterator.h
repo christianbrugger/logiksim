@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_HISTORY_ITERATOR_H
 #define LOGICSIM_COMPONENT_SIMULATION_HISTORY_ITERATOR_H
 
-#include "component/simulation/history_calculation.h"
-#include "component/simulation/history_entry.h"
-#include "component/simulation/history_index.h"
+#include "core/component/simulation/history_calculation.h"
+#include "core/component/simulation/history_entry.h"
+#include "core/component/simulation/history_index.h"
 
 #include <cstddef>  // std::size_t
 #include <iterator>

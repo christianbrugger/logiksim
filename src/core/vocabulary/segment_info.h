@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_SEGMENT_INFO_H
 #define LOGICSIM_VOCABULARY_SEGMENT_INFO_H
 
-#include "format/struct.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/segment_point_type.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/segment_point_type.h"
 
 #include <string>
 #include <type_traits>

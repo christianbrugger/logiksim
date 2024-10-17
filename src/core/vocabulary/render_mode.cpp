@@ -1,4 +1,4 @@
-#include "vocabulary/render_mode.h"
+#include "core/vocabulary/render_mode.h"
 
 #include <exception>
 

@@ -1,18 +1,18 @@
 #ifndef LOGICSIM_LOGIC_ITEM_LAYOUT_H
 #define LOGICSIM_LOGIC_ITEM_LAYOUT_H
 
-#include "container/static_vector.h"
-#include "element/logicitem/layout_logicitem_display_ascii.h"
-#include "element/logicitem/layout_logicitem_display_number.h"
-#include "element/logicitem/layout_logicitem_standard_element.h"
-#include "vocabulary/connection_count.h"
-#include "vocabulary/connector_info.h"
-#include "vocabulary/direction_type.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/layout_calculation_data.h"
-#include "vocabulary/layout_info_vector.h"
-#include "vocabulary/logicitem_type.h"
-#include "vocabulary/point.h"
+#include "core/container/static_vector.h"
+#include "core/element/logicitem/layout_logicitem_display_ascii.h"
+#include "core/element/logicitem/layout_logicitem_display_number.h"
+#include "core/element/logicitem/layout_logicitem_standard_element.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/connector_info.h"
+#include "core/vocabulary/direction_type.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/layout_info_vector.h"
+#include "core/vocabulary/logicitem_type.h"
+#include "core/vocabulary/point.h"
 
 #include <concepts>
 #include <exception>

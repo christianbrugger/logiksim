@@ -1,10 +1,11 @@
-#include "widget/render_widget.h"
+#include "gui/widget/render_widget.h"
 
-#include "format/blend2d_type.h"
-#include "format/qt_type.h"
-#include "qt/widget_geometry.h"
-#include "vocabulary/device_pixel_ratio.h"
-#include "vocabulary/fallback_info.h"
+#include "gui/format/qt_type.h"
+#include "gui/qt/widget_geometry.h"
+
+#include "core/format/blend2d_type.h"
+#include "core/vocabulary/device_pixel_ratio.h"
+#include "core/vocabulary/fallback_info.h"
 
 #include <blend2d.h>
 #include <gsl/gsl>

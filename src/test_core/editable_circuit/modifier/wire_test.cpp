@@ -1,8 +1,9 @@
-#include "component/editable_circuit/editing/edit_wire.h"
-#include "component/editable_circuit/modifier.h"
-#include "layout_message.h"
 #include "test_core/editable_circuit/modifier/test_helpers.h"
-#include "vocabulary/logicitem_definition.h"
+
+#include "core/component/editable_circuit/editing/edit_wire.h"
+#include "core/component/editable_circuit/modifier.h"
+#include "core/layout_message.h"
+#include "core/vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

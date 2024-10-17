@@ -1,4 +1,4 @@
-#include "vocabulary/size_device.h"
+#include "core/vocabulary/size_device.h"
 
 namespace logicsim {
 

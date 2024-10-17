@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_OPTIONAL_LOGIC_VALUE_H
 #define LOGICSIM_VOCABULARY_OPTIONAL_LOGIC_VALUE_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 #include <fmt/core.h>
 

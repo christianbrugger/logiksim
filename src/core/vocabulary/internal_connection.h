@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_INTERNAL_CONNECTION_H
 #define LOGICSIM_VOCABULARY_INTERNAL_CONNECTION_H
 
-#include "format/struct.h"
-#include "vocabulary/connection_id.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/connection_id.h"
 
 #include <compare>
 #include <type_traits>

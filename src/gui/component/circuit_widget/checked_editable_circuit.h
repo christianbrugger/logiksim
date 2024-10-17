@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_CHECKED_EDITABLE_CIRCUIT_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_CHECKED_EDITABLE_CIRCUIT_H
 
-#include "editable_circuit.h"
-#include "vocabulary/circuit_widget_state.h"
+#include "core/editable_circuit.h"
+#include "core/vocabulary/circuit_widget_state.h"
 
 namespace logicsim {
 

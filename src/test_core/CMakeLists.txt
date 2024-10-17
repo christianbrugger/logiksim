@@ -19,13 +19,9 @@ add_executable(${LS_CORE_TEST_TARGET}
 )
 target_link_libraries(${LS_CORE_TEST_TARGET} PRIVATE 
     ${LS_CORE_LIBRARY} 
-    logiksim_example_circuits
     GTest::gtest
     GTest::gmock
     GTest::gtest_main
-)
-target_include_directories(${LS_CORE_TEST_TARGET} PUBLIC
-    ${PROJECT_SOURCE_DIR}
 )
 set_property(TARGET ${LS_CORE_TEST_TARGET} PROPERTY RUNTIME_OUTPUT_DIRECTORY 
     ${CMAKE_BINARY_DIR}

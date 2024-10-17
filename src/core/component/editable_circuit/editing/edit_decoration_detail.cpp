@@ -1,6 +1,6 @@
-#include "component/editable_circuit/editing/edit_decoration_detail.h"
+#include "core/component/editable_circuit/editing/edit_decoration_detail.h"
 
-#include "component/editable_circuit/circuit_data.h"
+#include "core/component/editable_circuit/circuit_data.h"
 
 namespace logicsim {
 

@@ -1,4 +1,4 @@
-#include "safe_numeric.h"
+#include "core/safe_numeric.h"
 
 namespace logicsim {
 

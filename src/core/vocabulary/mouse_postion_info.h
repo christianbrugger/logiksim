@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_MOUSE_POSTION_INFO_H
 #define LOGICSIM_VOCABULARY_MOUSE_POSTION_INFO_H
 
-#include "format/struct.h"
-#include "vocabulary/point_device_fine.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/point_device_fine.h"
 
 #include <concepts>
 #include <vector>

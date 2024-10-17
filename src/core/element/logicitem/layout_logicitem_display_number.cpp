@@ -1,11 +1,11 @@
-#include "element/logicitem/layout_logicitem_display_number.h"
+#include "core/element/logicitem/layout_logicitem_display_number.h"
 
-#include "algorithm/range.h"
-#include "element/logicitem/layout_logicitem_display.h"
-#include "geometry/connection_count.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/layout_calculation_data.h"
-#include "vocabulary/point.h"
+#include "core/algorithm/range.h"
+#include "core/element/logicitem/layout_logicitem_display.h"
+#include "core/geometry/connection_count.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/point.h"
 
 #include <gcem.hpp>
 

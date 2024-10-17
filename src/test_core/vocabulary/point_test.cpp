@@ -1,6 +1,6 @@
-#include "vocabulary/point.h"
+#include "core/vocabulary/point.h"
 
-#include "logging.h"
+#include "core/logging.h"
 
 #include <gtest/gtest.h>
 

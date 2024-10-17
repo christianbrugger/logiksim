@@ -1,11 +1,11 @@
 
-#include "simulation.h"
+#include "core/simulation.h"
 
-#include "component/simulation/history_view.h"
-#include "element/logicitem/schematic_info.h"
-#include "logging.h"
-#include "schematic.h"
-#include "schematic_generation.h"
+#include "core/component/simulation/history_view.h"
+#include "core/element/logicitem/schematic_info.h"
+#include "core/logging.h"
+#include "core/schematic.h"
+#include "core/schematic_generation.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

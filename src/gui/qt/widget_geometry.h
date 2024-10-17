@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_QT_WIDGET_GEOMETRY_H
 #define LOGICSIM_QT_WIDGET_GEOMETRY_H
 
-#include "format/struct.h"
+#include "core/format/struct.h"
 
 #include <QPoint>
 #include <QRect>

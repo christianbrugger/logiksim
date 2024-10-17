@@ -1,4 +1,4 @@
-#include "wyhash.h"
+#include "core/wyhash.h"
 
 namespace logicsim {
 

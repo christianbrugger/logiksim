@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_CORE_IMAGE_SURFACE_H
 #define LOGICSIM_CORE_IMAGE_SURFACE_H
 
-#include "render/context.h"
-#include "render/context_guard.h"
-#include "render/image.h"
-#include "render/render_context.h"
+#include "core/render/context.h"
+#include "core/render/context_guard.h"
+#include "core/render/image.h"
+#include "core/render/render_context.h"
 
 #include <blend2d.h>
 

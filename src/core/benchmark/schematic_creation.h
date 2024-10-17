@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_BENCHMARK_SCHEMATIC_CREATION_H
 #define LOGICSIM_BENCHMARK_SCHEMATIC_CREATION_H
 
-#include "random/generator.h"
+#include "core/random/generator.h"
 
 namespace logicsim {
 

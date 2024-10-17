@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_HISTORY_INDEX_H
 #define LOGICSIM_COMPONENT_SIMULATION_HISTORY_INDEX_H
 
-#include "concept/integral.h"
-#include "format/struct.h"
-#include "safe_numeric.h"
+#include "core/concept/integral.h"
+#include "core/format/struct.h"
+#include "core/safe_numeric.h"
 
 #include <gsl/gsl>
 

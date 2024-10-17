@@ -1,10 +1,10 @@
-#include "geometry/part_selections.h"
+#include "core/geometry/part_selections.h"
 
-#include "algorithm/merged_any_of.h"
-#include "algorithm/merged_none_of.h"
-#include "geometry/part.h"
-#include "part_selection.h"
-#include "vocabulary/part.h"
+#include "core/algorithm/merged_any_of.h"
+#include "core/algorithm/merged_none_of.h"
+#include "core/geometry/part.h"
+#include "core/part_selection.h"
+#include "core/vocabulary/part.h"
 
 namespace logicsim {
 

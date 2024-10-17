@@ -1,8 +1,8 @@
 
-#include "schematic.h"
+#include "core/schematic.h"
 
-#include "algorithm/to_vector.h"
-#include "element/logicitem/schematic_info.h"
+#include "core/algorithm/to_vector.h"
+#include "core/element/logicitem/schematic_info.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -1,10 +1,10 @@
-#include "copy_paste_clipboard.h"
+#include "core/copy_paste_clipboard.h"
 
-#include "base64.h"
-#include "editable_circuit.h"
-#include "serialize.h"
-#include "vocabulary/point.h"
-#include "vocabulary/save_format.h"
+#include "core/base64.h"
+#include "core/editable_circuit.h"
+#include "core/serialize.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/save_format.h"
 
 namespace logicsim {
 

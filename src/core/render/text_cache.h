@@ -1,14 +1,14 @@
 #ifndef LOGIKSIM_RENDER_TEXT_CACHE_H
 #define LOGIKSIM_RENDER_TEXT_CACHE_H
 
-#include "format/struct.h"
-#include "render/font.h"
-#include "render/text_alignment.h"
-#include "render/text_shaping.h"
-#include "vocabulary/color.h"
-#include "vocabulary/font_style.h"
-#include "vocabulary/text_alignment.h"
-#include "wyhash.h"
+#include "core/format/struct.h"
+#include "core/render/font.h"
+#include "core/render/text_alignment.h"
+#include "core/render/text_shaping.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/font_style.h"
+#include "core/vocabulary/text_alignment.h"
+#include "core/wyhash.h"
 
 #include <ankerl/unordered_dense.h>
 #include <blend2d.h>

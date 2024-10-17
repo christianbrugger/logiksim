@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_RENDER_PRIMITIVE_ARROW_H
 #define LOGICSIM_RENDER_PRIMITIVE_ARROW_H
 
-#include "vocabulary/orientation.h"
+#include "core/vocabulary/orientation.h"
 
 namespace logicsim {
 

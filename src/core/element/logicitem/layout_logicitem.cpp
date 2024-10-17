@@ -1,7 +1,7 @@
-#include "element/logicitem/layout_logicitem.h"
+#include "core/element/logicitem/layout_logicitem.h"
 
-#include "algorithm/contains.h"
-#include "algorithm/to_underlying.h"
+#include "core/algorithm/contains.h"
+#include "core/algorithm/to_underlying.h"
 
 #include <gsl/gsl>
 

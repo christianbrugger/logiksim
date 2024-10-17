@@ -1,7 +1,8 @@
-#include "qt/setting_location.h"
+#include "gui/qt/setting_location.h"
 
-#include "qt/path_conversion.h"
-#include "resource.h"
+#include "gui/qt/path_conversion.h"
+
+#include "core/resource.h"
 
 #include <QDir>
 #include <QFileInfo>

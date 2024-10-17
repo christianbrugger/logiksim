@@ -1,13 +1,13 @@
-#include "logicitem_store.h"
+#include "core/component/layout/logicitem_store.h"
 
-#include "algorithm/range_extended.h"
-#include "allocated_size/ankerl_unordered_dense.h"
-#include "allocated_size/folly_small_vector.h"
-#include "allocated_size/std_vector.h"
-#include "component/layout/logicitem_store.h"
-#include "layout_info.h"
-#include "validate_definition_logicitem.h"
-#include "vocabulary/layout_calculation_data.h"
+#include "core/algorithm/range_extended.h"
+#include "core/allocated_size/ankerl_unordered_dense.h"
+#include "core/allocated_size/folly_small_vector.h"
+#include "core/allocated_size/std_vector.h"
+#include "core/component/layout/logicitem_store.h"
+#include "core/layout_info.h"
+#include "core/validate_definition_logicitem.h"
+#include "core/vocabulary/layout_calculation_data.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/zip.hpp>

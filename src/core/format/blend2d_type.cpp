@@ -1,4 +1,4 @@
-#include "format/blend2d_type.h"
+#include "core/format/blend2d_type.h"
 
 namespace logicsim {
 

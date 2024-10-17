@@ -1,4 +1,4 @@
-#include "component/circuit_widget/checked_editable_circuit.h"
+#include "gui/component/circuit_widget/checked_editable_circuit.h"
 
 #include <gsl/gsl>
 

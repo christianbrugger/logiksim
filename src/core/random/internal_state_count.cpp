@@ -1,4 +1,4 @@
-#include "random/internal_state_count.h"
+#include "core/random/internal_state_count.h"
 
 namespace logicsim {
 

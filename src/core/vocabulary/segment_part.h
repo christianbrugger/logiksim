@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_SEGMENT_PART_H
 #define LOGICSIM_VOCABULARY_SEGMENT_PART_H
 
-#include "format/struct.h"
-#include "vocabulary/part.h"
-#include "vocabulary/segment.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/part.h"
+#include "core/vocabulary/segment.h"
 
 #include <compare>
 #include <type_traits>

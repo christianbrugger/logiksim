@@ -1,11 +1,11 @@
-#include "random/random_schematic.h"
+#include "core/random/random_schematic.h"
 
-#include "algorithm/range.h"
-#include "algorithm/round.h"
-#include "algorithm/shuffle.h"
-#include "algorithm/uniform_int_distribution.h"
-#include "element/logicitem/schematic_info.h"
-#include "schematic.h"
+#include "core/algorithm/range.h"
+#include "core/algorithm/round.h"
+#include "core/algorithm/shuffle.h"
+#include "core/algorithm/uniform_int_distribution.h"
+#include "core/element/logicitem/schematic_info.h"
+#include "core/schematic.h"
 
 #include <exception>
 #include <stdexcept>

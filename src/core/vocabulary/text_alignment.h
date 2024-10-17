@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_TEXT_ALIGNMENT_H
 #define LOGICSIM_VOCABULARY_TEXT_ALIGNMENT_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 #include <cstdint>
 #include <string>

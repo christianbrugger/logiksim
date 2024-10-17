@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_WIDGET_TOP_WIDGET_H
 #define LOGIKSIM_WIDGET_TOP_WIDGET_H
 
-#include "circuit_widget_base.h"
+#include "gui/widget/circuit_widget_base.h"
 
 #include <ankerl/unordered_dense.h>
 #include <gsl/gsl>

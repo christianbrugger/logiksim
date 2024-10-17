@@ -20,11 +20,7 @@ add_executable(${LS_GUI_TEST_TARGET}
 )
 target_link_libraries(${LS_GUI_TEST_TARGET} PRIVATE 
     ${LS_GUI_LIBRARY} 
-    logiksim_example_circuits
     Catch2::Catch2WithMain
-)
-target_include_directories(${LS_GUI_TEST_TARGET} PUBLIC
-    ${PROJECT_SOURCE_DIR}
 )
 set_property(TARGET ${LS_GUI_TEST_TARGET} PROPERTY RUNTIME_OUTPUT_DIRECTORY 
     ${CMAKE_BINARY_DIR}

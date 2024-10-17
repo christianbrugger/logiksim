@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_CONTAINER_GRAPH_VISITOR_LENGTH_RECORDER_VISITOR_H
 #define LOGICSIM_CONTAINER_GRAPH_VISITOR_LENGTH_RECORDER_VISITOR_H
 
-#include "container/graph/adjacency_graph.h"
-#include "geometry/line.h"
-#include "vocabulary/line.h"
+#include "core/container/graph/adjacency_graph.h"
+#include "core/geometry/line.h"
+#include "core/vocabulary/line.h"
 
 #include <vector>
 

@@ -1,6 +1,6 @@
-#include "vocabulary/setting_attribute.h"
+#include "core/vocabulary/setting_attribute.h"
 
-#include "format/std_type.h"
+#include "core/format/std_type.h"
 
 namespace logicsim {
 

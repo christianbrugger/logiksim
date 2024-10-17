@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_INSERTION_MODE_H
 #define LOGICSIM_VOCABULARY_INSERTION_MODE_H
 
-#include "format/enum.h"
-#include "vocabulary/display_state.h"
+#include "core/format/enum.h"
+#include "core/vocabulary/display_state.h"
 
 #include <cstdint>
 

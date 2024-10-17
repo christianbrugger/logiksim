@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_HISTORY_CALCULATION_H
 #define LOGICSIM_COMPONENT_SIMULATION_HISTORY_CALCULATION_H
 
-#include "component/simulation/history_index.h"
-#include "component/simulation/history_min_index.h"
-#include "vocabulary/time.h"
+#include "core/component/simulation/history_index.h"
+#include "core/component/simulation/history_min_index.h"
+#include "core/vocabulary/time.h"
 
 namespace logicsim {
 

@@ -1,7 +1,7 @@
-#include "editable_circuit.h"
+#include "core/editable_circuit.h"
 
-#include "random/generator.h"
-#include "random/wire.h"
+#include "core/random/generator.h"
+#include "core/random/wire.h"
 
 #include <fmt/core.h>
 

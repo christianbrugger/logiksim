@@ -1,12 +1,12 @@
 #ifndef LOGICSIM_LINE_TREE_H
 #define LOGICSIM_LINE_TREE_H
 
-#include "algorithm/range_extended.h"
-#include "component/line_tree/line_store.h"
-#include "format/struct.h"
-#include "vocabulary/connection_id.h"
-#include "vocabulary/length_vector.h"
-#include "vocabulary/orientation.h"
+#include "core/algorithm/range_extended.h"
+#include "core/component/line_tree/line_store.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/connection_id.h"
+#include "core/vocabulary/length_vector.h"
+#include "core/vocabulary/orientation.h"
 
 #include <optional>
 #include <span>

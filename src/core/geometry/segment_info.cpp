@@ -1,9 +1,9 @@
-#include "geometry/segment_info.h"
+#include "core/geometry/segment_info.h"
 
-#include "geometry/part.h"
-#include "vocabulary/part.h"
-#include "vocabulary/point.h"
-#include "vocabulary/segment_info.h"
+#include "core/geometry/part.h"
+#include "core/vocabulary/part.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/segment_info.h"
 
 #include <stdexcept>
 

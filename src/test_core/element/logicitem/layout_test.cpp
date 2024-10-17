@@ -1,11 +1,11 @@
 
-#include "algorithm/range.h"
-#include "element/logicitem/layout_logicitem.h"
-#include "layout_info.h"
-#include "logging.h"
-#include "random/generator.h"
-#include "random/layout_calculation_data.h"
-#include "vocabulary/logicitem_type.h"
+#include "core/algorithm/range.h"
+#include "core/element/logicitem/layout_logicitem.h"
+#include "core/layout_info.h"
+#include "core/logging.h"
+#include "core/random/generator.h"
+#include "core/random/layout_calculation_data.h"
+#include "core/vocabulary/logicitem_type.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

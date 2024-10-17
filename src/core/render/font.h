@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_RENDER_FONT_H
 #define LOGICSIM_RENDER_FONT_H
 
-#include "format/struct.h"
-#include "render/text_shaping.h"
-#include "vocabulary/font_style.h"
+#include "core/format/struct.h"
+#include "core/render/text_shaping.h"
+#include "core/vocabulary/font_style.h"
 
 #include <blend2d.h>
 

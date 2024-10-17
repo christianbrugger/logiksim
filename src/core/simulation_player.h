@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_SIMULATION_PLAYER_H
 #define LOGICSIM_SIMULATION_PLAYER_H
 
-#include "component/simulation/simulation_event.h"
+#include "core/component/simulation/simulation_event.h"
 
 #include <vector>
 

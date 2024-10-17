@@ -1,4 +1,4 @@
-#include "vocabulary/connection_ids.h"
+#include "core/vocabulary/connection_ids.h"
 
 namespace logicsim {
 

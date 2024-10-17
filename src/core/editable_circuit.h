@@ -1,12 +1,12 @@
 #ifndef LOGICSIM_EDITABLE_CIRCUIT_H
 #define LOGICSIM_EDITABLE_CIRCUIT_H
 
-#include "component/editable_circuit/modifier.h"
-#include "component/editable_circuit/selection_guard.h"
-#include "format/struct.h"
-#include "random/generator.h"
-#include "vocabulary/insertion_mode.h"
-#include "vocabulary/line_insertion_type.h"
+#include "core/component/editable_circuit/modifier.h"
+#include "core/component/editable_circuit/selection_guard.h"
+#include "core/format/struct.h"
+#include "core/random/generator.h"
+#include "core/vocabulary/insertion_mode.h"
+#include "core/vocabulary/line_insertion_type.h"
 
 namespace logicsim {
 

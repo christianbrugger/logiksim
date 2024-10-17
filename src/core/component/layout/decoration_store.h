@@ -1,13 +1,13 @@
 #ifndef LOGICSIM_CORE_COMPONENT_LAYOUT_DECORATION_STORE_H
 #define LOGICSIM_CORE_COMPONENT_LAYOUT_DECORATION_STORE_H
 
-#include "vocabulary/decoration_definition.h"
-#include "vocabulary/decoration_id.h"
-#include "vocabulary/decoration_type.h"
-#include "vocabulary/display_state.h"
-#include "vocabulary/point.h"
-#include "vocabulary/rect.h"
-#include "vocabulary/size_2d.h"
+#include "core/vocabulary/decoration_definition.h"
+#include "core/vocabulary/decoration_id.h"
+#include "core/vocabulary/decoration_type.h"
+#include "core/vocabulary/display_state.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/rect.h"
+#include "core/vocabulary/size_2d.h"
 
 #include <ankerl/unordered_dense.h>
 

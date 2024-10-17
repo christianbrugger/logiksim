@@ -1,11 +1,11 @@
-#include "component/editable_circuit/editing/edit_wire_detail.h"
+#include "core/component/editable_circuit/editing/edit_wire_detail.h"
 
-#include "algorithm/sort_pair.h"
-#include "component/editable_circuit/circuit_data.h"
-#include "geometry/line.h"
-#include "geometry/orientation.h"
-#include "geometry/segment_info.h"
-#include "tree_normalization.h"
+#include "core/algorithm/sort_pair.h"
+#include "core/component/editable_circuit/circuit_data.h"
+#include "core/geometry/line.h"
+#include "core/geometry/orientation.h"
+#include "core/geometry/segment_info.h"
+#include "core/tree_normalization.h"
 
 #include <algorithm>
 #include <stdexcept>

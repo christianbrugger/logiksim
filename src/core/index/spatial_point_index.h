@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_INDEX_SPATIAL_POINT_INDEX_H
 #define LOGICSIM_INDEX_SPATIAL_POINT_INDEX_H
 
-#include "container/value_pointer.h"
-#include "format/container.h"
-#include "format/struct.h"
-#include "vocabulary/point.h"
+#include "core/container/value_pointer.h"
+#include "core/format/container.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/point.h"
 
 #include <folly/small_vector.h>
 

@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_ALGORITHM_DEPTH_FIRST_VISITOR_H
 #define LOGICSIM_ALGORITHM_DEPTH_FIRST_VISITOR_H
 
-#include "iterator_adaptor/transform_if_output_iterator.h"
-#include "iterator_adaptor/transform_output_iterator.h"
+#include "core/iterator_adaptor/transform_if_output_iterator.h"
+#include "core/iterator_adaptor/transform_output_iterator.h"
 
 #include <iterator>
 #include <ranges>

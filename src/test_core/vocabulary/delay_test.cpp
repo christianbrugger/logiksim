@@ -1,4 +1,4 @@
-#include "vocabulary/delay.h"
+#include "core/vocabulary/delay.h"
 
 #include <gtest/gtest.h>
 

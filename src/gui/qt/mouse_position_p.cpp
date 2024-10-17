@@ -1,4 +1,4 @@
-#include "qt/mouse_position_p.h"
+#include "gui/qt/mouse_position_p.h"
 
 #include <QPoint>
 #include <QPointF>

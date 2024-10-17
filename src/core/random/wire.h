@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_RANDOM_WIRE_H
 #define LOGICSIM_RANDOM_WIRE_H
 
-#include "random/generator.h"
-#include "vocabulary/grid.h"
+#include "core/random/generator.h"
+#include "core/vocabulary/grid.h"
 
 namespace logicsim {
 

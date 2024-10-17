@@ -1,4 +1,4 @@
-#include "qt/widget_geometry.h"
+#include "gui/qt/widget_geometry.h"
 
 #include <gsl/gsl>
 

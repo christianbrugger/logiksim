@@ -1,4 +1,4 @@
-#include "vocabulary/print_events.h"
+#include "core/vocabulary/print_events.h"
 
 #include <exception>
 

@@ -1,16 +1,16 @@
 #ifndef LOGICSIM_LOGIC_ITEM_LAYOUT_DISPLAY_ASCII_H
 #define LOGICSIM_LOGIC_ITEM_LAYOUT_DISPLAY_ASCII_H
 
-#include "algorithm/range.h"
-#include "element/logicitem/layout_logicitem_display.h"
-#include "geometry/connection_count.h"
-#include "vocabulary/connection_count.h"
-#include "vocabulary/connection_id.h"
-#include "vocabulary/connector_info.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/layout_info_vector.h"
-#include "vocabulary/orientation.h"
-#include "vocabulary/point.h"
+#include "core/algorithm/range.h"
+#include "core/element/logicitem/layout_logicitem_display.h"
+#include "core/geometry/connection_count.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/connection_id.h"
+#include "core/vocabulary/connector_info.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/layout_info_vector.h"
+#include "core/vocabulary/orientation.h"
+#include "core/vocabulary/point.h"
 
 namespace logicsim {
 

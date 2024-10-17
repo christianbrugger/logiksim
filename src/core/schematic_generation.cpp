@@ -1,14 +1,14 @@
-#include "schematic_generation.h"
+#include "core/schematic_generation.h"
 
-#include "algorithm/transform_to_container.h"
-#include "element/logicitem/schematic_info.h"
-#include "geometry/orientation.h"
-#include "index/connection_index.h"
-#include "layout.h"
-#include "line_tree.h"
-#include "line_tree_generation.h"
-#include "schematic.h"
-#include "vocabulary/output_delays.h"
+#include "core/algorithm/transform_to_container.h"
+#include "core/element/logicitem/schematic_info.h"
+#include "core/geometry/orientation.h"
+#include "core/index/connection_index.h"
+#include "core/layout.h"
+#include "core/line_tree.h"
+#include "core/line_tree_generation.h"
+#include "core/schematic.h"
+#include "core/vocabulary/output_delays.h"
 
 #include <cassert>
 #include <exception>

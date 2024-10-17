@@ -1,10 +1,10 @@
 #ifndef LOGIKSIM_RENDER_SVG_CACHE_H
 #define LOGIKSIM_RENDER_SVG_CACHE_H
 
-#include "container/value_pointer.h"
-#include "resource.h"
-#include "vocabulary/alignment.h"
-#include "vocabulary/color.h"
+#include "core/container/value_pointer.h"
+#include "core/resource.h"
+#include "core/vocabulary/alignment.h"
+#include "core/vocabulary/color.h"
 
 #include <ankerl/unordered_dense.h>
 #include <blend2d.h>

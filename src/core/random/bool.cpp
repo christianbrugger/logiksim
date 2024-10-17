@@ -1,7 +1,7 @@
-#include "random/bool.h"
+#include "core/random/bool.h"
 
-#include "algorithm/round.h"
-#include "algorithm/uniform_int_distribution.h"
+#include "core/algorithm/round.h"
+#include "core/algorithm/uniform_int_distribution.h"
 
 #include <boost/random/discrete_distribution.hpp>
 #include <gsl/gsl>

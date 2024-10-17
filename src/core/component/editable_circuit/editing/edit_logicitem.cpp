@@ -1,13 +1,13 @@
-#include "component/editable_circuit/editing/edit_logicitem.h"
+#include "core/component/editable_circuit/editing/edit_logicitem.h"
 
-#include "component/editable_circuit/circuit_data.h"
-#include "component/editable_circuit/editing/edit_logicitem_detail.h"
-#include "format/struct.h"
-#include "geometry/orientation.h"
-#include "geometry/point.h"
-#include "layout_info.h"
-#include "selection.h"
-#include "vocabulary/logicitem_id.h"
+#include "core/component/editable_circuit/circuit_data.h"
+#include "core/component/editable_circuit/editing/edit_logicitem_detail.h"
+#include "core/format/struct.h"
+#include "core/geometry/orientation.h"
+#include "core/geometry/point.h"
+#include "core/layout_info.h"
+#include "core/selection.h"
+#include "core/vocabulary/logicitem_id.h"
 
 #include <algorithm>
 #include <cassert>

@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_ALGORITHM_TRANSFORM_TO_VECTOR_H
 #define LOGICSIM_ALGORITHM_TRANSFORM_TO_VECTOR_H
 
-#include "algorithm/transform_to_container.h"
+#include "core/algorithm/transform_to_container.h"
 
 #include <algorithm>
 #include <functional>

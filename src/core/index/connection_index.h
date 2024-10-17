@@ -1,12 +1,12 @@
 #ifndef LOGIKSIM_INDEX_CONNECTION_INDEX_H
 #define LOGIKSIM_INDEX_CONNECTION_INDEX_H
 
-#include "format/struct.h"
-#include "layout_message_forward.h"
-#include "vocabulary/logicitem_connection.h"
-#include "vocabulary/orientation.h"
-#include "vocabulary/point.h"
-#include "vocabulary/segment.h"
+#include "core/format/struct.h"
+#include "core/layout_message_forward.h"
+#include "core/vocabulary/logicitem_connection.h"
+#include "core/vocabulary/orientation.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/segment.h"
 
 #include <ankerl/unordered_dense.h>
 

@@ -1,4 +1,4 @@
-#include "vocabulary/point_device_fine.h"
+#include "core/vocabulary/point_device_fine.h"
 
 namespace logicsim {
 

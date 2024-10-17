@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_CORE_ELEMENT_DECORATION_LAYOUT_DESCRIPTION_H
 #define LOGICSIM_CORE_ELEMENT_DECORATION_LAYOUT_DESCRIPTION_H
 
-#include "vocabulary/decoration_type.h"
-#include "vocabulary/layout_info_vector.h"
+#include "core/vocabulary/decoration_type.h"
+#include "core/vocabulary/layout_info_vector.h"
 
 namespace logicsim {
 

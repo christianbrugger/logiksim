@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_AREA_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_AREA_H
 
-#include "vocabulary/point_fine.h"
+#include "core/vocabulary/point_fine.h"
 
 #include <QPointF>
 #include <QRubberBand>

@@ -1,11 +1,11 @@
-#include "render/primitive/arrow.h"
+#include "core/render/primitive/arrow.h"
 
-#include "geometry/orientation.h"
-#include "render/context.h"
-#include "render/context_guard.h"
-#include "vocabulary/color.h"
-#include "vocabulary/grid_fine.h"
-#include "vocabulary/point.h"
+#include "core/geometry/orientation.h"
+#include "core/render/context.h"
+#include "core/render/context_guard.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/grid_fine.h"
+#include "core/vocabulary/point.h"
 
 namespace logicsim {
 

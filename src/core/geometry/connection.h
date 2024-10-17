@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_GEOMETRY_CONNECTION_H
 #define LOGICSIM_GEOMETRY_CONNECTION_H
 
-#include "vocabulary/connection.h"
-#include "vocabulary/connection_count.h"
-#include "vocabulary/element_id.h"
+#include "core/vocabulary/connection.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/element_id.h"
 
 #include <ranges>
 

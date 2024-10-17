@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_VOCABULARY_LAYOUT_CALCULATION_DATA_H
 #define LOGICSIM_VOCABULARY_LAYOUT_CALCULATION_DATA_H
 
-#include "format/struct.h"
-#include "vocabulary/connection_count.h"
-#include "vocabulary/logicitem_type.h"
-#include "vocabulary/orientation.h"
-#include "vocabulary/point.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/logicitem_type.h"
+#include "core/vocabulary/orientation.h"
+#include "core/vocabulary/point.h"
 
 #include <compare>
 #include <cstddef>

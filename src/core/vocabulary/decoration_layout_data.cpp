@@ -1,6 +1,6 @@
-#include "vocabulary/decoration_layout_data.h"
+#include "core/vocabulary/decoration_layout_data.h"
 
-#include "vocabulary/decoration_definition.h"
+#include "core/vocabulary/decoration_definition.h"
 
 namespace logicsim {
 

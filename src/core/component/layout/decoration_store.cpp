@@ -1,11 +1,11 @@
-#include "component/layout/decoration_store.h"
+#include "core/component/layout/decoration_store.h"
 
-#include "algorithm/range_extended.h"
-#include "allocated_size/ankerl_unordered_dense.h"
-#include "allocated_size/std_vector.h"
-#include "layout_info.h"
-#include "validate_definition_decoration.h"
-#include "vocabulary/decoration_layout_data.h"
+#include "core/algorithm/range_extended.h"
+#include "core/allocated_size/ankerl_unordered_dense.h"
+#include "core/allocated_size/std_vector.h"
+#include "core/layout_info.h"
+#include "core/validate_definition_decoration.h"
+#include "core/vocabulary/decoration_layout_data.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/zip.hpp>

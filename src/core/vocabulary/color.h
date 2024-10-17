@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_COLOR_H
 #define LOGICSIM_VOCABULARY_COLOR_H
 
-#include "format/struct.h"
+#include "core/format/struct.h"
 
 #include <compare>
 #include <cstdint>

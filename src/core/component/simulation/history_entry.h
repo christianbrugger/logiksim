@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_HISTORY_ENTRY_H
 #define LOGICSIM_COMPONENT_SIMULATION_HISTORY_ENTRY_H
 
-#include "format/struct.h"
-#include "vocabulary/time.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/time.h"
 
 #include <compare>
 #include <type_traits>

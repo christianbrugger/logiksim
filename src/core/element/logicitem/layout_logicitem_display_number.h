@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_LOGIC_ITEM_LAYOUT_DISPLAY_NUMBER_H
 #define LOGICSIM_LOGIC_ITEM_LAYOUT_DISPLAY_NUMBER_H
 
-#include "vocabulary/connection_count.h"
-#include "vocabulary/layout_info_vector.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/layout_info_vector.h"
 
 namespace logicsim {
 

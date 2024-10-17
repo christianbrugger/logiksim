@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_VOCABULARY_LINE_INDEX_H
 #define LOGICSIM_VOCABULARY_LINE_INDEX_H
 
-#include "algorithm/narrow_integral.h"
-#include "concept/explicitly_convertible.h"
-#include "concept/integral.h"
-#include "format/struct.h"
-#include "type_trait/safe_difference_type.h"
+#include "core/algorithm/narrow_integral.h"
+#include "core/concept/explicitly_convertible.h"
+#include "core/concept/integral.h"
+#include "core/format/struct.h"
+#include "core/type_trait/safe_difference_type.h"
 
 #include <compare>
 #include <cstdint>

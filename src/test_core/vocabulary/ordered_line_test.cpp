@@ -1,4 +1,4 @@
-#include "vocabulary/ordered_line.h"
+#include "core/vocabulary/ordered_line.h"
 
 #include <gtest/gtest.h>
 

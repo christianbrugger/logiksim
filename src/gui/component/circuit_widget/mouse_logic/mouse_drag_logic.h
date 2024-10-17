@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_MOUSE_DRAG_LOGIC_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_MOUSE_DRAG_LOGIC_H
 
-#include "vocabulary/point_device_fine.h"
-#include "vocabulary/view_config.h"
+#include "core/vocabulary/point_device_fine.h"
+#include "core/vocabulary/view_config.h"
 
 #include <optional>
 

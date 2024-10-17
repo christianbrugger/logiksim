@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_CORE_VOCABULARY_LOAD_ERROR_H
 #define LOGICSIM_CORE_VOCABULARY_LOAD_ERROR_H
 
-#include "format/enum.h"
-#include "format/struct.h"
+#include "core/format/enum.h"
+#include "core/format/struct.h"
 
 #include <string>
 

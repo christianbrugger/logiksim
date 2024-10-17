@@ -1,4 +1,4 @@
-#include "algorithm/transform_adjacent.h"
+#include "core/algorithm/transform_adjacent.h"
 
 namespace logicsim {
 

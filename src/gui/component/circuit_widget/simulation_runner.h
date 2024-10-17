@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_SIMULATION_RUNNER_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_SIMULATION_RUNNER_H
 
-#include "vocabulary/realtime_timeout.h"
+#include "core/vocabulary/realtime_timeout.h"
 
 namespace logicsim {
 

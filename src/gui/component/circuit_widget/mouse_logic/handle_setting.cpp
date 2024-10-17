@@ -1,7 +1,7 @@
-#include "component/circuit_widget/mouse_logic/handle_setting.h"
+#include "gui/component/circuit_widget/mouse_logic/handle_setting.h"
 
-#include "editable_circuit.h"
-#include "logging.h"
+#include "core/editable_circuit.h"
+#include "core/logging.h"
 
 namespace logicsim {
 

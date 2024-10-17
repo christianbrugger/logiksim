@@ -1,10 +1,10 @@
-#include "circuit_data.h"
+#include "core/component/editable_circuit/circuit_data.h"
 
-#include "allocated_size/std_optional.h"
-#include "allocated_size/std_vector.h"
-#include "component/editable_circuit/circuit_data.h"
-#include "format/container.h"
-#include "logging.h"
+#include "core/allocated_size/std_optional.h"
+#include "core/allocated_size/std_vector.h"
+#include "core/component/editable_circuit/circuit_data.h"
+#include "core/format/container.h"
+#include "core/logging.h"
 
 namespace logicsim {
 

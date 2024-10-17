@@ -1,6 +1,4 @@
-#include "segment_point_type.h"
-
-#include "vocabulary/segment_point_type.h"
+#include "core/vocabulary/segment_point_type.h"
 
 namespace logicsim {
 

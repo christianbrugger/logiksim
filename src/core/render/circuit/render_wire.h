@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_WIRE_H
 #define LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_WIRE_H
 
-#include "format/struct.h"
-#include "vocabulary/element_draw_state.h"
-#include "vocabulary/wire_render_style.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/element_draw_state.h"
+#include "core/vocabulary/wire_render_style.h"
 
 #include <concepts>
 #include <span>

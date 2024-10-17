@@ -1,4 +1,4 @@
-#include "vocabulary/direction_type.h"
+#include "core/vocabulary/direction_type.h"
 
 #include <exception>
 

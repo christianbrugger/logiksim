@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_LENGTH_H
 #define LOGICSIM_VOCABULARY_LENGTH_H
 
-#include "format/struct.h"
-#include "type_trait/safe_difference_type.h"
-#include "vocabulary/grid.h"
+#include "core/format/struct.h"
+#include "core/type_trait/safe_difference_type.h"
+#include "core/vocabulary/grid.h"
 
 #include <compare>
 #include <limits>

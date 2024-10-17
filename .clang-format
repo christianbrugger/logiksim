@@ -19,15 +19,19 @@ AllowShortFunctionsOnASingleLine: Empty
 IncludeBlocks: Regroup
 IncludeIsMainRegex: '(_test)?$'
 IncludeCategories:
-- Regex:    '^<(gtest/|gmock/|catch2/)'
+- Regex:    '^"gui/'
   Priority: 2
-- Regex:    '^<(boost/|fmt/|range/|blend2d\.h|benchmark/|folly/|gsl/|ankerl/|glaze/|hb\.h>|hb-|gcem\.hpp|tl/expected|whereami\.h|zlib\.h>)'
+- Regex:    '^"core/'
   Priority: 3
+- Regex:    '^<(gtest/|gmock/|catch2/)'
+  Priority: 4
+- Regex:    '^<(boost/|fmt/|range/|blend2d\.h|benchmark/|folly/|gsl/|ankerl/|glaze/|hb\.h>|hb-|gcem\.hpp|tl/expected|whereami\.h|zlib\.h>)'
+  Priority: 5
 - Regex:    '^<Q'
   CaseSensitive:   true
-  Priority: 4
+  Priority: 6
 - Regex:    '^<'
-  Priority: 5
+  Priority: 7
 - Regex:    '^"'
   Priority: 1
   SortPriority: 0

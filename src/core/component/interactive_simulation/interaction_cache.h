@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_COMPONENT_INTERACTIVE_SIMULATION_INTERACTION_CACHE_H
 #define LOGICSIM_COMPONENT_INTERACTIVE_SIMULATION_INTERACTION_CACHE_H
 
-#include "format/struct.h"
-#include "vocabulary/element_id.h"
-#include "vocabulary/point.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/element_id.h"
+#include "core/vocabulary/point.h"
 
 #include <ankerl/unordered_dense.h>
 

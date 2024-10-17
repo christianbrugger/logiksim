@@ -257,16 +257,13 @@ endif()
 add_library(${LS_CORE_LIBRARY} 
     ${LS_CORE_SOURCES}
 )
-# TODO: remove this and add prefix core to all includes?
-target_include_directories(${LS_CORE_LIBRARY} PUBLIC
-    ${PROJECT_SOURCE_DIR}/src/core
-)
 target_include_directories(${LS_CORE_LIBRARY} PUBLIC
     ${PROJECT_SOURCE_DIR}/src
 )
 target_link_libraries(${LS_CORE_LIBRARY} PUBLIC 
     ${LS_CORE_DEPENDENCIES}
     logiksim_resource_files
+    logiksim_example_circuits
 )
 target_link_libraries(${LS_CORE_LIBRARY} PUBLIC 
     logiksim_options

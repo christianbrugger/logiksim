@@ -1,15 +1,15 @@
-#include "layout.h"
+#include "core/layout.h"
 
-#include "algorithm/accumulate.h"
-#include "algorithm/fmt_join.h"
-#include "allocated_size/trait.h"
-#include "geometry/line.h"
-#include "geometry/point.h"
-#include "geometry/segment_info.h"
-#include "vocabulary/decoration_layout_data.h"
-#include "vocabulary/layout_calculation_data.h"
-#include "vocabulary/placed_logicitem.h"
-#include "vocabulary/segment_part.h"
+#include "core/algorithm/accumulate.h"
+#include "core/algorithm/fmt_join.h"
+#include "core/allocated_size/trait.h"
+#include "core/geometry/line.h"
+#include "core/geometry/point.h"
+#include "core/geometry/segment_info.h"
+#include "core/vocabulary/decoration_layout_data.h"
+#include "core/vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/placed_logicitem.h"
+#include "core/vocabulary/segment_part.h"
 
 #include <algorithm>
 

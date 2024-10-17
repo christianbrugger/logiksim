@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_CONTAINER_VALUE_POINTER_H
 #define LOGICSIM_CONTAINER_VALUE_POINTER_H
 
-#include "type_trait/is_equality_comparable.h"
+#include "core/type_trait/is_equality_comparable.h"
 
 #include <fmt/core.h>
 

@@ -1,9 +1,9 @@
-#include "element/logicitem/layout_logicitem_standard_element.h"
+#include "core/element/logicitem/layout_logicitem_standard_element.h"
 
-#include "algorithm/range.h"
-#include "geometry/connection_count.h"
-#include "vocabulary/layout_calculation_data.h"
-#include "vocabulary/point.h"
+#include "core/algorithm/range.h"
+#include "core/geometry/connection_count.h"
+#include "core/vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/point.h"
 
 namespace logicsim {
 

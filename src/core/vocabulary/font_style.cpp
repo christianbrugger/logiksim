@@ -1,4 +1,4 @@
-#include "vocabulary/font_style.h"
+#include "core/vocabulary/font_style.h"
 
 #include <exception>
 

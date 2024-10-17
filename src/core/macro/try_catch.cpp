@@ -1,4 +1,4 @@
-#include "macro/try_catch.h"
+#include "core/macro/try_catch.h"
 
 namespace logicsim {
 

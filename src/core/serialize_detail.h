@@ -1,16 +1,16 @@
 #ifndef LOGIKSIM_SERIALIZE_DETAIL_H
 #define LOGIKSIM_SERIALIZE_DETAIL_H
 
-#include "vocabulary/connection_count.h"
-#include "vocabulary/decoration_type.h"
-#include "vocabulary/load_error.h"
-#include "vocabulary/logic_small_vector.h"
-#include "vocabulary/logicitem_definition.h"
-#include "vocabulary/logicitem_type.h"
-#include "vocabulary/orientation.h"
-#include "vocabulary/point.h"
-#include "vocabulary/point_fine.h"
-#include "vocabulary/size_2d.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/decoration_type.h"
+#include "core/vocabulary/load_error.h"
+#include "core/vocabulary/logic_small_vector.h"
+#include "core/vocabulary/logicitem_definition.h"
+#include "core/vocabulary/logicitem_type.h"
+#include "core/vocabulary/orientation.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/point_fine.h"
+#include "core/vocabulary/size_2d.h"
 
 #include <tl/expected.hpp>
 

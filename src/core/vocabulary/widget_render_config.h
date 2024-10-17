@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_WIDGET_RENDER_CONFIG_H
 #define LOGICSIM_VOCABULARY_WIDGET_RENDER_CONFIG_H
 
-#include "format/struct.h"
-#include "vocabulary/thread_count.h"
-#include "vocabulary/wire_render_style.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/thread_count.h"
+#include "core/vocabulary/wire_render_style.h"
 
 #include <type_traits>
 

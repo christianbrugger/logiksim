@@ -1,10 +1,10 @@
-#include "widget/setting_dialog_manager.h"
+#include "gui/widget/setting_dialog_manager.h"
 
-#include "editable_circuit.h"
-#include "logging.h"
-#include "setting_dialog.h"
-#include "setting_handle.h"
-#include "vocabulary/logicitem_definition.h"
+#include "gui/widget/setting_dialog.h"
+
+#include "core/editable_circuit.h"
+#include "core/setting_handle.h"
+#include "core/vocabulary/logicitem_definition.h"
 
 #include <QWidget>
 

@@ -1,12 +1,12 @@
 #ifndef LOGICSIM_COMPONENT_LAYOUT_LOGICITEM_STORE_H
 #define LOGICSIM_COMPONENT_LAYOUT_LOGICITEM_STORE_H
 
-#include "vocabulary/display_state.h"
-#include "vocabulary/logicitem_definition.h"
-#include "vocabulary/logicitem_id.h"
-#include "vocabulary/logicitem_type.h"
-#include "vocabulary/point.h"
-#include "vocabulary/rect.h"
+#include "core/vocabulary/display_state.h"
+#include "core/vocabulary/logicitem_definition.h"
+#include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/logicitem_type.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/rect.h"
 
 #include <ankerl/unordered_dense.h>
 

@@ -1,4 +1,4 @@
-#include "vocabulary/layout_info_vector.h"
+#include "core/vocabulary/layout_info_vector.h"
 
 namespace logicsim {
 

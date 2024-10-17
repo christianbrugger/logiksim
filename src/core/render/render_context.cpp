@@ -1,8 +1,8 @@
-#include "render/render_context.h"
+#include "core/render/render_context.h"
 
-#include "algorithm/round.h"
-#include "render/context_guard.h"
-#include "render/context_info.h"
+#include "core/algorithm/round.h"
+#include "core/render/context_guard.h"
+#include "core/render/context_info.h"
 
 #include <gsl/gsl>
 

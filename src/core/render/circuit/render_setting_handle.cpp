@@ -1,12 +1,12 @@
-#include "render/circuit/render_setting_handle.h"
+#include "core/render/circuit/render_setting_handle.h"
 
-#include "geometry/rect.h"
-#include "render/context.h"
-#include "render/primitive/icon.h"
-#include "render/primitive/rect.h"
-#include "setting_handle.h"
-#include "vocabulary/color.h"
-#include "vocabulary/rect_fine.h"
+#include "core/geometry/rect.h"
+#include "core/render/context.h"
+#include "core/render/primitive/icon.h"
+#include "core/render/primitive/rect.h"
+#include "core/setting_handle.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/rect_fine.h"
 
 namespace logicsim {
 

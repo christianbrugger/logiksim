@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_CORE_VOCABULARY_SIZE_H
 #define LOGICSIM_CORE_VOCABULARY_SIZE_H
 
-#include "format/struct.h"
-#include "vocabulary/offset.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/offset.h"
 
 #include <compare>
 #include <type_traits>

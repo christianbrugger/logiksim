@@ -1,7 +1,8 @@
 #ifndef LOGICSIM_CONTAINER_ENUM_MAP_H
 #define LOGICSIM_CONTAINER_ENUM_MAP_H
 
-#include <algorithm/to_underlying.h>
+#include "core/algorithm/to_underlying.h"
+
 #include <array>
 #include <cassert>
 

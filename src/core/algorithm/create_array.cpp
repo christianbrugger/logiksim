@@ -1,4 +1,4 @@
-#include "algorithm/create_array.h"
+#include "core/algorithm/create_array.h"
 
 namespace logicsim {
 //

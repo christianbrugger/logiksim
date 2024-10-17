@@ -1,7 +1,7 @@
-#include "render/primitive/stroke.h"
+#include "core/render/primitive/stroke.h"
 
-#include "render/context.h"
-#include "vocabulary/view_config.h"
+#include "core/render/context.h"
+#include "core/vocabulary/view_config.h"
 
 namespace logicsim {
 

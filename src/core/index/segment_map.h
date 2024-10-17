@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_INDEX_SEGMENT_MAP_H
 #define LOGICSIM_INDEX_SEGMENT_MAP_H
 
-#include "vocabulary/orientation.h"
-#include "vocabulary/point.h"
-#include "vocabulary/segment.h"
+#include "core/vocabulary/orientation.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/segment.h"
 
 #include <ankerl/unordered_dense.h>
 

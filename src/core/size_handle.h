@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_SIZE_HANDLE_H
 #define LOGIKSIM_SIZE_HANDLE_H
 
-#include "vocabulary/point_fine.h"
+#include "core/vocabulary/point_fine.h"
 
 #include <blend2d.h>
 

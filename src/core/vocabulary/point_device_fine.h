@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_POINT_DEVICE_FINE_H
 #define LOGICSIM_VOCABULARY_POINT_DEVICE_FINE_H
-#include "format/struct.h"
-#include "vocabulary/point_device.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/point_device.h"
 
 #include <compare>
 #include <type_traits>

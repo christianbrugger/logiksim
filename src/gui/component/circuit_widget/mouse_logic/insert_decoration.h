@@ -1,9 +1,10 @@
 #ifndef LOGICSIM_GUI_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_INSERT_DECORATION_H
 #define LOGICSIM_GUI_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_INSERT_DECORATION_H
 
-#include "component/circuit_widget/mouse_logic/editing_logic_concept.h"
-#include "vocabulary/decoration_definition.h"
-#include "vocabulary/selection_id.h"
+#include "gui/component/circuit_widget/mouse_logic/editing_logic_concept.h"
+
+#include "core/vocabulary/decoration_definition.h"
+#include "core/vocabulary/selection_id.h"
 
 #include <optional>
 

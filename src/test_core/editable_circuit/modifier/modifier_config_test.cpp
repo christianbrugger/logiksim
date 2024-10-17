@@ -1,6 +1,7 @@
-#include "component/editable_circuit/modifier.h"
-#include "editable_circuit.h"
 #include "test_core/editable_circuit/modifier/test_helpers.h"
+
+#include "core/component/editable_circuit/modifier.h"
+#include "core/editable_circuit.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -1,13 +1,13 @@
-#include "benchmark/simulation_runtime.h"
+#include "core/benchmark/simulation_runtime.h"
 
-#include "algorithm/fmt_join.h"
-#include "algorithm/uniform_int_distribution.h"
-#include "component/simulation/history_view.h"
-#include "logging.h"
-#include "random/bool.h"
-#include "schematic.h"
-#include "schematic_generation.h"
-#include "simulation.h"
+#include "core/algorithm/fmt_join.h"
+#include "core/algorithm/uniform_int_distribution.h"
+#include "core/component/simulation/history_view.h"
+#include "core/logging.h"
+#include "core/random/bool.h"
+#include "core/schematic.h"
+#include "core/schematic_generation.h"
+#include "core/simulation.h"
 
 namespace logicsim {
 

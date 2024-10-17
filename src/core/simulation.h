@@ -1,15 +1,15 @@
 #ifndef LOGIKSIM_SIMULATION_H
 #define LOGIKSIM_SIMULATION_H
 
-#include "component/simulation/history_buffer.h"
-#include "component/simulation/simulation_queue.h"
-#include "format/struct.h"
-#include "schematic.h"
-#include "timeout_timer.h"
-#include "vocabulary/optional_logic_value.h"
-#include "vocabulary/optional_logic_values.h"
-#include "vocabulary/print_events.h"
-#include "vocabulary/realtime_timeout.h"
+#include "core/component/simulation/history_buffer.h"
+#include "core/component/simulation/simulation_queue.h"
+#include "core/format/struct.h"
+#include "core/schematic.h"
+#include "core/timeout_timer.h"
+#include "core/vocabulary/optional_logic_value.h"
+#include "core/vocabulary/optional_logic_values.h"
+#include "core/vocabulary/print_events.h"
+#include "core/vocabulary/realtime_timeout.h"
 
 #include <cstdint>
 #include <limits>

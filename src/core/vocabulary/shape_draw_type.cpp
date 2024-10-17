@@ -1,4 +1,4 @@
-#include "vocabulary/shape_draw_type.h"
+#include "core/vocabulary/shape_draw_type.h"
 
 #include <exception>
 

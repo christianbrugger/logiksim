@@ -1,10 +1,10 @@
 #ifndef LOGIKSIM_INDEX_SPATIAL_INDEX_H
 #define LOGIKSIM_INDEX_SPATIAL_INDEX_H
 
-#include "container/value_pointer.h"
-#include "format/struct.h"
-#include "layout_message_forward.h"
-#include "vocabulary/segment_index.h"
+#include "core/container/value_pointer.h"
+#include "core/format/struct.h"
+#include "core/layout_message_forward.h"
+#include "core/vocabulary/segment_index.h"
 
 #include <array>
 #include <cstdint>

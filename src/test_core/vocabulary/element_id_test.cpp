@@ -1,4 +1,4 @@
-#include "vocabulary/element_id.h"
+#include "core/vocabulary/element_id.h"
 
 #include <gtest/gtest.h>
 

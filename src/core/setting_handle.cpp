@@ -1,13 +1,13 @@
-﻿#include "setting_handle.h"
+#include "core/setting_handle.h"
 
-#include "geometry/layout_calculation.h"
-#include "geometry/rect.h"
-#include "layout.h"
-#include "layout_info.h"
-#include "selection.h"
-#include "vocabulary/logicitem_id.h"
-#include "vocabulary/point_fine.h"
-#include "vocabulary/rect_fine.h"
+#include "core/geometry/layout_calculation.h"
+#include "core/geometry/rect.h"
+#include "core/layout.h"
+#include "core/layout_info.h"
+#include "core/selection.h"
+#include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/point_fine.h"
+#include "core/vocabulary/rect_fine.h"
 
 #include <exception>
 

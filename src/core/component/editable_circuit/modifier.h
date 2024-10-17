@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_MODIFIER_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_MODIFIER_H
 
-#include "component/editable_circuit/circuit_data.h"
-#include "component/editable_circuit/selection_guard.h"
-#include "format/struct.h"
-#include "vocabulary/insertion_mode.h"
-#include "vocabulary/line_insertion_type.h"
+#include "core/component/editable_circuit/circuit_data.h"
+#include "core/component/editable_circuit/selection_guard.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/insertion_mode.h"
+#include "core/vocabulary/line_insertion_type.h"
 
 #include <gsl/gsl>
 

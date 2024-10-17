@@ -1,4 +1,4 @@
-#include "vocabulary/segment_part.h"
+#include "core/vocabulary/segment_part.h"
 
 #include <fmt/core.h>
 

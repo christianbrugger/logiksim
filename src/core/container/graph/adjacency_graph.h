@@ -1,14 +1,14 @@
 #ifndef LOGICSIM_CONTAINER_GRAPH_ADJACENCY_GRAPH_H
 #define LOGICSIM_CONTAINER_GRAPH_ADJACENCY_GRAPH_H
 
-#include "algorithm/narrow_integral.h"
-#include "algorithm/range.h"
-#include "concept/input_range.h"
-#include "format/container.h"
-#include "format/struct.h"
-#include "geometry/line.h"
-#include "geometry/to_points_sorted_unique.h"
-#include "vocabulary/point.h"
+#include "core/algorithm/narrow_integral.h"
+#include "core/algorithm/range.h"
+#include "core/concept/input_range.h"
+#include "core/format/container.h"
+#include "core/format/struct.h"
+#include "core/geometry/line.h"
+#include "core/geometry/to_points_sorted_unique.h"
+#include "core/vocabulary/point.h"
 
 #include <boost/container/static_vector.hpp>
 #include <fmt/core.h>

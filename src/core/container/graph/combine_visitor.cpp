@@ -1,4 +1,4 @@
-#include "container/graph/combine_visitor.h"
+#include "core/container/graph/combine_visitor.h"
 
 namespace logicsim {
 

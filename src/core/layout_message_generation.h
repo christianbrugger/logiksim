@@ -4,8 +4,8 @@
 #ifndef LOGICSIM_LAYOUT_MESSAGE_GENERATION_H
 #define LOGICSIM_LAYOUT_MESSAGE_GENERATION_H
 
-#include "layout.h"
-#include "layout_message.h"
+#include "core/layout.h"
+#include "core/layout_message.h"
 
 namespace logicsim {
 

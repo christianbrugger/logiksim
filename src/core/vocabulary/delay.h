@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_DELAY_H
 #define LOGICSIM_VOCABULARY_DELAY_H
 
-#include "concept/integral.h"
-#include "format/struct.h"
-#include "safe_numeric.h"
-#include "vocabulary/time_literal.h"
+#include "core/concept/integral.h"
+#include "core/format/struct.h"
+#include "core/safe_numeric.h"
+#include "core/vocabulary/time_literal.h"
 
 #include <chrono>
 #include <compare>

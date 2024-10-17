@@ -1,7 +1,7 @@
-#include "algorithm/path_conversion.h"
+#include "core/algorithm/path_conversion.h"
 
-#include "algorithm/text_escape.h"
-#include "algorithm/u8_conversion.h"
+#include "core/algorithm/text_escape.h"
+#include "core/algorithm/u8_conversion.h"
 
 namespace logicsim {
 

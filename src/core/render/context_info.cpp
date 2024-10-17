@@ -1,6 +1,6 @@
-#include "render/context_info.h"
+#include "core/render/context_info.h"
 
-#include "vocabulary/context_render_settings.h"
+#include "core/vocabulary/context_render_settings.h"
 
 #include <blend2d.h>
 

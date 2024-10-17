@@ -1,4 +1,4 @@
-#include "vocabulary/logicitem_type.h"
+#include "core/vocabulary/logicitem_type.h"
 
 #include <exception>
 #include <string>

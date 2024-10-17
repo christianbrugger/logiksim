@@ -1,15 +1,15 @@
 #include "core/render/circuit/render_layout_index.h"
 
-#include "editable_circuit.h"
-#include "geometry/orientation.h"
-#include "geometry/rect.h"
-#include "geometry/scene.h"
-#include "render/context.h"
-#include "render/context_guard.h"
-#include "render/primitive/arrow.h"
-#include "render/primitive/point.h"
-#include "render/primitive/rect.h"
-#include "vocabulary/color.h"
+#include "core/editable_circuit.h"
+#include "core/geometry/orientation.h"
+#include "core/geometry/rect.h"
+#include "core/geometry/scene.h"
+#include "core/render/context.h"
+#include "core/render/context_guard.h"
+#include "core/render/primitive/arrow.h"
+#include "core/render/primitive/point.h"
+#include "core/render/primitive/rect.h"
+#include "core/vocabulary/color.h"
 
 #include <numbers>
 #include <stdexcept>

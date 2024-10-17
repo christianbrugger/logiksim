@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_INTERNAL_STATE_H
 #define LOGICSIM_VOCABULARY_INTERNAL_STATE_H
 
-#include "format/struct.h"
-#include "vocabulary/element_id.h"
-#include "vocabulary/internal_state_index.h"
-#include "wyhash.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/element_id.h"
+#include "core/vocabulary/internal_state_index.h"
+#include "core/wyhash.h"
 
 #include <ankerl/unordered_dense.h>
 

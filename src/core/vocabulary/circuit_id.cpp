@@ -1,4 +1,4 @@
-#include "vocabulary/circuit_id.h"
+#include "core/vocabulary/circuit_id.h"
 
 #include <fmt/core.h>
 

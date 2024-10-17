@@ -1,9 +1,9 @@
-#include "component/layout/wire_store.h"
+#include "core/component/layout/wire_store.h"
 
-#include "allocated_size/std_optional.h"
-#include "allocated_size/std_vector.h"
-#include "vocabulary/rect.h"
-#include "vocabulary/wire_id.h"
+#include "core/allocated_size/std_optional.h"
+#include "core/allocated_size/std_vector.h"
+#include "core/vocabulary/rect.h"
+#include "core/vocabulary/wire_id.h"
 
 #include <gsl/gsl>
 

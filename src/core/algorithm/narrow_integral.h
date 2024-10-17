@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_ALGORITHM_NARROW_INTEGRAL_H
 #define LOGICSIM_ALGORITHM_NARROW_INTEGRAL_H
 
-#include "concept/integral.h"
+#include "core/concept/integral.h"
 
 #include <gsl/gsl>
 

@@ -1,9 +1,10 @@
-#include "component/circuit_widget/mouse_logic/selection_area.h"
+#include "gui/component/circuit_widget/mouse_logic/selection_area.h"
 
-#include "algorithm/sort_pair.h"
-#include "editable_circuit.h"
-#include "geometry/scene.h"
-#include "qt/point_conversion.h"
+#include "gui/qt/point_conversion.h"
+
+#include "core/algorithm/sort_pair.h"
+#include "core/editable_circuit.h"
+#include "core/geometry/scene.h"
 
 namespace logicsim {
 

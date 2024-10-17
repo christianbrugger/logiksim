@@ -1,4 +1,4 @@
-#include "vocabulary/grid.h"
+#include "core/vocabulary/grid.h"
 
 #include <fmt/core.h>
 

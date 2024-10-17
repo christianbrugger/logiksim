@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_ALLOCATED_SIZE_FOLLY_SMALL_VECTOR_H
 #define LOGICSIM_ALLOCATED_SIZE_FOLLY_SMALL_VECTOR_H
 
-#include "allocated_size/trait.h"
+#include "core/allocated_size/trait.h"
 
 #include <folly/small_vector.h>
 

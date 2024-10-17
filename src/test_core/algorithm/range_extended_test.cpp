@@ -1,7 +1,7 @@
 
-#include "algorithm/range_extended.h"
+#include "core/algorithm/range_extended.h"
 
-#include "algorithm/to_vector.h"
+#include "core/algorithm/to_vector.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

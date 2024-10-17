@@ -1,4 +1,4 @@
-#include "algorithm/random_select.h"
+#include "core/algorithm/random_select.h"
 
 namespace logicsim {
 

@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_RECT_FINE_H
 #define LOGICSIM_VOCABULARY_RECT_FINE_H
 
-#include "format/struct.h"
-#include "vocabulary/point.h"
-#include "vocabulary/point_fine.h"
-#include "vocabulary/rect.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/point_fine.h"
+#include "core/vocabulary/rect.h"
 
 #include <stdexcept>
 #include <type_traits>

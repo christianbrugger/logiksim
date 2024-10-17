@@ -1,8 +1,8 @@
-#include "component/circuit_widget/mouse_logic/insert_wire.h"
+#include "gui/component/circuit_widget/mouse_logic/insert_wire.h"
 
-#include "editable_circuit.h"
-#include "geometry/orientation.h"
-#include "vocabulary/insertion_mode.h"
+#include "core/editable_circuit.h"
+#include "core/geometry/orientation.h"
+#include "core/vocabulary/insertion_mode.h"
 
 namespace logicsim {
 

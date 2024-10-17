@@ -1,6 +1,6 @@
-#include "random/insertion_mode.h"
+#include "core/random/insertion_mode.h"
 
-#include "algorithm/uniform_int_distribution.h"
+#include "core/algorithm/uniform_int_distribution.h"
 
 #include <exception>
 

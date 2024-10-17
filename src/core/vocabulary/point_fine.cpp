@@ -1,4 +1,4 @@
-#include "vocabulary/point_fine.h"
+#include "core/vocabulary/point_fine.h"
 
 #include <fmt/core.h>
 

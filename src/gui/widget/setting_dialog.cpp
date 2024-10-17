@@ -1,13 +1,13 @@
-#include "widget/setting_dialog.h"
+#include "gui/widget/setting_dialog.h"
 
-#include "algorithm/range.h"
-#include "algorithm/round.h"
-#include "logging.h"
-#include "qt/path_conversion.h"
-#include "resource.h"
-#include "validate_definition_logicitem.h"
-#include "vocabulary/delay.h"
-#include "vocabulary/logicitem_definition.h"
+#include "gui/qt/path_conversion.h"
+
+#include "core/algorithm/range.h"
+#include "core/algorithm/round.h"
+#include "core/resource.h"
+#include "core/validate_definition_logicitem.h"
+#include "core/vocabulary/delay.h"
+#include "core/vocabulary/logicitem_definition.h"
 
 #include <QBoxLayout>
 #include <QCheckBox>

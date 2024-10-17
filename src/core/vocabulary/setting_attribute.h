@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_SETTING_ATTRIBUTE_H
 #define LOGICSIM_VOCABULARY_SETTING_ATTRIBUTE_H
 
-#include "format/struct.h"
-#include "vocabulary/logicitem_definition.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/logicitem_definition.h"
 
 #include <compare>
 #include <optional>

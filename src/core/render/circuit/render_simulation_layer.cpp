@@ -1,16 +1,16 @@
-#include "render/circuit/render_simulation_layer.h"
+#include "core/render/circuit/render_simulation_layer.h"
 
-#include "allocated_size/std_vector.h"
-#include "element/decoration/render_decoration_base.h"
-#include "element/logicitem/render_logicitem_base.h"
-#include "element/logicitem/render_logicitem_layer.h"
-#include "format/container.h"
-#include "geometry/rect.h"
-#include "layout.h"
-#include "render/circuit/render_connector.h"
-#include "render/circuit/render_wire.h"
-#include "render/context.h"
-#include "spatial_simulation.h"
+#include "core/allocated_size/std_vector.h"
+#include "core/element/decoration/render_decoration_base.h"
+#include "core/element/logicitem/render_logicitem_base.h"
+#include "core/element/logicitem/render_logicitem_layer.h"
+#include "core/format/container.h"
+#include "core/geometry/rect.h"
+#include "core/layout.h"
+#include "core/render/circuit/render_connector.h"
+#include "core/render/circuit/render_wire.h"
+#include "core/render/context.h"
+#include "core/spatial_simulation.h"
 
 namespace logicsim {
 

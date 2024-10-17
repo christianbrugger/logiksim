@@ -1,6 +1,6 @@
-#include "geometry/connection_count.h"
+#include "core/geometry/connection_count.h"
 
-#include "algorithm/to_vector.h"
+#include "core/algorithm/to_vector.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

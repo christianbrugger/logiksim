@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_FILE_H
 #define LOGIKSIM_FILE_H
 
-#include "vocabulary/load_error.h"
+#include "core/vocabulary/load_error.h"
 
 #include <tl/expected.hpp>
 

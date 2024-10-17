@@ -22,10 +22,6 @@ add_library(${LS_GUI_LIBRARY}
     ${LS_GUI_SOURCES}
     ${MOC_SOURCES}
 )
-# TODO: remove this and add prefix core to all includes?
-target_include_directories(${LS_GUI_LIBRARY} PUBLIC
-    ${PROJECT_SOURCE_DIR}/src/gui
-)
 target_link_libraries(${LS_GUI_LIBRARY} PUBLIC 
     ${LS_CORE_LIBRARY}
 

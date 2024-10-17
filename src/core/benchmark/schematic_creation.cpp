@@ -1,9 +1,9 @@
-#include "benchmark/schematic_creation.h"
+#include "core/benchmark/schematic_creation.h"
 
-#include "algorithm/range.h"
-#include "element/logicitem/schematic_info.h"
-#include "schematic.h"
-#include "vocabulary/logicitem_type.h"
+#include "core/algorithm/range.h"
+#include "core/element/logicitem/schematic_info.h"
+#include "core/schematic.h"
+#include "core/vocabulary/logicitem_type.h"
 
 namespace logicsim {
 

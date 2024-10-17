@@ -1,12 +1,12 @@
 #ifndef LOGICSIM_SELECTION_H
 #define LOGICSIM_SELECTION_H
 
-#include "layout_message_forward.h"
-#include "part_selection.h"
-#include "vocabulary/decoration_id.h"
-#include "vocabulary/display_state_map.h"
-#include "vocabulary/logicitem_id.h"
-#include "vocabulary/segment.h"
+#include "core/layout_message_forward.h"
+#include "core/part_selection.h"
+#include "core/vocabulary/decoration_id.h"
+#include "core/vocabulary/display_state_map.h"
+#include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/segment.h"
 
 #include <ankerl/unordered_dense.h>
 

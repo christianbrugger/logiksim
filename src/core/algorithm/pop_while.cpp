@@ -1,4 +1,4 @@
-#include "algorithm/pop_while.h"
+#include "core/algorithm/pop_while.h"
 
 namespace logicsim {
 

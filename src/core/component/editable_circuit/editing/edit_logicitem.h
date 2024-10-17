@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_LOGICITEM_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_LOGICITEM_H
 
-#include "vocabulary/insertion_mode.h"
+#include "core/vocabulary/insertion_mode.h"
 
 namespace logicsim {
 

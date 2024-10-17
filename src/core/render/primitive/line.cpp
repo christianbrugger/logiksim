@@ -1,9 +1,9 @@
-#include "render/primitive/line.h"
+#include "core/render/primitive/line.h"
 
-#include "render/context.h"
-#include "vocabulary/line.h"
-#include "vocabulary/line_fine.h"
-#include "vocabulary/ordered_line.h"
+#include "core/render/context.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/line_fine.h"
+#include "core/vocabulary/ordered_line.h"
 
 #include <blend2d.h>
 

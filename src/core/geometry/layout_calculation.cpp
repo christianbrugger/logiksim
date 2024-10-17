@@ -1,10 +1,10 @@
-#include "geometry/layout_calculation.h"
+#include "core/geometry/layout_calculation.h"
 
-#include "vocabulary/grid_fine.h"
-#include "vocabulary/point.h"
-#include "vocabulary/point_fine.h"
-#include "vocabulary/rect.h"
-#include "vocabulary/rect_fine.h"
+#include "core/vocabulary/grid_fine.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/point_fine.h"
+#include "core/vocabulary/rect.h"
+#include "core/vocabulary/rect_fine.h"
 
 #include <blend2d.h>
 

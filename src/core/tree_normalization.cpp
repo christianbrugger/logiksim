@@ -1,16 +1,16 @@
-#include "tree_normalization.h"
+#include "core/tree_normalization.h"
 
-#include "algorithm/compare_sorted.h"
-#include "algorithm/transform_to_vector.h"
-#include "container/graph/adjacency_graph.h"
-#include "container/graph/depth_first_search.h"
-#include "container/graph/visitor/empty_visitor.h"
-#include "geometry/line.h"
-#include "geometry/segment_info.h"
-#include "geometry/to_points_sorted_unique.h"
-#include "geometry/to_points_with_both_orientation.h"
-#include "logging.h"
-#include "segment_tree.h"
+#include "core/algorithm/compare_sorted.h"
+#include "core/algorithm/transform_to_vector.h"
+#include "core/container/graph/adjacency_graph.h"
+#include "core/container/graph/depth_first_search.h"
+#include "core/container/graph/visitor/empty_visitor.h"
+#include "core/geometry/line.h"
+#include "core/geometry/segment_info.h"
+#include "core/geometry/to_points_sorted_unique.h"
+#include "core/geometry/to_points_with_both_orientation.h"
+#include "core/logging.h"
+#include "core/segment_tree.h"
 
 #include <folly/small_vector.h>
 #include <range/v3/algorithm/copy.hpp>

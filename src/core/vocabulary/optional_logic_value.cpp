@@ -1,4 +1,4 @@
-#include "vocabulary/optional_logic_value.h"
+#include "core/vocabulary/optional_logic_value.h"
 
 #include <exception>
 

@@ -1,4 +1,4 @@
-#include "algorithm/range.h"
+#include "core/algorithm/range.h"
 
 namespace logicsim {
 

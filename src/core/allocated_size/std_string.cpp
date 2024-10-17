@@ -1,4 +1,4 @@
-#include "allocated_size/std_string.h"
+#include "core/allocated_size/std_string.h"
 
 namespace logicsim {
 

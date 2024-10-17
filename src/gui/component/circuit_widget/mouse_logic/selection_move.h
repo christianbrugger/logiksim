@@ -1,9 +1,10 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_MOVE_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_MOVE_H
 
-#include "component/circuit_widget/mouse_logic/editing_logic_concept.h"
-#include "vocabulary/insertion_mode.h"
-#include "vocabulary/point_fine.h"
+#include "gui/component/circuit_widget/mouse_logic/editing_logic_concept.h"
+
+#include "core/vocabulary/insertion_mode.h"
+#include "core/vocabulary/point_fine.h"
 
 #include <optional>
 #include <utility>

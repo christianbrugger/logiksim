@@ -1,4 +1,4 @@
-#include "vocabulary/optional_logic_values.h"
+#include "core/vocabulary/optional_logic_values.h"
 
 namespace logicsim {
 

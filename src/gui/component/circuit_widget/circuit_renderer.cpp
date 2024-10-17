@@ -1,14 +1,14 @@
-#include "component/circuit_widget/circuit_renderer.h"
+#include "gui/component/circuit_widget/circuit_renderer.h"
 
-#include "editable_circuit.h"
-#include "geometry/scene.h"
-#include "render/circuit/render_background.h"
-#include "render/circuit/render_circuit.h"
-#include "render/circuit/render_layout_index.h"
-#include "render/circuit/render_setting_handle.h"
-#include "render/circuit/render_size_handle.h"
-#include "render/text_cache.h"
-#include "spatial_simulation.h"
+#include "core/editable_circuit.h"
+#include "core/geometry/scene.h"
+#include "core/render/circuit/render_background.h"
+#include "core/render/circuit/render_circuit.h"
+#include "core/render/circuit/render_layout_index.h"
+#include "core/render/circuit/render_setting_handle.h"
+#include "core/render/circuit/render_size_handle.h"
+#include "core/render/text_cache.h"
+#include "core/spatial_simulation.h"
 
 #include <gsl/gsl>
 

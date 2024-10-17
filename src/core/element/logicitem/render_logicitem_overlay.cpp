@@ -1,7 +1,7 @@
-#include "element/logicitem/render_logicitem_overlay.h"
+#include "core/element/logicitem/render_logicitem_overlay.h"
 
-#include "layout_info.h"
-#include "vocabulary/grid_fine.h"
+#include "core/layout_info.h"
+#include "core/vocabulary/grid_fine.h"
 
 namespace logicsim {
 

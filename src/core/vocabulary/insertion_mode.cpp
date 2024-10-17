@@ -1,4 +1,4 @@
-#include "vocabulary/insertion_mode.h"
+#include "core/vocabulary/insertion_mode.h"
 
 #include <exception>
 #include <string>

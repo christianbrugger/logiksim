@@ -1,4 +1,4 @@
-#include "vocabulary/length_vector.h"
+#include "core/vocabulary/length_vector.h"
 
 namespace logicsim {
 

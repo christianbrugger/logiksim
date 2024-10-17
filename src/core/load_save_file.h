@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_LOAD_SAVE_FILE_H
 #define LOGICSIM_LOAD_SAVE_FILE_H
 
-#include "editable_circuit.h"
-#include "vocabulary/load_error.h"
-#include "vocabulary/simulation_config.h"
-#include "vocabulary/view_config.h"
+#include "core/editable_circuit.h"
+#include "core/vocabulary/load_error.h"
+#include "core/vocabulary/simulation_config.h"
+#include "core/vocabulary/view_config.h"
 
 #include <tl/expected.hpp>
 

@@ -1,4 +1,4 @@
-#include "vocabulary/output_delays.h"
+#include "core/vocabulary/output_delays.h"
 
 namespace logicsim {
 

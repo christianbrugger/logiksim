@@ -1,4 +1,4 @@
-#include "algorithm/sort_pair.h"
+#include "core/algorithm/sort_pair.h"
 
 namespace logicsim {
 

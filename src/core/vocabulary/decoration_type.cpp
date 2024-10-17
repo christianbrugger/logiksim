@@ -1,4 +1,4 @@
-#include "vocabulary/decoration_type.h"
+#include "core/vocabulary/decoration_type.h"
 
 #include <exception>
 #include <string>

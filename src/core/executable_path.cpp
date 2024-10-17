@@ -1,6 +1,6 @@
-#include "executable_path.h"
+#include "core/executable_path.h"
 
-#include "algorithm/u8_conversion.h"
+#include "core/algorithm/u8_conversion.h"
 
 #include <gsl/gsl>
 #include <whereami.h>

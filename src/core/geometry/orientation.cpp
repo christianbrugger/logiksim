@@ -1,8 +1,8 @@
-#include "geometry/orientation.h"
+#include "core/geometry/orientation.h"
 
-#include "vocabulary/line.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/point.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/point.h"
 
 #include <exception>
 #include <numbers>

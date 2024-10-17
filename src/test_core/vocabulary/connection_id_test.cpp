@@ -1,4 +1,4 @@
-#include "vocabulary/connection_id.h"
+#include "core/vocabulary/connection_id.h"
 
 #include <gtest/gtest.h>
 

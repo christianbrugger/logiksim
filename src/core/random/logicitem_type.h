@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_RANDOM_LOGICITEM_TYPE_H
 #define LOGICSIM_RANDOM_LOGICITEM_TYPE_H
 
-#include "random/generator.h"
-#include "vocabulary/logicitem_type.h"
+#include "core/random/generator.h"
+#include "core/vocabulary/logicitem_type.h"
 
 namespace logicsim {
 

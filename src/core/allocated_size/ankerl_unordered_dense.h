@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_ALLOCATED_SIZE_ANKERL_UNORDERED_DENSE_H
 #define LOGICSIM_ALLOCATED_SIZE_ANKERL_UNORDERED_DENSE_H
 
-#include "allocated_size/std_pair.h"
-#include "allocated_size/std_vector.h"
-#include "allocated_size/trait.h"
+#include "core/allocated_size/std_pair.h"
+#include "core/allocated_size/std_vector.h"
+#include "core/allocated_size/trait.h"
 
 #include <ankerl/unordered_dense.h>
 

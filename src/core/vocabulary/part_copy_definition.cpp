@@ -1,4 +1,4 @@
-#include "vocabulary/part_copy_definition.h"
+#include "core/vocabulary/part_copy_definition.h"
 
 #include <fmt/core.h>
 

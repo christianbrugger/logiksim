@@ -1,4 +1,4 @@
-#include "vocabulary/load_error.h"
+#include "core/vocabulary/load_error.h"
 
 #include <exception>
 

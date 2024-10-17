@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_GEOMETRY_CONNECTION_COUNT_H
 #define LOGICSIM_GEOMETRY_CONNECTION_COUNT_H
 
-#include "algorithm/range_extended.h"
-#include "vocabulary/connection_count.h"
-#include "vocabulary/connection_id.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/grid_fine.h"
+#include "core/algorithm/range_extended.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/connection_id.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/grid_fine.h"
 
 namespace logicsim {
 

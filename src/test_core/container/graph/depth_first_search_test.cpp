@@ -1,10 +1,10 @@
 
-#include "container/graph/depth_first_search.h"
+#include "core/container/graph/depth_first_search.h"
 
-#include "container/graph/adjacency_graph.h"
-#include "container/graph/visitor/calling_visitor.h"
-#include "vocabulary/line.h"
-#include "vocabulary/point.h"
+#include "core/container/graph/adjacency_graph.h"
+#include "core/container/graph/visitor/calling_visitor.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/point.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

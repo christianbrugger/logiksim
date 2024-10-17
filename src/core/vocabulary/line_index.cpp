@@ -1,4 +1,4 @@
-#include "vocabulary/line_index.h"
+#include "core/vocabulary/line_index.h"
 
 #include <fmt/core.h>
 

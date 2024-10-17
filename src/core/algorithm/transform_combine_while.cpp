@@ -1,4 +1,4 @@
-#include "algorithm/transform_combine_while.h"
+#include "core/algorithm/transform_combine_while.h"
 
 namespace logicsim {
 

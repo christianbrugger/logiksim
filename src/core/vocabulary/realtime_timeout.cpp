@@ -1,4 +1,4 @@
-#include "vocabulary/realtime_timeout.h"
+#include "core/vocabulary/realtime_timeout.h"
 
 namespace logicsim {
 

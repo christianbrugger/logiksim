@@ -1,8 +1,8 @@
-#include "random/logicitem_type.h"
+#include "core/random/logicitem_type.h"
 
-#include "algorithm/random_select.h"
-#include "algorithm/to_underlying.h"
-#include "algorithm/uniform_int_distribution.h"
+#include "core/algorithm/random_select.h"
+#include "core/algorithm/to_underlying.h"
+#include "core/algorithm/uniform_int_distribution.h"
 
 namespace logicsim {
 

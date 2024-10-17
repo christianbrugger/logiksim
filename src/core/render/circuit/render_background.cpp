@@ -1,12 +1,12 @@
-#include "render/circuit/render_background.h"
+#include "core/render/circuit/render_background.h"
 
-#include "algorithm/round.h"
-#include "geometry/grid.h"
-#include "geometry/scene.h"
-#include "render/context.h"
-#include "render/primitive/line.h"
-#include "vocabulary/color.h"
-#include "vocabulary/rect_fine.h"
+#include "core/algorithm/round.h"
+#include "core/geometry/grid.h"
+#include "core/geometry/scene.h"
+#include "core/render/context.h"
+#include "core/render/primitive/line.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/rect_fine.h"
 
 namespace logicsim {
 

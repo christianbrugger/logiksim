@@ -1,4 +1,4 @@
-#include "component/simulation/history_iterator.h"
+#include "core/component/simulation/history_iterator.h"
 
 namespace logicsim {
 

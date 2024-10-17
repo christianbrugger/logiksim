@@ -1,13 +1,13 @@
-#include "circuit_example.h"
+#include "core/circuit_example.h"
 
-#include "algorithm/range_step.h"
-#include "editable_circuit.h"
-#include "logging.h"
-#include "random/generator.h"
-#include "timer.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/insertion_mode.h"
-#include "vocabulary/point.h"
+#include "core/algorithm/range_step.h"
+#include "core/editable_circuit.h"
+#include "core/logging.h"
+#include "core/random/generator.h"
+#include "core/timer.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/insertion_mode.h"
+#include "core/vocabulary/point.h"
 
 #include <stdexcept>
 

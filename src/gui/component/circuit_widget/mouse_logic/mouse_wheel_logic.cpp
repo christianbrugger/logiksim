@@ -1,12 +1,12 @@
-#include "component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
+#include "gui/component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
 
-#include "component/circuit_widget/zoom.h"
-#include "format/qt_type.h"
-#include "geometry/scene.h"
-#include "logging.h"
-#include "qt/mouse_position.h"
-#include "qt/point_conversion.h"
-#include "vocabulary/view_config.h"
+#include "gui/component/circuit_widget/zoom.h"
+#include "gui/format/qt_type.h"
+#include "gui/qt/mouse_position.h"
+#include "gui/qt/point_conversion.h"
+
+#include "core/geometry/scene.h"
+#include "core/vocabulary/view_config.h"
 
 #include <QCursor>
 #include <QWidget>

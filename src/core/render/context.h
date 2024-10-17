@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_RENDER_CONTEXT2_H
 #define LOGICSIM_RENDER_CONTEXT2_H
 
-#include "render/context_cache.h"
-#include "vocabulary/context_render_settings.h"
+#include "core/render/context_cache.h"
+#include "core/vocabulary/context_render_settings.h"
 
 #include <blend2d.h>
 

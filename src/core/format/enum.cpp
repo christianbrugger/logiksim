@@ -1,4 +1,4 @@
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 namespace logicsim {
 

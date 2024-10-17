@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_WIRE_DETAIL_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_WIRE_DETAIL_H
 
-#include "vocabulary/display_state.h"
-#include "vocabulary/insertion_mode.h"
-#include "vocabulary/segment_point_type.h"
+#include "core/vocabulary/display_state.h"
+#include "core/vocabulary/insertion_mode.h"
+#include "core/vocabulary/segment_point_type.h"
 
 #include <initializer_list>
 #include <utility>

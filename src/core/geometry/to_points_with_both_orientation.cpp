@@ -1,12 +1,12 @@
-#include "geometry/to_points_with_both_orientation.h"
+#include "core/geometry/to_points_with_both_orientation.h"
 
-#include "algorithm/copy_adjacent_if.h"
-#include "algorithm/make_unique.h"
-#include "format/struct.h"
-#include "geometry/orientation.h"
-#include "vocabulary/line.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/point.h"
+#include "core/algorithm/copy_adjacent_if.h"
+#include "core/algorithm/make_unique.h"
+#include "core/format/struct.h"
+#include "core/geometry/orientation.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/point.h"
 
 #include <fmt/core.h>
 

@@ -1,4 +1,4 @@
-#include "qt/point_conversion.h"
+#include "gui/qt/point_conversion.h"
 
 namespace logicsim {
 

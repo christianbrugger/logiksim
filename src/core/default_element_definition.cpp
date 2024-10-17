@@ -1,8 +1,8 @@
-#include "default_element_definition.h"
+#include "core/default_element_definition.h"
 
-#include "layout_info.h"
-#include "vocabulary/decoration_definition.h"
-#include "vocabulary/logicitem_definition.h"
+#include "core/layout_info.h"
+#include "core/vocabulary/decoration_definition.h"
+#include "core/vocabulary/logicitem_definition.h"
 
 namespace logicsim {
 

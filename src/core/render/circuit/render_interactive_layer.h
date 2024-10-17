@@ -1,13 +1,13 @@
 #ifndef LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_INTERACTIVE_LAYER_H
 #define LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_INTERACTIVE_LAYER_H
 
-#include "allocated_size/trait.h"
-#include "format/struct.h"
-#include "vocabulary/display_state.h"
-#include "vocabulary/drawable_element.h"
-#include "vocabulary/rect.h"
-#include "vocabulary/segment_info.h"
-#include "vocabulary/wire_id.h"
+#include "core/allocated_size/trait.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/display_state.h"
+#include "core/vocabulary/drawable_element.h"
+#include "core/vocabulary/rect.h"
+#include "core/vocabulary/segment_info.h"
+#include "core/vocabulary/wire_id.h"
 
 #include <concepts>
 #include <optional>

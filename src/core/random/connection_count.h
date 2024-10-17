@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_RANDOM_CONNECTION_COUNT_H
 #define LOGICSIM_RANDOM_CONNECTION_COUNT_H
 
-#include "random/generator.h"
-#include "vocabulary/logicitem_type.h"
+#include "core/random/generator.h"
+#include "core/vocabulary/logicitem_type.h"
 
 namespace logicsim {
 

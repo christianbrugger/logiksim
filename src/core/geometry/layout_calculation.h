@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_GEOMETRY_LAYOUT_CALCULATION_H
 #define LOGICSIM_GEOMETRY_LAYOUT_CALCULATION_H
 
-#include "vocabulary/orientation.h"
+#include "core/vocabulary/orientation.h"
 
 struct BLPoint;
 

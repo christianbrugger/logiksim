@@ -1,5 +1,5 @@
 
-#include "component/simulation/simulation_event.h"
+#include "core/component/simulation/simulation_event.h"
 
 #include <gtest/gtest.h>
 

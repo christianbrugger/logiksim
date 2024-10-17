@@ -1,4 +1,4 @@
-#include "format/pointer.h"
+#include "core/format/pointer.h"
 
 namespace logicsim {
 

@@ -1,11 +1,12 @@
-#include "component/editable_circuit/editing/edit_logicitem.h"
-#include "component/editable_circuit/modifier.h"
-#include "format/container.h"
-#include "layout.h"
-#include "layout_message.h"
-#include "logging.h"
 #include "test_core/editable_circuit/modifier/test_helpers.h"
-#include "vocabulary/logicitem_definition.h"
+
+#include "core/component/editable_circuit/editing/edit_logicitem.h"
+#include "core/component/editable_circuit/modifier.h"
+#include "core/format/container.h"
+#include "core/layout.h"
+#include "core/layout_message.h"
+#include "core/logging.h"
+#include "core/vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

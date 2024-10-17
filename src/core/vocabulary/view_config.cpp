@@ -1,4 +1,4 @@
-#include "vocabulary/view_config.h"
+#include "core/vocabulary/view_config.h"
 
 #include <exception>
 

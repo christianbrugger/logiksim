@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_HISTORY_BUFFER_H
 #define LOGICSIM_COMPONENT_SIMULATION_HISTORY_BUFFER_H
 
-#include "container/circular_buffer.h"
-#include "format/container.h"
-#include "vocabulary/time.h"
+#include "core/container/circular_buffer.h"
+#include "core/format/container.h"
+#include "core/vocabulary/time.h"
 
 #include <compare>
 #include <initializer_list>

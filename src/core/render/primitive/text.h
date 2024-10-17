@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_RENDER_PRIMITIVE_TEXT_H
 #define LOGICSIM_RENDER_PRIMITIVE_TEXT_H
 
-#include "vocabulary/color.h"
-#include "vocabulary/font_style.h"
-#include "vocabulary/grid_fine.h"
-#include "vocabulary/text_alignment.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/font_style.h"
+#include "core/vocabulary/grid_fine.h"
+#include "core/vocabulary/text_alignment.h"
 
 #include <string_view>
 

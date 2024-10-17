@@ -1,4 +1,4 @@
-#include "vocabulary/thread_count.h"
+#include "core/vocabulary/thread_count.h"
 
 namespace logicsim {
 

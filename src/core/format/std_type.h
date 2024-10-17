@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_FORMAT_STD_TYPE_H
 #define LOGICSIM_FORMAT_STD_TYPE_H
 
-#include "algorithm/path_conversion.h"
+#include "core/algorithm/path_conversion.h"
 
 #include <fmt/core.h>
 

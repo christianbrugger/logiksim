@@ -1,8 +1,8 @@
-#include "render/primitive/icon.h"
+#include "core/render/primitive/icon.h"
 
-#include "render/context.h"
-#include "render/svg_cache.h"
-#include "vocabulary/point_fine.h"
+#include "core/render/context.h"
+#include "core/render/svg_cache.h"
+#include "core/vocabulary/point_fine.h"
 
 namespace logicsim {
 

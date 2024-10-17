@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_LOGIC_ITEM_SIMULATION_INFO_H
 #define LOGICSIM_LOGIC_ITEM_SIMULATION_INFO_H
 
-#include "vocabulary/element_type.h"
-#include "vocabulary/logic_small_vector.h"
+#include "core/vocabulary/element_type.h"
+#include "core/vocabulary/logic_small_vector.h"
 
 #include <vector>
 

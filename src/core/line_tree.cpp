@@ -1,11 +1,11 @@
-#include "line_tree.h"
+#include "core/line_tree.h"
 
-#include "algorithm/transform_to_container.h"
-#include "allocated_size/trait.h"
-#include "component/line_tree/tree_builder.h"
-#include "geometry/orientation.h"
-#include "vocabulary/connection_count.h"
-#include "vocabulary/ordered_line.h"
+#include "core/algorithm/transform_to_container.h"
+#include "core/allocated_size/trait.h"
+#include "core/component/line_tree/tree_builder.h"
+#include "core/geometry/orientation.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/ordered_line.h"
 
 namespace logicsim {
 

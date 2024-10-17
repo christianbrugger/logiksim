@@ -1,7 +1,7 @@
-#include "component/circuit_widget/mouse_logic/insert_decoration.h"
+#include "gui/component/circuit_widget/mouse_logic/insert_decoration.h"
 
-#include "editable_circuit.h"
-#include "vocabulary/insertion_mode.h"
+#include "core/editable_circuit.h"
+#include "core/vocabulary/insertion_mode.h"
 
 #include <optional>
 

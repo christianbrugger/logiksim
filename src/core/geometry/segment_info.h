@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_GEOMETRY_SEGMENT_INFO_H
 #define LOGICSIM_GEOMETRY_SEGMENT_INFO_H
 
-#include "vocabulary/segment_point_type.h"
+#include "core/vocabulary/segment_point_type.h"
 
 #include <array>
 #include <tuple>

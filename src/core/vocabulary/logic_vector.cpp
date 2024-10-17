@@ -1,4 +1,4 @@
-#include "vocabulary/logic_vector.h"
+#include "core/vocabulary/logic_vector.h"
 
 namespace logicsim {
 

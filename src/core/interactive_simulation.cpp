@@ -1,13 +1,13 @@
-#include "interactive_simulation.h"
+#include "core/interactive_simulation.h"
 
-#include "algorithm/round.h"
-#include "format/container.h"
-#include "format/std_type.h"
-#include "layout.h"
-#include "schematic.h"
-#include "schematic_generation.h"
-#include "vocabulary/internal_state.h"
-#include "vocabulary/simulation_config.h"
+#include "core/algorithm/round.h"
+#include "core/format/container.h"
+#include "core/format/std_type.h"
+#include "core/layout.h"
+#include "core/schematic.h"
+#include "core/schematic_generation.h"
+#include "core/vocabulary/internal_state.h"
+#include "core/vocabulary/simulation_config.h"
 
 #include <stdexcept>
 

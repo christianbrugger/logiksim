@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_OVERLAY_H
 #define LOGICSIM_CORE_RENDER_CIRCUIT_RENDER_OVERLAY_H
 
-#include "format/enum.h"
+#include "core/format/enum.h"
 
 #include <span>
 

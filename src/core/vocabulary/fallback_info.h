@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_FALLBACK_INFO_H
 #define LOGICSIM_VOCABULARY_FALLBACK_INFO_H
 
-#include "format/struct.h"
+#include "core/format/struct.h"
 
 #include <concepts>
 #include <string>

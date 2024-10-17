@@ -1,7 +1,7 @@
 
-#include "layout.h"
+#include "core/layout.h"
 
-#include "vocabulary/logicitem_definition.h"
+#include "core/vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

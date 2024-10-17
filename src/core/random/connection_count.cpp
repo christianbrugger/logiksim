@@ -1,8 +1,8 @@
-#include "random/connection_count.h"
+#include "core/random/connection_count.h"
 
-#include "algorithm/uniform_int_distribution.h"
-#include "layout_info.h"
-#include "vocabulary/connection_count.h"
+#include "core/algorithm/uniform_int_distribution.h"
+#include "core/layout_info.h"
+#include "core/vocabulary/connection_count.h"
 
 namespace logicsim {
 

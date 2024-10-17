@@ -1,14 +1,14 @@
 #ifndef LOGIKSIM_INDEX_COLLISION_INDEX_H
 #define LOGIKSIM_INDEX_COLLISION_INDEX_H
 
-#include "format/enum.h"
-#include "format/struct.h"
-#include "iterator_adaptor/transform_view.h"
-#include "layout_message_forward.h"
-#include "vocabulary/decoration_id.h"
-#include "vocabulary/logicitem_id.h"
-#include "vocabulary/point.h"
-#include "vocabulary/wire_id.h"
+#include "core/format/enum.h"
+#include "core/format/struct.h"
+#include "core/iterator_adaptor/transform_view.h"
+#include "core/layout_message_forward.h"
+#include "core/vocabulary/decoration_id.h"
+#include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/wire_id.h"
 
 #include <ankerl/unordered_dense.h>
 

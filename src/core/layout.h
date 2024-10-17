@@ -1,12 +1,12 @@
 #ifndef LOGIKSIM_LAYOUT_H
 #define LOGIKSIM_LAYOUT_H
 
-#include "algorithm/range_extended.h"
-#include "component/layout/decoration_store.h"
-#include "component/layout/logicitem_store.h"
-#include "component/layout/wire_store.h"
-#include "format/struct.h"
-#include "vocabulary/insertion_mode.h"
+#include "core/algorithm/range_extended.h"
+#include "core/component/layout/decoration_store.h"
+#include "core/component/layout/logicitem_store.h"
+#include "core/component/layout/wire_store.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/insertion_mode.h"
 
 #include <optional>
 #include <utility>

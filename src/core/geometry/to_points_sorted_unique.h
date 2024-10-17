@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_GEOMETRY_TO_POINTS_SORTED_UNIQUE_H
 #define LOGICSIM_GEOMETRY_TO_POINTS_SORTED_UNIQUE_H
 
-#include "algorithm/make_unique.h"
-#include "concept/input_range.h"
-#include "vocabulary/line.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/point.h"
+#include "core/algorithm/make_unique.h"
+#include "core/concept/input_range.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/point.h"
 
 #include <span>
 #include <vector>

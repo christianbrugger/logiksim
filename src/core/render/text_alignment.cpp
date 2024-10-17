@@ -1,8 +1,8 @@
-#include "render/text_alignment.h"
+#include "core/render/text_alignment.h"
 
-#include "algorithm/fmt_join.h"
-#include "font_style_property.h"
-#include "render/font.h"
+#include "core/algorithm/fmt_join.h"
+#include "core/font_style_property.h"
+#include "core/render/font.h"
 
 namespace logicsim {
 

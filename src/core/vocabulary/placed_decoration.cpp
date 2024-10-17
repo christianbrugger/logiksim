@@ -1,4 +1,4 @@
-#include "vocabulary/placed_decoration.h"
+#include "core/vocabulary/placed_decoration.h"
 
 namespace logicsim {
 

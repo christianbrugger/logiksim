@@ -1,4 +1,4 @@
-﻿#include "render/bl_glyph_placement.h"
+#include "core/render/bl_glyph_placement.h"
 
 auto operator==(const BLGlyphPlacement& a, const BLGlyphPlacement& b) -> bool {
     static_assert(sizeof(BLGlyphPlacement) == sizeof(BLGlyphPlacement::placement) +

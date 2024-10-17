@@ -1,10 +1,9 @@
-#include "qt/mouse_position.h"
+#include "gui/qt/mouse_position.h"
 
-#include "format/qt_type.h"
-#include "logging.h"
-#include "qt/mouse_position_p.h"
-#include "qt/point_conversion.h"
-#include "vocabulary/mouse_postion_info.h"
+#include "gui/qt/mouse_position_p.h"
+#include "gui/qt/point_conversion.h"
+
+#include "core/vocabulary/mouse_postion_info.h"
 
 #include <gsl/gsl>
 

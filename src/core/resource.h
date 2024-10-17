@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_RESOURCE_H
 #define LOGIKSIM_RESOURCE_H
 
-#include "vocabulary/font_style.h"
+#include "core/vocabulary/font_style.h"
 
 #include <filesystem>
 

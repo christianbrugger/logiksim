@@ -1,4 +1,4 @@
-#include "vocabulary/placed_logicitem.h"
+#include "core/vocabulary/placed_logicitem.h"
 
 #include <fmt/core.h>
 

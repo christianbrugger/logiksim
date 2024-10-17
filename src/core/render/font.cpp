@@ -1,10 +1,10 @@
-#include "render/font.h"
+#include "core/render/font.h"
 
-#include "file.h"
-#include "font_style_property.h"
-#include "iterator_adaptor/output_callable.h"
-#include "logging.h"
-#include "resource.h"
+#include "core/file.h"
+#include "core/font_style_property.h"
+#include "core/iterator_adaptor/output_callable.h"
+#include "core/logging.h"
+#include "core/resource.h"
 
 #include <gsl/gsl>
 

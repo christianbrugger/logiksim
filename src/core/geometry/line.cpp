@@ -1,12 +1,11 @@
-#include "line.h"
+#include "core/geometry/line.h"
 
-#include "geometry/line.h"
-#include "geometry/orientation.h"
-#include "geometry/point.h"
-#include "vocabulary/grid.h"
-#include "vocabulary/line.h"
-#include "vocabulary/ordered_line.h"
-#include "vocabulary/point.h"
+#include "core/geometry/orientation.h"
+#include "core/geometry/point.h"
+#include "core/vocabulary/grid.h"
+#include "core/vocabulary/line.h"
+#include "core/vocabulary/ordered_line.h"
+#include "core/vocabulary/point.h"
 
 #include <cmath>
 

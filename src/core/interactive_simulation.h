@@ -1,12 +1,12 @@
 #ifndef LOGIKSIM_INTERACTIVE_SIMULATION_H
 #define LOGIKSIM_INTERACTIVE_SIMULATION_H
 
-#include "component/interactive_simulation/interaction_cache.h"
-#include "event_counter_multi.h"
-#include "spatial_simulation.h"
-#include "timer.h"
-#include "vocabulary/time.h"
-#include "vocabulary/time_rate.h"
+#include "core/component/interactive_simulation/interaction_cache.h"
+#include "core/event_counter_multi.h"
+#include "core/spatial_simulation.h"
+#include "core/timer.h"
+#include "core/vocabulary/time.h"
+#include "core/vocabulary/time_rate.h"
 
 #include <chrono>
 

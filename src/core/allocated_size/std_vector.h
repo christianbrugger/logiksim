@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_ALLOCATED_SIZE_STD_VECTOR_H
 #define LOGICSIM_ALLOCATED_SIZE_STD_VECTOR_H
 
-#include "algorithm/accumulate.h"
-#include "allocated_size/trait.h"
+#include "core/algorithm/accumulate.h"
+#include "core/allocated_size/trait.h"
 
 #include <type_traits>
 #include <vector>

@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_SELECTION_STORE_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_SELECTION_STORE_H
 
-#include "format/struct.h"
-#include "layout_message_forward.h"
-#include "selection.h"
-#include "vocabulary/selection_id.h"
+#include "core/format/struct.h"
+#include "core/layout_message_forward.h"
+#include "core/selection.h"
+#include "core/vocabulary/selection_id.h"
 
 #include <ankerl/unordered_dense.h>
 

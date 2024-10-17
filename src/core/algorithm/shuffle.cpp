@@ -1,4 +1,4 @@
-#include "algorithm/shuffle.h"
+#include "core/algorithm/shuffle.h"
 
 namespace logicsim {
 

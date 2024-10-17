@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_CORE_RENDER_CIRCUIT_ALPHA_VALUES_H
 #define LOGICSIM_CORE_RENDER_CIRCUIT_ALPHA_VALUES_H
 
-#include "vocabulary/color.h"
-#include "vocabulary/element_draw_state.h"
+#include "core/vocabulary/color.h"
+#include "core/vocabulary/element_draw_state.h"
 
 namespace logicsim {
 

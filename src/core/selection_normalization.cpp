@@ -1,11 +1,11 @@
-#include "selection_normalization.h"
+#include "core/selection_normalization.h"
 
-#include "geometry/offset.h"
-#include "index/collision_index.h"
-#include "layout.h"
-#include "part_selection.h"
-#include "selection.h"
-#include "vocabulary/segment_part.h"
+#include "core/geometry/offset.h"
+#include "core/index/collision_index.h"
+#include "core/layout.h"
+#include "core/part_selection.h"
+#include "core/selection.h"
+#include "core/vocabulary/segment_part.h"
 
 #include <folly/small_vector.h>
 #include <gsl/gsl>

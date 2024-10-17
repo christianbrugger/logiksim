@@ -1,10 +1,10 @@
-#include "component/circuit_widget/circuit_store.h"
+#include "gui/component/circuit_widget/circuit_store.h"
 
-#include "file.h"
-#include "logging.h"
-#include "serialize.h"
-#include "timer.h"
-#include "vocabulary/insertion_mode.h"
+#include "core/file.h"
+#include "core/logging.h"
+#include "core/serialize.h"
+#include "core/timer.h"
+#include "core/vocabulary/insertion_mode.h"
 
 #include <fmt/core.h>
 

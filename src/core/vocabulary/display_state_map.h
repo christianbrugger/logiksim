@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_DISPLAY_STATE_MAP_H
 #define LOGICSIM_VOCABULARY_DISPLAY_STATE_MAP_H
 
-#include "container/enum_map.h"
-#include "format/container.h"
-#include "vocabulary/display_state.h"
+#include "core/container/enum_map.h"
+#include "core/format/container.h"
+#include "core/vocabulary/display_state.h"
 
 #include <fmt/core.h>
 

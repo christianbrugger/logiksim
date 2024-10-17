@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_FORMAT_CONTAINER_H
 #define LOGICSIM_FORMAT_CONTAINER_H
 
-#include "algorithm/fmt_join.h"
-#include "concept/member_format_function.h"
-#include "concept/string_view.h"
+#include "core/algorithm/fmt_join.h"
+#include "core/concept/member_format_function.h"
+#include "core/concept/string_view.h"
 
 #include <fmt/core.h>
 

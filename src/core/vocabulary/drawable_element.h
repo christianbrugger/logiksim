@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_DRAWABLE_ELEMENT_H
 #define LOGICSIM_VOCABULARY_DRAWABLE_ELEMENT_H
 
-#include "format/struct.h"
-#include "vocabulary/decoration_id.h"
-#include "vocabulary/element_draw_state.h"
-#include "vocabulary/logicitem_id.h"
+#include "core/format/struct.h"
+#include "core/vocabulary/decoration_id.h"
+#include "core/vocabulary/element_draw_state.h"
+#include "core/vocabulary/logicitem_id.h"
 
 #include <string>
 #include <type_traits>

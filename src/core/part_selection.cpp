@@ -1,11 +1,11 @@
-#include "part_selection.h"
+#include "core/part_selection.h"
 
-#include "algorithm/range.h"
-#include "allocated_size/folly_small_vector.h"
-#include "format/container.h"
-#include "geometry/part.h"
-#include "logging.h"
-#include "vocabulary/grid.h"
+#include "core/algorithm/range.h"
+#include "core/allocated_size/folly_small_vector.h"
+#include "core/format/container.h"
+#include "core/geometry/part.h"
+#include "core/logging.h"
+#include "core/vocabulary/grid.h"
 
 #include <fmt/core.h>
 #include <range/v3/algorithm/adjacent_remove_if.hpp>

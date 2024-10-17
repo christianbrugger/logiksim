@@ -1,15 +1,15 @@
 #ifndef LOGIKSIM_SEGMENT_TREE_H
 #define LOGIKSIM_SEGMENT_TREE_H
 
-#include "algorithm/range.h"
-#include "format/struct.h"
-#include "geometry/part.h"
-#include "iterator_adaptor/transform_view.h"
-#include "part_selection.h"
-#include "vocabulary/connection_count.h"
-#include "vocabulary/segment.h"
-#include "vocabulary/segment_index.h"
-#include "vocabulary/segment_info.h"
+#include "core/algorithm/range.h"
+#include "core/format/struct.h"
+#include "core/geometry/part.h"
+#include "core/iterator_adaptor/transform_view.h"
+#include "core/part_selection.h"
+#include "core/vocabulary/connection_count.h"
+#include "core/vocabulary/segment.h"
+#include "core/vocabulary/segment_index.h"
+#include "core/vocabulary/segment_info.h"
 
 #include <boost/container/vector.hpp>
 #include <folly/small_vector.h>

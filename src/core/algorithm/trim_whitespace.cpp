@@ -7,7 +7,7 @@
  *  The code was modified to work on std::string_view instaed of folly::StringPiece.
  */
 
-#include "algorithm/trim_whitespace.h"
+#include "core/algorithm/trim_whitespace.h"
 
 namespace logicsim {
 

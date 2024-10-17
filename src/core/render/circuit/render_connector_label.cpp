@@ -1,9 +1,9 @@
-#include "render/circuit/render_connector_label.h"
+#include "core/render/circuit/render_connector_label.h"
 
-#include "geometry/layout_calculation.h"
-#include "render/circuit/alpha_values.h"
-#include "render/context.h"
-#include "render/primitive/text.h"
+#include "core/geometry/layout_calculation.h"
+#include "core/render/circuit/alpha_values.h"
+#include "core/render/context.h"
+#include "core/render/primitive/text.h"
 
 namespace logicsim {
 

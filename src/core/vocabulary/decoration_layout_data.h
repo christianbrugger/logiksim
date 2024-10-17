@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_CORE_VOCABULARY_DECORATION_LAYOUT_DATA_H
 #define LOGICSIM_CORE_VOCABULARY_DECORATION_LAYOUT_DATA_H
 
-#include "vocabulary/decoration_type.h"
-#include "vocabulary/point.h"
-#include "vocabulary/size_2d.h"
+#include "core/vocabulary/decoration_type.h"
+#include "core/vocabulary/point.h"
+#include "core/vocabulary/size_2d.h"
 
 namespace logicsim {
 

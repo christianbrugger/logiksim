@@ -1,4 +1,4 @@
-#include "algorithm/to_underlying.h"
+#include "core/algorithm/to_underlying.h"
 
 namespace logicsim {
 

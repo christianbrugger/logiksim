@@ -1,8 +1,7 @@
-﻿
+﻿#include "gui/widget/top_widget.h"
 
-#include "logging.h"
-#include "resource.h"
-#include "widget/top_widget.h"
+#include "core/logging.h"
+#include "core/resource.h"
 
 #include <fmt/os.h>
 

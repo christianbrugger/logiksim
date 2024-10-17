@@ -1,7 +1,7 @@
-#include "component/circuit_widget/simulation_runner.h"
+#include "gui/component/circuit_widget/simulation_runner.h"
 
-#include "algorithm/checked_deref.h"
-#include "interactive_simulation.h"
+#include "core/algorithm/checked_deref.h"
+#include "core/interactive_simulation.h"
 
 namespace logicsim {
 

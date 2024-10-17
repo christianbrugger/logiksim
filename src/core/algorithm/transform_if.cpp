@@ -1,4 +1,4 @@
-#include "algorithm/transform_if.h"
+#include "core/algorithm/transform_if.h"
 
 namespace logicsim {
 

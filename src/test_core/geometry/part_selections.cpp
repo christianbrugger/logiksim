@@ -1,11 +1,11 @@
 
-#include "geometry/part_selections.h"
+#include "core/geometry/part_selections.h"
 
-#include "format/container.h"
-#include "format/std_type.h"
-#include "logging.h"
-#include "part_selection.h"
-#include "vocabulary/part.h"
+#include "core/format/container.h"
+#include "core/format/std_type.h"
+#include "core/logging.h"
+#include "core/part_selection.h"
+#include "core/vocabulary/part.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -1,7 +1,7 @@
-#include "component/circuit_widget/mouse_logic/selection_single.h"
+#include "gui/component/circuit_widget/mouse_logic/selection_single.h"
 
-#include "editable_circuit.h"
-#include "vocabulary/point_fine.h"
+#include "core/editable_circuit.h"
+#include "core/vocabulary/point_fine.h"
 
 namespace logicsim {
 
