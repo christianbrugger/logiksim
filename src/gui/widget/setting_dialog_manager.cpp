@@ -87,7 +87,7 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
         const auto [it, inserted] = map_.emplace(selection_id, nullptr);
         Expects(inserted);
 
-    } catch (std::exception&) {
+    } catch (...) {
         editable_circuit.destroy_selection(selection_id);
         throw;
     }
@@ -105,7 +105,7 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
         };
 
         map_.at(selection_id) = widget;
-    } catch (std::exception&) {
+    } catch (...) {
         widget->deleteLater();
         throw;
     }

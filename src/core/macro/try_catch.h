@@ -28,7 +28,7 @@ namespace logicsim {
 #endif
 
 /**
- * @brief: Used to annotate all functions that contain a non-empty try-catch block.
+ * @brief: Annotate all functions that contain a non-empty try-catch block.
  */
 #ifdef LS_DISABLE_ASAN_TRY_CATCH_NON_EMPTY
 #define LS_TRY_CATCH_NON_EMPTY __attribute__((no_sanitize_address))

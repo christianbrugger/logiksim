@@ -30,16 +30,6 @@ auto ensure_all_saves_restored(const BLContext& ctx) -> void;
  */
 auto checked_sync(BLContext& ctx) -> void;
 
-/**
- * @brief: End context and check for errors flags.
- *
- * Note that blend2d doesn't raise errors immediately. Only a flag
- * is set within the context. Use this method checks those flags when syncing.
- *
- * Raises a std::runtime_error on error.
- */
-auto checked_end(BLContext& ctx) -> void;
-
 }  // namespace logicsim
 
 #endif
