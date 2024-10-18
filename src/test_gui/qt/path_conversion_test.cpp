@@ -97,14 +97,11 @@ TEST_CASE("read write utf-8 high path", "[qt/path_conversion]") {
 
 TEST_CASE("back and forth invalid surrogates", "[qt/path_conversion]") {
     // Unmatched suggorage pair
-    const auto orig_path = std::filesystem::path {std::wstring {L"file_invalid_\xD800"}};
+    const auto path = std::filesystem::path {std::wstring {L"file_invalid_\xD800"}};
     // not representable as utf-8
-    REQUIRE(!path_to_utf8(orig_path).has_value());
+    REQUIRE(!path_to_utf8(path).has_value());
 
-    const auto qt_path = to_qt(orig_path);
-    const auto std_path = to_path(qt_path);
-
-    REQUIRE(std_path == orig_path);
+    REQUIRE(to_path(to_qt(path)) == path);
 }
 
 TEST_CASE("read write invalid surrogates", "[qt/path_conversion]") {
