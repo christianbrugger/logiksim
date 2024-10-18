@@ -264,7 +264,11 @@ jobs:
         ./ls_test_core
 
     - name: Run GUI Test
-      if: "!matrix.libcpp"  # Qt does not compile with clang libcpp
+      # Qt does not compile with clang libcpp
+      # Qt is not clean for some sanitizers
+      if: |
+        matrix.libcpp != 'true' &&
+        matrix.preset != 'win-clang-undefined'
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
         ./ls_test_gui -d yes
