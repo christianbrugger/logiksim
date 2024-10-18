@@ -145,8 +145,8 @@ set(LS_BENCHMARK_TARGET "ls_benchmark")
 set(LS_CLI_TARGET "ls_cli")
 set(LS_GUI_TARGET "ls_gui")
 
-set(LS_CORE_TEST_TARGET "ls_core_test")
-set(LS_GUI_TEST_TARGET "ls_gui_test")
+set(LS_CORE_TEST_TARGET "ls_test_core")
+set(LS_GUI_TEST_TARGET "ls_test_gui")
 
 
 # MAIN

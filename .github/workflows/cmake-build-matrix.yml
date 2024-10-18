@@ -261,12 +261,13 @@ jobs:
     - name: Run Core Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
-        ./ls_core_test
+        ./ls_test_core
 
-    # - name: Run GUI Test
-    #   working-directory: ${{ steps.strings.outputs.build-output-dir }}
-    #   run: |
-    #     ./ls_gui_test
+    - name: Run GUI Test
+      if: "!matrix.libcpp"  # Qt does not compile with clang libcpp
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: |
+        ./ls_test_gui -d yes
 
     - name: Run CLI
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
