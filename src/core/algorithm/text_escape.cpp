@@ -29,22 +29,6 @@ auto generic_char_to_hex(CharType c) -> std::string {
 }
 
 template <typename CharType>
-auto generic_is_printable_ascii(CharType c) -> bool {
-    return 32 <= c && c <= 126;
-}
-
-template <typename CharType>
-auto generic_char_to_ascii_hex(CharType c) -> std::string {
-    if (c == '\\') {
-        return std::string {"\\\\"};
-    }
-    if (generic_is_printable_ascii(c)) {
-        return std::string {gsl::narrow_cast<char>(c)};
-    }
-    return generic_char_to_hex(c);
-}
-
-template <typename CharType>
 auto generic_string_view_to_hex(std::basic_string_view<CharType> text) -> std::string {
     auto result = std::string {};
 
@@ -53,6 +37,22 @@ auto generic_string_view_to_hex(std::basic_string_view<CharType> text) -> std::s
     }
 
     return result;
+}
+
+template <typename CharType>
+auto generic_is_printable_ascii(CharType c) -> bool {
+    return CharType {32} <= c && c <= CharType {126};
+}
+
+template <typename CharType>
+auto generic_char_to_ascii_hex(CharType c) -> std::string {
+    if (c == CharType {'\\'}) {
+        return std::string {"\\\\"};
+    }
+    if (generic_is_printable_ascii(c)) {
+        return std::string {gsl::narrow_cast<char>(c)};
+    }
+    return generic_char_to_hex(c);
 }
 
 template <typename CharType>
