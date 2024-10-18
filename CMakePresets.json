@@ -371,7 +371,7 @@
         },
         {
             "name": "win-msvc-release-no-lto",
-            "displayName": "MSVC Release",
+            "displayName": "MSVC Release No-LTO",
             "description": "Compile release build type with MSVC compiler without LTO",
             "inherits": "common-win-msvc",
             "cacheVariables": {
@@ -465,7 +465,7 @@
         },
         {
             "name": "win-clang-undefined-rel",
-            "displayName": "Clang Undefined",
+            "displayName": "Clang Undefined Release",
             "description": "Compile with undefined behavior sanitizer and Clang Compiler",
             "inherits": "common-win-clang",
             "cacheVariables": {
