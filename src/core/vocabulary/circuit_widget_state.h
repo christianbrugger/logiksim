@@ -2,6 +2,7 @@
 #define LOGICSIM_VOCABULARY_CIRCUIT_WIDGET_STATE_H
 
 #include "core/algorithm/to_underlying.h"
+#include "core/format/container.h"
 #include "core/format/struct.h"
 #include "core/vocabulary/default_mouse_action.h"
 #include "core/wyhash.h"
