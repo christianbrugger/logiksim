@@ -69,63 +69,63 @@ auto generic_string_view_to_ascii_hex(std::basic_string_view<CharType> text)
 
 }  // namespace
 
-auto to_hex(char c) -> std::string {
+auto escape_as_hex(char c) -> std::string {
     return generic_char_to_hex(c);
 }
 
-auto to_hex(wchar_t c) -> std::string {
+auto escape_as_hex(wchar_t c) -> std::string {
     return generic_char_to_hex(c);
 }
 
-auto to_hex(char8_t c) -> std::string {
+auto escape_as_hex(char8_t c) -> std::string {
     return generic_char_to_hex(c);
 }
 
-auto to_hex(char16_t c) -> std::string {
+auto escape_as_hex(char16_t c) -> std::string {
     return generic_char_to_hex(c);
 }
 
-auto to_hex(char32_t c) -> std::string {
+auto escape_as_hex(char32_t c) -> std::string {
     return generic_char_to_hex(c);
 }
 
-auto to_hex(std::string_view text) -> std::string {
+auto escape_as_hex(std::string_view text) -> std::string {
     return generic_string_view_to_hex(text);
 }
 
-auto to_hex(std::wstring_view text) -> std::string {
+auto escape_as_hex(std::wstring_view text) -> std::string {
     return generic_string_view_to_hex(text);
 }
 
-auto to_hex(std::u8string_view text) -> std::string {
+auto escape_as_hex(std::u8string_view text) -> std::string {
     return generic_string_view_to_hex(text);
 }
 
-auto to_hex(std::u16string_view text) -> std::string {
+auto escape_as_hex(std::u16string_view text) -> std::string {
     return generic_string_view_to_hex(text);
 }
 
-auto to_hex(std::u32string_view text) -> std::string {
+auto escape_as_hex(std::u32string_view text) -> std::string {
     return generic_string_view_to_hex(text);
 }
 
-auto to_ascii_or_hex(std::string_view text) -> std::string {
+auto escape_as_ascii_or_hex(std::string_view text) -> std::string {
     return generic_string_view_to_ascii_hex(text);
 }
 
-auto to_ascii_or_hex(std::wstring_view text) -> std::string {
+auto escape_as_ascii_or_hex(std::wstring_view text) -> std::string {
     return generic_string_view_to_ascii_hex(text);
 }
 
-auto to_ascii_or_hex(std::u8string_view text) -> std::string {
+auto escape_as_ascii_or_hex(std::u8string_view text) -> std::string {
     return generic_string_view_to_ascii_hex(text);
 }
 
-auto to_ascii_or_hex(std::u16string_view text) -> std::string {
+auto escape_as_ascii_or_hex(std::u16string_view text) -> std::string {
     return generic_string_view_to_ascii_hex(text);
 }
 
-auto to_ascii_or_hex(std::u32string_view text) -> std::string {
+auto escape_as_ascii_or_hex(std::u32string_view text) -> std::string {
     return generic_string_view_to_ascii_hex(text);
 }
 

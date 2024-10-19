@@ -29,7 +29,7 @@ auto path_to_utf8_or_escape(const std::filesystem::path &path) -> std::string {
     if (const auto result = path_to_utf8(path); result) {
         return *result;
     }
-    return to_ascii_or_hex(path.native());
+    return escape_as_ascii_or_hex(path.native());
 }
 
 }  // namespace logicsim
