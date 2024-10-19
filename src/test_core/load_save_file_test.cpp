@@ -171,8 +171,8 @@ TEST(LoadSaveFile, SaveLoadExample1) {
     auto rng = get_random_number_generator(4);
     auto editable_circuit = EditableCircuit {};
     add_example(rng, editable_circuit);
-    EXPECT_GT(editable_circuit.layout().logicitems().size(), 0);
-    EXPECT_GT(editable_circuit.layout().decorations().size(), 0);
+    EXPECT_EQ(editable_circuit.layout().logicitems().size() > 0, true);
+    EXPECT_EQ(editable_circuit.layout().decorations().size() > 0, true);
 
     // save
     const auto success = save_circuit_to_file(editable_circuit.layout(), file, {}, {});
