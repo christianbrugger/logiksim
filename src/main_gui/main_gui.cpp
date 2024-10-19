@@ -26,7 +26,7 @@ auto main(int argc, char* argv[]) -> int {
     try {
 #endif
 
-        auto frame = MainWidget {};
+        auto frame = TopWidget {};
         frame.show();
         return QApplication::exec();
 

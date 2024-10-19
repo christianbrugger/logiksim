@@ -65,7 +65,7 @@ auto ElementButton::minimumSizeHint() const -> QSize {
 // MainWidget
 //
 
-MainWidget::MainWidget(QWidget* parent)
+TopWidget::TopWidget(QWidget* parent)
     : QMainWindow(parent),
       circuit_widget_ {new CircuitWidget {this}},
       circuit_widget_layout_ {new QHBoxLayout {}},
@@ -98,24 +98,24 @@ MainWidget::MainWidget(QWidget* parent)
 
     // timer title update
     connect(&timer_update_title_, &QTimer::timeout, this,
-            &MainWidget::on_timer_update_title);
+            &TopWidget::on_timer_update_title);
     timer_update_title_.setInterval(100);
     timer_update_title_.start();
 
     // timer app arguments
     connect(&timer_process_app_arguments_once_, &QTimer::timeout, this,
-            &MainWidget::on_timer_process_app_arguments_once);
+            &TopWidget::on_timer_process_app_arguments_once);
     timer_process_app_arguments_once_.setInterval(0);
     timer_process_app_arguments_once_.setSingleShot(true);
     timer_process_app_arguments_once_.start();
 
     // circuit widget signals
     connect(circuit_widget_, &CircuitWidgetBase::circuit_state_changed, this,
-            &MainWidget::on_circuit_state_changed);
+            &TopWidget::on_circuit_state_changed);
     connect(circuit_widget_, &CircuitWidgetBase::simulation_config_changed, this,
-            &MainWidget::on_simulation_config_changed);
+            &TopWidget::on_simulation_config_changed);
     connect(circuit_widget_, &CircuitWidgetBase::render_config_changed, this,
-            &MainWidget::on_render_config_changed);
+            &TopWidget::on_render_config_changed);
 
     on_circuit_state_changed(circuit_widget_->circuit_state());
     on_simulation_config_changed(circuit_widget_->simulation_config());
@@ -234,7 +234,7 @@ auto add_action_group(QMenu* menu, const QString& text,
 
 }  // namespace
 
-auto MainWidget::create_menu() -> void {
+auto TopWidget::create_menu() -> void {
     using UserAction = circuit_widget::UserAction;
 
     {
@@ -568,7 +568,7 @@ auto MainWidget::create_menu() -> void {
     }
 }
 
-auto MainWidget::create_toolbar() -> void {
+auto TopWidget::create_toolbar() -> void {
     const auto icon_size = QSize {18, 18};
 
     // Standard Toolbar
@@ -677,12 +677,12 @@ auto MainWidget::create_toolbar() -> void {
     }
 }
 
-auto MainWidget::create_statusbar() -> void {
+auto TopWidget::create_statusbar() -> void {
     auto* statusbar = new QStatusBar(this);
     this->setStatusBar(statusbar);
 }
 
-auto MainWidget::new_button(const QString& label, CircuitWidgetState state) -> QWidget* {
+auto TopWidget::new_button(const QString& label, CircuitWidgetState state) -> QWidget* {
     const auto button = new ElementButton(label);
     button->setCheckable(true);
     button_map_[state] = button;
@@ -700,7 +700,7 @@ auto line_separator() -> QWidget* {
     return line;
 }
 
-auto MainWidget::build_element_buttons() -> QWidget* {
+auto TopWidget::build_element_buttons() -> QWidget* {
     const auto layout = new QGridLayout();
     int row = -1;
 
@@ -744,7 +744,7 @@ auto MainWidget::build_element_buttons() -> QWidget* {
     return panel;
 }
 
-void MainWidget::on_timer_update_title() {
+void TopWidget::on_timer_update_title() {
     const auto statistics = circuit_widget_->statistics();
 
     auto text =
@@ -767,7 +767,7 @@ void MainWidget::on_timer_update_title() {
     }
 }
 
-void MainWidget::on_circuit_state_changed(CircuitWidgetState new_state) {
+void TopWidget::on_circuit_state_changed(CircuitWidgetState new_state) {
     bool simulation_active = is_simulation(new_state);
 
     // buttons
@@ -800,7 +800,7 @@ void MainWidget::on_circuit_state_changed(CircuitWidgetState new_state) {
     actions_.non_interactive_mode->setChecked(is_non_interactive(new_state));
 }
 
-void MainWidget::on_timer_process_app_arguments_once() {
+void TopWidget::on_timer_process_app_arguments_once() {
     for (const auto& argument : QCoreApplication::arguments() | std::views::drop(1)) {
         if (QFileInfo(argument).isFile()) {
             open_circuit(argument);
@@ -809,11 +809,11 @@ void MainWidget::on_timer_process_app_arguments_once() {
     }
 }
 
-auto MainWidget::filename_filter() -> QString {
+auto TopWidget::filename_filter() -> QString {
     return tr("Circuit Files (*.ls2);;All Files (*)");
 }
 
-auto MainWidget::new_circuit() -> void {
+auto TopWidget::new_circuit() -> void {
     if (ensure_circuit_saved() == save_result_t::success) {
         circuit_widget_->do_action(circuit_widget::UserAction::clear_circuit);
         circuit_widget_->do_action(circuit_widget::UserAction::reset_view);
@@ -826,7 +826,7 @@ auto MainWidget::new_circuit() -> void {
     }
 }
 
-auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_t {
+auto TopWidget::save_circuit(filename_choice_t filename_choice) -> save_result_t {
     const auto filename = [&] {
         if (!last_saved_filename_.isEmpty() &&
             filename_choice == filename_choice_t::same_as_last) {
@@ -866,7 +866,7 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
     return save_result_t::success;
 }
 
-auto MainWidget::open_circuit(std::optional<QString> filename) -> void {
+auto TopWidget::open_circuit(std::optional<QString> filename) -> void {
     if (ensure_circuit_saved() != save_result_t::success) {
         return;
     }
@@ -908,7 +908,7 @@ auto MainWidget::open_circuit(std::optional<QString> filename) -> void {
     }
 }
 
-auto MainWidget::load_circuit_example(int number) -> void {
+auto TopWidget::load_circuit_example(int number) -> void {
     if (ensure_circuit_saved() == save_result_t::success) {
         circuit_widget_->load_circuit_example(number);
 
@@ -917,7 +917,7 @@ auto MainWidget::load_circuit_example(int number) -> void {
     }
 }
 
-auto MainWidget::ensure_circuit_saved() -> save_result_t {
+auto TopWidget::ensure_circuit_saved() -> save_result_t {
     if (last_saved_data_ == circuit_widget_->serialized_circuit()) {
         return save_result_t::success;
     }
@@ -943,7 +943,7 @@ auto MainWidget::ensure_circuit_saved() -> save_result_t {
     return save_result_t::canceled;
 }
 
-void MainWidget::on_simulation_config_changed(SimulationConfig new_config) {
+void TopWidget::on_simulation_config_changed(SimulationConfig new_config) {
     // simulation_time_rate
     set_time_rate_slider(new_config.simulation_time_rate);
 
@@ -953,7 +953,7 @@ void MainWidget::on_simulation_config_changed(SimulationConfig new_config) {
     }
 }
 
-Q_SLOT void MainWidget::on_render_config_changed(WidgetRenderConfig new_config) {
+Q_SLOT void TopWidget::on_render_config_changed(WidgetRenderConfig new_config) {
     if (actions_.do_benchmark != nullptr) {
         actions_.do_benchmark->setChecked(new_config.do_benchmark);
     }
@@ -1020,7 +1020,7 @@ Q_SLOT void MainWidget::on_render_config_changed(WidgetRenderConfig new_config) 
     }
 }
 
-auto MainWidget::set_time_rate_slider(time_rate_t time_rate) -> void {
+auto TopWidget::set_time_rate_slider(time_rate_t time_rate) -> void {
     using namespace detail::time_slider;
 
     if (time_rate_slider_ != nullptr) {
@@ -1028,7 +1028,7 @@ auto MainWidget::set_time_rate_slider(time_rate_t time_rate) -> void {
     }
 }
 
-auto MainWidget::show_about_dialog() -> void {
+auto TopWidget::show_about_dialog() -> void {
     const auto text_fmt = tr("<h1>{}</h1>\n"
                              "<p>Version {}</p>"
                              "<p>Author: {}<br>"
@@ -1042,7 +1042,7 @@ auto MainWidget::show_about_dialog() -> void {
     QMessageBox::about(this, tr("About"), QString::fromStdString(text));
 }
 
-auto MainWidget::save_gui_state() -> void {
+auto TopWidget::save_gui_state() -> void {
     // geometry
     {
         const auto bytes = saveGeometry();
@@ -1082,7 +1082,7 @@ namespace {
 
 }  // namespace
 
-auto MainWidget::restore_gui_state() -> void {
+auto TopWidget::restore_gui_state() -> void {
     // geometry
     if (const auto str = load_file(get_writable_setting_path(setting_t::gui_geometry));
         str) {
@@ -1112,7 +1112,7 @@ auto MainWidget::restore_gui_state() -> void {
     }
 }
 
-auto MainWidget::closeEvent(QCloseEvent* event) -> void {
+auto TopWidget::closeEvent(QCloseEvent* event) -> void {
     event->ignore();
 
     if (ensure_circuit_saved() == save_result_t::success) {
@@ -1121,7 +1121,7 @@ auto MainWidget::closeEvent(QCloseEvent* event) -> void {
     }
 }
 
-auto MainWidget::dragEnterEvent(QDragEnterEvent* event) -> void {
+auto TopWidget::dragEnterEvent(QDragEnterEvent* event) -> void {
     const auto& mimeData = *event->mimeData();
 
     if (mimeData.hasUrls() && mimeData.urls().size() == 1 &&
@@ -1130,7 +1130,7 @@ auto MainWidget::dragEnterEvent(QDragEnterEvent* event) -> void {
     }
 }
 
-auto MainWidget::dropEvent(QDropEvent* event) -> void {
+auto TopWidget::dropEvent(QDropEvent* event) -> void {
     const auto& mimeData = *event->mimeData();
 
     if (mimeData.hasUrls() && mimeData.urls().size() == 1 &&

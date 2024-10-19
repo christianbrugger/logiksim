@@ -76,11 +76,11 @@ struct MainActions {
     QAction* wire_render_style_bold_red;
 };
 
-class MainWidget : public QMainWindow {
+class TopWidget : public QMainWindow {
     Q_OBJECT
 
    public:
-    explicit MainWidget(QWidget* parent = nullptr);
+    explicit TopWidget(QWidget* parent = nullptr);
 
    private:
     auto create_menu() -> void;
