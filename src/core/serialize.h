@@ -1,11 +1,14 @@
 #ifndef LOGIKSIM_SERIALIZE_H
 #define LOGIKSIM_SERIALIZE_H
 
+#include "core/format/struct.h"
 #include "core/vocabulary/insertion_mode.h"
 #include "core/vocabulary/load_error.h"
 #include "core/vocabulary/point.h"
 #include "core/vocabulary/save_format.h"
 #include "core/vocabulary/selection_id.h"
+#include "core/vocabulary/simulation_config.h"
+#include "core/vocabulary/view_config.h"
 
 #include <gsl/gsl>
 #include <tl/expected.hpp>
@@ -19,8 +22,18 @@ namespace logicsim {
 class Layout;
 class Selection;
 class EditableCircuit;
-struct ViewPoint;
-struct SimulationConfig;
+
+struct SerializeConfig {
+    SaveFormat save_format;
+
+    std::optional<ViewPoint> view_point = {};
+    std::optional<SimulationConfig> simulation_config {};
+    // Save position is used for copy & paste to store the mouse position.
+    std::optional<point_t> save_position {};
+
+    [[nodiscard]] auto operator==(const SerializeConfig& config) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
 
 /**
  * @brief: Serialize the given layout, view_point and simulation_config.
@@ -28,20 +41,16 @@ struct SimulationConfig;
  * Throws an exception if any element is not display state normal.
  */
 [[nodiscard]] auto serialize_all(const Layout& layout,
-                                 std::optional<ViewPoint> view_point,
-                                 std::optional<SimulationConfig> simulation_config,
-                                 SaveFormat format) -> std::string;
+                                 const SerializeConfig& config) -> std::string;
 
 /**
  * @brief: Serialize the selected elements.
  *
- * Save position is used for copy & paste to offset the saved positions.
  *
  * Throws an exception if a selected element does not have display state normal.
  */
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
-                                      std::optional<point_t> save_position,
-                                      SaveFormat format) -> std::string;
+                                      const SerializeConfig& config) -> std::string;
 
 namespace serialize {
 struct SerializedLayout;
@@ -61,6 +70,7 @@ class LoadLayoutResult {
                 AddParameters parameters) const -> void;
     [[nodiscard]] auto view_point() const -> ViewPoint;
     [[nodiscard]] auto simulation_config() const -> SimulationConfig;
+    [[nodiscard]] auto save_position() const -> point_t;
 
    private:
     // read-only, preserving whole parts relationship

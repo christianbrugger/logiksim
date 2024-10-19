@@ -6,13 +6,29 @@
 #include "core/vocabulary/point.h"
 #include "core/vocabulary/save_format.h"
 
+#include <fmt/core.h>
+
 namespace logicsim {
+
+auto layout_to_clipboard_text(const Layout& layout,
+                              point_t copy_position) -> std::string {
+    if (!layout.empty()) {
+        return serialize_all(layout, SerializeConfig {
+                                         .save_format = SaveFormat::base64_gzip,
+                                         .save_position = copy_position,
+                                     });
+    }
+    return std::string {};
+}
 
 auto selection_to_clipboard_text(const Layout& layout, const Selection& selection,
                                  point_t copy_position) -> std::string {
     if (!selection.empty()) {
-        return serialize_selected(layout, selection, copy_position,
-                                  SaveFormat::base64_gzip);
+        return serialize_selected(layout, selection,
+                                  SerializeConfig {
+                                      .save_format = SaveFormat::base64_gzip,
+                                      .save_position = copy_position,
+                                  });
     }
     return std::string {};
 }
@@ -21,6 +37,15 @@ auto visible_selection_to_clipboard_text(const EditableCircuit& editable_circuit
                                          point_t copy_position) -> std::string {
     return selection_to_clipboard_text(
         editable_circuit.layout(), editable_circuit.visible_selection(), copy_position);
+}
+
+auto PasteClipboardResult::format() const -> std::string {
+    return fmt::format(
+        "PasteClipboardResult(\n"  //
+        "  is_colliding = {},\n"   //
+        "  cross_points = {}\n"    //
+        ")",                       //
+        is_colliding, cross_points);
 }
 
 auto parse_clipboard_text(const std::string& text)

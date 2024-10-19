@@ -140,6 +140,8 @@ class Layout {
 
 [[nodiscard]] auto all_normal_display_state(const Layout &layout) -> bool;
 
+[[nodiscard]] auto are_normalized_equal(Layout layout1, Layout layout2) -> bool;
+
 }  // namespace logicsim
 
 #endif

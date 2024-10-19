@@ -121,11 +121,9 @@ TEST(LoadSaveFile, SaveLoadExample1) {
     ASSERT_EQ(load_result.has_value(), true);
 
     // compare
-    auto layout_orig = editable_circuit.extract_layout();
-    auto layout_load = load_result->editable_circuit.extract_layout();
-    layout_orig.normalize();
-    layout_load.normalize();
-    EXPECT_EQ(layout_orig, layout_load);
+    EXPECT_EQ(are_normalized_equal(editable_circuit.extract_layout(),
+                                   load_result->editable_circuit.extract_layout()),
+              true);
 }
 
 //

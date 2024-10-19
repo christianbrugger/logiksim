@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_COPY_PASTE_CLIPBOARD_H
 #define LOGICSIM_COPY_PASTE_CLIPBOARD_H
 
+#include "core/format/struct.h"
 #include "core/serialize.h"
 #include "core/vocabulary/load_error.h"
 
@@ -21,7 +22,18 @@ class LoadLayoutResult;
 }
 
 /**
- * @brief: Returns text representation of selected items usable for copy & pasting.
+ * @brief: Returns text representation of all items for copy & pasting.
+ *
+ * Throws if any item is not in display_state_t::normal.
+ *
+ * Returns an empty string if nothing is selected.
+ */
+auto layout_to_clipboard_text(const Layout& layout, point_t copy_position) -> std::string;
+
+/**
+ * @brief: Returns text representation of selected items for copy & pasting.
+ *
+ * Throws if any item is not in display_state_t::normal.
  *
  * Returns an empty string if nothing is selected.
  */
@@ -31,16 +43,12 @@ auto selection_to_clipboard_text(const Layout& layout, const Selection& selectio
 /**
  * @brief: Copies the visible selected elements to the clipboard.
  *
+ * Throws if any item is not in display_state_t::normal.
+ *
  * Returns an empty string if nothing is selected.
  */
 auto visible_selection_to_clipboard_text(const EditableCircuit& editable_circuit,
                                          point_t copy_position) -> std::string;
-
-/**
- * @brief: Parses the clipboard data for insertable elements.
- */
-[[nodiscard]] auto parse_clipboard_text(const std::string& text)
-    -> tl::expected<serialize::LoadLayoutResult, LoadError>;
 
 struct PasteClipboardResult {
     /**
@@ -52,7 +60,16 @@ struct PasteClipboardResult {
      * @brief: Contains original cross-points of the pasted data.
      */
     std::vector<point_t> cross_points {};
+
+    [[nodiscard]] auto operator==(const PasteClipboardResult&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
 };
+
+/**
+ * @brief: Parses the clipboard data for insertable elements.
+ */
+[[nodiscard]] auto parse_clipboard_text(const std::string& text)
+    -> tl::expected<serialize::LoadLayoutResult, LoadError>;
 
 /**
  * @brief: Inserts the parsed clipboard data at the requested position.

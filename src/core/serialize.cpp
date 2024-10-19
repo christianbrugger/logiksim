@@ -18,13 +18,11 @@
 #include "core/algorithm/trim_whitespace.h"
 #include "core/base64.h"
 #include "core/editable_circuit.h"
-#include "core/file.h"
 #include "core/geometry/line.h"
 #include "core/geometry/point.h"
 #include "core/gzip.h"
 #include "core/layout.h"
 #include "core/layout_info.h"
-#include "core/logging.h"
 #include "core/selection.h"
 #include "core/serialize_detail.h"
 #include "core/validate_definition_decoration.h"
@@ -34,10 +32,8 @@
 #include "core/vocabulary/placed_decoration.h"
 #include "core/vocabulary/placed_logicitem.h"
 #include "core/vocabulary/save_format.h"
-#include "core/vocabulary/simulation_config.h"
-#include "core/vocabulary/view_config.h"
 
-#include <optional>
+#include <fmt/core.h>
 
 namespace logicsim {
 
@@ -325,27 +321,46 @@ auto add_element(SerializedLayout& data, const Layout& layout,
     std::terminate();
 }
 
+[[nodiscard]] auto get_serialized_layout(const SerializeConfig& config)
+    -> SerializedLayout {
+    auto data = serialize::SerializedLayout {};
+
+    if (config.view_point) {
+        data.view_point = serialize::serialize_view_point(*config.view_point);
+    }
+    if (config.simulation_config) {
+        data.simulation_config =
+            serialize::serialize_simulation_config(*config.simulation_config);
+    }
+    if (config.save_position) {
+        data.save_position = *config.save_position;
+    }
+
+    return data;
+}
+
 }  // namespace
 
 }  // namespace serialize
 
+[[nodiscard]] auto SerializeConfig::format() const -> std::string {
+    return fmt::format(
+        "SerializationConfig(\n"      //
+        "  save_format = {}\n"        //
+        "  view_config = {}\n"        //
+        "  simulation_config = {}\n"  //
+        "  save_position = {}\n"      //
+        ")",                          //
+        save_format, view_point, simulation_config, save_position);
+}
+
 [[nodiscard]] auto serialize_all(const Layout& layout,
-                                 std::optional<ViewPoint> view_point,
-                                 std::optional<SimulationConfig> simulation_config,
-                                 SaveFormat format) -> std::string {
+                                 const SerializeConfig& config) -> std::string {
     if (!all_normal_display_state(layout)) {
         throw std::runtime_error("all items must have display state normal");
     }
 
-    auto data = serialize::SerializedLayout {};
-
-    if (view_point) {
-        data.view_point = serialize::serialize_view_point(*view_point);
-    }
-    if (simulation_config) {
-        data.simulation_config =
-            serialize::serialize_simulation_config(*simulation_config);
-    }
+    auto data = serialize::get_serialized_layout(config);
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
         serialize::add_element(data, layout, logicitem_id);
@@ -357,19 +372,16 @@ auto add_element(SerializedLayout& data, const Layout& layout,
         serialize::add_element(data, layout, wire_id);
     }
 
-    return serialize::serialize_to_format(data, format);
+    return serialize::serialize_to_format(data, config.save_format);
 }
 
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
-                                      std::optional<point_t> save_position,
-                                      SaveFormat format) -> std::string {
+                                      const SerializeConfig& config) -> std::string {
     if (!all_normal_display_state(selection, layout)) {
         throw std::runtime_error("all selected items must have display state normal");
     }
 
-    auto data = serialize::SerializedLayout {
-        .save_position = save_position ? *save_position : point_t {0, 0},
-    };
+    auto data = serialize::get_serialized_layout(config);
 
     for (const auto logicitem_id : selection.selected_logicitems()) {
         serialize::add_element(data, layout, logicitem_id);
@@ -387,7 +399,7 @@ auto add_element(SerializedLayout& data, const Layout& layout,
         }
     }
 
-    return serialize::serialize_to_format(data, format);
+    return serialize::serialize_to_format(data, config.save_format);
 }
 
 namespace serialize {
@@ -475,6 +487,11 @@ auto LoadLayoutResult::view_point() const -> ViewPoint {
 auto LoadLayoutResult::simulation_config() const -> SimulationConfig {
     Expects(data_ != nullptr);
     return parse_simulation_config(data_->simulation_config);
+}
+
+auto LoadLayoutResult::save_position() const -> point_t {
+    Expects(data_ != nullptr);
+    return data_->save_position;
 }
 
 }  // namespace serialize
