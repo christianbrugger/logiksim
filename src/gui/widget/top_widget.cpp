@@ -810,7 +810,7 @@ void MainWidget::on_timer_process_app_arguments_once() {
 }
 
 auto MainWidget::filename_filter() -> QString {
-    return tr("Circuit Files (*.ls2)");
+    return tr("Circuit Files (*.ls2);;All Files (*)");
 }
 
 auto MainWidget::new_circuit() -> void {
@@ -832,11 +832,18 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
             filename_choice == filename_choice_t::same_as_last) {
             return last_saved_filename_;
         }
-        return QFileDialog::getSaveFileName(this,              //
-                                            tr("Save As"),     //
-                                            "",                //
-                                            filename_filter()  //
+        auto result = QFileDialog::getSaveFileName(this,              //
+                                                   tr("Save As"),     //
+                                                   "",                //
+                                                   filename_filter()  //
         );
+        if (result.endsWith(".ls2")) {
+            return result;
+        }
+        if (result.endsWith(".")) {
+            return result + "ls2";
+        }
+        return result + ".ls2";
     }();
     if (filename.isEmpty()) {
         return save_result_t::canceled;
