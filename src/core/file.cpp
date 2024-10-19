@@ -2,7 +2,6 @@
 
 #include "core/format/std_type.h"
 #include "core/macro/try_catch.h"
-#include "core/timer.h"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
@@ -47,7 +46,6 @@ namespace {
 
 auto load_file(const std::filesystem::path &filename)
     -> tl::expected<std::string, LoadError> {
-    const auto t = Timer {fmt::format("{}", filename)};
     const auto path = boost::filesystem::path {filename.native()};
 
     // Note, memory mapping files for reading is much faster than ifstream.

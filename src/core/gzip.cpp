@@ -1,7 +1,5 @@
 #include "core/gzip.h"
 
-#include "core/timer.h"
-
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <fmt/core.h>
@@ -77,8 +75,6 @@ struct zlib_progress {
 }  // namespace
 
 auto gzip_compress(std::string_view input) -> std::string {
-    const auto t = Timer {"gzip_compress"};
-
     auto output = std::ostringstream {};
     {
         auto filter_stream = boost::iostreams::filtering_ostream {};
@@ -97,8 +93,6 @@ auto gzip_compress(std::string_view input) -> std::string {
  * place nice with sanitizer the sanitizer builds.
  */
 auto gzip_decompress(std::string_view input) -> tl::expected<std::string, LoadError> {
-    const auto t = Timer {"gzip_decompress"};
-
     // initialize inflate
     auto stream = ZInflateStream {};
     constexpr auto window_max_size = 15;
