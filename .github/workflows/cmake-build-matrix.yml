@@ -221,7 +221,7 @@ jobs:
 
     - name: Install Latest Qt
       if: ${{ ! matrix.system_qt }}
-      uses: jurplel/install-qt-action@v5
+      uses: jurplel/install-qt-action@master
       with: 
         version: ${{ env.LS_QT_VERSION }}
         archives: 'icu qtbase qtsvg'
