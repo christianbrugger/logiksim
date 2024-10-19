@@ -2,6 +2,7 @@
 #define LOGIKSIM_LAYOUT_MESSAGE_H
 
 #include "core/algorithm/fmt_join.h"
+#include "core/format/container.h"
 #include "core/format/struct.h"
 #include "core/layout_message_forward.h"
 #include "core/vocabulary/decoration_id.h"
