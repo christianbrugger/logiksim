@@ -29,4 +29,13 @@ target_link_libraries(${LS_GUI_LIBRARY} PUBLIC
     Qt6::Widgets
     Qt6::GuiPrivate
 )
-
+target_compile_definitions(${LS_GUI_LIBRARY} PUBLIC
+    # The minimum version of Qt supported.
+    # This usually is the system installed Qt version on latest Ubuntu LTS.
+    QT_DISABLE_DEPRECATED_BEFORE=0x060400  # Qt 6.4
+)
+target_compile_options(${LS_GUI_LIBRARY} PRIVATE
+    # Disable any deprecation warnings introduced in newer Qt version.
+    # They usually can't be fix, due to depency on older version.
+    -Wno-deprecated-declarations
+)
