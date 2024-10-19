@@ -221,9 +221,10 @@ jobs:
 
     - name: Install Latest Qt
       if: ${{ ! matrix.system_qt }}
-      uses: jurplel/install-qt-action
+      uses: jurplel/install-qt-action@v4
       with: 
         version: ${{ env.LS_QT_VERSION }}
+        arch: 'win64_msvc2022_64'
         archives: 'icu qtbase qtsvg'
         cache-key-prefix: install-qt-action-v4-${{ env.LS_QT_VERSION }}-${{ matrix.os }}-icu-qtbase-qtsvg
         cache: true
