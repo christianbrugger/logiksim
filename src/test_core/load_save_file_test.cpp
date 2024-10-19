@@ -10,6 +10,10 @@
 
 namespace logicsim {
 
+//
+// 2.1.0
+//
+
 TEST(LoadSaveFile, Load210Files16BitCounter) {
     const auto file = std::filesystem::path {"example_circuits/2.1.0/16_bit_counter.ls2"};
     auto result = load_circuit_from_file(file);
@@ -91,6 +95,69 @@ TEST(LoadSaveFile, Load210FilesJkFlipFlop) {
     visible_selection_select_all(result->editable_circuit);
     EXPECT_EQ(result->editable_circuit.visible_selection().selected_segments().size(),
               49);
+}
+
+//
+// 2.2.0
+//
+
+TEST(LoadSaveFile, Load220FilesAllComponentsGzip) {
+    const auto file = std::filesystem::path {"example_circuits/2.2.0/all_components.ls2"};
+    ASSERT_EQ(guess_save_format(load_file(file).value()), SaveFormat::gzip);
+
+    auto result = load_circuit_from_file(file);
+    ASSERT_EQ(result.has_value(), true);
+
+    EXPECT_EQ(result->editable_circuit.layout().logicitems().size(), 153);
+    EXPECT_EQ(result->editable_circuit.layout().decorations().size(), 1);
+    visible_selection_select_all(result->editable_circuit);
+    EXPECT_EQ(result->editable_circuit.visible_selection().selected_segments().size(),
+              378);
+}
+
+TEST(LoadSaveFile, Load210FilesCounterDisplay1To4Gzip) {
+    const auto file =
+        std::filesystem::path {"example_circuits/2.2.0/counter_display_1_to_4_gzip.ls2"};
+    ASSERT_EQ(guess_save_format(load_file(file).value()), SaveFormat::gzip);
+
+    auto result = load_circuit_from_file(file);
+    ASSERT_EQ(result.has_value(), true);
+
+    EXPECT_EQ(result->editable_circuit.layout().logicitems().size(), 13);
+    EXPECT_EQ(result->editable_circuit.layout().decorations().size(), 1);
+    visible_selection_select_all(result->editable_circuit);
+    EXPECT_EQ(result->editable_circuit.visible_selection().selected_segments().size(),
+              70);
+}
+
+TEST(LoadSaveFile, Load210FilesCounterDisplay1To4Json) {
+    const auto file =
+        std::filesystem::path {"example_circuits/2.2.0/counter_display_1_to_4_json.ls2"};
+    ASSERT_EQ(guess_save_format(load_file(file).value()), SaveFormat::json);
+
+    auto result = load_circuit_from_file(file);
+    ASSERT_EQ(result.has_value(), true);
+
+    EXPECT_EQ(result->editable_circuit.layout().logicitems().size(), 13);
+    EXPECT_EQ(result->editable_circuit.layout().decorations().size(), 1);
+    visible_selection_select_all(result->editable_circuit);
+    EXPECT_EQ(result->editable_circuit.visible_selection().selected_segments().size(),
+              70);
+}
+
+TEST(LoadSaveFile, Load210FilesCounterDisplay1To4Base64) {
+    const auto file = std::filesystem::path {
+        "example_circuits/2.2.0/counter_display_1_to_4_base64.ls2"};
+    ASSERT_EQ(guess_save_format(load_file(file).value()), SaveFormat::base64_gzip);
+
+    auto result = load_circuit_from_file(file);
+    ASSERT_EQ(result.has_value(), true);
+
+    EXPECT_EQ(result->editable_circuit.layout().logicitems().size(), 13);
+    EXPECT_EQ(result->editable_circuit.layout().decorations().size(), 1);
+    visible_selection_select_all(result->editable_circuit);
+    EXPECT_EQ(result->editable_circuit.visible_selection().selected_segments().size(),
+              70);
 }
 
 //
