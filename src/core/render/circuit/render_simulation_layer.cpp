@@ -11,6 +11,7 @@
 #include "core/render/circuit/render_wire.h"
 #include "core/render/context.h"
 #include "core/spatial_simulation.h"
+#include "core/vocabulary/drawable_element.h"
 
 namespace logicsim {
 
