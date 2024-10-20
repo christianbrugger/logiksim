@@ -21,6 +21,11 @@ constexpr static inline auto text_element_angle_size = grid_fine_t {0.25};  // (
 
 namespace {
 
+/**
+ * @brief: Draw an angle with the tip at origin.
+ *
+ * Note, shift determines the size and direction. Left for positive, right for negative.
+ */
 auto draw_decoration_text_angle(Context& ctx, point_fine_t origin, double shift,
                                 color_t color) -> void {
     const auto stroke_width = ctx.view_config().stroke_width();
@@ -46,6 +51,9 @@ consteval auto text_element_angle_offset() -> point_fine_t {
     return point_fine_t {grid_fine_t {0.25} + defaults::text_element_angle_size / 2, 0};
 }
 
+/**
+ * @brief: Draw all angles of the text element.
+ */
 auto draw_decoration_text_angles(Context& ctx, point_t position, size_2d_t size,
                                  ElementDrawState state) -> void {
     const auto angle_offset = text_element_angle_offset();
@@ -66,6 +74,9 @@ auto draw_decoration_text_angles(Context& ctx, point_t position, size_2d_t size,
     }
 }
 
+/**
+ * @brief: Draw the full text element.
+ */
 auto draw_decoration_text_element(Context& ctx, const Layout& layout,
                                   decoration_id_t decoration_id,
                                   ElementDrawState state) -> void {
