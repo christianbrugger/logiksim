@@ -3,8 +3,8 @@ include(source_list.cmake)
 ###### Dependencies
 
 # Catch2
-set(CATCH_INSTALL_DOCS OFF)
-set(CATCH_INSTALL_EXTRA OFF)
+set(CATCH_INSTALL_DOCS OFF CACHE BOOL "" FORCE)
+set(CATCH_INSTALL_EXTRA OFF CACHE BOOL "" FORCE)
 add_subdirectory(
     ${PROJECT_SOURCE_DIR}/external/catch2
     ${CMAKE_BINARY_DIR}/external/catch2
