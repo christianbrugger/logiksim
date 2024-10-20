@@ -1,7 +1,9 @@
 #include "core/element/decoration/render_decoration_base.h"
 
+#include "core/geometry/offset.h"
 #include "core/layout.h"
 #include "core/render/circuit/alpha_values.h"
+#include "core/render/context.h"
 #include "core/render/primitive/point.h"
 #include "core/render/primitive/text.h"
 #include "core/vocabulary/decoration_type.h"
@@ -10,20 +12,73 @@
 
 namespace logicsim {
 
+namespace defaults {
+
+constexpr static inline auto text_element_angle_color = defaults::color_light_gray;
+constexpr static inline auto text_element_angle_size = grid_fine_t {0.25};  // (0 - 0.5]
+
+}  // namespace defaults
+
 namespace {
+
+auto draw_decoration_text_angle(Context& ctx, point_fine_t origin, double shift,
+                                color_t color) -> void {
+    const auto stroke_width = ctx.view_config().stroke_width();
+    const auto [x, y] = to_context(origin, ctx);
+
+    const auto poly = std::array {
+        BLPoint {x + shift, y - shift},
+        BLPoint {x, y},
+        BLPoint {x + shift, y + shift},
+    };
+    const auto view = BLArrayView<BLPoint> {poly.data(), poly.size()};
+
+    ctx.bl_ctx.setStrokeWidth(stroke_width);
+    ctx.bl_ctx.strokePolyline(BLArrayView<BLPoint>(view), color);
+}
+
+/**
+ * @brief: Offset of the angles origin of the text element from the position.
+ */
+consteval auto text_element_angle_offset() -> point_fine_t {
+    static_assert(defaults::text_element_angle_size > grid_fine_t {0});
+    static_assert(defaults::text_element_angle_size <= grid_fine_t {0.5});
+    return point_fine_t {grid_fine_t {0.25} + defaults::text_element_angle_size / 2, 0};
+}
+
+auto draw_decoration_text_angles(Context& ctx, point_t position, size_2d_t size,
+                                 ElementDrawState state) -> void {
+    const auto angle_offset = text_element_angle_offset();
+    const auto color = with_alpha_runtime(defaults::text_element_angle_color, state);
+    const auto shift = to_context(defaults::text_element_angle_size, ctx);
+
+    // start angle
+    {
+        const auto origin_start = position - angle_offset;
+        draw_decoration_text_angle(ctx, origin_start, shift, color);
+    }
+
+    // end angle
+    {
+        const auto position_end = point_t {to_grid(size.width, position.x), position.y};
+        const auto origin_end = position_end + angle_offset;
+        draw_decoration_text_angle(ctx, origin_end, -shift, color);
+    }
+}
 
 auto draw_decoration_text_element(Context& ctx, const Layout& layout,
                                   decoration_id_t decoration_id,
                                   ElementDrawState state) -> void {
     const auto position = layout.decorations().position(decoration_id);
-    const auto color = with_alpha_runtime(defaults::color_gray, state);
-    const auto size = grid_fine_t {0.25};
-    draw_point(ctx, position, PointShape::diamond, color, size);
+    const auto size = layout.decorations().size(decoration_id);
 
-    const auto text_anchor = point_fine_t {position.x + grid_fine_t {0.5}, position.y};
+    // angles
+    draw_decoration_text_angles(ctx, position, size, state);
+
+    // text
+    const auto text_anchor = point_fine_t {position.x, position.y};
     const auto text_color = with_alpha_runtime(defaults::color_black, state);
     const auto& text_label = layout.decorations().attrs_text_element(decoration_id).text;
-
     draw_text(ctx, text_anchor, text_label,
               TextAttributes {
                   .font_size = grid_fine_t {1.0},
