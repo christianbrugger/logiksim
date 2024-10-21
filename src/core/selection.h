@@ -54,7 +54,8 @@ class Selection {
 
     [[nodiscard]] auto operator==(const Selection &) const -> bool = default;
 
-    [[nodiscard]] auto empty() const noexcept -> bool;
+    [[nodiscard]] auto empty() const -> bool;
+    [[nodiscard]] auto size() const -> std::size_t;
     auto clear() -> void;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
@@ -150,6 +151,9 @@ auto remove_segment_part(Selection &selection, const Layout &layout, segment_t s
 
 auto toggle_segment_part(Selection &selection, const Layout &layout, segment_t segment,
                          point_fine_t point) -> void;
+
+auto get_single_logicitem(const Selection &selection) -> logicitem_id_t;
+auto get_single_decoration(const Selection &selection) -> decoration_id_t;
 
 }  // namespace logicsim
 

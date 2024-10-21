@@ -7,8 +7,12 @@
 #include "core/random/generator.h"
 #include "core/vocabulary/insertion_mode.h"
 #include "core/vocabulary/line_insertion_type.h"
+#include "core/vocabulary/placed_element.h"
 
 namespace logicsim {
+
+struct PlacedLogicItem;
+struct PlacedDecoration;
 
 class Layout;
 
@@ -158,6 +162,18 @@ using SelectionGuard = editable_circuit::SelectionGuardTemplate<EditableCircuit>
  * enabled with DEBUG_CHECK_CLASS_INVARIANTS on a per method level.
  */
 [[nodiscard]] auto is_valid(const EditableCircuit& editable_circuit) -> bool;
+
+auto add_placed_logicitem(EditableCircuit& editable_circuit,
+                          const PlacedLogicItem& placed_logicitem,
+                          InsertionMode insertion_mode,
+                          selection_id_t selection_id = null_selection_id) -> void;
+auto add_placed_decoration(EditableCircuit& editable_circuit,
+                           const PlacedDecoration& placed_decoration,
+                           InsertionMode insertion_mode,
+                           selection_id_t selection_id = null_selection_id) -> void;
+auto add_placed_element(EditableCircuit& editable_circuit,
+                        const PlacedElement& placed_element, InsertionMode insertion_mode,
+                        selection_id_t selection_id = null_selection_id) -> void;
 
 auto add_wire_segments(EditableCircuit& editable_circuit, point_t p0, point_t p1,
                        LineInsertionType segment_type, InsertionMode insertion_mode,

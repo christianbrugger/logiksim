@@ -68,18 +68,6 @@ auto setting_handle_position(const Layout& layout, logicitem_id_t logicitem_id)
     std::terminate();
 }
 
-namespace {
-
-auto get_single_logicitem(const Selection& selection) -> logicitem_id_t {
-    if (selection.selected_logicitems().size() != 1 ||
-        !selection.selected_segments().empty()) {
-        return null_logicitem_id;
-    }
-    return selection.selected_logicitems().front();
-}
-
-}  // namespace
-
 auto setting_handle_position(const Layout& layout, const Selection& selection)
     -> std::optional<setting_handle_t> {
     const auto logicitem_id = get_single_logicitem(selection);

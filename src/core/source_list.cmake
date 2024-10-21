@@ -277,6 +277,7 @@ set(LS_CORE_SOURCES
     vocabulary/part.cpp
     vocabulary/part_copy_definition.cpp
     vocabulary/placed_decoration.cpp
+    vocabulary/placed_element.cpp
     vocabulary/placed_logicitem.cpp
     vocabulary/point.cpp
     vocabulary/point_device.cpp

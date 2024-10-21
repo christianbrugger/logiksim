@@ -1,7 +1,10 @@
 #include "core/editable_circuit.h"
 
+#include "core/algorithm/overload.h"
 #include "core/random/generator.h"
 #include "core/random/wire.h"
+#include "core/vocabulary/placed_decoration.h"
+#include "core/vocabulary/placed_logicitem.h"
 
 #include <fmt/core.h>
 
@@ -283,6 +286,38 @@ auto EditableCircuit::visible_selection_empty() const -> bool {
 
 auto is_valid(const EditableCircuit& editable_circuit) -> bool {
     return is_valid(editable_circuit.modifier());
+}
+
+auto add_placed_logicitem(EditableCircuit& editable_circuit,
+                          const PlacedLogicItem& placed_logicitem,
+                          InsertionMode insertion_mode,
+                          selection_id_t selection_id) -> void {
+    editable_circuit.add_logicitem(placed_logicitem.definition, placed_logicitem.position,
+                                   insertion_mode, selection_id);
+}
+
+auto add_placed_decoration(EditableCircuit& editable_circuit,
+                           const PlacedDecoration& placed_decoration,
+                           InsertionMode insertion_mode,
+                           selection_id_t selection_id) -> void {
+    editable_circuit.add_decoration(placed_decoration.definition,
+                                    placed_decoration.position, insertion_mode,
+                                    selection_id);
+}
+
+auto add_placed_element(EditableCircuit& editable_circuit,
+                        const PlacedElement& placed_element, InsertionMode insertion_mode,
+                        selection_id_t selection_id) -> void {
+    std::visit(overload(
+                   [&](const PlacedLogicItem& placed_logicitem) {
+                       add_placed_logicitem(editable_circuit, placed_logicitem,
+                                            insertion_mode, selection_id);
+                   },
+                   [&](const PlacedDecoration& placed_decoration) {
+                       add_placed_decoration(editable_circuit, placed_decoration,
+                                             insertion_mode, selection_id);
+                   }),
+               placed_element);
 }
 
 namespace {

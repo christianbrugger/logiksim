@@ -4,9 +4,10 @@
 #include "gui/component/circuit_widget/mouse_logic/editing_logic_concept.h"
 
 #include "core/size_handle.h"
+#include "core/vocabulary/placed_decoration.h"
+#include "core/vocabulary/placed_element.h"
 #include "core/vocabulary/placed_logicitem.h"
 #include "core/vocabulary/point_fine.h"
-#include "core/vocabulary/selection_id.h"
 
 #include <optional>
 
@@ -33,7 +34,7 @@ class HandleResizeLogic {
 
    private:
     size_handle_t size_handle_;
-    PlacedLogicItem initial_logicitem_;
+    PlacedElement initial_element_;
 
     std::optional<point_fine_t> first_position_ {};
     std::optional<int> last_delta_ {};

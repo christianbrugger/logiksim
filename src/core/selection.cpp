@@ -49,11 +49,16 @@ auto Selection::format_info(bool as_selection) const -> std::string {
                        selected_decorations_.size());
 }
 
-auto Selection::empty() const noexcept -> bool {
+auto Selection::empty() const -> bool {
     Expects(class_invariant_holds());
 
     return selected_logicitems_.empty() && selected_segments_.empty() &&
            selected_decorations_.empty();
+}
+
+auto Selection::size() const -> std::size_t {
+    return selected_logicitems_.size() + selected_segments_.size() +
+           selected_decorations_.size();
 }
 
 auto Selection::clear() -> void {
@@ -715,6 +720,20 @@ auto toggle_segment_part(Selection &selection, const Layout &layout, segment_t s
             }
         }
     });
+}
+
+auto get_single_logicitem(const Selection &selection) -> logicitem_id_t {
+    if (selection.selected_logicitems().size() != 1 || selection.size() != 1) {
+        return null_logicitem_id;
+    }
+    return selection.selected_logicitems().front();
+}
+
+auto get_single_decoration(const Selection &selection) -> decoration_id_t {
+    if (selection.selected_decorations().size() != 1 || selection.size() != 1) {
+        return null_decoration_id;
+    }
+    return selection.selected_decorations().front();
 }
 
 }  // namespace logicsim

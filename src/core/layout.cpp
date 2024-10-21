@@ -8,6 +8,7 @@
 #include "core/geometry/segment_info.h"
 #include "core/vocabulary/decoration_layout_data.h"
 #include "core/vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/placed_decoration.h"
 #include "core/vocabulary/placed_logicitem.h"
 #include "core/vocabulary/segment_part.h"
 
@@ -347,11 +348,19 @@ auto to_decoration_definition(const Layout &layout,
     return layout::to_decoration_definition(layout.decorations(), decoration_id);
 }
 
-auto to_placed_element(const Layout &layout,
-                       logicitem_id_t logicitem_id) -> PlacedLogicItem {
+auto to_placed_logicitem(const Layout &layout,
+                         logicitem_id_t logicitem_id) -> PlacedLogicItem {
     return PlacedLogicItem {
         .definition = to_logicitem_definition(layout, logicitem_id),
         .position = layout.logicitems().position(logicitem_id),
+    };
+}
+
+auto to_placed_decoration(const Layout &layout,
+                          decoration_id_t decoration_id) -> PlacedDecoration {
+    return PlacedDecoration {
+        .definition = to_decoration_definition(layout, decoration_id),
+        .position = layout.decorations().position(decoration_id),
     };
 }
 

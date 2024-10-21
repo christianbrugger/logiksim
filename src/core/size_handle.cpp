@@ -5,6 +5,7 @@
 #include "core/element/logicitem/layout_logicitem_display_number.h"
 #include "core/geometry/connection_count.h"
 #include "core/geometry/layout_calculation.h"
+#include "core/geometry/offset.h"
 #include "core/geometry/point.h"
 #include "core/geometry/rect.h"
 #include "core/geometry/scene.h"
@@ -14,6 +15,7 @@
 #include "core/selection.h"
 #include "core/vocabulary/layout_calculation_data.h"
 #include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/placed_decoration.h"
 #include "core/vocabulary/placed_logicitem.h"
 #include "core/vocabulary/view_config.h"
 
@@ -87,33 +89,50 @@ auto size_handle_positions(const Layout& layout,
             return {};
     };
 
-    throw std::runtime_error("unknown ElementType in size_handle_positions");
+    std::terminate();
 }
 
-namespace {
+auto size_handle_positions(const Layout& layout,
+                           decoration_id_t decoration_id) -> std::vector<size_handle_t> {
+    switch (layout.decorations().type(decoration_id)) {
+        using enum DecorationType;
 
-auto get_single_logicitem(const Selection& selection) -> logicitem_id_t {
-    if (selection.selected_logicitems().size() != 1 ||
-        !selection.selected_segments().empty()) {
-        return null_logicitem_id;
-    }
-    return selection.selected_logicitems().front();
+        case text_element: {
+            // TODO move to element/decoration/.h
+            const auto position = layout.decorations().position(decoration_id);
+            const auto size = layout.decorations().size(decoration_id);
+
+            const auto position_end = point_t {
+                to_grid(size.width, position.x),
+                position.y,
+            };
+            const auto offset = point_fine_t {0.5, 0};
+
+            return {
+                size_handle_t {0, point_fine_t {position} - offset},
+                size_handle_t {1, point_fine_t {position_end} + offset},
+            };
+        }
+    };
+
+    std::terminate();
 }
-
-}  // namespace
 
 auto size_handle_positions(const Layout& layout,
                            const Selection& selection) -> std::vector<size_handle_t> {
-    // only show handles when a single item is selected
-    const auto logicitem_id = get_single_logicitem(selection);
-    if (!logicitem_id) {
-        return {};
-    }
-    if (layout.logicitems().display_state(logicitem_id) != display_state_t::normal) {
-        return {};
+    if (const auto logicitem_id = get_single_logicitem(selection);
+        logicitem_id &&
+        layout.logicitems().display_state(logicitem_id) == display_state_t::normal) {
+        return size_handle_positions(layout, logicitem_id);
     }
 
-    return size_handle_positions(layout, logicitem_id);
+    if (const auto decoration_id = get_single_decoration(selection);
+        decoration_id &&
+        layout.decorations().display_state(decoration_id) == display_state_t::normal) {
+        return size_handle_positions(layout, decoration_id);
+    }
+
+    return {};
 }
 
 auto size_handle_rect_px(size_handle_t handle, const ViewConfig& config) -> BLRect {
@@ -257,12 +276,44 @@ auto get_resized_element(const PlacedLogicItem& original, size_handle_t handle,
     std::terminate();
 }
 
-auto get_single_placed_element(const EditableCircuit& editable_circuit)
-    -> PlacedLogicItem {
-    const auto element_id = get_single_logicitem(editable_circuit.visible_selection());
-    Expects(element_id);
+auto get_resized_element(const PlacedDecoration& original, size_handle_t handle,
+                         int delta) -> PlacedDecoration {
+    switch (original.definition.decoration_type) {
+        using enum DecorationType;
 
-    return to_placed_element(editable_circuit.layout(), element_id);
+        case text_element: {
+            static_cast<void>(handle);
+            static_cast<void>(delta);
+            return original;
+        }
+    }
+
+    std::terminate();
+}
+
+auto get_resized_element(const PlacedElement& original, size_handle_t handle,
+                         int delta) -> PlacedElement {
+    return std::visit(
+        [&](const auto& original) -> PlacedElement {
+            return get_resized_element(original, handle, delta);
+        },
+        original);
+}
+
+auto get_single_placed_element(const EditableCircuit& editable_circuit)
+    -> std::optional<PlacedElement> {
+    if (const auto logicitem_id =
+            get_single_logicitem(editable_circuit.visible_selection());
+        logicitem_id) {
+        return to_placed_logicitem(editable_circuit.layout(), logicitem_id);
+    }
+    if (const auto decoration_id =
+            get_single_decoration(editable_circuit.visible_selection());
+        decoration_id) {
+        return to_placed_decoration(editable_circuit.layout(), decoration_id);
+    }
+
+    return std::nullopt;
 }
 
 }  // namespace logicsim
