@@ -104,6 +104,18 @@ auto is_valid(const decoration_layout_data_t &data) -> bool {
 //
 //
 
+auto element_size_min(DecorationType decoration_type) -> size_2d_t {
+    return layout_info::decoration_size_min(decoration_type);
+}
+
+auto element_size_max(DecorationType decoration_type) -> size_2d_t {
+    return layout_info::decoration_size_max(decoration_type);
+}
+
+//
+//
+//
+
 auto element_input_count_min(LogicItemType logicitem_type) -> connection_count_t {
     return get_layout_info(logicitem_type).input_count_min;
 }

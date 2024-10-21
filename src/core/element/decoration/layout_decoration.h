@@ -11,6 +11,10 @@ struct decoration_layout_data_t;
 
 namespace layout_info {
 
+[[nodiscard]] auto decoration_size_min(DecorationType decoration_type) -> size_2d_t;
+[[nodiscard]] auto decoration_size_max(DecorationType decoration_type) -> size_2d_t;
+[[nodiscard]] auto decoration_size_default(DecorationType decoration_type) -> size_2d_t;
+
 [[nodiscard]] auto is_decoration_size_valid(DecorationType decoration_type,
                                             size_2d_t size) -> bool;
 

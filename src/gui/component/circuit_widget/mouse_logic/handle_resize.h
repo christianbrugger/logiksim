@@ -10,6 +10,7 @@
 #include "core/vocabulary/point_fine.h"
 
 #include <optional>
+#include <utility>
 
 namespace logicsim {
 
@@ -37,7 +38,7 @@ class HandleResizeLogic {
     PlacedElement initial_element_;
 
     std::optional<point_fine_t> first_position_ {};
-    std::optional<int> last_delta_ {};
+    std::optional<delta_movement_t> last_delta_ {};
 };
 
 static_assert(has_mouse_logic_finalize<HandleResizeLogic>);

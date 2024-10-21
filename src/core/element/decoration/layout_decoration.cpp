@@ -8,15 +8,31 @@ namespace logicsim {
 
 namespace layout_info {
 
-[[nodiscard]] auto is_decoration_size_valid(DecorationType decoration_type,
-                                            size_2d_t size) -> bool {
+auto decoration_size_min(DecorationType decoration_type) -> size_2d_t {
     switch (decoration_type) {
         using enum DecorationType;
 
         case text_element:
-            return size.width >= offset_t {0} && size.height == offset_t {0};
+            return size_2d_t {0, 0};
     }
     std::terminate();
+}
+
+auto decoration_size_max(DecorationType decoration_type) -> size_2d_t {
+    switch (decoration_type) {
+        using enum DecorationType;
+
+        case text_element:
+            return size_2d_t {offset_t::max(), offset_t::max()};
+    }
+    std::terminate();
+}
+
+auto is_decoration_size_valid(DecorationType decoration_type, size_2d_t size) -> bool {
+    const auto min_size = decoration_size_min(decoration_type);
+    const auto max_size = decoration_size_max(decoration_type);
+
+    return min_size <= size && size <= max_size;
 }
 
 namespace {

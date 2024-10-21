@@ -30,7 +30,7 @@ HandleResizeLogic::HandleResizeLogic(const EditableCircuit& editable_circuit,
 auto HandleResizeLogic::mouse_press(EditableCircuit& editable_circuit [[maybe_unused]],
                                     point_fine_t position) -> void {
     first_position_ = position;
-    last_delta_ = 0;
+    last_delta_ = delta_movement_t {};
 }
 
 auto HandleResizeLogic::mouse_move(EditableCircuit& editable_circuit,
@@ -62,7 +62,7 @@ auto HandleResizeLogic::finalize(EditableCircuit& editable_circuit) -> void {
 namespace {
 
 auto resize_element(EditableCircuit& editable_circuit, const PlacedElement& original,
-                    size_handle_t size_handle, int new_delta) {
+                    size_handle_t size_handle, delta_movement_t new_delta) {
     // delete element
     editable_circuit.delete_all(editable_circuit.visible_selection());
 
@@ -92,7 +92,12 @@ auto HandleResizeLogic::move_handle_to(EditableCircuit& editable_circuit,
         return;
     }
 
-    const auto new_delta = round_to<int>(double {position.y - first_position_->y});
+    // TODO handle double out of range of int
+    const auto new_delta = delta_movement_t {
+        .horizontal = round_to<int>(double {position.x - first_position_->x}),
+        .vertical = round_to<int>(double {position.y - first_position_->y}),
+    };
+
     if (new_delta == *last_delta_) {
         return;
     }

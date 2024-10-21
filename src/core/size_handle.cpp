@@ -24,6 +24,14 @@
 #include <stdexcept>
 
 namespace logicsim {
+auto size_handle_t::format() const -> std::string {
+    return fmt::format("size_handle_t(index = {}, point = {})", index, point);
+}
+
+auto delta_movement_t::format() const -> std::string {
+    return fmt::format("delta_movement_t(horizontal = {}, vertical = {})", horizontal,
+                       vertical);
+}
 
 auto size_handle_positions(const Layout& layout,
                            logicitem_id_t logicitem_id) -> std::vector<size_handle_t> {
@@ -200,12 +208,14 @@ auto clamp_connection_count(connection_count_t count, int delta, connection_coun
     return connection_count_t {clamped_count};
 }
 
-auto element_height(const PlacedLogicItem& element) -> grid_t {
+auto logicitem_height(const PlacedLogicItem& element) -> grid_t {
     const auto data = to_layout_calculation_data(element);
     return element_height(data);
 }
 
-auto adjust_height(const PlacedLogicItem& original, size_handle_t handle, int delta) {
+[[nodiscard]] auto adjust_logicitem_height(const PlacedLogicItem& original,
+                                           size_handle_t handle,
+                                           delta_movement_t delta) -> PlacedLogicItem {
     if (handle.index != 0 && handle.index != 1) {
         throw std::runtime_error("unknown handle index");
     }
@@ -218,16 +228,16 @@ auto adjust_height(const PlacedLogicItem& original, size_handle_t handle, int de
     // input count
     if (handle.index == 0) {
         result.definition.input_count = clamp_connection_count(
-            original.definition.input_count, -delta, min_inputs, max_inputs);
+            original.definition.input_count, -delta.vertical, min_inputs, max_inputs);
     } else if (handle.index == 1) {
         result.definition.input_count = clamp_connection_count(
-            original.definition.input_count, +delta, min_inputs, max_inputs);
+            original.definition.input_count, +delta.vertical, min_inputs, max_inputs);
     }
 
     // position adjustment
     if (handle.index == 0) {
-        const auto old_height = element_height(original);
-        const auto new_height = element_height(result);
+        const auto old_height = logicitem_height(original);
+        const auto new_height = logicitem_height(result);
         const auto delta_height = int {old_height} - int {new_height};
 
         if (is_representable(original.position, 0, delta_height)) {
@@ -245,7 +255,7 @@ auto adjust_height(const PlacedLogicItem& original, size_handle_t handle, int de
 }  // namespace
 
 auto get_resized_element(const PlacedLogicItem& original, size_handle_t handle,
-                         int delta) -> PlacedLogicItem {
+                         delta_movement_t delta) -> PlacedLogicItem {
     switch (original.definition.logicitem_type) {
         using enum LogicItemType;
 
@@ -254,7 +264,7 @@ auto get_resized_element(const PlacedLogicItem& original, size_handle_t handle,
         case xor_element:
 
         case display_number: {
-            return adjust_height(original, handle, delta);
+            return adjust_logicitem_height(original, handle, delta);
         }
 
         case buffer_element:
@@ -276,15 +286,63 @@ auto get_resized_element(const PlacedLogicItem& original, size_handle_t handle,
     std::terminate();
 }
 
+namespace {
+
+auto clamp_width(offset_t width, int delta, offset_t min, offset_t max) -> offset_t {
+    const auto new_width = int64_t {int {width}} + int64_t {delta};
+    static_assert(sizeof(new_width) > sizeof(delta));
+
+    const auto clamped_count =
+        std::clamp<decltype(new_width)>(new_width, int {min}, int {max});
+
+    return offset_t {clamped_count};
+}
+
+[[nodiscard]] auto adjust_decoration_size(const PlacedDecoration& original,
+                                          size_handle_t handle, delta_movement_t delta) {
+    if (handle.index != 0 && handle.index != 1) {
+        throw std::runtime_error("unknown handle index");
+    }
+
+    auto result = PlacedDecoration {original};
+
+    const auto min_width = element_size_min(original.definition.decoration_type).width;
+    const auto max_width = element_size_max(original.definition.decoration_type).width;
+
+    // input count
+    if (handle.index == 0) {
+        result.definition.size.width = clamp_width(
+            original.definition.size.width, -delta.horizontal, min_width, max_width);
+    } else if (handle.index == 1) {
+        result.definition.size.width = clamp_width(
+            original.definition.size.width, +delta.horizontal, min_width, max_width);
+    }
+
+    // position adjustment
+    if (handle.index == 0) {
+        const auto old_width = original.definition.size.width;
+        const auto new_width = result.definition.size.width;
+        const auto delta_width = int {old_width} - int {new_width};
+
+        if (is_representable(original.position, delta_width, 0)) {
+            result.position = add_unchecked(original.position, delta_width, 0);
+        } else {
+            return original;
+        }
+    }
+
+    return result;
+}
+
+}  // namespace
+
 auto get_resized_element(const PlacedDecoration& original, size_handle_t handle,
-                         int delta) -> PlacedDecoration {
+                         delta_movement_t delta) -> PlacedDecoration {
     switch (original.definition.decoration_type) {
         using enum DecorationType;
 
         case text_element: {
-            static_cast<void>(handle);
-            static_cast<void>(delta);
-            return original;
+            return adjust_decoration_size(original, handle, delta);
         }
     }
 
@@ -292,7 +350,7 @@ auto get_resized_element(const PlacedDecoration& original, size_handle_t handle,
 }
 
 auto get_resized_element(const PlacedElement& original, size_handle_t handle,
-                         int delta) -> PlacedElement {
+                         delta_movement_t delta) -> PlacedElement {
     return std::visit(
         [&](const auto& original) -> PlacedElement {
             return get_resized_element(original, handle, delta);

@@ -73,6 +73,17 @@ struct decoration_layout_data_t;
 [[nodiscard]] auto is_valid(const decoration_layout_data_t &data) -> bool;
 
 //
+// Size
+//
+
+/**
+ * @brief: Min and max size of a decoration.
+ */
+[[nodiscard]] auto element_size_min(DecorationType decoration_type) -> size_2d_t;
+[[nodiscard]] auto element_size_max(DecorationType decoration_type) -> size_2d_t;
+[[nodiscard]] auto element_size_default(DecorationType decoration_type) -> size_2d_t;
+
+//
 // Connection Count
 //
 
