@@ -352,8 +352,8 @@ auto get_resized_element(const PlacedDecoration& original, size_handle_t handle,
 auto get_resized_element(const PlacedElement& original, size_handle_t handle,
                          delta_movement_t delta) -> PlacedElement {
     return std::visit(
-        [&](const auto& original) -> PlacedElement {
-            return get_resized_element(original, handle, delta);
+        [&](const auto& element) -> PlacedElement {
+            return get_resized_element(element, handle, delta);
         },
         original);
 }
