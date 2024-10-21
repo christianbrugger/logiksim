@@ -121,13 +121,11 @@ def create_files(
     component: str | None,
 ) -> None:
     """Create cpp and header file at location."""
-    include_name = name.relative_to(top_folder(name))
-
     replacements = {
         "define": "{}_{}_H".format(LS_NAMESPACE, str(name).replace("/", "_")).upper(),
         "namespace": LS_NAMESPACE.lower(),
         "component": component,
-        "include": str(include_name) + f".{LS_HEADER_EXT}",
+        "include": str(name) + f".{LS_HEADER_EXT}",
     }
 
     template_name = TemplateName.COMPONENT if component else TemplateName.GENERIC
