@@ -25,6 +25,24 @@ Make sure to install the following components:
 
 *tested with Visual Studio Community 17.10.2*
 
+### CMake 3.30+
+
+Manually install CMake from:
+
+https://cmake.org/download/
+
+Add it to the `PATH` and make sure it is available in the terminal via:
+
+```
+cmake --version
+```
+
+In Visual Studio to use the external Cmake executable set it up under `Tools -> Options`:
+
+![image-20241021165358753](.images/image-20241021165358753.png)
+
+
+
 ### Python 3.11+ (optional)
 
 This is optional, only used for some scripts, not the main build.
@@ -47,7 +65,7 @@ Make sure `git` is avaiable in the PATH.
 
 *tested with 2.45.2*
 
-### Qt 6.7+
+### Qt 6.4+
 
 Qt is not build from source and is best installed with the Qt Installer:
 
@@ -55,7 +73,8 @@ https://www.qt.io/download-qt-installer-oss
 
 The only required package for building is:
 
-* MSVC 2019 64-bit
+* MSVC 2019 64-bit (before Qt 6.8)
+* MSVC 2022 64-bit (beginning Qt 6.8)
 
 Recommended for debugging:
 
