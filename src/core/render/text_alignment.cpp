@@ -86,13 +86,13 @@ auto calculate_offset(const BLBox& bounding_box,
 
 auto calculate_baseline_offset(FontStyle style [[maybe_unused]],
                                const FontFace& face) -> BaselineOffset {
+    const auto font_size = float {16};
+    const auto font = HbFont {face.hb_face()};
+
     const auto text =
         "abcdefghijklmnopqrstuvwxyz"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "0123456789";
-    const auto font_size = float {16};
-
-    const auto font = HbFont {face.hb_face()};
     const auto box = HbShapedText {text, font, font_size}.bounding_box();
 
     using enum VTextAlignment;
