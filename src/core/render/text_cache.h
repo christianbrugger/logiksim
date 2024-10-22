@@ -92,12 +92,6 @@ class TextCache {
     auto draw_text(BLContext &ctx, const BLPoint &position, std::string_view text,
                    float font_size, TextAttributes attributes) const -> void;
 
-    auto draw_text(BLContext &ctx, const BLPoint &position, std::string_view text,
-                   float font_size, color_t color = defaults::color_black,
-                   HTextAlignment horizontal_alignment = HTextAlignment::left,
-                   VTextAlignment vertical_alignment = VTextAlignment::baseline,
-                   FontStyle style = FontStyle::regular) const -> void;
-
     [[nodiscard]] auto calculate_bounding_box(std::string_view text, float font_size,
                                               FontStyle style) const -> BLBox;
 

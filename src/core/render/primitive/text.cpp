@@ -22,9 +22,14 @@ auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
     const auto position_px = to_context(position, ctx);
     const auto font_size_px_float = static_cast<float>(font_size_px);
 
-    ctx.cache.text_cache().draw_text(ctx.bl_ctx, position_px, text, font_size_px_float,
-                                     attributes.color, attributes.horizontal_alignment,
-                                     attributes.vertical_alignment, attributes.style);
+    ctx.cache.text_cache().draw_text(
+        ctx.bl_ctx, position_px, text, font_size_px_float,
+        TextCache::TextAttributes {
+            .color = attributes.color,
+            .horizontal_alignment = attributes.horizontal_alignment,
+            .vertical_alignment = attributes.vertical_alignment,
+            .style = attributes.style,
+        });
 }
 
 }  // namespace logicsim

@@ -112,15 +112,6 @@ auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_v
     }
 }
 
-auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_view text,
-                          float font_size, color_t color,
-                          HTextAlignment horizontal_alignment,
-                          VTextAlignment vertical_alignment,
-                          FontStyle style) const -> void {
-    draw_text(ctx, position, text, font_size,
-              TextAttributes {color, horizontal_alignment, vertical_alignment, style});
-}
-
 namespace {
 
 auto text_width(const TextCache& glyph_cache, std::string_view text,
