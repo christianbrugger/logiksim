@@ -137,6 +137,7 @@ auto format(icon_t icon) -> std::string {
             return "setting_handle_text_element";
         }
     }
+    std::terminate();
 }
 
 namespace {
