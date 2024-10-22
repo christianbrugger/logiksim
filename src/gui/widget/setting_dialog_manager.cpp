@@ -2,6 +2,7 @@
 
 #include "gui/widget/setting_dialog.h"
 
+#include "core/algorithm/overload.h"
 #include "core/editable_circuit.h"
 #include "core/setting_handle.h"
 #include "core/vocabulary/logicitem_definition.h"
@@ -28,36 +29,68 @@ SettingDialogManager::SettingDialogManager(QWidget* parent)
 
 namespace {
 
-auto get_selected_logicitem(const EditableCircuit& editable_circuit,
-                            selection_id_t selection_id) -> logicitem_id_t {
-    if (!editable_circuit.selection_exists(selection_id)) {
-        return null_logicitem_id;
+auto get_selected_element(const EditableCircuit& editable_circuit,
+                          selection_id_t selection_id)
+    -> std::optional<std::variant<logicitem_id_t, decoration_id_t>> {
+    if (editable_circuit.selection_exists(selection_id)) {
+        if (const auto logicitem_id =
+                get_single_logicitem(editable_circuit.selection(selection_id))) {
+            Ensures(logicitem_id);
+            return logicitem_id;
+        }
+        if (const auto decoration_id =
+                get_single_decoration(editable_circuit.selection(selection_id))) {
+            Ensures(decoration_id);
+            return decoration_id;
+        }
     }
-    const auto& selection = editable_circuit.selection(selection_id);
+    return std::nullopt;
+}
 
-    if (selection.selected_logicitems().size() != 1 ||
-        !selection.selected_segments().empty()) {
-        return null_logicitem_id;
+auto create_setting_dialog_element(const Layout& layout, logicitem_id_t logicitem_id,
+                                   selection_id_t selection_id,
+                                   QWidget* parent) -> SettingDialog* {
+    switch (layout.logicitems().type(logicitem_id)) {
+        case LogicItemType::clock_generator: {
+            return new ClockGeneratorDialog {
+                parent, selection_id,
+                layout.logicitems().attrs_clock_generator(logicitem_id)};
+        }
+
+        default: {
+            throw std::runtime_error("type doesn't have dialog");
+        }
     }
+}
 
-    return selection.selected_logicitems().front();
+auto create_setting_dialog_element(const Layout& layout, decoration_id_t decoration_id,
+                                   selection_id_t selection_id,
+                                   QWidget* parent) -> SettingDialog* {
+    switch (layout.decorations().type(decoration_id)) {
+        case DecorationType::text_element: {
+            return new SettingDialog {parent, selection_id};
+        }
+
+        default: {
+            throw std::runtime_error("type doesn't have dialog");
+        }
+    }
 }
 
 auto create_setting_dialog(const EditableCircuit& editable_circuit,
                            selection_id_t selection_id,
                            QWidget* parent) -> SettingDialog* {
-    const auto logicitem_id = get_selected_logicitem(editable_circuit, selection_id);
-    Expects(logicitem_id);
-
-    const auto logicitem_type = editable_circuit.layout().logicitems().type(logicitem_id);
-
-    if (logicitem_type == LogicItemType::clock_generator) {
-        return new ClockGeneratorDialog {
-            parent, selection_id,
-            editable_circuit.layout().logicitems().attrs_clock_generator(logicitem_id)};
+    const auto element = get_selected_element(editable_circuit, selection_id);
+    if (!element) {
+        throw std::runtime_error("Selection must hold exactly one element");
     }
 
-    throw std::runtime_error("type doesn't have dialog");
+    return std::visit(
+        [&](auto element_id) {
+            return create_setting_dialog_element(editable_circuit.layout(), element_id,
+                                                 selection_id, parent);
+        },
+        element.value());
 }
 
 }  // namespace
@@ -68,8 +101,8 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
 
     // find existing dialog
     for (auto&& [selection_id, widget] : map_) {
-        if (get_selected_logicitem(editable_circuit, selection_id) ==
-            setting_handle.logicitem_id) {
+        if (const auto element = get_selected_element(editable_circuit, selection_id);
+            element && *element == setting_handle.element_id) {
             widget->show();
             widget->activateWindow();
 
@@ -83,7 +116,11 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
     Expects(selection_id);
 
     try {
-        editable_circuit.add_to_selection(selection_id, setting_handle.logicitem_id);
+        std::visit(
+            [&](auto element_id) {
+                editable_circuit.add_to_selection(selection_id, element_id);
+            },
+            setting_handle.element_id);
         const auto [it, inserted] = map_.emplace(selection_id, nullptr);
         Expects(inserted);
 
@@ -138,7 +175,7 @@ auto SettingDialogManager::run_cleanup(EditableCircuit& editable_circuit) -> voi
     // close dialogs with deleted logic-items
     for (auto&& [selection_id, widget] : map_) {
         if (widget != nullptr) {
-            if (!get_selected_logicitem(editable_circuit, selection_id)) {
+            if (!get_selected_element(editable_circuit, selection_id)) {
                 widget->deleteLater();
                 widget = nullptr;
             }
@@ -210,21 +247,46 @@ auto SettingDialogManager::class_invariant_holds() const -> bool {
 // Public Methods
 //
 
-auto change_setting_attributes(EditableCircuit& editable_circuit,
-                               selection_id_t selection_id,
-                               SettingAttributes attributes) -> void {
-    const auto element_id = get_selected_logicitem(editable_circuit, selection_id);
-    if (!element_id) {
-        return;
-    }
+namespace {
 
-    const auto logicitem_type = editable_circuit.layout().logicitems().type(element_id);
+auto change_setting_attributes_element(EditableCircuit& editable_circuit,
+                                       logicitem_id_t logicitem_id,
+                                       const SettingAttributes& attributes) -> void {
+    auto logicitem_type = editable_circuit.layout().logicitems().type(logicitem_id);
 
     if (logicitem_type == LogicItemType::clock_generator &&
         attributes.attrs_clock_generator) {
-        editable_circuit.set_attributes(element_id,
+        editable_circuit.set_attributes(logicitem_id,
                                         attributes.attrs_clock_generator.value());
     }
+
+    throw std::runtime_error("Logicitem has unsupported type");
+}
+
+auto change_setting_attributes_element(EditableCircuit& editable_circuit,
+                                       decoration_id_t decoration_id,
+                                       const SettingAttributes& attributes) -> void {
+    static_cast<void>(editable_circuit);
+    static_cast<void>(decoration_id);
+    static_cast<void>(attributes);
+    throw std::runtime_error("Logicitem has unsupported type");
+}
+
+}  // namespace
+
+auto change_setting_attributes(EditableCircuit& editable_circuit,
+                               selection_id_t selection_id,
+                               const SettingAttributes& attributes) -> void {
+    const auto element = get_selected_element(editable_circuit, selection_id);
+    if (!element) {
+        return;
+    }
+
+    std::visit(
+        [&](auto element_id) {
+            change_setting_attributes_element(editable_circuit, element_id, attributes);
+        },
+        element.value());
 }
 
 }  // namespace logicsim

@@ -9,9 +9,139 @@
 
 namespace logicsim {
 
+template <>
+auto format(icon_t icon) -> std::string {
+    switch (icon) {
+        using enum icon_t;
+        case app_icon: {
+            return "app_icon";
+        }
+
+        // file
+        case new_file: {
+            return "new_file";
+        }
+        case open_file: {
+            return "open_file";
+        }
+        case save_file: {
+            return "save_file";
+        }
+        case exit: {
+            return "exit";
+        }
+
+        // edit
+        case cut: {
+            return "cut";
+        }
+        case copy: {
+            return "copy";
+        }
+        case paste: {
+            return "paste";
+        }
+        case delete_selected: {
+            return "delete_selected";
+        }
+        case select_all: {
+            return "select_all";
+        }
+
+        // view
+        case reset_zoom: {
+            return "reset_zoom";
+        }
+        case zoom_in: {
+            return "zoom_in";
+        }
+        case zoom_out: {
+            return "zoom_out";
+        }
+
+        // simulation
+        case simulation_start: {
+            return "simulation_start";
+        }
+        case simulation_stop: {
+            return "simulation_stop";
+        }
+        case simulation_speed: {
+            return "simulation_speed";
+        }
+
+        // debug
+        case benchmark: {
+            return "benchmark";
+        }
+        case show_circuit: {
+            return "show_circuit";
+        }
+        case show_collision_cache: {
+            return "show_collision_cache";
+        }
+        case show_connection_cache: {
+            return "show_connection_cache";
+        }
+        case show_selection_cache: {
+            return "show_selection_cache";
+        }
+        // --
+        case reload_circuit: {
+            return "reload_circuit";
+        }
+        case load_simple_example: {
+            return "load_simple_example";
+        }
+        case load_wire_example: {
+            return "load_wire_example";
+        }
+        case load_element_example: {
+            return "load_element_example";
+        }
+        case load_elements_and_wires_example: {
+            return "load_elements_and_wires_example";
+        }
+        // --
+        case show_render_borders: {
+            return "show_render_borders";
+        }
+        case show_mouse_position: {
+            return "show_mouse_position";
+        }
+        case non_interactive_mode: {
+            return "non_interactive_mode";
+        }
+        case direct_rendering: {
+            return "direct_rendering";
+        }
+        case jit_rendering: {
+            return "jit_rendering";
+        }
+
+        // options
+        case options: {
+            return "options";
+        }
+
+        // help
+        case about: {
+            return "about";
+        }
+
+        // circuit rendering
+        case setting_handle_clock_generator: {
+            return "setting_handle_clock_generator";
+        }
+        case setting_handle_text_element: {
+            return "setting_handle_text_element";
+        }
+    }
+}
+
 namespace {
 
-[[nodiscard]] auto to_absolute_resource_path(const std::filesystem::path &relative)
+[[nodiscard]] auto to_absolute_resource_path(const std::filesystem::path& relative)
     -> std::filesystem::path {
     Expects(!relative.empty());
 
@@ -169,7 +299,8 @@ namespace {
             return std::filesystem::path {"icons/lucide/info.svg"};
         }
 
-        case setting_handle_clock_generator: {
+        case setting_handle_clock_generator:
+        case setting_handle_text_element: {
             return std::filesystem::path {"icons/lucide/activity.svg"};
         }
     };

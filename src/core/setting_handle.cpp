@@ -1,5 +1,6 @@
 #include "core/setting_handle.h"
 
+#include "core/algorithm/overload.h"
 #include "core/geometry/layout_calculation.h"
 #include "core/geometry/rect.h"
 #include "core/layout.h"
@@ -12,6 +13,22 @@
 #include <exception>
 
 namespace logicsim {
+
+auto setting_handle_t::format() const -> std::string {
+    const auto id_str =
+        std::visit(overload(
+                       [](const logicitem_id_t logicitem_id) {
+                           return fmt::format("logicitem_id = {}", logicitem_id);
+                       },
+
+                       [](const decoration_id_t decoration_id) {
+                           return fmt::format("decoration_id = {}", decoration_id);
+                       }),
+                   element_id);
+    return fmt::format("setting_handle_t(position = {}, icon = {}, {})", position, icon,
+                       id_str);
+}
+
 auto setting_handle_position(const Layout& layout, logicitem_id_t logicitem_id)
     -> std::optional<setting_handle_t> {
     switch (layout.logicitems().type(logicitem_id)) {
@@ -41,7 +58,7 @@ auto setting_handle_position(const Layout& layout, logicitem_id_t logicitem_id)
                                   height / 2.0 + handle_size / 2.0,
                               }),
                 .icon = icon_t::setting_handle_clock_generator,
-                .logicitem_id = logicitem_id,
+                .element_id = logicitem_id,
             };
         }
 
@@ -68,17 +85,44 @@ auto setting_handle_position(const Layout& layout, logicitem_id_t logicitem_id)
     std::terminate();
 }
 
+auto setting_handle_position(const Layout& layout, decoration_id_t decoration_id)
+    -> std::optional<setting_handle_t> {
+    switch (layout.decorations().type(decoration_id)) {
+        using enum DecorationType;
+
+        case text_element: {
+            // TODO move to element/decoration/..
+
+            const auto position = layout.decorations().position(decoration_id);
+            const auto size = layout.decorations().size(decoration_id);
+
+            return setting_handle_t {
+                .position =
+                    point_fine_t {position} +
+                    point_fine_t {int {size.width} / 2.0, int {size.height} / 2.0},
+                .icon = icon_t::setting_handle_clock_generator,
+                .element_id = decoration_id,
+            };
+        }
+    };
+
+    std::terminate();
+}
+
 auto setting_handle_position(const Layout& layout, const Selection& selection)
     -> std::optional<setting_handle_t> {
-    const auto logicitem_id = get_single_logicitem(selection);
-    if (!logicitem_id) {
-        return {};
+    if (const auto logicitem_id = get_single_logicitem(selection);
+        logicitem_id &&
+        layout.logicitems().display_state(logicitem_id) == display_state_t::normal) {
+        return setting_handle_position(layout, logicitem_id);
     }
-    if (layout.logicitems().display_state(logicitem_id) != display_state_t::normal) {
-        return {};
+    if (const auto decoration_id = get_single_decoration(selection);
+        decoration_id &&
+        layout.decorations().display_state(decoration_id) == display_state_t::normal) {
+        return setting_handle_position(layout, decoration_id);
     }
 
-    return setting_handle_position(layout, logicitem_id);
+    return std::nullopt;
 }
 
 auto setting_handle_rect(setting_handle_t handle) -> rect_fine_t {

@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_RESOURCE_H
 #define LOGIKSIM_RESOURCE_H
 
+#include "core/format/enum.h"
 #include "core/vocabulary/font_style.h"
 
 #include <filesystem>
@@ -65,7 +66,11 @@ enum class icon_t {
 
     // circuit rendering
     setting_handle_clock_generator,
+    setting_handle_text_element,
 };
+
+template <>
+[[nodiscard]] auto format(icon_t icon) -> std::string;
 
 [[nodiscard]] auto get_icon_path(icon_t icon) -> std::filesystem::path;
 
