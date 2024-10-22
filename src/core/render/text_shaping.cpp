@@ -3,18 +3,24 @@
 #include "core/algorithm/range.h"
 #include "core/algorithm/round.h"
 #include "core/algorithm/transform_to_vector.h"
+#include "core/concept/input_range.h"
 #include "core/format/blend2d_type.h"
 #include "core/format/container.h"
 #include "core/logging.h"
+#include "core/timer.h"
 
 #include <blend2d.h>
 #include <fmt/core.h>
 #include <gsl/gsl>
 #include <hb.h>
+#include <range/v3/algorithm/adjacent_find.hpp>
 #include <range/v3/numeric/accumulate.hpp>
 #include <range/v3/to_container.hpp>
+#include <range/v3/view/chunk_by.hpp>
 #include <range/v3/view/exclusive_scan.hpp>
+#include <range/v3/view/iota.hpp>
 #include <range/v3/view/partial_sum.hpp>
+#include <range/v3/view/take_last.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip_with.hpp>
 
@@ -186,71 +192,6 @@ auto HbBufferDeleter::operator()(hb_buffer_t *hb_buffer) -> void {
     });
 }
 
-[[nodiscard]] auto calculate_max_glyph_count(hb_buffer_t *hb_buffer, hb_font_t *hb_font,
-                                             float font_size,
-                                             double max_font_width) -> std::size_t {
-    Expects(hb_buffer != nullptr);
-    Expects(hb_font != nullptr);
-    Expects(max_font_width >= 0);
-
-    const auto glyph_infos = get_glyph_infos(hb_buffer);
-    const auto glyph_positions = get_hb_glyph_positions(hb_buffer);
-    const auto glyph_count = std::min(glyph_infos.size(), glyph_positions.size());
-
-    if (glyph_count == 0) {
-        return 0;
-    }
-
-    auto scale = BLPointI {};
-    hb_font_get_scale(hb_font, &scale.x, &scale.y);
-    const auto max_width_scaled = max_font_width / font_size * scale.x;
-
-    auto origin = BLPoint {};
-
-    auto current_cluster = glyph_infos.front().cluster;
-    auto current_min = +std::numeric_limits<double>::infinity();
-    auto current_max = -std::numeric_limits<double>::infinity();
-    auto accepted_glyph_count = std::size_t {0};
-
-    for (auto i : range(glyph_count)) {
-        const auto &pos = glyph_positions[i];
-        auto extents = hb_glyph_extents_t {};
-
-        if (hb_font_get_glyph_extents(hb_font, glyph_infos[i].codepoint, &extents)) {
-            if (glyph_infos[i].cluster != current_cluster) {
-                Expects(i > 0);
-                accepted_glyph_count = i;
-                current_cluster = glyph_infos[i].cluster;
-            }
-
-            const auto new_min = origin.x + pos.x_offset + extents.x_bearing;
-            const auto new_max =
-                origin.x + pos.x_offset + extents.x_bearing + extents.width;
-
-            assert(new_min <= new_max);
-
-            current_min = std::min(current_min, new_min);
-            current_max = std::max(current_max, new_max);
-
-            assert(current_min <= current_max);
-
-            if (current_max - current_min > max_width_scaled) {
-                break;
-            }
-        }
-
-        origin.x += pos.x_advance;
-        origin.y += pos.y_advance;
-    }
-
-    if (current_max - current_min < max_width_scaled) {
-        accepted_glyph_count = glyph_count;
-    }
-
-    Ensures(accepted_glyph_count <= glyph_count);
-    return accepted_glyph_count;
-}
-
 constexpr static inline auto empty_bl_box = BLBox {
     +std::numeric_limits<double>::infinity(),
     +std::numeric_limits<double>::infinity(),
@@ -319,7 +260,8 @@ constexpr static inline auto empty_bl_box = BLBox {
 }
 
 // TODO move somewhere else
-[[nodiscard]] auto get_box_union(std::span<const BLBox> boxes) -> BLBox {
+// [[nodiscard]] auto get_box_union(std::span<const BLBox> boxes) -> BLBox {
+[[nodiscard]] auto get_box_union(input_range_of<BLBox> auto &&boxes) -> BLBox {
     if (boxes.size() == 0) {
         return empty_bl_box;
     }
@@ -363,66 +305,182 @@ constexpr static inline auto empty_bl_box = BLBox {
            ranges::to<std::vector>;
 }
 
-[[nodiscard]] auto calculate_bounding_rect(hb_buffer_t *hb_buffer, hb_font_t *hb_font,
-                                           float font_size) -> BLBox {
+[[nodiscard]] auto calculate_bounding_box_user(hb_buffer_t *hb_buffer, hb_font_t *hb_font,
+                                               float font_size) -> BLBox {
+    // TODO move to arguments
     const auto boxes = calculate_glyph_boxes_user(hb_buffer, hb_font, font_size);
     return get_box_union(boxes);
 }
 
+struct ClusterBox {
+    // first and last glyph index of the cluster
+    std::size_t begin_index;  // inclusive
+    std::size_t end_index;    // exclusive
+
+    // bounding box of the cluster
+    BLBox box;
+
+    [[nodiscard]] auto operator==(const ClusterBox &) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+auto ClusterBox::format() const -> std::string {
+    return fmt::format("ClusterBox(first_index = {}, last_index = {}, box = {})",
+                       begin_index, end_index, box);
+}
+
+struct GlyphBoxData {
+    std::size_t glyph_index;
+    uint32_t cluster;
+    BLBox box;
+
+    [[nodiscard]] auto operator==(const GlyphBoxData &) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+auto GlyphBoxData::format() const -> std::string {
+    return fmt::format("GlyphBoxData(glyph_index = {}, cluster = {}, box = {})",
+                       glyph_index, cluster, box);
+}
+
+/**
+ * @brief: calculate bounding boxes of each graphene cluster
+ */
+[[nodiscard]] auto calculate_cluster_boxes_user(hb_buffer_t *hb_buffer,
+                                                hb_font_t *hb_font, float font_size)
+    -> std::vector<ClusterBox> {
+    const auto glyph_infos = get_glyph_infos(hb_buffer);
+
+    // TODO move to arguments
+    const auto boxes = calculate_glyph_boxes_user(hb_buffer, hb_font, font_size);
+    Expects(glyph_infos.size() == boxes.size());
+
+    print(glyph_infos.size());
+
+    const auto to_glyph_data = [](const std::size_t index, const hb_glyph_info_t &a,
+                                  const BLBox &box) {
+        return GlyphBoxData {
+            .glyph_index = index,
+            .cluster = a.cluster,
+            .box = box,
+        };
+    };
+
+    const auto is_cluster_equal = [](const GlyphBoxData &a,
+                                     const GlyphBoxData &b) -> bool {
+        return a.cluster == b.cluster;
+    };
+
+    const auto to_box_union = [](input_range_of<GlyphBoxData> auto &&rng) {
+        const auto to_box = [](const GlyphBoxData &a) { return a.box; };
+        return ClusterBox {
+            .begin_index = (*std::ranges::begin(rng)).glyph_index,
+            .end_index = (*std::ranges::prev(std::ranges::end(rng))).glyph_index + 1,
+            .box = get_box_union(rng | ranges::views::transform(to_box)),
+        };
+    };
+
+    return ranges::views::zip_with(to_glyph_data,                               //
+                                   ranges::views::iota(0), glyph_infos, boxes)  //
+           | ranges::views::chunk_by(is_cluster_equal)                          //
+           | ranges::views::transform(to_box_union)                             //
+           | ranges::to<std::vector>;
+}
+
+[[nodiscard]] auto calculate_max_glyph_count(hb_buffer_t *hb_buffer, hb_font_t *hb_font,
+                                             float font_size,
+                                             double max_font_width) -> std::size_t {
+    // TODO move to arguments
+    const auto boxes = calculate_cluster_boxes_user(hb_buffer, hb_font, font_size);
+
+    const auto union_box_data = [](const ClusterBox &a, const ClusterBox &b) {
+        return ClusterBox {
+            .begin_index = std::min(a.begin_index, b.begin_index),
+            .end_index = std::max(a.end_index, b.end_index),
+            .box = get_box_union(a.box, b.box),
+        };
+    };
+
+    const auto box_fitting = [&](const ClusterBox &a) -> bool {
+        const auto width = a.box.x1 - a.box.x0;
+        assert(width >= 0);
+        return width <= max_font_width;
+    };
+
+    const auto sum_boxes = ranges::views::partial_sum(boxes, union_box_data);
+
+    for (const auto &b : sum_boxes) {
+        print(b);
+    }
+
+    static_cast<void>(box_fitting);
+
+    // return (*ranges::prev(ranges::end(fitting_clusters))).end_index;
+    const auto glyph_infos = get_glyph_infos(hb_buffer);
+    return glyph_infos.size();
+}
+
 /*
-[[nodiscard]] auto calculate_bounding_rect(hb_buffer_t *hb_buffer, hb_font_t *hb_font,
-                                           float font_size) -> BLBox {
-    Expects(hb_buffer != nullptr);
-    Expects(hb_font != nullptr);
+[[nodiscard]] auto calculate_max_glyph_count(hb_buffer_t *hb_buffer, hb_font_t
+*hb_font, float font_size, double max_font_width) -> std::size_t { Expects(hb_buffer
+!= nullptr); Expects(hb_font != nullptr); Expects(max_font_width >= 0);
 
     const auto glyph_infos = get_glyph_infos(hb_buffer);
     const auto glyph_positions = get_hb_glyph_positions(hb_buffer);
+    const auto glyph_count = std::min(glyph_infos.size(), glyph_positions.size());
+
+    if (glyph_count == 0) {
+        return 0;
+    }
 
     auto scale = BLPointI {};
     hb_font_get_scale(hb_font, &scale.x, &scale.y);
+    const auto max_width_scaled = max_font_width / font_size * scale.x;
 
     auto origin = BLPoint {};
-    auto rect = BLBox {
-        +std::numeric_limits<double>::infinity(),
-        +std::numeric_limits<double>::infinity(),
-        -std::numeric_limits<double>::infinity(),
-        -std::numeric_limits<double>::infinity(),
-    };
-    bool found = false;
 
-    for (auto i : range(std::min(glyph_infos.size(), glyph_positions.size()))) {
+    auto current_cluster = glyph_infos.front().cluster;
+    auto current_min = +std::numeric_limits<double>::infinity();
+    auto current_max = -std::numeric_limits<double>::infinity();
+    auto accepted_glyph_count = std::size_t {0};
+
+    for (auto i : range(glyph_count)) {
         const auto &pos = glyph_positions[i];
         auto extents = hb_glyph_extents_t {};
 
-        if (hb_font_get_glyph_extents(hb_font, glyph_infos[i].codepoint, &extents) != 0 &&
-            extents.width != 0 && extents.height != 0) {
-            const auto glyph_rect = BLBox {
-                origin.x + pos.x_offset + extents.x_bearing,
-                -(origin.y + pos.y_offset + extents.y_bearing),
-                origin.x + pos.x_offset + extents.x_bearing + extents.width,
-                -(origin.y + pos.y_offset + extents.y_bearing + extents.height),
-            };
+        if (hb_font_get_glyph_extents(hb_font, glyph_infos[i].codepoint, &extents)) {
+            if (glyph_infos[i].cluster != current_cluster) {
+                Expects(i > 0);
+                accepted_glyph_count = i;
+                current_cluster = glyph_infos[i].cluster;
+            }
 
-            assert(glyph_rect.x0 <= glyph_rect.x1);
-            assert(glyph_rect.y0 <= glyph_rect.y1);
+            const auto new_min = origin.x + pos.x_offset + extents.x_bearing;
+            const auto new_max =
+                origin.x + pos.x_offset + extents.x_bearing + extents.width;
 
-            rect.x0 = std::min(rect.x0, glyph_rect.x0);
-            rect.y0 = std::min(rect.y0, glyph_rect.y0);
-            rect.x1 = std::max(rect.x1, glyph_rect.x1);
-            rect.y1 = std::max(rect.y1, glyph_rect.y1);
+            assert(new_min <= new_max);
 
-            found = true;
+            current_min = std::min(current_min, new_min);
+            current_max = std::max(current_max, new_max);
+
+            assert(current_min <= current_max);
+
+            if (current_max - current_min > max_width_scaled) {
+                break;
+            }
         }
 
         origin.x += pos.x_advance;
         origin.y += pos.y_advance;
     }
 
-    if (!found || scale.x == 0 || scale.y == 0) {
-        return BLBox {};
+    if (current_max - current_min < max_width_scaled) {
+        accepted_glyph_count = glyph_count;
     }
 
-    return rect / scale * font_size;
+    Ensures(accepted_glyph_count <= glyph_count);
+    return accepted_glyph_count;
 }
 */
 
@@ -494,7 +552,7 @@ HbShapedText::HbShapedText(std::string_view text_utf8, const HbFont &font,
     placements_ = get_bl_placements(buffer.get());
 
     // calculate bounding rect with glyph_count in mind
-    bounding_box_ = calculate_bounding_rect(buffer.get(), font.hb_font(), font_size);
+    bounding_box_ = calculate_bounding_box_user(buffer.get(), font.hb_font(), font_size);
 
     if (max_text_width) {
         glyph_count_ = calculate_max_glyph_count(buffer.get(), font.hb_font(), font_size,
