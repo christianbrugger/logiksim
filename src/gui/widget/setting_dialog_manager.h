@@ -1,6 +1,8 @@
 #ifndef LOGICSIM_WIDGET_SETTING_DIALOG_MANAGER_H
 #define LOGICSIM_WIDGET_SETTING_DIALOG_MANAGER_H
 
+#include "core/vocabulary/decoration_definition.h"
+#include "core/vocabulary/logicitem_definition.h"
 #include "core/vocabulary/selection_id.h"
 #include "core/vocabulary/setting_attribute.h"
 

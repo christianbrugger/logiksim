@@ -1,7 +1,9 @@
 #ifndef LOGICSIM_WIDGET_SETTING_DIALOG_H
 #define LOGICSIM_WIDGET_SETTING_DIALOG_H
 
+#include "core/vocabulary/decoration_definition.h"
 #include "core/vocabulary/delay.h"
+#include "core/vocabulary/logicitem_definition.h"
 #include "core/vocabulary/selection_id.h"
 #include "core/vocabulary/setting_attribute.h"
 
@@ -19,8 +21,6 @@ class QCloseEvent;
 namespace logicsim {
 
 struct delay_t;
-struct attributes_clock_generator_t;
-struct LogicItemDefinition;
 
 //
 // Setting Dialog
@@ -94,6 +94,20 @@ class ClockGeneratorDialog : public SettingDialog {
 
     QCheckBox* is_symmetric_;
     QCheckBox* simulation_controls_;
+};
+
+class TextElementDialog : public SettingDialog {
+    Q_OBJECT
+
+   public:
+    explicit TextElementDialog(QWidget* parent, selection_id_t selection_id,
+                               const attributes_text_element_t& attrs);
+
+   private:
+    auto value_changed() -> void;
+
+   private:
+    QLineEdit* text_;
 };
 
 }  // namespace logicsim

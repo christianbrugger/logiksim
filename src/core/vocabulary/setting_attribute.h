@@ -1,22 +1,15 @@
 #ifndef LOGICSIM_VOCABULARY_SETTING_ATTRIBUTE_H
 #define LOGICSIM_VOCABULARY_SETTING_ATTRIBUTE_H
 
-#include "core/format/struct.h"
-#include "core/vocabulary/logicitem_definition.h"
-
-#include <compare>
-#include <optional>
+#include <variant>
 
 namespace logicsim {
 
-struct SettingAttributes {
-    std::optional<attributes_clock_generator_t> attrs_clock_generator {};
+struct attributes_clock_generator_t;
+struct attributes_text_element_t;
 
-    [[nodiscard]] auto format() const -> std::string;
-
-    [[nodiscard]] auto operator==(const SettingAttributes& other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const SettingAttributes& other) const = default;
-};
+using SettingAttributes =
+    std::variant<attributes_clock_generator_t, attributes_text_element_t>;
 
 }  // namespace logicsim
 

@@ -135,6 +135,11 @@ auto EditableCircuit::set_attributes(logicitem_id_t logicitem_id,
     modifier_.set_attributes(logicitem_id, std::move(attrs));
 }
 
+auto EditableCircuit::set_attributes(decoration_id_t decoration_id,
+                                     attributes_text_element_t attrs) -> void {
+    modifier_.set_attributes(decoration_id, std::move(attrs));
+}
+
 //
 // Wire Regularization
 //

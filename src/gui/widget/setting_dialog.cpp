@@ -6,6 +6,7 @@
 #include "core/algorithm/round.h"
 #include "core/resource.h"
 #include "core/validate_definition_logicitem.h"
+#include "core/vocabulary/decoration_definition.h"
 #include "core/vocabulary/delay.h"
 #include "core/vocabulary/logicitem_definition.h"
 
@@ -39,7 +40,7 @@ void SettingDialog::emit_attributes_changed(const SettingAttributes& attributes)
 }
 
 //
-// Clock Generator Dialog
+// Delay Input
 //
 
 DelayInput::DelayInput(QWidget* parent, const QString& text, delay_t initial_value,
@@ -121,6 +122,10 @@ auto DelayInput::delay_unit_changed() -> void {
     const double max_ns = gsl::narrow<double>(max_time.count_ns()) * scale;
     delay_validator.setRange(min_ns / unit, max_ns / unit);
 }
+
+//
+// Clock Generator Dialog
+//
 
 ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent, selection_id_t selection_id,
                                            const attributes_clock_generator_t& attrs)
@@ -218,17 +223,16 @@ auto ClockGeneratorDialog::value_changed() -> void {
     Expects(is_symmetric_ != nullptr);
     Expects(simulation_controls_ != nullptr);
 
-    emit_attributes_changed(SettingAttributes {
-        .attrs_clock_generator = attributes_clock_generator_t {
-            .name = name_->text().toStdString(),
+    emit_attributes_changed(attributes_clock_generator_t {
+        .name = name_->text().toStdString(),
 
-            .time_symmetric = time_symmetric_->last_valid_delay,
-            .time_on = time_on_->last_valid_delay,
-            .time_off = time_off_->last_valid_delay,
+        .time_symmetric = time_symmetric_->last_valid_delay,
+        .time_on = time_on_->last_valid_delay,
+        .time_off = time_off_->last_valid_delay,
 
-            .is_symmetric = is_symmetric_->isChecked(),
-            .show_simulation_controls = simulation_controls_->isChecked(),
-        }});
+        .is_symmetric = is_symmetric_->isChecked(),
+        .show_simulation_controls = simulation_controls_->isChecked(),
+    });
 }
 
 auto ClockGeneratorDialog::update_row_visibility() -> void {
@@ -239,6 +243,43 @@ auto ClockGeneratorDialog::update_row_visibility() -> void {
     layout_->setRowVisible(time_off_->label, !is_symmetric);
 
     this->adjustSize();
+}
+
+//
+// Text Element Dialog
+//
+
+TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_id,
+                                     const attributes_text_element_t& attrs)
+    : SettingDialog {parent, selection_id} {
+    setWindowTitle(tr("Text Element"));
+    const auto path = get_icon_path(icon_t::setting_handle_text_element);
+    setWindowIcon(QIcon(to_qt(path)));
+
+    auto* layout = new QFormLayout(this);
+
+    // Text
+    {
+        auto* label = new QLabel(this);
+        label->setText(tr("Text:"));
+        auto* line_edit = new QLineEdit(this);
+        line_edit->setText(QString::fromStdString(attrs.text));
+
+        layout->addRow(label, line_edit);
+
+        text_ = line_edit;
+        connect(text_, &QLineEdit::textChanged, this, &TextElementDialog::value_changed);
+    }
+
+    Ensures(text_ != nullptr);
+}
+
+auto TextElementDialog::value_changed() -> void {
+    Expects(text_ != nullptr);
+
+    emit_attributes_changed(attributes_text_element_t {
+        .text = text_->text().toStdString(),
+    });
 }
 
 }  // namespace logicsim

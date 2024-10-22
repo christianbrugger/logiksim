@@ -71,6 +71,8 @@ class EditableCircuit {
     auto toggle_wire_crosspoint(point_t point) -> void;
     auto set_attributes(logicitem_id_t logicitem_id,
                         attributes_clock_generator_t attrs) -> void;
+    auto set_attributes(decoration_id_t decoration_id,
+                        attributes_text_element_t attrs) -> void;
 
     //
     // Wire Regularization

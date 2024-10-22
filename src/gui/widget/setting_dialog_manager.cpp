@@ -5,7 +5,6 @@
 #include "core/algorithm/overload.h"
 #include "core/editable_circuit.h"
 #include "core/setting_handle.h"
-#include "core/vocabulary/logicitem_definition.h"
 
 #include <QWidget>
 
@@ -68,7 +67,9 @@ auto create_setting_dialog_element(const Layout& layout, decoration_id_t decorat
                                    QWidget* parent) -> SettingDialog* {
     switch (layout.decorations().type(decoration_id)) {
         case DecorationType::text_element: {
-            return new SettingDialog {parent, selection_id};
+            return new TextElementDialog {
+                parent, selection_id,
+                layout.decorations().attrs_text_element(decoration_id)};
         }
 
         default: {
@@ -252,24 +253,33 @@ namespace {
 auto change_setting_attributes_element(EditableCircuit& editable_circuit,
                                        logicitem_id_t logicitem_id,
                                        const SettingAttributes& attributes) -> void {
-    auto logicitem_type = editable_circuit.layout().logicitems().type(logicitem_id);
+    switch (editable_circuit.layout().logicitems().type(logicitem_id)) {
+        case LogicItemType::clock_generator: {
+            editable_circuit.set_attributes(
+                logicitem_id, std::get<attributes_clock_generator_t>(attributes));
+            return;
+        }
 
-    if (logicitem_type == LogicItemType::clock_generator &&
-        attributes.attrs_clock_generator) {
-        editable_circuit.set_attributes(logicitem_id,
-                                        attributes.attrs_clock_generator.value());
+        default: {
+            throw std::runtime_error("Unsupported type");
+        }
     }
-
-    throw std::runtime_error("Logicitem has unsupported type");
 }
 
 auto change_setting_attributes_element(EditableCircuit& editable_circuit,
                                        decoration_id_t decoration_id,
                                        const SettingAttributes& attributes) -> void {
-    static_cast<void>(editable_circuit);
-    static_cast<void>(decoration_id);
-    static_cast<void>(attributes);
-    throw std::runtime_error("Logicitem has unsupported type");
+    switch (editable_circuit.layout().decorations().type(decoration_id)) {
+        case DecorationType::text_element: {
+            editable_circuit.set_attributes(
+                decoration_id, std::get<attributes_text_element_t>(attributes));
+            return;
+        }
+
+        default: {
+            throw std::runtime_error("Unsupported type");
+        }
+    }
 }
 
 }  // namespace

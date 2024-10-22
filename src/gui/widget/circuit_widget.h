@@ -10,6 +10,7 @@
 #include "core/vocabulary/fallback_info.h"
 #include "core/vocabulary/load_error.h"
 #include "core/vocabulary/render_mode.h"
+#include "core/vocabulary/setting_attribute.h"
 #include "core/vocabulary/thread_count.h"
 #include "core/vocabulary/wire_render_style.h"
 
@@ -23,7 +24,6 @@
 namespace logicsim {
 
 class SettingDialogManager;
-struct SettingAttributes;
 struct selection_id_t;
 
 namespace circuit_widget {
