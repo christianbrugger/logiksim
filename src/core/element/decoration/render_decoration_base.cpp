@@ -98,6 +98,8 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
                   .horizontal_alignment = HTextAlignment::left,
                   .vertical_alignment = VTextAlignment::center_baseline,
                   .style = FontStyle::regular,
+
+                  .max_text_width = grid_fine_t {int {size.width}},
               });
 }
 

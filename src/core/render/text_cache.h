@@ -13,6 +13,7 @@
 #include <ankerl/unordered_dense.h>
 #include <blend2d.h>
 
+#include <cassert>
 #include <string>
 #include <string_view>
 
@@ -22,6 +23,7 @@ namespace text_cache {
 
 struct cache_key_t {
     uint64_t text_hash;
+    double max_text_width;  // -1 if not set
     float font_size;
     FontStyle style;
     HTextAlignment horizontal_alignment;
@@ -52,14 +54,16 @@ struct ankerl::unordered_dense::hash<logicsim::text_cache::cache_key_t> {
 
     [[nodiscard]] auto operator()(
         const logicsim::text_cache::cache_key_t &obj) const noexcept -> uint64_t {
+        assert(obj.max_text_width == -1 || obj.max_text_width >= 0);
+
         const uint64_t numerics =
             (uint64_t {std::bit_cast<uint32_t>(obj.font_size)} << 32) +
             (static_cast<uint64_t>(obj.style) << 16) +
             (static_cast<uint64_t>(obj.horizontal_alignment) << 8) +
             (static_cast<uint64_t>(obj.vertical_alignment) << 0);
 
-        const uint64_t v0 = ankerl::unordered_dense::hash<uint64_t> {}(numerics);
-        return logicsim::wyhash_128_bit(v0, obj.text_hash);
+        const auto v1 = std::bit_cast<uint64_t>(obj.max_text_width);
+        return logicsim::wyhash_192_bit(obj.text_hash, v1, numerics);
     }
 };
 
@@ -87,6 +91,12 @@ class TextCache {
         HTextAlignment horizontal_alignment {HTextAlignment::left};
         VTextAlignment vertical_alignment {VTextAlignment::baseline};
         FontStyle style {FontStyle::regular};
+
+        // stop rendering characters when size limit is exceeded
+        std::optional<double> max_text_width {std::nullopt};
+
+        bool draw_bounding_rect {false};
+        bool draw_glyph_rects {false};
     };
 
     auto draw_text(BLContext &ctx, const BLPoint &position, std::string_view text,
@@ -98,10 +108,10 @@ class TextCache {
    private:
     [[nodiscard]] auto get_scaled_bl_font(float font_size,
                                           FontStyle style) const -> const BLFont &;
-    [[nodiscard]] auto get_entry(std::string_view text, float font_size, FontStyle style,
-                                 HTextAlignment horizontal_alignment,
-                                 VTextAlignment vertical_alignment) const
-        -> const cache_entry_t &;
+    [[nodiscard]] auto get_entry(
+        std::string_view text, float font_size, FontStyle style,
+        HTextAlignment horizontal_alignment, VTextAlignment vertical_alignment,
+        std::optional<double> max_text_width) const -> const cache_entry_t &;
 
    private:
     using glyph_map_t = ankerl::unordered_dense::map<cache_key_t, cache_entry_t>;

@@ -21,8 +21,11 @@ struct TextAttributes {
     VTextAlignment vertical_alignment {VTextAlignment::baseline};
     FontStyle style {FontStyle::regular};
 
-    // don't render, if scaled font size is smaller
+    // don't render, if scaled font size is smaller, on this zoom level
     double cutoff_size_px {3.0};  // pixels
+
+    // stop rendering characters when size limit is exceeded
+    std::optional<grid_fine_t> max_text_width {std::nullopt};
 };
 
 auto draw_text(Context& ctx, point_fine_t position, std::string_view text,

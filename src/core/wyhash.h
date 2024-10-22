@@ -3,6 +3,7 @@
 
 #include <ankerl/unordered_dense.h>
 
+#include <array>
 #include <bit>
 #include <cstdint>
 
@@ -39,6 +40,11 @@ constexpr inline auto wyhash_secret = std::array {
 [[nodiscard]] inline auto wyhash_128_bit(uint64_t a, uint64_t b) -> uint64_t {
     return ankerl::unordered_dense::detail::wyhash::mix(a ^ wyhash_secret[1],
                                                         b ^ wyhash_secret[0]);
+}
+
+[[nodiscard]] inline auto wyhash_192_bit(uint64_t a, uint64_t b, uint64_t c) -> uint64_t {
+    const auto array = std::array {a, b, c};
+    return ankerl::unordered_dense::detail::wyhash::hash(array.data(), array.size());
 }
 
 //

@@ -5,6 +5,7 @@
 #include "core/algorithm/transform_to_vector.h"
 #include "core/format/blend2d_type.h"
 #include "core/format/container.h"
+#include "core/logging.h"
 
 #include <blend2d.h>
 #include <fmt/core.h>
@@ -179,6 +180,71 @@ auto HbBufferDeleter::operator()(hb_buffer_t *hb_buffer) -> void {
     });
 }
 
+[[nodiscard]] auto calculate_max_glyph_count(hb_buffer_t *hb_buffer, hb_font_t *hb_font,
+                                             float font_size,
+                                             double max_font_width) -> std::size_t {
+    Expects(hb_buffer != nullptr);
+    Expects(hb_font != nullptr);
+    Expects(max_font_width >= 0);
+
+    const auto glyph_infos = get_glyph_infos(hb_buffer);
+    const auto glyph_positions = get_hb_glyph_positions(hb_buffer);
+    const auto glyph_count = std::min(glyph_infos.size(), glyph_positions.size());
+
+    if (glyph_count == 0) {
+        return 0;
+    }
+
+    auto scale = BLPointI {};
+    hb_font_get_scale(hb_font, &scale.x, &scale.y);
+    const auto max_width_scaled = max_font_width / font_size * scale.x;
+
+    auto origin = BLPoint {};
+
+    auto current_cluster = glyph_infos.front().cluster;
+    auto current_min = +std::numeric_limits<double>::infinity();
+    auto current_max = -std::numeric_limits<double>::infinity();
+    auto accepted_glyph_count = std::size_t {0};
+
+    for (auto i : range(glyph_count)) {
+        const auto &pos = glyph_positions[i];
+        auto extents = hb_glyph_extents_t {};
+
+        if (hb_font_get_glyph_extents(hb_font, glyph_infos[i].codepoint, &extents)) {
+            if (glyph_infos[i].cluster != current_cluster) {
+                Expects(i > 0);
+                accepted_glyph_count = i;
+                current_cluster = glyph_infos[i].cluster;
+            }
+
+            const auto new_min = origin.x + pos.x_offset + extents.x_bearing;
+            const auto new_max =
+                origin.x + pos.x_offset + extents.x_bearing + extents.width;
+
+            assert(new_min <= new_max);
+
+            current_min = std::min(current_min, new_min);
+            current_max = std::max(current_max, new_max);
+
+            assert(current_min <= current_max);
+
+            if (current_max - current_min > max_width_scaled) {
+                break;
+            }
+        }
+
+        origin.x += pos.x_advance;
+        origin.y += pos.y_advance;
+    }
+
+    if (current_max - current_min < max_width_scaled) {
+        accepted_glyph_count = glyph_count;
+    }
+
+    Ensures(accepted_glyph_count <= glyph_count);
+    return accepted_glyph_count;
+}
+
 [[nodiscard]] auto calculate_bounding_rect(hb_buffer_t *hb_buffer, hb_font_t *hb_font,
                                            float font_size) -> BLBox {
     Expects(hb_buffer != nullptr);
@@ -295,28 +361,42 @@ auto HbFont::hb_font() const noexcept -> hb_font_t * {
 //
 
 HbShapedText::HbShapedText(std::string_view text_utf8, const HbFont &font,
-                           float font_size) {
+                           float font_size, std::optional<double> max_text_width) {
     const auto buffer = shape_text(text_utf8, font.hb_font());
 
     codepoints_ = get_uint32_codepoints(buffer.get());
     placements_ = get_bl_placements(buffer.get());
+
+    // calculate bounding rect with glyph_count in mind
     bounding_box_ = calculate_bounding_rect(buffer.get(), font.hb_font(), font_size);
 
+    if (max_text_width) {
+        glyph_count_ = calculate_max_glyph_count(buffer.get(), font.hb_font(), font_size,
+                                                 *max_text_width);
+    } else {
+        glyph_count_ = codepoints_.size();
+    }
+
     Ensures(codepoints_.size() == placements_.size());
+    Ensures(glyph_count_ <= codepoints_.size());
 }
 
 auto HbShapedText::empty() const -> bool {
     Expects(codepoints_.size() == placements_.size());
+    Ensures(glyph_count_ <= codepoints_.size());
+
+    // TODO use glyph_count_ ???
 
     return codepoints_.empty();
 }
 
 auto HbShapedText::glyph_run() const noexcept -> BLGlyphRun {
     Expects(codepoints_.size() == placements_.size());
+    Ensures(glyph_count_ <= codepoints_.size());
 
     auto result = BLGlyphRun {};
 
-    result.size = codepoints_.size();
+    result.size = glyph_count_;  // codepoints_.size();
     result.setGlyphData(codepoints_.data());
     result.setPlacementData(placements_.data());
     result.placementType = BL_GLYPH_PLACEMENT_TYPE_ADVANCE_OFFSET;

@@ -7,6 +7,7 @@
 #include <blend2d.h>
 
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -50,8 +51,8 @@ static_assert(std::semiregular<HbFont>);
 class HbShapedText {
    public:
     explicit HbShapedText() = default;
-    explicit HbShapedText(std::string_view text_utf8, const HbFont &font,
-                          float font_size);
+    explicit HbShapedText(std::string_view text_utf8, const HbFont &font, float font_size,
+                          std::optional<double> max_text_width = {});
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto format() const -> std::string;
@@ -65,6 +66,7 @@ class HbShapedText {
     std::vector<uint32_t> codepoints_ {};
     std::vector<BLGlyphPlacement> placements_ {};
     BLBox bounding_box_ {};
+    std::size_t glyph_count_ {};
 };
 
 static_assert(std::regular<HbShapedText>);

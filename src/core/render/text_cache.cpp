@@ -65,12 +65,18 @@ auto TextCache::calculate_bounding_box(std::string_view text, float font_size,
     return HbShapedText {text, font, font_size}.bounding_box();
 }
 
-auto TextCache::get_entry(std::string_view text, float font_size, FontStyle style,
-                          HTextAlignment horizontal_alignment,
-                          VTextAlignment vertical_alignment) const
-    -> const cache_entry_t& {
+auto TextCache::get_entry(
+    std::string_view text, float font_size, FontStyle style,
+    HTextAlignment horizontal_alignment, VTextAlignment vertical_alignment,
+    std::optional<double> max_text_width) const -> const cache_entry_t& {
+    if (max_text_width && *max_text_width < 0) [[unlikely]] {
+        throw std::runtime_error("max_text_width cannot be negative if set.");
+    }
+
+    // TODO don't add font-size and max-text-width to cache-key
     const auto [it, inserted] = glyph_map_.try_emplace(cache_key_t {
         .text_hash = wyhash(text),
+        .max_text_width = max_text_width ? *max_text_width : -1,
         .font_size = font_size,
         .style = style,
         .horizontal_alignment = horizontal_alignment,
@@ -81,7 +87,7 @@ auto TextCache::get_entry(std::string_view text, float font_size, FontStyle styl
     if (inserted) {
         const auto& hb_font = fonts_.get(style).hb_font();
 
-        entry.shaped_text = HbShapedText {text, hb_font, font_size};
+        entry.shaped_text = HbShapedText {text, hb_font, font_size, max_text_width};
         entry.offset = calculate_offset(entry.shaped_text.bounding_box(),
                                         baseline_offsets_.get(style, font_size),
                                         horizontal_alignment, vertical_alignment);
@@ -99,17 +105,23 @@ auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_v
     const auto& font = get_scaled_bl_font(font_size, attributes.style);
     const auto& entry = get_entry(text, font_size, attributes.style,  //
                                   attributes.horizontal_alignment,    //
-                                  attributes.vertical_alignment);
+                                  attributes.vertical_alignment,      //
+                                  attributes.max_text_width);
     const auto origin = position - entry.offset;
 
     ctx.fillGlyphRun(origin, font, entry.shaped_text.glyph_run(), attributes.color);
 
-    if constexpr (const bool debug_rect [[maybe_unused]] = false) {
+    if (attributes.draw_bounding_rect) {
         ctx.setStrokeWidth(1);
         ctx.translate(origin);
         ctx.strokeRect(entry.shaped_text.bounding_rect(), defaults::color_lime);
         ctx.translate(-origin);
     }
+    // if (attributes.draw_glyph_rects) {
+    //     for (const auto rect : entry.shaped_text.glyph_bounding_rects()) {
+    //         print(rect);
+    //     }
+    // }
 }
 
 namespace {

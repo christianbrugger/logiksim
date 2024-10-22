@@ -21,6 +21,10 @@ auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
 
     const auto position_px = to_context(position, ctx);
     const auto font_size_px_float = static_cast<float>(font_size_px);
+    const auto max_text_width_px =
+        attributes.max_text_width
+            ? std::make_optional(to_context_unrounded(*attributes.max_text_width, ctx))
+            : std::nullopt;
 
     ctx.cache.text_cache().draw_text(
         ctx.bl_ctx, position_px, text, font_size_px_float,
@@ -29,6 +33,7 @@ auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
             .horizontal_alignment = attributes.horizontal_alignment,
             .vertical_alignment = attributes.vertical_alignment,
             .style = attributes.style,
+            .max_text_width = max_text_width_px,
         });
 }
 
