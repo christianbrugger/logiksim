@@ -299,9 +299,13 @@ namespace {
             return std::filesystem::path {"icons/lucide/info.svg"};
         }
 
-        case setting_handle_clock_generator:
-        case setting_handle_text_element: {
+        case setting_handle_clock_generator: {
             return std::filesystem::path {"icons/lucide/activity.svg"};
+        }
+        case setting_handle_text_element: {
+            // text-cursor-input, chevrons-left-right-ellipsis,
+            // rectangle-ellipsis, ellipsis
+            return std::filesystem::path {"icons/lucide/ellipsis.svg"};
         }
     };
     std::terminate();

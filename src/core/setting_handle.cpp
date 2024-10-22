@@ -100,7 +100,7 @@ auto setting_handle_position(const Layout& layout, decoration_id_t decoration_id
                 .position =
                     point_fine_t {position} +
                     point_fine_t {int {size.width} / 2.0, int {size.height} / 2.0},
-                .icon = icon_t::setting_handle_clock_generator,
+                .icon = icon_t::setting_handle_text_element,
                 .element_id = decoration_id,
             };
         }
