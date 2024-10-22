@@ -97,9 +97,15 @@ auto setting_handle_position(const Layout& layout, decoration_id_t decoration_id
             const auto size = layout.decorations().size(decoration_id);
 
             return setting_handle_t {
-                .position =
-                    point_fine_t {position} +
-                    point_fine_t {int {size.width} / 2.0, int {size.height} / 2.0},
+                .position = point_fine_t {position} +
+                            // point_fine_t {
+                            //     int {size.width} / 2.0,
+                            //     1.0 + int {size.height} / 2.0,
+                            // },
+                            point_fine_t {
+                                int {size.width} + 1.5,
+                                int {size.height} / 2.0,
+                            },
                 .icon = icon_t::setting_handle_text_element,
                 .element_id = decoration_id,
             };

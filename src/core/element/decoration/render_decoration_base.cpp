@@ -92,11 +92,11 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
     const auto& text_label = layout.decorations().attrs_text_element(decoration_id).text;
     draw_text(ctx, text_anchor, text_label,
               TextAttributes {
-                  .font_size = grid_fine_t {1.0},
+                  .font_size = grid_fine_t {0.9},
                   .color = text_color,
 
                   .horizontal_alignment = HTextAlignment::left,
-                  .vertical_alignment = VTextAlignment::center,
+                  .vertical_alignment = VTextAlignment::center_baseline,
                   .style = FontStyle::regular,
               });
 }
