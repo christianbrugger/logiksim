@@ -11,6 +11,12 @@
 #include <fmt/core.h>
 #include <gsl/gsl>
 #include <hb.h>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/to_container.hpp>
+#include <range/v3/view/exclusive_scan.hpp>
+#include <range/v3/view/partial_sum.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/zip_with.hpp>
 
 #include <numeric>
 
@@ -245,6 +251,125 @@ auto HbBufferDeleter::operator()(hb_buffer_t *hb_buffer) -> void {
     return accepted_glyph_count;
 }
 
+constexpr static inline auto empty_bl_box = BLBox {
+    +std::numeric_limits<double>::infinity(),
+    +std::numeric_limits<double>::infinity(),
+    -std::numeric_limits<double>::infinity(),
+    -std::numeric_limits<double>::infinity(),
+};
+
+[[nodiscard]] auto get_font_user_scale(hb_font_t *hb_font, float font_size) -> BLPoint {
+    auto scale = BLPointI {};
+    hb_font_get_scale(hb_font, &scale.x, &scale.y);
+    return BLPoint {
+        static_cast<double>(font_size) / scale.x,
+        -static_cast<double>(font_size) / scale.y,
+    };
+}
+
+[[nodiscard]] auto calculate_glyph_positions_design(hb_buffer_t *hb_buffer) {
+    const auto glyph_positions = get_hb_glyph_positions(hb_buffer);
+
+    const auto to_advance = [](const hb_glyph_position_t &value) {
+        return BLPoint {
+            static_cast<double>(value.x_advance),
+            static_cast<double>(value.y_advance),
+        };
+    };
+    const auto origins = ranges::views::transform(glyph_positions, to_advance)  //
+                         | ranges::views::exclusive_scan(BLPoint {}, std::plus {});
+
+    const auto add_glyph_offset = [](const BLPoint &origin,
+                                     const hb_glyph_position_t &value) {
+        return BLPoint {
+            origin.x + value.x_offset,
+            origin.y + value.y_offset,
+        };
+    };
+
+    return ranges::views::zip_with(add_glyph_offset, origins, glyph_positions) |
+           ranges::to<std::vector>;
+}
+
+// TODO remove maybe_unused
+[[maybe_unused]] [[nodiscard]] auto calculate_glyph_positions_user(hb_buffer_t *hb_buffer,
+                                                                   BLPoint user_scale) {
+    const auto glyph_positions = get_hb_glyph_positions(hb_buffer);
+
+    const auto to_advance_user = [&](const hb_glyph_position_t &value) {
+        return BLPoint {
+            value.x_advance * user_scale.x,
+            value.y_advance * user_scale.y,
+        };
+    };
+
+    return ranges::views::transform(glyph_positions, to_advance_user)  //
+           | ranges::views::partial_sum(std::plus {})                  //
+           | ranges::to<std::vector>;
+}
+
+// TODO move somewhere else
+[[nodiscard]] auto get_box_union(const BLBox &a, const BLBox &b) -> BLBox {
+    return BLBox {
+        std::min(a.x0, b.x0),
+        std::min(a.y0, b.y0),
+        std::max(a.x1, b.x1),
+        std::max(a.y1, b.y1),
+    };
+}
+
+// TODO move somewhere else
+[[nodiscard]] auto get_box_union(std::span<const BLBox> boxes) -> BLBox {
+    if (boxes.size() == 0) {
+        return empty_bl_box;
+    }
+
+    return ranges::accumulate(boxes, empty_bl_box, [](const BLBox &a, const BLBox &b) {
+        return get_box_union(a, b);
+    });
+}
+
+[[nodiscard]] auto get_glyph_extends(hb_font_t *hb_font, hb_codepoint_t codepoint)
+    -> std::optional<hb_glyph_extents_t> {
+    Expects(hb_font != nullptr);
+
+    auto extents = hb_glyph_extents_t {};
+    if (hb_font_get_glyph_extents(hb_font, codepoint, &extents) != 0) {
+        return extents;
+    }
+
+    return std::nullopt;
+}
+
+[[nodiscard]] auto calculate_glyph_boxes_user(hb_buffer_t *hb_buffer, hb_font_t *hb_font,
+                                              float font_size) -> std::vector<BLBox> {
+    const auto glyph_positions = calculate_glyph_positions_design(hb_buffer);
+    const auto glyph_infos = get_glyph_infos(hb_buffer);
+    const auto user_scale = get_font_user_scale(hb_font, font_size);
+
+    const auto info_to_box = [&](const BLPoint &position, const hb_glyph_info_t &info) {
+        if (const auto extents = get_glyph_extends(hb_font, info.codepoint)) {
+            return user_scale * BLBox {
+                                    position.x + extents->x_bearing,
+                                    position.y + extents->y_bearing,
+                                    position.x + extents->x_bearing + extents->width,
+                                    position.y + extents->y_bearing + extents->height,
+                                };
+        }
+        return empty_bl_box;
+    };
+
+    return ranges::views::zip_with(info_to_box, glyph_positions, glyph_infos) |
+           ranges::to<std::vector>;
+}
+
+[[nodiscard]] auto calculate_bounding_rect(hb_buffer_t *hb_buffer, hb_font_t *hb_font,
+                                           float font_size) -> BLBox {
+    const auto boxes = calculate_glyph_boxes_user(hb_buffer, hb_font, font_size);
+    return get_box_union(boxes);
+}
+
+/*
 [[nodiscard]] auto calculate_bounding_rect(hb_buffer_t *hb_buffer, hb_font_t *hb_font,
                                            float font_size) -> BLBox {
     Expects(hb_buffer != nullptr);
@@ -299,6 +424,7 @@ auto HbBufferDeleter::operator()(hb_buffer_t *hb_buffer) -> void {
 
     return rect / scale * font_size;
 }
+*/
 
 }  // namespace
 
