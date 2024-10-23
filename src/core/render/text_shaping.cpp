@@ -212,7 +212,8 @@ constexpr static inline auto empty_bl_box = BLBox {
     };
 }
 
-[[nodiscard]] auto calculate_glyph_positions_design(hb_buffer_t *hb_buffer) {
+[[nodiscard]] auto calculate_glyph_positions_design(hb_buffer_t *hb_buffer)
+    -> std::vector<BLPoint> {
     const auto glyph_positions = get_hb_glyph_positions(hb_buffer);
 
     const auto to_advance = [](const hb_glyph_position_t &value) {
@@ -234,6 +235,30 @@ constexpr static inline auto empty_bl_box = BLBox {
 
     return ranges::views::zip_with(add_glyph_offset, origins, glyph_positions) |
            ranges::to<std::vector>;
+}
+
+class GlyphPositionsDesign {
+   public:
+    explicit GlyphPositionsDesign(hb_buffer_t *hb_buffer);
+
+    [[nodiscard]] auto operator==(const GlyphPositionsDesign &) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto span() const -> std::span<const BLPoint>;
+
+   private:
+    std::vector<BLPoint> positions_;
+};
+
+GlyphPositionsDesign::GlyphPositionsDesign(hb_buffer_t *hb_buffer)
+    : positions_ {calculate_glyph_positions_design(hb_buffer)} {}
+
+auto GlyphPositionsDesign::format() const -> std::string {
+    return fmt::format("{}", positions_);
+}
+
+auto GlyphPositionsDesign::span() const -> std::span<const BLPoint> {
+    return positions_;
 }
 
 // TODO move somewhere else
@@ -270,9 +295,9 @@ constexpr static inline auto empty_bl_box = BLBox {
     return std::nullopt;
 }
 
-[[nodiscard]] auto calculate_glyph_boxes_user(
-    std::span<const BLPoint> glyph_positions_design, hb_buffer_t *hb_buffer,
-    hb_font_t *hb_font, float font_size) -> std::vector<BLBox> {
+[[nodiscard]] auto calculate_glyph_boxes_user(const GlyphPositionsDesign &positions,
+                                              hb_buffer_t *hb_buffer, hb_font_t *hb_font,
+                                              float font_size) -> std::vector<BLBox> {
     const auto user_scale = get_font_user_scale(hb_font, font_size);
     const auto glyph_infos = get_glyph_infos(hb_buffer);
 
@@ -291,13 +316,41 @@ constexpr static inline auto empty_bl_box = BLBox {
         return empty_bl_box;
     };
 
-    return ranges::views::zip_with(info_to_box, glyph_positions_design, glyph_infos) |
+    return ranges::views::zip_with(info_to_box, positions.span(), glyph_infos) |
            ranges::to<std::vector>;
 }
 
-[[nodiscard]] auto calculate_bounding_box_user(std::span<const BLBox> glyph_boxes_user)
+class GlyphBoxesUser {
+   public:
+    explicit GlyphBoxesUser(const GlyphPositionsDesign &positions, hb_buffer_t *hb_buffer,
+                            hb_font_t *hb_font, float font_size);
+
+    [[nodiscard]] auto operator==(const GlyphBoxesUser &) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto span() const -> std::span<const BLBox>;
+
+   private:
+    std::vector<BLBox> glyph_boxes_;
+};
+
+GlyphBoxesUser::GlyphBoxesUser(const GlyphPositionsDesign &positions,
+                               hb_buffer_t *hb_buffer, hb_font_t *hb_font,
+                               float font_size)
+    : glyph_boxes_ {
+          calculate_glyph_boxes_user(positions, hb_buffer, hb_font, font_size)} {}
+
+auto GlyphBoxesUser::format() const -> std::string {
+    return fmt::format("{}", glyph_boxes_);
+}
+
+auto GlyphBoxesUser::span() const -> std::span<const BLBox> {
+    return glyph_boxes_;
+}
+
+[[nodiscard]] auto calculate_bounding_box_user(const GlyphBoxesUser &glyph_boxes)
     -> BLBox {
-    return get_box_union(glyph_boxes_user);
+    return get_box_union(glyph_boxes.span());
 }
 
 struct ClusterBox {
@@ -334,11 +387,11 @@ auto GlyphBoxData::format() const -> std::string {
 /**
  * @brief: calculate bounding boxes of each graphene cluster
  */
-[[nodiscard]] auto calculate_cluster_boxes_user(hb_buffer_t *hb_buffer,
-                                                std::span<const BLBox> glyph_boxes_user)
+[[nodiscard]] auto calculate_cluster_boxes_user(const GlyphBoxesUser &glyph_boxes,
+                                                hb_buffer_t *hb_buffer)
     -> std::vector<ClusterBox> {
     const auto glyph_infos = get_glyph_infos(hb_buffer);
-    Expects(glyph_infos.size() == glyph_boxes_user.size());
+    Expects(glyph_infos.size() == glyph_boxes.span().size());
 
     const auto to_glyph_data = [](const std::size_t index, const hb_glyph_info_t &a,
                                   const BLBox &box) {
@@ -363,17 +416,40 @@ auto GlyphBoxData::format() const -> std::string {
         };
     };
 
-    return ranges::views::zip_with(to_glyph_data,  //
-                                   ranges::views::iota(0), glyph_infos,
-                                   glyph_boxes_user)    //
-           | ranges::views::chunk_by(is_cluster_equal)  //
-           | ranges::views::transform(to_box_union)     //
+    return ranges::views::zip_with(to_glyph_data, ranges::views::iota(0),  //
+                                   glyph_infos, glyph_boxes.span())        //
+           | ranges::views::chunk_by(is_cluster_equal)                     //
+           | ranges::views::transform(to_box_union)                        //
            | ranges::to<std::vector>;
 }
 
-[[nodiscard]] auto calculate_max_glyph_count(
-    std::span<const ClusterBox> cluster_boxes_user,
-    double max_text_width) -> std::size_t {
+class ClusterBoxesUser {
+   public:
+    explicit ClusterBoxesUser(const GlyphBoxesUser &glyph_boxes, hb_buffer_t *hb_buffer);
+
+    [[nodiscard]] auto operator==(const ClusterBoxesUser &) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto span() const -> std::span<const ClusterBox>;
+
+   private:
+    std::vector<ClusterBox> cluster_boxes_;
+};
+
+ClusterBoxesUser::ClusterBoxesUser(const GlyphBoxesUser &glyph_boxes,
+                                   hb_buffer_t *hb_buffer)
+    : cluster_boxes_ {calculate_cluster_boxes_user(glyph_boxes, hb_buffer)} {}
+
+auto ClusterBoxesUser::format() const -> std::string {
+    return fmt::format("{}", cluster_boxes_);
+}
+
+auto ClusterBoxesUser::span() const -> std::span<const ClusterBox> {
+    return cluster_boxes_;
+}
+
+[[nodiscard]] auto calculate_max_glyph_count(const ClusterBoxesUser &cluster_boxes,
+                                             double max_text_width) -> std::size_t {
     const auto union_box_data = [](const ClusterBox &a, const ClusterBox &b) {
         return ClusterBox {
             .begin_index = std::min(a.begin_index, b.begin_index),
@@ -386,8 +462,9 @@ auto GlyphBoxData::format() const -> std::string {
         return (a.box.x1 - a.box.x0) <= max_text_width;
     };
 
-    const auto fitting = ranges::views::partial_sum(cluster_boxes_user, union_box_data) |
-                         ranges::views::take_while(box_fitting);
+    const auto fitting =
+        ranges::views::partial_sum(cluster_boxes.span(), union_box_data)  //
+        | ranges::views::take_while(box_fitting);
 
     const auto max = ranges::max_element(fitting, {}, &ClusterBox::end_index);
     return max != fitting.end() ? (*max).end_index : std::size_t {0};
@@ -525,20 +602,19 @@ HbShapedText::HbShapedText(std::string_view text_utf8, const HbFont &font,
     placements_ = get_bl_placements(buffer.get());
 
     // positions
-    const auto glyph_positions_design = calculate_glyph_positions_design(buffer.get());
+    const auto glyph_positions = GlyphPositionsDesign {buffer.get()};
 
     // boxes
-    const auto glyph_boxes_user = calculate_glyph_boxes_user(
-        glyph_positions_design, buffer.get(), font.hb_font(), font_size);
-    const auto cluster_boxes_user =
-        calculate_cluster_boxes_user(buffer.get(), glyph_boxes_user);
+    const auto glyph_boxes =
+        GlyphBoxesUser {glyph_positions, buffer.get(), font.hb_font(), font_size};
+    const auto cluster_boxes = ClusterBoxesUser {glyph_boxes, buffer.get()};
 
     // count
     const auto glyph_count =
-        max_text_width ? calculate_max_glyph_count(cluster_boxes_user, *max_text_width)
-                       : glyph_boxes_user.size();
+        max_text_width ? calculate_max_glyph_count(cluster_boxes, *max_text_width)
+                       : glyph_boxes.span().size();
 
-    bounding_box_ = calculate_bounding_box_user(glyph_boxes_user);
+    bounding_box_ = calculate_bounding_box_user(glyph_boxes);
     glyph_count_ = glyph_count;
 
     Ensures(codepoints_.size() == placements_.size());
