@@ -62,7 +62,7 @@ auto TextCache::get_scaled_bl_font(float font_size,
 auto TextCache::calculate_bounding_box(std::string_view text, float font_size,
                                        FontStyle style) const -> BLBox {
     const auto& font = fonts_.get(style).hb_font();
-    return HbShapedText {text, font, font_size}.bounding_box();
+    return calculate_bounding_box_user(text, font, font_size);
 }
 
 auto TextCache::get_entry(
@@ -86,9 +86,11 @@ auto TextCache::get_entry(
 
     if (inserted) {
         const auto& hb_font = fonts_.get(style).hb_font();
+        const auto hb_shaped_text = HbShapedText {text, hb_font, font_size};
 
-        entry.shaped_text = HbShapedText {text, hb_font, font_size, max_text_width};
-        entry.offset = calculate_offset(entry.shaped_text.bounding_box(),
+        entry.hb_glyph_run = max_text_width ? HbGlyphRun {hb_shaped_text, *max_text_width}
+                                            : HbGlyphRun {hb_shaped_text};
+        entry.offset = calculate_offset(entry.hb_glyph_run.bounding_box(),
                                         baseline_offsets_.get(style, font_size),
                                         horizontal_alignment, vertical_alignment);
     }
@@ -109,12 +111,12 @@ auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_v
                                   attributes.max_text_width);
     const auto origin = position - entry.offset;
 
-    ctx.fillGlyphRun(origin, font, entry.shaped_text.glyph_run(), attributes.color);
+    ctx.fillGlyphRun(origin, font, entry.hb_glyph_run.glyph_run(), attributes.color);
 
     if (attributes.draw_bounding_rect) {
         ctx.setStrokeWidth(1);
         ctx.translate(origin);
-        ctx.strokeRect(entry.shaped_text.bounding_rect(), defaults::color_lime);
+        ctx.strokeRect(entry.hb_glyph_run.bounding_rect(), defaults::color_lime);
         ctx.translate(-origin);
     }
     // if (attributes.draw_glyph_rects) {

@@ -36,7 +36,7 @@ struct cache_key_t {
 static_assert(std::regular<cache_key_t>);
 
 struct cache_entry_t {
-    HbShapedText shaped_text {};
+    HbGlyphRun hb_glyph_run {};
     BLPoint offset {0., 0.};
 
     [[nodiscard]] auto format() const -> std::string;

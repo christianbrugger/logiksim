@@ -93,7 +93,7 @@ auto calculate_baseline_offset(FontStyle style [[maybe_unused]],
         "abcdefghijklmnopqrstuvwxyz"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "0123456789";
-    const auto box = HbShapedText {text, font, font_size}.bounding_box();
+    const auto box = calculate_bounding_box_user(text, font, font_size);
 
     using enum VTextAlignment;
     return BaselineOffset {
