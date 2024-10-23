@@ -14,8 +14,12 @@ namespace logicsim {
 
 namespace defaults {
 
-constexpr static inline auto text_element_angle_color = defaults::color_light_gray;
-constexpr static inline auto text_element_angle_size = grid_fine_t {0.25};  // (0 - 0.5]
+constexpr static inline auto text_element_angle_color_normal = defaults::color_light_gray;
+constexpr static inline auto text_element_angle_color_truncated = defaults::color_red;
+
+// values from (0 - 0.5] are allowed
+constexpr static inline auto text_element_angle_size_normal = grid_fine_t {0.25};
+constexpr static inline auto text_element_angle_size_truncated = grid_fine_t {0.5};
 
 }  // namespace defaults
 
@@ -45,20 +49,29 @@ auto draw_decoration_text_angle(Context& ctx, point_fine_t origin, double shift,
 /**
  * @brief: Offset of the angles origin of the text element from the position.
  */
-consteval auto text_element_angle_offset() -> point_fine_t {
-    static_assert(defaults::text_element_angle_size > grid_fine_t {0});
-    static_assert(defaults::text_element_angle_size <= grid_fine_t {0.5});
-    return point_fine_t {grid_fine_t {0.25} + defaults::text_element_angle_size / 2, 0};
+auto text_element_angle_offset(grid_fine_t angle_size) -> point_fine_t {
+    Expects(angle_size > grid_fine_t {0});
+    Expects(angle_size <= grid_fine_t {0.5});
+
+    return point_fine_t {grid_fine_t {0.25} + angle_size / 2, 0};
 }
 
 /**
  * @brief: Draw all angles of the text element.
  */
 auto draw_decoration_text_angles(Context& ctx, point_t position, size_2d_t size,
-                                 ElementDrawState state) -> void {
-    const auto angle_offset = text_element_angle_offset();
-    const auto color = with_alpha_runtime(defaults::text_element_angle_color, state);
-    const auto shift = to_context(defaults::text_element_angle_size, ctx);
+                                 ElementDrawState state,
+                                 TextTruncated truncated) -> void {
+    const auto color_base = truncated == TextTruncated::no
+                                ? defaults::text_element_angle_color_normal
+                                : defaults::text_element_angle_color_truncated;
+    const auto angle_size = truncated == TextTruncated::no
+                                ? defaults::text_element_angle_size_normal
+                                : defaults::text_element_angle_size_truncated;
+
+    const auto angle_offset = text_element_angle_offset(angle_size);
+    const auto color = with_alpha_runtime(color_base, state);
+    const auto shift = to_context(angle_size, ctx);
 
     // start angle
     {
@@ -83,24 +96,25 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
     const auto position = layout.decorations().position(decoration_id);
     const auto size = layout.decorations().size(decoration_id);
 
-    // angles
-    draw_decoration_text_angles(ctx, position, size, state);
-
     // text
     const auto text_anchor = point_fine_t {position.x, position.y};
     const auto text_color = with_alpha_runtime(defaults::color_black, state);
     const auto& text_label = layout.decorations().attrs_text_element(decoration_id).text;
-    draw_text(ctx, text_anchor, text_label,
-              TextAttributes {
-                  .font_size = grid_fine_t {0.9},
-                  .color = text_color,
+    const auto truncated =
+        draw_text(ctx, text_anchor, text_label,
+                  TextAttributes {
+                      .font_size = grid_fine_t {0.9},
+                      .color = text_color,
 
-                  .horizontal_alignment = HTextAlignment::left,
-                  .vertical_alignment = VTextAlignment::center_baseline,
-                  .style = FontStyle::regular,
+                      .horizontal_alignment = HTextAlignment::left,
+                      .vertical_alignment = VTextAlignment::center_baseline,
+                      .style = FontStyle::regular,
 
-                  .max_text_width = grid_fine_t {int {size.width}},
-              });
+                      .max_text_width = grid_fine_t {int {size.width}},
+                  });
+
+    // angles
+    draw_decoration_text_angles(ctx, position, size, state, truncated);
 }
 
 }  // namespace

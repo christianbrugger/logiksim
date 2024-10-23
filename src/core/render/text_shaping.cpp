@@ -570,7 +570,7 @@ GlyphGeometryData::GlyphGeometryData(const HbShapedText &shaped_text)
       positions_ {GlyphPositionsDesign(shaped_text)},
       glyph_boxes_ {GlyphBoxesUser(shaped_text, positions_)},
       cluster_boxes_ {ClusterBoxesUser(shaped_text, glyph_boxes_.value())},
-      is_truncated_ {false} {
+      truncated_ {TextTruncated::no} {
     Ensures(codepoints_.size() == positions_.size());
     Ensures(!glyph_boxes_ || codepoints_.size() == glyph_boxes_->size());
     Ensures(!cluster_boxes_ || codepoints_.size() >= cluster_boxes_->size());
@@ -584,7 +584,9 @@ GlyphGeometryData::GlyphGeometryData(const HbShapedText &shaped_text,
     Expects(counts.glyph_count <= size());
     Expects(counts.cluster_count <= cluster_boxes_.value().size());
 
-    is_truncated_ = counts.glyph_count < codepoints_.size();
+    truncated_ = counts.glyph_count < codepoints_.size()  //
+                     ? TextTruncated::yes
+                     : TextTruncated::no;
 
     codepoints_.resize(counts.glyph_count);
     positions_.resize(counts.glyph_count);
@@ -636,8 +638,8 @@ auto GlyphGeometryData::cluster_boxes() const -> const std::optional<ClusterBoxe
     return cluster_boxes_;
 }
 
-auto GlyphGeometryData::is_truncated() const -> bool {
-    return is_truncated_;
+auto GlyphGeometryData::truncated() const -> TextTruncated {
+    return truncated_;
 }
 
 auto GlyphGeometryData::clear_glyph_boxes() -> void {
@@ -694,8 +696,8 @@ auto HbGlyphRun::bounding_rect() const noexcept -> BLRect {
     return BLRect {box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0};
 }
 
-auto HbGlyphRun::is_truncated() const -> bool {
-    return data_.is_truncated();
+auto HbGlyphRun::truncated() const -> TextTruncated {
+    return data_.truncated();
 }
 
 auto HbGlyphRun::glyph_bounding_boxes() const -> const std::optional<GlyphBoxesUser> & {

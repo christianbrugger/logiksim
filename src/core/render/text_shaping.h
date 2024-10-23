@@ -3,6 +3,7 @@
 
 #include "core/format/struct.h"
 #include "core/render/bl_glyph_placement.h"
+#include "core/vocabulary/text_truncated.h"
 
 #include <blend2d.h>
 
@@ -211,7 +212,7 @@ struct GlyphGeometryData {
     [[nodiscard]] auto positions() const -> const GlyphPositionsDesign &;
     [[nodiscard]] auto glyph_boxes() const -> const std::optional<GlyphBoxesUser> &;
     [[nodiscard]] auto cluster_boxes() const -> const std::optional<ClusterBoxesUser> &;
-    [[nodiscard]] auto is_truncated() const -> bool;
+    [[nodiscard]] auto truncated() const -> TextTruncated;
 
     auto clear_glyph_boxes() -> void;
     auto clear_cluster_boxes() -> void;
@@ -221,7 +222,7 @@ struct GlyphGeometryData {
     GlyphPositionsDesign positions_ {};
     std::optional<GlyphBoxesUser> glyph_boxes_ {};
     std::optional<ClusterBoxesUser> cluster_boxes_ {};
-    bool is_truncated_ {};
+    TextTruncated truncated_ {};
 };
 
 class HbGlyphRun {
@@ -237,7 +238,7 @@ class HbGlyphRun {
     [[nodiscard]] auto glyph_run() const noexcept -> BLGlyphRun;
     [[nodiscard]] auto bounding_box() const noexcept -> BLBox;
     [[nodiscard]] auto bounding_rect() const noexcept -> BLRect;
-    [[nodiscard]] auto is_truncated() const -> bool;
+    [[nodiscard]] auto truncated() const -> TextTruncated;
 
     [[nodiscard]] auto glyph_bounding_boxes() const
         -> const std::optional<GlyphBoxesUser> &;

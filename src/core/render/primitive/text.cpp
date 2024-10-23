@@ -10,13 +10,14 @@
 namespace logicsim {
 
 auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
-               const TextAttributes& attributes) -> void {
+               const TextAttributes& attributes) -> TextTruncated {
     if (text.empty()) {
-        return;
+        return TextTruncated::no;
     }
     const auto font_size_px = to_context_unrounded(attributes.font_size, ctx);
     if (font_size_px < attributes.cutoff_size_px) {
-        return;
+        // TODO what to do here ?
+        return TextTruncated::no;
     }
 
     const auto position_px = to_context(position, ctx);
@@ -26,7 +27,7 @@ auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
             ? std::make_optional(to_context_unrounded(*attributes.max_text_width, ctx))
             : std::nullopt;
 
-    ctx.cache.text_cache().draw_text(
+    return ctx.cache.text_cache().draw_text(
         ctx.bl_ctx, position_px, text, font_size_px_float,
         TextCache::TextAttributes {
             .color = attributes.color,

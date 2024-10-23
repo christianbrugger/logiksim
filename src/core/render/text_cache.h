@@ -8,6 +8,7 @@
 #include "core/vocabulary/color.h"
 #include "core/vocabulary/font_style.h"
 #include "core/vocabulary/text_alignment.h"
+#include "core/vocabulary/text_truncated.h"
 #include "core/wyhash.h"
 
 #include <ankerl/unordered_dense.h>
@@ -101,7 +102,7 @@ class TextCache {
     };
 
     auto draw_text(BLContext &ctx, const BLPoint &position, std::string_view text,
-                   float font_size, TextAttributes attributes) const -> void;
+                   float font_size, TextAttributes attributes) const -> TextTruncated;
 
     [[nodiscard]] auto calculate_bounding_box(std::string_view text, float font_size,
                                               FontStyle style) const -> BLBox;
