@@ -22,6 +22,8 @@ constexpr static inline auto text_element_angle_color_truncated = defaults::colo
 constexpr static inline auto text_element_angle_size_normal = grid_fine_t {0.25};
 constexpr static inline auto text_element_angle_size_truncated = grid_fine_t {0.4};
 
+constexpr static inline auto text_element_font_size = grid_fine_t {0.8};
+
 }  // namespace defaults
 
 namespace {
@@ -110,7 +112,7 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
     const auto truncated =
         draw_text(ctx, text_anchor, text_label,
                   TextAttributes {
-                      .font_size = grid_fine_t {0.9},
+                      .font_size = defaults::text_element_font_size,
                       .color = text_color,
 
                       .horizontal_alignment = HTextAlignment::left,
