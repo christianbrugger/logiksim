@@ -11,9 +11,10 @@ namespace logicsim {
 namespace {
 
 [[nodiscard]] auto get_clipboard_test_circuit() -> Layout {
-    auto rng = get_random_number_generator(4);
+    auto rng = get_random_number_generator(1);
     auto editable_circuit = EditableCircuit {};
     add_example(rng, editable_circuit);
+
     EXPECT_TRUE(editable_circuit.layout().logicitems().size() > 0);
     EXPECT_TRUE(editable_circuit.layout().decorations().size() > 0);
     return editable_circuit.extract_layout();

@@ -2,6 +2,7 @@
 #include "core/load_save_file.h"
 
 #include "core/file.h"
+#include "core/logging.h"
 #include "core/spatial_simulation.h"
 #include "core/vocabulary/save_format.h"
 
@@ -109,10 +110,10 @@ TEST(LoadSaveFile, Load220FilesAllComponentsGzip) {
     ASSERT_EQ(result.has_value(), true);
 
     EXPECT_EQ(result->editable_circuit.layout().logicitems().size(), 153);
-    EXPECT_EQ(result->editable_circuit.layout().decorations().size(), 1);
+    EXPECT_EQ(result->editable_circuit.layout().decorations().size(), 3);
     visible_selection_select_all(result->editable_circuit);
     EXPECT_EQ(result->editable_circuit.visible_selection().selected_segments().size(),
-              378);
+              387);
 }
 
 TEST(LoadSaveFile, Load210FilesCounterDisplay1To4Gzip) {
@@ -164,11 +165,30 @@ TEST(LoadSaveFile, Load210FilesCounterDisplay1To4Base64) {
 // Save and load
 //
 
+namespace {
+
+[[maybe_unused]] auto search_seed() -> void {
+    for (const auto seed : std::ranges::views::iota(0)) {
+        auto rng = get_random_number_generator(seed);
+        auto editable_circuit = EditableCircuit {};
+        add_example(rng, editable_circuit);
+
+        if (editable_circuit.layout().decorations().size() > 0) {
+            print("FOUND SEED", seed);
+            break;
+        }
+    }
+    throw std::exception("shall not be called usually");
+}
+
+}  // namespace
+
 TEST(LoadSaveFile, SaveLoadExample1) {
     const auto file = std::filesystem::path {"test_example_1.ls2"};
 
     // generate
-    auto rng = get_random_number_generator(4);
+    // search_seed();
+    auto rng = get_random_number_generator(1);
     auto editable_circuit = EditableCircuit {};
     add_example(rng, editable_circuit);
     EXPECT_EQ(editable_circuit.layout().logicitems().size() > 0, true);

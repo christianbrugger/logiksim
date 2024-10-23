@@ -53,12 +53,13 @@ auto add_random_button(Rng& rng, EditableCircuit& editable_circuit, grid_t min,
 
 auto add_random_text(Rng& rng, EditableCircuit& editable_circuit, grid_t min, grid_t max,
                      bool random_modes) -> void {
+    const auto width = 1;
     const auto definition = DecorationDefinition {
         .decoration_type = DecorationType::text_element,
-        .size = size_2d_t {0, 0},
+        .size = size_2d_t {width, 0},
         .attrs_text_element = attributes_text_element_t {.text = ""},
     };
-    const auto position = get_random_point(rng, min, max);
+    const auto position = get_random_point(rng, min, max - grid_t {width});
     const auto mode =
         random_modes ? get_random_insertion_mode(rng) : InsertionMode::insert_or_discard;
 
@@ -88,7 +89,7 @@ auto add_many_wires_and_buttons(Rng& rng, EditableCircuit& editable_circuit,
 
     for (auto _ [[maybe_unused]] : range(tries)) {
         if (get_random_bool(rng, 0.1)) {
-            if (get_random_bool(rng, 0.8)) {
+            if (get_random_bool(rng, 0.5)) {
                 add_random_button(rng, editable_circuit, min, max, params.random_modes);
             } else {
                 add_random_text(rng, editable_circuit, min, max, params.random_modes);

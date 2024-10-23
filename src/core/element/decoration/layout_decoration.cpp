@@ -13,7 +13,7 @@ auto decoration_size_min(DecorationType decoration_type) -> size_2d_t {
         using enum DecorationType;
 
         case text_element:
-            return size_2d_t {0, 0};
+            return size_2d_t {1, 0};
     }
     std::terminate();
 }
