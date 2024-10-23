@@ -13,6 +13,7 @@
 #include <string_view>
 #include <vector>
 
+struct hb_buffer_t;
 struct hb_face_t;
 struct hb_font_t;
 
@@ -48,6 +49,22 @@ class HbFont final {
 
 static_assert(std::semiregular<HbFont>);
 
+class GlyphPositionsDesign {
+   public:
+    explicit GlyphPositionsDesign() = default;
+    explicit GlyphPositionsDesign(hb_buffer_t *hb_buffer);
+
+    [[nodiscard]] auto operator==(const GlyphPositionsDesign &) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto span() const -> std::span<const BLPoint>;
+
+   private:
+    std::vector<BLPoint> positions_;
+};
+
+static_assert(std::regular<GlyphPositionsDesign>);
+
 class HbShapedText {
    public:
     explicit HbShapedText() = default;
@@ -64,9 +81,8 @@ class HbShapedText {
 
    private:
     std::vector<uint32_t> codepoints_ {};
-    std::vector<BLGlyphPlacement> placements_ {};
+    GlyphPositionsDesign positions_ {};
     BLBox bounding_box_ {};
-    std::size_t glyph_count_ {};
 };
 
 static_assert(std::regular<HbShapedText>);

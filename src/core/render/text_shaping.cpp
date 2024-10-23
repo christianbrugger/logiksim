@@ -180,19 +180,6 @@ auto HbBufferDeleter::operator()(hb_buffer_t *hb_buffer) -> void {
     });
 }
 
-[[nodiscard]] auto get_bl_placements(hb_buffer_t *hb_buffer)
-    -> std::vector<BLGlyphPlacement> {
-    Expects(hb_buffer != nullptr);
-    const auto glyph_positions = get_hb_glyph_positions(hb_buffer);
-
-    return transform_to_vector(glyph_positions, [](const hb_glyph_position_t &position) {
-        return BLGlyphPlacement {
-            .placement = BLPointI {position.x_offset, position.y_offset},
-            .advance = BLPointI {position.x_advance, position.y_advance},
-        };
-    });
-}
-
 constexpr static inline auto empty_bl_box = BLBox {
     +std::numeric_limits<double>::infinity(),
     +std::numeric_limits<double>::infinity(),
@@ -237,18 +224,7 @@ constexpr static inline auto empty_bl_box = BLBox {
            ranges::to<std::vector>;
 }
 
-class GlyphPositionsDesign {
-   public:
-    explicit GlyphPositionsDesign(hb_buffer_t *hb_buffer);
-
-    [[nodiscard]] auto operator==(const GlyphPositionsDesign &) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
-
-    [[nodiscard]] auto span() const -> std::span<const BLPoint>;
-
-   private:
-    std::vector<BLPoint> positions_;
-};
+}  // namespace
 
 GlyphPositionsDesign::GlyphPositionsDesign(hb_buffer_t *hb_buffer)
     : positions_ {calculate_glyph_positions_design(hb_buffer)} {}
@@ -260,6 +236,8 @@ auto GlyphPositionsDesign::format() const -> std::string {
 auto GlyphPositionsDesign::span() const -> std::span<const BLPoint> {
     return positions_;
 }
+
+namespace {
 
 // TODO move somewhere else
 [[nodiscard]] auto get_box_union(const BLBox &a, const BLBox &b) -> BLBox {
@@ -470,70 +448,6 @@ auto ClusterBoxesUser::span() const -> std::span<const ClusterBox> {
     return max != fitting.end() ? (*max).end_index : std::size_t {0};
 }
 
-/*
-[[nodiscard]] auto calculate_max_glyph_count(hb_buffer_t *hb_buffer, hb_font_t
-*hb_font, float font_size, double max_font_width) -> std::size_t { Expects(hb_buffer
-!= nullptr); Expects(hb_font != nullptr); Expects(max_font_width >= 0);
-
-    const auto glyph_infos = get_glyph_infos(hb_buffer);
-    const auto glyph_positions = get_hb_glyph_positions(hb_buffer);
-    const auto glyph_count = std::min(glyph_infos.size(), glyph_positions.size());
-
-    if (glyph_count == 0) {
-        return 0;
-    }
-
-    auto scale = BLPointI {};
-    hb_font_get_scale(hb_font, &scale.x, &scale.y);
-    const auto max_width_scaled = max_font_width / font_size * scale.x;
-
-    auto origin = BLPoint {};
-
-    auto current_cluster = glyph_infos.front().cluster;
-    auto current_min = +std::numeric_limits<double>::infinity();
-    auto current_max = -std::numeric_limits<double>::infinity();
-    auto accepted_glyph_count = std::size_t {0};
-
-    for (auto i : range(glyph_count)) {
-        const auto &pos = glyph_positions[i];
-        auto extents = hb_glyph_extents_t {};
-
-        if (hb_font_get_glyph_extents(hb_font, glyph_infos[i].codepoint, &extents)) {
-            if (glyph_infos[i].cluster != current_cluster) {
-                Expects(i > 0);
-                accepted_glyph_count = i;
-                current_cluster = glyph_infos[i].cluster;
-            }
-
-            const auto new_min = origin.x + pos.x_offset + extents.x_bearing;
-            const auto new_max =
-                origin.x + pos.x_offset + extents.x_bearing + extents.width;
-
-            assert(new_min <= new_max);
-
-            current_min = std::min(current_min, new_min);
-            current_max = std::max(current_max, new_max);
-
-            assert(current_min <= current_max);
-
-            if (current_max - current_min > max_width_scaled) {
-                break;
-            }
-        }
-
-        origin.x += pos.x_advance;
-        origin.y += pos.y_advance;
-    }
-
-    if (current_max - current_min < max_width_scaled) {
-        accepted_glyph_count = glyph_count;
-    }
-
-    Ensures(accepted_glyph_count <= glyph_count);
-    return accepted_glyph_count;
-}
-*/
-
 }  // namespace
 
 //
@@ -599,14 +513,11 @@ HbShapedText::HbShapedText(std::string_view text_utf8, const HbFont &font,
     const auto buffer = shape_text(text_utf8, font.hb_font());
 
     codepoints_ = get_uint32_codepoints(buffer.get());
-    placements_ = get_bl_placements(buffer.get());
-
-    // positions
-    const auto glyph_positions = GlyphPositionsDesign {buffer.get()};
+    positions_ = GlyphPositionsDesign {buffer.get()};
 
     // boxes
     const auto glyph_boxes =
-        GlyphBoxesUser {glyph_positions, buffer.get(), font.hb_font(), font_size};
+        GlyphBoxesUser {positions_, buffer.get(), font.hb_font(), font_size};
     const auto cluster_boxes = ClusterBoxesUser {glyph_boxes, buffer.get()};
 
     // count
@@ -615,15 +526,14 @@ HbShapedText::HbShapedText(std::string_view text_utf8, const HbFont &font,
                        : glyph_boxes.span().size();
 
     bounding_box_ = calculate_bounding_box_user(glyph_boxes);
-    glyph_count_ = glyph_count;
 
-    Ensures(codepoints_.size() == placements_.size());
-    Ensures(glyph_count_ <= codepoints_.size());  // TODO change to equal
+    codepoints_.resize(glyph_count);
+
+    // Ensures(codepoints_.size() == positions_.span().size());
 }
 
 auto HbShapedText::empty() const -> bool {
-    Expects(codepoints_.size() == placements_.size());
-    Ensures(glyph_count_ <= codepoints_.size());
+    // Expects(codepoints_.size() == placements_.size());
 
     // TODO use glyph_count_ ???
 
@@ -631,15 +541,14 @@ auto HbShapedText::empty() const -> bool {
 }
 
 auto HbShapedText::glyph_run() const noexcept -> BLGlyphRun {
-    Expects(codepoints_.size() == placements_.size());
-    Ensures(glyph_count_ <= codepoints_.size());
+    // Expects(codepoints_.size() == placements_.size());
 
     auto result = BLGlyphRun {};
 
-    result.size = glyph_count_;  // codepoints_.size();
+    result.size = codepoints_.size();
     result.setGlyphData(codepoints_.data());
-    result.setPlacementData(placements_.data());
-    result.placementType = BL_GLYPH_PLACEMENT_TYPE_ADVANCE_OFFSET;
+    result.setPlacementData(positions_.span().data());
+    result.placementType = BL_GLYPH_PLACEMENT_TYPE_DESIGN_UNITS;
 
     return result;
 }
@@ -654,8 +563,8 @@ auto HbShapedText::bounding_rect() const noexcept -> BLRect {
 }
 
 auto HbShapedText::format() const -> std::string {
-    return fmt::format("ShapedText(codepoints = {}, placements = {}, bounding_box = {})",
-                       codepoints_, placements_, bounding_box_);
+    return fmt::format("ShapedText(codepoints = {}, positions = {}, bounding_box = {})",
+                       codepoints_, positions_, bounding_box_);
 }
 
 }  // namespace logicsim
