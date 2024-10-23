@@ -95,9 +95,9 @@ class TextCache {
         // stop rendering characters when size limit is exceeded
         std::optional<double> max_text_width {std::nullopt};
 
-        bool draw_bounding_rect {true};
-        bool draw_glyph_rects {true};
-        bool draw_cluster_rects {true};
+        bool draw_bounding_rect {false};
+        bool draw_glyph_rects {false};
+        bool draw_cluster_rects {false};
     };
 
     auto draw_text(BLContext &ctx, const BLPoint &position, std::string_view text,

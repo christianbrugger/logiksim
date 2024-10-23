@@ -4,6 +4,7 @@
 #include "core/concept/input_range.h"
 #include "core/format/blend2d_type.h"
 #include "core/format/container.h"
+#include "core/format/std_type.h"
 
 #include <blend2d.h>
 #include <fmt/core.h>
@@ -568,33 +569,36 @@ GlyphGeometryData::GlyphGeometryData(const HbShapedText &shaped_text)
     : codepoints_ {get_codepoints(shaped_text)},
       positions_ {GlyphPositionsDesign(shaped_text)},
       glyph_boxes_ {GlyphBoxesUser(shaped_text, positions_)},
-      cluster_boxes_ {ClusterBoxesUser(shaped_text, glyph_boxes_)} {
+      cluster_boxes_ {ClusterBoxesUser(shaped_text, glyph_boxes_.value())},
+      is_truncated_ {false} {
     Ensures(codepoints_.size() == positions_.size());
-    Ensures(codepoints_.size() == glyph_boxes_.size());
-    Ensures(codepoints_.size() >= cluster_boxes_.size());
+    Ensures(!glyph_boxes_ || codepoints_.size() == glyph_boxes_->size());
+    Ensures(!cluster_boxes_ || codepoints_.size() >= cluster_boxes_->size());
 };
 
 GlyphGeometryData::GlyphGeometryData(const HbShapedText &shaped_text,
                                      double max_text_width)
     : GlyphGeometryData {shaped_text} {
-    const auto counts = calculate_max_glyph_count(cluster_boxes_, max_text_width);
+    const auto counts = calculate_max_glyph_count(cluster_boxes_.value(), max_text_width);
 
     Expects(counts.glyph_count <= size());
-    Expects(counts.cluster_count <= cluster_boxes_.size());
+    Expects(counts.cluster_count <= cluster_boxes_.value().size());
+
+    is_truncated_ = counts.glyph_count < codepoints_.size();
 
     codepoints_.resize(counts.glyph_count);
     positions_.resize(counts.glyph_count);
-    glyph_boxes_.resize(counts.glyph_count);
-    cluster_boxes_.resize(counts.cluster_count);
+    glyph_boxes_.value().resize(counts.glyph_count);
+    cluster_boxes_.value().resize(counts.cluster_count);
 
     codepoints_.shrink_to_fit();
     positions_.shrink_to_fit();
-    glyph_boxes_.shrink_to_fit();
-    cluster_boxes_.shrink_to_fit();
+    glyph_boxes_.value().shrink_to_fit();
+    cluster_boxes_.value().shrink_to_fit();
 
     Ensures(codepoints_.size() == positions_.size());
-    Ensures(codepoints_.size() == glyph_boxes_.size());
-    Ensures(codepoints_.size() >= cluster_boxes_.size());
+    Ensures(!glyph_boxes_ || codepoints_.size() == glyph_boxes_->size());
+    Ensures(!cluster_boxes_ || codepoints_.size() >= cluster_boxes_->size());
 }
 
 auto GlyphGeometryData::format() const -> std::string {
@@ -624,32 +628,58 @@ auto GlyphGeometryData::positions() const -> const GlyphPositionsDesign & {
     return positions_;
 }
 
-auto GlyphGeometryData::glyph_boxes() const -> const GlyphBoxesUser & {
+auto GlyphGeometryData::glyph_boxes() const -> const std::optional<GlyphBoxesUser> & {
     return glyph_boxes_;
 }
 
-auto GlyphGeometryData::cluster_boxes() const -> const ClusterBoxesUser & {
+auto GlyphGeometryData::cluster_boxes() const -> const std::optional<ClusterBoxesUser> & {
     return cluster_boxes_;
 }
 
+auto GlyphGeometryData::is_truncated() const -> bool {
+    return is_truncated_;
+}
+
+auto GlyphGeometryData::clear_glyph_boxes() -> void {
+    glyph_boxes_.reset();
+
+    Ensures(codepoints_.size() == positions_.size());
+    Ensures(!glyph_boxes_ || codepoints_.size() == glyph_boxes_->size());
+    Ensures(!cluster_boxes_ || codepoints_.size() >= cluster_boxes_->size());
+}
+
+auto GlyphGeometryData::clear_cluster_boxes() -> void {
+    cluster_boxes_.reset();
+
+    Ensures(codepoints_.size() == positions_.size());
+    Ensures(!glyph_boxes_ || codepoints_.size() == glyph_boxes_->size());
+    Ensures(!cluster_boxes_ || codepoints_.size() >= cluster_boxes_->size());
+}
+
 HbGlyphRun::HbGlyphRun(const HbShapedText &shaped_text)
-    : geometry_data_ {GlyphGeometryData {shaped_text}},
-      bounding_box_ {calculate_bounding_box_user(geometry_data_.glyph_boxes())} {}
+    : data_ {GlyphGeometryData {shaped_text}},
+      bounding_box_ {calculate_bounding_box_user(data_.glyph_boxes().value())} {
+    data_.clear_glyph_boxes();
+    data_.clear_cluster_boxes();
+}
 
 HbGlyphRun::HbGlyphRun(const HbShapedText &shaped_text, double max_text_width)
-    : geometry_data_ {GlyphGeometryData {shaped_text, max_text_width}},
-      bounding_box_ {calculate_bounding_box_user(geometry_data_.glyph_boxes())} {}
+    : data_ {GlyphGeometryData {shaped_text, max_text_width}},
+      bounding_box_ {calculate_bounding_box_user(data_.glyph_boxes().value())} {
+    data_.clear_glyph_boxes();
+    data_.clear_cluster_boxes();
+}
 
 auto HbGlyphRun::empty() const -> bool {
-    return geometry_data_.empty();
+    return data_.empty();
 }
 
 auto HbGlyphRun::glyph_run() const noexcept -> BLGlyphRun {
     auto result = BLGlyphRun {};
 
-    result.size = geometry_data_.size();
-    result.setGlyphData(geometry_data_.codepoints().data());
-    result.setPlacementData(geometry_data_.positions().span().data());
+    result.size = data_.size();
+    result.setGlyphData(data_.codepoints().data());
+    result.setPlacementData(data_.positions().span().data());
     result.placementType = BL_GLYPH_PLACEMENT_TYPE_DESIGN_UNITS;
 
     return result;
@@ -664,17 +694,21 @@ auto HbGlyphRun::bounding_rect() const noexcept -> BLRect {
     return BLRect {box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0};
 }
 
-auto HbGlyphRun::glyph_bounding_boxes() const -> const GlyphBoxesUser & {
-    return geometry_data_.glyph_boxes();
+auto HbGlyphRun::is_truncated() const -> bool {
+    return data_.is_truncated();
 }
 
-auto HbGlyphRun::cluster_bounding_boxes() const -> const ClusterBoxesUser & {
-    return geometry_data_.cluster_boxes();
+auto HbGlyphRun::glyph_bounding_boxes() const -> const std::optional<GlyphBoxesUser> & {
+    return data_.glyph_boxes();
+}
+
+auto HbGlyphRun::cluster_bounding_boxes() const
+    -> const std::optional<ClusterBoxesUser> & {
+    return data_.cluster_boxes();
 }
 
 auto HbGlyphRun::format() const -> std::string {
-    return fmt::format("HbGlyphRun(bounding_box = {}, data = {})", bounding_box_,
-                       geometry_data_);
+    return fmt::format("HbGlyphRun(bounding_box = {}, data = {})", bounding_box_, data_);
 }
 
 }  // namespace logicsim

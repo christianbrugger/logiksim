@@ -6,6 +6,7 @@
 
 #include <blend2d.h>
 
+#include <concepts>
 #include <memory>
 #include <optional>
 #include <span>
@@ -104,7 +105,7 @@ class GlyphPositionsDesign {
     [[nodiscard]] auto span() const -> std::span<const BLPoint>;
 
    private:
-    std::vector<BLPoint> positions_;
+    std::vector<BLPoint> positions_ {};
 };
 
 static_assert(std::regular<GlyphPositionsDesign>);
@@ -127,7 +128,7 @@ class GlyphBoxesUser {
     [[nodiscard]] auto span() const -> std::span<const BLBox>;
 
    private:
-    std::vector<BLBox> glyph_boxes_;
+    std::vector<BLBox> glyph_boxes_ {};
 };
 
 static_assert(std::regular<GlyphBoxesUser>);
@@ -167,7 +168,7 @@ class ClusterBoxesUser {
     [[nodiscard]] auto span() const -> std::span<const ClusterBox>;
 
    private:
-    std::vector<ClusterBox> cluster_boxes_;
+    std::vector<ClusterBox> cluster_boxes_ {};
 };
 
 static_assert(std::regular<ClusterBoxesUser>);
@@ -208,14 +209,19 @@ struct GlyphGeometryData {
 
     [[nodiscard]] auto codepoints() const -> std::span<const uint32_t>;
     [[nodiscard]] auto positions() const -> const GlyphPositionsDesign &;
-    [[nodiscard]] auto glyph_boxes() const -> const GlyphBoxesUser &;
-    [[nodiscard]] auto cluster_boxes() const -> const ClusterBoxesUser &;
+    [[nodiscard]] auto glyph_boxes() const -> const std::optional<GlyphBoxesUser> &;
+    [[nodiscard]] auto cluster_boxes() const -> const std::optional<ClusterBoxesUser> &;
+    [[nodiscard]] auto is_truncated() const -> bool;
+
+    auto clear_glyph_boxes() -> void;
+    auto clear_cluster_boxes() -> void;
 
    private:
-    std::vector<uint32_t> codepoints_;
-    GlyphPositionsDesign positions_;
-    GlyphBoxesUser glyph_boxes_;
-    ClusterBoxesUser cluster_boxes_;
+    std::vector<uint32_t> codepoints_ {};
+    GlyphPositionsDesign positions_ {};
+    std::optional<GlyphBoxesUser> glyph_boxes_ {};
+    std::optional<ClusterBoxesUser> cluster_boxes_ {};
+    bool is_truncated_ {};
 };
 
 class HbGlyphRun {
@@ -231,12 +237,15 @@ class HbGlyphRun {
     [[nodiscard]] auto glyph_run() const noexcept -> BLGlyphRun;
     [[nodiscard]] auto bounding_box() const noexcept -> BLBox;
     [[nodiscard]] auto bounding_rect() const noexcept -> BLRect;
+    [[nodiscard]] auto is_truncated() const -> bool;
 
-    [[nodiscard]] auto glyph_bounding_boxes() const -> const GlyphBoxesUser &;
-    [[nodiscard]] auto cluster_bounding_boxes() const -> const ClusterBoxesUser &;
+    [[nodiscard]] auto glyph_bounding_boxes() const
+        -> const std::optional<GlyphBoxesUser> &;
+    [[nodiscard]] auto cluster_bounding_boxes() const
+        -> const std::optional<ClusterBoxesUser> &;
 
    private:
-    GlyphGeometryData geometry_data_ {};
+    GlyphGeometryData data_ {};
     BLBox bounding_box_ {};
 };
 

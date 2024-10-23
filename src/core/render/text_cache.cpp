@@ -109,13 +109,13 @@ auto draw_bounding_boxes(BLContext& ctx, const HbGlyphRun& hb_glyph_run, BLPoint
         if (attributes.draw_bounding_rect) {
             ctx.strokeBox(hb_glyph_run.bounding_box(), defaults::color_lime);
         }
-        if (attributes.draw_glyph_rects) {
-            for (const auto box : hb_glyph_run.glyph_bounding_boxes().span()) {
+        if (attributes.draw_glyph_rects && hb_glyph_run.glyph_bounding_boxes()) {
+            for (const auto box : hb_glyph_run.glyph_bounding_boxes().value().span()) {
                 ctx.strokeBox(box, defaults::color_orange);
             }
         }
-        if (attributes.draw_cluster_rects) {
-            for (const auto box : hb_glyph_run.cluster_bounding_boxes().span()) {
+        if (attributes.draw_cluster_rects && hb_glyph_run.cluster_bounding_boxes()) {
+            for (const auto box : hb_glyph_run.cluster_bounding_boxes().value().span()) {
                 ctx.strokeBox(box.box, defaults::color_blue);
             }
         }
