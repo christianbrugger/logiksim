@@ -232,6 +232,9 @@ class HbGlyphRun {
     [[nodiscard]] auto bounding_box() const noexcept -> BLBox;
     [[nodiscard]] auto bounding_rect() const noexcept -> BLRect;
 
+    [[nodiscard]] auto glyph_bounding_boxes() const -> const GlyphBoxesUser &;
+    [[nodiscard]] auto cluster_bounding_boxes() const -> const ClusterBoxesUser &;
+
    private:
     GlyphGeometryData geometry_data_ {};
     BLBox bounding_box_ {};

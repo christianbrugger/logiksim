@@ -1,13 +1,11 @@
 #include "core/render/text_cache.h"
 
 #include "core/logging.h"
+#include "core/render/context_guard.h"
 #include "core/render/text_cache.h"
-#include "core/timer.h"  // TODO remove
 
 #include <fmt/core.h>
 #include <gsl/gsl>
-
-#include <exception>
 
 namespace logicsim {
 
@@ -98,6 +96,34 @@ auto TextCache::get_entry(
     return entry;
 }
 
+namespace {
+
+auto draw_bounding_boxes(BLContext& ctx, const HbGlyphRun& hb_glyph_run, BLPoint origin,
+                         const TextCache::TextAttributes& attributes) -> void {
+    if (attributes.draw_glyph_rects || attributes.draw_bounding_rect) {
+        const auto _ = ContextGuard {ctx};
+
+        ctx.translate(origin);
+        ctx.setStrokeWidth(1);
+
+        if (attributes.draw_bounding_rect) {
+            ctx.strokeBox(hb_glyph_run.bounding_box(), defaults::color_lime);
+        }
+        if (attributes.draw_glyph_rects) {
+            for (const auto box : hb_glyph_run.glyph_bounding_boxes().span()) {
+                ctx.strokeBox(box, defaults::color_orange);
+            }
+        }
+        if (attributes.draw_cluster_rects) {
+            for (const auto box : hb_glyph_run.cluster_bounding_boxes().span()) {
+                ctx.strokeBox(box.box, defaults::color_blue);
+            }
+        }
+    }
+}
+
+}  // namespace
+
 auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_view text,
                           float font_size, TextAttributes attributes) const -> void {
     if (text.empty()) {
@@ -112,18 +138,7 @@ auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_v
     const auto origin = position - entry.offset;
 
     ctx.fillGlyphRun(origin, font, entry.hb_glyph_run.glyph_run(), attributes.color);
-
-    if (attributes.draw_bounding_rect) {
-        ctx.setStrokeWidth(1);
-        ctx.translate(origin);
-        ctx.strokeRect(entry.hb_glyph_run.bounding_rect(), defaults::color_lime);
-        ctx.translate(-origin);
-    }
-    // if (attributes.draw_glyph_rects) {
-    //     for (const auto rect : entry.shaped_text.glyph_bounding_rects()) {
-    //         print(rect);
-    //     }
-    // }
+    draw_bounding_boxes(ctx, entry.hb_glyph_run, origin, attributes);
 }
 
 namespace {

@@ -1,13 +1,9 @@
 #include "core/render/text_shaping.h"
 
-#include "core/algorithm/range.h"
-#include "core/algorithm/round.h"
 #include "core/algorithm/transform_to_vector.h"
 #include "core/concept/input_range.h"
 #include "core/format/blend2d_type.h"
 #include "core/format/container.h"
-#include "core/logging.h"
-#include "core/timer.h"
 
 #include <blend2d.h>
 #include <fmt/core.h>
@@ -24,8 +20,6 @@
 #include <range/v3/view/take_while.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip_with.hpp>
-
-#include <numeric>
 
 namespace logicsim {
 
@@ -562,7 +556,7 @@ auto calculate_max_glyph_count(const ClusterBoxesUser &cluster_boxes,
 
     return glyph_count_result_t {
         .glyph_count = glyph_count,
-        .cluster_count = 0,
+        .cluster_count = static_cast<std::size_t>(ranges::distance(fitting)),
     };
 }
 
@@ -668,6 +662,14 @@ auto HbGlyphRun::bounding_box() const noexcept -> BLBox {
 auto HbGlyphRun::bounding_rect() const noexcept -> BLRect {
     const auto box = bounding_box_;
     return BLRect {box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0};
+}
+
+auto HbGlyphRun::glyph_bounding_boxes() const -> const GlyphBoxesUser & {
+    return geometry_data_.glyph_boxes();
+}
+
+auto HbGlyphRun::cluster_bounding_boxes() const -> const ClusterBoxesUser & {
+    return geometry_data_.cluster_boxes();
 }
 
 auto HbGlyphRun::format() const -> std::string {
