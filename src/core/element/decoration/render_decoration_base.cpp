@@ -4,6 +4,7 @@
 #include "core/layout.h"
 #include "core/render/circuit/alpha_values.h"
 #include "core/render/context.h"
+#include "core/render/context_guard.h"
 #include "core/render/primitive/point.h"
 #include "core/render/primitive/text.h"
 #include "core/vocabulary/decoration_type.h"
@@ -15,11 +16,11 @@ namespace logicsim {
 namespace defaults {
 
 constexpr static inline auto text_element_angle_color_normal = defaults::color_light_gray;
-constexpr static inline auto text_element_angle_color_truncated = defaults::color_red;
+constexpr static inline auto text_element_angle_color_truncated = defaults::color_orange;
 
 // values from (0 - 0.5] are allowed
 constexpr static inline auto text_element_angle_size_normal = grid_fine_t {0.25};
-constexpr static inline auto text_element_angle_size_truncated = grid_fine_t {0.5};
+constexpr static inline auto text_element_angle_size_truncated = grid_fine_t {0.4};
 
 }  // namespace defaults
 
@@ -30,9 +31,12 @@ namespace {
  *
  * Note, shift determines the size and direction. Left for positive, right for negative.
  */
-auto draw_decoration_text_angle(Context& ctx, point_fine_t origin, double shift,
-                                color_t color) -> void {
-    const auto stroke_width = ctx.view_config().stroke_width();
+auto draw_decoration_text_angle_primitive(Context& ctx, point_fine_t origin, double shift,
+                                          color_t color,
+                                          TextTruncated truncated) -> void {
+    const auto stroke_factor = truncated == TextTruncated::no ? 1 : 3;
+    const auto stroke_width = ctx.view_config().stroke_width() * stroke_factor;
+
     const auto [x, y] = to_context(origin, ctx);
 
     const auto poly = std::array {
@@ -42,6 +46,9 @@ auto draw_decoration_text_angle(Context& ctx, point_fine_t origin, double shift,
     };
     const auto view = BLArrayView<BLPoint> {poly.data(), poly.size()};
 
+    const auto _ = ContextGuard {ctx.bl_ctx};
+    ctx.bl_ctx.setStrokeStartCap(BL_STROKE_CAP_ROUND);
+    ctx.bl_ctx.setStrokeEndCap(BL_STROKE_CAP_ROUND);
     ctx.bl_ctx.setStrokeWidth(stroke_width);
     ctx.bl_ctx.strokePolyline(BLArrayView<BLPoint>(view), color);
 }
@@ -56,12 +63,14 @@ auto text_element_angle_offset(grid_fine_t angle_size) -> point_fine_t {
     return point_fine_t {grid_fine_t {0.25} + angle_size / 2, 0};
 }
 
+enum class BracketType { open, close };
+
 /**
- * @brief: Draw all angles of the text element.
+ * @brief: Draw an angle of the text element.
  */
-auto draw_decoration_text_angles(Context& ctx, point_t position, size_2d_t size,
-                                 ElementDrawState state,
-                                 TextTruncated truncated) -> void {
+auto draw_decoration_text_angle(Context& ctx, point_t position, size_2d_t size,
+                                ElementDrawState state, TextTruncated truncated,
+                                BracketType type) -> void {
     const auto color_base = truncated == TextTruncated::no
                                 ? defaults::text_element_angle_color_normal
                                 : defaults::text_element_angle_color_truncated;
@@ -73,17 +82,15 @@ auto draw_decoration_text_angles(Context& ctx, point_t position, size_2d_t size,
     const auto color = with_alpha_runtime(color_base, state);
     const auto shift = to_context(angle_size, ctx);
 
-    // start angle
-    {
+    if (type == BracketType::open) {
         const auto origin_start = position - angle_offset;
-        draw_decoration_text_angle(ctx, origin_start, shift, color);
+        draw_decoration_text_angle_primitive(ctx, origin_start, shift, color, truncated);
     }
 
-    // end angle
-    {
+    else if (type == BracketType::close) {
         const auto position_end = point_t {to_grid(size.width, position.x), position.y};
         const auto origin_end = position_end + angle_offset;
-        draw_decoration_text_angle(ctx, origin_end, -shift, color);
+        draw_decoration_text_angle_primitive(ctx, origin_end, -shift, color, truncated);
     }
 }
 
@@ -114,7 +121,9 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
                   });
 
     // angles
-    draw_decoration_text_angles(ctx, position, size, state, truncated);
+    draw_decoration_text_angle(ctx, position, size, state, TextTruncated::no,
+                               BracketType::open);
+    draw_decoration_text_angle(ctx, position, size, state, truncated, BracketType::close);
 }
 
 }  // namespace
