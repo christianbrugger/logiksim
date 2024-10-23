@@ -14,13 +14,14 @@
 #include <gsl/gsl>
 #include <hb.h>
 #include <range/v3/algorithm/adjacent_find.hpp>
+#include <range/v3/algorithm/max_element.hpp>
 #include <range/v3/numeric/accumulate.hpp>
 #include <range/v3/to_container.hpp>
 #include <range/v3/view/chunk_by.hpp>
 #include <range/v3/view/exclusive_scan.hpp>
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/partial_sum.hpp>
-#include <range/v3/view/take_last.hpp>
+#include <range/v3/view/take_while.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip_with.hpp>
 
@@ -402,22 +403,14 @@ auto GlyphBoxData::format() const -> std::string {
     };
 
     const auto box_fitting = [&](const ClusterBox &a) -> bool {
-        const auto width = a.box.x1 - a.box.x0;
-        assert(width >= 0);
-        return width <= max_font_width;
+        return (a.box.x1 - a.box.x0) <= max_font_width;
     };
 
-    const auto sum_boxes = ranges::views::partial_sum(boxes, union_box_data);
+    const auto fitting = ranges::views::partial_sum(boxes, union_box_data)  //
+                         | ranges::views::take_while(box_fitting);
 
-    for (const auto &b : sum_boxes) {
-        print(b);
-    }
-
-    static_cast<void>(box_fitting);
-
-    // return (*ranges::prev(ranges::end(fitting_clusters))).end_index;
-    const auto glyph_infos = get_glyph_infos(hb_buffer);
-    return glyph_infos.size();
+    const auto max = ranges::max_element(fitting, {}, &ClusterBox::end_index);
+    return max != fitting.end() ? (*max).end_index : std::size_t {0};
 }
 
 /*
