@@ -178,7 +178,7 @@ namespace {
             break;
         }
     }
-    throw std::exception("shall not be called usually");
+    throw std::runtime_error("shall not be called usually");
 }
 
 }  // namespace
