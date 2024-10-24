@@ -60,6 +60,12 @@ class HbFont final {
 
 static_assert(std::semiregular<HbFont>);
 
+/**
+ * @brief: Shaped utf-8 text.
+ *
+ * Class-invariant:
+ *   + buffer_ is not modified once set in the constructor.
+ */
 class HbShapedText {
    public:
     explicit HbShapedText();
@@ -71,9 +77,13 @@ class HbShapedText {
     [[nodiscard]] auto font_size() const -> float;
     [[nodiscard]] auto user_scale() const -> BLPoint;
 
-    [[nodiscard]] auto hb_buffer() const noexcept -> hb_buffer_t *;
     [[nodiscard]] auto hb_glyph_infos() const -> std::span<const hb_glyph_info_t>;
     [[nodiscard]] auto hb_glyph_positions() const -> std::span<const hb_glyph_position_t>;
+
+   private:
+    // Private, as hb_buffer_t cannot be set immutable, so
+    // the class needs to hold this invariant.
+    [[nodiscard]] auto hb_buffer() const noexcept -> hb_buffer_t *;
 
    private:
     HbFont font_;
