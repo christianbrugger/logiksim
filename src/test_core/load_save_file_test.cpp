@@ -110,10 +110,10 @@ TEST(LoadSaveFile, Load220FilesAllComponentsGzip) {
     ASSERT_EQ(result.has_value(), true);
 
     EXPECT_EQ(result->editable_circuit.layout().logicitems().size(), 153);
-    EXPECT_EQ(result->editable_circuit.layout().decorations().size(), 3);
+    EXPECT_EQ(result->editable_circuit.layout().decorations().size(), 6);
     visible_selection_select_all(result->editable_circuit);
     EXPECT_EQ(result->editable_circuit.visible_selection().selected_segments().size(),
-              387);
+              401);
 }
 
 TEST(LoadSaveFile, Load210FilesCounterDisplay1To4Gzip) {
