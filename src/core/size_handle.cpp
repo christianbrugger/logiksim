@@ -112,7 +112,7 @@ auto size_handle_positions(const Layout& layout,
 
             const auto position_end = point_t {
                 to_grid(size.width, position.x),
-                position.y,
+                to_grid(size.height, position.y),
             };
             const auto offset = point_fine_t {0.5, 0};
 
@@ -288,12 +288,12 @@ auto get_resized_element(const PlacedLogicItem& original, size_handle_t handle,
 
 namespace {
 
-auto clamp_width(offset_t width, int delta, offset_t min, offset_t max) -> offset_t {
-    const auto new_width = int64_t {int {width}} + int64_t {delta};
-    static_assert(sizeof(new_width) > sizeof(delta));
+auto clamp_offset(offset_t width, int delta, offset_t min, offset_t max) -> offset_t {
+    const auto new_offset = int64_t {int {width}} + int64_t {delta};
+    static_assert(sizeof(new_offset) > sizeof(delta));
 
     const auto clamped_count =
-        std::clamp<decltype(new_width)>(new_width, int {min}, int {max});
+        std::clamp<decltype(new_offset)>(new_offset, int {min}, int {max});
 
     return offset_t {clamped_count};
 }
@@ -305,30 +305,32 @@ auto clamp_width(offset_t width, int delta, offset_t min, offset_t max) -> offse
     }
 
     auto result = PlacedDecoration {original};
+    const auto min_size = element_size_min(original.definition.decoration_type);
+    const auto max_size = element_size_max(original.definition.decoration_type);
 
-    const auto min_width = element_size_min(original.definition.decoration_type).width;
-    const auto max_width = element_size_max(original.definition.decoration_type).width;
+    // width
+    const auto delta_width = handle.index == 0 ? -delta.horizontal : delta.horizontal;
+    result.definition.size.width = clamp_offset(
+        original.definition.size.width, delta_width, min_size.width, max_size.width);
 
-    // input count
-    if (handle.index == 0) {
-        result.definition.size.width = clamp_width(
-            original.definition.size.width, -delta.horizontal, min_width, max_width);
-    } else if (handle.index == 1) {
-        result.definition.size.width = clamp_width(
-            original.definition.size.width, +delta.horizontal, min_width, max_width);
-    }
+    // height
+    const auto delta_height = handle.index == 0 ? -delta.vertical : delta.vertical;
+    result.definition.size.height = clamp_offset(
+        original.definition.size.height, delta_height, min_size.height, max_size.height);
 
     // position adjustment
-    if (handle.index == 0) {
-        const auto old_width = original.definition.size.width;
-        const auto new_width = result.definition.size.width;
-        const auto delta_width = int {old_width} - int {new_width};
+    const auto old_size = original.definition.size;
+    const auto new_size = result.definition.size;
+    const auto width_diff = int {new_size.width} - int {old_size.width};
+    const auto height_diff = int {new_size.height} - int {old_size.height};
 
-        if (is_representable(original.position, delta_width, 0)) {
-            result.position = add_unchecked(original.position, delta_width, 0);
-        } else {
-            return original;
-        }
+    const auto delta_x = handle.index == 0 ? -width_diff : 0;
+    const auto delta_y = handle.index == 0 ? -height_diff : 0;
+
+    if (is_representable(original.position, delta_x, delta_y)) {
+        result.position = add_unchecked(original.position, delta_x, delta_y);
+    } else {
+        return original;
     }
 
     return result;

@@ -1,5 +1,6 @@
 #include "core/element/decoration/render_decoration_base.h"
 
+#include "core/algorithm/range_extended.h"
 #include "core/geometry/offset.h"
 #include "core/layout.h"
 #include "core/render/circuit/alpha_values.h"
@@ -106,13 +107,16 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
     const auto size = layout.decorations().size(decoration_id);
 
     // text
-    const auto text_anchor = point_fine_t {position.x, position.y};
+    const auto text_anchor = point_fine_t {position.x, position.y}  //
+                             + point_fine_t {0, int {size.height} / 2.0};
     const auto text_color = with_alpha_runtime(defaults::color_black, state);
+    const auto font_size = (int {size.height} + 1) * defaults::text_element_font_size;
     const auto& text_label = layout.decorations().attrs_text_element(decoration_id).text;
+
     const auto truncated =
         draw_text(ctx, text_anchor, text_label,
                   TextAttributes {
-                      .font_size = defaults::text_element_font_size,
+                      .font_size = font_size,
                       .color = text_color,
 
                       .horizontal_alignment = HTextAlignment::left,
@@ -123,9 +127,12 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
                   });
 
     // angles
-    draw_decoration_text_angle(ctx, position, size, state, TextTruncated::no,
-                               BracketType::open);
-    draw_decoration_text_angle(ctx, position, size, state, truncated, BracketType::close);
+    for (auto offset : range_inclusive<grid_t>(0, int {size.height})) {
+        const auto pos = position + point_t {0, offset};
+        draw_decoration_text_angle(ctx, pos, size, state, TextTruncated::no,
+                                   BracketType::open);
+        draw_decoration_text_angle(ctx, pos, size, state, truncated, BracketType::close);
+    }
 }
 
 }  // namespace
