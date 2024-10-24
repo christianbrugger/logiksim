@@ -70,7 +70,7 @@ auto text_element_angle_offset(grid_fine_t angle_size) -> point_fine_t {
 enum class BracketType { open, close };
 
 /**
- * @brief: Draw an angle of the text element.
+ * @brief: Draw a single angle of the text element.
  */
 auto draw_decoration_text_angle(Context& ctx, point_t position, size_2d_t size,
                                 ElementDrawState state, TextTruncated truncated,
@@ -95,6 +95,27 @@ auto draw_decoration_text_angle(Context& ctx, point_t position, size_2d_t size,
         const auto position_end = point_t {to_grid(size.width, position.x), position.y};
         const auto origin_end = position_end + angle_offset;
         draw_decoration_text_angle_primitive(ctx, origin_end, -shift, color, truncated);
+    }
+}
+
+/**
+ * @brief: Draw all angles of the text decoration
+ */
+auto draw_decoration_text_angles(Context& ctx, point_t position, size_2d_t size,
+                                 ElementDrawState state,
+                                 const draw_text_result_t& draw_result) -> void {
+    if (draw_result.truncated == TextTruncated::no &&
+        !is_box_empty(draw_result.bounding_box)) {
+        return;
+    }
+
+    for (auto offset : range_inclusive<grid_t>(0, int {size.height})) {
+        const auto pos = position + point_t {0, offset};
+
+        draw_decoration_text_angle(ctx, pos, size, state, TextTruncated::no,
+                                   BracketType::open);
+        draw_decoration_text_angle(ctx, pos, size, state, draw_result.truncated,
+                                   BracketType::close);
     }
 }
 
@@ -128,16 +149,7 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
                   });
 
     // angles
-    if (draw_result.truncated == TextTruncated::yes ||
-        is_box_empty(draw_result.bounding_box)) {
-        for (auto offset : range_inclusive<grid_t>(0, int {size.height})) {
-            const auto pos = position + point_t {0, offset};
-            draw_decoration_text_angle(ctx, pos, size, state, TextTruncated::no,
-                                       BracketType::open);
-            draw_decoration_text_angle(ctx, pos, size, state, draw_result.truncated,
-                                       BracketType::close);
-        }
-    }
+    draw_decoration_text_angles(ctx, position, size, state, draw_result);
 }
 
 }  // namespace
