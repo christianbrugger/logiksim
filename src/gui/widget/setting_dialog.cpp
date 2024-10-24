@@ -271,6 +271,8 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
         connect(text_, &QLineEdit::textChanged, this, &TextElementDialog::value_changed);
     }
 
+    // TODO bold
+
     Ensures(text_ != nullptr);
 }
 
