@@ -14,6 +14,7 @@ auto format(TextTruncated value) -> std::string {
             return "no";
         }
     }
+    std::terminate();
 }
 
 }  // namespace logicsim

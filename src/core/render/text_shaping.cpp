@@ -12,7 +12,7 @@
 #include <gsl/gsl>
 #include <hb.h>
 #include <range/v3/algorithm/max_element.hpp>
-#include <range/v3/to_container.hpp>
+#include <range/v3/range/conversion.hpp>
 #include <range/v3/view/chunk_by.hpp>
 #include <range/v3/view/exclusive_scan.hpp>
 #include <range/v3/view/iota.hpp>
@@ -202,8 +202,12 @@ auto HbFont::user_scale(float font_size) const -> BLPoint {
 
 namespace {
 
-[[nodiscard]] auto shape_text(const HbFont &font,
-                              std::string_view text_utf8) -> HbBufferPointer {
+[[nodiscard]] auto create_shaped_text() -> HbBufferPointer {
+    return HbBufferPointer {hb_buffer_get_empty()};
+}
+
+[[nodiscard]] auto create_shaped_text(const HbFont &font,
+                                      std::string_view text_utf8) -> HbBufferPointer {
     auto buffer = HbBufferPointer {hb_buffer_create()};
     Expects(buffer != nullptr);
 
@@ -230,14 +234,14 @@ namespace {
 }  // namespace
 
 HbShapedText::HbShapedText()
-    : font_ {HbFont {}}, font_size_ {0}, buffer_ {hb_buffer_get_empty()} {
+    : font_ {HbFont {}}, font_size_ {0}, buffer_ {create_shaped_text()} {
     Ensures(buffer_ != nullptr);
 }
 
 HbShapedText::HbShapedText(std::string_view text_utf8, HbFont font, float font_size)
     : font_ {std::move(font)},
       font_size_ {font_size},
-      buffer_ {shape_text(font_, text_utf8)} {
+      buffer_ {create_shaped_text(font_, text_utf8)} {
     Ensures(buffer_ != nullptr);
 }
 
