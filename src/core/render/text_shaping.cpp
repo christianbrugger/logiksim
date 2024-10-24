@@ -412,7 +412,7 @@ struct GlyphBoxData {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-auto GlyphBoxData::format() const -> std::string {
+[[maybe_unused]] auto GlyphBoxData::format() const -> std::string {
     return fmt::format("GlyphBoxData(glyph_index = {}, cluster = {}, box = {})",
                        glyph_index, cluster, box);
 }
