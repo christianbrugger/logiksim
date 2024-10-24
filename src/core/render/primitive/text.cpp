@@ -1,5 +1,6 @@
 #include "core/render/primitive/text.h"
 
+#include "core/render/bl_box.h"
 #include "core/render/context.h"
 #include "core/render/context_cache.h"
 #include "core/render/text_cache.h"
@@ -10,14 +11,19 @@
 namespace logicsim {
 
 auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
-               const TextAttributes& attributes) -> TextTruncated {
+               const TextAttributes& attributes) -> draw_text_result_t {
     if (text.empty()) {
-        return TextTruncated::no;
+        return draw_text_result_t {
+            .truncated = TextTruncated::no,
+            .bounding_box = empty_bl_box,
+        };
     }
     const auto font_size_px = to_context_unrounded(attributes.font_size, ctx);
     if (font_size_px < attributes.cutoff_size_px) {
-        // TODO what to do here ?
-        return TextTruncated::no;
+        return draw_text_result_t {
+            .truncated = TextTruncated::no,
+            .bounding_box = empty_bl_box,
+        };
     }
 
     const auto position_px = to_context(position, ctx);

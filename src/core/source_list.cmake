@@ -197,6 +197,7 @@ set(LS_CORE_SOURCES
     render/primitive/round_rect.cpp
     render/primitive/stroke.cpp
     render/primitive/text.cpp
+    render/bl_box.cpp
     render/bl_error_check.cpp
     render/bl_glyph_placement.cpp
     render/context.cpp
@@ -210,6 +211,7 @@ set(LS_CORE_SOURCES
     render/svg_cache.cpp
     render/text_alignment.cpp
     render/text_cache.cpp
+    render/text_result_type.cpp
     render/text_shaping.cpp
     render/write_file.cpp
 

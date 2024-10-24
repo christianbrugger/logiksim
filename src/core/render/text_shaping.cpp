@@ -5,14 +5,13 @@
 #include "core/format/blend2d_type.h"
 #include "core/format/container.h"
 #include "core/format/std_type.h"
+#include "core/render/bl_box.h"
 
 #include <blend2d.h>
 #include <fmt/core.h>
 #include <gsl/gsl>
 #include <hb.h>
-#include <range/v3/algorithm/adjacent_find.hpp>
 #include <range/v3/algorithm/max_element.hpp>
-#include <range/v3/numeric/accumulate.hpp>
 #include <range/v3/to_container.hpp>
 #include <range/v3/view/chunk_by.hpp>
 #include <range/v3/view/exclusive_scan.hpp>
@@ -118,36 +117,6 @@ auto HbBufferDeleter::operator()(hb_buffer_t *hb_buffer) -> void {
     hb_font_make_immutable(font.get());
 
     return font;
-}
-
-// TODO move somewhere else
-constexpr static inline auto empty_bl_box = BLBox {
-    +std::numeric_limits<double>::infinity(),
-    +std::numeric_limits<double>::infinity(),
-    -std::numeric_limits<double>::infinity(),
-    -std::numeric_limits<double>::infinity(),
-};
-
-// TODO move somewhere else
-[[nodiscard]] auto get_box_union(const BLBox &a, const BLBox &b) -> BLBox {
-    return BLBox {
-        std::min(a.x0, b.x0),
-        std::min(a.y0, b.y0),
-        std::max(a.x1, b.x1),
-        std::max(a.y1, b.y1),
-    };
-}
-
-// TODO move somewhere else
-// [[nodiscard]] auto get_box_union(std::span<const BLBox> boxes) -> BLBox {
-[[nodiscard]] auto get_box_union(input_range_of<BLBox> auto &&boxes) -> BLBox {
-    if (boxes.size() == 0) {
-        return empty_bl_box;
-    }
-
-    return ranges::accumulate(boxes, empty_bl_box, [](const BLBox &a, const BLBox &b) {
-        return get_box_union(a, b);
-    });
 }
 
 }  // namespace

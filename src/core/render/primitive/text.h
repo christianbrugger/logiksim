@@ -1,11 +1,11 @@
 #ifndef LOGICSIM_RENDER_PRIMITIVE_TEXT_H
 #define LOGICSIM_RENDER_PRIMITIVE_TEXT_H
 
+#include "core/render/text_result_type.h"
 #include "core/vocabulary/color.h"
 #include "core/vocabulary/font_style.h"
 #include "core/vocabulary/grid_fine.h"
 #include "core/vocabulary/text_alignment.h"
-#include "core/vocabulary/text_truncated.h"
 
 #include <string_view>
 
@@ -30,7 +30,7 @@ struct TextAttributes {
 };
 
 auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
-               const TextAttributes& attributes) -> TextTruncated;
+               const TextAttributes& attributes) -> draw_text_result_t;
 
 }  // namespace logicsim
 

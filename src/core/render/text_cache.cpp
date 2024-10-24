@@ -1,6 +1,7 @@
 #include "core/render/text_cache.h"
 
 #include "core/logging.h"
+#include "core/render/bl_box.h"
 #include "core/render/context_guard.h"
 #include "core/render/text_cache.h"
 
@@ -126,9 +127,12 @@ auto draw_bounding_boxes(BLContext& ctx, const HbGlyphRun& hb_glyph_run, BLPoint
 
 auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_view text,
                           float font_size,
-                          TextAttributes attributes) const -> TextTruncated {
+                          TextAttributes attributes) const -> draw_text_result_t {
     if (text.empty()) {
-        return TextTruncated::no;
+        return draw_text_result_t {
+            .truncated = TextTruncated::no,
+            .bounding_box = empty_bl_box,
+        };
     }
 
     const auto& font = get_scaled_bl_font(font_size, attributes.style);
@@ -141,7 +145,10 @@ auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_v
     ctx.fillGlyphRun(origin, font, entry.hb_glyph_run.glyph_run(), attributes.color);
     draw_bounding_boxes(ctx, entry.hb_glyph_run, origin, attributes);
 
-    return entry.hb_glyph_run.truncated();
+    return draw_text_result_t {
+        .truncated = entry.hb_glyph_run.truncated(),
+        .bounding_box = entry.hb_glyph_run.bounding_box(),
+    };
 }
 
 namespace {

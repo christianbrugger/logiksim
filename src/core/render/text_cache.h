@@ -4,11 +4,11 @@
 #include "core/format/struct.h"
 #include "core/render/font.h"
 #include "core/render/text_alignment.h"
+#include "core/render/text_result_type.h"
 #include "core/render/text_shaping.h"
 #include "core/vocabulary/color.h"
 #include "core/vocabulary/font_style.h"
 #include "core/vocabulary/text_alignment.h"
-#include "core/vocabulary/text_truncated.h"
 #include "core/wyhash.h"
 
 #include <ankerl/unordered_dense.h>
@@ -102,7 +102,8 @@ class TextCache {
     };
 
     auto draw_text(BLContext &ctx, const BLPoint &position, std::string_view text,
-                   float font_size, TextAttributes attributes) const -> TextTruncated;
+                   float font_size,
+                   TextAttributes attributes) const -> draw_text_result_t;
 
     [[nodiscard]] auto calculate_bounding_box(std::string_view text, float font_size,
                                               FontStyle style) const -> BLBox;

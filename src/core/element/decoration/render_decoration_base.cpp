@@ -3,6 +3,7 @@
 #include "core/algorithm/range_extended.h"
 #include "core/geometry/offset.h"
 #include "core/layout.h"
+#include "core/render/bl_box.h"
 #include "core/render/circuit/alpha_values.h"
 #include "core/render/context.h"
 #include "core/render/context_guard.h"
@@ -16,11 +17,11 @@ namespace logicsim {
 
 namespace defaults {
 
-constexpr static inline auto text_element_angle_color_normal = defaults::color_light_gray;
+constexpr static inline auto text_element_angle_color_empty = defaults::color_gray;
 constexpr static inline auto text_element_angle_color_truncated = defaults::color_orange;
 
 // values from (0 - 0.5] are allowed
-constexpr static inline auto text_element_angle_size_normal = grid_fine_t {0.25};
+constexpr static inline auto text_element_angle_size_empty = grid_fine_t {0.25};
 constexpr static inline auto text_element_angle_size_truncated = grid_fine_t {0.4};
 
 constexpr static inline auto text_element_font_size = grid_fine_t {0.8};
@@ -75,10 +76,10 @@ auto draw_decoration_text_angle(Context& ctx, point_t position, size_2d_t size,
                                 ElementDrawState state, TextTruncated truncated,
                                 BracketType type) -> void {
     const auto color_base = truncated == TextTruncated::no
-                                ? defaults::text_element_angle_color_normal
+                                ? defaults::text_element_angle_color_empty
                                 : defaults::text_element_angle_color_truncated;
     const auto angle_size = truncated == TextTruncated::no
-                                ? defaults::text_element_angle_size_normal
+                                ? defaults::text_element_angle_size_empty
                                 : defaults::text_element_angle_size_truncated;
 
     const auto angle_offset = text_element_angle_offset(angle_size);
@@ -113,7 +114,7 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
     const auto font_size = (int {size.height} + 1) * defaults::text_element_font_size;
     const auto& text_label = layout.decorations().attrs_text_element(decoration_id).text;
 
-    const auto truncated =
+    const auto draw_result =
         draw_text(ctx, text_anchor, text_label,
                   TextAttributes {
                       .font_size = font_size,
@@ -127,11 +128,15 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
                   });
 
     // angles
-    for (auto offset : range_inclusive<grid_t>(0, int {size.height})) {
-        const auto pos = position + point_t {0, offset};
-        draw_decoration_text_angle(ctx, pos, size, state, TextTruncated::no,
-                                   BracketType::open);
-        draw_decoration_text_angle(ctx, pos, size, state, truncated, BracketType::close);
+    if (draw_result.truncated == TextTruncated::yes ||
+        is_box_empty(draw_result.bounding_box)) {
+        for (auto offset : range_inclusive<grid_t>(0, int {size.height})) {
+            const auto pos = position + point_t {0, offset};
+            draw_decoration_text_angle(ctx, pos, size, state, TextTruncated::no,
+                                       BracketType::open);
+            draw_decoration_text_angle(ctx, pos, size, state, draw_result.truncated,
+                                       BracketType::close);
+        }
     }
 }
 
