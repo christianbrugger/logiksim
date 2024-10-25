@@ -3,12 +3,18 @@
 
 #include "core/vocabulary/decoration_definition.h"
 #include "core/vocabulary/delay.h"
+#include "core/vocabulary/font_style.h"
 #include "core/vocabulary/logicitem_definition.h"
 #include "core/vocabulary/selection_id.h"
 #include "core/vocabulary/setting_attribute.h"
 
+#include <ankerl/unordered_dense.h>
+
+#include <QAbstractButton>
 #include <QDoubleValidator>
 #include <QWidget>
+
+#include <vector>
 
 class QCheckBox;
 class QComboBox;
@@ -21,6 +27,7 @@ class QCloseEvent;
 namespace logicsim {
 
 struct delay_t;
+struct FontStyleInfo;
 
 //
 // Setting Dialog
@@ -104,10 +111,16 @@ class TextElementDialog : public SettingDialog {
                                const attributes_text_element_t& attrs);
 
    private:
+    [[nodiscard]] static auto get_style_button_infos() -> std::vector<FontStyleInfo>;
+    [[nodiscard]] auto get_selected_font_style() const -> FontStyle;
+
     auto value_changed() -> void;
 
    private:
     QLineEdit* text_;
+
+    using font_style_map_type = ankerl::unordered_dense::map<FontStyle, QAbstractButton*>;
+    font_style_map_type font_style_buttons_ {};
 };
 
 }  // namespace logicsim

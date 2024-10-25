@@ -37,6 +37,7 @@ google-runtime-operator,
 -readability-uppercase-literal-suffix,
 
 -readability-redundant-member-init,
+-cppcoreguidelines-owning-memory,
 '
 
 

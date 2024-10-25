@@ -1,14 +1,21 @@
 #include "gui/widget/setting_dialog.h"
 
+#include "gui/format/qt_type.h"
 #include "gui/qt/path_conversion.h"
 
 #include "core/algorithm/range.h"
 #include "core/algorithm/round.h"
+#include "core/concept/input_range.h"
+#include "core/logging.h"
 #include "core/resource.h"
 #include "core/validate_definition_logicitem.h"
 #include "core/vocabulary/decoration_definition.h"
 #include "core/vocabulary/delay.h"
+#include "core/vocabulary/font_style.h"
 #include "core/vocabulary/logicitem_definition.h"
+
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/transform.hpp>
 
 #include <QBoxLayout>
 #include <QButtonGroup>
@@ -251,6 +258,80 @@ auto ClockGeneratorDialog::update_row_visibility() -> void {
 // Text Element Dialog
 //
 
+struct FontStyleInfo {
+    QString label;
+    QString tooltip;
+
+    FontStyle font_style;
+
+    bool is_bold {false};
+    bool is_italic {false};
+};
+
+auto TextElementDialog::get_style_button_infos() -> std::vector<FontStyleInfo> {
+    return {
+        FontStyleInfo {
+            .label = tr("R"),
+            .tooltip = tr("Regular"),
+            .font_style = FontStyle::regular,
+        },
+        FontStyleInfo {
+            .label = tr("B"),
+            .tooltip = tr("Bold"),
+            .font_style = FontStyle::bold,
+            .is_bold = true,
+        },
+        FontStyleInfo {
+            .label = tr("I"),
+            .tooltip = tr("Italic"),
+            .font_style = FontStyle::italic,
+            .is_italic = true,
+        },
+        FontStyleInfo {
+            .label = tr("M"),
+            .tooltip = tr("Monospace"),
+            .font_style = FontStyle::monospace,
+        },
+    };
+}
+
+namespace {
+
+[[nodiscard]] auto get_buttons_max_size(input_range_of<QAbstractButton*> auto&& buttons)
+    -> QSize {
+    const auto size_union = [](const QSize& a, const QSize& b) -> QSize {
+        return a.expandedTo(b);
+    };
+
+    const auto size_hints = ranges::views::transform(buttons, &QAbstractButton::sizeHint);
+
+    return ranges::accumulate(size_hints, QSize {}, size_union);
+}
+
+[[nodiscard]] auto to_squared_size(QSize size) -> QSize {
+    const auto max_extend = qMax(size.width(), size.height());
+    return QSize {max_extend, max_extend};
+}
+
+[[nodiscard]] auto get_buttons_max_extend(input_range_of<QAbstractButton*> auto&& buttons)
+    -> QSize {
+    return to_squared_size(get_buttons_max_size(buttons));
+}
+
+auto set_buttons_size(input_range_of<QAbstractButton*> auto&& buttons,
+                      QSize size) -> void {
+    for (QAbstractButton* button : buttons) {
+        button->setFixedSize(size);
+    }
+}
+
+auto set_buttons_to_equal_squares(input_range_of<QAbstractButton*> auto&& buttons)
+    -> void {
+    set_buttons_size(buttons, get_buttons_max_extend(buttons));
+}
+
+}  // namespace
+
 TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_id,
                                      const attributes_text_element_t& attrs)
     : SettingDialog {parent, selection_id} {
@@ -266,7 +347,6 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
         label->setText(tr("Text:"));
         auto* line_edit = new QLineEdit(this);
         line_edit->setText(QString::fromStdString(attrs.text));
-        line_edit->setMinimumWidth(0);
 
         layout->addRow(label, line_edit);
 
@@ -279,19 +359,40 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
         auto* label = new QLabel(this);
         label->setText(tr("Font Style:"));
 
-        auto* row_layout = new QHBoxLayout {this};
+        auto* row_layout = new QHBoxLayout {};
+        layout->addRow(label, row_layout);
+
+        const auto infos = get_style_button_infos();
         auto* group = new QButtonGroup {this};
 
-        for (auto label : {"R", "B", "I", "M"}) {
+        for (const auto& info : infos) {
             auto* button = new QToolButton {this};
-            button->setText(label);
+            button->setText(info.label);
+            button->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonTextOnly);
             button->setCheckable(true);
+            button->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+            button->setToolTip(info.tooltip);
+
+            auto font = button->font();
+            font.setBold(info.is_bold);
+            font.setItalic(info.is_italic);
+            button->setFont(font);
+
             group->addButton(button);
-            row_layout->addWidget(button);
+            row_layout->addWidget(button, 1);
+
+            font_style_buttons_[info.font_style] = button;
+
+            connect(button, &QToolButton::clicked, this,
+                    &TextElementDialog::value_changed);
         }
 
+        auto buttons = std::ranges::views::values(font_style_buttons_.values());
+        set_buttons_to_equal_squares(buttons);
         row_layout->addStretch(1);
-        layout->addRow(label, row_layout);
+
+        // set active button
+        font_style_buttons_[attrs.font_style]->setChecked(true);
     }
 
     // Horizontal Alignment
@@ -307,11 +408,21 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
     Ensures(text_ != nullptr);
 }
 
+auto TextElementDialog::get_selected_font_style() const -> FontStyle {
+    for (const auto& [style, button] : font_style_buttons_) {
+        if (button->isChecked()) {
+            return style;
+        }
+    }
+    return attributes_text_element_t {}.font_style;
+}
+
 auto TextElementDialog::value_changed() -> void {
     Expects(text_ != nullptr);
 
     emit_attributes_changed(attributes_text_element_t {
         .text = text_->text().toStdString(),
+        .font_style = get_selected_font_style(),
     });
 }
 
