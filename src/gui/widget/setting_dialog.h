@@ -118,10 +118,13 @@ class TextElementDialog : public SettingDialog {
     [[nodiscard]] auto get_selected_font_style() const -> FontStyle;
     [[nodiscard]] auto get_selected_alignment() const -> HTextAlignment;
 
+    auto on_color_button_clicked() -> void;
     auto value_changed() -> void;
 
    private:
     QLineEdit* text_;
+    QAbstractButton* color_button_;
+    color_t text_color_;
 
     using font_style_map_type = ankerl::unordered_dense::map<FontStyle, QAbstractButton*>;
     font_style_map_type font_style_buttons_ {};

@@ -2,11 +2,13 @@
 
 #include "gui/format/qt_type.h"
 #include "gui/qt/path_conversion.h"
+#include "gui/qt/svg_icon_engine.h"
 
 #include "core/algorithm/overload.h"
 #include "core/algorithm/range.h"
 #include "core/algorithm/round.h"
 #include "core/concept/input_range.h"
+#include "core/file.h"
 #include "core/logging.h"
 #include "core/resource.h"
 #include "core/validate_definition_logicitem.h"
@@ -18,12 +20,14 @@
 #include <range/v3/numeric/accumulate.hpp>
 #include <range/v3/view/concat.hpp>
 #include <range/v3/view/map.hpp>
+#include <range/v3/view/single.hpp>
 #include <range/v3/view/transform.hpp>
 
 #include <QBoxLayout>
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QCloseEvent>
+#include <QColorDialog>
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
@@ -387,6 +391,22 @@ auto set_button_icon(QAbstractButton* button, icon_t icon, QSize size) -> void {
     button->setIconSize(size);
 }
 
+constexpr inline auto svg_color_template = R"(
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+>
+  <rect x="2" y="2" width="20" height="20" rx="2" fill="#{:02X}{:02X}{:02X}"/>
+</svg>
+)";
+
+auto create_icon_from_color(color_t color) -> QIcon {
+    const auto svg = fmt::format(svg_color_template, color.r(), color.g(), color.b());
+    return QIcon {new SvgIconEngine {svg}};
+}
+
 }  // namespace
 
 TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_id,
@@ -490,12 +510,25 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
 
     // Color
     {
-        //
+        auto* label = new QLabel {this};
+        label->setText(tr("Color:"));
+        auto* button = new QToolButton {this};
+        layout->addRow(label, button);
+
+        button->setIcon(create_icon_from_color(attrs.text_color));
+        button->setIconSize(icon_size);
+        button->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonIconOnly);
+
+        connect(button, &QToolButton::clicked, this,
+                &TextElementDialog::on_color_button_clicked);
+        color_button_ = button;
+        text_color_ = attrs.text_color;
     }
 
     // equal button size
     auto buttons = ranges::views::concat(font_style_buttons_ | ranges::views::values,
-                                         alignment_buttons_ | ranges::views::values);
+                                         alignment_buttons_ | ranges::views::values,
+                                         ranges::views::single(color_button_));
     set_buttons_to_equal_squares(buttons);
 
     resize(400, 50);
@@ -518,6 +551,28 @@ auto TextElementDialog::get_selected_alignment() const -> HTextAlignment {
         }
     }
     return attributes_text_element_t {}.horizontal_alignment;
+}
+
+auto TextElementDialog::on_color_button_clicked() -> void {
+    // TODO put somewhere else
+    const auto initial = QColor {
+        gsl::narrow<int>(text_color_.r()),
+        gsl::narrow<int>(text_color_.g()),
+        gsl::narrow<int>(text_color_.b()),
+    };
+    const auto res = QColorDialog::getColor(initial);
+
+    if (res.isValid()) {
+        const auto color = color_t {
+            gsl::narrow<uint32_t>(res.red()),
+            gsl::narrow<uint32_t>(res.green()),
+            gsl::narrow<uint32_t>(res.blue()),
+        };
+
+        color_button_->setIcon(create_icon_from_color(color));
+        text_color_ = color;
+        value_changed();
+    }
 }
 
 auto TextElementDialog::value_changed() -> void {

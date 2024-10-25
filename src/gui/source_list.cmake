@@ -29,6 +29,7 @@ set(LS_GUI_SOURCES
     qt/path_conversion.cpp
     qt/point_conversion.cpp
     qt/setting_location.cpp
+    qt/svg_icon_engine.cpp
     qt/widget_geometry.cpp
 
     widget/circuit_widget.cpp

@@ -8,6 +8,7 @@ include(source_moc.cmake)
 set(CMAKE_AUTOMOC FALSE)  # takes too much time, not parallelized
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Svg)
 message(NOTICE "Qt version: ${Qt6_VERSION}")
 
 
@@ -27,6 +28,8 @@ target_link_libraries(${LS_GUI_LIBRARY} PUBLIC
 
     Qt6::Core
     Qt6::Widgets
+    Qt6::Svg
+
     Qt6::GuiPrivate
 )
 
