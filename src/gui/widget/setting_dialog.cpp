@@ -518,6 +518,7 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
         button->setIcon(create_icon_from_color(attrs.text_color));
         button->setIconSize(icon_size);
         button->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonIconOnly);
+        button->setToolTip(tr("Select Color"));
 
         connect(button, &QToolButton::clicked, this,
                 &TextElementDialog::on_color_button_clicked);
@@ -534,6 +535,7 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
 
     resize(400, 50);
     Ensures(text_ != nullptr);
+    Ensures(color_button_ != nullptr);
 }
 
 auto TextElementDialog::get_selected_font_style() const -> FontStyle {
@@ -554,14 +556,46 @@ auto TextElementDialog::get_selected_alignment() const -> HTextAlignment {
     return attributes_text_element_t {}.horizontal_alignment;
 }
 
+namespace {
+
+// TODO put somewhere else
+
+/**
+ * @brief: Open QColorDialog and let user choose a color.
+ *
+ * Note, this reimplements QColorDialog::getColor, which leads to
+ * geometry warnings on Windows, due to missing adjustSize.
+ *
+ * https://github.com/qt/qtbase/blob/1347ca99a30364ca9973448111a9bf40173fd81e/src/widgets/dialogs/qcolordialog.cpp#L2197-L2213
+ */
+[[nodiscard]] auto color_dialog_get_color(const QColor& initial, QWidget* parent,
+                                          const QString& title) {
+    auto dialog = QScopedPointer {new QColorDialog {parent}};
+    dialog->setWindowTitle(title);
+    dialog->setCurrentColor(initial);
+    // silence geometry warning
+    dialog->adjustSize();
+    dialog->exec();
+    // dialog can be deleted in exec
+    if (bool {dialog}) {
+        return dialog->selectedColor();
+    }
+    return QColor {};
+}
+
+}  // namespace
+
 auto TextElementDialog::on_color_button_clicked() -> void {
+    Expects(color_button_ != nullptr);
+
     // TODO put somewhere else
     const auto initial = QColor {
         gsl::narrow<int>(text_color_.r()),
         gsl::narrow<int>(text_color_.g()),
         gsl::narrow<int>(text_color_.b()),
     };
-    const auto res = QColorDialog::getColor(initial);
+
+    const auto res = color_dialog_get_color(initial, this, color_button_->toolTip());
 
     if (res.isValid()) {
         const auto color = color_t {
