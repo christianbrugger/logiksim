@@ -119,6 +119,27 @@ auto draw_decoration_text_angles(Context& ctx, point_t position, size_2d_t size,
     }
 }
 
+auto text_element_text_anchor(point_t position, size_2d_t size,
+                              HTextAlignment horizontal_alignment) -> point_fine_t {
+    const auto x_offset = [&]() -> double {
+        switch (horizontal_alignment) {
+            case HTextAlignment::center: {
+                return int {size.width} / 2.0;
+            }
+            case HTextAlignment::left: {
+                return 0;
+            }
+            case HTextAlignment::right: {
+                return int {size.width};
+            }
+        }
+        std::terminate();
+    }();
+    const auto y_offset = int {size.height} / 2.0;
+
+    return position + point_fine_t {x_offset, y_offset};
+}
+
 /**
  * @brief: Draw the full text element.
  */
@@ -127,23 +148,23 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
                                   ElementDrawState state) -> void {
     const auto position = layout.decorations().position(decoration_id);
     const auto size = layout.decorations().size(decoration_id);
+    const auto& attrs = layout.decorations().attrs_text_element(decoration_id);
 
     // text
-    const auto text_anchor = point_fine_t {position.x, position.y}  //
-                             + point_fine_t {0, int {size.height} / 2.0};
+    const auto text_anchor =
+        text_element_text_anchor(position, size, attrs.horizontal_alignment);
     const auto text_color = with_alpha_runtime(defaults::color_black, state);
     const auto font_size = (int {size.height} + 1) * defaults::text_element_font_size;
-    const auto& text_label = layout.decorations().attrs_text_element(decoration_id).text;
 
     const auto draw_result =
-        draw_text(ctx, text_anchor, text_label,
+        draw_text(ctx, text_anchor, attrs.text,
                   TextAttributes {
                       .font_size = font_size,
                       .color = text_color,
 
-                      .horizontal_alignment = HTextAlignment::left,
+                      .horizontal_alignment = attrs.horizontal_alignment,
                       .vertical_alignment = VTextAlignment::center_baseline,
-                      .style = FontStyle::regular,
+                      .style = attrs.font_style,
 
                       .max_text_width = grid_fine_t {int {size.width}},
                   });

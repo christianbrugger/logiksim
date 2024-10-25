@@ -7,7 +7,8 @@
 namespace logicsim {
 
 auto attributes_text_element_t::format() const -> std::string {
-    return fmt::format("{}", text);
+    return fmt::format("(text = {}, alignment = {}, style = {})", text,
+                       horizontal_alignment, font_style);
 }
 
 auto attributes_text_element_t::allocated_size() const -> std::size_t {

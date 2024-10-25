@@ -3,7 +3,9 @@
 
 #include "core/format/struct.h"
 #include "core/vocabulary/decoration_type.h"
+#include "core/vocabulary/font_style.h"
 #include "core/vocabulary/size_2d.h"
+#include "core/vocabulary/text_alignment.h"
 
 #include <compare>
 #include <optional>
@@ -17,6 +19,8 @@ namespace logicsim {
  */
 struct attributes_text_element_t {
     std::string text {};
+    HTextAlignment horizontal_alignment {HTextAlignment::center};
+    FontStyle font_style {FontStyle::regular};
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;

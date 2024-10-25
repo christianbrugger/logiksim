@@ -11,6 +11,7 @@
 #include "core/vocabulary/logicitem_definition.h"
 
 #include <QBoxLayout>
+#include <QButtonGroup>
 #include <QCheckBox>
 #include <QCloseEvent>
 #include <QComboBox>
@@ -20,6 +21,7 @@
 #include <QLayout>
 #include <QLineEdit>
 #include <QRegularExpression>
+#include <QToolButton>
 
 #include <stdexcept>
 
@@ -264,6 +266,7 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
         label->setText(tr("Text:"));
         auto* line_edit = new QLineEdit(this);
         line_edit->setText(QString::fromStdString(attrs.text));
+        line_edit->setMinimumWidth(0);
 
         layout->addRow(label, line_edit);
 
@@ -271,7 +274,35 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
         connect(text_, &QLineEdit::textChanged, this, &TextElementDialog::value_changed);
     }
 
-    // TODO bold
+    // Font Style
+    {
+        auto* label = new QLabel(this);
+        label->setText(tr("Font Style:"));
+
+        auto* row_layout = new QHBoxLayout {this};
+        auto* group = new QButtonGroup {this};
+
+        for (auto label : {"R", "B", "I", "M"}) {
+            auto* button = new QToolButton {this};
+            button->setText(label);
+            button->setCheckable(true);
+            group->addButton(button);
+            row_layout->addWidget(button);
+        }
+
+        row_layout->addStretch(1);
+        layout->addRow(label, row_layout);
+    }
+
+    // Horizontal Alignment
+    {
+        //
+    }
+
+    // Color
+    {
+        //
+    }
 
     Ensures(text_ != nullptr);
 }
