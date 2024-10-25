@@ -1084,21 +1084,19 @@ namespace {
 
 auto TopWidget::restore_gui_state() -> void {
     // geometry
-    if (const auto str = load_file(get_writable_setting_path(setting_t::gui_geometry));
-        str) {
+    if (const auto str = load_file(get_writable_setting_path(setting_t::gui_geometry))) {
         const auto bytes = QByteArray {str->data(), gsl::narrow<qsizetype>(str->size())};
         restoreGeometry(bytes);
     }
 
     // state
-    if (const auto str = load_file(get_writable_setting_path(setting_t::gui_state));
-        str) {
+    if (const auto str = load_file(get_writable_setting_path(setting_t::gui_state))) {
         const auto bytes = QByteArray {str->data(), gsl::narrow<qsizetype>(str->size())};
         restoreState(bytes);
     }
 
     // settings
-    if (const auto settings = load_gui_settings_from_file(); settings) {
+    if (const auto settings = load_gui_settings_from_file()) {
         auto render_config = circuit_widget_->render_config();
 
         render_config.thread_count = settings->thread_count;

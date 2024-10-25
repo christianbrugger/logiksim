@@ -1,15 +1,11 @@
 #include "gui/widget/setting_dialog.h"
 
-#include "gui/format/qt_type.h"
 #include "gui/qt/path_conversion.h"
 #include "gui/qt/svg_icon_engine.h"
 
-#include "core/algorithm/overload.h"
 #include "core/algorithm/range.h"
 #include "core/algorithm/round.h"
 #include "core/concept/input_range.h"
-#include "core/file.h"
-#include "core/logging.h"
 #include "core/resource.h"
 #include "core/validate_definition_logicitem.h"
 #include "core/vocabulary/decoration_definition.h"
@@ -61,13 +57,15 @@ void SettingDialog::emit_attributes_changed(const SettingAttributes& attributes)
 
 DelayInput::DelayInput(QWidget* parent, const QString& text, delay_t initial_value,
                        double scale_)
-    : QObject(parent), scale {scale_}, last_valid_delay {initial_value} {
-    label = new QLabel(parent);
+    : QObject(parent),
+      scale {scale_},
+      last_valid_delay {initial_value},
+      label {new QLabel {parent}},
+      layout {new QHBoxLayout {}} {
     label->setText(text);
 
     // TODO handle overflow
 
-    layout = new QHBoxLayout();
     auto* line_edit = new QLineEdit(parent);
     auto* combo_box = new QComboBox(parent);
 
@@ -559,7 +557,6 @@ auto TextElementDialog::get_selected_alignment() const -> HTextAlignment {
 namespace {
 
 // TODO put somewhere else
-
 /**
  * @brief: Open QColorDialog and let user choose a color.
  *
@@ -598,6 +595,7 @@ auto TextElementDialog::on_color_button_clicked() -> void {
     const auto res = color_dialog_get_color(initial, this, color_button_->toolTip());
 
     if (res.isValid()) {
+        // TODO put somewhere else
         const auto color = color_t {
             gsl::narrow<uint32_t>(res.red()),
             gsl::narrow<uint32_t>(res.green()),

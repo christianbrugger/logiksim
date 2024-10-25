@@ -26,11 +26,15 @@ auto load_svg_icon(icon_t icon) -> svg_data_t {
 
     if (!binary) {
         print("WARNING: unable to load svg icon", filename);
+        return svg_data_t {};
     }
 
     auto result = svg_data_t {};
 
-    const auto byte_span = svg2b2d::ByteSpan {binary->data(), binary->size()};
+    const auto byte_span = svg2b2d::ByteSpan {
+        binary.value().data(),
+        binary.value().size(),
+    };
     result.document.readFromData(byte_span);
 
     return result;
