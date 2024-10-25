@@ -7,6 +7,7 @@
 #include "core/vocabulary/logicitem_definition.h"
 #include "core/vocabulary/selection_id.h"
 #include "core/vocabulary/setting_attribute.h"
+#include "core/vocabulary/text_alignment.h"
 
 #include <ankerl/unordered_dense.h>
 
@@ -28,6 +29,7 @@ namespace logicsim {
 
 struct delay_t;
 struct FontStyleInfo;
+struct AlignmentInfo;
 
 //
 // Setting Dialog
@@ -112,7 +114,9 @@ class TextElementDialog : public SettingDialog {
 
    private:
     [[nodiscard]] static auto get_style_button_infos() -> std::vector<FontStyleInfo>;
+    [[nodiscard]] static auto get_alignment_button_infos() -> std::vector<AlignmentInfo>;
     [[nodiscard]] auto get_selected_font_style() const -> FontStyle;
+    [[nodiscard]] auto get_selected_alignment() const -> HTextAlignment;
 
     auto value_changed() -> void;
 
@@ -121,6 +125,10 @@ class TextElementDialog : public SettingDialog {
 
     using font_style_map_type = ankerl::unordered_dense::map<FontStyle, QAbstractButton*>;
     font_style_map_type font_style_buttons_ {};
+
+    using alignment_map_type =
+        ankerl::unordered_dense::map<HTextAlignment, QAbstractButton*>;
+    alignment_map_type alignment_buttons_ {};
 };
 
 }  // namespace logicsim

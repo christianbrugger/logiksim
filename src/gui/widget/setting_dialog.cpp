@@ -15,6 +15,8 @@
 #include "core/vocabulary/logicitem_definition.h"
 
 #include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/concat.hpp>
+#include <range/v3/view/map.hpp>
 #include <range/v3/view/transform.hpp>
 
 #include <QBoxLayout>
@@ -271,7 +273,7 @@ struct FontStyleInfo {
 auto TextElementDialog::get_style_button_infos() -> std::vector<FontStyleInfo> {
     return {
         FontStyleInfo {
-            .label = tr("R"),
+            .label = tr("A"),
             .tooltip = tr("Regular"),
             .font_style = FontStyle::regular,
         },
@@ -288,9 +290,36 @@ auto TextElementDialog::get_style_button_infos() -> std::vector<FontStyleInfo> {
             .is_italic = true,
         },
         FontStyleInfo {
-            .label = tr("M"),
+            .label = tr("{}"),
             .tooltip = tr("Monospace"),
             .font_style = FontStyle::monospace,
+        },
+    };
+}
+
+struct AlignmentInfo {
+    icon_t icon;
+    QString tooltip;
+
+    HTextAlignment alignment;
+};
+
+auto TextElementDialog::get_alignment_button_infos() -> std::vector<AlignmentInfo> {
+    return {
+        AlignmentInfo {
+            .icon = icon_t::text_alignment_horizontal_left,
+            .tooltip = tr("Left"),
+            .alignment = HTextAlignment::left,
+        },
+        AlignmentInfo {
+            .icon = icon_t::text_alignment_horizontal_center,
+            .tooltip = tr("Center"),
+            .alignment = HTextAlignment::center,
+        },
+        AlignmentInfo {
+            .icon = icon_t::text_alignment_horizontal_right,
+            .tooltip = tr("Right"),
+            .alignment = HTextAlignment::right,
         },
     };
 }
@@ -330,6 +359,12 @@ auto set_buttons_to_equal_squares(input_range_of<QAbstractButton*> auto&& button
     set_buttons_size(buttons, get_buttons_max_extend(buttons));
 }
 
+auto set_font_size_ratio(QWidget* widget, double ratio) -> void {
+    auto font = widget->font();
+    font.setPointSizeF(font.pointSizeF() * ratio);
+    widget->setFont(font);
+};
+
 }  // namespace
 
 TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_id,
@@ -343,22 +378,28 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
 
     // Text
     {
+        constexpr auto text_size_ratio = 1.1;
+
         auto* label = new QLabel(this);
         label->setText(tr("Text:"));
         auto* line_edit = new QLineEdit(this);
-        line_edit->setText(QString::fromStdString(attrs.text));
-
         layout->addRow(label, line_edit);
+
+        line_edit->setText(QString::fromStdString(attrs.text));
+        line_edit->setMinimumWidth(200);
+        set_font_size_ratio(line_edit, text_size_ratio);
+        set_font_size_ratio(label, text_size_ratio);
 
         text_ = line_edit;
         connect(text_, &QLineEdit::textChanged, this, &TextElementDialog::value_changed);
     }
 
+    layout->addItem(new QSpacerItem {0, 2});
+
     // Font Style
     {
         auto* label = new QLabel(this);
-        label->setText(tr("Font Style:"));
-
+        label->setText(tr("Style:"));
         auto* row_layout = new QHBoxLayout {};
         layout->addRow(label, row_layout);
 
@@ -382,13 +423,10 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
             row_layout->addWidget(button, 1);
 
             font_style_buttons_[info.font_style] = button;
-
             connect(button, &QToolButton::clicked, this,
                     &TextElementDialog::value_changed);
         }
 
-        auto buttons = std::ranges::views::values(font_style_buttons_.values());
-        set_buttons_to_equal_squares(buttons);
         row_layout->addStretch(1);
 
         // set active button
@@ -397,13 +435,45 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
 
     // Horizontal Alignment
     {
-        //
+        auto* label = new QLabel(this);
+        label->setText(tr("Alignment:"));
+        auto* row_layout = new QHBoxLayout {};
+        layout->addRow(label, row_layout);
+
+        const auto infos = get_alignment_button_infos();
+        auto* group = new QButtonGroup {this};
+
+        for (const auto& info : infos) {
+            auto* button = new QToolButton {this};
+            button->setIcon(QIcon(to_qt(get_icon_path(info.icon))));
+            button->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonIconOnly);
+            button->setCheckable(true);
+            button->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+            button->setToolTip(info.tooltip);
+
+            group->addButton(button);
+            row_layout->addWidget(button, 1);
+
+            alignment_buttons_[info.alignment] = button;
+            connect(button, &QToolButton::clicked, this,
+                    &TextElementDialog::value_changed);
+        }
+
+        row_layout->addStretch(1);
+
+        // set active button
+        alignment_buttons_[attrs.horizontal_alignment]->setChecked(true);
     }
 
     // Color
     {
         //
     }
+
+    // equal button size
+    auto buttons = ranges::views::concat(font_style_buttons_ | ranges::views::values,
+                                         alignment_buttons_ | ranges::views::values);
+    set_buttons_to_equal_squares(buttons);
 
     Ensures(text_ != nullptr);
 }
@@ -417,11 +487,21 @@ auto TextElementDialog::get_selected_font_style() const -> FontStyle {
     return attributes_text_element_t {}.font_style;
 }
 
+auto TextElementDialog::get_selected_alignment() const -> HTextAlignment {
+    for (const auto& [alignment, button] : alignment_buttons_) {
+        if (button->isChecked()) {
+            return alignment;
+        }
+    }
+    return attributes_text_element_t {}.horizontal_alignment;
+}
+
 auto TextElementDialog::value_changed() -> void {
     Expects(text_ != nullptr);
 
     emit_attributes_changed(attributes_text_element_t {
         .text = text_->text().toStdString(),
+        .horizontal_alignment = get_selected_alignment(),
         .font_style = get_selected_font_style(),
     });
 }

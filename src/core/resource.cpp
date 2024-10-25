@@ -136,6 +136,17 @@ auto format(icon_t icon) -> std::string {
         case setting_handle_text_element: {
             return "setting_handle_text_element";
         }
+
+        // text alignment
+        case text_alignment_horizontal_left: {
+            return "text_alignment_horizontal_left";
+        }
+        case text_alignment_horizontal_center: {
+            return "text_alignment_horizontal_center";
+        }
+        case text_alignment_horizontal_right: {
+            return "text_alignment_horizontal_right";
+        }
     }
     std::terminate();
 }
@@ -307,6 +318,16 @@ namespace {
             // text-cursor-input, chevrons-left-right-ellipsis,
             // rectangle-ellipsis, ellipsis
             return std::filesystem::path {"icons/lucide/ellipsis.svg"};
+        }
+
+        case text_alignment_horizontal_left: {
+            return std::filesystem::path {"icons/lucide/align-left.svg"};
+        }
+        case text_alignment_horizontal_center: {
+            return std::filesystem::path {"icons/lucide/align-center.svg"};
+        }
+        case text_alignment_horizontal_right: {
+            return std::filesystem::path {"icons/lucide/align-right.svg"};
         }
     };
     std::terminate();
