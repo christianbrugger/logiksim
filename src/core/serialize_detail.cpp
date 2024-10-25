@@ -148,14 +148,53 @@ struct glz::meta<SerializedLogicItem> {
     );
 };
 
+template <>
+struct glz::meta<logicsim::HTextAlignment> {
+    using enum logicsim::HTextAlignment;
+
+    static constexpr auto value = enumerate(  //
+        "left", left,                         //
+        "right", right,                       //
+        "center", center                      //
+    );
+};
+
+template <>
+struct glz::meta<logicsim::FontStyle> {
+    using enum logicsim::FontStyle;
+
+    static constexpr auto value = enumerate(  //
+        "regular", regular,                   //
+        "italic", italic,                     //
+        "bold", bold,                         //
+        "monospace", monospace                //
+    );
+};
+
+using logicsim::serialize::SerializedRgbColor;
+
+template <>
+struct glz::meta<SerializedRgbColor> {
+    using T = SerializedRgbColor;
+
+    static constexpr auto value = glz::object(  //
+        "red", &T::red,                         //
+        "green", &T::green,                     //
+        "blue", &T::blue                        //
+    );
+};
+
 using logicsim::serialize::SerializedAttributesTextElement;
 
 template <>
 struct glz::meta<SerializedAttributesTextElement> {
     using T = SerializedAttributesTextElement;
 
-    static constexpr auto value = glz::object(  //
-        "text", &T::text                        //
+    static constexpr auto value = glz::object(             //
+        "text", &T::text,                                  //
+        "horizontal_alignment", &T::horizontal_alignment,  //
+        "font_style", &T::font_style,                      //
+        "text_color", &T::text_color                       //
     );
 };
 

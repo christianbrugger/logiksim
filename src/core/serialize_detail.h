@@ -3,6 +3,7 @@
 
 #include "core/vocabulary/connection_count.h"
 #include "core/vocabulary/decoration_type.h"
+#include "core/vocabulary/font_style.h"
 #include "core/vocabulary/load_error.h"
 #include "core/vocabulary/logic_small_vector.h"
 #include "core/vocabulary/logicitem_definition.h"
@@ -11,6 +12,7 @@
 #include "core/vocabulary/point.h"
 #include "core/vocabulary/point_fine.h"
 #include "core/vocabulary/size_2d.h"
+#include "core/vocabulary/text_alignment.h"
 
 #include <tl/expected.hpp>
 
@@ -69,8 +71,18 @@ struct SerializedLogicItem {
     std::optional<SerializedAttributesClockGenerator> attributes_clock_generator;
 };
 
+struct SerializedRgbColor {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+};
+
 struct SerializedAttributesTextElement {
     std::string text;
+
+    HTextAlignment horizontal_alignment;
+    FontStyle font_style;
+    SerializedRgbColor text_color;
 };
 
 struct SerializedDecoration {

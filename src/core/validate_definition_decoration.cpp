@@ -6,8 +6,7 @@
 namespace logicsim {
 
 auto is_valid(const attributes_text_element_t& a) -> bool {
-    static_cast<void>(a);
-    return true;
+    return is_rgb(a.text_color);
 }
 
 auto is_valid(const DecorationDefinition& d) -> bool {

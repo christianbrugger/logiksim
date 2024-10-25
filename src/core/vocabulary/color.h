@@ -46,6 +46,7 @@ static_assert(std::is_trivially_copy_assignable_v<color_t>);
 //
 
 constexpr auto monochrome(uint8_t value) -> color_t;
+constexpr auto is_rgb(color_t value) -> bool;
 
 //
 // Implementation
@@ -78,6 +79,10 @@ constexpr auto color_t::a() const noexcept -> uint32_t {
 
 constexpr auto monochrome(uint8_t value) -> color_t {
     return color_t {value, value, value, 255};
+}
+
+constexpr auto is_rgb(color_t value) -> bool {
+    return value.a() == 255;
 }
 
 //

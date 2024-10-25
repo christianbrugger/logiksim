@@ -141,21 +141,29 @@ struct move_delta_t {
     };
 }
 
+[[nodiscard]] auto parse_rgb_color(const SerializedRgbColor& color) -> color_t {
+    return color_t {color.red, color.green, color.blue};
+}
+
 [[nodiscard]] auto parse_attr_text_element(
     const std::optional<SerializedAttributesTextElement>& obj)
     -> std::optional<attributes_text_element_t> {
-    if (obj.has_value()) {
-        auto limited_text = obj->text;
-        if (limited_text.size() > text_element_text_max_size) {
-            limited_text.resize(text_element_text_max_size);
-        }
-
-        return attributes_text_element_t {
-            .text = limited_text,
-        };
+    if (!obj.has_value()) {
+        return std::nullopt;
     }
 
-    return std::nullopt;
+    auto limited_text = obj->text;
+    if (limited_text.size() > text_element_text_max_size) {
+        limited_text.resize(text_element_text_max_size);
+    }
+
+    return attributes_text_element_t {
+        .text = limited_text,
+
+        .horizontal_alignment = obj->horizontal_alignment,
+        .font_style = obj->font_style,
+        .text_color = parse_rgb_color(obj->text_color),
+    };
 }
 
 [[nodiscard]] auto to_placed_decoration(const SerializedDecoration& obj,
@@ -229,6 +237,18 @@ auto add_element(SerializedLayout& data, const Layout& layout,
     });
 }
 
+[[nodiscard]] auto serialized_rgb_color(color_t color) -> SerializedRgbColor {
+    if (!is_rgb(color)) [[unlikely]] {
+        throw std::runtime_error("Cannot serialize color with alpha channel as rgb.");
+    }
+
+    return SerializedRgbColor {
+        .red = gsl::narrow<uint8_t>(color.r()),
+        .green = gsl::narrow<uint8_t>(color.g()),
+        .blue = gsl::narrow<uint8_t>(color.b()),
+    };
+}
+
 [[nodiscard]] auto serialize_attr_text_element(const Layout& layout,
                                                decoration_id_t decoration_id)
     -> std::optional<SerializedAttributesTextElement> {
@@ -237,6 +257,10 @@ auto add_element(SerializedLayout& data, const Layout& layout,
 
         return SerializedAttributesTextElement {
             .text = attr.text,
+
+            .horizontal_alignment = attr.horizontal_alignment,
+            .font_style = attr.font_style,
+            .text_color = serialized_rgb_color(attr.text_color),
         };
     }
 
