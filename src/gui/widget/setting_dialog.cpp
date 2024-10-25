@@ -521,6 +521,7 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
 
         connect(button, &QToolButton::clicked, this,
                 &TextElementDialog::on_color_button_clicked);
+
         color_button_ = button;
         text_color_ = attrs.text_color;
     }
@@ -582,6 +583,7 @@ auto TextElementDialog::value_changed() -> void {
         .text = text_->text().toStdString(),
         .horizontal_alignment = get_selected_alignment(),
         .font_style = get_selected_font_style(),
+        .text_color = text_color_,
     });
 }
 

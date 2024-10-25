@@ -153,7 +153,7 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
     // text
     const auto text_anchor =
         text_element_text_anchor(position, size, attrs.horizontal_alignment);
-    const auto text_color = with_alpha_runtime(defaults::color_black, state);
+    const auto text_color = with_alpha_runtime(attrs.text_color, state);
     const auto font_size = (int {size.height} + 1) * defaults::text_element_font_size;
 
     const auto draw_result =
