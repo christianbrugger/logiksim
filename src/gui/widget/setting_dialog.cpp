@@ -396,8 +396,9 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
     const auto path = get_icon_path(icon_t::dialog_text_element);
     setWindowIcon(QIcon(to_qt(path)));
 
-    constexpr auto icon_size = QSize {20, 20};
-    constexpr auto text_size_ratio = 1.2;
+    constexpr auto icon_size = QSize {18, 18};
+    constexpr auto text_size_ratio = 1.1;
+    constexpr auto text_margins = 1;
 
     auto* layout = new QFormLayout(this);
 
@@ -409,9 +410,8 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
         layout->addRow(label, line_edit);
 
         line_edit->setText(QString::fromStdString(attrs.text));
-        line_edit->setMinimumWidth(200);
-        // set_font_size_ratio(label, text_size_ratio);
         set_font_size_ratio(line_edit, text_size_ratio);
+        line_edit->setTextMargins(text_margins, text_margins, text_margins, text_margins);
 
         text_ = line_edit;
         connect(text_, &QLineEdit::textChanged, this, &TextElementDialog::value_changed);
