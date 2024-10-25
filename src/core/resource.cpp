@@ -136,6 +136,9 @@ auto format(icon_t icon) -> std::string {
         case setting_handle_text_element: {
             return "setting_handle_text_element";
         }
+        case dialog_text_element: {
+            return "dialog_text_element";
+        }
 
         // text alignment
         case text_alignment_horizontal_left: {
@@ -146,6 +149,18 @@ auto format(icon_t icon) -> std::string {
         }
         case text_alignment_horizontal_right: {
             return "text_alignment_horizontal_right";
+        }
+        case text_style_regular: {
+            return "text_style_regular";
+        }
+        case text_style_italic: {
+            return "text_style_italic";
+        }
+        case text_style_bold: {
+            return "text_style_bold";
+        }
+        case text_style_monospace: {
+            return "text_style_monospace";
         }
     }
     std::terminate();
@@ -319,6 +334,9 @@ namespace {
             // rectangle-ellipsis, ellipsis
             return std::filesystem::path {"icons/lucide/ellipsis.svg"};
         }
+        case dialog_text_element: {
+            return std::filesystem::path {"icons/lucide/code.svg"};
+        }
 
         case text_alignment_horizontal_left: {
             return std::filesystem::path {"icons/lucide/align-left.svg"};
@@ -329,7 +347,20 @@ namespace {
         case text_alignment_horizontal_right: {
             return std::filesystem::path {"icons/lucide/align-right.svg"};
         }
+        case text_style_regular: {
+            return std::filesystem::path {"icons/own/regular.svg"};
+        }
+        case text_style_italic: {
+            return std::filesystem::path {"icons/lucide/italic.svg"};
+        }
+        case text_style_bold: {
+            return std::filesystem::path {"icons/own/bold.svg"};
+        }
+        case text_style_monospace: {
+            return std::filesystem::path {"icons/lucide/braces.svg"};
+        }
     };
+
     std::terminate();
 }
 

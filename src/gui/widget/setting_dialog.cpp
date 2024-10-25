@@ -3,6 +3,7 @@
 #include "gui/format/qt_type.h"
 #include "gui/qt/path_conversion.h"
 
+#include "core/algorithm/overload.h"
 #include "core/algorithm/range.h"
 #include "core/algorithm/round.h"
 #include "core/concept/input_range.h"
@@ -261,7 +262,7 @@ auto ClockGeneratorDialog::update_row_visibility() -> void {
 //
 
 struct FontStyleInfo {
-    QString label;
+    icon_t icon;
     QString tooltip;
 
     FontStyle font_style;
@@ -273,24 +274,24 @@ struct FontStyleInfo {
 auto TextElementDialog::get_style_button_infos() -> std::vector<FontStyleInfo> {
     return {
         FontStyleInfo {
-            .label = tr("A"),
+            .icon = icon_t::text_style_regular,
             .tooltip = tr("Regular"),
             .font_style = FontStyle::regular,
         },
         FontStyleInfo {
-            .label = tr("B"),
+            .icon = icon_t::text_style_bold,
             .tooltip = tr("Bold"),
             .font_style = FontStyle::bold,
             .is_bold = true,
         },
         FontStyleInfo {
-            .label = tr("I"),
+            .icon = icon_t::text_style_italic,
             .tooltip = tr("Italic"),
             .font_style = FontStyle::italic,
             .is_italic = true,
         },
         FontStyleInfo {
-            .label = tr("{}"),
+            .icon = icon_t::text_style_monospace,
             .tooltip = tr("Monospace"),
             .font_style = FontStyle::monospace,
         },
@@ -326,44 +327,65 @@ auto TextElementDialog::get_alignment_button_infos() -> std::vector<AlignmentInf
 
 namespace {
 
+// TODO move somewhere else
 [[nodiscard]] auto get_buttons_max_size(input_range_of<QAbstractButton*> auto&& buttons)
     -> QSize {
+    const auto to_size_hint = [](const QAbstractButton* button) -> QSize {
+        Expects(button != nullptr);
+        return button->sizeHint();
+    };
+
     const auto size_union = [](const QSize& a, const QSize& b) -> QSize {
         return a.expandedTo(b);
     };
 
-    const auto size_hints = ranges::views::transform(buttons, &QAbstractButton::sizeHint);
-
+    const auto size_hints = ranges::views::transform(buttons, to_size_hint);
     return ranges::accumulate(size_hints, QSize {}, size_union);
 }
 
+// TODO move somewhere else
 [[nodiscard]] auto to_squared_size(QSize size) -> QSize {
     const auto max_extend = qMax(size.width(), size.height());
     return QSize {max_extend, max_extend};
 }
 
+// TODO move somewhere else
 [[nodiscard]] auto get_buttons_max_extend(input_range_of<QAbstractButton*> auto&& buttons)
     -> QSize {
     return to_squared_size(get_buttons_max_size(buttons));
 }
 
+// TODO move somewhere else
 auto set_buttons_size(input_range_of<QAbstractButton*> auto&& buttons,
                       QSize size) -> void {
     for (QAbstractButton* button : buttons) {
+        Expects(button != nullptr);
         button->setFixedSize(size);
     }
 }
 
+// TODO move somewhere else
 auto set_buttons_to_equal_squares(input_range_of<QAbstractButton*> auto&& buttons)
     -> void {
     set_buttons_size(buttons, get_buttons_max_extend(buttons));
 }
 
+// TODO move somewhere else
 auto set_font_size_ratio(QWidget* widget, double ratio) -> void {
+    Expects(widget != nullptr);
+
     auto font = widget->font();
     font.setPointSizeF(font.pointSizeF() * ratio);
     widget->setFont(font);
 };
+
+auto set_button_icon(QAbstractButton* button, icon_t icon, QSize size) -> void {
+    Expects(button != nullptr);
+
+    const auto qt_icon = QIcon(to_qt(get_icon_path(icon)));
+    button->setIcon(qt_icon);
+    button->setIconSize(size);
+}
 
 }  // namespace
 
@@ -371,15 +393,16 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
                                      const attributes_text_element_t& attrs)
     : SettingDialog {parent, selection_id} {
     setWindowTitle(tr("Text Element"));
-    const auto path = get_icon_path(icon_t::setting_handle_text_element);
+    const auto path = get_icon_path(icon_t::dialog_text_element);
     setWindowIcon(QIcon(to_qt(path)));
+
+    constexpr auto icon_size = QSize {20, 20};
+    constexpr auto text_size_ratio = 1.2;
 
     auto* layout = new QFormLayout(this);
 
     // Text
     {
-        constexpr auto text_size_ratio = 1.1;
-
         auto* label = new QLabel(this);
         label->setText(tr("Text:"));
         auto* line_edit = new QLineEdit(this);
@@ -387,8 +410,8 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
 
         line_edit->setText(QString::fromStdString(attrs.text));
         line_edit->setMinimumWidth(200);
+        // set_font_size_ratio(label, text_size_ratio);
         set_font_size_ratio(line_edit, text_size_ratio);
-        set_font_size_ratio(label, text_size_ratio);
 
         text_ = line_edit;
         connect(text_, &QLineEdit::textChanged, this, &TextElementDialog::value_changed);
@@ -408,8 +431,8 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
 
         for (const auto& info : infos) {
             auto* button = new QToolButton {this};
-            button->setText(info.label);
-            button->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonTextOnly);
+            set_button_icon(button, info.icon, icon_size);
+            button->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonIconOnly);
             button->setCheckable(true);
             button->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
             button->setToolTip(info.tooltip);
@@ -445,7 +468,7 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
 
         for (const auto& info : infos) {
             auto* button = new QToolButton {this};
-            button->setIcon(QIcon(to_qt(get_icon_path(info.icon))));
+            set_button_icon(button, info.icon, icon_size);
             button->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonIconOnly);
             button->setCheckable(true);
             button->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
@@ -475,6 +498,7 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
                                          alignment_buttons_ | ranges::views::values);
     set_buttons_to_equal_squares(buttons);
 
+    resize(400, 50);
     Ensures(text_ != nullptr);
 }
 

@@ -67,11 +67,16 @@ enum class icon_t {
     // circuit rendering
     setting_handle_clock_generator,
     setting_handle_text_element,
+    dialog_text_element,
 
-    // text alignment
+    // text
     text_alignment_horizontal_left,
     text_alignment_horizontal_center,
     text_alignment_horizontal_right,
+    text_style_regular,
+    text_style_italic,
+    text_style_bold,
+    text_style_monospace,
 };
 
 template <>
