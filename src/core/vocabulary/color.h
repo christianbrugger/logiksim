@@ -55,6 +55,8 @@ constexpr auto is_rgb(color_t value) -> bool;
 constexpr color_t::color_t(uint32_t value_) noexcept : value {value_} {}
 
 constexpr color_t::color_t(uint32_t r, uint32_t g, uint32_t b, uint32_t a) noexcept
+    // TODO: change number type to interger-like
+    // TODO: check 0 <= value <= 255
     : value((r << 16) | (g << 8) | b | (a << 24)) {}
 
 constexpr auto color_t::r() const noexcept -> uint32_t {
