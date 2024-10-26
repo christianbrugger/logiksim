@@ -106,7 +106,8 @@ auto render_simulation_layers(Context& ctx, const SpatialSimulation& spatial_sim
 
     draw_logicitems_connectors(ctx, spatial_simulation, layers.items_below);
     draw_logicitems_connectors(ctx, spatial_simulation, layers.items_above);
-    draw_decorations_base(ctx, spatial_simulation.layout(), layers.decorations);
+    draw_decorations_base(ctx, spatial_simulation.layout(), layers.decorations,
+                          ElementDrawState::simulated);
 };
 
 }  // namespace logicsim

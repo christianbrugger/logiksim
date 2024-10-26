@@ -200,6 +200,11 @@ auto draw_decoration_text_angle(Context& ctx, point_t position, size_2d_t size,
 auto draw_decoration_text_angles(Context& ctx, point_t position, size_2d_t size,
                                  ElementDrawState draw_state,
                                  TextElementState text_state) -> void {
+    if (draw_state == ElementDrawState::simulated &&
+        text_state != TextElementState::truncated) {
+        return;
+    }
+
     for (auto offset : range_inclusive<grid_t>(0, int {size.height})) {
         const auto pos = position + point_t {0, offset};
 
