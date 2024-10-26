@@ -269,6 +269,19 @@ auto json_dumps(const serialize::SerializedLayout& data) -> std::string {
     return json_text;
 }
 
+namespace {
+
+[[nodiscard]] auto parse_min_logiksim_version(std::string_view text) {
+    const auto limit_string = [](const std::string& value) -> std::string {
+        return value.substr(0, serialize::minimum_logiksim_version_max_size);
+    };
+
+    return glz::get_as_json<std::string, "/minimum_logiksim_version">(text).transform(
+        limit_string);
+}
+
+}  // namespace
+
 auto json_loads(std::string_view text)
     -> tl::expected<serialize::SerializedLayout, LoadError> {
     // read version
@@ -282,8 +295,7 @@ auto json_loads(std::string_view text)
 
     // handle future versions
     if (version.value() > serialize::CURRENT_VERSION) {
-        const auto min_logiksim_version =
-            glz::get_as_json<std::string, "/minimum_logiksim_version">(text);
+        const auto min_logiksim_version = parse_min_logiksim_version(text);
 
         if (min_logiksim_version) {
             return tl::unexpected<LoadError> {

@@ -45,6 +45,7 @@ struct SerializedLine {
 
 constexpr static inline auto clock_generator_name_max_size = 100;
 constexpr static inline auto text_element_text_max_size = 10'000;
+constexpr static inline auto minimum_logiksim_version_max_size = 20;
 
 struct SerializedAttributesClockGenerator {
     std::string name;
