@@ -270,7 +270,7 @@ auto draw_decoration_text_element(Context& ctx, const Layout& layout,
                       .color = text_color,
 
                       .horizontal_alignment = attrs.horizontal_alignment,
-                      .vertical_alignment = VTextAlignment::center_baseline,
+                      .vertical_alignment = VTextAlignment::center,
                       .style = attrs.font_style,
 
                       .max_text_width = grid_fine_t {int {size.width}},
