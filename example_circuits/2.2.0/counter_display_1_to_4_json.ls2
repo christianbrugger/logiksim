@@ -1,15 +1,18 @@
 
   
   {
-    "version":200,
-    "minimum_logiksim_version":"2.2.0",
+    "version": 200,
+    "minimum_logiksim_version": "2.2.0", 
     "save_position":[0,0],
-    "view_config":{"device_scale":10.160530740968019,"grid_offset_x":4.289696904089979,"grid_offset_y":9.416736174138665},
+    "view_config":{"device_scale":16.363636363636417,"grid_offset_x":3.2052410804568687,"grid_offset_y":2.861196765156408},
     "simulation_settings":{"simulation_time_rate_ns":2842104,"use_wire_delay":false},
+    
     "logic_items":[{"element_type":"or_element","input_count":2,"output_count":1,"input_inverters":[false,false],"output_inverters":[false],"position":[16,8],"orientation":"right"},{"element_type":"led","input_count":1,"output_count":0,"input_inverters":[false],"output_inverters":[],"position":[24,8],"orientation":"undirected"},{"element_type":"button","input_count":0,"output_count":1,"input_inverters":[],"output_inverters":[false],"position":[12,4],"orientation":"undirected"},{"element_type":"and_element","input_count":3,"output_count":1,"input_inverters":[true,true,true],"output_inverters":[false],"position":[18,16],"orientation":"right"},{"element_type":"flipflop_d","input_count":4,"output_count":1,"input_inverters":[false,false,false,false],"output_inverters":[false],"position":[40,14],"orientation":"right"},{"element_type":"flipflop_d","input_count":4,"output_count":1,"input_inverters":[false,false,false,false],"output_inverters":[false],"position":[33,14],"orientation":"right"},{"element_type":"flipflop_d","input_count":4,"output_count":1,"input_inverters":[false,false,false,false],"output_inverters":[false],"position":[47,14],"orientation":"right"},{"element_type":"flipflop_d","input_count":4,"output_count":1,"input_inverters":[false,false,false,false],"output_inverters":[false],"position":[26,14],"orientation":"right"},{"element_type":"or_element","input_count":2,"output_count":1,"input_inverters":[false,false],"output_inverters":[false],"position":[76,16],"orientation":"right"},{"element_type":"or_element","input_count":2,"output_count":1,"input_inverters":[false,false],"output_inverters":[false],"position":[76,19],"orientation":"right"},{"element_type":"display_number","input_count":5,"output_count":0,"input_inverters":[false,false,false,false,false],"output_inverters":[],"position":[97,18],"orientation":"right"},{"element_type":"clock_generator","input_count":3,"output_count":3,"input_inverters":[false,false,false],"output_inverters":[false,false,false],"position":[1,6],"orientation":"right","attributes_clock_generator":{"name":"clock","time_symmetric_ns":500000,"time_on_ns":500000,"time_off_ns":500000,"is_symmetric":true,"show_simulation_controls":true}},{"element_type":"buffer_element","input_count":1,"output_count":1,"input_inverters":[false],"output_inverters":[true],"position":[20,8],"orientation":"right"}],
-    "decorations":[{"decoration_type":"text_element","position":[14,4],"size":{"width":4,"height":0},"attributes_text_element":{"text":"Disable"}}],
+    
+    "decorations":[{"decoration_type":"text_element","position":[10,2],"size":{"width":4,"height":0},"attributes_text_element":{"text":"Disable","horizontal_alignment":"center","font_style":"regular","text_color":{"red":0,"green":0,"blue":0}}}],
+    
     "wire_segments":[[[6,8],[16,8]],[[12,4],[12,9]],[[12,9],[16,9]],[[18,8],[20,8]],[[21,8],[23,8]],[[23,8],[23,13]],[[23,8],[24,8]],[[23,13],[32,13]],[[32,13],[32,15]],[[46,15],[47,15]],[[46,13],[46,15]],[[39,13],[46,13]],[[39,15],[40,15]],[[39,13],[39,15]],[[32,13],[39,13]],[[32,15],[33,15]],[[23,13],[23,15]],[[23,15],[26,15]],[[15,25],[45,25]],[[15,16],[15,25]],[[15,16],[18,16]],[[45,12],[71,12]],[[45,14],[47,14]],[[45,12],[45,14]],[[43,14],[45,14]],[[45,14],[45,25]],[[71,12],[71,17]],[[71,17],[76,17]],[[71,17],[71,20]],[[71,20],[76,20]],[[71,20],[71,25]],[[89,20],[89,22]],[[89,20],[97,20]],[[14,26],[52,26]],[[52,13],[52,14]],[[52,13],[70,13]],[[50,14],[52,14]],[[52,14],[52,26]],[[70,13],[70,22]],[[70,22],[89,22]],[[70,22],[70,25]],[[16,17],[16,24]],[[16,17],[18,17]],[[16,24],[38,24]],[[38,11],[72,11]],[[38,11],[38,14]],[[38,14],[40,14]],[[38,14],[38,24]],[[36,14],[38,14]],[[72,11],[72,19]],[[72,19],[76,19]],[[72,19],[72,25]],[[17,18],[17,23]],[[17,18],[18,18]],[[17,23],[31,23]],[[31,14],[31,23]],[[29,14],[31,14]],[[31,14],[33,14]],[[31,10],[73,10]],[[31,10],[31,14]],[[73,10],[73,16]],[[73,16],[76,16]],[[73,16],[73,25]],[[21,14],[21,17]],[[20,17],[21,17]],[[21,14],[26,14]],[[78,16],[89,16]],[[89,16],[89,18]],[[89,18],[97,18]],[[78,19],[97,19]]]
-  }  
+  }
   
   
   
