@@ -232,8 +232,7 @@ auto format_decoration(const Layout &layout,
     using enum DecorationType;
     const auto attr_str =
         type == text_element
-            ? fmt::format(" \"{}\"",
-                          layout.decorations().attrs_text_element(decoration_id))
+            ? fmt::format(" {}", layout.decorations().attrs_text_element(decoration_id))
             : std::string {};
     return fmt::format("<Decoration {}: {}x{} {} {}{}>", decoration_id, size.width,
                        size.height, type, layout.decorations().position(decoration_id),
