@@ -96,11 +96,18 @@ class Simulation {
    public:
     using event_count_t = simulation::event_count_t;
 
+    [[nodiscard]] explicit Simulation();
     /**
      * @brief: Creates and initializes the simulation from the schematic.
      */
     [[nodiscard]] explicit Simulation(Schematic &&schematic,
                                       PrintEvents do_print = PrintEvents::no);
+
+    // TODO: define equality
+    // [[nodiscard]] auto operator==(const Simulation &) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto format_element(element_id_t element_id) const -> std::string;
+
     [[nodiscard]] auto time() const noexcept -> time_t;
     [[nodiscard]] auto processed_event_count() const noexcept -> event_count_t;
     /**
@@ -108,9 +115,6 @@ class Simulation {
      */
     [[nodiscard]] auto is_finished() const -> bool;
     [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
-
-    [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto format_element(element_id_t element_id) const -> std::string;
 
     /**
      * @brief: Runs simulation with given config.
@@ -199,6 +203,10 @@ class Simulation {
     std::vector<logic_small_vector_t> internal_states_ {};
     std::vector<simulation::HistoryBuffer> first_input_histories_ {};
 };
+
+// TODO: make regular
+// static_assert(std::regular<Simulation>);
+static_assert(std::semiregular<Simulation>);
 
 }  // namespace logicsim
 

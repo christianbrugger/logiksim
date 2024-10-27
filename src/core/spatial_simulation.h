@@ -5,12 +5,12 @@
 #include "core/layout.h"
 #include "core/line_tree.h"
 #include "core/simulation.h"
-#include "core/vocabulary/simulation_config.h"
 
-#include <optional>
 #include <vector>
 
 namespace logicsim {
+
+struct schematic_generation_result_t;
 
 /**
  * @brief: Simulation holding also the spatial information for wires and logic items.
@@ -32,13 +32,23 @@ class SpatialSimulation {
     /**
      * @brief: Create a new spatial simulation.
      *
-     * Pre-condition: All inserted segment-trees are expected to form contiguous trees.
-     * Pre-condition: All inserted segment-trees have all cross-points & corners set.
+     * Pre-condition: All inserted segment-trees are expected to form contiguous
+     * trees. Pre-condition: All inserted segment-trees have all cross-points &
+     * corners set.
      *
      * Note this can be achieved through methods in `tree_normalization.h`.
      */
     [[nodiscard]] explicit SpatialSimulation(Layout &&layout,
                                              delay_t wire_delay_per_distance);
+    /**
+     * @brief: Create a new spatial simulation from generation result.
+     */
+    [[nodiscard]] explicit SpatialSimulation(
+        Layout &&layout, schematic_generation_result_t &&generation_result);
+
+    // TODO: define equality
+    // [[nodiscard]] auto operator==(const SpatialSimulation &) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto layout() const -> const Layout &;
     [[nodiscard]] auto schematic() const -> const Schematic &;
@@ -46,10 +56,7 @@ class SpatialSimulation {
     [[nodiscard]] auto simulation() -> Simulation &;
 
     [[nodiscard]] auto line_tree(wire_id_t wire_id) const -> const LineTree &;
-
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
-
-    [[nodiscard]] auto format() const -> std::string;
 
    private:
     Layout layout_;
@@ -58,6 +65,10 @@ class SpatialSimulation {
     delay_t wire_delay_per_distance_;
     Simulation simulation_;
 };
+
+// TODO: make regular
+// static_assert(std::regular<SpatialSimulation>);
+static_assert(std::semiregular<SpatialSimulation>);
 
 [[nodiscard]] auto to_element_id(const SpatialSimulation &spatial_simulation,
                                  logicitem_id_t logicitem_id) -> element_id_t;

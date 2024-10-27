@@ -3,6 +3,8 @@
 #include "core/algorithm/make_unique.h"
 #include "core/algorithm/transform_if.h"
 #include "core/algorithm/transform_to_vector.h"
+#include "core/geometry/segment_info.h"
+#include "core/index/connection_index.h"
 #include "core/layout.h"
 #include "core/line_tree.h"
 #include "core/logging.h"
@@ -15,52 +17,60 @@ namespace logicsim {
 
 namespace {
 
-auto find_root(const SegmentTree& segment_tree) -> std::optional<point_t> {
+auto is_convertable_output(point_t point, SegmentPointType type,
+                           const LogicItemInputIndex& index) -> bool {
+    return type == SegmentPointType::output && !index.find(point);
+}
+
+auto find_root(const SegmentTree& segment_tree,
+               const LogicItemInputIndex& index) -> std::optional<point_t> {
     if (segment_tree.has_input()) {
         return segment_tree.input_position();
     }
 
     for (const segment_info_t& info : segment_tree) {
-        if (info.p0_type == SegmentPointType::output) {
-            return info.line.p0;
-        }
-        if (info.p1_type == SegmentPointType::output) {
-            return info.line.p1;
+        for (const auto [point, type] : to_point_and_type(info)) {
+            if (is_convertable_output(point, type, index)) {
+                return point;
+            }
         }
     }
     return std::nullopt;
 }
 
-auto generate_line_tree_impl(const SegmentTree& segment_tree) -> LineTree {
+auto generate_line_tree_impl(const SegmentTree& segment_tree,
+                             const LogicItemInputIndex& index) -> LineTree {
     if (segment_tree.empty()) {
         return LineTree {};
     }
 
-    if (const auto root = find_root(segment_tree)) {
+    if (const auto root = find_root(segment_tree, index)) {
         const auto segments = transform_to_vector(all_lines(segment_tree));
         return to_line_tree(segments, *root);
     }
 
-    throw std::runtime_error("tree has no input or output");
+    throw std::runtime_error("tree has no input or convertible outputs");
 }
 
 }  // namespace
 
-auto generate_line_tree(const SegmentTree& segment_tree) -> LineTree {
+auto generate_line_tree(const SegmentTree& segment_tree,
+                        const LogicItemInputIndex& index) -> LineTree {
     // pre-condition
     assert(is_contiguous_tree_with_correct_endpoints(segment_tree));
 
-    const auto line_tree = generate_line_tree_impl(segment_tree);
+    const auto line_tree = generate_line_tree_impl(segment_tree, index);
 
     // post-condition
     assert(is_equivalent(segment_tree, line_tree));
     return line_tree;
 }
 
-auto generate_line_trees(const Layout& layout) -> std::vector<LineTree> {
+auto generate_line_trees(const Layout& layout,
+                         const LogicItemInputIndex& index) -> std::vector<LineTree> {
     const auto gen_line_tree = [&](wire_id_t wire_id) {
         if (is_inserted(wire_id)) {
-            return generate_line_tree(layout.wires().segment_tree(wire_id));
+            return generate_line_tree(layout.wires().segment_tree(wire_id), index);
         }
         return LineTree {};
     };

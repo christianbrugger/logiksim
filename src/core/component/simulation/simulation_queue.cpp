@@ -4,6 +4,7 @@
 #include "core/component/simulation/simulation_event_group.h"
 
 #include <stdexcept>
+#include <fmt/core.h>
 
 namespace logicsim {
 
@@ -12,6 +13,10 @@ namespace simulation {
 //
 // SimulationQueue
 //
+
+auto SimulationQueue::format() const -> std::string {
+    return fmt::format("SimulationQueue(time = {}, count = {})", time_, events_.size());
+}
 
 auto SimulationQueue::time() const noexcept -> time_t {
     return time_;

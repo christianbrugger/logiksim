@@ -1,6 +1,8 @@
 #ifndef LOGICSIM_LINE_TREE_GENERATION_H
 #define LOGICSIM_LINE_TREE_GENERATION_H
 
+#include "core/index/connection_index_forward.h"
+
 #include <vector>
 
 namespace logicsim {
@@ -15,7 +17,8 @@ class Layout;
  * Pre-condition: segment-tree is contiguous tree with correct endpoints.
  *                See `tree_normalization.h`.
  */
-[[nodiscard]] auto generate_line_tree(const SegmentTree& segment_tree) -> LineTree;
+[[nodiscard]] auto generate_line_tree(const SegmentTree& segment_tree,
+                                      const LogicItemInputIndex& index) -> LineTree;
 
 /**
  * @brief: Creates a vector with LineTrees for all wires.
@@ -25,7 +28,8 @@ class Layout;
  *
  * Result contains LineTrees of inserted and empty trees for non-inserted wires.
  */
-[[nodiscard]] auto generate_line_trees(const Layout& layout) -> std::vector<LineTree>;
+[[nodiscard]] auto generate_line_trees(
+    const Layout& layout, const LogicItemInputIndex& index) -> std::vector<LineTree>;
 
 [[nodiscard]] auto has_same_segments(const SegmentTree& segment_tree,
                                      const LineTree& line_tree) -> bool;

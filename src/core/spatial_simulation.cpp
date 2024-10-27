@@ -1,7 +1,6 @@
 #include "core/spatial_simulation.h"
 
 #include "core/layout.h"
-#include "core/line_tree_generation.h"
 #include "core/schematic_generation.h"
 
 #include <fmt/core.h>
@@ -12,10 +11,16 @@ namespace logicsim {
 SpatialSimulation::SpatialSimulation() : SpatialSimulation {Layout {}, delay_t {1us}} {}
 
 SpatialSimulation::SpatialSimulation(Layout &&layout, delay_t wire_delay_per_distance)
+    // defined behaviour, as std::move is just a cast
+    : SpatialSimulation {std::move(layout),
+                         generate_schematic(layout, wire_delay_per_distance)} {}
+
+SpatialSimulation::SpatialSimulation(Layout &&layout,
+                                     schematic_generation_result_t &&generation_result)
     : layout_ {std::move(layout)},
-      line_trees_ {generate_line_trees(layout_)},
-      wire_delay_per_distance_ {wire_delay_per_distance},
-      simulation_ {generate_schematic(layout_, line_trees_, wire_delay_per_distance)} {}
+      line_trees_ {std::move(generation_result.line_trees)},
+      wire_delay_per_distance_ {generation_result.wire_delay_per_distance},
+      simulation_ {std::move(generation_result.schematic)} {}
 
 auto SpatialSimulation::layout() const -> const Layout & {
     return layout_;

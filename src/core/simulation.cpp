@@ -76,6 +76,13 @@ auto Simulation::resize_vectors() -> void {
     Ensures(schematic_.size() == first_input_histories_.size());
 }
 
+Simulation::Simulation()
+    : schematic_ {},
+      queue_ {},
+      largest_history_event_ {queue_.time()},
+      print_events_ {false},
+      event_count_ {0} {}
+
 Simulation::Simulation(Schematic &&schematic, PrintEvents do_print)
     : schematic_ {std::move(schematic)},
       queue_ {},

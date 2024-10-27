@@ -2,6 +2,7 @@
 #define LOGIKSIM_INDEX_CONNECTION_INDEX_H
 
 #include "core/format/struct.h"
+#include "core/index/connection_index_forward.h"
 #include "core/layout_message_forward.h"
 #include "core/vocabulary/logicitem_connection.h"
 #include "core/vocabulary/orientation.h"
@@ -19,9 +20,6 @@ class Layout;
 struct layout_calculation_data_t;
 
 namespace connection_index {
-
-enum class ContentType { LogicItem, Wire };
-enum class DirectionType { Input, Output };
 
 struct wire_value_t {
     segment_t segment;

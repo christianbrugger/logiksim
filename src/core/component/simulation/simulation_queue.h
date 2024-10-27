@@ -2,9 +2,11 @@
 #define LOGICSIM_COMPONENT_SIMULATION_SIMULATION_QUEUE_H
 
 #include "core/component/simulation/simulation_event.h"
+#include "core/format/struct.h"
 #include "core/vocabulary/time.h"
 
 #include <queue>
+#include <string>
 
 namespace logicsim {
 
@@ -25,6 +27,10 @@ class SimulationQueue {
                             greater_time_element_id>;
 
    public:
+    // TODO define equality
+    // [[nodiscard]] auto operator==(const SimulationQueue&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+
     [[nodiscard]] auto time() const noexcept -> time_t;
     [[nodiscard]] auto next_event_time() const noexcept -> time_t;
     [[nodiscard]] auto empty() const noexcept -> bool;
@@ -60,6 +66,7 @@ class SimulationQueue {
     time_t time_ {0us};
     queue_t events_;
 };
+
 }  // namespace simulation
 
 }  // namespace logicsim

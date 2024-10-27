@@ -23,6 +23,7 @@
 #include "core/timer.h"
 #include "core/tree_normalization.h"
 #include "core/vocabulary/logicitem_definition.h"
+#include "core/vocabulary/simulation_config.h"
 
 #include <range/v3/view/sliding.hpp>
 

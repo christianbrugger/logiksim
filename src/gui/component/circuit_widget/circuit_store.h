@@ -7,7 +7,7 @@
 #include "core/format/struct.h"
 #include "core/interactive_simulation.h"
 #include "core/vocabulary/circuit_widget_state.h"
-#include "core/vocabulary/view_config.h"
+#include "core/vocabulary/simulation_config.h"
 
 #include <optional>
 
