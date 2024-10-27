@@ -114,7 +114,7 @@ auto size_handle_positions(const Layout& layout,
                 to_grid(size.width, position.x),
                 to_grid(size.height, position.y),
             };
-            const auto offset = point_fine_t {0.5, 0};
+            const auto offset = point_fine_t {0.5, 0.5};
 
             return {
                 size_handle_t {0, point_fine_t {position} - offset},
