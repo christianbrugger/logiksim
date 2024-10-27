@@ -7,7 +7,6 @@
 #include "core/index/connection_index.h"
 #include "core/layout.h"
 #include "core/line_tree.h"
-#include "core/logging.h"
 #include "core/segment_tree.h"
 #include "core/tree_normalization.h"
 
@@ -29,7 +28,7 @@ auto find_root(const SegmentTree& segment_tree,
     }
 
     for (const segment_info_t& info : segment_tree) {
-        for (const auto [point, type] : to_point_and_type(info)) {
+        for (const auto& [point, type] : to_point_and_type(info)) {
             if (is_convertable_output(point, type, index)) {
                 return point;
             }
