@@ -305,7 +305,7 @@ auto is_contiguous_tree_with_correct_endpoints(const SegmentTree& tree) -> bool 
     const auto segments = transform_to_vector(all_lines(tree));
     const auto graph = ValidationGraph {segments};
 
-    return segments_are_contiguous_tree(segments, graph) &&
+    return !tree.empty() && segments_are_contiguous_tree(segments, graph) &&
            has_correct_endpoints(tree, graph);
 }
 

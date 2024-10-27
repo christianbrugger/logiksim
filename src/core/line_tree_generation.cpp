@@ -23,7 +23,7 @@ auto is_convertable_output(point_t point, SegmentPointType type,
 }
 
 auto find_root(const SegmentTree& segment_tree,
-               const LogicItemInputIndex& index) -> std::optional<point_t> {
+               const LogicItemInputIndex& index) -> point_t {
     if (segment_tree.has_input()) {
         return segment_tree.input_position();
     }
@@ -35,21 +35,15 @@ auto find_root(const SegmentTree& segment_tree,
             }
         }
     }
-    return std::nullopt;
+
+    throw std::runtime_error("tree has no input or convertible outputs");
 }
 
 auto generate_line_tree_impl(const SegmentTree& segment_tree,
                              const LogicItemInputIndex& index) -> LineTree {
-    if (segment_tree.empty()) {
-        return LineTree {};
-    }
-
-    if (const auto root = find_root(segment_tree, index)) {
-        const auto segments = transform_to_vector(all_lines(segment_tree));
-        return to_line_tree(segments, *root);
-    }
-
-    throw std::runtime_error("tree has no input or convertible outputs");
+    const auto root = find_root(segment_tree, index);
+    const auto segments = transform_to_vector(all_lines(segment_tree));
+    return to_line_tree(segments, root);
 }
 
 }  // namespace

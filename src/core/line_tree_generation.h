@@ -14,8 +14,9 @@ class Layout;
 /**
  * @brief: Creates a LineTree from a SegmentTree.
  *
- * Pre-condition: segment-tree is contiguous tree with correct endpoints.
- *                See `tree_normalization.h`.
+ * Pre-condition:
+ *  + segment-tree is contiguous tree with correct endpoints (tree_normalization.h).
+ *
  */
 [[nodiscard]] auto generate_line_tree(const SegmentTree& segment_tree,
                                       const LogicItemInputIndex& index) -> LineTree;
@@ -23,8 +24,8 @@ class Layout;
 /**
  * @brief: Creates a vector with LineTrees for all wires.
  *
- * Pre-condition: segment-trees are contiguous tree with correct endpoints.
- *                See `tree_normalization.h`.
+ * Pre-condition:
+ *  + segment-trees are contiguous tree with correct endpoints (tree_normalization.h).
  *
  * Result contains LineTrees of inserted and empty trees for non-inserted wires.
  */

@@ -104,44 +104,27 @@ auto add_logicitem(Schematic& schematic, const Layout& layout,
     });
 }
 
-auto add_wire(Schematic& schematic, const Layout& layout, wire_id_t wire_id,
-              const LineTree& line_tree, delay_t wire_delay_per_distance) -> void {
-    if (line_tree.empty()) {
-        const auto output_count = layout.wires().segment_tree(wire_id).output_count();
+auto add_wire(Schematic& schematic, const LineTree& line_tree,
+              delay_t wire_delay_per_distance) -> void {
+    auto ignore_delay = wire_delay_per_distance == delay_t {0ns};
 
-        schematic.add_element(schematic::NewElement {
-            .element_type = ElementType::wire,
-            .input_count = connection_count_t {0},
-            .output_count = output_count,
+    auto delays =
+        ignore_delay
+            ? output_delays_t(line_tree.output_count().count(), delay_t::epsilon())
+            : calculate_output_delays(line_tree, wire_delay_per_distance);
 
-            .sub_circuit_id = null_circuit,
-            .input_inverters = {},
-            .output_delays = output_delays_t(output_count.count(), delay_t::epsilon()),
-            .history_length = schematic::defaults::no_history,
-        });
+    const auto tree_max_delay = ignore_delay ? delay_t {0ns} : std::ranges::max(delays);
 
-    } else {
-        auto ignore_delay = wire_delay_per_distance == delay_t {0ns};
+    schematic.add_element(schematic::NewElement {
+        .element_type = ElementType::wire,
+        .input_count = connection_count_t {1},
+        .output_count = line_tree.output_count(),
 
-        auto delays =
-            ignore_delay
-                ? output_delays_t(line_tree.output_count().count(), delay_t::epsilon())
-                : calculate_output_delays(line_tree, wire_delay_per_distance);
-
-        const auto tree_max_delay =
-            ignore_delay ? delay_t {0ns} : std::ranges::max(delays);
-
-        schematic.add_element(schematic::NewElement {
-            .element_type = ElementType::wire,
-            .input_count = connection_count_t {1},
-            .output_count = line_tree.output_count(),
-
-            .sub_circuit_id = null_circuit,
-            .input_inverters = {false},
-            .output_delays = std::move(delays),
-            .history_length = tree_max_delay,
-        });
-    }
+        .sub_circuit_id = null_circuit,
+        .input_inverters = {false},
+        .output_delays = std::move(delays),
+        .history_length = tree_max_delay,
+    });
 }
 
 auto add_layout_elements(Schematic& schematic, const Layout& layout,
@@ -165,7 +148,7 @@ auto add_layout_elements(Schematic& schematic, const Layout& layout,
     for (const auto inserted_wire_id : inserted_wire_ids(layout)) {
         const auto& line_tree = line_trees.at(inserted_wire_id.value);
 
-        add_wire(schematic, layout, inserted_wire_id, line_tree, wire_delay_per_distance);
+        add_wire(schematic, line_tree, wire_delay_per_distance);
     }
 }
 
@@ -209,39 +192,6 @@ auto connect_line_tree(Schematic& schematic, const Layout& layout,
     }
 }
 
-// TODO: do we need this function ???
-// wires without inputs have no LineTree
-auto connect_segment_tree(Schematic& schematic, const Layout& layout,
-                          const GenerationIndex& index, element_id_t element_id) -> void {
-    Expects(schematic.input_count(element_id) != connection_count_t {0});
-
-    // connect outputs
-    auto output_id = connection_id_t {0};
-    const auto try_connect_output = [&](point_t position, orientation_t orientation) {
-        if (const auto entry = index.inputs.find(position)) {
-            if (!orientations_compatible(entry->orientation, orientation)) {
-                throw std::runtime_error("input orientation not compatible");
-            }
-            const auto connected_element_id = to_element_id(layout, entry->logicitem_id);
-
-            const auto output = output_t {element_id, output_id};
-            const auto input = input_t {connected_element_id, entry->connection_id};
-            schematic.connect(output, input);
-
-            ++output_id;
-        }
-    };
-
-    for (const auto& info : layout.wires().segment_tree(to_wire_id(layout, element_id))) {
-        if (info.p0_type == SegmentPointType::output) {
-            try_connect_output(info.line.p0, to_orientation_p0(info.line));
-        }
-        if (info.p1_type == SegmentPointType::output) {
-            try_connect_output(info.line.p1, to_orientation_p1(info.line));
-        }
-    }
-}
-
 auto create_connections(Schematic& schematic, const Layout& layout,
                         const std::vector<LineTree>& line_trees,
                         const GenerationIndex& index) -> void {
@@ -258,12 +208,7 @@ auto create_connections(Schematic& schematic, const Layout& layout,
         if (element_type == ElementType::wire) {
             const auto& line_tree = line_trees.at(to_wire_id(layout, element_id).value);
 
-            if (line_tree.empty()) {
-                // TODO: do we need this case ???
-                connect_segment_tree(schematic, layout, index, element_id);
-            } else {
-                connect_line_tree(schematic, layout, index, element_id, line_tree);
-            }
+            connect_line_tree(schematic, layout, index, element_id, line_tree);
         }
     }
 }
