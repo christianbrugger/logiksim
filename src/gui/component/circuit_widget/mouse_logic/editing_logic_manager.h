@@ -3,6 +3,7 @@
 
 #include "gui/component/circuit_widget/mouse_logic/editing_logic_variant.h"
 
+#include "core/format/struct.h"
 #include "core/vocabulary/circuit_widget_state.h"
 
 #include <QPointF>
@@ -18,10 +19,19 @@ class EditableCircuit;
 
 namespace circuit_widget {
 
-enum class ManagerResult {
-    done,
-    require_update,
+struct editing_manager_result_t {
+    // the circuit was modified and a repaint is required
+    bool require_update {false};
+
+    // the given decoration shall be selected and its settings opened
+    // std::optional<decoration_id_t> select_and_open_settings {};
+
+    [[nodiscard]] auto operator==(const editing_manager_result_t&) const -> bool =
+                                                                                default;
+    [[nodiscard]] auto format() const -> std::string;
 };
+
+static_assert(std::regular<editing_manager_result_t>);
 
 /**
  * @brief: Manages the mouse interactions in the editing state
@@ -40,8 +50,8 @@ class EditingLogicManager {
                            EditableCircuit* editable_circuit) -> void;
     [[nodiscard]] auto circuit_state() const -> CircuitWidgetState;
 
-    auto finalize_editing(EditableCircuit* editable_circuit_) -> ManagerResult;
-    auto confirm_editing(EditableCircuit* editable_circuit_) -> ManagerResult;
+    auto finalize_editing(EditableCircuit* editable_circuit_) -> editing_manager_result_t;
+    auto confirm_editing(EditableCircuit* editable_circuit_) -> editing_manager_result_t;
 
     [[nodiscard]] auto is_editing_active() const -> bool;
     [[nodiscard]] auto is_area_selection_active() const -> bool;
@@ -58,15 +68,18 @@ class EditingLogicManager {
                               std::vector<point_t> cross_points) -> void;
 
    public:
-    [[nodiscard]] auto mouse_press(QPointF position, const ViewConfig& view_config,
-                                   Qt::KeyboardModifiers modifiers, bool double_click,
-                                   EditableCircuit* editable_circuit) -> ManagerResult;
+    [[nodiscard]] auto mouse_press(
+        QPointF position, const ViewConfig& view_config, Qt::KeyboardModifiers modifiers,
+        bool double_click, EditableCircuit* editable_circuit) -> editing_manager_result_t;
+
     [[nodiscard]] auto mouse_move(QPointF position, const ViewConfig& view_config,
-                                  EditableCircuit* editable_circuit) -> ManagerResult;
+                                  EditableCircuit* editable_circuit)
+        -> editing_manager_result_t;
+
     [[nodiscard]] auto mouse_release(QPointF position, const ViewConfig& view_config,
                                      EditableCircuit* editable_circuit,
                                      const OpenSettingDialog& show_setting_dialog)
-        -> ManagerResult;
+        -> editing_manager_result_t;
 
    private:
     [[nodiscard]] auto class_invariant_holds() const -> bool;

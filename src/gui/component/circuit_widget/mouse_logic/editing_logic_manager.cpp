@@ -6,16 +6,20 @@
 #include "core/default_element_definition.h"
 #include "core/editable_circuit.h"
 #include "core/geometry/scene.h"
-#include "core/logging.h"
 #include "core/setting_handle.h"
 #include "core/size_handle.h"
 #include "core/vocabulary/point.h"
 
+#include <fmt/core.h>
 #include <gsl/gsl>
 
 namespace logicsim {
 
 namespace circuit_widget {
+
+auto editing_manager_result_t::format() const -> std::string {
+    return fmt::format("editing_manager_result_t(require_update = {})", require_update);
+}
 
 namespace {
 
@@ -53,11 +57,11 @@ auto EditingLogicManager::circuit_state() const -> CircuitWidgetState {
 }
 
 auto EditingLogicManager::finalize_editing(EditableCircuit* editable_circuit_)
-    -> ManagerResult {
+    -> editing_manager_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
-    const auto res = mouse_logic_ ? ManagerResult::require_update : ManagerResult::done;
+    const auto had_mouse_logic = mouse_logic_.has_value();
 
     if (editable_circuit_ != nullptr && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
@@ -75,15 +79,17 @@ auto EditingLogicManager::finalize_editing(EditableCircuit* editable_circuit_)
 
     Ensures(class_invariant_holds());
     Ensures(!mouse_logic_);
-    return res;
+    return editing_manager_result_t {
+        .require_update = had_mouse_logic,
+    };
 }
 
 auto EditingLogicManager::confirm_editing(EditableCircuit* editable_circuit_)
-    -> ManagerResult {
+    -> editing_manager_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
-    const auto res = mouse_logic_ ? ManagerResult::require_update : ManagerResult::done;
+    const auto had_mouse_logic = mouse_logic_.has_value();
 
     if (editable_circuit_ != nullptr && mouse_logic_) {
         bool finished = std::visit(overload {
@@ -101,7 +107,9 @@ auto EditingLogicManager::confirm_editing(EditableCircuit* editable_circuit_)
     }
 
     Ensures(class_invariant_holds());
-    return res;
+    return editing_manager_result_t {
+        .require_update = had_mouse_logic,
+    };
 }
 
 auto EditingLogicManager::is_editing_active() const -> bool {
@@ -193,7 +201,7 @@ auto create_editing_mouse_logic(
 
 auto EditingLogicManager::mouse_press(
     QPointF position, const ViewConfig& view_config, Qt::KeyboardModifiers modifiers,
-    bool double_click, EditableCircuit* editable_circuit_) -> ManagerResult {
+    bool double_click, EditableCircuit* editable_circuit_) -> editing_manager_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
@@ -238,12 +246,14 @@ auto EditingLogicManager::mouse_press(
     }
 
     Ensures(class_invariant_holds());
-    return mouse_logic_ ? ManagerResult::require_update : ManagerResult::done;
+    return editing_manager_result_t {
+        .require_update = mouse_logic_.has_value(),
+    };
 }
 
 auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_config,
                                      EditableCircuit* editable_circuit_)
-    -> ManagerResult {
+    -> editing_manager_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
@@ -277,16 +287,18 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
     }
 
     Ensures(class_invariant_holds());
-    return mouse_logic_ ? ManagerResult::require_update : ManagerResult::done;
+    return editing_manager_result_t {
+        .require_update = mouse_logic_.has_value(),
+    };
 }
 
 auto EditingLogicManager::mouse_release(
     QPointF position, const ViewConfig& view_config, EditableCircuit* editable_circuit_,
-    const OpenSettingDialog& show_setting_dialog) -> ManagerResult {
+    const OpenSettingDialog& show_setting_dialog) -> editing_manager_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
-    const auto res = mouse_logic_ ? ManagerResult::require_update : ManagerResult::done;
+    const auto had_mouse_logic = mouse_logic_.has_value();
 
     if (editable_circuit_ != nullptr && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
@@ -333,7 +345,9 @@ auto EditingLogicManager::mouse_release(
     }
 
     Ensures(class_invariant_holds());
-    return res;
+    return editing_manager_result_t {
+        .require_update = had_mouse_logic,
+    };
 }
 
 auto EditingLogicManager::class_invariant_holds() const -> bool {

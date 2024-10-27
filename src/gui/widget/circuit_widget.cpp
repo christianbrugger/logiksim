@@ -514,10 +514,11 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     if (event_->button() == Qt::LeftButton) {
         const auto double_click = event_->type() == QEvent::MouseButtonDblClick;
 
-        if (editing_logic_manager_.mouse_press(
-                position, circuit_renderer_.view_config(), event_->modifiers(),
-                double_click, editable_circuit_pointer(circuit_store_)) ==
-            circuit_widget::ManagerResult::require_update) {
+        if (editing_logic_manager_
+                .mouse_press(position, circuit_renderer_.view_config(),
+                             event_->modifiers(), double_click,
+                             editable_circuit_pointer(circuit_store_))
+                .require_update) {
             update();
         }
     }
@@ -551,9 +552,10 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
     }
 
     if ((event_->buttons() & Qt::LeftButton) != 0) {
-        if (editing_logic_manager_.mouse_move(position, circuit_renderer_.view_config(),
-                                              editable_circuit_pointer(circuit_store_)) ==
-            circuit_widget::ManagerResult::require_update) {
+        if (editing_logic_manager_
+                .mouse_move(position, circuit_renderer_.view_config(),
+                            editable_circuit_pointer(circuit_store_))
+                .require_update) {
             update();
         }
     }
@@ -583,10 +585,11 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
                                                          setting_handle);
         };
 
-        if (editing_logic_manager_.mouse_release(
-                position, circuit_renderer_.view_config(),
-                editable_circuit_pointer(circuit_store_),
-                show_setting_dialog) == circuit_widget::ManagerResult::require_update) {
+        if (editing_logic_manager_
+                .mouse_release(position, circuit_renderer_.view_config(),
+                               editable_circuit_pointer(circuit_store_),
+                               show_setting_dialog)
+                .require_update) {
             update();
         }
     }
@@ -625,8 +628,9 @@ auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
 
     // Enter
     else if (event_->key() == Qt::Key_Enter || event_->key() == Qt::Key_Return) {
-        if (editing_logic_manager_.confirm_editing(editable_circuit_pointer(
-                circuit_store_)) == circuit_widget::ManagerResult::require_update) {
+        if (editing_logic_manager_
+                .confirm_editing(editable_circuit_pointer(circuit_store_))
+                .require_update) {
             update();
             // some elements might have been deleted (e.g. move-selection confirmation)
             on_setting_dialog_cleanup_request();
