@@ -201,6 +201,11 @@ auto visible_selection_select_all(EditableCircuit& editable_circuit) -> void;
 
 auto visible_selection_delete_all(EditableCircuit& editable_circuit) -> void;
 
+[[nodiscard]] auto get_single_logicitem(const EditableCircuit& editable_circuit,
+                                        selection_id_t selection_id) -> logicitem_id_t;
+[[nodiscard]] auto get_single_decoration(const EditableCircuit& editable_circuit,
+                                         selection_id_t selection_id) -> decoration_id_t;
+
 }  // namespace logicsim
 
 #endif

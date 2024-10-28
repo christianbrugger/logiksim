@@ -49,6 +49,10 @@ class Selection {
     using segment_pair_t = detail::selection::map_pair_t;
 
    public:
+    [[nodiscard]] explicit Selection() = default;
+    [[nodiscard]] explicit Selection(std::span<const logicitem_id_t> logicitems,
+                                     std::span<const decoration_id_t> decorations);
+
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_info(bool as_selection = true) const -> std::string;
 

@@ -15,7 +15,8 @@ class EditableCircuit;
 
 namespace circuit_widget {
 
-using OpenSettingDialog = std::function<void(EditableCircuit&, setting_handle_t)>;
+using OpenSettingDialog =
+    std::function<void(EditableCircuit&, std::variant<logicitem_id_t, decoration_id_t>)>;
 
 class HandleSettingLogic {
    public:

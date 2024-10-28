@@ -3,7 +3,6 @@
 set(LS_GUI_SOURCES
     component/circuit_widget/mouse_logic/editing_logic_concept.cpp
     component/circuit_widget/mouse_logic/editing_logic_manager.cpp
-    component/circuit_widget/mouse_logic/editing_logic_result.cpp
     component/circuit_widget/mouse_logic/editing_logic_variant.cpp
     component/circuit_widget/mouse_logic/handle_resize.cpp
     component/circuit_widget/mouse_logic/handle_setting.cpp
@@ -11,6 +10,7 @@ set(LS_GUI_SOURCES
     component/circuit_widget/mouse_logic/insert_logicitem.cpp
     component/circuit_widget/mouse_logic/insert_wire.cpp
     component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
+    component/circuit_widget/mouse_logic/mouse_logic_result.cpp
     component/circuit_widget/mouse_logic/mouse_wheel_logic.cpp
     component/circuit_widget/mouse_logic/selection_area.cpp
     component/circuit_widget/mouse_logic/selection_move.cpp

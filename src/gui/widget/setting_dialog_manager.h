@@ -11,12 +11,14 @@
 #include <QObject>
 #include <QTimer>
 
+#include <variant>
+
 class QWidget;
 
 namespace logicsim {
 
-struct setting_handle_t;
 struct logicitem_id_t;
+struct decoration_id_t;
 struct LogicItemDefinition;
 
 class EditableCircuit;
@@ -42,7 +44,8 @@ class SettingDialogManager : public QObject {
     explicit SettingDialogManager(QWidget* parent);
 
     auto show_setting_dialog(EditableCircuit& editable_circuit,
-                             setting_handle_t setting_handle) -> void;
+                             std::variant<logicitem_id_t, decoration_id_t> element_id)
+        -> void;
     auto close_all(EditableCircuit& editable_circuit) -> void;
     auto run_cleanup(EditableCircuit& editable_circuit) -> void;
 

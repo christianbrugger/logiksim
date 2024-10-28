@@ -1,6 +1,9 @@
 #include "gui/component/circuit_widget/mouse_logic/insert_decoration.h"
 
+#include "gui/component/circuit_widget/mouse_logic/mouse_logic_result.h"
+
 #include "core/editable_circuit.h"
+#include "core/selection.h"
 #include "core/vocabulary/insertion_mode.h"
 
 #include <optional>
@@ -49,13 +52,23 @@ auto InsertDecorationLogic::mouse_move(EditableCircuit& editable_circuit,
 }
 
 auto InsertDecorationLogic::mouse_release(EditableCircuit& editable_circuit,
-                                          std::optional<point_t> position) -> void {
+                                          std::optional<point_t> position)
+    -> mouse_release_result_t {
     temp_element_ =
         remove_and_insert(editable_circuit, temp_element_, element_definition_, position,
                           InsertionMode::insert_or_discard);
+    const auto inserted_decoration =
+        get_single_decoration(editable_circuit, temp_element_);
 
     save_destroy_selection(editable_circuit, temp_element_);
     temp_element_ = null_selection_id;
+
+    return mouse_release_result_t {
+        .finished = true,
+        .mouse_logic_result {
+            .inserted_decoration = inserted_decoration,
+        },
+    };
 }
 
 auto InsertDecorationLogic::finalize(EditableCircuit& editable_circuit) -> void {

@@ -415,4 +415,20 @@ auto visible_selection_delete_all(EditableCircuit& editable_circuit) -> void {
     editable_circuit.delete_all(std::move(selection));
 }
 
+auto get_single_logicitem(const EditableCircuit& editable_circuit,
+                          selection_id_t selection_id) -> logicitem_id_t {
+    if (editable_circuit.selection_exists(selection_id)) {
+        return get_single_logicitem(editable_circuit.selection(selection_id));
+    }
+    return null_logicitem_id;
+}
+
+auto get_single_decoration(const EditableCircuit& editable_circuit,
+                           selection_id_t selection_id) -> decoration_id_t {
+    if (editable_circuit.selection_exists(selection_id)) {
+        return get_single_decoration(editable_circuit.selection(selection_id));
+    }
+    return null_decoration_id;
+}
+
 }  // namespace logicsim

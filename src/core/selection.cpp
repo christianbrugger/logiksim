@@ -23,6 +23,16 @@ namespace logicsim {
 // Selection
 //
 
+Selection::Selection(std::span<const logicitem_id_t> logicitems,
+                     std::span<const decoration_id_t> decorations) {
+    for (const auto logicitem : logicitems) {
+        add_logicitem(logicitem);
+    }
+    for (const auto decoration : decorations) {
+        add_decoration(decoration);
+    }
+}
+
 auto Selection::format() const -> std::string {
     Expects(class_invariant_holds());
 

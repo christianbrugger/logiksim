@@ -1,6 +1,6 @@
 #include "gui/widget/circuit_widget.h"
 
-#include "gui/component/circuit_widget/mouse_logic/editing_logic_result.h"
+#include "gui/component/circuit_widget/mouse_logic/mouse_logic_result.h"
 #include "gui/component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
 #include "gui/component/circuit_widget/simulation_runner.h"
 #include "gui/component/circuit_widget/zoom.h"
@@ -12,7 +12,6 @@
 #include "gui/qt/widget_geometry.h"
 #include "gui/widget/setting_dialog_manager.h"
 
-#include "core/algorithm/overload.h"
 #include "core/circuit_example.h"
 #include "core/copy_paste_clipboard.h"
 #include "core/geometry/scene.h"
@@ -579,19 +578,25 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
     }
 
     if (event_->button() == Qt::LeftButton) {
-        const auto show_setting_dialog = [&](EditableCircuit& editable_circuit,
-                                             setting_handle_t setting_handle) {
-            Expects(setting_dialog_manager_);
-            setting_dialog_manager_->show_setting_dialog(editable_circuit,
-                                                         setting_handle);
-        };
+        const auto show_setting_dialog =
+            [&](EditableCircuit& editable_circuit,
+                std::variant<logicitem_id_t, decoration_id_t> element_id) {
+                Expects(setting_dialog_manager_);
+                setting_dialog_manager_->show_setting_dialog(editable_circuit,
+                                                             element_id);
+            };
 
-        if (editing_logic_manager_
-                .mouse_release(position, circuit_renderer_.view_config(),
-                               editable_circuit_pointer(circuit_store_),
-                               show_setting_dialog)
-                .require_update) {
+        const auto result = editing_logic_manager_.mouse_release(
+            position, circuit_renderer_.view_config(),
+            editable_circuit_pointer(circuit_store_), show_setting_dialog);
+
+        if (result.require_update) {
             update();
+        }
+        if (result.inserted_decoration) {
+            set_circuit_state(defaults::selection_state);
+            circuit_store_.editable_circuit().set_visible_selection(
+                Selection {{}, std::array {result.inserted_decoration}});
         }
     }
 

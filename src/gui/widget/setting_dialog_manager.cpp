@@ -4,7 +4,6 @@
 
 #include "core/algorithm/overload.h"
 #include "core/editable_circuit.h"
-#include "core/setting_handle.h"
 
 #include <QWidget>
 
@@ -96,14 +95,15 @@ auto create_setting_dialog(const EditableCircuit& editable_circuit,
 
 }  // namespace
 
-auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit,
-                                               setting_handle_t setting_handle) -> void {
+auto SettingDialogManager::show_setting_dialog(
+    EditableCircuit& editable_circuit,
+    std::variant<logicitem_id_t, decoration_id_t> element_id) -> void {
     Expects(class_invariant_holds());
 
     // find existing dialog
     for (auto&& [selection_id, widget] : map_) {
         if (const auto element = get_selected_element(editable_circuit, selection_id);
-            element && *element == setting_handle.element_id) {
+            element && *element == element_id) {
             widget->show();
             widget->activateWindow();
 
@@ -121,7 +121,7 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
             [&](auto element_id) {
                 editable_circuit.add_to_selection(selection_id, element_id);
             },
-            setting_handle.element_id);
+            element_id);
         const auto [it, inserted] = map_.emplace(selection_id, nullptr);
         Expects(inserted);
 

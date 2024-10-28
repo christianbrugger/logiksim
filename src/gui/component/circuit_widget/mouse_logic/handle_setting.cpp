@@ -21,7 +21,7 @@ auto HandleSettingLogic::mouse_release(
     if (first_position_ &&  //
         is_colliding(setting_handle_, first_position_.value()) &&
         is_colliding(setting_handle_, position)) {
-        show_setting_dialog(editable_circuit, setting_handle_);
+        show_setting_dialog(editable_circuit, setting_handle_.element_id);
     }
 }
 

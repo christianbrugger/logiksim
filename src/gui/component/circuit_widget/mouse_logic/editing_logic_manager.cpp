@@ -1,6 +1,6 @@
 #include "gui/component/circuit_widget/mouse_logic/editing_logic_manager.h"
 
-#include "gui/component/circuit_widget/mouse_logic/editing_logic_result.h"
+#include "gui/component/circuit_widget/mouse_logic/mouse_logic_result.h"
 #include "gui/qt/point_conversion.h"
 
 #include "core/algorithm/overload.h"
@@ -53,7 +53,7 @@ auto EditingLogicManager::circuit_state() const -> CircuitWidgetState {
 }
 
 auto EditingLogicManager::finalize_editing(EditableCircuit* editable_circuit_)
-    -> editing_logic_result_t {
+    -> mouse_logic_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
@@ -75,13 +75,13 @@ auto EditingLogicManager::finalize_editing(EditableCircuit* editable_circuit_)
 
     Ensures(class_invariant_holds());
     Ensures(!mouse_logic_);
-    return editing_logic_result_t {
+    return mouse_logic_result_t {
         .require_update = had_mouse_logic,
     };
 }
 
 auto EditingLogicManager::confirm_editing(EditableCircuit* editable_circuit_)
-    -> editing_logic_result_t {
+    -> mouse_logic_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
@@ -103,7 +103,7 @@ auto EditingLogicManager::confirm_editing(EditableCircuit* editable_circuit_)
     }
 
     Ensures(class_invariant_holds());
-    return editing_logic_result_t {
+    return mouse_logic_result_t {
         .require_update = had_mouse_logic,
     };
 }
@@ -197,7 +197,7 @@ auto create_editing_mouse_logic(
 
 auto EditingLogicManager::mouse_press(
     QPointF position, const ViewConfig& view_config, Qt::KeyboardModifiers modifiers,
-    bool double_click, EditableCircuit* editable_circuit_) -> editing_logic_result_t {
+    bool double_click, EditableCircuit* editable_circuit_) -> mouse_logic_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
@@ -242,14 +242,14 @@ auto EditingLogicManager::mouse_press(
     }
 
     Ensures(class_invariant_holds());
-    return editing_logic_result_t {
+    return mouse_logic_result_t {
         .require_update = mouse_logic_.has_value(),
     };
 }
 
 auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_config,
                                      EditableCircuit* editable_circuit_)
-    -> editing_logic_result_t {
+    -> mouse_logic_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
@@ -283,66 +283,68 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
     }
 
     Ensures(class_invariant_holds());
-    return editing_logic_result_t {
+    return mouse_logic_result_t {
         .require_update = mouse_logic_.has_value(),
     };
 }
 
 auto EditingLogicManager::mouse_release(
     QPointF position, const ViewConfig& view_config, EditableCircuit* editable_circuit_,
-    const OpenSettingDialog& show_setting_dialog) -> editing_logic_result_t {
+    const OpenSettingDialog& show_setting_dialog) -> mouse_logic_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
     const auto had_mouse_logic = mouse_logic_.has_value();
+    auto inserted_decoration = null_decoration_id;
 
     if (editable_circuit_ != nullptr && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
         const auto grid_position = to_grid(to(position), view_config);
         const auto grid_fine_position = to_grid_fine(to(position), view_config);
 
-        const auto finished = std::visit(
+        const auto result = std::visit(
             overload {[&](InsertLogicItemLogic& arg) {
                           arg.mouse_release(editable_circuit, grid_position);
-                          return true;
+                          return mouse_release_result_t {};
                       },
                       [&](InsertWireLogic& arg) {
                           arg.mouse_release(editable_circuit, grid_position);
-                          return true;
+                          return mouse_release_result_t {};
                       },
                       [&](InsertDecorationLogic& arg) {
-                          arg.mouse_release(editable_circuit, grid_position);
-                          return true;
+                          return arg.mouse_release(editable_circuit, grid_position);
                       },
                       [&](SelectionAreaLogic& arg) {
                           arg.mouse_release(editable_circuit, position, view_config,
                                             rubber_band_);
-                          return true;
+                          return mouse_release_result_t {};
                       },
-                      [&](SelectionSingleLogic&) { return true; },
+                      [&](SelectionSingleLogic&) { return mouse_release_result_t {}; },
                       [&](SelectionMoveLogic& arg) {
                           arg.mouse_release(editable_circuit, grid_fine_position);
-                          return arg.is_finished();
+                          return mouse_release_result_t {.finished = arg.is_finished()};
                       },
                       [&](HandleResizeLogic& arg) {
                           arg.mouse_release(editable_circuit, grid_fine_position);
-                          return true;
+                          return mouse_release_result_t {};
                       },
                       [&](HandleSettingLogic& arg) {
                           arg.mouse_release(editable_circuit, grid_fine_position,
                                             show_setting_dialog);
-                          return true;
+                          return mouse_release_result_t {};
                       }},
             mouse_logic_.value());
 
-        if (finished) {
+        if (result.finished) {
             finalize_editing(editable_circuit_);
         }
+        inserted_decoration = result.mouse_logic_result.inserted_decoration;
     }
 
     Ensures(class_invariant_holds());
-    return editing_logic_result_t {
+    return mouse_logic_result_t {
         .require_update = had_mouse_logic,
+        .inserted_decoration = inserted_decoration,
     };
 }
 
