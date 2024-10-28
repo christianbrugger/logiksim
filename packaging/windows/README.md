@@ -84,6 +84,26 @@ C:\Program Files (x86)\Resource Hacker
 
 
 
+### 7zip
+
+To zip the installers.
+
+https://www.7-zip.org/
+
+
+
+`7z.exe` needs to be available in the `PATH`. Usually:
+
+```
+C:\Program Files\7-Zip
+```
+
+
+
+*tested with 24.08*
+
+
+
 ### Python 3.12+
 
 Required to run the bundling script.

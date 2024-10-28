@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -145,6 +146,47 @@ def action_package() -> None:
         ],
         check=True,
         cwd=LS_SCRIPT_DIR,
+    )
+
+    # define zip names
+    output_names = list(LS_TEMP_PATH.glob("LogikSim_*_win_x64.exe"))
+    assert len(output_names) == 1
+    installer_exe = output_names[0]
+    version = re.match(r"^LogikSim_([0-9.]+)_win_x64.exe", installer_exe.name).group(1)
+
+    installer_zip = LS_TEMP_PATH / f"LogikSim_{version}_win_64_installer.zip"
+    portable_zip = LS_TEMP_PATH / f"LogikSim_{version}_win_64_portable.zip"
+    portable_folder = LS_TEMP_PATH / f"LogikSim_{version}"
+
+    # zip installer
+    subprocess.run(
+        [
+            "7z",
+            "a",
+            "-tzip",
+            "-mm=Deflate",
+            "-mx=9",
+            installer_zip,
+            installer_exe,
+        ],
+        check=True,
+        cwd=LS_TEMP_PATH,
+    )
+
+    # zip portable
+    shutil.copytree(LS_DEPLOY_PATH, portable_folder)
+    subprocess.run(
+        [
+            "7z",
+            "a",
+            "-tzip",
+            "-mm=Deflate",
+            "-mx=9",
+            portable_zip,
+            portable_folder,
+        ],
+        check=True,
+        cwd=LS_TEMP_PATH,
     )
 
 
