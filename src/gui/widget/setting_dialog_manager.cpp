@@ -118,8 +118,8 @@ auto SettingDialogManager::show_setting_dialog(
 
     try {
         std::visit(
-            [&](auto element_id) {
-                editable_circuit.add_to_selection(selection_id, element_id);
+            [&](auto element_id_) {
+                editable_circuit.add_to_selection(selection_id, element_id_);
             },
             element_id);
         const auto [it, inserted] = map_.emplace(selection_id, nullptr);
