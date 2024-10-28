@@ -8,8 +8,6 @@
 
 Update the version to the desired LogikSim version.
 
-
-
 #### 2. Run `bundle_installer.py`
 
 Open a `Developer Powershell for VS 2022`. Make sure all the dependencies are available on the path below.
@@ -22,6 +20,14 @@ python3 script_create_installer.py configure
 python3 script_create_installer.py build
 python3 script_create_installer.py deploy
 python3 script_create_installer.py package
+```
+
+The final output is under `temp`. For example:
+
+```
+LogikSim_2.2.0_win_x64.exe
+LogikSim_2.2.0_win_x64_installer.zip
+LogikSim_2.2.0_win_x64_portable.zip
 ```
 
 

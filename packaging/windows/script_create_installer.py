@@ -154,8 +154,8 @@ def action_package() -> None:
     installer_exe = output_names[0]
     version = re.match(r"^LogikSim_([0-9.]+)_win_x64.exe", installer_exe.name).group(1)
 
-    installer_zip = LS_TEMP_PATH / f"LogikSim_{version}_win_64_installer.zip"
-    portable_zip = LS_TEMP_PATH / f"LogikSim_{version}_win_64_portable.zip"
+    installer_zip = LS_TEMP_PATH / f"LogikSim_{version}_win_x64_installer.zip"
+    portable_zip = LS_TEMP_PATH / f"LogikSim_{version}_win_x64_portable.zip"
     portable_folder = LS_TEMP_PATH / f"LogikSim_{version}"
 
     # zip installer
@@ -174,6 +174,7 @@ def action_package() -> None:
     )
 
     # zip portable
+    shutil.rmtree(portable_folder)
     shutil.copytree(LS_DEPLOY_PATH, portable_folder)
     subprocess.run(
         [

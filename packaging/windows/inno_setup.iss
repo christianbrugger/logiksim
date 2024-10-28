@@ -34,6 +34,7 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=temp
 OutputBaseFilename={#MyAppName}_{#MyAppVersion}_win_x64
+; SetupIconFile="temp\deploy\logiksim.ico"
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
