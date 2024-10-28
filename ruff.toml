@@ -27,5 +27,9 @@ ignore = [
     # Reason: We have other tools that track and highlight todo.
     #         Makes it impossible to get to zero warning level, otherwise.
     "FIX002",
+    
+    # Rule: File is part of an implicit namespace package. Add an `__init__.py`.
+    # Reason: Out scripts don't need a package. Probably a false positive.
+    "INP001",
 ]
 

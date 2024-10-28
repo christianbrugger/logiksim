@@ -8,6 +8,7 @@ file(GLOB_RECURSE
 
     ${PROJECT_SOURCE_DIR}/resources/**.ttf
     ${PROJECT_SOURCE_DIR}/resources/**.svg
+    ${PROJECT_SOURCE_DIR}/resources/**/LICENSE
 )
 FOREACH(LS_RESOURCE_FILE ${LS_RESOURCE_FILES})
     add_custom_command(
