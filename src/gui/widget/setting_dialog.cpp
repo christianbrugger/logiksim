@@ -223,6 +223,9 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent, selection_id_t selec
         simulation_controls_ = check_box;
         connect(simulation_controls_, &QCheckBox::stateChanged, this,
                 &ClockGeneratorDialog::value_changed);
+
+        // not used at the moment
+        check_box->hide();
     }
 
     update_row_visibility();

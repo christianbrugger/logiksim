@@ -48,7 +48,7 @@ ElementButton::ElementButton(const QString& text, QWidget* parent)
 
 auto ElementButton::sizeHint() const -> QSize {
     const auto text = "NAND";
-    const auto margin = 5;
+    const auto margin = 8;
 
     const auto metric = fontMetrics();
     const auto size = metric.size(Qt::TextShowMnemonic, text);
