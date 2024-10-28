@@ -11,7 +11,7 @@
 #define MyAppAssocName MyAppName + " Circuit"
 #define MyAppAssocExt ".ls2"
 #define MyAppAssocKey StringChange(MyAppAssocName, " ", "") + MyAppAssocExt
-#define MyAppIconFile "{app}\resources\icons\own\app_icon_256.ico"
+#define MyAppIconFile "{app}\logiksim.ico"
 
 [Setup]
 
@@ -32,6 +32,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
 ; commandline | dialog
 PrivilegesRequiredOverridesAllowed=dialog
+OutputDir=temp
 OutputBaseFilename={#MyAppName}_{#MyAppVersion}_win_x64
 Compression=lzma2/max
 SolidCompression=yes
@@ -41,7 +42,7 @@ WizardStyle=modern
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "output\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "temp\deploy\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Registry]
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocExt}\OpenWithProgids"; ValueType: string; ValueName: "{#MyAppAssocKey}"; ValueData: ""; Flags: uninsdeletevalue

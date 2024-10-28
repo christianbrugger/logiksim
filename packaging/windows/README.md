@@ -12,9 +12,17 @@ Update the version to the desired LogikSim version.
 
 #### 2. Run `bundle_installer.py`
 
-Open a `Developer Powershell for VS 2022`.
+Open a `Developer Powershell for VS 2022`. Make sure all the dependencies are available on the path below.
 
+Then run the following in order:
 
+```powershell
+python3 script_create_installer.py clean
+python3 script_create_installer.py configure
+python3 script_create_installer.py build
+python3 script_create_installer.py deploy
+python3 script_create_installer.py package
+```
 
 
 
@@ -24,7 +32,15 @@ Open a `Developer Powershell for VS 2022`.
 
 
 
+### Build Dependencies
 
+All build dependencies need to be available from the PATH.
+
+* CMake
+* Ninja
+* Visual Studio 2022
+* Clang
+* Qt binary folder
 
 
 
@@ -33,6 +49,16 @@ Open a `Developer Powershell for VS 2022`.
 Main tool to create the installer.
 
 https://jrsoftware.org/isinfo.php
+
+
+
+`iscc.exe` needs to be available in the `PATH`. Usually:
+
+```
+C:\Program Files (x86)\Inno Setup 6
+```
+
+
 
 *tested with 6.3.3*
 
@@ -43,6 +69,16 @@ https://jrsoftware.org/isinfo.php
 Add icon to executable.
 
 https://www.angusj.com/resourcehacker/
+
+
+
+`ResourceHacker.exe` needs to be available in the `PATH`. Usually:
+
+```
+C:\Program Files (x86)\Resource Hacker
+```
+
+
 
 *tested with 5.2.7*
 

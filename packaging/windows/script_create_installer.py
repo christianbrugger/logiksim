@@ -14,11 +14,11 @@ from pathlib import Path
 #
 
 LS_ROOT = Path(__file__).parent.parent.parent.resolve()
-LS_TEMP_PATH = Path(__file__).parent.resolve() / "temp"
+LS_SCRIPT_DIR = Path(__file__).parent.resolve()
+LS_TEMP_PATH = LS_SCRIPT_DIR / "temp"
 
 LS_BUILD_PATH = LS_TEMP_PATH / "build"
 LS_DEPLOY_PATH = LS_TEMP_PATH / "deploy"
-LS_BUNDLE_PATH = LS_TEMP_PATH / "package"
 
 #
 # CONFIGURATION
@@ -35,6 +35,8 @@ LS_REDIST_FOLDER = "x64/Microsoft.VC143.CRT"
 
 LS_ICON_SRC = LS_ROOT / "resources" / "icons" / "own" / "app_icon_256.ico"
 LS_ICON_DST = LS_DEPLOY_PATH / "logiksim.ico"
+
+LS_INNO_SETUP = "inno_setup.iss"
 
 
 def action_clean() -> None:
@@ -74,11 +76,13 @@ def action_deploy() -> None:
         shutil.rmtree(LS_DEPLOY_PATH)
     LS_DEPLOY_PATH.mkdir()
 
+    #
     # application files
     shutil.copy(LS_BUILD_PATH / LS_GUI_BINARY_SRC, LS_DEPLOY_PATH / LS_GUI_BINARY_DST)
     for resource_dir in LS_RESOURCE_DIRS:
         shutil.copytree(LS_BUILD_PATH / resource_dir, LS_DEPLOY_PATH / resource_dir)
 
+    #
     # qt libraries
     subprocess.run(
         [
@@ -99,6 +103,7 @@ def action_deploy() -> None:
         cwd=LS_DEPLOY_PATH,
     )
 
+    #
     # vc redist
     redist_base = os.getenv("VCToolsRedistDir")
     assert redist_base is not None
@@ -109,12 +114,38 @@ def action_deploy() -> None:
     for item in redist_dir.glob("*.dll"):
         shutil.copy(item, LS_DEPLOY_PATH / item.name)
 
-    # icon
+    #
+    # app icon
     shutil.copy(LS_ICON_SRC, LS_ICON_DST)
+    subprocess.run(
+        [
+            "ResourceHacker",
+            "-open",
+            LS_GUI_BINARY_DST,
+            "-save",
+            LS_GUI_BINARY_DST,
+            "-action",
+            "add",
+            "-res",
+            LS_ICON_DST.name,
+            "-mask",
+            "ICONGROUP,MAINICON,",
+        ],
+        check=True,
+        cwd=LS_DEPLOY_PATH,
+    )
 
 
 def action_package() -> None:
-    """Package binary and ressources into windows installer."""
+    """Package binary and ressources into windows installer with Inno Setup."""
+    subprocess.run(
+        [
+            "iscc",
+            LS_INNO_SETUP,
+        ],
+        check=True,
+        cwd=LS_SCRIPT_DIR,
+    )
 
 
 def main() -> int:
