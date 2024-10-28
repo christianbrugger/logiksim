@@ -15,11 +15,7 @@ Open a `Developer Powershell for VS 2022`. Make sure all the dependencies are av
 Then run the following in order:
 
 ```powershell
-python3 script_create_installer.py clean
-python3 script_create_installer.py configure
-python3 script_create_installer.py build
-python3 script_create_installer.py deploy
-python3 script_create_installer.py package
+python3 script_create_installer.py all
 ```
 
 The final output is under `temp`. For example:
@@ -29,6 +25,21 @@ LogikSim_2.2.0_win_x64.exe
 LogikSim_2.2.0_win_x64_installer.zip
 LogikSim_2.2.0_win_x64_portable.zip
 ```
+
+
+
+##### Debugging
+
+For debugging individual steps can be executed:
+
+```
+python3 script_create_installer.py configure
+python3 script_create_installer.py build
+python3 script_create_installer.py deploy
+python3 script_create_installer.py package
+```
+
+
 
 
 

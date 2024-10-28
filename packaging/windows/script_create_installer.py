@@ -174,7 +174,8 @@ def action_package() -> None:
     )
 
     # zip portable
-    shutil.rmtree(portable_folder)
+    with contextlib.suppress(FileNotFoundError):
+        shutil.rmtree(portable_folder)
     shutil.copytree(LS_DEPLOY_PATH, portable_folder)
     subprocess.run(
         [
@@ -196,20 +197,20 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "action",
-        choices=["clean", "configure", "build", "deploy", "package"],
+        choices=["clean", "all", "configure", "build", "deploy", "package"],
         help="Action to perform. Need to be run in order.",
     )
     args = parser.parse_args()
 
-    if args.action == "clean":
+    if args.action in ("clean",):
         action_clean()
-    elif args.action == "configure":
+    if args.action in ("configure", "all"):
         action_configure()
-    elif args.action == "build":
+    if args.action in ("build", "all"):
         action_build()
-    elif args.action == "deploy":
+    if args.action in ("deploy", "all"):
         action_deploy()
-    elif args.action == "package":
+    if args.action in ("package", "all"):
         action_package()
 
     return 0
