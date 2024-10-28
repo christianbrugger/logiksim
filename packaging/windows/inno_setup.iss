@@ -15,7 +15,7 @@
 
 [Setup]
 
-AppId=2C447801-6DB7-43CE-8641-DAD122B2A15F
+AppId={{2C447801-6DB7-43CE-8641-DAD122B2A15F}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 UninstallDisplayName={#MyAppName}
