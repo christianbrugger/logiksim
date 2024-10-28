@@ -436,6 +436,21 @@
             }
         },
         {
+            "name": "win-clang-release-package",
+            "displayName": "Clang Release Package",
+            "description": "Compile release build type with Clang compiler without terminal window",
+            "inherits": "common-win-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "ON",
+
+                "LS_WIN32_APPLICATON": "ON"
+                
+            }
+        },
+        {
             "name": "win-clang-address",
             "displayName": "Clang Address",
             "description": "Compile with address sanitizer and Clang Compiler",

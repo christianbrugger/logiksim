@@ -25,7 +25,7 @@ LS_DEPLOY_PATH = LS_TEMP_PATH / "deploy"
 # CONFIGURATION
 #
 
-LS_CMAKE_CONFIG = "win-clang-release"
+LS_CMAKE_CONFIG = "win-clang-release-package"
 LS_GUI_BINARY_SRC = "ls_gui.exe"
 LS_GUI_BINARY_DST = "logiksim.exe"
 LS_TEST_BINARIES = ["ls_test_core.exe", "ls_test_gui.exe"]

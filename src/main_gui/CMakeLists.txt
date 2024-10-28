@@ -1,3 +1,5 @@
+include(../../cmake/utils.cmake)
+
 include(source_list.cmake)
 
 
@@ -18,13 +20,14 @@ set_property(TARGET ${LS_GUI_TARGET} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 ###### Packaging Configuration
 
-# TODO: introduce packaging flag
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_definitions(${LS_GUI_TARGET} PRIVATE 
         LS_EXCEPTION_MESSAGE_BOX
     )
-    if (WIN32)
-        # set_property(TARGET ${LS_GUI_TARGET} PROPERTY WIN32_EXECUTABLE true)
-        # target_compile_definitions(${LS_GUI_TARGET} PRIVATE LS_LOG_TO_FILE)
-    endif ()
+endif ()
+
+ls_require_bool(LS_WIN32_APPLICATON)
+if (WIN32 AND LS_WIN32_APPLICATON)
+    set_property(TARGET ${LS_GUI_TARGET} PROPERTY WIN32_EXECUTABLE true)
+    target_compile_definitions(${LS_GUI_TARGET} PRIVATE LS_LOG_TO_FILE)
 endif ()

@@ -20,6 +20,7 @@ option(LS_ENABLE_COVERAGE "Enable coverage for tests under Clang" OFF)
 
 option(LS_BLEND2D_NO_JIT "Disable JIT for blend2d backend" OFF)
 option(LS_WARNINGS_AS_ERRORS "Report warnings as errors and abort the build" ON)
+option(LS_WIN32_APPLICATON "Do not build as console application on windows." OFF)
 
 # LS_SANITIZE
 #    * Address

@@ -18,7 +18,8 @@ namespace {
     const auto parent = to_path(QStandardPaths::writableLocation(location));
     const auto folder = parent / LS_APP_VERSION_STR;
 
-    std::filesystem::create_directory(folder);
+    // TODO: what if this fails
+    std::filesystem::create_directories(folder);
     return std::filesystem::weakly_canonical(folder) / relative;
 }
 
