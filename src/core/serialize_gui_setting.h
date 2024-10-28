@@ -21,6 +21,18 @@ namespace logicsim {
  */
 constexpr static inline auto CURRENT_GUI_SETTING_VERSION = 200;
 
+struct GuiDebugSettings {
+    bool show_debug_menu;
+    bool show_render_frames_per_second;
+    bool show_simulation_events_per_second;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const GuiDebugSettings&) const -> bool = default;
+};
+
+static_assert(std::is_aggregate_v<GuiDebugSettings>);
+static_assert(std::regular<GuiDebugSettings>);
+
 /*
  * @brief: Presistent GUI settings that are stored on disk.
  */
@@ -31,6 +43,8 @@ struct GuiSettings {
     WireRenderStyle wire_render_style;
     bool direct_rendering;
     bool jit_rendering;
+
+    GuiDebugSettings debug;
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const GuiSettings&) const -> bool = default;

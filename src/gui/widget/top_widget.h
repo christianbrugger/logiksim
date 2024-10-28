@@ -3,6 +3,8 @@
 
 #include "gui/widget/circuit_widget_base.h"
 
+#include "core/serialize_gui_setting.h"
+
 #include <ankerl/unordered_dense.h>
 #include <gsl/gsl>
 
@@ -118,6 +120,7 @@ class TopWidget : public QMainWindow {
     // gui state
     auto save_gui_state() -> void;
     auto restore_gui_state() -> void;
+    auto set_gui_settings(const GuiDebugSettings& settings) -> void;
 
    protected:
     auto closeEvent(QCloseEvent* event) -> void override;
@@ -127,6 +130,7 @@ class TopWidget : public QMainWindow {
    private:
     gsl::not_null<CircuitWidget*> circuit_widget_;
     gsl::not_null<QHBoxLayout*> circuit_widget_layout_;
+    GuiDebugSettings debug_settings_ {};
 
     QTimer timer_update_title_ {};
     QTimer timer_process_app_arguments_once_ {};
@@ -144,6 +148,7 @@ class TopWidget : public QMainWindow {
     MainActions actions_ {};
     QMenu* menu_toolbars_ {};
     QSlider* time_rate_slider_ {};
+    QMenu* menu_debug_ {};
 };
 
 }  // namespace logicsim

@@ -32,6 +32,17 @@ struct glz::meta<logicsim::ThreadCount> {
 
 namespace logicsim {
 
+auto GuiDebugSettings::format() const -> std::string {
+    return fmt::format(
+        "GuiSettings{{\n"
+        "  show_debug_menu = {},\n"
+        "  show_render_frames_per_second = {},\n"
+        "  show_simulation_events_per_second = {},\n"
+        "}}",
+        show_debug_menu, show_render_frames_per_second,
+        show_simulation_events_per_second);
+}
+
 auto GuiSettings::format() const -> std::string {
     return fmt::format(
         "GuiSettings{{\n"
@@ -41,8 +52,10 @@ auto GuiSettings::format() const -> std::string {
         "  wire_render_style = {},\n"
         "  direct_rendering = {},\n"
         "  jit_rendering = {},\n"
+        "  \n"
+        "  debug = {},\n"
         "}}",
-        version, thread_count, wire_render_style, direct_rendering, jit_rendering);
+        version, thread_count, wire_render_style, direct_rendering, jit_rendering, debug);
 }
 
 auto is_valid(const GuiSettings& settings) -> void;

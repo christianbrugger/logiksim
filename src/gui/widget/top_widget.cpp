@@ -391,6 +391,8 @@ auto TopWidget::create_menu() -> void {
     {
         // Debug
         auto* menu = menuBar()->addMenu(tr("&Debug"));
+        menu_debug_ = menu;
+        menu_debug_->menuAction()->setVisible(debug_settings_.show_debug_menu);
 
         // Benchmark
         actions_.do_benchmark = add_action_checkable(
@@ -576,7 +578,9 @@ auto TopWidget::create_toolbar() -> void {
         auto* toolbar = this->addToolBar("Standard");
         toolbar->setObjectName("toolbar_standard");
         toolbar->setIconSize(icon_size);
-        menu_toolbars_->addAction(toolbar->toggleViewAction());
+        if (menu_toolbars_ != nullptr) {
+            menu_toolbars_->addAction(toolbar->toggleViewAction());
+        }
 
         // file actions
         toolbar->addAction(actions_.new_file);
@@ -596,7 +600,9 @@ auto TopWidget::create_toolbar() -> void {
         auto* toolbar = this->addToolBar("Simulation");
         toolbar->setObjectName("toolbar_simulation");
         toolbar->setIconSize(icon_size);
-        menu_toolbars_->addAction(toolbar->toggleViewAction());
+        if (menu_toolbars_ != nullptr) {
+            menu_toolbars_->addAction(toolbar->toggleViewAction());
+        }
 
         // start simulation
         {
@@ -643,7 +649,9 @@ auto TopWidget::create_toolbar() -> void {
         auto* toolbar = this->addToolBar("Speed");
         toolbar->setObjectName("toolbar_speed");
         toolbar->setIconSize(icon_size);
-        menu_toolbars_->addAction(toolbar->toggleViewAction());
+        if (menu_toolbars_ != nullptr) {
+            menu_toolbars_->addAction(toolbar->toggleViewAction());
+        }
 
         {
             using namespace detail::time_slider;
@@ -747,19 +755,30 @@ auto TopWidget::build_element_buttons() -> QWidget* {
 void TopWidget::on_timer_update_title() {
     const auto statistics = circuit_widget_->statistics();
 
-    auto text =
-        fmt::format("[{}x{}] {:.1f} FPS {:.1f} pixel scale ({})", statistics.image_size.w,
-                    statistics.image_size.h, statistics.frames_per_second,
-                    statistics.pixel_scale, statistics.render_mode);
+    auto text = std::string {};
+    auto sep = std::string {};
 
-    if (statistics.simulation_events_per_second.has_value()) {
+    if (debug_settings_.show_render_frames_per_second) {
+        text = fmt::format("[{}x{}] {:.1f} FPS {:.1f} pixel scale ({}) ",
+                           statistics.image_size.w, statistics.image_size.h,
+                           statistics.frames_per_second, statistics.pixel_scale,
+                           statistics.render_mode);
+        sep = "- ";
+    }
+
+    if (debug_settings_.show_simulation_events_per_second &&
+        statistics.simulation_events_per_second.has_value()) {
         const auto eps = statistics.simulation_events_per_second.value();
-        text = fmt::format("{} {:.3g} EPS", text, round_fast(eps));
+        text = fmt::format("{}{:.3g} EPS ", text, round_fast(eps));
+        sep = "- ";
     }
 
     if (!last_saved_filename_.isEmpty()) {
-        text = fmt::format("{} - {}", text, last_saved_filename_);
+        text = fmt::format("{}{}{} ", text, sep, last_saved_filename_);
+        sep = "- ";
     }
+
+    text = fmt::format("{}{}{}", text, sep, LS_APP_NAME);
 
     QString title = QString::fromStdString(text);
     if (title != windowTitle()) {
@@ -1067,6 +1086,8 @@ auto TopWidget::save_gui_state() -> void {
             .wire_render_style = render_config.wire_render_style,
             .direct_rendering = render_config.direct_rendering,
             .jit_rendering = render_config.jit_rendering,
+
+            .debug = debug_settings_,
         };
         const auto string = serialize_gui_settings(settings);
         save_file(get_writable_setting_path(setting_t::gui_settings), string);
@@ -1097,16 +1118,30 @@ auto TopWidget::restore_gui_state() -> void {
 
     // settings
     if (const auto settings = load_gui_settings_from_file()) {
+        // render config
         auto render_config = circuit_widget_->render_config();
-
         render_config.thread_count = settings->thread_count;
         render_config.wire_render_style = settings->wire_render_style;
         render_config.direct_rendering = settings->direct_rendering;
         render_config.jit_rendering = settings->jit_rendering;
-
         circuit_widget_->set_render_config(render_config);
+
+        // debug settings
+        set_gui_settings(settings->debug);
     } else {
         print("WARNING: Unable to read GUI settings:", settings.error());
+    }
+}
+
+auto TopWidget::set_gui_settings(const GuiDebugSettings& settings) -> void {
+    if (debug_settings_ == settings) {
+        return;
+    }
+
+    debug_settings_ = settings;
+
+    if (menu_debug_ != nullptr) {
+        menu_debug_->menuAction()->setVisible(debug_settings_.show_debug_menu);
     }
 }
 
