@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import enum
 import textwrap
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import script_update_source_lists
 
@@ -190,7 +190,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        create_file_pair(LS_SRC_ROOT, PurePosixPath(args.name))
+        create_file_pair(LS_SRC_ROOT, PurePosixPath(PureWindowsPath(args.name)))
     except ParameterWrongError as exc:
         print(exc)
         return 1
