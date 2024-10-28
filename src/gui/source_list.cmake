@@ -3,6 +3,7 @@
 set(LS_GUI_SOURCES
     component/circuit_widget/mouse_logic/editing_logic_concept.cpp
     component/circuit_widget/mouse_logic/editing_logic_manager.cpp
+    component/circuit_widget/mouse_logic/editing_logic_result.cpp
     component/circuit_widget/mouse_logic/editing_logic_variant.cpp
     component/circuit_widget/mouse_logic/handle_resize.cpp
     component/circuit_widget/mouse_logic/handle_setting.cpp

@@ -1,5 +1,6 @@
 #include "gui/widget/circuit_widget.h"
 
+#include "gui/component/circuit_widget/mouse_logic/editing_logic_result.h"
 #include "gui/component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
 #include "gui/component/circuit_widget/simulation_runner.h"
 #include "gui/component/circuit_widget/zoom.h"
