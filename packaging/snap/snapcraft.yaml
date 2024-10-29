@@ -145,29 +145,34 @@ layout:
 parts:
   logiksim:
     plugin: nil
-    source: .
-    source-type: local
+    source: https://github.com/christianbrugger/logiksim.git
+    source-type: git
+    source-submodules: []
     build-environment:
       - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
       - LDFLAGS: ${LDFLAGS:+$LDFLAGS} -s
       - CC: clang-18
       - CXX: clang++-18
     build-packages:
+      - python3.12
       - clang-18
       - llvm-18
       - ninja-build
     build-snaps:
       - cmake
-    override-pull: |
-      # version="2.1.0"
-      # craftctl set version="$version"
     override-build: |
+      echo ${CRAFT_PART_BUILD}
+
+      # submodules
+      cd ${CRAFT_PART_BUILD}
+      python3.12 external/checkout.py
+
       # configure
-      cmake ${CRAFT_PROJECT_DIR} --preset linux-clang-release \
-        -DLS_ENABLE_LTO=OFF
+      cd ${CRAFT_PART_BUILD}
+      cmake --preset linux-clang-release
 
       # build
-      cd ${CRAFT_PROJECT_DIR}/build/linux-clang-release
+      cd ${CRAFT_PART_BUILD}/build/linux-clang-release
       ninja ls_test_core ls_test_gui ls_gui
 
       # run test
@@ -185,8 +190,6 @@ parts:
   
   logiksim-meta:
     plugin: nil
-    source: .
-    source-type: local
     override-build: |
       mkdir -p "${CRAFT_PART_INSTALL}/usr/share/applications"
       cp "${CRAFT_PROJECT_DIR}/resources/icons/derivative/app_icon.svg" \
