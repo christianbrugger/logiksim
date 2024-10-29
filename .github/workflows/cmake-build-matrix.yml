@@ -17,7 +17,7 @@ on:
     branches: [ "master" ]
 
 env:
-  LS_QT_VERSION: 6.7.2
+  LS_QT_VERSION: 6.7.3
   LS_CCACHE_VERSION: 4.10.2
   
 
@@ -224,8 +224,8 @@ jobs:
       uses: jurplel/install-qt-action@v4
       with: 
         version: ${{ env.LS_QT_VERSION }}
-        # select architecture manually until v5 is released
-        arch: ${{ runner.os == 'Windows' && 'win64_msvc2022_64' || 'linux_gcc_64' }}
+        # select architecture for Qt 6.8.0 manually until v5 is released
+        # arch: ${{ runner.os == 'Windows' && 'win64_msvc2022_64' || 'linux_gcc_64' }}
         archives: 'icu qtbase qtsvg'
         cache-key-prefix: install-qt-action-v4-${{ env.LS_QT_VERSION }}-${{ matrix.os }}-icu-qtbase-qtsvg
         cache: true
