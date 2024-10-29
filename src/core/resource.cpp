@@ -215,7 +215,7 @@ namespace {
         using enum icon_t;
 
         case app_icon: {
-            return std::filesystem::path {"icons/own/cpu.svg"};
+            return std::filesystem::path {"icons/derivative/app_icon.svg"};
         }
 
         case new_file: {
@@ -259,10 +259,10 @@ namespace {
         }
 
         case simulation_start: {
-            return std::filesystem::path {"icons/own/play.svg"};
+            return std::filesystem::path {"icons/derivative/play.svg"};
         }
         case simulation_stop: {
-            return std::filesystem::path {"icons/own/stop_15x15_r0_r.svg"};
+            return std::filesystem::path {"icons/derivative/stop_15x15_r0_r.svg"};
         }
         case simulation_speed: {
             return std::filesystem::path {"icons/lucide/gauge.svg"};
@@ -348,13 +348,13 @@ namespace {
             return std::filesystem::path {"icons/lucide/align-right.svg"};
         }
         case text_style_regular: {
-            return std::filesystem::path {"icons/own/regular.svg"};
+            return std::filesystem::path {"icons/derivative/regular.svg"};
         }
         case text_style_italic: {
             return std::filesystem::path {"icons/lucide/italic.svg"};
         }
         case text_style_bold: {
-            return std::filesystem::path {"icons/own/bold.svg"};
+            return std::filesystem::path {"icons/derivative/bold.svg"};
         }
         case text_style_monospace: {
             return std::filesystem::path {"icons/lucide/braces.svg"};

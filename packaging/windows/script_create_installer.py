@@ -34,7 +34,7 @@ LS_RESOURCE_DIRS = ["resources/fonts", "resources/icons"]
 # folder under $env:VCToolsRedistDir
 LS_REDIST_FOLDER = "x64/Microsoft.VC143.CRT"
 
-LS_ICON_SRC = LS_ROOT / "resources" / "icons" / "own" / "app_icon_256.ico"
+LS_ICON_SRC = LS_ROOT / "resources" / "icons" / "derivative" / "app_icon_256.ico"
 LS_ICON_DST = LS_DEPLOY_PATH / "logiksim.ico"
 
 LS_INNO_SETUP = "inno_setup.iss"
