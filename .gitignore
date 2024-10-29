@@ -20,3 +20,9 @@ _build_*/
 out/
 out_clion/
 
+snap
+*.snap
+
+unittest_*
+test_example_*
+
