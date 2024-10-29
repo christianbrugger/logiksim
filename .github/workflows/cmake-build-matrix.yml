@@ -17,7 +17,7 @@ on:
     branches: [ "master" ]
 
 env:
-  LS_QT_VERSION: 6.8.0
+  LS_QT_VERSION: 6.7.3
   LS_CCACHE_VERSION: 4.10.2
   
 

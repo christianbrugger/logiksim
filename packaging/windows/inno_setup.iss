@@ -11,7 +11,7 @@
 #define MyAppAssocName MyAppName + " Circuit"
 #define MyAppAssocExt ".ls2"
 #define MyAppAssocKey StringChange(MyAppAssocName, " ", "") + MyAppAssocExt
-#define MyAppIconFile "{app}\logiksim.ico"
+#define MyAppIconFile "{app}/resources/icons/derivative/app_icon_256.ico"
 
 [Setup]
 
