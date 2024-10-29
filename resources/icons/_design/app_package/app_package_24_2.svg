@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="24"
+   height="24"
+   viewBox="0 0 24 24"
+   fill="none"
+   stroke="currentColor"
+   stroke-width="2"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   version="1.1"
+   id="svg24"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs28" />
+  <rect
+     x="4"
+     y="4"
+     width="16"
+     height="16"
+     rx="2"
+     id="rect2"
+     style="fill:#c0c0c0;fill-opacity:1" />
+  <rect
+     style="fill:#ffffff;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10005.4"
+     id="rect107-7"
+     width="8.6558876"
+     height="3.5169017"
+     x="5.3470793"
+     y="18.999073" />
+  <rect
+     x="9"
+     y="9"
+     width="6"
+     height="6"
+     id="rect4" />
+  <rect
+     style="fill:#ffffff;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10005.4"
+     id="rect107"
+     width="5.1129732"
+     height="12.521001"
+     x="-0.10996562"
+     y="9.9944687" />
+  <path
+     d="M15 2v2"
+     id="path6" />
+  <path
+     d="M15 20v2"
+     id="path8" />
+  <path
+     d="M2 9h2"
+     id="path10" />
+  <path
+     d="M20 15h2"
+     id="path12" />
+  <path
+     d="M20 9h2"
+     id="path14" />
+  <path
+     d="M9 2v2"
+     id="path16" />
+  <path
+     d="M3 13.1a2 2 0 0 0-1 1.76v3.24a2 2 0 0 0 .97 1.78L6 21.7a2 2 0 0 0 2.03.01L11 19.9a2 2 0 0 0 1-1.76V14.9a2 2 0 0 0-.97-1.78L8 11.3a2 2 0 0 0-2.03-.01Z"
+     id="path20"
+     style="fill:#5fbcd3" />
+  <path
+     d="M11.7 14.2 7 17l-4.7-2.8"
+     id="path18" />
+  <path
+     d="M7 17v5"
+     id="path22" />
+</svg>
