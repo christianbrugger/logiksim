@@ -856,6 +856,9 @@ auto TopWidget::save_circuit(filename_choice_t filename_choice) -> save_result_t
                                                    "",                //
                                                    filename_filter()  //
         );
+        if (result.isEmpty()) {
+            return result;
+        }
         if (result.endsWith(".ls2")) {
             return result;
         }
