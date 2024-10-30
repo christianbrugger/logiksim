@@ -30,8 +30,8 @@
 #include <QLabel>
 #include <QLayout>
 #include <QLineEdit>
+#include <QPushButton>
 #include <QRegularExpression>
-#include <QToolButton>
 
 #include <stdexcept>
 
@@ -451,9 +451,8 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
         auto* group = new QButtonGroup {this};
 
         for (const auto& info : infos) {
-            auto* button = new QToolButton {this};
+            auto* button = new QPushButton {this};
             set_button_icon(button, info.icon, icon_size);
-            button->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonIconOnly);
             button->setCheckable(true);
             button->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
             button->setToolTip(info.tooltip);
@@ -467,7 +466,7 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
             row_layout->addWidget(button, 1);
 
             font_style_buttons_[info.font_style] = button;
-            connect(button, &QToolButton::clicked, this,
+            connect(button, &QPushButton::clicked, this,
                     &TextElementDialog::value_changed);
         }
 
@@ -488,9 +487,8 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
         auto* group = new QButtonGroup {this};
 
         for (const auto& info : infos) {
-            auto* button = new QToolButton {this};
+            auto* button = new QPushButton {this};
             set_button_icon(button, info.icon, icon_size);
-            button->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonIconOnly);
             button->setCheckable(true);
             button->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
             button->setToolTip(info.tooltip);
@@ -499,7 +497,7 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
             row_layout->addWidget(button, 1);
 
             alignment_buttons_[info.alignment] = button;
-            connect(button, &QToolButton::clicked, this,
+            connect(button, &QPushButton::clicked, this,
                     &TextElementDialog::value_changed);
         }
 
@@ -513,15 +511,14 @@ TextElementDialog::TextElementDialog(QWidget* parent, selection_id_t selection_i
     {
         auto* label = new QLabel {this};
         label->setText(tr("Color:"));
-        auto* button = new QToolButton {this};
+        auto* button = new QPushButton {this};
         layout->addRow(label, button);
 
         button->setIcon(create_icon_from_color(attrs.text_color));
         button->setIconSize(icon_size);
-        button->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonIconOnly);
         button->setToolTip(tr("Select Color"));
 
-        connect(button, &QToolButton::clicked, this,
+        connect(button, &QPushButton::clicked, this,
                 &TextElementDialog::on_color_button_clicked);
 
         color_button_ = button;
