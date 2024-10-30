@@ -41,7 +41,21 @@ nvim ~/snap/logiksim/current/.config/LogikSim/LogikSim/2.2.0/gui_settings.json
 
 
 
+## Publish Snap
 
+```
+snapcraft login
+```
+
+Upload it as a new release candiate.
+
+```
+snapcraft push --release candidate logiksim_*_amd64.snap
+```
+
+Then publish it as release under 
+
+https://snapcraft.io/logiksim/releases
 
 
 

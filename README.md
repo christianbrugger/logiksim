@@ -10,14 +10,14 @@ Design and simulation circuits with predefined logic items.
 
 **Windows**
 
-[LogikSim_2.1.0_win_x64.exe](https://github.com/christianbrugger/logiksim/releases/download/2.1.0/LogikSim_2.1.0_win_x64.exe) (10.3 MB, [changelog](https://github.com/christianbrugger/logiksim/releases/tag/2.1.0))
-Version: 2.1.0
+[LogikSim_2.2.0_win_x64.exe](https://github.com/christianbrugger/logiksim/releases/download/2.2.0/LogikSim_2.2.0_win_x64.exe) (11.3 MB, [changelog](https://github.com/christianbrugger/logiksim/releases/tag/2.2.0))
+Version: 2.2.0
 Note: Install Logiksim for all or current user (without Admin rights).
 
 </br>
 
-[LogikSim_2.1.0_win_x64_portable.zip](https://github.com/christianbrugger/logiksim/releases/download/2.1.0/LogikSim_2.1.0_win_x64_portable.zip) (12.1 MB, [changelog](https://github.com/christianbrugger/logiksim/releases/tag/2.1.0))
-Version: 2.1.0
+[LogikSim_2.2.0_win_x64_portable.zip](https://github.com/christianbrugger/logiksim/releases/download/2.2.0/LogikSim_2.2.0_win_x64_portable.zip) (13.1 MB, [changelog](https://github.com/christianbrugger/logiksim/releases/tag/2.2.0))
+Version: 2.2.0
 Note: Can be used without installation or on USB drives. Zip needs to be extracted.
 
 </br>
@@ -42,7 +42,7 @@ If you get the message "sudo: snap: command not found", read [here](https://snap
 ## Build Instructions
 
 * [Windows](documentation/build_windows.md)
-* [Linux](documentation/build_windows.md)
+* [Linux](documentation/build_linux.md)
 
 
 
