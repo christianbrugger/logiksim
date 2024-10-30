@@ -364,10 +364,9 @@ auto TopWidget::create_menu() -> void {
             });
 
         const auto tooltip_fmt =
-            tr("When enabled wires have visible delay of {}/unit.\n"
-               "Wire delay can be very useful when understanding circuits.\n"
-               "One the other hand it can be a hindrance when designing large\n"
-               "sequential circuits.")
+            tr("When enabled wires have delay of {}/unit.\n"
+               "Wire delay can be useful to visualize small circuits.\n"
+               "For large sequential circuits it is best switched off.")
                 .toStdString();
         const auto tooltip =
             fmt::format(fmt::runtime(tooltip_fmt), default_wire_delay_per_distance());
