@@ -24,8 +24,11 @@ class QSlider;
 namespace logicsim {
 
 constexpr static auto inline LS_APP_AUTHOR = "Christian Brugger";
-constexpr static auto inline LS_APP_EMAIL = "brugger.chr@gmail.com";
+constexpr static auto inline LS_APP_EMAIL = "christian@rangetable.com";
 constexpr static auto inline LS_APP_YEAR_STR = " 2024 ";
+constexpr static auto inline LS_APP_WEBSITE =
+    "https://github.com/christianbrugger/logiksim";
+constexpr static auto inline LS_APP_LICENSE = "Apache 2.0";
 
 class CircuitWidget;
 struct time_rate_t;

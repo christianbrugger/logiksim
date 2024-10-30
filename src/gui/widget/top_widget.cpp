@@ -1051,14 +1051,20 @@ auto TopWidget::set_time_rate_slider(time_rate_t time_rate) -> void {
 
 auto TopWidget::show_about_dialog() -> void {
     const auto text_fmt = tr("<h1>{}</h1>\n"
-                             "<p>Version {}</p>"
-                             "<p>Author: {}<br>"
-                             "Contact: <a href=\"mailto:{}\">{}</a></p>"
-                             "<p>© {}</p>")
+                             "<p><b>Version {}</b></p>"
+                             "<p>Author: {}<br><br>"
+                             "Website:<br><a href=\"{}\">{}</a><br><br>"
+                             "Contact:<br><a href=\"mailto:{}\">{}</a><br><br>"
+                             "Copyright {}, {} License</p>")
                               .toStdString();
-    const auto text =
-        fmt::format(fmt::runtime(text_fmt), LS_APP_NAME, LS_APP_VERSION_STR,
-                    LS_APP_AUTHOR, LS_APP_EMAIL, LS_APP_EMAIL, LS_APP_YEAR_STR);
+    const auto text = fmt::format(fmt::runtime(text_fmt),          //
+                                  LS_APP_NAME,                     //
+                                  LS_APP_VERSION_STR,              //
+                                  LS_APP_AUTHOR,                   //
+                                  LS_APP_WEBSITE, LS_APP_WEBSITE,  //
+                                  LS_APP_EMAIL, LS_APP_EMAIL,      //
+                                  LS_APP_YEAR_STR, LS_APP_LICENSE  //
+    );
 
     QMessageBox::about(this, tr("About"), QString::fromStdString(text));
 }
