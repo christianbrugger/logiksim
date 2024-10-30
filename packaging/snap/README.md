@@ -4,15 +4,6 @@
 
 ## Create new Snap
 
-Prepare the repository:
-
-```
-git clone https://github.com/christianbrugger/logiksim/
-cd logiksim
-
-python external/checkout.py
-```
-
 Make symlink, so `snapcraft.yaml` is found
 
 ```
@@ -22,12 +13,15 @@ ln -s packaging/snap snap
 Build new snap (run at repo root)
 
 ```bash
+snapcraft clean logiksim
 snapcraft --verbosity debug --debug
 ```
 
 Test install it
 
 ```bash
+sudo snap install ./logiksim_*_amd64.snap --dangerous
+
 sudo snap install ./logiksim_*_amd64.snap --dangerous --devmode
 ```
 
