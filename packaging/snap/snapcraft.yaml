@@ -169,7 +169,10 @@ parts:
 
       # configure
       cd ${CRAFT_PART_BUILD}
-      cmake --preset linux-clang-release
+      # disable LTO as it leads to coredump when running the snap
+      # not sure why
+      cmake --preset linux-clang-release \
+        -DLS_ENABLE_LTO=OFF
 
       # build
       cd ${CRAFT_PART_BUILD}/build/linux-clang-release
