@@ -12,7 +12,7 @@
 #
 
 name: logiksim
-version: '2.2.0'
+version: '2.3.0'
 summary: Design and simulation circuits with predefined logic items.
 description: |
   Design and simulation circuits with predefined logic items.

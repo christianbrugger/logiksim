@@ -5,7 +5,7 @@
 ;
 
 #define MyAppName "LogikSim"
-#define MyAppVersion "2.2.0"
+#define MyAppVersion "2.3.0"
 #define MyAppPublisher "Christian Brugger"
 #define MyAppExeName "logiksim.exe"
 #define MyAppAssocName MyAppName + " Circuit"
