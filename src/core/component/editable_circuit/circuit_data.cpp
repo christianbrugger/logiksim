@@ -23,10 +23,12 @@ auto CircuitData::format() const -> std::string {
         "index = {}\n"
         "selection_store = {}\n"
         "visible_selection = {}\n"
+        "history = {}\n"
         "messages = {}\n"
         "message_validator = {}\n"
         "}}\n",
-        layout, index, selection_store, visible_selection, messages, message_validator);
+        layout, index, selection_store, visible_selection, history, messages,
+        message_validator);
 }
 
 auto CircuitData::allocated_size() const -> std::size_t {
@@ -34,6 +36,7 @@ auto CircuitData::allocated_size() const -> std::size_t {
            index.allocated_size() +              //
            selection_store.allocated_size() +    //
            visible_selection.allocated_size() +  //
+           history.allocated_size() +            //
 
            get_allocated_size(messages) +  //
            get_allocated_size(message_validator);
@@ -54,6 +57,60 @@ auto CircuitData::submit(const InfoMessage& message) -> void {
     if (message_validator) {
         message_validator->submit(message);
     }
+}
+
+//
+// Undo Redo Interface
+//
+
+}  // namespace editable_circuit
+
+template <>
+[[nodiscard]] auto format(editable_circuit::UndoType type) -> std::string {
+    using namespace editable_circuit;
+
+    switch (type) {
+        using enum UndoType;
+
+        case create_temporary_element:
+            return "create_element";
+        case delete_temporary_element:
+            return "delete_element";
+    };
+    std::terminate();
+}
+
+namespace editable_circuit {
+
+auto DecorationUndoEntry::format() const -> std::string {
+    return fmt::format("DecorationUndoEntry(type = {}, uid = {}, position = {})", type,
+                       uid, position);
+}
+
+auto UndoHistory::format() const -> std::string {
+    return fmt::format("UndoHistory(\n  decoration_undo_entries = {}\n)",
+                       decoration_undo_entries);
+}
+
+auto UndoHistory::allocated_size() const -> std::size_t {
+    return get_allocated_size(decoration_undo_entries);
+}
+
+auto CircuitData::add_temporary_decoration(const DecorationDefinition& definition,
+                                           point_t position) -> decoration_id_t {
+    const auto decoration_id =
+        layout.decorations().add(definition, position, display_state_t::temporary);
+    submit(info_message::DecorationCreated {decoration_id});
+
+    history.decoration_undo_entries.emplace_back(DecorationUndoEntry {
+        .uid = 0,
+        .position = point_t {},
+        .type = UndoType::delete_temporary_element,
+    });
+    // print(history);
+    // print(index.key_index());
+
+    return decoration_id;
 }
 
 }  // namespace editable_circuit

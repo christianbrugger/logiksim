@@ -9,13 +9,17 @@ namespace logicsim {
 //
 
 LayoutIndex::LayoutIndex(const Layout& layout)
+    : LayoutIndex {layout, KeyIndex {layout}} {}
+
+LayoutIndex::LayoutIndex(const Layout& layout, KeyIndex key_index)
     : logicitems_inputs_ {layout},
       logicitems_outputs_ {layout},
       wire_inputs_ {layout},
       wire_outputs_ {layout},
 
       collision_index_ {layout},
-      spatial_index_ {layout} {}
+      spatial_index_ {layout},
+      key_index_ {std::move(key_index)} {}
 
 auto LayoutIndex::format() const -> std::string {
     return fmt::format(
@@ -26,9 +30,10 @@ auto LayoutIndex::format() const -> std::string {
         "{}\n"
         "{}\n"
         "{}\n"
+        "{}\n"
         "}}\n",
         logicitems_inputs_, logicitems_outputs_, wire_inputs_, wire_outputs_,
-        collision_index_, spatial_index_);
+        collision_index_, spatial_index_, key_index_);
 }
 
 auto LayoutIndex::allocated_size() const -> std::size_t {
@@ -38,7 +43,8 @@ auto LayoutIndex::allocated_size() const -> std::size_t {
            wire_outputs_.allocated_size() +        //
 
            collision_index_.allocated_size() +  //
-           spatial_index_.allocated_size();
+           spatial_index_.allocated_size() +    //
+           key_index_.allocated_size();
 }
 
 auto LayoutIndex::submit(const InfoMessage& message) -> void {
@@ -49,6 +55,7 @@ auto LayoutIndex::submit(const InfoMessage& message) -> void {
 
     collision_index_.submit(message);
     spatial_index_.submit(message);
+    key_index_.submit(message);
 }
 
 auto LayoutIndex::logicitem_input_index() const -> const LogicItemInputIndex& {
@@ -73,6 +80,10 @@ auto LayoutIndex::collision_index() const -> const CollisionIndex& {
 
 auto LayoutIndex::selection_index() const -> const SpatialIndex& {
     return spatial_index_;
+}
+
+auto LayoutIndex::key_index() const -> const KeyIndex& {
+    return key_index_;
 }
 
 }  // namespace logicsim

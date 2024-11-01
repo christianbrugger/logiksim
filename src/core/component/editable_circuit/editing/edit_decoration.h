@@ -50,8 +50,6 @@ auto change_decoration_insertion_mode(CircuitData& circuit,
 auto add_decoration(CircuitData& circuit, const DecorationDefinition& definition,
                     point_t position, InsertionMode insertion_mode) -> decoration_id_t;
 
-auto toggle_inverter(CircuitData& circuit, point_t point) -> void;
-
 }  // namespace editing
 
 }  // namespace editable_circuit

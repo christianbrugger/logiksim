@@ -253,9 +253,7 @@ auto add_decoration(CircuitData& circuit, const DecorationDefinition& definition
     if (!is_representable(to_decoration_layout_data(definition, position))) {
         return null_decoration_id;
     }
-    auto decoration_id = circuit.layout.decorations().add(definition, position,
-                                                          display_state_t::temporary);
-    circuit.submit(info_message::DecorationCreated {decoration_id});
+    auto decoration_id = circuit.add_temporary_decoration(definition, position);
 
     if (decoration_id) {
         change_decoration_insertion_mode(circuit, decoration_id, insertion_mode);

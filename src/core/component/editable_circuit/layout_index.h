@@ -4,6 +4,7 @@
 #include "core/format/struct.h"
 #include "core/index/collision_index.h"
 #include "core/index/connection_index.h"
+#include "core/index/key_index.h"
 #include "core/index/spatial_index.h"
 #include "core/layout_message_forward.h"
 
@@ -25,6 +26,7 @@ class LayoutIndex {
    public:
     [[nodiscard]] explicit LayoutIndex() = default;
     [[nodiscard]] explicit LayoutIndex(const Layout& layout);
+    [[nodiscard]] explicit LayoutIndex(const Layout& layout, KeyIndex key_index);
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
@@ -37,6 +39,7 @@ class LayoutIndex {
 
     [[nodiscard]] auto collision_index() const -> const CollisionIndex&;
     [[nodiscard]] auto selection_index() const -> const SpatialIndex&;
+    [[nodiscard]] auto key_index() const -> const KeyIndex&;
 
     auto submit(const InfoMessage& message) -> void;
 
@@ -48,6 +51,7 @@ class LayoutIndex {
 
     CollisionIndex collision_index_ {};
     SpatialIndex spatial_index_ {};
+    KeyIndex key_index_ {};
 };
 
 static_assert(std::regular<LayoutIndex>);

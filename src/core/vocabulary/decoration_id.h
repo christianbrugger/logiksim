@@ -19,7 +19,7 @@
 namespace logicsim {
 
 /**
- * @brief: Identifier to an logic-item in the layout.
+ * @brief: Identifier to a decoration in the layout.
  */
 struct decoration_id_t {
     using value_type = int32_t;

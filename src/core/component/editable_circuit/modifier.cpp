@@ -635,7 +635,8 @@ auto is_valid(const Modifier& modifier) -> bool {
     Expects(_colliding_point_types_valid(circuit.layout));
 
     // Layout Index
-    Expects(circuit.index == LayoutIndex {circuit.layout});
+    Expects(circuit.index == LayoutIndex(circuit.layout, circuit.index.key_index()));
+    Expects(circuit.index.key_index().has_all_ids_inserted(circuit.layout));
 
     // Selections
     const auto selection_valid = [&](const Selection& selection) {

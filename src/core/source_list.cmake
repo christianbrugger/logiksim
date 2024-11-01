@@ -146,6 +146,7 @@ set(LS_CORE_SOURCES
     index/connection_index.cpp
     index/connection_index_forward.cpp
     index/generation_index.cpp
+    index/key_index.cpp
     index/segment_map.cpp
     index/spatial_index.cpp
     index/spatial_point_index.cpp
@@ -235,6 +236,7 @@ set(LS_CORE_SOURCES
     vocabulary/context_render_settings.cpp
     vocabulary/decoration_definition.cpp
     vocabulary/decoration_id.cpp
+    vocabulary/decoration_key_t.cpp
     vocabulary/decoration_layout_data.cpp
     vocabulary/decoration_type.cpp
     vocabulary/default_mouse_action.cpp
