@@ -79,7 +79,7 @@ constexpr decoration_key_t::operator std::size_t() const {
 }
 
 constexpr decoration_key_t::operator difference_type() const {
-    static_assert(std::same_as<difference_type, decltype(value)>);
+    static_assert(sizeof(difference_type) >= sizeof(value));
     return difference_type {value};
 }
 
