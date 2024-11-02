@@ -94,14 +94,26 @@ auto Modifier::config() const -> ModifierConfig {
 
 auto Modifier::undo_group() -> void {
     editing::undo_group(circuit_data_);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
 }
 
 auto Modifier::redo_group() -> void {
     editing::redo_group(circuit_data_);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
 }
 
 auto Modifier::finish_undo_group() -> void {
     editing::finish_undo_group(circuit_data_.history);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
 }
 
 auto Modifier::has_undo() const -> bool {

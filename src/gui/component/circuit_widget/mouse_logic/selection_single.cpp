@@ -86,7 +86,9 @@ auto SelectionSingleLogic::mouse_press(EditableCircuit& editable_circuit,
     editable_circuit.set_visible_selection(selection);
 }
 
-auto SelectionSingleLogic::finalize(EditableCircuit& /*unused*/) -> void {}
+auto SelectionSingleLogic::finalize(EditableCircuit& editable_circuit) -> void {
+    editable_circuit.finish_undo_group();
+}
 
 }  // namespace circuit_widget
 

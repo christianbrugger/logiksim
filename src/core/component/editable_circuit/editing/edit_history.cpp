@@ -35,11 +35,11 @@ auto redo_group(CircuitData& circuit) -> void {
 }
 
 auto finish_undo_group(CircuitHistory& history) -> void {
-    if (has_ungrouped_undo_entries(history)) {
-        history.undo_stack.emplace_back(DecorationUndoEntry {
-            .type = UndoType::new_group,
-        });
-    }
+    // if (has_ungrouped_undo_entries(history)) {
+    history.undo_stack.emplace_back(DecorationUndoEntry {
+        .type = UndoType::new_group,
+    });
+    // }
 }
 
 }  // namespace editing

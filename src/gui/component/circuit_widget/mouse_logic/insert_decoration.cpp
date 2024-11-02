@@ -75,6 +75,8 @@ auto InsertDecorationLogic::finalize(EditableCircuit& editable_circuit) -> void 
     save_delete_all(editable_circuit, temp_element_);
     save_destroy_selection(editable_circuit, temp_element_);
     temp_element_ = null_selection_id;
+
+    editable_circuit.finish_undo_group();
 }
 
 }  // namespace circuit_widget

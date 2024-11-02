@@ -15,7 +15,7 @@ class SelectionSingleLogic {
     static auto mouse_press(EditableCircuit& editable_circuit, point_fine_t point,
                             bool double_click) -> void;
 
-    auto finalize(EditableCircuit& /*unused*/) -> void;
+    auto finalize(EditableCircuit& editable_circuit) -> void;
 };
 
 static_assert(has_mouse_logic_finalize<SelectionSingleLogic>);

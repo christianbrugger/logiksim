@@ -57,6 +57,8 @@ auto HandleResizeLogic::finalize(EditableCircuit& editable_circuit) -> void {
     Expects(found_states_matches_insertion_mode(
         display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
         InsertionMode::insert_or_discard));
+
+    editable_circuit.finish_undo_group();
 }
 
 namespace {

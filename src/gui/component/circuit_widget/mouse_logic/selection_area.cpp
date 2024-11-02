@@ -83,6 +83,8 @@ auto SelectionAreaLogic::finalize(EditableCircuit& editable_circuit,
     first_position_.reset();
     keep_last_selection_ = false;
     rubber_band.hide();
+
+    editable_circuit.finish_undo_group();
 }
 
 auto SelectionAreaLogic::update_mouse_position(EditableCircuit& editable_circuit,

@@ -132,6 +132,8 @@ auto SelectionMoveLogic::finalize(EditableCircuit& editable_circuit) -> void {
     if (state_ == State::finished_confirmed) {
         editable_circuit.clear_visible_selection();
     }
+
+    editable_circuit.finish_undo_group();
 }
 
 auto SelectionMoveLogic::move_selection(EditableCircuit& editable_circuit,

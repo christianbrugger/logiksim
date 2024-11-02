@@ -297,6 +297,8 @@ auto change_setting_attributes(EditableCircuit& editable_circuit,
             change_setting_attributes_element(editable_circuit, element_id, attributes);
         },
         element.value());
+
+    editable_circuit.finish_undo_group();
 }
 
 }  // namespace logicsim

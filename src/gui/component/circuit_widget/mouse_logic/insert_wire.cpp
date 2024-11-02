@@ -84,6 +84,8 @@ auto InsertWireLogic::finalize(EditableCircuit& editable_circuit) -> void {
     save_delete_all(editable_circuit, temp_wire_);
     save_destroy_selection(editable_circuit, temp_wire_);
     *this = {};
+
+    editable_circuit.finish_undo_group();
 }
 
 }  // namespace circuit_widget
