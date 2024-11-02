@@ -8,7 +8,25 @@
 namespace logicsim {
 
 template <>
-[[nodiscard]] auto format(editable_circuit::UndoType type) -> std::string {
+auto format(editable_circuit::HistoryState state) -> std::string {
+    using namespace editable_circuit;
+
+    switch (state) {
+        using enum HistoryState;
+
+        case disabled:
+            return "disabled";
+
+        case track_undo:
+            return "track_undo";
+        case track_redo:
+            return "track_redo";
+    };
+    std::terminate();
+}
+
+template <>
+auto format(editable_circuit::UndoType type) -> std::string {
     using namespace editable_circuit;
 
     switch (type) {
@@ -51,6 +69,7 @@ auto CircuitHistory::format() const -> std::string {
 
     return fmt::format(
         "UndoHistory(\n"
+        "  state = {}\n"
         "  decoration_undo_entries = [\n"
         "    {}\n"
         "  ],\n"
@@ -58,7 +77,7 @@ auto CircuitHistory::format() const -> std::string {
         "    {}\n"
         "  ],\n"
         ")",
-        entry_str, graveyard_str);
+        state, entry_str, graveyard_str);
 }
 
 auto CircuitHistory::allocated_size() const -> std::size_t {

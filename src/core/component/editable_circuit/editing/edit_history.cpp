@@ -10,6 +10,10 @@ namespace editable_circuit {
 
 namespace editing {
 
+auto is_history_enabled(const CircuitHistory& history) -> bool {
+    return history.state != HistoryState::disabled;
+}
+
 auto has_undo_entries(const CircuitHistory& history) -> bool {
     return !history.undo_stack.empty();
 }
@@ -24,6 +28,10 @@ auto has_ungrouped_undo_entries(const CircuitHistory& history) -> bool {
                      history.undo_stack.back().type != UndoType::new_group);
 }
 
+auto enable_history(CircuitHistory& history) -> void {
+    history.state = HistoryState::track_undo;
+}
+
 auto undo_group(CircuitData& circuit) -> void {
     static_cast<void>(circuit);
     print("RUN UNDO GROUP");
@@ -36,9 +44,11 @@ auto redo_group(CircuitData& circuit) -> void {
 
 auto finish_undo_group(CircuitHistory& history) -> void {
     // if (has_ungrouped_undo_entries(history)) {
-    history.undo_stack.emplace_back(DecorationUndoEntry {
-        .type = UndoType::new_group,
-    });
+    if (history.state == HistoryState::track_undo) {
+        history.undo_stack.emplace_back(DecorationUndoEntry {
+            .type = UndoType::new_group,
+        });
+    }
     // }
 }
 

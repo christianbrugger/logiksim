@@ -37,6 +37,10 @@ auto EditableCircuit::modifier() const -> const editable_circuit::Modifier& {
 // Undo & Redo
 //
 
+auto EditableCircuit::enable_history() -> void {
+    modifier_.enable_history();
+}
+
 auto EditableCircuit::undo_group() -> void {
     modifier_.undo_group();
 }
@@ -47,6 +51,10 @@ auto EditableCircuit::redo_group() -> void {
 
 auto EditableCircuit::finish_undo_group() -> void {
     modifier_.finish_undo_group();
+}
+
+auto EditableCircuit::is_history_enabled() const -> bool {
+    return modifier_.is_history_enabled();
 }
 
 auto EditableCircuit::has_undo() const -> bool {

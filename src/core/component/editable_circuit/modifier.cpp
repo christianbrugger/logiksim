@@ -91,6 +91,13 @@ auto Modifier::config() const -> ModifierConfig {
 //
 // Undo & Redo
 //
+auto Modifier::enable_history() -> void {
+    editing::enable_history(circuit_data_.history);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
+}
 
 auto Modifier::undo_group() -> void {
     editing::undo_group(circuit_data_);
@@ -114,6 +121,10 @@ auto Modifier::finish_undo_group() -> void {
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
     }
+}
+
+auto Modifier::is_history_enabled() const -> bool {
+    return editing::is_history_enabled(circuit_data_.history);
 }
 
 auto Modifier::has_undo() const -> bool {

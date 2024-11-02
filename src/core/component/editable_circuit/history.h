@@ -12,6 +12,20 @@ namespace logicsim {
 
 namespace editable_circuit {
 
+enum class HistoryState {
+    disabled,
+
+    track_undo,
+    track_redo,
+};
+
+}
+
+template <>
+[[nodiscard]] auto format(editable_circuit::HistoryState state) -> std::string;
+
+namespace editable_circuit {
+
 enum class UndoType : uint8_t {
     new_group,
 
@@ -49,6 +63,8 @@ struct CircuitHistory {
     [[nodiscard]] auto operator==(const CircuitHistory&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
+
+    HistoryState state {HistoryState::disabled};
 
     std::vector<DecorationUndoEntry> undo_stack {};
     std::vector<PlacedDecoration> decoration_graveyard {};
