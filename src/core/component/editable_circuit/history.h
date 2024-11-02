@@ -15,8 +15,9 @@ namespace editable_circuit {
 enum class HistoryState {
     disabled,
 
-    track_undo,
-    track_redo,
+    track_undo_new,
+    track_undo_replay,
+    track_redo_replay,
 };
 
 }
@@ -55,21 +56,23 @@ struct HistoryStack {
     [[nodiscard]] auto operator==(const HistoryStack&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
+
+    [[nodiscard]] auto empty() const -> bool;
+    [[nodiscard]] auto size() const -> std::size_t;
+    auto clear() -> void;
 };
 
 static_assert(std::regular<HistoryStack>);
 
 struct CircuitHistory {
+    HistoryState state {HistoryState::disabled};
+    HistoryStack undo_stack {};
+    HistoryStack redo_stack {};
+
     [[nodiscard]] auto operator==(const CircuitHistory&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
-    HistoryState state {HistoryState::disabled};
-
-    HistoryStack undo_stack {};
-    HistoryStack redo_stack {};
-
-    [[nodiscard]] auto get_stack() const -> const HistoryStack*;
     [[nodiscard]] auto get_stack() -> HistoryStack*;
 };
 

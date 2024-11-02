@@ -17,10 +17,12 @@ auto format(editable_circuit::HistoryState state) -> std::string {
         case disabled:
             return "disabled";
 
-        case track_undo:
-            return "track_undo";
-        case track_redo:
-            return "track_redo";
+        case track_undo_new:
+            return "track_undo_new";
+        case track_undo_replay:
+            return "track_undo_replay";
+        case track_redo_replay:
+            return "track_redo_replay";
     };
     std::terminate();
 }
@@ -89,6 +91,20 @@ auto HistoryStack::allocated_size() const -> std::size_t {
            get_allocated_size(move_deltas);
 }
 
+auto HistoryStack::empty() const -> bool {
+    return entries.empty();
+}
+
+auto HistoryStack::size() const -> std::size_t {
+    return entries.size();
+}
+
+auto HistoryStack::clear() -> void {
+    if (!empty()) {
+        *this = HistoryStack {};
+    }
+}
+
 auto CircuitHistory::format() const -> std::string {
     return fmt::format(
         "UndoHistory(\n"
@@ -104,32 +120,20 @@ auto CircuitHistory::allocated_size() const -> std::size_t {
            get_allocated_size(redo_stack);
 }
 
-auto CircuitHistory::get_stack() const -> const HistoryStack* {
-    switch (state) {
-        using enum HistoryState;
-        case disabled: {
-            return nullptr;
-        }
-        case track_undo: {
-            return &undo_stack;
-        }
-        case track_redo: {
-            return &redo_stack;
-        }
-    };
-    std::terminate();
-}
-
 auto CircuitHistory::get_stack() -> HistoryStack* {
     switch (state) {
         using enum HistoryState;
         case disabled: {
             return nullptr;
         }
-        case track_undo: {
+        case track_undo_new: {
+            redo_stack.clear();
             return &undo_stack;
         }
-        case track_redo: {
+        case track_undo_replay: {
+            return &undo_stack;
+        }
+        case track_redo_replay: {
             return &redo_stack;
         }
     };

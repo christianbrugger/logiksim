@@ -19,11 +19,11 @@ auto is_history_enabled(const CircuitHistory& history) -> bool {
 }
 
 auto has_undo_entries(const CircuitHistory& history) -> bool {
-    return !history.undo_stack.entries.empty();
+    return !history.undo_stack.empty();
 }
 
 auto has_redo_entries(const CircuitHistory& history) -> bool {
-    return !history.redo_stack.entries.empty();
+    return !history.redo_stack.empty();
 }
 
 auto has_ungrouped_undo_entries(const CircuitHistory& history) -> bool {
@@ -37,7 +37,7 @@ auto has_ungrouped_redo_entries(const CircuitHistory& history) -> bool {
 }
 
 auto enable_history(CircuitHistory& history) -> void {
-    history.state = HistoryState::track_undo;
+    history.state = HistoryState::track_undo_new;
 }
 
 namespace {
@@ -132,7 +132,7 @@ auto undo_group(CircuitData& circuit) -> void {
     const auto _ = gsl::finally([&, initial_state = circuit.history.state]() {
         circuit.history.state = initial_state;
     });
-    circuit.history.state = HistoryState::track_redo;
+    circuit.history.state = HistoryState::track_redo_replay;
 
     _apply_last_group(circuit, circuit.history.undo_stack);
     finish_redo_group(circuit.history);
@@ -145,7 +145,7 @@ auto redo_group(CircuitData& circuit) -> void {
     const auto _ = gsl::finally([&, initial_state = circuit.history.state]() {
         circuit.history.state = initial_state;
     });
-    circuit.history.state = HistoryState::track_undo;
+    circuit.history.state = HistoryState::track_undo_replay;
 
     _apply_last_group(circuit, circuit.history.redo_stack);
     finish_undo_group(circuit.history);
