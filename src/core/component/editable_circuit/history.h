@@ -48,8 +48,8 @@ struct CircuitHistory {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
-    std::vector<DecorationUndoEntry> decoration_undo_entries;
-    std::vector<PlacedDecoration> decoration_graveyard;
+    std::vector<DecorationUndoEntry> decoration_undo_entries {};
+    std::vector<PlacedDecoration> decoration_graveyard {};
 };
 
 static_assert(std::regular<CircuitHistory>);

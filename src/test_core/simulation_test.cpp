@@ -120,6 +120,15 @@ TEST(SimulationTest, SimulationTimeAdvancingWithInfiniteEvents) {
 
     EXPECT_EQ(simulation.is_finished(), false);
 }
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define LS_SLOW_SIMULATION
+#endif
+#endif
+#ifndef NDEBUG
+// debug
+#define LS_SLOW_SIMULATION
+#endif
 
 TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     // create infinite loop
@@ -154,12 +163,10 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     EXPECT_GT(simulation.time(), time_t {1ms});
     const auto delay = end - start;
 
-#ifndef NDEBUG
-    // debug
+#ifdef LS_SLOW_SIMULATION
     ASSERT_THAT(delay > 4ms, true);
     ASSERT_THAT(delay < 20ms, true);
 #else
-    // release
     ASSERT_THAT(delay > 4.5ms, true);
     ASSERT_THAT(delay < 5.5ms, true);
 #endif
