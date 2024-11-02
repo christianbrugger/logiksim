@@ -17,8 +17,8 @@ struct CircuitData;
 
 namespace editing {
 
-auto delete_temporary_logicitem(CircuitData& circuit, logicitem_id_t& logicitem_id,
-                                logicitem_id_t* preserve_element = nullptr) -> void;
+auto delete_temporary_logicitem(CircuitData& circuit,
+                                logicitem_id_t& logicitem_id) -> void;
 
 [[nodiscard]] auto is_logicitem_position_representable(const Layout& layout,
                                                        logicitem_id_t logicitem_id,

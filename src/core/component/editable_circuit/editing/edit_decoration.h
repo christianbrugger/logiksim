@@ -17,8 +17,8 @@ struct CircuitData;
 
 namespace editing {
 
-auto delete_temporary_decoration(CircuitData& circuit, decoration_id_t& decoration_id,
-                                 decoration_id_t* preserve_element = nullptr) -> void;
+auto delete_temporary_decoration(CircuitData& circuit,
+                                 decoration_id_t& decoration_id) -> void;
 
 [[nodiscard]] auto is_decoration_position_representable(const Layout& layout,
                                                         decoration_id_t decoration_id,

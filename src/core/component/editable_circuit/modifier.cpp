@@ -90,18 +90,16 @@ auto Modifier::config() const -> ModifierConfig {
 // Logic Items
 //
 
-auto Modifier::delete_temporary_logicitem(logicitem_id_t& logicitem_id,
-                                          logicitem_id_t* preserve_element) -> void {
+auto Modifier::delete_temporary_logicitem(logicitem_id_t& logicitem_id) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "delete_temporary_logicitem(logicitem_id = {}, preserve_element = "
-            "{});\n"
+            "delete_temporary_logicitem(logicitem_id = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, logicitem_id, fmt_ptr(preserve_element));
+            circuit_data_.layout, logicitem_id);
     }
 
-    editing::delete_temporary_logicitem(circuit_data_, logicitem_id, preserve_element);
+    editing::delete_temporary_logicitem(circuit_data_, logicitem_id);
 
     Ensures(debug_class_invariant_holds(*this));
 }
@@ -111,7 +109,8 @@ auto Modifier::move_temporary_logicitem_unchecked(const logicitem_id_t logicitem
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_temporary_logicitem_unchecked(logicitem_id = {}, dx = {}, dy = {});\n"
+            "move_temporary_logicitem_unchecked(logicitem_id = {}, dx = {}, dy = "
+            "{});\n"
             "==========================================================\n\n",
             circuit_data_.layout, logicitem_id, dx, dy);
     }
@@ -126,7 +125,8 @@ auto Modifier::move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, 
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_or_delete_temporary_logicitem(logicitem_id = {}, dx = {}, dy = {});\n"
+            "move_or_delete_temporary_logicitem(logicitem_id = {}, dx = {}, dy = "
+            "{});\n"
             "==========================================================\n\n",
             circuit_data_.layout, logicitem_id, dx, dy);
     }
@@ -197,18 +197,16 @@ auto Modifier::set_attributes(logicitem_id_t logicitem_id,
 // Decorations
 //
 
-auto Modifier::delete_temporary_decoration(decoration_id_t& decoration_id,
-                                           decoration_id_t* preserve_element) -> void {
+auto Modifier::delete_temporary_decoration(decoration_id_t& decoration_id) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "delete_temporary_decoration(decoration_id = {}, preserve_element = "
-            "{});\n"
+            "delete_temporary_decoration(decoration_id = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, decoration_id, fmt_ptr(preserve_element));
+            circuit_data_.layout, decoration_id);
     }
 
-    editing::delete_temporary_decoration(circuit_data_, decoration_id, preserve_element);
+    editing::delete_temporary_decoration(circuit_data_, decoration_id);
 
     Ensures(debug_class_invariant_holds(*this));
 }
@@ -218,7 +216,8 @@ auto Modifier::move_temporary_decoration_unchecked(const decoration_id_t decorat
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_temporary_decoration_unchecked(decoration_id = {}, dx = {}, dy = {});\n"
+            "move_temporary_decoration_unchecked(decoration_id = {}, dx = {}, dy = "
+            "{});\n"
             "==========================================================\n\n",
             circuit_data_.layout, decoration_id, dx, dy);
     }
@@ -233,7 +232,8 @@ auto Modifier::move_or_delete_temporary_decoration(decoration_id_t& decoration_i
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_or_delete_temporary_decoration(decoration_id = {}, dx = {}, dy = {});\n"
+            "move_or_delete_temporary_decoration(decoration_id = {}, dx = {}, dy = "
+            "{});\n"
             "==========================================================\n\n",
             circuit_data_.layout, decoration_id, dx, dy);
     }
@@ -388,7 +388,8 @@ auto Modifier::regularize_temporary_selection(
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "regularize_temporary_selection(selection = {}, true_cross_points = {});\n"
+            "regularize_temporary_selection(selection = {}, true_cross_points = "
+            "{});\n"
             "==========================================================\n\n",
             circuit_data_.layout, selection, true_cross_points_);
     }
@@ -423,7 +424,8 @@ auto Modifier::create_selection() -> selection_id_t {
 
 auto Modifier::create_selection(Selection selection_) -> selection_id_t {
     // this method needs to take selection as a copy, as create might invalidate the
-    // reference, if the underlying vector is resized and given selection points to it.
+    // reference, if the underlying vector is resized and given selection points to
+    // it.
 
     if (!is_valid_selection(selection_, circuit_data_.layout)) {
         throw std::runtime_error("Selection contains elements not in layout");
@@ -618,7 +620,8 @@ auto is_valid(const Modifier& modifier) -> bool {
     //      + All connections with wires are compatible (type & orientation).
     //   Inserted Wires:
     //      + Segments are not colliding with anything.
-    //      + Input corresponds to logicitem output and has correct orientation / position
+    //      + Input corresponds to logicitem output and has correct orientation /
+    //      position
 
     // Inserted Wires
     Expects(inserted_wires_are_contiguous_tree_with_correct_endpoints(circuit.layout));

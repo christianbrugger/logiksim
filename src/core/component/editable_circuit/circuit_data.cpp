@@ -131,8 +131,7 @@ auto _notify_decoration_id_change(CircuitData& circuit,
 }
 }  // namespace
 
-auto CircuitData::swap_and_delete_temporary_decoration(decoration_id_t decoration_id)
-    -> decoration_id_t {
+auto CircuitData::delete_temporary_decoration(decoration_id_t decoration_id) -> void {
     if (!decoration_id) [[unlikely]] {
         throw std::runtime_error("decoration id is invalid");
     }
@@ -158,8 +157,6 @@ auto CircuitData::swap_and_delete_temporary_decoration(decoration_id_t decoratio
     if (decoration_id != last_id) {
         _notify_decoration_id_change(*this, decoration_id, last_id);
     }
-
-    return last_id;
 }
 
 auto CircuitData::add_temporary_decoration(const DecorationDefinition& definition,

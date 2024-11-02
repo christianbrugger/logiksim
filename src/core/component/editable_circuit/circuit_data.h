@@ -70,8 +70,7 @@ struct CircuitData {
     auto submit(const InfoMessage& message) -> void;
 
     // undo redo interface
-    auto swap_and_delete_temporary_decoration(decoration_id_t decoration_id)
-        -> decoration_id_t;
+    auto delete_temporary_decoration(decoration_id_t decoration_id) -> void;
     auto add_temporary_decoration(const DecorationDefinition& definition,
                                   point_t position) -> decoration_id_t;
 };

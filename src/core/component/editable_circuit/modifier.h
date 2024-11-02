@@ -76,8 +76,7 @@ class Modifier {
     // Logic Items
     //
 
-    auto delete_temporary_logicitem(logicitem_id_t& logicitem_id,
-                                    logicitem_id_t* preserve_element = nullptr) -> void;
+    auto delete_temporary_logicitem(logicitem_id_t& logicitem_id) -> void;
 
     auto move_temporary_logicitem_unchecked(logicitem_id_t logicitem_id, int dx,
                                             int dy) -> void;
@@ -100,8 +99,7 @@ class Modifier {
     // Decorations
     //
 
-    auto delete_temporary_decoration(decoration_id_t& decoration_id,
-                                     decoration_id_t* preserve_element = nullptr) -> void;
+    auto delete_temporary_decoration(decoration_id_t& decoration_id) -> void;
 
     auto move_temporary_decoration_unchecked(decoration_id_t decoration_id, int dx,
                                              int dy) -> void;

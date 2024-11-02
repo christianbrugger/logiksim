@@ -46,8 +46,8 @@ auto _notify_logicitem_id_change(CircuitData& circuit,
 
 }  // namespace
 
-auto delete_temporary_logicitem(CircuitData& circuit, logicitem_id_t& logicitem_id,
-                                logicitem_id_t* preserve_element) -> void {
+auto delete_temporary_logicitem(CircuitData& circuit,
+                                logicitem_id_t& logicitem_id) -> void {
     if (!logicitem_id) [[unlikely]] {
         throw std::runtime_error("logic item id is invalid");
     }
@@ -60,18 +60,10 @@ auto delete_temporary_logicitem(CircuitData& circuit, logicitem_id_t& logicitem_
     circuit.submit(info_message::LogicItemDeleted {logicitem_id});
 
     // delete in underlying
-    auto last_id = circuit.layout.logicitems().swap_and_delete(logicitem_id);
+    const auto last_id = circuit.layout.logicitems().swap_and_delete(logicitem_id);
 
     if (logicitem_id != last_id) {
         _notify_logicitem_id_change(circuit, logicitem_id, last_id);
-    }
-
-    if (preserve_element != nullptr) {
-        if (*preserve_element == logicitem_id) {
-            *preserve_element = null_logicitem_id;
-        } else if (*preserve_element == last_id) {
-            *preserve_element = logicitem_id;
-        }
     }
 
     logicitem_id = null_logicitem_id;

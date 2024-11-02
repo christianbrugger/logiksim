@@ -22,18 +22,9 @@ namespace editing {
 // Delete Decoration
 //
 
-auto delete_temporary_decoration(CircuitData& circuit, decoration_id_t& decoration_id,
-                                 decoration_id_t* preserve_element) -> void {
-    const auto last_id = circuit.swap_and_delete_temporary_decoration(decoration_id);
-
-    if (preserve_element != nullptr) {
-        if (*preserve_element == decoration_id) {
-            *preserve_element = null_decoration_id;
-        } else if (*preserve_element == last_id) {
-            *preserve_element = decoration_id;
-        }
-    }
-
+auto delete_temporary_decoration(CircuitData& circuit,
+                                 decoration_id_t& decoration_id) -> void {
+    circuit.delete_temporary_decoration(decoration_id);
     decoration_id = null_decoration_id;
 }
 
