@@ -59,6 +59,7 @@ set(LS_CORE_SOURCES
     component/editable_circuit/editing/edit_wire.cpp
     component/editable_circuit/editing/edit_wire_detail.cpp
     component/editable_circuit/circuit_data.cpp
+    component/editable_circuit/history.cpp
     component/editable_circuit/layout_index.cpp
     component/editable_circuit/modifier.cpp
     component/editable_circuit/selection_guard.cpp

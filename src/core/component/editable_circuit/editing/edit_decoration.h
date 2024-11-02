@@ -36,8 +36,9 @@ auto delete_temporary_decoration(CircuitData& circuit,
  *    + decoration is temporary
  *    + new position is representable
  */
-auto move_temporary_decoration_unchecked(Layout& layout, decoration_id_t decoration_id,
-                                         int dx, int dy) -> void;
+auto move_temporary_decoration_unchecked(CircuitData& circuit,
+                                         decoration_id_t decoration_id, int dx,
+                                         int dy) -> void;
 
 auto move_or_delete_temporary_decoration(CircuitData& circuit,
                                          decoration_id_t& decoration_id, int dx,

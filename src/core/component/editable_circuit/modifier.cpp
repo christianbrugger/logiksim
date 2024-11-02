@@ -15,6 +15,7 @@ namespace logicsim {
 namespace editable_circuit {
 
 constexpr static inline auto DEBUG_PRINT_MODIFIER_METHODS = false;
+constexpr static inline auto DEBUG_PRINT_CIRCUIT_HISTORY = false;
 constexpr static inline auto DEBUG_CHECK_CLASS_INVARIANTS = false;
 
 namespace {
@@ -208,6 +209,9 @@ auto Modifier::delete_temporary_decoration(decoration_id_t& decoration_id) -> vo
 
     editing::delete_temporary_decoration(circuit_data_, decoration_id);
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -222,8 +226,11 @@ auto Modifier::move_temporary_decoration_unchecked(const decoration_id_t decorat
             circuit_data_.layout, decoration_id, dx, dy);
     }
 
-    editing::move_temporary_decoration_unchecked(circuit_data_.layout, decoration_id, dx,
-                                                 dy);
+    editing::move_temporary_decoration_unchecked(circuit_data_, decoration_id, dx, dy);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -239,6 +246,10 @@ auto Modifier::move_or_delete_temporary_decoration(decoration_id_t& decoration_i
     }
 
     editing::move_or_delete_temporary_decoration(circuit_data_, decoration_id, dx, dy);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -254,6 +265,9 @@ auto Modifier::change_decoration_insertion_mode(
 
     editing::change_decoration_insertion_mode(circuit_data_, decoration_id,
                                               new_insertion_mode);
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -270,6 +284,9 @@ auto Modifier::add_decoration(const DecorationDefinition& definition, point_t po
     const auto decoration_id =
         editing::add_decoration(circuit_data_, definition, position, insertion_mode);
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
     return decoration_id;
 }
@@ -285,6 +302,10 @@ auto Modifier::set_attributes(decoration_id_t decoration_id,
     }
 
     circuit_data_.layout.decorations().set_attributes(decoration_id, std::move(attrs_));
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
