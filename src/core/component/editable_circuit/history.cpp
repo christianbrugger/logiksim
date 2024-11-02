@@ -26,31 +26,31 @@ auto format(editable_circuit::HistoryState state) -> std::string {
 }
 
 template <>
-auto format(editable_circuit::UndoType type) -> std::string {
+auto format(editable_circuit::HistoryEntry type) -> std::string {
     using namespace editable_circuit;
 
     switch (type) {
-        using enum UndoType;
+        using enum HistoryEntry;
 
         case new_group:
             return "new_group";
 
-        case create_temporary_element:
+        case decoration_create_temporary:
             return "create_temporary_element";
-        case delete_temporary_element:
+        case decoration_delete_temporary:
             return "delete_temporary_element";
 
-        case move_temporary_element:
+        case decoration_move_temporary:
             return "move_temporary_element";
 
-        case to_insertion_temporary:
+        case decoration_to_insertion_temporary:
             return "to_insertion_temporary";
-        case to_insertion_colliding:
+        case decoration_to_insertion_colliding:
             return "to_insertion_colliding";
-        case to_insertion_insert:
+        case decoration_to_insertion_insert:
             return "to_insertion_insert";
 
-        case change_attributes:
+        case decoration_change_attributes:
             return "change_attributes";
     };
     std::terminate();
@@ -58,34 +58,82 @@ auto format(editable_circuit::UndoType type) -> std::string {
 
 namespace editable_circuit {
 
-auto DecorationUndoEntry::format() const -> std::string {
-    return fmt::format("DecorationUndoEntry(key = {}, type = {})", key, type);
+namespace {
+
+template <typename T>
+auto format_stack_vector(const std::vector<T>& data) -> std::string {
+    if (data.empty()) {
+        return "[]";
+    }
+    return "[\n      " + fmt_join(",\n      ", data) + "\n    ]";
+}
+
+}  // namespace
+
+auto HistoryStack::format() const -> std::string {
+    return fmt::format(
+        "Stack(\n"
+        "    entries = {},\n"
+        "    decoration_keys = {},\n"
+        "    placed_decorations = {},\n"
+        "    move_delta_stack = {},\n"
+        "  )",
+        format_stack_vector(entries), format_stack_vector(decoration_keys),
+        format_stack_vector(placed_decorations), format_stack_vector(move_deltas));
+}
+
+auto HistoryStack::allocated_size() const -> std::size_t {
+    return get_allocated_size(entries) +             //
+           get_allocated_size(decoration_keys) +     //
+           get_allocated_size(placed_decorations) +  //
+           get_allocated_size(move_deltas);
 }
 
 auto CircuitHistory::format() const -> std::string {
-    const auto entry_str = fmt_join(",\n    ", undo_stack);
-    const auto graveyard_str = fmt_join(",\n    ", placed_decoration_stack);
-    const auto move_delta_str = fmt_join(",\n    ", move_delta_stack);
-
     return fmt::format(
         "UndoHistory(\n"
         "  state = {}\n"
-        "  decoration_undo_entries = [\n"
-        "    {}\n"
-        "  ],\n"
-        "  decoration_graveyard = [\n"
-        "    {}\n"
-        "  ],\n"
-        "  move_delta_stack = [\n"
-        "    {}\n"
-        "  ],\n"
+        "  undo_stack = {}\n"
+        "  redo_stack = {}\n"
         ")",
-        state, entry_str, graveyard_str, move_delta_str);
+        state, undo_stack, redo_stack, redo_stack);
 }
 
 auto CircuitHistory::allocated_size() const -> std::size_t {
     return get_allocated_size(undo_stack) +  //
-           get_allocated_size(placed_decoration_stack);
+           get_allocated_size(redo_stack);
+}
+
+auto CircuitHistory::get_stack() const -> const HistoryStack* {
+    switch (state) {
+        using enum HistoryState;
+        case disabled: {
+            return nullptr;
+        }
+        case track_undo: {
+            return &undo_stack;
+        }
+        case track_redo: {
+            return &redo_stack;
+        }
+    };
+    std::terminate();
+}
+
+auto CircuitHistory::get_stack() -> HistoryStack* {
+    switch (state) {
+        using enum HistoryState;
+        case disabled: {
+            return nullptr;
+        }
+        case track_undo: {
+            return &undo_stack;
+        }
+        case track_redo: {
+            return &redo_stack;
+        }
+    };
+    std::terminate();
 }
 
 }  // namespace editable_circuit

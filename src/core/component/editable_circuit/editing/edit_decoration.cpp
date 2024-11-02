@@ -43,17 +43,14 @@ auto _notify_decoration_id_change(CircuitData& circuit,
 
 auto _store_history_create_decoration(CircuitData& circuit,
                                       decoration_id_t decoration_id) -> void {
-    if (circuit.history.state == HistoryState::track_undo) {
+    if (const auto& stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        circuit.history.placed_decoration_stack.emplace_back(
+        stack->entries.emplace_back(HistoryEntry::decoration_create_temporary);
+        stack->decoration_keys.emplace_back(key);
+        stack->placed_decorations.emplace_back(
             to_placed_decoration(circuit.layout, decoration_id));
-
-        circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
-            .key = key,
-            .type = UndoType::create_temporary_element,
-        });
     }
 }
 
@@ -115,15 +112,13 @@ namespace {
 auto _store_history_move_temporary_decoration(CircuitData& circuit,
                                               decoration_id_t decoration_id, int dx,
                                               int dy) -> void {
-    if (circuit.history.state == HistoryState::track_undo) {
+    if (const auto& stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
-            .key = key,
-            .type = UndoType::move_temporary_element,
-        });
-        circuit.history.move_delta_stack.emplace_back(-dx, -dy);
+        stack->entries.emplace_back(HistoryEntry::decoration_move_temporary);
+        stack->decoration_keys.emplace_back(key);
+        stack->move_deltas.emplace_back(-dx, -dy);
     }
 }
 
@@ -167,40 +162,34 @@ namespace {
 
 auto _store_history_to_insertion_temporary(CircuitData& circuit,
                                            decoration_id_t decoration_id) -> void {
-    if (circuit.history.state == HistoryState::track_undo) {
+    if (const auto& stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
-            .key = key,
-            .type = UndoType::to_insertion_temporary,
-        });
+        stack->entries.emplace_back(HistoryEntry::decoration_to_insertion_temporary);
+        stack->decoration_keys.emplace_back(key);
     }
 }
 
 auto _store_history_to_insertion_colliding(CircuitData& circuit,
                                            decoration_id_t decoration_id) -> void {
-    if (circuit.history.state == HistoryState::track_undo) {
+    if (const auto& stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
-            .key = key,
-            .type = UndoType::to_insertion_colliding,
-        });
+        stack->entries.emplace_back(HistoryEntry::decoration_to_insertion_colliding);
+        stack->decoration_keys.emplace_back(key);
     }
 }
 
 auto _store_history_to_insertion_insert(CircuitData& circuit,
                                         decoration_id_t decoration_id) -> void {
-    if (circuit.history.state == HistoryState::track_undo) {
+    if (const auto& stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
-            .key = key,
-            .type = UndoType::to_insertion_insert,
-        });
+        stack->entries.emplace_back(HistoryEntry::decoration_to_insertion_insert);
+        stack->decoration_keys.emplace_back(key);
     }
 }
 
@@ -326,14 +315,12 @@ namespace {
 
 auto _store_history_delete_temporary_decoration(CircuitData& circuit,
                                                 decoration_id_t decoration_id) -> void {
-    if (circuit.history.state == HistoryState::track_undo) {
+    if (const auto& stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
-            .key = key,
-            .type = UndoType::delete_temporary_element,
-        });
+        stack->entries.emplace_back(HistoryEntry::decoration_delete_temporary);
+        stack->decoration_keys.emplace_back(key);
     }
 }
 
@@ -365,17 +352,14 @@ namespace {
 
 auto _store_history_change_attribute_decoration(CircuitData& circuit,
                                                 decoration_id_t decoration_id) -> void {
-    if (circuit.history.state == HistoryState::track_undo) {
+    if (const auto& stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        circuit.history.placed_decoration_stack.emplace_back(
+        stack->entries.emplace_back(HistoryEntry::decoration_change_attributes);
+        stack->decoration_keys.emplace_back(key);
+        stack->placed_decorations.emplace_back(
             to_placed_decoration(circuit.layout, decoration_id));
-
-        circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
-            .key = key,
-            .type = UndoType::change_attributes,
-        });
     }
 }
 

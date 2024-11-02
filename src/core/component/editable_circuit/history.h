@@ -26,37 +26,38 @@ template <>
 
 namespace editable_circuit {
 
-enum class UndoType : uint8_t {
+enum class HistoryEntry : uint8_t {
     new_group,
 
-    create_temporary_element,
-    delete_temporary_element,
-
-    move_temporary_element,
-
-    to_insertion_temporary,
-    to_insertion_colliding,
-    to_insertion_insert,
-
-    change_attributes,
+    // decoration
+    decoration_create_temporary,
+    decoration_delete_temporary,
+    decoration_move_temporary,
+    decoration_to_insertion_temporary,
+    decoration_to_insertion_colliding,
+    decoration_to_insertion_insert,
+    decoration_change_attributes,
 };
 
 }
 
 template <>
-[[nodiscard]] auto format(editable_circuit::UndoType type) -> std::string;
+[[nodiscard]] auto format(editable_circuit::HistoryEntry type) -> std::string;
 
 namespace editable_circuit {
 
-struct DecorationUndoEntry {
-    decoration_key_t key {null_decoration_key};
-    UndoType type {UndoType::create_temporary_element};
+struct HistoryStack {
+    std::vector<HistoryEntry> entries {};
+    std::vector<decoration_key_t> decoration_keys {};
+    std::vector<PlacedDecoration> placed_decorations {};
+    std::vector<std::pair<int, int>> move_deltas {};
 
-    [[nodiscard]] auto operator==(const DecorationUndoEntry&) const -> bool = default;
+    [[nodiscard]] auto operator==(const HistoryStack&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 };
 
-static_assert(std::regular<DecorationUndoEntry>);
+static_assert(std::regular<HistoryStack>);
 
 struct CircuitHistory {
     [[nodiscard]] auto operator==(const CircuitHistory&) const -> bool = default;
@@ -65,9 +66,11 @@ struct CircuitHistory {
 
     HistoryState state {HistoryState::disabled};
 
-    std::vector<DecorationUndoEntry> undo_stack {};
-    std::vector<PlacedDecoration> placed_decoration_stack {};
-    std::vector<std::pair<int, int>> move_delta_stack {};
+    HistoryStack undo_stack {};
+    HistoryStack redo_stack {};
+
+    [[nodiscard]] auto get_stack() const -> const HistoryStack*;
+    [[nodiscard]] auto get_stack() -> HistoryStack*;
 };
 
 static_assert(std::regular<CircuitHistory>);
