@@ -1,6 +1,7 @@
 #include "core/component/editable_circuit/history.h"
 
 #include "core/algorithm/fmt_join.h"
+#include "core/allocated_size/std_pair.h"
 #include "core/allocated_size/std_vector.h"
 #include "core/format/container.h"
 #include "core/format/std_type.h"
