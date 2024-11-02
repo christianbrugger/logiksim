@@ -80,9 +80,9 @@ class Modifier {
     auto redo_group() -> void;
     auto finish_undo_group() -> void;
 
-    [[nodiscard]] auto has_undo() -> bool;
-    [[nodiscard]] auto has_redo() -> bool;
-    [[nodiscard]] auto has_ungrouped_undo_entries() -> bool;
+    [[nodiscard]] auto has_undo() const -> bool;
+    [[nodiscard]] auto has_redo() const -> bool;
+    [[nodiscard]] auto has_ungrouped_undo_entries() const -> bool;
 
     //
     // Logic Items

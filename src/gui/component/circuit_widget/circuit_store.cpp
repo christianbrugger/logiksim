@@ -182,7 +182,7 @@ auto CircuitStore::simulation_events_per_second() const -> std::optional<double>
     return std::nullopt;
 }
 
-auto circuit_widget::CircuitStore::class_invariant_holds() const -> bool {
+auto CircuitStore::class_invariant_holds() const -> bool {
     Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 
     // this is expensive, so we only check in Debug

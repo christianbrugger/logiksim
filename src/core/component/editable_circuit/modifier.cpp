@@ -104,15 +104,15 @@ auto Modifier::finish_undo_group() -> void {
     editing::finish_undo_group(circuit_data_.history);
 }
 
-auto Modifier::has_undo() -> bool {
+auto Modifier::has_undo() const -> bool {
     return editing::has_undo_entries(circuit_data_.history);
 }
 
-auto Modifier::has_redo() -> bool {
+auto Modifier::has_redo() const -> bool {
     return editing::has_redo_entries(circuit_data_.history);
 }
 
-auto Modifier::has_ungrouped_undo_entries() -> bool {
+auto Modifier::has_ungrouped_undo_entries() const -> bool {
     return editing::has_ungrouped_undo_entries(circuit_data_.history);
 }
 

@@ -49,15 +49,15 @@ auto EditableCircuit::finish_undo_group() -> void {
     modifier_.finish_undo_group();
 }
 
-auto EditableCircuit::has_undo() -> bool {
+auto EditableCircuit::has_undo() const -> bool {
     return modifier_.has_undo();
 }
 
-auto EditableCircuit::has_redo() -> bool {
+auto EditableCircuit::has_redo() const -> bool {
     return modifier_.has_redo();
 }
 
-auto EditableCircuit::has_ungrouped_undo_entries() -> bool {
+auto EditableCircuit::has_ungrouped_undo_entries() const -> bool {
     return modifier_.has_ungrouped_undo_entries();
 }
 

@@ -16,8 +16,9 @@ namespace circuit_widget {
  *
  * Class-invariant:
  *   + editable-circuit has no selection in non-editing-states
- *   + editable-circuit has no visible selection is non-editing-states
+ *   + editable-circuit has no visible selection in non-editing-states
  *   + number of visible-selection operations is maximum 1 (for optimization)
+ *   + editable-circuit has no ungrouped redo entries in non-editing states
  */
 class CheckedEditableCircuit {
    public:
@@ -29,6 +30,9 @@ class CheckedEditableCircuit {
     [[nodiscard]] auto extract_editable_circuit() -> EditableCircuit;
 
     auto set_editable_circuit(EditableCircuit &&editable_circuit) -> void;
+
+   private:
+    [[nodiscard]] auto class_invariant_holds() const -> bool;
 
    private:
     CircuitWidgetState circuit_state_ {NonInteractiveState {}};

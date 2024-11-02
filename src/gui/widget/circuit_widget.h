@@ -101,7 +101,6 @@ template <>
  *     + timer_run_simulation_ is only active when in simulation state
  *     + setting dialog count is zero if not in editing state
  *     + layout contains only normal display state items if no editing is active
- *     + number of visible-selection operations is maximum 1 (for optimization)
  */
 class CircuitWidget : public CircuitWidgetBase {
    public:

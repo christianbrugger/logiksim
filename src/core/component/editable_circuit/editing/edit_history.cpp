@@ -10,18 +10,18 @@ namespace editable_circuit {
 
 namespace editing {
 
-auto has_undo_entries(CircuitHistory& history) -> bool {
+auto has_undo_entries(const CircuitHistory& history) -> bool {
     return !history.undo_stack.empty();
 }
 
-auto has_redo_entries(CircuitHistory& history) -> bool {
+auto has_redo_entries(const CircuitHistory& history) -> bool {
     static_cast<void>(history);
     return false;
 }
 
-auto has_ungrouped_undo_entries(CircuitHistory& history) -> bool {
-    return !history.undo_stack.empty() &&
-           history.undo_stack.back().type != UndoType::new_group;
+auto has_ungrouped_undo_entries(const CircuitHistory& history) -> bool {
+    return false && (!history.undo_stack.empty() &&
+                     history.undo_stack.back().type != UndoType::new_group);
 }
 
 auto undo_group(CircuitData& circuit) -> void {
@@ -35,9 +35,11 @@ auto redo_group(CircuitData& circuit) -> void {
 }
 
 auto finish_undo_group(CircuitHistory& history) -> void {
-    history.undo_stack.emplace_back(DecorationUndoEntry {
-        .type = UndoType::new_group,
-    });
+    if (has_ungrouped_undo_entries(history)) {
+        history.undo_stack.emplace_back(DecorationUndoEntry {
+            .type = UndoType::new_group,
+        });
+    }
 }
 
 }  // namespace editing
