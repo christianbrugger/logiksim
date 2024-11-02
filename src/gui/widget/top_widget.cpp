@@ -268,6 +268,17 @@ auto TopWidget::create_menu() -> void {
         // Edit
         auto* menu = menuBar()->addMenu(tr("&Edit"));
 
+        actions_.undo = add_action(
+            menu, tr("&Undo"),
+            ActionAttributes {.shortcut = QKeySequence::Undo, .icon = icon_t::undo},
+            [this] { circuit_widget_->do_action(UserAction::undo); });
+        actions_.redo = add_action(
+            menu, tr("&Redo"),
+            ActionAttributes {.shortcut = QKeySequence::Redo, .icon = icon_t::redo},
+            [this] { circuit_widget_->do_action(UserAction::redo); });
+
+        menu->addSeparator();
+
         actions_.cut = add_action(
             menu, tr("Cu&t"),
             ActionAttributes {.shortcut = QKeySequence::Cut, .icon = icon_t::cut},
@@ -585,6 +596,11 @@ auto TopWidget::create_toolbar() -> void {
         toolbar->addAction(actions_.new_file);
         toolbar->addAction(actions_.open_file);
         toolbar->addAction(actions_.save_file);
+        toolbar->addSeparator();
+
+        // undo redo
+        toolbar->addAction(actions_.undo);
+        toolbar->addAction(actions_.redo);
         toolbar->addSeparator();
 
         // edit actions

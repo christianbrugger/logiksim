@@ -48,6 +48,8 @@ struct MainActions {
     QAction* save_file;
 
     // edit
+    QAction* undo;
+    QAction* redo;
     QAction* cut;
     QAction* copy;
     QAction* paste;

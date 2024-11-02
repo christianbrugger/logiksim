@@ -58,6 +58,8 @@ enum class UserAction {
      */
     reload_circuit,
 
+    undo,
+    redo,
     select_all,
     copy_selected,
     paste_from_clipboard,

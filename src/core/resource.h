@@ -23,6 +23,8 @@ enum class icon_t {
     exit,
 
     // edit
+    undo,
+    redo,
     cut,
     copy,
     paste,

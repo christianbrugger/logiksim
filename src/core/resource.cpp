@@ -32,6 +32,12 @@ auto format(icon_t icon) -> std::string {
         }
 
         // edit
+        case undo: {
+            return "undo";
+        }
+        case redo: {
+            return "redo";
+        }
         case cut: {
             return "cut";
         }
@@ -231,6 +237,12 @@ namespace {
             return std::filesystem::path {"icons/lucide/log-out.svg"};
         }
 
+        case undo: {
+            return std::filesystem::path {"icons/lucide/undo.svg"};
+        }
+        case redo: {
+            return std::filesystem::path {"icons/lucide/redo.svg"};
+        }
         case cut: {
             return std::filesystem::path {"icons/lucide/scissors.svg"};
         }

@@ -56,6 +56,10 @@ auto format(circuit_widget::UserAction action) -> std::string {
         case reload_circuit:
             return "reload_circuit";
 
+        case undo:
+            return "undo";
+        case redo:
+            return "redo";
         case select_all:
             return "select_all";
         case copy_selected:
@@ -357,6 +361,12 @@ auto CircuitWidget::do_action(UserAction action) -> void {
             break;
         }
 
+        case undo: {
+            break;
+        }
+        case redo: {
+            break;
+        }
         case select_all: {
             this->select_all();
             break;
