@@ -29,13 +29,11 @@ TEST(EditableCircuitModifierLogicItem, DeleteTemporaryElement) {
     ASSERT_EQ(logicitem_id, logicitem_id_t {0});
 
     auto modifier = get_logging_modifier(layout);
-    auto preserved_id = logicitem_id_t {0};
-    modifier.delete_temporary_logicitem(logicitem_id, &preserved_id);
+    modifier.delete_temporary_logicitem(logicitem_id);
     Expects(is_valid(modifier));
 
     // logicitem_ids
     ASSERT_EQ(logicitem_id, null_logicitem_id);
-    ASSERT_EQ(preserved_id, null_logicitem_id);
 
     // layout
     ASSERT_EQ(modifier.circuit_data().layout.empty(), true);
@@ -61,12 +59,11 @@ TEST(EditableCircuitModifierLogicItem, DeletePreserving1) {
     ASSERT_EQ(logicitem_id_1, logicitem_id_t {1});
 
     auto modifier = get_logging_modifier(layout);
-    modifier.delete_temporary_logicitem(logicitem_id_0, &logicitem_id_1);
+    modifier.delete_temporary_logicitem(logicitem_id_0);
     Expects(is_valid(modifier));
 
     // logicitem_ids
     ASSERT_EQ(logicitem_id_0, null_logicitem_id);
-    ASSERT_EQ(logicitem_id_1, logicitem_id_t {0});
 
     // layout
     assert_logicitem_count(modifier, 1);
@@ -102,11 +99,10 @@ TEST(EditableCircuitModifierLogicItem, DeletePreserving2) {
     ASSERT_EQ(logicitem_id_2, logicitem_id_t {2});
 
     auto modifier = get_logging_modifier(layout);
-    modifier.delete_temporary_logicitem(logicitem_id_1, &logicitem_id_0);
+    modifier.delete_temporary_logicitem(logicitem_id_1);
     Expects(is_valid(modifier));
 
     //  logicitem_ids
-    ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
     ASSERT_EQ(logicitem_id_1, null_logicitem_id);
 
     // layout
