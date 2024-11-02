@@ -36,6 +36,8 @@ auto KeyIndex::allocated_size() const -> std::size_t {
 }
 
 auto KeyIndex::get(decoration_id_t decoration_id) const -> decoration_key_t {
+    assert(class_invariant_holds());
+
     if (const auto it = decoration_keys_.find(decoration_id);
         it != decoration_keys_.end()) {
         return it->second;
@@ -44,6 +46,8 @@ auto KeyIndex::get(decoration_id_t decoration_id) const -> decoration_key_t {
 }
 
 auto KeyIndex::get(decoration_key_t decoration_key) const -> decoration_id_t {
+    assert(class_invariant_holds());
+
     if (const auto it = decoration_ids_.find(decoration_key);
         it != decoration_ids_.end()) {
         return it->second;
@@ -53,6 +57,9 @@ auto KeyIndex::get(decoration_key_t decoration_key) const -> decoration_id_t {
 
 auto KeyIndex::set(decoration_id_t decoration_id,
                    decoration_key_t decoration_key) -> void {
+    assert(class_invariant_holds());
+    Expects(decoration_key < next_decoration_key_);
+
     const auto key_it = decoration_keys_.find(decoration_id);
     Expects(key_it != decoration_keys_.end());
 
@@ -63,6 +70,8 @@ auto KeyIndex::set(decoration_id_t decoration_id,
     key_it->second = decoration_key;
     decoration_ids_.erase(id_it);
     Expects(decoration_ids_.emplace(decoration_key, decoration_id).second);
+
+    assert(class_invariant_holds());
 }
 
 auto KeyIndex::handle(const info_message::DecorationCreated& message) -> void {

@@ -327,7 +327,8 @@ auto _store_history_delete_temporary_decoration(CircuitData& circuit,
 }  // namespace
 
 auto add_decoration(CircuitData& circuit, const DecorationDefinition& definition,
-                    point_t position, InsertionMode insertion_mode) -> decoration_id_t {
+                    point_t position, InsertionMode insertion_mode,
+                    decoration_key_t decoration_key) -> decoration_id_t {
     if (!is_representable(to_decoration_layout_data(definition, position))) {
         return null_decoration_id;
     }
@@ -336,6 +337,9 @@ auto add_decoration(CircuitData& circuit, const DecorationDefinition& definition
     auto decoration_id = circuit.layout.decorations().add(definition, position,
                                                           display_state_t::temporary);
     circuit.submit(info_message::DecorationCreated {decoration_id});
+    if (decoration_key) {
+        circuit.index.set_key(decoration_id, decoration_key);
+    }
     _store_history_delete_temporary_decoration(circuit, decoration_id);
 
     if (decoration_id) {

@@ -80,8 +80,8 @@ auto HistoryStack::format() const -> std::string {
         "    placed_decorations = {},\n"
         "    move_delta_stack = {},\n"
         "  )",
-        format_stack_vector(entries), format_stack_vector(decoration_keys),
-        format_stack_vector(placed_decorations), format_stack_vector(move_deltas));
+        format_stack_vector(entries), decoration_keys,
+        format_stack_vector(placed_decorations), move_deltas);
 }
 
 auto HistoryStack::allocated_size() const -> std::size_t {

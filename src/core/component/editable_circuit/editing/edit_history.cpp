@@ -59,11 +59,9 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             auto placed_decoration = pop_back_vector(stack.placed_decorations);
 
             // TODO fix std::move
-            const auto decoration_id = editing::add_decoration(
-                circuit, std::move(placed_decoration.definition),
-                placed_decoration.position, InsertionMode::temporary);
-
-            circuit.index.set_key(decoration_id, decoration_key);
+            editing::add_decoration(circuit, std::move(placed_decoration.definition),
+                                    placed_decoration.position, InsertionMode::temporary,
+                                    decoration_key);
             return;
         }
 
