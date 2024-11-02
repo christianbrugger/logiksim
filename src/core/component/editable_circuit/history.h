@@ -13,6 +13,8 @@ namespace logicsim {
 namespace editable_circuit {
 
 enum class UndoType : uint8_t {
+    new_group,
+
     create_temporary_element,
     delete_temporary_element,
 
@@ -48,7 +50,7 @@ struct CircuitHistory {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
-    std::vector<DecorationUndoEntry> decoration_undo_entries {};
+    std::vector<DecorationUndoEntry> undo_stack {};
     std::vector<PlacedDecoration> decoration_graveyard {};
 };
 

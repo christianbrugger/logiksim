@@ -14,6 +14,9 @@ template <>
     switch (type) {
         using enum UndoType;
 
+        case new_group:
+            return "new_group";
+
         case create_temporary_element:
             return "create_temporary_element";
         case delete_temporary_element:
@@ -43,7 +46,7 @@ auto DecorationUndoEntry::format() const -> std::string {
 }
 
 auto CircuitHistory::format() const -> std::string {
-    const auto entry_str = fmt_join(",\n    ", decoration_undo_entries);
+    const auto entry_str = fmt_join(",\n    ", undo_stack);
     const auto graveyard_str = fmt_join(",\n    ", decoration_graveyard);
 
     return fmt::format(
@@ -59,7 +62,7 @@ auto CircuitHistory::format() const -> std::string {
 }
 
 auto CircuitHistory::allocated_size() const -> std::size_t {
-    return get_allocated_size(decoration_undo_entries) +  //
+    return get_allocated_size(undo_stack) +  //
            get_allocated_size(decoration_graveyard);
 }
 

@@ -1,6 +1,7 @@
 #include "core/component/editable_circuit/modifier.h"
 
 #include "core/component/editable_circuit/editing/edit_decoration.h"
+#include "core/component/editable_circuit/editing/edit_history.h"
 #include "core/component/editable_circuit/editing/edit_logicitem.h"
 #include "core/component/editable_circuit/editing/edit_wire.h"
 #include "core/component/editable_circuit/modifier.h"
@@ -88,6 +89,34 @@ auto Modifier::config() const -> ModifierConfig {
 }
 
 //
+// Undo & Redo
+//
+
+auto Modifier::undo_group() -> void {
+    editing::undo_group(circuit_data_);
+}
+
+auto Modifier::redo_group() -> void {
+    editing::redo_group(circuit_data_);
+}
+
+auto Modifier::finish_undo_group() -> void {
+    editing::finish_undo_group(circuit_data_.history);
+}
+
+auto Modifier::has_undo() -> bool {
+    return editing::has_undo_entries(circuit_data_.history);
+}
+
+auto Modifier::has_redo() -> bool {
+    return editing::has_redo_entries(circuit_data_.history);
+}
+
+auto Modifier::has_ungrouped_undo_entries() -> bool {
+    return editing::has_ungrouped_undo_entries(circuit_data_.history);
+}
+
+//
 // Logic Items
 //
 
@@ -110,8 +139,7 @@ auto Modifier::move_temporary_logicitem_unchecked(const logicitem_id_t logicitem
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_temporary_logicitem_unchecked(logicitem_id = {}, dx = {}, dy = "
-            "{});\n"
+            "move_temporary_logicitem_unchecked(logicitem_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
             circuit_data_.layout, logicitem_id, dx, dy);
     }
@@ -126,8 +154,7 @@ auto Modifier::move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, 
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_or_delete_temporary_logicitem(logicitem_id = {}, dx = {}, dy = "
-            "{});\n"
+            "move_or_delete_temporary_logicitem(logicitem_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
             circuit_data_.layout, logicitem_id, dx, dy);
     }
@@ -220,8 +247,7 @@ auto Modifier::move_temporary_decoration_unchecked(const decoration_id_t decorat
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_temporary_decoration_unchecked(decoration_id = {}, dx = {}, dy = "
-            "{});\n"
+            "move_temporary_decoration_unchecked(decoration_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
             circuit_data_.layout, decoration_id, dx, dy);
     }
@@ -239,8 +265,7 @@ auto Modifier::move_or_delete_temporary_decoration(decoration_id_t& decoration_i
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_or_delete_temporary_decoration(decoration_id = {}, dx = {}, dy = "
-            "{});\n"
+            "move_or_delete_temporary_decoration(decoration_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
             circuit_data_.layout, decoration_id, dx, dy);
     }
@@ -409,8 +434,7 @@ auto Modifier::regularize_temporary_selection(
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "regularize_temporary_selection(selection = {}, true_cross_points = "
-            "{});\n"
+            "regularize_temporary_selection(selection = {}, true_cross_points = {});\n"
             "==========================================================\n\n",
             circuit_data_.layout, selection, true_cross_points_);
     }

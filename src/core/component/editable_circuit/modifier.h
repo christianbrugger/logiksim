@@ -73,6 +73,18 @@ class Modifier {
     [[nodiscard]] auto config() const -> ModifierConfig;
 
     //
+    // Undo & Redo
+    //
+
+    auto undo_group() -> void;
+    auto redo_group() -> void;
+    auto finish_undo_group() -> void;
+
+    [[nodiscard]] auto has_undo() -> bool;
+    [[nodiscard]] auto has_redo() -> bool;
+    [[nodiscard]] auto has_ungrouped_undo_entries() -> bool;
+
+    //
     // Logic Items
     //
 

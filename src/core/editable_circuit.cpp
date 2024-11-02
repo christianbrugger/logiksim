@@ -34,6 +34,34 @@ auto EditableCircuit::modifier() const -> const editable_circuit::Modifier& {
 }
 
 //
+// Undo & Redo
+//
+
+auto EditableCircuit::undo_group() -> void {
+    modifier_.undo_group();
+}
+
+auto EditableCircuit::redo_group() -> void {
+    modifier_.redo_group();
+}
+
+auto EditableCircuit::finish_undo_group() -> void {
+    modifier_.finish_undo_group();
+}
+
+auto EditableCircuit::has_undo() -> bool {
+    return modifier_.has_undo();
+}
+
+auto EditableCircuit::has_redo() -> bool {
+    return modifier_.has_redo();
+}
+
+auto EditableCircuit::has_ungrouped_undo_entries() -> bool {
+    return modifier_.has_ungrouped_undo_entries();
+}
+
+//
 // Elements
 //
 

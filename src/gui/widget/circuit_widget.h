@@ -158,6 +158,8 @@ class CircuitWidget : public CircuitWidgetBase {
     auto finalize_editing() -> void;
     auto close_all_setting_dialogs() -> void;
 
+    auto undo() -> void;
+    auto redo() -> void;
     auto select_all() -> void;
     auto delete_selected() -> void;
     [[nodiscard]] auto copy_paste_position() -> point_t;

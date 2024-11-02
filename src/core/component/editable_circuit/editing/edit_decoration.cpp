@@ -49,7 +49,7 @@ auto _store_history_create_decoration(CircuitData& circuit,
     circuit.history.decoration_graveyard.emplace_back(
         to_placed_decoration(circuit.layout, decoration_id));
 
-    circuit.history.decoration_undo_entries.emplace_back(DecorationUndoEntry {
+    circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
         .key = key,
         .type = UndoType::create_temporary_element,
     });
@@ -115,7 +115,7 @@ auto _store_history_move_temporary_decoration(CircuitData& circuit,
     const auto key = circuit.index.key_index().get(decoration_id);
     Expects(key);
 
-    circuit.history.decoration_undo_entries.emplace_back(DecorationUndoEntry {
+    circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
         .key = key,
         .position = circuit.layout.decorations().position(decoration_id),
         .type = UndoType::move_temporary_element,
@@ -165,7 +165,7 @@ auto _store_history_to_insertion_temporary(CircuitData& circuit,
     const auto key = circuit.index.key_index().get(decoration_id);
     Expects(key);
 
-    circuit.history.decoration_undo_entries.emplace_back(DecorationUndoEntry {
+    circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
         .key = key,
         .type = UndoType::to_insertion_temporary,
     });
@@ -176,7 +176,7 @@ auto _store_history_to_insertion_colliding(CircuitData& circuit,
     const auto key = circuit.index.key_index().get(decoration_id);
     Expects(key);
 
-    circuit.history.decoration_undo_entries.emplace_back(DecorationUndoEntry {
+    circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
         .key = key,
         .type = UndoType::to_insertion_colliding,
     });
@@ -187,7 +187,7 @@ auto _store_history_to_insertion_insert(CircuitData& circuit,
     const auto key = circuit.index.key_index().get(decoration_id);
     Expects(key);
 
-    circuit.history.decoration_undo_entries.emplace_back(DecorationUndoEntry {
+    circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
         .key = key,
         .type = UndoType::to_insertion_insert,
     });
@@ -318,7 +318,7 @@ auto _store_history_delete_temporary_decoration(CircuitData& circuit,
     const auto key = circuit.index.key_index().get(decoration_id);
     Expects(key);
 
-    circuit.history.decoration_undo_entries.emplace_back(DecorationUndoEntry {
+    circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
         .key = key,
         .type = UndoType::delete_temporary_element,
     });
@@ -358,7 +358,7 @@ auto _store_history_change_attribute_decoration(CircuitData& circuit,
     circuit.history.decoration_graveyard.emplace_back(
         to_placed_decoration(circuit.layout, decoration_id));
 
-    circuit.history.decoration_undo_entries.emplace_back(DecorationUndoEntry {
+    circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
         .key = key,
         .type = UndoType::change_attributes,
     });

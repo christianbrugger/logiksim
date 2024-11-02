@@ -362,9 +362,11 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         }
 
         case undo: {
+            this->undo();
             break;
         }
         case redo: {
+            this->redo();
             break;
         }
         case select_all: {
@@ -705,6 +707,40 @@ auto CircuitWidget::close_all_setting_dialogs() -> void {
     if (is_editing_state(circuit_state_)) {
         setting_dialog_manager_->close_all(circuit_store_.editable_circuit());
     }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+}
+
+auto CircuitWidget::undo() -> void {
+    Expects(class_invariant_holds());
+
+    if (!is_editing_state(circuit_state_)) {
+        return;
+    }
+    finalize_editing();
+    close_all_setting_dialogs();
+    set_circuit_state(defaults::selection_state);
+
+    circuit_store_.editable_circuit().undo_group();
+    update();
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+}
+
+auto CircuitWidget::redo() -> void {
+    Expects(class_invariant_holds());
+
+    if (!is_editing_state(circuit_state_)) {
+        return;
+    }
+    finalize_editing();
+    close_all_setting_dialogs();
+    set_circuit_state(defaults::selection_state);
+
+    circuit_store_.editable_circuit().redo_group();
+    update();
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
