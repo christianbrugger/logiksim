@@ -47,7 +47,7 @@ auto _store_history_create_decoration(CircuitData& circuit,
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        circuit.history.decoration_graveyard.emplace_back(
+        circuit.history.placed_decoration_stack.emplace_back(
             to_placed_decoration(circuit.layout, decoration_id));
 
         circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
@@ -113,16 +113,17 @@ auto are_decoration_positions_representable(const Layout& layout,
 namespace {
 
 auto _store_history_move_temporary_decoration(CircuitData& circuit,
-                                              decoration_id_t decoration_id) -> void {
+                                              decoration_id_t decoration_id, int dx,
+                                              int dy) -> void {
     if (circuit.history.state == HistoryState::track_undo) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
         circuit.history.undo_stack.emplace_back(DecorationUndoEntry {
             .key = key,
-            .position = circuit.layout.decorations().position(decoration_id),
             .type = UndoType::move_temporary_element,
         });
+        circuit.history.move_delta_stack.emplace_back(-dx, -dy);
     }
 }
 
@@ -135,7 +136,7 @@ auto move_temporary_decoration_unchecked(CircuitData& circuit,
            display_state_t::temporary);
     assert(is_decoration_position_representable(circuit.layout, decoration_id, dx, dy));
 
-    _store_history_move_temporary_decoration(circuit, decoration_id);
+    _store_history_move_temporary_decoration(circuit, decoration_id, dx, dy);
 
     const auto position =
         add_unchecked(circuit.layout.decorations().position(decoration_id), dx, dy);
@@ -368,7 +369,7 @@ auto _store_history_change_attribute_decoration(CircuitData& circuit,
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        circuit.history.decoration_graveyard.emplace_back(
+        circuit.history.placed_decoration_stack.emplace_back(
             to_placed_decoration(circuit.layout, decoration_id));
 
         circuit.history.undo_stack.emplace_back(DecorationUndoEntry {

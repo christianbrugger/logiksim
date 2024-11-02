@@ -43,6 +43,8 @@ class LayoutIndex {
 
     auto submit(const InfoMessage& message) -> void;
 
+    auto set_key(decoration_id_t decoration_id, decoration_key_t decoration_key) -> void;
+
    private:
     LogicItemInputIndex logicitems_inputs_ {};
     LogicItemOutputIndex logicitems_outputs_ {};

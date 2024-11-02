@@ -50,7 +50,6 @@ namespace editable_circuit {
 
 struct DecorationUndoEntry {
     decoration_key_t key {null_decoration_key};
-    point_t position {};
     UndoType type {UndoType::create_temporary_element};
 
     [[nodiscard]] auto operator==(const DecorationUndoEntry&) const -> bool = default;
@@ -67,7 +66,8 @@ struct CircuitHistory {
     HistoryState state {HistoryState::disabled};
 
     std::vector<DecorationUndoEntry> undo_stack {};
-    std::vector<PlacedDecoration> decoration_graveyard {};
+    std::vector<PlacedDecoration> placed_decoration_stack {};
+    std::vector<std::pair<int, int>> move_delta_stack {};
 };
 
 static_assert(std::regular<CircuitHistory>);

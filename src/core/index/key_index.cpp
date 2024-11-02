@@ -51,6 +51,20 @@ auto KeyIndex::get(decoration_key_t decoration_key) const -> decoration_id_t {
     return null_decoration_id;
 }
 
+auto KeyIndex::set(decoration_id_t decoration_id,
+                   decoration_key_t decoration_key) -> void {
+    const auto key_it = decoration_keys_.find(decoration_id);
+    Expects(key_it != decoration_keys_.end());
+
+    const auto id_it = decoration_ids_.find(key_it->second);
+    Expects(id_it != decoration_ids_.end());
+    Expects(id_it->second == decoration_id);
+
+    key_it->second = decoration_key;
+    decoration_ids_.erase(id_it);
+    Expects(decoration_ids_.emplace(decoration_key, decoration_id).second);
+}
+
 auto KeyIndex::handle(const info_message::DecorationCreated& message) -> void {
     Expects(decoration_ids_.emplace(next_decoration_key_, message.decoration_id).second);
     Expects(decoration_keys_.emplace(message.decoration_id, next_decoration_key_).second);

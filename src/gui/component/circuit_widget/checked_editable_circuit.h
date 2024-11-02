@@ -19,6 +19,7 @@ namespace circuit_widget {
  *   + editable-circuit has no visible selection in non-editing-states
  *   + number of visible-selection operations is maximum 1 (for optimization)
  *   + editable-circuit has no ungrouped redo entries in non-editing states
+ *   + editable-circuit history is always enabled
  */
 class CheckedEditableCircuit {
    public:
@@ -36,7 +37,8 @@ class CheckedEditableCircuit {
 
    private:
     CircuitWidgetState circuit_state_ {NonInteractiveState {}};
-    EditableCircuit editable_circuit_ {};
+    EditableCircuit editable_circuit_ {Layout {},
+                                       EditableCircuit::Config {.enable_history = true}};
 };
 
 }  // namespace circuit_widget

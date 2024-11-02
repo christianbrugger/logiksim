@@ -58,6 +58,11 @@ auto LayoutIndex::submit(const InfoMessage& message) -> void {
     key_index_.submit(message);
 }
 
+auto LayoutIndex::set_key(decoration_id_t decoration_id,
+                          decoration_key_t decoration_key) -> void {
+    key_index_.set(decoration_id, decoration_key);
+}
+
 auto LayoutIndex::logicitem_input_index() const -> const LogicItemInputIndex& {
     return logicitems_inputs_;
 }

@@ -39,6 +39,7 @@ class KeyIndex {
     // return null if ids are not found
     [[nodiscard]] auto get(decoration_id_t decoration_id) const -> decoration_key_t;
     [[nodiscard]] auto get(decoration_key_t decoration_key) const -> decoration_id_t;
+    auto set(decoration_id_t decoration_id, decoration_key_t decoration_key) -> void;
 
     auto submit(const InfoMessage& message) -> void;
     [[nodiscard]] auto has_all_ids_inserted(const Layout& layout) const -> bool;

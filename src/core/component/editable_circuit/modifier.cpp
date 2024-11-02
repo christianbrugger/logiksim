@@ -46,11 +46,17 @@ auto create_circuit_data(Layout&& layout_, ModifierConfig config) -> CircuitData
     auto validator_ = config.validate_messages ? std::optional<MessageValidator> {layout_}
                                                : std::nullopt;
 
+    auto history_ = CircuitHistory {};
+    if (config.enable_history) {
+        editing::enable_history(history_);
+    }
+
     return CircuitData {
         .layout = std::move(layout_),
         .index = std::move(index_),
         .selection_store {},
         .visible_selection {},
+        .history = std::move(history_),
         .messages = std::move(messages_),
         .message_validator = std::move(validator_),
     };

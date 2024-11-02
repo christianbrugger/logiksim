@@ -26,6 +26,7 @@ constexpr static inline auto VALIDATE_MESSAGES_DEFAULT = true;
 #endif
 
 struct ModifierConfig {
+    bool enable_history {false};
     bool store_messages {false};
     bool validate_messages {VALIDATE_MESSAGES_DEFAULT};
 };

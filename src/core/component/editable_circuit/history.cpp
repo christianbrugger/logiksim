@@ -59,13 +59,13 @@ auto format(editable_circuit::UndoType type) -> std::string {
 namespace editable_circuit {
 
 auto DecorationUndoEntry::format() const -> std::string {
-    return fmt::format("DecorationUndoEntry(type = {}, key = {}, position = {})", type,
-                       key, position);
+    return fmt::format("DecorationUndoEntry(key = {}, type = {})", key, type);
 }
 
 auto CircuitHistory::format() const -> std::string {
     const auto entry_str = fmt_join(",\n    ", undo_stack);
-    const auto graveyard_str = fmt_join(",\n    ", decoration_graveyard);
+    const auto graveyard_str = fmt_join(",\n    ", placed_decoration_stack);
+    const auto move_delta_str = fmt_join(",\n    ", move_delta_stack);
 
     return fmt::format(
         "UndoHistory(\n"
@@ -76,13 +76,16 @@ auto CircuitHistory::format() const -> std::string {
         "  decoration_graveyard = [\n"
         "    {}\n"
         "  ],\n"
+        "  move_delta_stack = [\n"
+        "    {}\n"
+        "  ],\n"
         ")",
-        state, entry_str, graveyard_str);
+        state, entry_str, graveyard_str, move_delta_str);
 }
 
 auto CircuitHistory::allocated_size() const -> std::size_t {
     return get_allocated_size(undo_stack) +  //
-           get_allocated_size(decoration_graveyard);
+           get_allocated_size(placed_decoration_stack);
 }
 
 }  // namespace editable_circuit

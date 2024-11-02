@@ -776,6 +776,7 @@ auto CircuitWidget::delete_selected() -> void {
         print("Deleted", visible_selection_format(circuit_store_), "in", t);
     }
 
+    circuit_store_.editable_circuit().finish_undo_group();
     update();
     // items with open settings dialogs might have been deleted
     on_setting_dialog_cleanup_request();
@@ -850,6 +851,7 @@ auto CircuitWidget::paste_clipboard() -> void {
         editing_logic_manager_.setup_colliding_move(circuit_store_.editable_circuit(),
                                                     std::move(paste_result.cross_points));
     }
+    circuit_store_.editable_circuit().finish_undo_group();
 
     update();
     print("Pasted", visible_selection_format(circuit_store_), "in", t);
