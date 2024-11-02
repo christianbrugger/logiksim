@@ -6,6 +6,7 @@
 #include "core/vocabulary/decoration_key_t.h"
 #include "core/vocabulary/placed_decoration.h"
 
+#include <optional>
 #include <vector>
 
 namespace logicsim {
@@ -77,6 +78,13 @@ struct CircuitHistory {
 };
 
 static_assert(std::regular<CircuitHistory>);
+
+//
+// Free Functions
+//
+
+[[nodiscard]] auto last_non_group_entry(const std::vector<HistoryEntry>& entries)
+    -> std::optional<HistoryEntry>;
 
 }  // namespace editable_circuit
 

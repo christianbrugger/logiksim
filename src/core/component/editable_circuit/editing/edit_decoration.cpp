@@ -1,5 +1,6 @@
 #include "core/component/editable_circuit/editing/edit_decoration.h"
 
+#include "core/algorithm/at_back_vector.h"
 #include "core/component/editable_circuit/circuit_data.h"
 #include "core/component/editable_circuit/editing/edit_decoration_detail.h"
 #include "core/geometry/point.h"
@@ -359,6 +360,13 @@ auto _store_history_change_attribute_decoration(CircuitData& circuit,
     if (const auto& stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
+
+        // skip similar changes
+        if (last_non_group_entry(stack->entries) ==
+                HistoryEntry::decoration_change_attributes &&
+            at_back_vector(stack->decoration_keys) == key) {
+            return;
+        }
 
         stack->entries.emplace_back(HistoryEntry::decoration_change_attributes);
         stack->decoration_keys.emplace_back(key);

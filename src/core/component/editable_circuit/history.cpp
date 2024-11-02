@@ -105,6 +105,10 @@ auto HistoryStack::clear() -> void {
     }
 }
 
+//
+// History
+//
+
 auto CircuitHistory::format() const -> std::string {
     return fmt::format(
         "UndoHistory(\n"
@@ -138,6 +142,19 @@ auto CircuitHistory::get_stack() -> HistoryStack* {
         }
     };
     std::terminate();
+}
+
+//
+// Free Functions
+//
+
+auto last_non_group_entry(const std::vector<HistoryEntry>& entries)
+    -> std::optional<HistoryEntry> {
+    const auto view = entries | std::ranges::views::reverse;
+    const auto it = std::ranges::find_if(
+        view, [](const HistoryEntry& entry) { return entry != HistoryEntry::new_group; });
+
+    return it == view.end() ? std::nullopt : std::make_optional(*it);
 }
 
 }  // namespace editable_circuit

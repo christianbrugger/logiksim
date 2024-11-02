@@ -3,6 +3,7 @@ set(LS_CORE_SOURCES
     algorithm/accumulate.cpp
     algorithm/adjacent_count_if.cpp
     algorithm/all_equal.cpp
+    algorithm/at_back_vector.cpp
     algorithm/checked_deref.cpp
     algorithm/compare_sorted.cpp
     algorithm/contains.cpp
