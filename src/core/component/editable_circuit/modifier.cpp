@@ -15,7 +15,7 @@ namespace logicsim {
 namespace editable_circuit {
 
 constexpr static inline auto DEBUG_PRINT_MODIFIER_METHODS = false;
-constexpr static inline auto DEBUG_PRINT_CIRCUIT_HISTORY = false;
+constexpr static inline auto DEBUG_PRINT_CIRCUIT_HISTORY = true;
 constexpr static inline auto DEBUG_CHECK_CLASS_INVARIANTS = false;
 
 namespace {
@@ -301,7 +301,7 @@ auto Modifier::set_attributes(decoration_id_t decoration_id,
             circuit_data_.layout, decoration_id, attrs_);
     }
 
-    circuit_data_.layout.decorations().set_attributes(decoration_id, std::move(attrs_));
+    editing::set_attributes_decoration(circuit_data_, decoration_id, std::move(attrs_));
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);

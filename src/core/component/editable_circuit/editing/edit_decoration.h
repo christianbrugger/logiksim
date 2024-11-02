@@ -6,6 +6,7 @@
 namespace logicsim {
 
 struct decoration_id_t;
+struct attributes_text_element_t;
 struct DecorationDefinition;
 struct point_t;
 class Layout;
@@ -50,6 +51,9 @@ auto change_decoration_insertion_mode(CircuitData& circuit,
 
 auto add_decoration(CircuitData& circuit, const DecorationDefinition& definition,
                     point_t position, InsertionMode insertion_mode) -> decoration_id_t;
+
+auto set_attributes_decoration(CircuitData& circuit, decoration_id_t decoration_id,
+                               attributes_text_element_t&& attrs) -> void;
 
 }  // namespace editing
 

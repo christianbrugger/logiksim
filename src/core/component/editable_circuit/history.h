@@ -6,8 +6,6 @@
 #include "core/vocabulary/decoration_key_t.h"
 #include "core/vocabulary/placed_decoration.h"
 
-#include <ankerl/unordered_dense.h>
-
 #include <vector>
 
 namespace logicsim {
@@ -23,6 +21,8 @@ enum class UndoType : uint8_t {
     to_insertion_temporary,
     to_insertion_colliding,
     to_insertion_insert,
+
+    change_attributes,
 };
 
 }
@@ -49,7 +49,7 @@ struct CircuitHistory {
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     std::vector<DecorationUndoEntry> decoration_undo_entries;
-    ankerl::unordered_dense::map<decoration_key_t, PlacedDecoration> decoration_graveyard;
+    std::vector<PlacedDecoration> decoration_graveyard;
 };
 
 static_assert(std::regular<CircuitHistory>);

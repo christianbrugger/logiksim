@@ -1,7 +1,6 @@
 #include "core/component/editable_circuit/history.h"
 
 #include "core/algorithm/fmt_join.h"
-#include "core/allocated_size/ankerl_unordered_dense.h"
 #include "core/allocated_size/std_vector.h"
 #include "core/format/container.h"
 #include "core/format/std_type.h"
@@ -29,6 +28,9 @@ template <>
             return "to_insertion_colliding";
         case to_insertion_insert:
             return "to_insertion_insert";
+
+        case change_attributes:
+            return "change_attributes";
     };
     std::terminate();
 }

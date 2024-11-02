@@ -46,8 +46,8 @@ auto _store_history_create_decoration(CircuitData& circuit,
     const auto key = circuit.index.key_index().get(decoration_id);
     Expects(key);
 
-    circuit.history.decoration_graveyard.emplace(
-        key, to_placed_decoration(circuit.layout, decoration_id));
+    circuit.history.decoration_graveyard.emplace_back(
+        to_placed_decoration(circuit.layout, decoration_id));
 
     circuit.history.decoration_undo_entries.emplace_back(DecorationUndoEntry {
         .key = key,
@@ -342,6 +342,35 @@ auto add_decoration(CircuitData& circuit, const DecorationDefinition& definition
         change_decoration_insertion_mode(circuit, decoration_id, insertion_mode);
     }
     return decoration_id;
+}
+
+//
+// Attributes
+//
+
+namespace {
+
+auto _store_history_change_attribute_decoration(CircuitData& circuit,
+                                                decoration_id_t decoration_id) -> void {
+    const auto key = circuit.index.key_index().get(decoration_id);
+    Expects(key);
+
+    circuit.history.decoration_graveyard.emplace_back(
+        to_placed_decoration(circuit.layout, decoration_id));
+
+    circuit.history.decoration_undo_entries.emplace_back(DecorationUndoEntry {
+        .key = key,
+        .type = UndoType::change_attributes,
+    });
+}
+
+}  // namespace
+
+auto set_attributes_decoration(CircuitData& circuit, decoration_id_t decoration_id,
+                               attributes_text_element_t&& attrs) -> void {
+    _store_history_change_attribute_decoration(circuit, decoration_id);
+
+    circuit.layout.decorations().set_attributes(decoration_id, std::move(attrs));
 }
 
 }  // namespace editing
