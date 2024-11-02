@@ -43,6 +43,7 @@ struct DecorationDefinition {
     std::optional<attributes_text_element_t> attrs_text_element {};
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto operator==(const DecorationDefinition& other) const -> bool =
                                                                                   default;

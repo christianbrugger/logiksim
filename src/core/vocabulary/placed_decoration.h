@@ -15,6 +15,7 @@ struct PlacedDecoration {
     point_t position {0, 0};
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto operator==(const PlacedDecoration& other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const PlacedDecoration&) const = default;

@@ -1,5 +1,6 @@
 #include "core/vocabulary/decoration_definition.h"
 
+#include "core/allocated_size/std_optional.h"
 #include "core/allocated_size/std_string.h"
 
 #include <fmt/core.h>
@@ -21,6 +22,10 @@ auto DecorationDefinition::format() const -> std::string {
                            : std::string {};
 
     return fmt::format("LogicItemDefinition({} {} {})", decoration_type, size, attr_str);
+}
+
+auto DecorationDefinition::allocated_size() const -> std::size_t {
+    return get_allocated_size(attrs_text_element);
 }
 
 }  // namespace logicsim

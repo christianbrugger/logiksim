@@ -16,6 +16,8 @@
 namespace logicsim {
 
 struct decoration_layout_data_t;
+struct DecorationDefinition;
+struct PlacedDecoration;
 
 namespace layout {
 
@@ -96,6 +98,9 @@ class DecorationStore {
 
 [[nodiscard]] auto to_decoration_definition(
     const DecorationStore &store, decoration_id_t decoration_id) -> DecorationDefinition;
+
+[[nodiscard]] auto to_placed_decoration(
+    const DecorationStore &store, decoration_id_t decoration_id) -> PlacedDecoration;
 
 }  // namespace layout
 

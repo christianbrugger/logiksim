@@ -35,6 +35,22 @@ auto KeyIndex::allocated_size() const -> std::size_t {
            get_allocated_size(decoration_ids_);
 }
 
+auto KeyIndex::get(decoration_id_t decoration_id) const -> decoration_key_t {
+    if (const auto it = decoration_keys_.find(decoration_id);
+        it != decoration_keys_.end()) {
+        return it->second;
+    }
+    return null_decoration_key;
+}
+
+auto KeyIndex::get(decoration_key_t decoration_key) const -> decoration_id_t {
+    if (const auto it = decoration_ids_.find(decoration_key);
+        it != decoration_ids_.end()) {
+        return it->second;
+    }
+    return null_decoration_id;
+}
+
 auto KeyIndex::handle(const info_message::DecorationCreated& message) -> void {
     Expects(decoration_ids_.emplace(next_decoration_key_, message.decoration_id).second);
     Expects(decoration_keys_.emplace(message.decoration_id, next_decoration_key_).second);

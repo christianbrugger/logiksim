@@ -9,6 +9,9 @@
 #include "core/layout.h"
 #include "core/layout_message_forward.h"
 #include "core/layout_message_validator.h"
+#include "core/vocabulary/placed_decoration.h"
+
+#include <ankerl/unordered_dense.h>
 
 #include <optional>
 #include <vector>
@@ -30,7 +33,7 @@ template <>
 namespace editable_circuit {
 
 struct DecorationUndoEntry {
-    uint64_t uid;
+    decoration_key_t key;
     point_t position;
     UndoType type;
 
@@ -38,10 +41,11 @@ struct DecorationUndoEntry {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-struct UndoHistory {
+struct HistoryData {
     std::vector<DecorationUndoEntry> decoration_undo_entries;
+    ankerl::unordered_dense::map<decoration_key_t, PlacedDecoration> decoration_graveyard;
 
-    [[nodiscard]] auto operator==(const UndoHistory&) const -> bool = default;
+    [[nodiscard]] auto operator==(const HistoryData&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 };
@@ -54,7 +58,7 @@ struct CircuitData {
     LayoutIndex index {};
     SelectionStore selection_store {};
     VisibleSelection visible_selection {};
-    UndoHistory history {};
+    HistoryData history {};
 
     std::optional<message_vector_t> messages {std::nullopt};
     std::optional<MessageValidator> message_validator {std::nullopt};
@@ -66,6 +70,8 @@ struct CircuitData {
     auto submit(const InfoMessage& message) -> void;
 
     // undo redo interface
+    auto swap_and_delete_temporary_decoration(decoration_id_t decoration_id)
+        -> decoration_id_t;
     auto add_temporary_decoration(const DecorationDefinition& definition,
                                   point_t position) -> decoration_id_t;
 };

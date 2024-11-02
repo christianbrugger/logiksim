@@ -22,48 +22,9 @@ namespace editing {
 // Delete Decoration
 //
 
-namespace {
-
-auto _notify_decoration_id_change(CircuitData& circuit,
-                                  const decoration_id_t new_decoration_id,
-                                  const decoration_id_t old_decoration_id) {
-    circuit.submit(info_message::DecorationIdUpdated {
-        .new_decoration_id = new_decoration_id,
-        .old_decoration_id = old_decoration_id,
-    });
-
-    if (is_inserted(circuit.layout, new_decoration_id)) {
-        const auto data = to_decoration_layout_data(circuit.layout, new_decoration_id);
-
-        circuit.submit(info_message::InsertedDecorationIdUpdated {
-            .new_decoration_id = new_decoration_id,
-            .old_decoration_id = old_decoration_id,
-            .data = data,
-        });
-    }
-}
-
-}  // namespace
-
 auto delete_temporary_decoration(CircuitData& circuit, decoration_id_t& decoration_id,
                                  decoration_id_t* preserve_element) -> void {
-    if (!decoration_id) [[unlikely]] {
-        throw std::runtime_error("decoration id is invalid");
-    }
-
-    if (circuit.layout.decorations().display_state(decoration_id) !=
-        display_state_t::temporary) [[unlikely]] {
-        throw std::runtime_error("can only delete temporary objects");
-    }
-
-    circuit.submit(info_message::DecorationDeleted {decoration_id});
-
-    // delete in underlying
-    auto last_id = circuit.layout.decorations().swap_and_delete(decoration_id);
-
-    if (decoration_id != last_id) {
-        _notify_decoration_id_change(circuit, decoration_id, last_id);
-    }
+    const auto last_id = circuit.swap_and_delete_temporary_decoration(decoration_id);
 
     if (preserve_element != nullptr) {
         if (*preserve_element == decoration_id) {

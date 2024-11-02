@@ -6,6 +6,7 @@
 #include "core/layout_info.h"
 #include "core/validate_definition_decoration.h"
 #include "core/vocabulary/decoration_layout_data.h"
+#include "core/vocabulary/placed_decoration.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/zip.hpp>
@@ -299,6 +300,14 @@ auto to_decoration_definition(const DecorationStore &store,
             type == DecorationType::text_element
                 ? std::make_optional(store.attrs_text_element(decoration_id))
                 : std::nullopt,
+    };
+}
+
+auto to_placed_decoration(const DecorationStore &store,
+                          decoration_id_t decoration_id) -> PlacedDecoration {
+    return PlacedDecoration {
+        .definition = to_decoration_definition(store, decoration_id),
+        .position = store.position(decoration_id),
     };
 }
 

@@ -36,6 +36,10 @@ class KeyIndex {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
+    // return null if ids are not found
+    [[nodiscard]] auto get(decoration_id_t decoration_id) const -> decoration_key_t;
+    [[nodiscard]] auto get(decoration_key_t decoration_key) const -> decoration_id_t;
+
     auto submit(const InfoMessage& message) -> void;
     [[nodiscard]] auto has_all_ids_inserted(const Layout& layout) const -> bool;
 

@@ -357,10 +357,7 @@ auto to_placed_logicitem(const Layout &layout,
 
 auto to_placed_decoration(const Layout &layout,
                           decoration_id_t decoration_id) -> PlacedDecoration {
-    return PlacedDecoration {
-        .definition = to_decoration_definition(layout, decoration_id),
-        .position = layout.decorations().position(decoration_id),
-    };
+    return layout::to_placed_decoration(layout.decorations(), decoration_id);
 }
 
 auto get_display_states(const Layout &layout, segment_part_t segment_part)
