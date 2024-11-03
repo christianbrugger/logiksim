@@ -907,6 +907,11 @@ auto CircuitWidget::class_invariant_holds() const -> bool {
     Expects(is_editing_state(circuit_state_) ||
             setting_dialog_manager_->open_dialog_count() == 0);
 
+    // operation count
+    Expects(editing_logic_manager_.is_editing_active() ||
+            !is_editing_state(circuit_state_) ||
+            circuit_store_.editable_circuit().visible_selection_operation_count() == 0);
+
     // History Group
     Expects(editing_logic_manager_.is_editing_active() ||
             !is_editing_state(circuit_state_) ||

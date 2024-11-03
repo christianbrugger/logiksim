@@ -42,7 +42,7 @@ auto KeyIndex::get(decoration_id_t decoration_id) const -> decoration_key_t {
         it != decoration_keys_.end()) {
         return it->second;
     }
-    return null_decoration_key;
+    throw std::runtime_error("id does not exist");
 }
 
 auto KeyIndex::get(decoration_key_t decoration_key) const -> decoration_id_t {
@@ -52,7 +52,7 @@ auto KeyIndex::get(decoration_key_t decoration_key) const -> decoration_id_t {
         it != decoration_ids_.end()) {
         return it->second;
     }
-    return null_decoration_id;
+    throw std::runtime_error("key does not exist");
 }
 
 auto KeyIndex::set(decoration_id_t decoration_id,
