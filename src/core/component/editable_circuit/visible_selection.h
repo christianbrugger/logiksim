@@ -60,6 +60,7 @@ class VisibleSelection {
                               const LayoutIndex &layout_index) -> void;
     [[nodiscard]] auto selection(
         const Layout &layout, const LayoutIndex &layout_index) const -> const Selection &;
+    [[nodiscard]] auto initial_selection() const -> const Selection &;
 
     auto submit(const InfoMessage &message) -> void;
 

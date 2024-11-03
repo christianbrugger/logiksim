@@ -3,6 +3,7 @@
 #include "core/algorithm/pop_back_vector.h"
 #include "core/component/editable_circuit/circuit_data.h"
 #include "core/component/editable_circuit/editing/edit_decoration.h"
+#include "core/component/editable_circuit/editing/edit_visible_selection.h"
 #include "core/component/editable_circuit/history.h"
 #include "core/logging.h"
 
@@ -112,15 +113,26 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case visible_selection_set: {
+            auto selection = pop_back_vector(stack.visible_selections);
+            editing::set_visible_selection(circuit, std::move(selection));
             return;
         }
+
         case visible_selection_add: {
+            const auto function = pop_back_vector(stack.selection_functions);
+            const auto rect = pop_back_vector(stack.selection_rects);
+            editing::add_visible_selection_rect(circuit, function, rect);
             return;
         }
+
         case visible_selection_update_last: {
+            const auto rect = pop_back_vector(stack.selection_rects);
+            editing::update_last_visible_selection_rect(circuit, rect);
             return;
         }
+
         case visible_selection_pop_last: {
+            editing::pop_last_visible_selection_rect(circuit);
             return;
         }
     };

@@ -31,7 +31,9 @@ auto operation_t::format() const -> std::string {
 //
 
 VisibleSelection::VisibleSelection(Selection selection)
-    : initial_selection_ {std::move(selection)} {}
+    : initial_selection_ {std::move(selection)} {
+    Ensures(class_invariant_holds());
+}
 
 auto VisibleSelection::submit(const InfoMessage& message) -> void {
     using namespace info_message;
@@ -279,6 +281,10 @@ auto VisibleSelection::selection(
 
     Ensures(class_invariant_holds());
     return *cached_selection_;
+}
+
+auto VisibleSelection::initial_selection() const -> const Selection& {
+    return initial_selection_;
 }
 
 auto VisibleSelection::apply_all_operations(const Layout& layout,
