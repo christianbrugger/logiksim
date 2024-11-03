@@ -291,7 +291,7 @@ auto EditableCircuit::set_visible_selection(Selection selection) -> void {
 }
 
 auto EditableCircuit::visible_selection_operation_count() const -> std::size_t {
-    return modifier_.circuit_data().visible_selection.operation_count();
+    return modifier_.circuit_data().visible_selection.operations().size();
 }
 
 auto EditableCircuit::add_visible_selection_rect(SelectionFunction function,

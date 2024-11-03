@@ -42,6 +42,7 @@ enum class HistoryEntry : uint8_t {
     decoration_change_attributes,
 
     // visible selection
+    visible_selection_clear,
     visible_selection_set,
     visible_selection_add,
     visible_selection_update_last,
@@ -64,7 +65,7 @@ struct HistoryStack {
     std::vector<std::pair<int, int>> move_deltas {};
 
     // visible selection
-    std::vector<VisibleSelection> visible_selections {};
+    std::vector<Selection> selections {};
     std::vector<rect_fine_t> selection_rects {};
     std::vector<SelectionFunction> selection_functions {};
 

@@ -18,12 +18,14 @@ class LayoutIndex;
 namespace visible_selection {
 
 struct operation_t {
-    SelectionFunction function;
-    rect_fine_t rect;
+    SelectionFunction function {SelectionFunction::add};
+    rect_fine_t rect {};
 
     [[nodiscard]] auto format() const -> std ::string;
     [[nodiscard]] auto operator==(const operation_t &) const -> bool = default;
 };
+
+static_assert(std::regular<operation_t>);
 
 }  // namespace visible_selection
 
@@ -43,41 +45,33 @@ class VisibleSelection {
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
-
     [[nodiscard]] auto format() const -> std ::string;
     [[nodiscard]] auto operator==(const VisibleSelection &other) const -> bool;
 
-    auto clear() -> void;
-    auto clear_cache() const -> void;
     auto add(SelectionFunction function, rect_fine_t rect) -> void;
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> void;
-    auto set_selection(Selection selection) -> void;
-    [[nodiscard]] auto operation_count() const -> std::size_t;
-    [[nodiscard]] auto last_opereration() const -> std::optional<operation_t>;
 
-    auto apply_all_operations(const Layout &layout,
-                              const LayoutIndex &layout_index) -> void;
     [[nodiscard]] auto selection(
         const Layout &layout, const LayoutIndex &layout_index) const -> const Selection &;
+    [[nodiscard]] auto operations() const -> std::span<const operation_t>;
     [[nodiscard]] auto initial_selection() const -> const Selection &;
 
     auto submit(const InfoMessage &message) -> void;
 
    private:
-    [[nodiscard]] auto calculate_selection(
-        const Layout &layout, const LayoutIndex &layout_index) const -> Selection;
-
     [[nodiscard]] auto class_invariant_holds() const -> bool;
 
    private:
     Selection initial_selection_ {};
-
     std::vector<operation_t> operations_ {};
     mutable std::optional<Selection> cached_selection_ {};
 };
 
 static_assert(std::regular<VisibleSelection>);
+
+[[nodiscard]] auto last_operation(const VisibleSelection &visible_selection)
+    -> std::optional<visible_selection::operation_t>;
 
 }  // namespace logicsim
 

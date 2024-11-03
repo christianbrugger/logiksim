@@ -112,8 +112,13 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
+        case visible_selection_clear: {
+            editing::clear_visible_selection(circuit);
+            return;
+        }
+
         case visible_selection_set: {
-            auto selection = pop_back_vector(stack.visible_selections);
+            auto selection = pop_back_vector(stack.selections);
             editing::set_visible_selection(circuit, std::move(selection));
             return;
         }

@@ -53,6 +53,8 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
         case decoration_change_attributes:
             return "decoration_change_attributes";
 
+        case visible_selection_clear:
+            return "visble_selection_clear";
         case visible_selection_set:
             return "visble_selection_set";
         case visible_selection_add:
@@ -93,7 +95,7 @@ auto HistoryStack::format() const -> std::string {
         "    selection_functions = {},\n"
         "  )",
         format_stack_vector(entries), decoration_keys,
-        format_stack_vector(placed_decorations), move_deltas, visible_selections.size(),
+        format_stack_vector(placed_decorations), move_deltas, selections.size(),
         selection_rects, selection_functions);
 }
 
@@ -104,7 +106,7 @@ auto HistoryStack::allocated_size() const -> std::size_t {
            get_allocated_size(placed_decorations) +  //
            get_allocated_size(move_deltas) +         //
                                                      //
-           get_allocated_size(visible_selections) +  //
+           get_allocated_size(selections) +          //
            get_allocated_size(selection_rects) +     //
            get_allocated_size(selection_functions);
 }

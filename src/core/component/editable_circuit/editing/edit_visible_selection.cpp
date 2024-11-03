@@ -10,13 +10,28 @@ namespace editing {
 
 namespace {
 
-auto _store_history_visible_selection_set(CircuitHistory& history,
-                                          VisibleSelection&& visible_selection) -> void {
-    if (const auto& stack = history.get_stack()) {
-        visible_selection.clear_cache();
+auto _add_operation_to_history(HistoryStack& stack,
+                               VisibleSelection::operation_t operation) -> void {
+    stack.entries.emplace_back(HistoryEntry::visible_selection_add);
+    stack.selection_functions.emplace_back(operation.function);
+    stack.selection_rects.emplace_back(operation.rect);
+}
 
-        stack->entries.emplace_back(HistoryEntry::visible_selection_set);
-        stack->visible_selections.emplace_back(std::move(visible_selection));
+auto _store_history_visible_selection_set(
+    CircuitHistory& history, const VisibleSelection& visible_selection) -> void {
+    if (const auto& stack = history.get_stack()) {
+        for (const auto& operation :
+             visible_selection.operations() | std::ranges::views::reverse) {
+            _add_operation_to_history(*stack, operation);
+        }
+
+        if (const auto& initial_selection = visible_selection.initial_selection();
+            !initial_selection.empty()) {
+            stack->entries.emplace_back(HistoryEntry::visible_selection_set);
+            stack->selections.emplace_back(initial_selection);
+        } else {
+            stack->entries.emplace_back(HistoryEntry::visible_selection_clear);
+        }
     }
 }
 
@@ -27,16 +42,15 @@ auto _store_history_visible_selection_pop_last(CircuitHistory& history) -> void 
 }
 
 auto _store_history_visible_selection_add(CircuitData& circuit_data) -> void {
+    static_cast<void>(circuit_data);
     if (const auto& stack = circuit_data.history.get_stack()) {
-        const auto operation = circuit_data.visible_selection.last_opereration().value();
-
-        stack->entries.emplace_back(HistoryEntry::visible_selection_add);
-        stack->selection_functions.emplace_back(operation.function);
-        stack->selection_rects.emplace_back(operation.rect);
+        const auto operation = last_operation(circuit_data.visible_selection).value();
+        _add_operation_to_history(*stack, operation);
     }
 }
 
 auto _store_history_visible_selection_update_last(CircuitData& circuit_data) -> void {
+    static_cast<void>(circuit_data);
     if (const auto& stack = circuit_data.history.get_stack()) {
         // skip similar changes
         if (last_non_group_entry(stack->entries) ==
@@ -44,7 +58,7 @@ auto _store_history_visible_selection_update_last(CircuitData& circuit_data) -> 
             return;
         }
 
-        const auto operation = circuit_data.visible_selection.last_opereration().value();
+        const auto operation = last_operation(circuit_data.visible_selection).value();
         stack->entries.emplace_back(HistoryEntry::visible_selection_update_last);
         stack->selection_rects.emplace_back(operation.rect);
     }
@@ -53,35 +67,33 @@ auto _store_history_visible_selection_update_last(CircuitData& circuit_data) -> 
 }  // namespace
 
 auto clear_visible_selection(CircuitData& circuit_data) -> void {
-    _store_history_visible_selection_set(circuit_data.history,
-                                         std::move(circuit_data.visible_selection));
-    circuit_data.visible_selection = VisibleSelection {};
+    set_visible_selection(circuit_data, Selection {});
 }
 
 auto set_visible_selection(CircuitData& circuit_data, Selection selection_) -> void {
-    set_visible_selection(circuit_data, VisibleSelection {std::move(selection_)});
-}
-
-auto set_visible_selection(CircuitData& circuit_data,
-                           VisibleSelection&& visible_selection_) -> void {
-    if (!is_valid_selection(visible_selection_.initial_selection(),
-                            circuit_data.layout)) {
+    if (!is_valid_selection(selection_, circuit_data.layout)) {
         throw std::runtime_error("Selection contains elements not in layout");
+    }
+    if (circuit_data.visible_selection.operations().empty() &&
+        circuit_data.visible_selection.initial_selection() == selection_) {
+        return;
     }
 
     _store_history_visible_selection_set(circuit_data.history,
-                                         std::move(circuit_data.visible_selection));
-    circuit_data.visible_selection = std::move(visible_selection_);
+                                         circuit_data.visible_selection);
+    circuit_data.visible_selection = VisibleSelection {std::move(selection_)};
 }
 
 auto add_visible_selection_rect(CircuitData& circuit_data, SelectionFunction function,
                                 rect_fine_t rect) -> void {
     _store_history_visible_selection_pop_last(circuit_data.history);
+
     circuit_data.visible_selection.add(function, rect);
 }
 
 auto pop_last_visible_selection_rect(CircuitData& circuit_data) -> void {
     _store_history_visible_selection_add(circuit_data);
+
     circuit_data.visible_selection.pop_last();
 }
 
@@ -92,11 +104,14 @@ auto update_last_visible_selection_rect(CircuitData& circuit_data,
 }
 
 auto apply_all_visible_selection_operations(CircuitData& circuit_data) -> void {
-    _store_history_visible_selection_set(
-        circuit_data.history, VisibleSelection {circuit_data.visible_selection});
+    if (circuit_data.visible_selection.operations().empty()) {
+        return;
+    }
 
-    circuit_data.visible_selection.apply_all_operations(circuit_data.layout,
-                                                        circuit_data.index);
+    auto selection = Selection {circuit_data.visible_selection.selection(
+        circuit_data.layout, circuit_data.index)};
+
+    set_visible_selection(circuit_data, std::move(selection));
 }
 
 }  // namespace editing
