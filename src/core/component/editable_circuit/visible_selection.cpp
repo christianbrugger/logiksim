@@ -1,5 +1,6 @@
 #include "core/component/editable_circuit/visible_selection.h"
 
+#include "core/allocated_size/std_optional.h"
 #include "core/allocated_size/std_vector.h"
 #include "core/allocated_size/trait.h"
 #include "core/component/editable_circuit/layout_index.h"
@@ -29,6 +30,9 @@ auto operation_t::format() const -> std::string {
 // Visible Selection
 //
 
+VisibleSelection::VisibleSelection(Selection selection)
+    : initial_selection_ {std::move(selection)} {}
+
 auto VisibleSelection::submit(const InfoMessage& message) -> void {
     using namespace info_message;
     Expects(class_invariant_holds());
@@ -52,7 +56,8 @@ auto VisibleSelection::allocated_size() const -> std::size_t {
     Expects(class_invariant_holds());
 
     return get_allocated_size(initial_selection_) +  //
-           get_allocated_size(operations_);
+           get_allocated_size(operations_) +         //
+           get_allocated_size(cached_selection_);
 }
 
 auto VisibleSelection::format() const -> std::string {
@@ -79,6 +84,14 @@ auto VisibleSelection::clear() -> void {
 
     initial_selection_.clear();
     operations_.clear();
+    cached_selection_.reset();
+
+    Ensures(class_invariant_holds());
+}
+
+auto VisibleSelection::clear_cache() const -> void {
+    Expects(class_invariant_holds());
+
     cached_selection_.reset();
 
     Ensures(class_invariant_holds());
@@ -136,6 +149,15 @@ auto VisibleSelection::operation_count() const -> std::size_t {
     Expects(class_invariant_holds());
 
     return operations_.size();
+}
+
+auto VisibleSelection::last_opereration() const -> std::optional<operation_t> {
+    Expects(class_invariant_holds());
+
+    if (operations_.empty()) {
+        return std::nullopt;
+    }
+    return operations_.back();
 }
 
 namespace {

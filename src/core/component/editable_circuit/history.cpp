@@ -39,22 +39,28 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
             return "new_group";
 
         case decoration_create_temporary:
-            return "create_temporary_element";
+            return "decoration_create_temporary";
         case decoration_delete_temporary:
-            return "delete_temporary_element";
-
+            return "decoration_delete_temporary";
         case decoration_move_temporary:
-            return "move_temporary_element";
-
+            return "decoration_move_temporary";
         case decoration_to_insertion_temporary:
-            return "to_insertion_temporary";
+            return "decoration_to_insertion_temporary";
         case decoration_to_insertion_colliding:
-            return "to_insertion_colliding";
+            return "decoration_to_insertion_colliding";
         case decoration_to_insertion_insert:
-            return "to_insertion_insert";
-
+            return "decoration_to_insertion_insert";
         case decoration_change_attributes:
-            return "change_attributes";
+            return "decoration_change_attributes";
+
+        case visible_selection_set:
+            return "visble_selection_set";
+        case visible_selection_add:
+            return "visible_selection_add";
+        case visible_selection_update_last:
+            return "visible_selection_update_last";
+        case visible_selection_pop_last:
+            return "visible_selection_pop_last";
     };
     std::terminate();
 }
@@ -77,19 +83,30 @@ auto HistoryStack::format() const -> std::string {
     return fmt::format(
         "Stack(\n"
         "    entries = {},\n"
+        "    \n"
         "    decoration_keys = {},\n"
         "    placed_decorations = {},\n"
         "    move_delta_stack = {},\n"
+        "    \n"
+        "    visible_selections = {},\n"
+        "    selection_rects = {},\n"
+        "    selection_functions = {},\n"
         "  )",
         format_stack_vector(entries), decoration_keys,
-        format_stack_vector(placed_decorations), move_deltas);
+        format_stack_vector(placed_decorations), move_deltas, visible_selections.size(),
+        selection_rects, selection_functions);
 }
 
 auto HistoryStack::allocated_size() const -> std::size_t {
     return get_allocated_size(entries) +             //
+                                                     //
            get_allocated_size(decoration_keys) +     //
            get_allocated_size(placed_decorations) +  //
-           get_allocated_size(move_deltas);
+           get_allocated_size(move_deltas) +         //
+                                                     //
+           get_allocated_size(visible_selections) +  //
+           get_allocated_size(selection_rects) +     //
+           get_allocated_size(selection_functions);
 }
 
 auto HistoryStack::empty() const -> bool {

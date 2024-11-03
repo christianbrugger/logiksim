@@ -619,18 +619,23 @@ auto Modifier::add_visible_selection_rect(SelectionFunction function,
 }
 
 auto Modifier::try_pop_last_visible_selection_rect() -> bool {
-    const auto result = editing::try_pop_last_visible_selection_rect(circuit_data_);
+    if (circuit_data_.visible_selection.operation_count() == std::size_t {0}) {
+        return false;
+    }
+    editing::pop_last_visible_selection_rect(circuit_data_);
 
     Ensures(debug_class_invariant_holds(*this));
-    return result;
+    return true;
 }
 
 auto Modifier::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool {
-    const auto result =
-        editing::try_update_last_visible_selection_rect(circuit_data_, rect);
+    if (circuit_data_.visible_selection.operation_count() == std::size_t {0}) {
+        return false;
+    }
+    editing::update_last_visible_selection_rect(circuit_data_, rect);
 
     Ensures(debug_class_invariant_holds(*this));
-    return result;
+    return true;
 }
 
 auto Modifier::apply_all_visible_selection_operations() -> void {

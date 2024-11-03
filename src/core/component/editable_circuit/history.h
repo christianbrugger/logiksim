@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_CORE_COMPONENT_EDITABLE_CIRCUIT_HISTORY_H
 #define LOGICSIM_CORE_COMPONENT_EDITABLE_CIRCUIT_HISTORY_H
 
+#include "core/component/editable_circuit/visible_selection.h"
 #include "core/format/enum.h"
 #include "core/format/struct.h"
 #include "core/vocabulary/decoration_key_t.h"
@@ -39,6 +40,12 @@ enum class HistoryEntry : uint8_t {
     decoration_to_insertion_colliding,
     decoration_to_insertion_insert,
     decoration_change_attributes,
+
+    // visible selection
+    visible_selection_set,
+    visible_selection_add,
+    visible_selection_update_last,
+    visible_selection_pop_last,
 };
 
 }
@@ -50,9 +57,16 @@ namespace editable_circuit {
 
 struct HistoryStack {
     std::vector<HistoryEntry> entries {};
+
+    // decoration
     std::vector<decoration_key_t> decoration_keys {};
     std::vector<PlacedDecoration> placed_decorations {};
     std::vector<std::pair<int, int>> move_deltas {};
+
+    // visible selection
+    std::vector<VisibleSelection> visible_selections {};
+    std::vector<rect_fine_t> selection_rects {};
+    std::vector<SelectionFunction> selection_functions {};
 
     [[nodiscard]] auto operator==(const HistoryStack&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;

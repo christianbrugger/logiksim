@@ -38,6 +38,9 @@ class VisibleSelection {
     using operation_t = visible_selection::operation_t;
 
    public:
+    [[nodiscard]] explicit VisibleSelection() = default;
+    [[nodiscard]] explicit VisibleSelection(Selection selection);
+
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
@@ -45,11 +48,13 @@ class VisibleSelection {
     [[nodiscard]] auto operator==(const VisibleSelection &other) const -> bool;
 
     auto clear() -> void;
+    auto clear_cache() const -> void;
     auto add(SelectionFunction function, rect_fine_t rect) -> void;
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> void;
     auto set_selection(Selection selection) -> void;
     [[nodiscard]] auto operation_count() const -> std::size_t;
+    [[nodiscard]] auto last_opereration() const -> std::optional<operation_t>;
 
     auto apply_all_operations(const Layout &layout,
                               const LayoutIndex &layout_index) -> void;

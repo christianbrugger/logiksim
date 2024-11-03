@@ -110,6 +110,19 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             }
             return;
         }
+
+        case visible_selection_set: {
+            return;
+        }
+        case visible_selection_add: {
+            return;
+        }
+        case visible_selection_update_last: {
+            return;
+        }
+        case visible_selection_pop_last: {
+            return;
+        }
     };
     std::terminate();
 }
