@@ -268,14 +268,18 @@ auto TopWidget::create_menu() -> void {
         // Edit
         auto* menu = menuBar()->addMenu(tr("&Edit"));
 
-        actions_.undo = add_action(
-            menu, tr("&Undo"),
-            ActionAttributes {.shortcut = QKeySequence::Undo, .icon = icon_t::undo},
-            [this] { circuit_widget_->do_action(UserAction::undo); });
-        actions_.redo = add_action(
-            menu, tr("&Redo"),
-            ActionAttributes {.shortcut = QKeySequence::Redo, .icon = icon_t::redo},
-            [this] { circuit_widget_->do_action(UserAction::redo); });
+        actions_.undo =
+            add_action(menu, tr("&Undo"),
+                       ActionAttributes {.shortcut = QKeySequence::Undo,
+                                         .shortcut_auto_repeat = true,
+                                         .icon = icon_t::undo},
+                       [this] { circuit_widget_->do_action(UserAction::undo); });
+        actions_.redo =
+            add_action(menu, tr("&Redo"),
+                       ActionAttributes {.shortcut = QKeySequence::Redo,
+                                         .shortcut_auto_repeat = true,
+                                         .icon = icon_t::redo},
+                       [this] { circuit_widget_->do_action(UserAction::redo); });
 
         menu->addSeparator();
 
