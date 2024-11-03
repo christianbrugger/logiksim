@@ -40,7 +40,7 @@ class VisibleSelection {
     using operation_t = visible_selection::operation_t;
 
    public:
-    [[nodiscard]] explicit VisibleSelection() = default;
+    [[nodiscard]] VisibleSelection() = default;
     [[nodiscard]] explicit VisibleSelection(Selection selection);
 
     [[nodiscard]] auto empty() const noexcept -> bool;
