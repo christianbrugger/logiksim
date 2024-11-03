@@ -59,6 +59,7 @@ set(LS_CORE_SOURCES
     component/editable_circuit/editing/edit_history.cpp
     component/editable_circuit/editing/edit_logicitem.cpp
     component/editable_circuit/editing/edit_logicitem_detail.cpp
+    component/editable_circuit/editing/edit_visible_selection.cpp
     component/editable_circuit/editing/edit_wire.cpp
     component/editable_circuit/editing/edit_wire_detail.cpp
     component/editable_circuit/circuit_data.cpp
@@ -304,6 +305,7 @@ set(LS_CORE_SOURCES
     vocabulary/segment_info.cpp
     vocabulary/segment_part.cpp
     vocabulary/segment_point_type.cpp
+    vocabulary/selection_function.cpp
     vocabulary/selection_id.cpp
     vocabulary/setting_attribute.cpp
     vocabulary/shape_draw_type.cpp

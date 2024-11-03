@@ -17,19 +17,6 @@
 
 namespace logicsim {
 
-template <>
-auto format(SelectionFunction selection_function) -> std::string {
-    switch (selection_function) {
-        using enum SelectionFunction;
-
-        case add:
-            return "add";
-        case substract:
-            return "substract";
-    }
-    std::terminate();
-}
-
 namespace visible_selection {
 
 auto operation_t::format() const -> std::string {

@@ -3,6 +3,7 @@
 #include "core/component/editable_circuit/editing/edit_decoration.h"
 #include "core/component/editable_circuit/editing/edit_history.h"
 #include "core/component/editable_circuit/editing/edit_logicitem.h"
+#include "core/component/editable_circuit/editing/edit_visible_selection.h"
 #include "core/component/editable_circuit/editing/edit_wire.h"
 #include "core/component/editable_circuit/modifier.h"
 #include "core/format/pointer.h"
@@ -489,6 +490,10 @@ auto Modifier::split_temporary_segments(const Selection& selection,
     Ensures(debug_class_invariant_holds(*this));
 }
 
+//
+// Selections
+//
+
 auto Modifier::create_selection() -> selection_id_t {
     const auto selection_id = circuit_data_.selection_store.create();
 
@@ -590,52 +595,46 @@ auto Modifier::remove_from_selection(selection_id_t selection_id,
     Ensures(debug_class_invariant_holds(*this));
 }
 
+//
+// Visible Selection
+//
+
 auto Modifier::clear_visible_selection() -> void {
-    circuit_data_.visible_selection.clear();
+    editing::clear_visible_selection(circuit_data_);
 
     Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::set_visible_selection(Selection selection_) -> void {
-    if (!is_valid_selection(selection_, circuit_data_.layout)) {
-        throw std::runtime_error("Selection contains elements not in layout");
-    }
-
-    circuit_data_.visible_selection.set_selection(std::move(selection_));
+    editing::set_visible_selection(circuit_data_, std::move(selection_));
 
     Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::add_visible_selection_rect(SelectionFunction function,
                                           rect_fine_t rect) -> void {
-    circuit_data_.visible_selection.add(function, rect);
+    editing::add_visible_selection_rect(circuit_data_, function, rect);
 
     Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::try_pop_last_visible_selection_rect() -> bool {
-    if (circuit_data_.visible_selection.operation_count() == std::size_t {0}) {
-        return false;
-    }
-    circuit_data_.visible_selection.pop_last();
+    const auto result = editing::try_pop_last_visible_selection_rect(circuit_data_);
 
     Ensures(debug_class_invariant_holds(*this));
-    return true;
+    return result;
 }
 
 auto Modifier::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool {
-    if (circuit_data_.visible_selection.operation_count() == std::size_t {0}) {
-        return false;
-    }
-    circuit_data_.visible_selection.update_last(rect);
+    const auto result =
+        editing::try_update_last_visible_selection_rect(circuit_data_, rect);
 
     Ensures(debug_class_invariant_holds(*this));
-    return true;
+    return result;
 }
 
 auto Modifier::apply_all_visible_selection_operations() -> void {
-    circuit_data_.visible_selection.apply_all_operations(circuit_data_.layout,
-                                                         circuit_data_.index);
+    editing::apply_all_visible_selection_operations(circuit_data_);
 
     Ensures(debug_class_invariant_holds(*this));
 }

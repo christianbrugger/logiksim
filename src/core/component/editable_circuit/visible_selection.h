@@ -1,11 +1,11 @@
 #ifndef LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_VISIBLE_SELECTION_H
 #define LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_VISIBLE_SELECTION_H
 
-#include "core/format/enum.h"
 #include "core/format/struct.h"
 #include "core/layout_message.h"
 #include "core/selection.h"
 #include "core/vocabulary/rect_fine.h"
+#include "core/vocabulary/selection_function.h"
 
 #include <optional>
 
@@ -14,14 +14,6 @@ namespace logicsim {
 class Layout;
 class SpatialIndex;
 class LayoutIndex;
-
-enum class SelectionFunction {
-    add,
-    substract,
-};
-
-template <>
-[[nodiscard]] auto format(SelectionFunction selection_function) -> std::string;
 
 namespace visible_selection {
 
