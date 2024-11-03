@@ -53,6 +53,10 @@ auto EditableCircuit::finish_undo_group() -> void {
     modifier_.finish_undo_group();
 }
 
+auto EditableCircuit::reopen_undo_group() -> void {
+    modifier_.reopen_undo_group();
+}
+
 auto EditableCircuit::is_history_enabled() const -> bool {
     return modifier_.is_history_enabled();
 }

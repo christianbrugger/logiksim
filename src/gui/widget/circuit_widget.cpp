@@ -608,6 +608,7 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
         }
         if (result.inserted_decoration) {
             set_circuit_state(defaults::selection_state);
+            circuit_store_.editable_circuit().reopen_undo_group();
             circuit_store_.editable_circuit().set_visible_selection(
                 Selection {{}, std::array {result.inserted_decoration}});
             circuit_store_.editable_circuit().finish_undo_group();

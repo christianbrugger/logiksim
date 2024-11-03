@@ -17,10 +17,15 @@ namespace editing {
 [[nodiscard]] auto has_ungrouped_redo_entries(const CircuitHistory& history) -> bool;
 
 auto enable_history(CircuitHistory& history) -> void;
+
 auto undo_group(CircuitData& circuit) -> void;
 auto redo_group(CircuitData& circuit) -> void;
+
 auto finish_undo_group(CircuitHistory& history) -> void;
 auto finish_redo_group(CircuitHistory& history) -> void;
+
+auto reopen_undo_group(CircuitHistory& history) -> void;
+auto reopen_redo_group(CircuitHistory& history) -> void;
 
 }  // namespace editing
 

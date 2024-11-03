@@ -81,6 +81,7 @@ class Modifier {
     auto undo_group() -> void;
     auto redo_group() -> void;
     auto finish_undo_group() -> void;
+    auto reopen_undo_group() -> void;
 
     [[nodiscard]] auto is_history_enabled() const -> bool;
     [[nodiscard]] auto has_undo() const -> bool;

@@ -195,6 +195,22 @@ auto finish_redo_group(CircuitHistory& history) -> void {
     }
 }
 
+auto reopen_undo_group(CircuitHistory& history) -> void {
+    auto& entries = history.undo_stack.entries;
+
+    while (!entries.empty() && entries.back() == HistoryEntry::new_group) {
+        entries.pop_back();
+    }
+}
+
+auto reopen_redo_group(CircuitHistory& history) -> void {
+    auto& entries = history.redo_stack.entries;
+
+    while (!entries.empty() && entries.back() == HistoryEntry::new_group) {
+        entries.pop_back();
+    }
+}
+
 }  // namespace editing
 
 }  // namespace editable_circuit

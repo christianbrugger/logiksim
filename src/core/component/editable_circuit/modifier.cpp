@@ -130,6 +130,14 @@ auto Modifier::finish_undo_group() -> void {
     }
 }
 
+auto Modifier::reopen_undo_group() -> void {
+    editing::reopen_undo_group(circuit_data_.history);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
+}
+
 auto Modifier::is_history_enabled() const -> bool {
     return editing::is_history_enabled(circuit_data_.history);
 }
