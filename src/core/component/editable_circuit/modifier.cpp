@@ -602,12 +602,18 @@ auto Modifier::remove_from_selection(selection_id_t selection_id,
 auto Modifier::clear_visible_selection() -> void {
     editing::clear_visible_selection(circuit_data_);
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::set_visible_selection(Selection selection_) -> void {
     editing::set_visible_selection(circuit_data_, std::move(selection_));
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -615,6 +621,9 @@ auto Modifier::add_visible_selection_rect(SelectionFunction function,
                                           rect_fine_t rect) -> void {
     editing::add_visible_selection_rect(circuit_data_, function, rect);
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -624,6 +633,9 @@ auto Modifier::try_pop_last_visible_selection_rect() -> bool {
     }
     editing::pop_last_visible_selection_rect(circuit_data_);
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
     return true;
 }
@@ -634,6 +646,9 @@ auto Modifier::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool 
     }
     editing::update_last_visible_selection_rect(circuit_data_, rect);
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
     return true;
 }
@@ -641,6 +656,9 @@ auto Modifier::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool 
 auto Modifier::apply_all_visible_selection_operations() -> void {
     editing::apply_all_visible_selection_operations(circuit_data_);
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 

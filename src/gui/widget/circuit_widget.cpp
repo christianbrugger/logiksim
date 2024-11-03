@@ -184,6 +184,7 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
     // clear visible selection
     if (is_selection_state(circuit_state_)) {
         circuit_store_.editable_circuit().clear_visible_selection();
+        circuit_store_.editable_circuit().finish_undo_group();
     }
 
     // circuit store
@@ -609,6 +610,7 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
             set_circuit_state(defaults::selection_state);
             circuit_store_.editable_circuit().set_visible_selection(
                 Selection {{}, std::array {result.inserted_decoration}});
+            circuit_store_.editable_circuit().finish_undo_group();
         }
     }
 
@@ -677,6 +679,7 @@ auto CircuitWidget::abort_current_action() -> void {
             // 2) cancel active selection
             if (is_selection_state(circuit_state_)) {
                 circuit_store_.editable_circuit().clear_visible_selection();
+                circuit_store_.editable_circuit().finish_undo_group();
                 update();
             }
 
@@ -756,6 +759,7 @@ auto CircuitWidget::select_all() -> void {
     set_circuit_state(defaults::selection_state);
 
     visible_selection_select_all(circuit_store_.editable_circuit());
+    circuit_store_.editable_circuit().finish_undo_group();
     update();
 
     Ensures(class_invariant_holds());
@@ -851,8 +855,8 @@ auto CircuitWidget::paste_clipboard() -> void {
         editing_logic_manager_.setup_colliding_move(circuit_store_.editable_circuit(),
                                                     std::move(paste_result.cross_points));
     }
-    circuit_store_.editable_circuit().finish_undo_group();
 
+    circuit_store_.editable_circuit().finish_undo_group();
     update();
     print("Pasted", visible_selection_format(circuit_store_), "in", t);
 
