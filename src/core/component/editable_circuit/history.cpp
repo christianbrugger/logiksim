@@ -168,13 +168,18 @@ auto CircuitHistory::get_stack() -> HistoryStack* {
 // Free Functions
 //
 
-auto last_non_group_entry(const std::vector<HistoryEntry>& entries)
-    -> std::optional<HistoryEntry> {
+auto get_entry_before_skip(const std::vector<HistoryEntry>& entries,
+                           HistoryEntry skip_type) -> std::optional<HistoryEntry> {
     const auto view = entries | std::ranges::views::reverse;
     const auto it = std::ranges::find_if(
-        view, [](const HistoryEntry& entry) { return entry != HistoryEntry::new_group; });
+        view, [skip_type](const HistoryEntry& entry) { return entry != skip_type; });
 
     return it == view.end() ? std::nullopt : std::make_optional(*it);
+}
+
+auto last_non_group_entry(const std::vector<HistoryEntry>& entries)
+    -> std::optional<HistoryEntry> {
+    return get_entry_before_skip(entries, HistoryEntry::new_group);
 }
 
 }  // namespace editable_circuit

@@ -99,6 +99,10 @@ static_assert(std::regular<CircuitHistory>);
 // Free Functions
 //
 
+[[nodiscard]] auto get_entry_before_skip(const std::vector<HistoryEntry>& entries,
+                                         HistoryEntry skip_type)
+    -> std::optional<HistoryEntry>;
+
 [[nodiscard]] auto last_non_group_entry(const std::vector<HistoryEntry>& entries)
     -> std::optional<HistoryEntry>;
 

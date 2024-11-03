@@ -44,7 +44,7 @@ auto _notify_decoration_id_change(CircuitData& circuit,
 
 auto _store_history_create_decoration(CircuitData& circuit,
                                       decoration_id_t decoration_id) -> void {
-    if (const auto& stack = circuit.history.get_stack()) {
+    if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
@@ -113,7 +113,7 @@ namespace {
 auto _store_history_move_temporary_decoration(CircuitData& circuit,
                                               decoration_id_t decoration_id, int dx,
                                               int dy) -> void {
-    if (const auto& stack = circuit.history.get_stack()) {
+    if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
@@ -163,7 +163,7 @@ namespace {
 
 auto _store_history_to_insertion_temporary(CircuitData& circuit,
                                            decoration_id_t decoration_id) -> void {
-    if (const auto& stack = circuit.history.get_stack()) {
+    if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
@@ -174,7 +174,7 @@ auto _store_history_to_insertion_temporary(CircuitData& circuit,
 
 auto _store_history_to_insertion_colliding(CircuitData& circuit,
                                            decoration_id_t decoration_id) -> void {
-    if (const auto& stack = circuit.history.get_stack()) {
+    if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
@@ -185,7 +185,7 @@ auto _store_history_to_insertion_colliding(CircuitData& circuit,
 
 auto _store_history_to_insertion_insert(CircuitData& circuit,
                                         decoration_id_t decoration_id) -> void {
-    if (const auto& stack = circuit.history.get_stack()) {
+    if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
@@ -316,7 +316,7 @@ namespace {
 
 auto _store_history_delete_temporary_decoration(CircuitData& circuit,
                                                 decoration_id_t decoration_id) -> void {
-    if (const auto& stack = circuit.history.get_stack()) {
+    if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
@@ -357,7 +357,7 @@ namespace {
 
 auto _store_history_change_attribute_decoration(CircuitData& circuit,
                                                 decoration_id_t decoration_id) -> void {
-    if (const auto& stack = circuit.history.get_stack()) {
+    if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
