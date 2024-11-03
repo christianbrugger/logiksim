@@ -362,6 +362,7 @@ set(LS_CORE_SOURCES
     simulation_player.cpp
     size_handle.cpp
     spatial_simulation.cpp
+    stable_selection.cpp
     timeout_timer.cpp
     timer.cpp
     tree_normalization.cpp

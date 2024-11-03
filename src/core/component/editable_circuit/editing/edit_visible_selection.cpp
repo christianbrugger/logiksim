@@ -17,8 +17,9 @@ auto _add_operation_to_history(HistoryStack& stack,
     stack.selection_rects.emplace_back(operation.rect);
 }
 
-auto _store_history_visible_selection_set(
-    CircuitHistory& history, const VisibleSelection& visible_selection) -> void {
+auto _store_history_visible_selection_set(CircuitHistory& history,
+                                          const VisibleSelection& visible_selection,
+                                          const KeyIndex& key_index) -> void {
     if (const auto& stack = history.get_stack()) {
         for (const auto& operation :
              visible_selection.operations() | std::ranges::views::reverse) {
@@ -28,7 +29,8 @@ auto _store_history_visible_selection_set(
         if (const auto& initial_selection = visible_selection.initial_selection();
             !initial_selection.empty()) {
             stack->entries.emplace_back(HistoryEntry::visible_selection_set);
-            stack->selections.emplace_back(initial_selection);
+            stack->selections.emplace_back(
+                to_stable_selection(initial_selection, key_index));
         } else {
             stack->entries.emplace_back(HistoryEntry::visible_selection_clear);
         }
@@ -70,7 +72,7 @@ auto clear_visible_selection(CircuitData& circuit_data) -> void {
     set_visible_selection(circuit_data, Selection {});
 }
 
-auto set_visible_selection(CircuitData& circuit_data, Selection selection_) -> void {
+auto set_visible_selection(CircuitData& circuit_data, Selection&& selection_) -> void {
     if (!is_valid_selection(selection_, circuit_data.layout)) {
         throw std::runtime_error("Selection contains elements not in layout");
     }
@@ -80,7 +82,8 @@ auto set_visible_selection(CircuitData& circuit_data, Selection selection_) -> v
     }
 
     _store_history_visible_selection_set(circuit_data.history,
-                                         circuit_data.visible_selection);
+                                         circuit_data.visible_selection,
+                                         circuit_data.index.key_index());
     circuit_data.visible_selection = VisibleSelection {std::move(selection_)};
 }
 

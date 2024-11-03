@@ -274,8 +274,4 @@ auto last_operation(const VisibleSelection& visible_selection)
     return operations.back();
 }
 
-auto operation_count(const VisibleSelection& visible_selection) -> std::size_t {
-    return visible_selection.operations().size();
-}
-
 }  // namespace logicsim

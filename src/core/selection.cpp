@@ -33,6 +33,12 @@ Selection::Selection(std::span<const logicitem_id_t> logicitems,
     }
 }
 
+Selection::Selection(logicitems_set_t &&logicitems, decorations_set_t &&decorations,
+                     segment_map_t &&segments)
+    : selected_logicitems_ {std::move(logicitems)},
+      selected_decorations_ {std::move(decorations)},
+      selected_segments_ {std::move(segments)} {}
+
 auto Selection::format() const -> std::string {
     Expects(class_invariant_holds());
 
@@ -160,7 +166,7 @@ auto Selection::add_segment(segment_part_t segment_part) -> void {
 
     if (it == selected_segments_.end()) {
         // not found
-        const auto value = detail::selection::map_value_t {segment_part.part};
+        const auto value = selection::map_value_t {segment_part.part};
         bool inserted = selected_segments_.emplace(segment_part.segment, value).second;
         Expects(inserted);
     } else {
@@ -316,7 +322,7 @@ auto Selection::handle(const info_message::SegmentIdUpdated &message) -> void {
     const auto it = selected_segments_.find(message.old_segment);
 
     if (it != selected_segments_.end()) {
-        auto parts = detail::selection::map_value_t {std::move(it->second)};
+        auto parts = selection::map_value_t {std::move(it->second)};
         selected_segments_.erase(it);
 
         const auto added =
@@ -329,9 +335,9 @@ auto Selection::handle(const info_message::SegmentIdUpdated &message) -> void {
 
 namespace {
 
-auto _handle_move_different_segment(detail::selection::segment_map_t &map,
+auto _handle_move_different_segment(selection::segment_map_t &map,
                                     info_message::SegmentPartMoved message) -> void {
-    using namespace detail::selection;
+    using namespace selection;
 
     if (message.source.segment == message.destination.segment) [[unlikely]] {
         throw std::runtime_error("source and destination need to be different");
@@ -373,7 +379,7 @@ auto _handle_move_different_segment(detail::selection::segment_map_t &map,
     }
 }
 
-auto _handle_move_same_segment(detail::selection::segment_map_t &map,
+auto _handle_move_same_segment(selection::segment_map_t &map,
                                info_message::SegmentPartMoved message) -> void {
     if (message.source.segment != message.destination.segment) [[unlikely]] {
         throw std::runtime_error("source and destination need to the same");

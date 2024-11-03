@@ -20,7 +20,7 @@ struct ordered_line_t;
 struct segment_part_t;
 class Layout;
 
-namespace detail::selection {
+namespace selection {
 
 using logicitems_set_t = ankerl::unordered_dense::set<logicitem_id_t>;
 using decorations_set_t = ankerl::unordered_dense::set<decoration_id_t>;
@@ -35,7 +35,7 @@ static_assert(sizeof(map_pair_t) == 20);
 
 using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
 
-}  // namespace detail::selection
+}  // namespace selection
 
 /**
  * @brief: A selection of logicitems and segment parts of a Layout.
@@ -46,12 +46,19 @@ using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
  */
 class Selection {
    public:
-    using segment_pair_t = detail::selection::map_pair_t;
+    using segment_pair_t = selection::map_pair_t;
+
+    using logicitems_set_t = selection::logicitems_set_t;
+    using decorations_set_t = selection::decorations_set_t;
+    using segment_map_t = selection::segment_map_t;
 
    public:
     [[nodiscard]] explicit Selection() = default;
     [[nodiscard]] explicit Selection(std::span<const logicitem_id_t> logicitems,
                                      std::span<const decoration_id_t> decorations);
+    [[nodiscard]] explicit Selection(logicitems_set_t &&logicitems,
+                                     decorations_set_t &&decorations,
+                                     segment_map_t &&segments);
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_info(bool as_selection = true) const -> std::string;
@@ -100,9 +107,9 @@ class Selection {
     [[nodiscard]] auto class_invariant_holds() const -> bool;
 
    private:
-    detail::selection::logicitems_set_t selected_logicitems_ {};
-    detail::selection::decorations_set_t selected_decorations_ {};
-    detail::selection::segment_map_t selected_segments_ {};
+    logicitems_set_t selected_logicitems_ {};
+    decorations_set_t selected_decorations_ {};
+    segment_map_t selected_segments_ {};
 };
 
 //

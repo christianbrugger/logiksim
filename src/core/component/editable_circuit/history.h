@@ -4,6 +4,7 @@
 #include "core/component/editable_circuit/visible_selection.h"
 #include "core/format/enum.h"
 #include "core/format/struct.h"
+#include "core/stable_selection.h"
 #include "core/vocabulary/decoration_key_t.h"
 #include "core/vocabulary/placed_decoration.h"
 
@@ -65,7 +66,7 @@ struct HistoryStack {
     std::vector<std::pair<int, int>> move_deltas {};
 
     // visible selection
-    std::vector<Selection> selections {};
+    std::vector<StableSelection> selections {};
     std::vector<rect_fine_t> selection_rects {};
     std::vector<SelectionFunction> selection_functions {};
 

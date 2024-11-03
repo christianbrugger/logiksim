@@ -118,7 +118,8 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case visible_selection_set: {
-            auto selection = pop_back_vector(stack.selections);
+            const auto stable_selection = pop_back_vector(stack.selections);
+            auto selection = to_selection(stable_selection, circuit.index.key_index());
             editing::set_visible_selection(circuit, std::move(selection));
             return;
         }
