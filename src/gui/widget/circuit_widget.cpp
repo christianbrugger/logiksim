@@ -908,15 +908,17 @@ auto CircuitWidget::class_invariant_holds() const -> bool {
     Expects(is_editing_state(circuit_state_) ||
             setting_dialog_manager_->open_dialog_count() == 0);
 
-    // operation count
-    Expects(editing_logic_manager_.is_editing_active() ||
-            !is_editing_state(circuit_state_) ||
-            circuit_store_.editable_circuit().visible_selection_operation_count() == 0);
+    if (is_editing_state(circuit_state_) && !editing_logic_manager_.is_editing_active()) {
+        // Operation count
+        Expects(circuit_store_.editable_circuit().visible_selection_operation_count() ==
+                0);
 
-    // History Group
-    Expects(editing_logic_manager_.is_editing_active() ||
-            !is_editing_state(circuit_state_) ||
-            !circuit_store_.editable_circuit().has_ungrouped_undo_entries());
+        // History Group
+        Expects(!circuit_store_.editable_circuit().has_ungrouped_undo_entries());
+
+        // History Enabled
+        Expects(circuit_store_.editable_circuit().is_history_enabled());
+    }
 
     return true;
 }

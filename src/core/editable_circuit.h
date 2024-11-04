@@ -37,8 +37,11 @@ class EditableCircuit {
     //
 
     auto enable_history() -> void;
+    auto disable_history() -> void;
+
     auto undo_group() -> void;
     auto redo_group() -> void;
+
     auto finish_undo_group() -> void;
     auto reopen_undo_group() -> void;
 
@@ -215,6 +218,9 @@ auto save_destroy_selection(EditableCircuit& editable_circuit,
 auto visible_selection_select_all(EditableCircuit& editable_circuit) -> void;
 
 auto visible_selection_delete_all(EditableCircuit& editable_circuit) -> void;
+
+[[nodiscard]] auto visible_selection_anything_colliding(EditableCircuit& editable_circuit)
+    -> bool;
 
 [[nodiscard]] auto get_single_logicitem(const EditableCircuit& editable_circuit,
                                         selection_id_t selection_id) -> logicitem_id_t;

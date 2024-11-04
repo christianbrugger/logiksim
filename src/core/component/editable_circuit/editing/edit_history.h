@@ -17,6 +17,7 @@ namespace editing {
 [[nodiscard]] auto has_ungrouped_redo_entries(const CircuitHistory& history) -> bool;
 
 auto enable_history(CircuitHistory& history) -> void;
+auto disable_history(CircuitHistory& history) -> void;
 
 auto undo_group(CircuitData& circuit) -> void;
 auto redo_group(CircuitData& circuit) -> void;

@@ -15,7 +15,7 @@ namespace logicsim {
 
 namespace editable_circuit {
 
-enum class HistoryState {
+enum class HistoryState : uint8_t {
     disabled,
 
     track_undo_new,

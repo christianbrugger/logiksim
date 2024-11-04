@@ -41,6 +41,10 @@ auto enable_history(CircuitHistory& history) -> void {
     history.state = HistoryState::track_undo_new;
 }
 
+auto disable_history(CircuitHistory& history) -> void {
+    history.state = HistoryState::disabled;
+}
+
 namespace {
 
 auto _pop_decoration_id(HistoryStack& stack, CircuitData& circuit) -> decoration_id_t {

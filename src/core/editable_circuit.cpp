@@ -41,6 +41,10 @@ auto EditableCircuit::enable_history() -> void {
     modifier_.enable_history();
 }
 
+auto EditableCircuit::disable_history() -> void {
+    modifier_.disable_history();
+}
+
 auto EditableCircuit::undo_group() -> void {
     modifier_.undo_group();
 }
@@ -453,6 +457,12 @@ auto visible_selection_delete_all(EditableCircuit& editable_circuit) -> void {
     auto selection = Selection {editable_circuit.visible_selection()};
     editable_circuit.clear_visible_selection();
     editable_circuit.delete_all(std::move(selection));
+}
+
+[[nodiscard]] auto visible_selection_anything_colliding(EditableCircuit& editable_circuit)
+    -> bool {
+    return anything_colliding(editable_circuit.visible_selection(),
+                              editable_circuit.layout());
 }
 
 auto get_single_logicitem(const EditableCircuit& editable_circuit,

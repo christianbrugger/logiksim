@@ -87,7 +87,6 @@ auto CheckedEditableCircuit::set_editable_circuit(EditableCircuit&& editable_cir
 auto CheckedEditableCircuit::class_invariant_holds() const -> bool {
     Expects(selection_valid(editable_circuit_, circuit_state_));
     Expects(redo_entries_grouped(editable_circuit_, circuit_state_));
-    Expects(editable_circuit_.is_history_enabled());
 
     return true;
 }

@@ -106,6 +106,14 @@ auto Modifier::enable_history() -> void {
     }
 }
 
+auto Modifier::disable_history() -> void {
+    editing::disable_history(circuit_data_.history);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
+}
+
 auto Modifier::undo_group() -> void {
     editing::undo_group(circuit_data_);
 

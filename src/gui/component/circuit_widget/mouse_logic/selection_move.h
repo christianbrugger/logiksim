@@ -52,6 +52,8 @@ struct Args {
  * @ brief: Logic to handle selection moving via mouse clicks.
  *
  *
+ * Pre-condition:
+ *   + history enable state is not changed during this logic is active
  */
 class SelectionMoveLogic {
    public:
@@ -81,9 +83,12 @@ class SelectionMoveLogic {
     bool delete_on_cancel_;
     State state_;
     InsertionMode insertion_mode_;
+    bool initial_history_enabled_;
+    bool expected_history_enabled_;
 
     std::optional<point_fine_t> last_position_ {};
     std::pair<int, int> total_offsets_ {};
+    std::pair<int, int> history_offsets_ {};
     std::optional<std::vector<point_t>> cross_points_ {};
 };
 

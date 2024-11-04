@@ -78,8 +78,11 @@ class Modifier {
     //
 
     auto enable_history() -> void;
+    auto disable_history() -> void;
+
     auto undo_group() -> void;
     auto redo_group() -> void;
+
     auto finish_undo_group() -> void;
     auto reopen_undo_group() -> void;
 
