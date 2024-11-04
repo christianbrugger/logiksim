@@ -1,6 +1,7 @@
 #include "core/component/editable_circuit/editing/edit_decoration.h"
 
 #include "core/algorithm/at_back_vector.h"
+#include "core/algorithm/pop_back_vector.h"
 #include "core/component/editable_circuit/circuit_data.h"
 #include "core/component/editable_circuit/editing/edit_decoration_detail.h"
 #include "core/geometry/point.h"
@@ -47,6 +48,15 @@ auto _store_history_create_decoration(CircuitData& circuit,
     if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
+
+        // skip if it was just deleted
+        if (get_back_vector(stack->entries) ==
+                HistoryEntry::decoration_delete_temporary &&
+            at_back_vector(stack->decoration_keys) == key) {
+            pop_back_vector(stack->entries);
+            pop_back_vector(stack->decoration_keys);
+            return;
+        }
 
         stack->entries.emplace_back(HistoryEntry::decoration_create_temporary);
         stack->decoration_keys.emplace_back(key);
@@ -131,6 +141,9 @@ auto move_temporary_decoration_unchecked(CircuitData& circuit,
     assert(std::as_const(circuit.layout).decorations().display_state(decoration_id) ==
            display_state_t::temporary);
     assert(is_decoration_position_representable(circuit.layout, decoration_id, dx, dy));
+    if (dx == 0 && dy == 0) {
+        return;
+    }
 
     _store_history_move_temporary_decoration(circuit, decoration_id, dx, dy);
 
@@ -145,6 +158,9 @@ auto move_or_delete_temporary_decoration(CircuitData& circuit,
     if (circuit.layout.decorations().display_state(decoration_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("Only temporary items can be freely moved.");
+    }
+    if (dx == 0 && dy == 0) {
+        return;
     }
 
     if (!is_decoration_position_representable(circuit.layout, decoration_id, dx, dy)) {
@@ -161,35 +177,81 @@ auto move_or_delete_temporary_decoration(CircuitData& circuit,
 
 namespace {
 
-auto _store_history_to_insertion_temporary(CircuitData& circuit,
-                                           decoration_id_t decoration_id) -> void {
+auto _store_history_to_insertion_colliding_to_temporary(
+    CircuitData& circuit, decoration_id_t decoration_id) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        stack->entries.emplace_back(HistoryEntry::decoration_to_insertion_temporary);
+        // skip if it was just colliding
+        if (get_back_vector(stack->entries) ==
+                HistoryEntry::decoration_to_mode_colliding &&
+            at_back_vector(stack->decoration_keys) == key) {
+            pop_back_vector(stack->entries);
+            pop_back_vector(stack->decoration_keys);
+            return;
+        }
+
+        stack->entries.emplace_back(HistoryEntry::decoration_to_mode_temporary);
         stack->decoration_keys.emplace_back(key);
     }
 }
 
-auto _store_history_to_insertion_colliding(CircuitData& circuit,
-                                           decoration_id_t decoration_id) -> void {
+auto _store_history_to_insertion_temporary_to_colliding(
+    CircuitData& circuit, decoration_id_t decoration_id) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        stack->entries.emplace_back(HistoryEntry::decoration_to_insertion_colliding);
+        // skip if it was just temporary
+        if (get_back_vector(stack->entries) ==
+                HistoryEntry::decoration_to_mode_temporary &&
+            at_back_vector(stack->decoration_keys) == key) {
+            pop_back_vector(stack->entries);
+            pop_back_vector(stack->decoration_keys);
+            return;
+        }
+
+        stack->entries.emplace_back(HistoryEntry::decoration_to_mode_colliding);
         stack->decoration_keys.emplace_back(key);
     }
 }
 
-auto _store_history_to_insertion_insert(CircuitData& circuit,
-                                        decoration_id_t decoration_id) -> void {
+auto _store_history_to_insertion_insert_to_colliding(
+    CircuitData& circuit, decoration_id_t decoration_id) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
 
-        stack->entries.emplace_back(HistoryEntry::decoration_to_insertion_insert);
+        // skip if it was just inserted
+        if (get_back_vector(stack->entries) == HistoryEntry::decoration_to_mode_insert &&
+            at_back_vector(stack->decoration_keys) == key) {
+            pop_back_vector(stack->entries);
+            pop_back_vector(stack->decoration_keys);
+            return;
+        }
+
+        stack->entries.emplace_back(HistoryEntry::decoration_to_mode_colliding);
+        stack->decoration_keys.emplace_back(key);
+    }
+}
+
+auto _store_history_to_insertion_colliding_to_insert(
+    CircuitData& circuit, decoration_id_t decoration_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto key = circuit.index.key_index().get(decoration_id);
+        Expects(key);
+
+        // skip if it was just colliding
+        if (get_back_vector(stack->entries) ==
+                HistoryEntry::decoration_to_mode_colliding &&
+            at_back_vector(stack->decoration_keys) == key) {
+            pop_back_vector(stack->entries);
+            pop_back_vector(stack->decoration_keys);
+            return;
+        }
+
+        stack->entries.emplace_back(HistoryEntry::decoration_to_mode_insert);
         stack->decoration_keys.emplace_back(key);
     }
 }
@@ -201,7 +263,7 @@ auto _decoration_change_temporary_to_colliding(
         throw std::runtime_error("element is not in the right state.");
     }
 
-    _store_history_to_insertion_temporary(circuit, decoration_id);
+    _store_history_to_insertion_colliding_to_temporary(circuit, decoration_id);
 
     if (is_decoration_colliding(circuit, decoration_id)) {
         circuit.layout.decorations().set_display_state(decoration_id,
@@ -222,7 +284,7 @@ auto _decoration_change_colliding_to_insert(CircuitData& circuit,
                                             decoration_id_t& decoration_id) -> void {
     const auto display_state = circuit.layout.decorations().display_state(decoration_id);
 
-    _store_history_to_insertion_colliding(circuit, decoration_id);
+    _store_history_to_insertion_insert_to_colliding(circuit, decoration_id);
 
     if (display_state == display_state_t::valid) {
         circuit.layout.decorations().set_display_state(decoration_id,
@@ -248,7 +310,7 @@ auto _decoration_change_insert_to_colliding(CircuitData& circuit,
         throw std::runtime_error("element is not in the right state.");
     }
 
-    _store_history_to_insertion_insert(circuit, decoration_id);
+    _store_history_to_insertion_colliding_to_insert(circuit, decoration_id);
 
     circuit.layout.decorations().set_display_state(decoration_id, display_state_t::valid);
 };
@@ -257,7 +319,7 @@ auto _decoration_change_colliding_to_temporary(
     CircuitData& circuit, const decoration_id_t decoration_id) -> void {
     const auto display_state = circuit.layout.decorations().display_state(decoration_id);
 
-    _store_history_to_insertion_colliding(circuit, decoration_id);
+    _store_history_to_insertion_temporary_to_colliding(circuit, decoration_id);
 
     if (display_state == display_state_t::valid) {
         circuit.submit(info_message::DecorationUninserted {
@@ -319,6 +381,16 @@ auto _store_history_delete_temporary_decoration(CircuitData& circuit,
     if (const auto stack = circuit.history.get_stack()) {
         const auto key = circuit.index.key_index().get(decoration_id);
         Expects(key);
+
+        // skip if it was just created
+        if (get_back_vector(stack->entries) ==
+                HistoryEntry::decoration_create_temporary &&
+            at_back_vector(stack->decoration_keys) == key) {
+            pop_back_vector(stack->entries);
+            pop_back_vector(stack->decoration_keys);
+            pop_back_vector(stack->placed_decorations);
+            return;
+        }
 
         stack->entries.emplace_back(HistoryEntry::decoration_delete_temporary);
         stack->decoration_keys.emplace_back(key);

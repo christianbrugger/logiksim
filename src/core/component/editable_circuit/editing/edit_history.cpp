@@ -79,21 +79,21 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
-        case decoration_to_insertion_temporary: {
+        case decoration_to_mode_temporary: {
             auto decoration_id = _pop_decoration_id(stack, circuit);
             editing::change_decoration_insertion_mode(circuit, decoration_id,
                                                       InsertionMode::temporary);
             return;
         }
 
-        case decoration_to_insertion_colliding: {
+        case decoration_to_mode_colliding: {
             auto decoration_id = _pop_decoration_id(stack, circuit);
             editing::change_decoration_insertion_mode(circuit, decoration_id,
                                                       InsertionMode::collisions);
             return;
         }
 
-        case decoration_to_insertion_insert: {
+        case decoration_to_mode_insert: {
             auto decoration_id = _pop_decoration_id(stack, circuit);
             editing::change_decoration_insertion_mode(circuit, decoration_id,
                                                       InsertionMode::insert_or_discard);

@@ -3,6 +3,7 @@
 
 #include <gsl/gsl>
 
+#include <optional>
 #include <vector>
 
 namespace logicsim {
@@ -16,6 +17,17 @@ template <typename T>
 auto at_back_vector(std::vector<T>& data) {
     Expects(!data.empty());
     return data.back();
+}
+
+/**
+ * @brief: Get last vector element if it exists.
+ */
+template <typename T>
+auto get_back_vector(std::vector<T>& data) -> std::optional<std::decay_t<T>> {
+    if (!data.empty()) {
+        return std::make_optional(data.back());
+    }
+    return std::nullopt;
 }
 
 }  // namespace logicsim

@@ -44,12 +44,12 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
             return "decoration_delete_temporary";
         case decoration_move_temporary:
             return "decoration_move_temporary";
-        case decoration_to_insertion_temporary:
-            return "decoration_to_insertion_temporary";
-        case decoration_to_insertion_colliding:
-            return "decoration_to_insertion_colliding";
-        case decoration_to_insertion_insert:
-            return "decoration_to_insertion_insert";
+        case decoration_to_mode_temporary:
+            return "decoration_to_mode_temporary";
+        case decoration_to_mode_colliding:
+            return "decoration_to_mode_colliding";
+        case decoration_to_mode_insert:
+            return "decoration_to_mode_insert";
         case decoration_change_attributes:
             return "decoration_change_attributes";
 

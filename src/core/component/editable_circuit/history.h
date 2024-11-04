@@ -37,9 +37,9 @@ enum class HistoryEntry : uint8_t {
     decoration_create_temporary,
     decoration_delete_temporary,
     decoration_move_temporary,
-    decoration_to_insertion_temporary,
-    decoration_to_insertion_colliding,
-    decoration_to_insertion_insert,
+    decoration_to_mode_temporary,
+    decoration_to_mode_colliding,
+    decoration_to_mode_insert,
     decoration_change_attributes,
 
     // visible selection
