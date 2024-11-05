@@ -6,9 +6,11 @@
 #include "core/format/struct.h"
 #include "core/stable_selection.h"
 #include "core/vocabulary/decoration_key_t.h"
+#include "core/vocabulary/move_delta.h"
 #include "core/vocabulary/placed_decoration.h"
 
 #include <optional>
+#include <utility>
 #include <vector>
 
 namespace logicsim {
@@ -63,7 +65,7 @@ struct HistoryStack {
     // decoration
     std::vector<decoration_key_t> decoration_keys {};
     std::vector<PlacedDecoration> placed_decorations {};
-    std::vector<std::pair<int, int>> move_deltas {};
+    std::vector<move_delta_t> move_deltas {};
 
     // visible selection
     std::vector<StableSelection> selections {};
@@ -89,10 +91,20 @@ struct HistoryStack {
     auto push_decoration_temporary_to_colliding(decoration_key_t decoration_key) -> void;
     auto push_decoration_colliding_to_insert(decoration_key_t decoration_key) -> void;
     auto push_decoration_insert_to_colliding(decoration_key_t decoration_key) -> void;
-    auto push_decoration_move_temporary(decoration_key_t decoration_key, int dx,
-                                        int dy) -> void;
+    auto push_decoration_move_temporary(decoration_key_t decoration_key,
+                                        move_delta_t delta) -> void;
     auto push_decoration_change_attributes(decoration_key_t decoration_key,
                                            PlacedDecoration&& placed_decoration) -> void;
+
+    auto pop_decoration_create_temporary()
+        -> std::pair<decoration_key_t, PlacedDecoration>;
+    auto pop_decoration_delete_temporary() -> decoration_key_t;
+    auto pop_decoration_to_mode_temporary() -> decoration_key_t;
+    auto pop_decoration_to_mode_colliding() -> decoration_key_t;
+    auto pop_decoration_to_mode_insert() -> decoration_key_t;
+    auto pop_decoration_move_temporary() -> std::pair<decoration_key_t, move_delta_t>;
+    auto pop_decoration_change_attributes()
+        -> std::pair<decoration_key_t, PlacedDecoration>;
 };
 
 static_assert(std::regular<HistoryStack>);

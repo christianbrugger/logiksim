@@ -163,43 +163,42 @@ auto SelectionMoveLogic::move_selection(EditableCircuit& editable_circuit,
         return;
     }
 
-    const auto delta_x = round_to<int>(double {point.x - last_position_->x});
-    const auto delta_y = round_to<int>(double {point.y - last_position_->y});
+    const auto delta = move_delta_t {
+        round_to<int>(double {point.x - last_position_->x}),
+        round_to<int>(double {point.y - last_position_->y}),
+    };
 
-    if (delta_x == 0 && delta_y == 0) {
+    if (delta == move_delta_t {0, 0}) {
         return;
     }
     const auto t [[maybe_unused]] =
         Timer {insertion_mode_ != InsertionMode::temporary ? "uninsert selection" : ""};
 
-    if (!new_positions_representable(
-            editable_circuit, editable_circuit.visible_selection(), delta_x, delta_y)) {
+    if (!new_positions_representable(editable_circuit,
+                                     editable_circuit.visible_selection(), delta)) {
         return;
     }
 
     convert_selection_to(editable_circuit, InsertionMode::temporary);
     editable_circuit.move_temporary_unchecked(editable_circuit.visible_selection(),
-                                              delta_x, delta_y);
+                                              delta);
     if (cross_points_) {
-        cross_points_ = move_or_delete_points(cross_points_.value(), delta_x, delta_y);
+        cross_points_ = move_or_delete_points(cross_points_.value(), delta.x, delta.y);
     }
 
-    *last_position_ += point_fine_t {delta_x, delta_y};
-    total_offsets_.first += delta_x;
-    total_offsets_.second += delta_y;
-    history_offsets_.first += delta_x;
-    history_offsets_.second += delta_y;
+    *last_position_ += point_fine_t {delta.x, delta.y};
+    total_offsets_ += delta;
+    history_offsets_ += delta;
 }
 
 namespace {
 
-auto repeat_move_with_history(EditableCircuit& editable_circuit,
-                              std::pair<int, int> offsets) {
+auto repeat_move_with_history(EditableCircuit& editable_circuit, move_delta_t delta) {
     editable_circuit.move_temporary_unchecked(editable_circuit.visible_selection(),
-                                              -offsets.first, -offsets.second);
+                                              -delta);
     editable_circuit.enable_history();
     editable_circuit.move_temporary_unchecked(editable_circuit.visible_selection(),
-                                              offsets.first, offsets.second);
+                                              delta);
 }
 
 }  // namespace
@@ -254,14 +253,13 @@ auto SelectionMoveLogic::convert_selection_to(EditableCircuit& editable_circuit,
 
 auto SelectionMoveLogic::restore_original_positions(EditableCircuit& editable_circuit)
     -> void {
-    if (total_offsets_.first == 0 && total_offsets_.second == 0) {
+    if (total_offsets_ == move_delta_t {0, 0}) {
         return;
     }
 
     convert_selection_to(editable_circuit, InsertionMode::temporary);
     editable_circuit.move_temporary_unchecked(editable_circuit.visible_selection(),
-                                              -total_offsets_.first,
-                                              -total_offsets_.second);
+                                              -total_offsets_);
 }
 
 }  // namespace circuit_widget

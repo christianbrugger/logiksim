@@ -4,6 +4,7 @@
 #include "gui/component/circuit_widget/mouse_logic/editing_logic_concept.h"
 
 #include "core/vocabulary/insertion_mode.h"
+#include "core/vocabulary/move_delta.h"
 #include "core/vocabulary/point_fine.h"
 
 #include <optional>
@@ -87,8 +88,8 @@ class SelectionMoveLogic {
     bool expected_history_enabled_;
 
     std::optional<point_fine_t> last_position_ {};
-    std::pair<int, int> total_offsets_ {};
-    std::pair<int, int> history_offsets_ {};
+    move_delta_t total_offsets_ {};
+    move_delta_t history_offsets_ {};
     std::optional<std::vector<point_t>> cross_points_ {};
 };
 

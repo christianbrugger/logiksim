@@ -130,25 +130,25 @@ auto EditableCircuit::change_insertion_mode(Selection selection,
     change_insertion_mode_consuming(modifier_, guard.selection_id(), new_insertion_mode);
 }
 
-auto EditableCircuit::move_or_delete_temporary(selection_id_t selection_id, int delta_x,
-                                               int delta_y) -> void {
+auto EditableCircuit::move_or_delete_temporary(selection_id_t selection_id,
+                                               move_delta_t delta) -> void {
     using namespace editable_circuit;
 
     const auto guard = ModifierSelectionGuard(modifier_, selection_id);
-    move_or_delete_temporary_consuming(modifier_, guard.selection_id(), delta_x, delta_y);
+    move_or_delete_temporary_consuming(modifier_, guard.selection_id(), delta);
 }
 
-auto EditableCircuit::move_or_delete_temporary(Selection selection, int delta_x,
-                                               int delta_y) -> void {
+auto EditableCircuit::move_or_delete_temporary(Selection selection,
+                                               move_delta_t delta) -> void {
     using namespace editable_circuit;
 
     const auto guard = ModifierSelectionGuard(modifier_, std::move(selection));
-    move_or_delete_temporary_consuming(modifier_, guard.selection_id(), delta_x, delta_y);
+    move_or_delete_temporary_consuming(modifier_, guard.selection_id(), delta);
 }
 
-auto EditableCircuit::move_temporary_unchecked(const Selection& selection, int delta_x,
-                                               int delta_y) -> void {
-    editable_circuit::move_temporary_unchecked(modifier_, selection, delta_x, delta_y);
+auto EditableCircuit::move_temporary_unchecked(const Selection& selection,
+                                               move_delta_t delta) -> void {
+    editable_circuit::move_temporary_unchecked(modifier_, selection, delta);
 }
 
 auto EditableCircuit::delete_all(selection_id_t selection_id) -> void {
@@ -414,10 +414,9 @@ auto add_example(Rng& rng, EditableCircuit& editable_circuit) -> void {
 }
 
 auto new_positions_representable(const EditableCircuit& editable_circuit,
-                                 const Selection& selection, int delta_x,
-                                 int delta_y) -> bool {
+                                 const Selection& selection, move_delta_t delta) -> bool {
     return editable_circuit::new_positions_representable(editable_circuit.layout(),
-                                                         selection, delta_x, delta_y);
+                                                         selection, delta);
 }
 
 auto get_inserted_cross_points(const EditableCircuit& editable_circuit,

@@ -8,6 +8,7 @@ namespace logicsim {
 struct logicitem_id_t;
 struct LogicItemDefinition;
 struct point_t;
+struct move_delta_t;
 class Layout;
 class Selection;
 
@@ -22,12 +23,11 @@ auto delete_temporary_logicitem(CircuitData& circuit,
 
 [[nodiscard]] auto is_logicitem_position_representable(const Layout& layout,
                                                        logicitem_id_t logicitem_id,
-                                                       int dx, int dy) -> bool;
+                                                       move_delta_t delta) -> bool;
 
 [[nodiscard]] auto are_logicitem_positions_representable(const Layout& layout,
                                                          const Selection& selection,
-                                                         int delta_x,
-                                                         int delta_y) -> bool;
+                                                         move_delta_t delta) -> bool;
 
 /**
  * @brief:
@@ -37,11 +37,11 @@ auto delete_temporary_logicitem(CircuitData& circuit,
  *    + new position is representable
  */
 auto move_temporary_logicitem_unchecked(Layout& layout, logicitem_id_t logicitem_id,
-                                        int dx, int dy) -> void;
+                                        move_delta_t delta) -> void;
 
 auto move_or_delete_temporary_logicitem(CircuitData& circuit,
-                                        logicitem_id_t& logicitem_id, int dx,
-                                        int dy) -> void;
+                                        logicitem_id_t& logicitem_id,
+                                        move_delta_t delta) -> void;
 
 auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logicitem_id,
                                      InsertionMode new_mode) -> void;

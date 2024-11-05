@@ -29,6 +29,7 @@
 #include "core/validate_definition_logicitem.h"
 #include "core/vocabulary/layout_calculation_data.h"
 #include "core/vocabulary/logicitem_definition.h"
+#include "core/vocabulary/move_delta.h"
 #include "core/vocabulary/placed_decoration.h"
 #include "core/vocabulary/placed_logicitem.h"
 #include "core/vocabulary/save_format.h"
@@ -40,11 +41,6 @@ namespace logicsim {
 namespace serialize {
 
 namespace {
-
-struct move_delta_t {
-    int x;
-    int y;
-};
 
 [[nodiscard]] auto to_line(const SerializedLine& obj,
                            move_delta_t delta = {}) -> std::optional<line_t> {

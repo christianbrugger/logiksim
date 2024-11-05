@@ -82,24 +82,27 @@ auto delete_temporary_decoration(CircuitData& circuit,
 //
 
 auto is_decoration_position_representable(const Layout& layout,
-                                          const decoration_id_t decoration_id, int dx,
-                                          int dy) -> bool {
+                                          const decoration_id_t decoration_id,
+                                          move_delta_t delta) -> bool {
     if (!decoration_id) [[unlikely]] {
         throw std::runtime_error("element id is invalid");
     }
 
     const auto bounding_rect = layout.decorations().bounding_rect(decoration_id);
 
-    return is_representable(bounding_rect.p0, dx, dy) &&
-           is_representable(bounding_rect.p1, dx, dy);
+    return is_representable(bounding_rect.p0, delta.x, delta.y) &&
+           is_representable(bounding_rect.p1, delta.x, delta.y);
 }
 
 auto are_decoration_positions_representable(const Layout& layout,
-                                            const Selection& selection, int delta_x,
-                                            int delta_y) -> bool {
+                                            const Selection& selection,
+                                            move_delta_t delta) -> bool {
+    if (delta == move_delta_t {0, 0}) {
+        return true;
+    }
+
     const auto decoration_valid = [&](decoration_id_t decoration_id) {
-        return is_decoration_position_representable(layout, decoration_id, delta_x,
-                                                    delta_y);
+        return is_decoration_position_representable(layout, decoration_id, delta);
     };
 
     return std::ranges::all_of(selection.selected_decorations(), decoration_valid);
@@ -108,50 +111,51 @@ auto are_decoration_positions_representable(const Layout& layout,
 namespace {
 
 auto _store_history_move_temporary_decoration(CircuitData& circuit,
-                                              decoration_id_t decoration_id, int dx,
-                                              int dy) -> void {
+                                              decoration_id_t decoration_id,
+                                              move_delta_t delta) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
-        stack->push_decoration_move_temporary(decoration_key, dx, dy);
+        stack->push_decoration_move_temporary(decoration_key, delta);
     }
 }
 
 }  // namespace
 
 auto move_temporary_decoration_unchecked(CircuitData& circuit,
-                                         const decoration_id_t decoration_id, int dx,
-                                         int dy) -> void {
+                                         const decoration_id_t decoration_id,
+                                         move_delta_t delta) -> void {
     assert(std::as_const(circuit.layout).decorations().display_state(decoration_id) ==
            display_state_t::temporary);
-    assert(is_decoration_position_representable(circuit.layout, decoration_id, dx, dy));
-    if (dx == 0 && dy == 0) {
+    assert(is_decoration_position_representable(circuit.layout, decoration_id, delta));
+    if (delta == move_delta_t {0, 0}) {
         return;
     }
 
-    _store_history_move_temporary_decoration(circuit, decoration_id, -dx, -dy);
+    _store_history_move_temporary_decoration(circuit, decoration_id,
+                                             move_delta_t {-delta.x, -delta.y});
 
-    const auto position =
-        add_unchecked(circuit.layout.decorations().position(decoration_id), dx, dy);
+    const auto position = add_unchecked(
+        circuit.layout.decorations().position(decoration_id), delta.x, delta.y);
     circuit.layout.decorations().set_position(decoration_id, position);
 }
 
 auto move_or_delete_temporary_decoration(CircuitData& circuit,
-                                         decoration_id_t& decoration_id, int dx,
-                                         int dy) -> void {
+                                         decoration_id_t& decoration_id,
+                                         move_delta_t delta) -> void {
     if (circuit.layout.decorations().display_state(decoration_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("Only temporary items can be freely moved.");
     }
-    if (dx == 0 && dy == 0) {
+    if (delta == move_delta_t {0, 0}) {
         return;
     }
 
-    if (!is_decoration_position_representable(circuit.layout, decoration_id, dx, dy)) {
+    if (!is_decoration_position_representable(circuit.layout, decoration_id, delta)) {
         delete_temporary_decoration(circuit, decoration_id);
         return;
     }
 
-    move_temporary_decoration_unchecked(circuit, decoration_id, dx, dy);
+    move_temporary_decoration_unchecked(circuit, decoration_id, delta);
 }
 
 //

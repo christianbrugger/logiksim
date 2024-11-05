@@ -131,8 +131,7 @@ auto HistoryStack::push_decoration_create_temporary(
     // skip if it was just deleted
     if (get_back_vector(entries) == HistoryEntry::decoration_delete_temporary &&
         at_back_vector(decoration_keys) == decoration_key) {
-        pop_back_vector(entries);
-        pop_back_vector(decoration_keys);
+        pop_decoration_delete_temporary();
         return;
     }
 
@@ -146,9 +145,7 @@ auto HistoryStack::push_decoration_delete_temporary(decoration_key_t decoration_
     // skip if it was just created
     if (get_back_vector(entries) == HistoryEntry::decoration_create_temporary &&
         at_back_vector(decoration_keys) == decoration_key) {
-        pop_back_vector(entries);
-        pop_back_vector(decoration_keys);
-        pop_back_vector(placed_decorations);
+        pop_decoration_create_temporary();
         return;
     }
 
@@ -161,8 +158,7 @@ auto HistoryStack::push_decoration_colliding_to_temporary(decoration_key_t decor
     // skip if it was just colliding
     if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_colliding &&
         at_back_vector(decoration_keys) == decoration_key) {
-        pop_back_vector(entries);
-        pop_back_vector(decoration_keys);
+        pop_decoration_to_mode_colliding();
         return;
     }
 
@@ -175,8 +171,7 @@ auto HistoryStack::push_decoration_temporary_to_colliding(decoration_key_t decor
     // skip if it was just temporary
     if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_temporary &&
         at_back_vector(decoration_keys) == decoration_key) {
-        pop_back_vector(entries);
-        pop_back_vector(decoration_keys);
+        pop_decoration_to_mode_temporary();
         return;
     }
 
@@ -189,8 +184,7 @@ auto HistoryStack::push_decoration_colliding_to_insert(decoration_key_t decorati
     // skip if it was just colliding
     if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_colliding &&
         at_back_vector(decoration_keys) == decoration_key) {
-        pop_back_vector(entries);
-        pop_back_vector(decoration_keys);
+        pop_decoration_to_mode_colliding();
         return;
     }
 
@@ -203,8 +197,7 @@ auto HistoryStack::push_decoration_insert_to_colliding(decoration_key_t decorati
     // skip if it was just inserted
     if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_insert &&
         at_back_vector(decoration_keys) == decoration_key) {
-        pop_back_vector(entries);
-        pop_back_vector(decoration_keys);
+        pop_decoration_to_mode_insert();
         return;
     }
 
@@ -212,11 +205,11 @@ auto HistoryStack::push_decoration_insert_to_colliding(decoration_key_t decorati
     decoration_keys.emplace_back(decoration_key);
 }
 
-auto HistoryStack::push_decoration_move_temporary(decoration_key_t decoration_key, int dx,
-                                                  int dy) -> void {
+auto HistoryStack::push_decoration_move_temporary(decoration_key_t decoration_key,
+                                                  move_delta_t delta) -> void {
     entries.emplace_back(HistoryEntry::decoration_move_temporary);
     decoration_keys.emplace_back(decoration_key);
-    move_deltas.emplace_back(dx, dy);
+    move_deltas.emplace_back(delta);
 }
 
 auto HistoryStack::push_decoration_change_attributes(
@@ -230,6 +223,44 @@ auto HistoryStack::push_decoration_change_attributes(
     entries.emplace_back(HistoryEntry::decoration_change_attributes);
     decoration_keys.emplace_back(decoration_key);
     placed_decorations.emplace_back(std::move(placed_decoration));
+}
+
+[[nodiscard]] auto HistoryStack::pop_decoration_create_temporary()
+    -> std::pair<decoration_key_t, PlacedDecoration> {
+    Expects(pop_back_vector(entries) == HistoryEntry::decoration_create_temporary);
+    return {pop_back_vector(decoration_keys), pop_back_vector(placed_decorations)};
+}
+
+[[nodiscard]] auto HistoryStack::pop_decoration_delete_temporary() -> decoration_key_t {
+    Expects(pop_back_vector(entries) == HistoryEntry::decoration_delete_temporary);
+    return pop_back_vector(decoration_keys);
+}
+
+[[nodiscard]] auto HistoryStack::pop_decoration_to_mode_temporary() -> decoration_key_t {
+    Expects(pop_back_vector(entries) == HistoryEntry::decoration_to_mode_temporary);
+    return pop_back_vector(decoration_keys);
+}
+
+[[nodiscard]] auto HistoryStack::pop_decoration_to_mode_colliding() -> decoration_key_t {
+    Expects(pop_back_vector(entries) == HistoryEntry::decoration_to_mode_colliding);
+    return pop_back_vector(decoration_keys);
+}
+
+[[nodiscard]] auto HistoryStack::pop_decoration_to_mode_insert() -> decoration_key_t {
+    Expects(pop_back_vector(entries) == HistoryEntry::decoration_to_mode_insert);
+    return pop_back_vector(decoration_keys);
+}
+
+[[nodiscard]] auto HistoryStack::pop_decoration_move_temporary()
+    -> std::pair<decoration_key_t, move_delta_t> {
+    Expects(pop_back_vector(entries) == HistoryEntry::decoration_move_temporary);
+    return {pop_back_vector(decoration_keys), pop_back_vector(move_deltas)};
+}
+
+[[nodiscard]] auto HistoryStack::pop_decoration_change_attributes()
+    -> std::pair<decoration_key_t, PlacedDecoration> {
+    Expects(pop_back_vector(entries) == HistoryEntry::decoration_change_attributes);
+    return {pop_back_vector(decoration_keys), pop_back_vector(placed_decorations)};
 }
 
 //

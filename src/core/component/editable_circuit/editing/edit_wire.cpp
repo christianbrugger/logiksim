@@ -41,25 +41,25 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
 //
 
 auto is_wire_position_representable(const Layout& layout,
-                                    const segment_part_t segment_part, int dx,
-                                    int dy) -> bool {
+                                    const segment_part_t segment_part,
+                                    move_delta_t delta) -> bool {
     if (!segment_part) [[unlikely]] {
         throw std::runtime_error("segment part is invalid");
     }
 
     const auto line = get_line(layout, segment_part);
-    return is_representable(line, dx, dy);
+    return is_representable(line, delta.x, delta.y);
 }
 
 auto new_wire_positions_representable(const Layout& layout, const Selection& selection,
-                                      int delta_x, int delta_y) -> bool {
+                                      move_delta_t delta) -> bool {
     for (const auto& [segment, parts] : selection.selected_segments()) {
         const auto full_line = get_line(layout, segment);
 
         for (const auto& part : parts) {
             const auto line = to_line(full_line, part);
 
-            if (!is_representable(line, delta_x, delta_y)) {
+            if (!is_representable(line, delta.x, delta.y)) {
                 return false;
             }
         }
@@ -69,16 +69,16 @@ auto new_wire_positions_representable(const Layout& layout, const Selection& sel
 }
 
 auto move_temporary_wire_unchecked(Layout& layout, segment_t segment,
-                                   part_t verify_full_part, int dx, int dy) -> void {
+                                   part_t verify_full_part, move_delta_t delta) -> void {
     assert(is_temporary(segment.wire_id));
     assert(verify_full_part == to_part(get_line(layout, segment)));
     assert(is_wire_position_representable(
-        layout, segment_part_t {segment, verify_full_part}, dx, dy));
+        layout, segment_part_t {segment, verify_full_part}, delta));
 
     auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
 
     auto info = m_tree.info(segment.segment_index);
-    info.line = add_unchecked(info.line, dx, dy);
+    info.line = add_unchecked(info.line, delta.x, delta.y);
 
     if (to_part(info.line) != verify_full_part) {
         throw std::runtime_error("need to select full line part");
@@ -88,7 +88,7 @@ auto move_temporary_wire_unchecked(Layout& layout, segment_t segment,
 }
 
 auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment_part,
-                                   int dx, int dy) -> void {
+                                   move_delta_t delta) -> void {
     if (!segment_part) [[unlikely]] {
         throw std::runtime_error("segment part is invalid");
     }
@@ -96,7 +96,7 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
         throw std::runtime_error("can only move temporary segments");
     }
 
-    if (!is_wire_position_representable(circuit.layout, segment_part, dx, dy)) {
+    if (!is_wire_position_representable(circuit.layout, segment_part, delta)) {
         // delete
         remove_segment_from_tree(circuit, segment_part);
         return;
@@ -113,7 +113,7 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
     auto& m_tree =
         circuit.layout.wires().modifiable_segment_tree(segment_part.segment.wire_id);
     auto info = m_tree.info(segment_part.segment.segment_index);
-    info.line = add_unchecked(part_line, dx, dy);
+    info.line = add_unchecked(part_line, delta.x, delta.y);
     m_tree.update_segment(segment_part.segment.segment_index, info);
 
     // We don't need a message to update visible-selection here

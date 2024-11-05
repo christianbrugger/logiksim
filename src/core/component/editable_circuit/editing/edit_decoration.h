@@ -6,6 +6,7 @@
 
 namespace logicsim {
 
+struct move_delta_t;
 struct decoration_id_t;
 struct attributes_text_element_t;
 struct DecorationDefinition;
@@ -24,12 +25,11 @@ auto delete_temporary_decoration(CircuitData& circuit,
 
 [[nodiscard]] auto is_decoration_position_representable(const Layout& layout,
                                                         decoration_id_t decoration_id,
-                                                        int dx, int dy) -> bool;
+                                                        move_delta_t delta) -> bool;
 
 [[nodiscard]] auto are_decoration_positions_representable(const Layout& layout,
                                                           const Selection& selection,
-                                                          int delta_x,
-                                                          int delta_y) -> bool;
+                                                          move_delta_t delta) -> bool;
 
 /**
  * @brief:
@@ -39,12 +39,12 @@ auto delete_temporary_decoration(CircuitData& circuit,
  *    + new position is representable
  */
 auto move_temporary_decoration_unchecked(CircuitData& circuit,
-                                         decoration_id_t decoration_id, int dx,
-                                         int dy) -> void;
+                                         decoration_id_t decoration_id,
+                                         move_delta_t delta) -> void;
 
 auto move_or_delete_temporary_decoration(CircuitData& circuit,
-                                         decoration_id_t& decoration_id, int dx,
-                                         int dy) -> void;
+                                         decoration_id_t& decoration_id,
+                                         move_delta_t delta) -> void;
 
 auto change_decoration_insertion_mode(CircuitData& circuit,
                                       decoration_id_t& decoration_id,

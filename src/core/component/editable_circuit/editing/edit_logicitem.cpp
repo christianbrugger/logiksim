@@ -74,60 +74,59 @@ auto delete_temporary_logicitem(CircuitData& circuit,
 //
 
 auto is_logicitem_position_representable(const Layout& layout,
-                                         const logicitem_id_t logicitem_id, int dx,
-                                         int dy) -> bool {
+                                         const logicitem_id_t logicitem_id,
+                                         move_delta_t delta) -> bool {
     if (!logicitem_id) [[unlikely]] {
         throw std::runtime_error("element id is invalid");
     }
 
     const auto position = layout.logicitems().position(logicitem_id);
 
-    if (!is_representable(position, dx, dy)) {
+    if (!is_representable(position, delta.x, delta.y)) {
         return false;
     }
 
     auto data = to_layout_calculation_data(layout, logicitem_id);
-    data.position = add_unchecked(position, dx, dy);
+    data.position = add_unchecked(position, delta.x, delta.y);
 
     return is_representable(data);
 }
 
 auto are_logicitem_positions_representable(const Layout& layout,
-                                           const Selection& selection, int delta_x,
-                                           int delta_y) -> bool {
+                                           const Selection& selection,
+                                           move_delta_t delta) -> bool {
     const auto logicitem_valid = [&](logicitem_id_t logicitem_id) {
-        return is_logicitem_position_representable(layout, logicitem_id, delta_x,
-                                                   delta_y);
+        return is_logicitem_position_representable(layout, logicitem_id, delta);
     };
 
     return std::ranges::all_of(selection.selected_logicitems(), logicitem_valid);
 }
 
 auto move_temporary_logicitem_unchecked(Layout& layout, const logicitem_id_t logicitem_id,
-                                        int dx, int dy) -> void {
+                                        move_delta_t delta) -> void {
     assert(std::as_const(layout).logicitems().display_state(logicitem_id) ==
            display_state_t::temporary);
-    assert(is_logicitem_position_representable(layout, logicitem_id, dx, dy));
+    assert(is_logicitem_position_representable(layout, logicitem_id, delta));
 
     const auto position =
-        add_unchecked(layout.logicitems().position(logicitem_id), dx, dy);
+        add_unchecked(layout.logicitems().position(logicitem_id), delta.x, delta.y);
     layout.logicitems().set_position(logicitem_id, position);
 }
 
 auto move_or_delete_temporary_logicitem(CircuitData& circuit,
-                                        logicitem_id_t& logicitem_id, int dx,
-                                        int dy) -> void {
+                                        logicitem_id_t& logicitem_id,
+                                        move_delta_t delta) -> void {
     if (circuit.layout.logicitems().display_state(logicitem_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("Only temporary items can be freely moved.");
     }
 
-    if (!is_logicitem_position_representable(circuit.layout, logicitem_id, dx, dy)) {
+    if (!is_logicitem_position_representable(circuit.layout, logicitem_id, delta)) {
         delete_temporary_logicitem(circuit, logicitem_id);
         return;
     }
 
-    move_temporary_logicitem_unchecked(circuit.layout, logicitem_id, dx, dy);
+    move_temporary_logicitem_unchecked(circuit.layout, logicitem_id, delta);
 }
 
 //
@@ -249,8 +248,8 @@ auto add_logicitem(CircuitData& circuit, const LogicItemDefinition& definition,
     circuit.submit(info_message::LogicItemCreated {logicitem_id});
 
     // assume final position
-    move_or_delete_temporary_logicitem(circuit, logicitem_id, int {position.x},
-                                       int {position.y});
+    move_or_delete_temporary_logicitem(circuit, logicitem_id,
+                                       move_delta_t {int {position.x}, int {position.y}});
     if (logicitem_id) {
         change_logicitem_insertion_mode(circuit, logicitem_id, insertion_mode);
     }

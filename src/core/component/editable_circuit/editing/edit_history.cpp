@@ -78,8 +78,8 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
 
         case decoration_move_temporary: {
             const auto decoration_id = _pop_decoration_id(stack, circuit);
-            const auto [x, y] = pop_back_vector(stack.move_deltas);
-            editing::move_temporary_decoration_unchecked(circuit, decoration_id, x, y);
+            const auto delta = pop_back_vector(stack.move_deltas);
+            editing::move_temporary_decoration_unchecked(circuit, decoration_id, delta);
             return;
         }
 

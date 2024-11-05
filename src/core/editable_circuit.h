@@ -71,12 +71,11 @@ class EditableCircuit {
     auto change_insertion_mode(Selection selection,
                                InsertionMode new_insertion_mode) -> void;
 
-    auto move_or_delete_temporary(selection_id_t selection_id, int delta_x,
-                                  int delta_y) -> void;
-    auto move_or_delete_temporary(Selection selection, int delta_x, int delta_y) -> void;
+    auto move_or_delete_temporary(selection_id_t selection_id,
+                                  move_delta_t delta) -> void;
+    auto move_or_delete_temporary(Selection selection, move_delta_t delta) -> void;
 
-    auto move_temporary_unchecked(const Selection& selection, int delta_x,
-                                  int delta_y) -> void;
+    auto move_temporary_unchecked(const Selection& selection, move_delta_t delta) -> void;
 
     auto delete_all(selection_id_t selection_id) -> void;
     auto delete_all(Selection selection) -> void;
@@ -202,8 +201,8 @@ auto add_wire_segments(EditableCircuit& editable_circuit, point_t p0, point_t p1
 auto add_example(Rng& rng, EditableCircuit& editable_circuit) -> void;
 
 [[nodiscard]] auto new_positions_representable(const EditableCircuit& editable_circuit,
-                                               const Selection& selection, int delta_x,
-                                               int delta_y) -> bool;
+                                               const Selection& selection,
+                                               move_delta_t delta) -> bool;
 
 [[nodiscard]] auto get_inserted_cross_points(const EditableCircuit& editable_circuit,
                                              const Selection& selection)

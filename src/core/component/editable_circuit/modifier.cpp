@@ -181,31 +181,31 @@ auto Modifier::delete_temporary_logicitem(logicitem_id_t& logicitem_id) -> void 
 }
 
 auto Modifier::move_temporary_logicitem_unchecked(const logicitem_id_t logicitem_id,
-                                                  int dx, int dy) -> void {
+                                                  move_delta_t delta) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_temporary_logicitem_unchecked(logicitem_id = {}, dx = {}, dy = {});\n"
+            "move_temporary_logicitem_unchecked(logicitem_id = {}, delta = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, logicitem_id, dx, dy);
+            circuit_data_.layout, logicitem_id, delta);
     }
 
-    editing::move_temporary_logicitem_unchecked(circuit_data_.layout, logicitem_id, dx,
-                                                dy);
+    editing::move_temporary_logicitem_unchecked(circuit_data_.layout, logicitem_id,
+                                                delta);
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, int dx,
-                                                  int dy) -> void {
+auto Modifier::move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id,
+                                                  move_delta_t delta) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_or_delete_temporary_logicitem(logicitem_id = {}, dx = {}, dy = {});\n"
+            "move_or_delete_temporary_logicitem(logicitem_id = {}, delta = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, logicitem_id, dx, dy);
+            circuit_data_.layout, logicitem_id, delta);
     }
 
-    editing::move_or_delete_temporary_logicitem(circuit_data_, logicitem_id, dx, dy);
+    editing::move_or_delete_temporary_logicitem(circuit_data_, logicitem_id, delta);
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -289,16 +289,16 @@ auto Modifier::delete_temporary_decoration(decoration_id_t& decoration_id) -> vo
 }
 
 auto Modifier::move_temporary_decoration_unchecked(const decoration_id_t decoration_id,
-                                                   int dx, int dy) -> void {
+                                                   move_delta_t delta) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_temporary_decoration_unchecked(decoration_id = {}, dx = {}, dy = {});\n"
+            "move_temporary_decoration_unchecked(decoration_id = {}, delta = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, decoration_id, dx, dy);
+            circuit_data_.layout, decoration_id, delta);
     }
 
-    editing::move_temporary_decoration_unchecked(circuit_data_, decoration_id, dx, dy);
+    editing::move_temporary_decoration_unchecked(circuit_data_, decoration_id, delta);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
@@ -306,17 +306,17 @@ auto Modifier::move_temporary_decoration_unchecked(const decoration_id_t decorat
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::move_or_delete_temporary_decoration(decoration_id_t& decoration_id, int dx,
-                                                   int dy) -> void {
+auto Modifier::move_or_delete_temporary_decoration(decoration_id_t& decoration_id,
+                                                   move_delta_t delta) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_or_delete_temporary_decoration(decoration_id = {}, dx = {}, dy = {});\n"
+            "move_or_delete_temporary_decoration(decoration_id = {}, delta = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, decoration_id, dx, dy);
+            circuit_data_.layout, decoration_id, delta);
     }
 
-    editing::move_or_delete_temporary_decoration(circuit_data_, decoration_id, dx, dy);
+    editing::move_or_delete_temporary_decoration(circuit_data_, decoration_id, delta);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
@@ -428,32 +428,32 @@ auto Modifier::change_wire_insertion_mode(segment_part_t& segment_part,
 }
 
 auto Modifier::move_temporary_wire_unchecked(segment_t segment, part_t verify_full_part,
-                                             int dx, int dy) -> void {
+                                             move_delta_t delta) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
             "move_temporary_wire_unchecked(segment = {}, verify_full_part = {}, "
-            "dx = {}, dy = {});\n"
+            "delta = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, segment, verify_full_part, dx, dy);
+            circuit_data_.layout, segment, verify_full_part, delta);
     }
 
     editing::move_temporary_wire_unchecked(circuit_data_.layout, segment,
-                                           verify_full_part, dx, dy);
+                                           verify_full_part, delta);
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::move_or_delete_temporary_wire(segment_part_t& segment_part, int dx,
-                                             int dy) -> void {
+auto Modifier::move_or_delete_temporary_wire(segment_part_t& segment_part,
+                                             move_delta_t delta) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_or_delete_temporary_wire(segment_part = {}, dx = {}, dy = {});\n"
+            "move_or_delete_temporary_wire(segment_part = {}, delta = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, segment_part, dx, dy);
+            circuit_data_.layout, segment_part, delta);
     }
 
-    editing::move_or_delete_temporary_wire(circuit_data_, segment_part, dx, dy);
+    editing::move_or_delete_temporary_wire(circuit_data_, segment_part, delta);
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -872,16 +872,14 @@ auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selectio
 }
 
 auto new_positions_representable(const Layout& layout, const Selection& selection,
-                                 int delta_x, int delta_y) -> bool {
-    return editing::are_logicitem_positions_representable(layout, selection, delta_x,
-                                                          delta_y) &&
-           editing::are_decoration_positions_representable(layout, selection, delta_x,
-                                                           delta_y) &&
-           editing::new_wire_positions_representable(layout, selection, delta_x, delta_y);
+                                 move_delta_t delta) -> bool {
+    return editing::are_logicitem_positions_representable(layout, selection, delta) &&
+           editing::are_decoration_positions_representable(layout, selection, delta) &&
+           editing::new_wire_positions_representable(layout, selection, delta);
 }
 
-auto move_temporary_unchecked(Modifier& modifier, const Selection& selection, int delta_x,
-                              int delta_y) -> void {
+auto move_temporary_unchecked(Modifier& modifier, const Selection& selection,
+                              move_delta_t delta) -> void {
     for (const auto& logicitem_id : selection.selected_logicitems()) {
         // TODO move checks to low-level method
         if (modifier.circuit_data().layout.logicitems().display_state(logicitem_id) !=
@@ -889,7 +887,7 @@ auto move_temporary_unchecked(Modifier& modifier, const Selection& selection, in
             throw std::runtime_error("selected logic items need to be temporary");
         }
 
-        modifier.move_temporary_logicitem_unchecked(logicitem_id, delta_x, delta_y);
+        modifier.move_temporary_logicitem_unchecked(logicitem_id, delta);
     }
 
     for (const auto& decoration_id : selection.selected_decorations()) {
@@ -899,7 +897,7 @@ auto move_temporary_unchecked(Modifier& modifier, const Selection& selection, in
             throw std::runtime_error("selected decorations need to be temporary");
         }
 
-        modifier.move_temporary_decoration_unchecked(decoration_id, delta_x, delta_y);
+        modifier.move_temporary_decoration_unchecked(decoration_id, delta);
     }
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
@@ -911,31 +909,31 @@ auto move_temporary_unchecked(Modifier& modifier, const Selection& selection, in
             throw std::runtime_error("selected wires need to be temporary");
         }
 
-        modifier.move_temporary_wire_unchecked(segment, parts.front(), delta_x, delta_y);
+        modifier.move_temporary_wire_unchecked(segment, parts.front(), delta);
     }
 }
 
 auto move_or_delete_temporary_consuming(Modifier& modifier, selection_id_t selection_id,
-                                        int delta_x, int delta_y) -> void {
+                                        move_delta_t delta) -> void {
     while (has_logicitem(modifier, selection_id)) {
         auto logicitem_id = get_first_logicitem(modifier, selection_id);
         modifier.remove_from_selection(selection_id, logicitem_id);
 
-        modifier.move_or_delete_temporary_logicitem(logicitem_id, delta_x, delta_y);
+        modifier.move_or_delete_temporary_logicitem(logicitem_id, delta);
     }
 
     while (has_decoration(modifier, selection_id)) {
         auto decoration_id = get_first_decoration(modifier, selection_id);
         modifier.remove_from_selection(selection_id, decoration_id);
 
-        modifier.move_or_delete_temporary_decoration(decoration_id, delta_x, delta_y);
+        modifier.move_or_delete_temporary_decoration(decoration_id, delta);
     }
 
     while (has_segment(modifier, selection_id)) {
         auto segment_part = get_first_segment(modifier, selection_id);
         modifier.remove_from_selection(selection_id, segment_part);
 
-        modifier.move_or_delete_temporary_wire(segment_part, delta_x, delta_y);
+        modifier.move_or_delete_temporary_wire(segment_part, delta);
     }
 }
 

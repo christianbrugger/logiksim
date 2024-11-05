@@ -14,6 +14,7 @@ struct part_t;
 struct segment_t;
 struct segment_part_t;
 struct point_t;
+struct move_delta_t;
 struct ordered_line_t;
 class Layout;
 class Selection;
@@ -28,19 +29,19 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
                                    segment_part_t& segment_part) -> void;
 
 [[nodiscard]] auto is_wire_position_representable(const Layout& layout,
-                                                  segment_part_t segment_part, int dx,
-                                                  int dy) -> bool;
+                                                  segment_part_t segment_part,
+                                                  move_delta_t delta) -> bool;
 
 [[nodiscard]] auto new_wire_positions_representable(const Layout& layout,
                                                     const Selection& selection,
-                                                    int delta_x, int delta_y) -> bool;
+                                                    move_delta_t delta) -> bool;
 
 // TODO why verify_full_part ??
 auto move_temporary_wire_unchecked(Layout& layout, segment_t segment,
-                                   part_t verify_full_part, int dx, int dy) -> void;
+                                   part_t verify_full_part, move_delta_t delta) -> void;
 
 auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment_part,
-                                   int dx, int dy) -> void;
+                                   move_delta_t delta) -> void;
 
 auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_part,
                                 InsertionMode new_mode) -> void;

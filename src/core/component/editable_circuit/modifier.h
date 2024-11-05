@@ -97,11 +97,11 @@ class Modifier {
 
     auto delete_temporary_logicitem(logicitem_id_t& logicitem_id) -> void;
 
-    auto move_temporary_logicitem_unchecked(logicitem_id_t logicitem_id, int dx,
-                                            int dy) -> void;
+    auto move_temporary_logicitem_unchecked(logicitem_id_t logicitem_id,
+                                            move_delta_t delta) -> void;
 
-    auto move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id, int dx,
-                                            int dy) -> void;
+    auto move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id,
+                                            move_delta_t delta) -> void;
 
     auto change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
                                          InsertionMode new_insertion_mode) -> void;
@@ -120,11 +120,11 @@ class Modifier {
 
     auto delete_temporary_decoration(decoration_id_t& decoration_id) -> void;
 
-    auto move_temporary_decoration_unchecked(decoration_id_t decoration_id, int dx,
-                                             int dy) -> void;
+    auto move_temporary_decoration_unchecked(decoration_id_t decoration_id,
+                                             move_delta_t delta) -> void;
 
-    auto move_or_delete_temporary_decoration(decoration_id_t& decoration_id, int dx,
-                                             int dy) -> void;
+    auto move_or_delete_temporary_decoration(decoration_id_t& decoration_id,
+                                             move_delta_t delta) -> void;
 
     auto change_decoration_insertion_mode(decoration_id_t& decoration_id,
                                           InsertionMode new_insertion_mode) -> void;
@@ -147,11 +147,11 @@ class Modifier {
     auto change_wire_insertion_mode(segment_part_t& segment_part,
                                     InsertionMode new_insertion_mode) -> void;
 
-    auto move_temporary_wire_unchecked(segment_t segment, part_t verify_full_part, int dx,
-                                       int dy) -> void;
+    auto move_temporary_wire_unchecked(segment_t segment, part_t verify_full_part,
+                                       move_delta_t delta) -> void;
 
-    auto move_or_delete_temporary_wire(segment_part_t& segment_part, int dx,
-                                       int dy) -> void;
+    auto move_or_delete_temporary_wire(segment_part_t& segment_part,
+                                       move_delta_t delta) -> void;
 
     auto toggle_wire_crosspoint(point_t point) -> void;
 
@@ -243,14 +243,14 @@ auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selectio
                                      InsertionMode new_insertion_mode) -> void;
 
 auto new_positions_representable(const Layout& Layout, const Selection& selection,
-                                 int delta_x, int delta_y) -> bool;
+                                 move_delta_t delta) -> bool;
 
 // TODO move checks to low-level method
-auto move_temporary_unchecked(Modifier& modifier, const Selection& selection, int delta_x,
-                              int delta_y) -> void;
+auto move_temporary_unchecked(Modifier& modifier, const Selection& selection,
+                              move_delta_t delta) -> void;
 
 auto move_or_delete_temporary_consuming(Modifier& modifier, selection_id_t selection_id,
-                                        int delta_x, int delta_y) -> void;
+                                        move_delta_t delta) -> void;
 
 auto delete_all(Modifier& modifier, selection_id_t selection_id) -> void;
 
