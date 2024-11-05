@@ -23,7 +23,7 @@ auto at_back_vector(std::vector<T>& data) {
  * @brief: Get last vector element if it exists.
  */
 template <typename T>
-auto get_back_vector(std::vector<T>& data) -> std::optional<std::decay_t<T>> {
+auto get_back_vector(const std::vector<T>& data) -> std::optional<std::decay_t<T>> {
     if (!data.empty()) {
         return std::make_optional(data.back());
     }

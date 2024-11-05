@@ -104,6 +104,29 @@ auto HistoryStack::clear() -> void {
     }
 }
 
+auto HistoryStack::top_entry() const -> std::optional<HistoryEntry> {
+    return get_back_vector(entries);
+}
+
+//
+// Groups
+//
+
+auto HistoryStack::push_new_group() -> void {
+    // skip if it is already grouped
+    if (entries.empty() || entries.back() == HistoryEntry::new_group) {
+        return;
+    }
+    entries.emplace_back(HistoryEntry::new_group);
+}
+
+auto HistoryStack::pop_new_group() -> void {
+    Expects(pop_back_vector(entries) == HistoryEntry::new_group);
+}
+
+//
+// Decoration
+//
 auto HistoryStack::push_decoration_create_temporary(
     decoration_key_t decoration_key, PlacedDecoration&& placed_decoration) -> void {
     // skip if it was just deleted
@@ -241,6 +264,10 @@ auto HistoryStack::pop_decoration_change_attributes()
     return {pop_back_vector(decoration_keys), pop_back_vector(placed_decorations)};
 }
 
+//
+// Visible Selection
+//
+
 auto HistoryStack::push_visible_selection_clear() -> void {
     entries.emplace_back(HistoryEntry::visible_selection_clear);
 }
@@ -324,6 +351,18 @@ auto get_entry_before_skip(const std::vector<HistoryEntry>& entries,
 auto last_non_group_entry(const std::vector<HistoryEntry>& entries)
     -> std::optional<HistoryEntry> {
     return get_entry_before_skip(entries, HistoryEntry::new_group);
+}
+
+auto has_ungrouped_entries(const HistoryStack& stack) -> bool {
+    const auto top_entry = stack.top_entry();
+
+    return top_entry != std::nullopt && top_entry != HistoryEntry::new_group;
+}
+
+auto reopen_group(HistoryStack& stack) -> void {
+    while (stack.top_entry() == HistoryEntry::new_group) {
+        stack.pop_new_group();
+    }
 }
 
 }  // namespace editable_circuit

@@ -28,13 +28,11 @@ auto has_redo_entries(const History& history) -> bool {
 }
 
 auto has_ungrouped_undo_entries(const History& history) -> bool {
-    return !history.undo_stack.entries.empty() &&
-           history.undo_stack.entries.back() != HistoryEntry::new_group;
+    return has_ungrouped_entries(history.undo_stack);
 }
 
 auto has_ungrouped_redo_entries(const History& history) -> bool {
-    return !history.redo_stack.entries.empty() &&
-           history.redo_stack.entries.back() != HistoryEntry::new_group;
+    return has_ungrouped_entries(history.redo_stack);
 }
 
 auto enable_history(History& history) -> void {
@@ -52,7 +50,7 @@ auto to_id(decoration_key_t decoration_key, CircuitData& circuit) -> decoration_
 }
 
 auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
-    switch (at_back_vector(stack.entries)) {
+    switch (stack.top_entry().value()) {
         using enum HistoryEntry;
         case new_group: {
             return;
@@ -153,11 +151,11 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
 }
 
 auto _apply_last_group(CircuitData& circuit, HistoryStack& stack) -> void {
-    while (!stack.entries.empty() && stack.entries.back() == HistoryEntry::new_group) {
-        stack.entries.pop_back();
+    while (stack.top_entry() == HistoryEntry::new_group) {
+        stack.pop_new_group();
     }
 
-    while (!stack.entries.empty() && stack.entries.back() != HistoryEntry::new_group) {
+    while (has_ungrouped_entries(stack)) {
         _apply_last_entry(circuit, stack);
     }
 }
@@ -191,31 +189,19 @@ auto redo_group(CircuitData& circuit) -> void {
 }
 
 auto finish_undo_group(History& history) -> void {
-    if (has_ungrouped_undo_entries(history)) {
-        history.undo_stack.entries.emplace_back(HistoryEntry::new_group);
-    }
+    history.undo_stack.push_new_group();
 }
 
 auto finish_redo_group(History& history) -> void {
-    if (has_ungrouped_redo_entries(history)) {
-        history.redo_stack.entries.emplace_back(HistoryEntry::new_group);
-    }
+    history.redo_stack.push_new_group();
 }
 
 auto reopen_undo_group(History& history) -> void {
-    auto& entries = history.undo_stack.entries;
-
-    while (!entries.empty() && entries.back() == HistoryEntry::new_group) {
-        entries.pop_back();
-    }
+    return reopen_group(history.undo_stack);
 }
 
 auto reopen_redo_group(History& history) -> void {
-    auto& entries = history.redo_stack.entries;
-
-    while (!entries.empty() && entries.back() == HistoryEntry::new_group) {
-        entries.pop_back();
-    }
+    return reopen_group(history.redo_stack);
 }
 
 }  // namespace editing

@@ -43,19 +43,9 @@ template <>
 
 namespace editable_circuit {
 
+// TODO make class
 struct HistoryStack {
-    std::vector<HistoryEntry> entries {};
-
-    // decoration
-    std::vector<decoration_key_t> decoration_keys {};
-    std::vector<PlacedDecoration> placed_decorations {};
-    std::vector<move_delta_t> move_deltas {};
-
-    // visible selection
-    std::vector<StableSelection> selections {};
-    std::vector<rect_fine_t> selection_rects {};
-    std::vector<SelectionFunction> selection_functions {};
-
+   public:
     [[nodiscard]] auto operator==(const HistoryStack&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
@@ -63,6 +53,15 @@ struct HistoryStack {
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto size() const -> std::size_t;
     auto clear() -> void;
+
+    [[nodiscard]] auto top_entry() const -> std::optional<HistoryEntry>;
+
+    //
+    // Groups
+    //
+
+    auto push_new_group() -> void;
+    auto pop_new_group() -> void;
 
     //
     // Decoration
@@ -106,9 +105,24 @@ struct HistoryStack {
     auto pop_visible_selection_add() -> visible_selection::operation_t;
     auto pop_visible_selection_update_last() -> rect_fine_t;
     auto pop_visible_selection_pop_last() -> void;
+
+   private:
+    // TODO rename
+    std::vector<HistoryEntry> entries {};
+
+    // decoration
+    std::vector<decoration_key_t> decoration_keys {};
+    std::vector<PlacedDecoration> placed_decorations {};
+    std::vector<move_delta_t> move_deltas {};
+
+    // visible selection
+    std::vector<StableSelection> selections {};
+    std::vector<rect_fine_t> selection_rects {};
+    std::vector<SelectionFunction> selection_functions {};
 };
 
 static_assert(std::regular<HistoryStack>);
+
 //
 // Free Functions
 //
@@ -119,6 +133,10 @@ static_assert(std::regular<HistoryStack>);
 
 [[nodiscard]] auto last_non_group_entry(const std::vector<HistoryEntry>& entries)
     -> std::optional<HistoryEntry>;
+
+[[nodiscard]] auto has_ungrouped_entries(const HistoryStack& stack) -> bool;
+
+auto reopen_group(HistoryStack& stack) -> void;
 
 }  // namespace editable_circuit
 
