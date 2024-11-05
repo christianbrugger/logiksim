@@ -15,53 +15,52 @@ namespace editable_circuit {
 
 namespace editing {
 
-auto is_history_enabled(const CircuitHistory& history) -> bool {
+auto is_history_enabled(const History& history) -> bool {
     return history.state != HistoryState::disabled;
 }
 
-auto has_undo_entries(const CircuitHistory& history) -> bool {
+auto has_undo_entries(const History& history) -> bool {
     return !history.undo_stack.empty();
 }
 
-auto has_redo_entries(const CircuitHistory& history) -> bool {
+auto has_redo_entries(const History& history) -> bool {
     return !history.redo_stack.empty();
 }
 
-auto has_ungrouped_undo_entries(const CircuitHistory& history) -> bool {
+auto has_ungrouped_undo_entries(const History& history) -> bool {
     return !history.undo_stack.entries.empty() &&
            history.undo_stack.entries.back() != HistoryEntry::new_group;
 }
 
-auto has_ungrouped_redo_entries(const CircuitHistory& history) -> bool {
+auto has_ungrouped_redo_entries(const History& history) -> bool {
     return !history.redo_stack.entries.empty() &&
            history.redo_stack.entries.back() != HistoryEntry::new_group;
 }
 
-auto enable_history(CircuitHistory& history) -> void {
+auto enable_history(History& history) -> void {
     history.state = HistoryState::track_undo_new;
 }
 
-auto disable_history(CircuitHistory& history) -> void {
+auto disable_history(History& history) -> void {
     history.state = HistoryState::disabled;
 }
 
 namespace {
 
-auto _pop_decoration_id(HistoryStack& stack, CircuitData& circuit) -> decoration_id_t {
-    const auto decoration_key = pop_back_vector(stack.decoration_keys);
+auto to_id(decoration_key_t decoration_key, CircuitData& circuit) -> decoration_id_t {
     return circuit.index.key_index().get(decoration_key);
 }
 
 auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
-    switch (pop_back_vector(stack.entries)) {
+    switch (at_back_vector(stack.entries)) {
         using enum HistoryEntry;
         case new_group: {
             return;
         }
 
         case decoration_create_temporary: {
-            const auto decoration_key = pop_back_vector(stack.decoration_keys);
-            auto placed_decoration = pop_back_vector(stack.placed_decorations);
+            auto [decoration_key, placed_decoration] =
+                stack.pop_decoration_create_temporary();
 
             // TODO fix std::move
             editing::add_decoration(circuit, std::move(placed_decoration.definition),
@@ -71,42 +70,44 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case decoration_delete_temporary: {
-            auto decoration_id = _pop_decoration_id(stack, circuit);
+            auto decoration_id = to_id(stack.pop_decoration_delete_temporary(), circuit);
             editing::delete_temporary_decoration(circuit, decoration_id);
             return;
         }
 
         case decoration_move_temporary: {
-            const auto decoration_id = _pop_decoration_id(stack, circuit);
-            const auto delta = pop_back_vector(stack.move_deltas);
+            const auto [decoration_key, delta] = stack.pop_decoration_move_temporary();
+            const auto decoration_id = to_id(decoration_key, circuit);
+
             editing::move_temporary_decoration_unchecked(circuit, decoration_id, delta);
             return;
         }
 
         case decoration_to_mode_temporary: {
-            auto decoration_id = _pop_decoration_id(stack, circuit);
+            auto decoration_id = to_id(stack.pop_decoration_to_mode_temporary(), circuit);
             editing::change_decoration_insertion_mode(circuit, decoration_id,
                                                       InsertionMode::temporary);
             return;
         }
 
         case decoration_to_mode_colliding: {
-            auto decoration_id = _pop_decoration_id(stack, circuit);
+            auto decoration_id = to_id(stack.pop_decoration_to_mode_colliding(), circuit);
             editing::change_decoration_insertion_mode(circuit, decoration_id,
                                                       InsertionMode::collisions);
             return;
         }
 
         case decoration_to_mode_insert: {
-            auto decoration_id = _pop_decoration_id(stack, circuit);
+            auto decoration_id = to_id(stack.pop_decoration_to_mode_insert(), circuit);
             editing::change_decoration_insertion_mode(circuit, decoration_id,
                                                       InsertionMode::insert_or_discard);
             return;
         }
 
         case decoration_change_attributes: {
-            const auto decoration_id = _pop_decoration_id(stack, circuit);
-            auto placed_decoration = pop_back_vector(stack.placed_decorations);
+            auto [decoration_key, placed_decoration] =
+                stack.pop_decoration_change_attributes();
+            const auto decoration_id = to_id(decoration_key, circuit);
 
             if (placed_decoration.definition.attrs_text_element.has_value()) {
                 editing::set_attributes_decoration(
@@ -117,31 +118,33 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case visible_selection_clear: {
+            stack.pop_visible_selection_clear();
             editing::clear_visible_selection(circuit);
             return;
         }
 
         case visible_selection_set: {
-            const auto stable_selection = pop_back_vector(stack.selections);
+            const auto stable_selection = stack.pop_visible_selection_set();
             auto selection = to_selection(stable_selection, circuit.index.key_index());
             editing::set_visible_selection(circuit, std::move(selection));
             return;
         }
 
         case visible_selection_add: {
-            const auto function = pop_back_vector(stack.selection_functions);
-            const auto rect = pop_back_vector(stack.selection_rects);
-            editing::add_visible_selection_rect(circuit, function, rect);
+            const auto operation = stack.pop_visible_selection_add();
+            editing::add_visible_selection_rect(circuit, operation.function,
+                                                operation.rect);
             return;
         }
 
         case visible_selection_update_last: {
-            const auto rect = pop_back_vector(stack.selection_rects);
+            const auto rect = stack.pop_visible_selection_update_last();
             editing::update_last_visible_selection_rect(circuit, rect);
             return;
         }
 
         case visible_selection_pop_last: {
+            stack.pop_visible_selection_pop_last();
             editing::pop_last_visible_selection_rect(circuit);
             return;
         }
@@ -187,19 +190,19 @@ auto redo_group(CircuitData& circuit) -> void {
     Ensures(!has_ungrouped_redo_entries(circuit.history));
 }
 
-auto finish_undo_group(CircuitHistory& history) -> void {
+auto finish_undo_group(History& history) -> void {
     if (has_ungrouped_undo_entries(history)) {
         history.undo_stack.entries.emplace_back(HistoryEntry::new_group);
     }
 }
 
-auto finish_redo_group(CircuitHistory& history) -> void {
+auto finish_redo_group(History& history) -> void {
     if (has_ungrouped_redo_entries(history)) {
         history.redo_stack.entries.emplace_back(HistoryEntry::new_group);
     }
 }
 
-auto reopen_undo_group(CircuitHistory& history) -> void {
+auto reopen_undo_group(History& history) -> void {
     auto& entries = history.undo_stack.entries;
 
     while (!entries.empty() && entries.back() == HistoryEntry::new_group) {
@@ -207,7 +210,7 @@ auto reopen_undo_group(CircuitHistory& history) -> void {
     }
 }
 
-auto reopen_redo_group(CircuitHistory& history) -> void {
+auto reopen_redo_group(History& history) -> void {
     auto& entries = history.redo_stack.entries;
 
     while (!entries.empty() && entries.back() == HistoryEntry::new_group) {

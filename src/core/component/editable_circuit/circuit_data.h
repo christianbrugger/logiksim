@@ -24,7 +24,7 @@ struct CircuitData {
     LayoutIndex index {};
     SelectionStore selection_store {};
     VisibleSelection visible_selection {};
-    CircuitHistory history {};
+    History history {};
 
     std::optional<message_vector_t> messages {std::nullopt};
     std::optional<MessageValidator> message_validator {std::nullopt};

@@ -12,7 +12,7 @@ namespace editing {
 namespace {
 
 auto _store_history_visible_selection_set_operations(
-    CircuitHistory& history, const VisibleSelection& visible_selection) -> void {
+    History& history, const VisibleSelection& visible_selection) -> void {
     if (const auto stack = history.get_stack()) {
         for (const auto& operation :
              visible_selection.operations() | std::ranges::views::reverse) {
@@ -21,7 +21,7 @@ auto _store_history_visible_selection_set_operations(
     }
 }
 
-auto _store_history_visible_selection_set(CircuitHistory& history,
+auto _store_history_visible_selection_set(History& history,
                                           const VisibleSelection& visible_selection,
                                           const KeyIndex& key_index) -> void {
     if (const auto stack = history.get_stack()) {
@@ -35,7 +35,7 @@ auto _store_history_visible_selection_set(CircuitHistory& history,
     }
 }
 
-auto _store_history_visible_selection_pop_last(CircuitHistory& history) -> void {
+auto _store_history_visible_selection_pop_last(History& history) -> void {
     if (const auto stack = history.get_stack()) {
         stack->push_visible_selection_pop_last();
     }
