@@ -105,6 +105,23 @@ struct HistoryStack {
     auto pop_decoration_move_temporary() -> std::pair<decoration_key_t, move_delta_t>;
     auto pop_decoration_change_attributes()
         -> std::pair<decoration_key_t, PlacedDecoration>;
+
+    //
+    // Visible Selection
+    //
+
+    auto push_visible_selection_clear() -> void;
+    auto push_visible_selection_set(StableSelection&& stable_selection) -> void;
+    auto push_visible_selection_add(const VisibleSelection::operation_t& operation)
+        -> void;
+    auto push_visible_selection_update_last(const rect_fine_t& rect) -> void;
+    auto push_visible_selection_pop_last() -> void;
+
+    auto pop_visible_selection_clear() -> void;
+    auto pop_visible_selection_set() -> StableSelection;
+    auto pop_visible_selection_add() -> visible_selection::operation_t;
+    auto pop_visible_selection_update_last() -> rect_fine_t;
+    auto pop_visible_selection_pop_last() -> void;
 };
 
 static_assert(std::regular<HistoryStack>);

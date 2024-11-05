@@ -225,42 +225,109 @@ auto HistoryStack::push_decoration_change_attributes(
     placed_decorations.emplace_back(std::move(placed_decoration));
 }
 
-[[nodiscard]] auto HistoryStack::pop_decoration_create_temporary()
+auto HistoryStack::pop_decoration_create_temporary()
     -> std::pair<decoration_key_t, PlacedDecoration> {
     Expects(pop_back_vector(entries) == HistoryEntry::decoration_create_temporary);
     return {pop_back_vector(decoration_keys), pop_back_vector(placed_decorations)};
 }
 
-[[nodiscard]] auto HistoryStack::pop_decoration_delete_temporary() -> decoration_key_t {
+auto HistoryStack::pop_decoration_delete_temporary() -> decoration_key_t {
     Expects(pop_back_vector(entries) == HistoryEntry::decoration_delete_temporary);
     return pop_back_vector(decoration_keys);
 }
 
-[[nodiscard]] auto HistoryStack::pop_decoration_to_mode_temporary() -> decoration_key_t {
+auto HistoryStack::pop_decoration_to_mode_temporary() -> decoration_key_t {
     Expects(pop_back_vector(entries) == HistoryEntry::decoration_to_mode_temporary);
     return pop_back_vector(decoration_keys);
 }
 
-[[nodiscard]] auto HistoryStack::pop_decoration_to_mode_colliding() -> decoration_key_t {
+auto HistoryStack::pop_decoration_to_mode_colliding() -> decoration_key_t {
     Expects(pop_back_vector(entries) == HistoryEntry::decoration_to_mode_colliding);
     return pop_back_vector(decoration_keys);
 }
 
-[[nodiscard]] auto HistoryStack::pop_decoration_to_mode_insert() -> decoration_key_t {
+auto HistoryStack::pop_decoration_to_mode_insert() -> decoration_key_t {
     Expects(pop_back_vector(entries) == HistoryEntry::decoration_to_mode_insert);
     return pop_back_vector(decoration_keys);
 }
 
-[[nodiscard]] auto HistoryStack::pop_decoration_move_temporary()
+auto HistoryStack::pop_decoration_move_temporary()
     -> std::pair<decoration_key_t, move_delta_t> {
     Expects(pop_back_vector(entries) == HistoryEntry::decoration_move_temporary);
     return {pop_back_vector(decoration_keys), pop_back_vector(move_deltas)};
 }
 
-[[nodiscard]] auto HistoryStack::pop_decoration_change_attributes()
+auto HistoryStack::pop_decoration_change_attributes()
     -> std::pair<decoration_key_t, PlacedDecoration> {
     Expects(pop_back_vector(entries) == HistoryEntry::decoration_change_attributes);
     return {pop_back_vector(decoration_keys), pop_back_vector(placed_decorations)};
+}
+
+auto HistoryStack::push_visible_selection_clear() -> void {
+    entries.emplace_back(HistoryEntry::visible_selection_clear);
+}
+
+auto HistoryStack::push_visible_selection_set(StableSelection&& stable_selection)
+    -> void {
+    entries.emplace_back(HistoryEntry::visible_selection_set);
+    selections.emplace_back(std::move(stable_selection));
+}
+
+auto HistoryStack::push_visible_selection_add(
+    const VisibleSelection::operation_t& operation) -> void {
+    // remove rects added and removed in the same group
+    if (get_entry_before_skip(entries, HistoryEntry::visible_selection_update_last) ==
+        HistoryEntry::visible_selection_pop_last) {
+        while (at_back_vector(entries) == HistoryEntry::visible_selection_update_last) {
+            pop_visible_selection_update_last();
+        }
+        pop_visible_selection_pop_last();
+        return;
+    }
+
+    entries.emplace_back(HistoryEntry::visible_selection_add);
+    selection_functions.emplace_back(operation.function);
+    selection_rects.emplace_back(operation.rect);
+}
+
+auto HistoryStack::push_visible_selection_update_last(const rect_fine_t& rect) -> void {
+    // skip similar changes
+    if (last_non_group_entry(entries) == HistoryEntry::visible_selection_update_last) {
+        return;
+    }
+
+    entries.emplace_back(HistoryEntry::visible_selection_update_last);
+    selection_rects.emplace_back(rect);
+}
+
+auto HistoryStack::push_visible_selection_pop_last() -> void {
+    entries.emplace_back(HistoryEntry::visible_selection_pop_last);
+}
+
+auto HistoryStack::pop_visible_selection_clear() -> void {
+    Expects(pop_back_vector(entries) == HistoryEntry::visible_selection_clear);
+}
+
+auto HistoryStack::pop_visible_selection_set() -> StableSelection {
+    Expects(pop_back_vector(entries) == HistoryEntry::visible_selection_set);
+    return pop_back_vector(selections);
+}
+
+auto HistoryStack::pop_visible_selection_add() -> visible_selection::operation_t {
+    Expects(pop_back_vector(entries) == HistoryEntry::visible_selection_add);
+    return visible_selection::operation_t {
+        .function = pop_back_vector(selection_functions),
+        .rect = pop_back_vector(selection_rects),
+    };
+}
+
+auto HistoryStack::pop_visible_selection_update_last() -> rect_fine_t {
+    Expects(pop_back_vector(entries) == HistoryEntry::visible_selection_update_last);
+    return pop_back_vector(selection_rects);
+}
+
+auto HistoryStack::pop_visible_selection_pop_last() -> void {
+    Expects(pop_back_vector(entries) == HistoryEntry::visible_selection_pop_last);
 }
 
 //

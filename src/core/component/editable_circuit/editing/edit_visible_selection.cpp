@@ -11,33 +11,12 @@ namespace editing {
 
 namespace {
 
-auto _add_operation_to_history(HistoryStack& stack,
-                               VisibleSelection::operation_t operation) -> void {
-    // remove rects added and removed in the same group
-    if (get_entry_before_skip(stack.entries,
-                              HistoryEntry::visible_selection_update_last) ==
-        HistoryEntry::visible_selection_pop_last) {
-        while (at_back_vector(stack.entries) ==
-               HistoryEntry::visible_selection_update_last) {
-            pop_back_vector(stack.entries);
-            pop_back_vector(stack.selection_rects);
-        }
-        Expects(pop_back_vector(stack.entries) ==
-                HistoryEntry::visible_selection_pop_last);
-        return;
-    }
-
-    stack.entries.emplace_back(HistoryEntry::visible_selection_add);
-    stack.selection_functions.emplace_back(operation.function);
-    stack.selection_rects.emplace_back(operation.rect);
-}
-
 auto _store_history_visible_selection_set_operations(
     CircuitHistory& history, const VisibleSelection& visible_selection) -> void {
     if (const auto stack = history.get_stack()) {
         for (const auto& operation :
              visible_selection.operations() | std::ranges::views::reverse) {
-            _add_operation_to_history(*stack, operation);
+            stack->push_visible_selection_add(operation);
         }
     }
 }
@@ -48,18 +27,17 @@ auto _store_history_visible_selection_set(CircuitHistory& history,
     if (const auto stack = history.get_stack()) {
         if (const auto& initial_selection = visible_selection.initial_selection();
             !initial_selection.empty()) {
-            stack->entries.emplace_back(HistoryEntry::visible_selection_set);
-            stack->selections.emplace_back(
+            stack->push_visible_selection_set(
                 to_stable_selection(initial_selection, key_index));
         } else {
-            stack->entries.emplace_back(HistoryEntry::visible_selection_clear);
+            stack->push_visible_selection_clear();
         }
     }
 }
 
 auto _store_history_visible_selection_pop_last(CircuitHistory& history) -> void {
     if (const auto stack = history.get_stack()) {
-        stack->entries.emplace_back(HistoryEntry::visible_selection_pop_last);
+        stack->push_visible_selection_pop_last();
     }
 }
 
@@ -67,22 +45,15 @@ auto _store_history_visible_selection_add(CircuitData& circuit_data) -> void {
     static_cast<void>(circuit_data);
     if (const auto stack = circuit_data.history.get_stack()) {
         const auto operation = last_operation(circuit_data.visible_selection).value();
-        _add_operation_to_history(*stack, operation);
+        stack->push_visible_selection_add(operation);
     }
 }
 
 auto _store_history_visible_selection_update_last(CircuitData& circuit_data) -> void {
     static_cast<void>(circuit_data);
     if (const auto stack = circuit_data.history.get_stack()) {
-        // skip similar changes
-        if (last_non_group_entry(stack->entries) ==
-            HistoryEntry::visible_selection_update_last) {
-            return;
-        }
-
         const auto operation = last_operation(circuit_data.visible_selection).value();
-        stack->entries.emplace_back(HistoryEntry::visible_selection_update_last);
-        stack->selection_rects.emplace_back(operation.rect);
+        stack->push_visible_selection_update_last(operation.rect);
     }
 }
 
