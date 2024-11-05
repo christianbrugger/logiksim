@@ -3,7 +3,6 @@ set(LS_CORE_SOURCES
     algorithm/accumulate.cpp
     algorithm/adjacent_count_if.cpp
     algorithm/all_equal.cpp
-    algorithm/at_back_vector.cpp
     algorithm/checked_deref.cpp
     algorithm/compare_sorted.cpp
     algorithm/contains.cpp
@@ -20,7 +19,6 @@ set(LS_CORE_SOURCES
     algorithm/narrow_integral.cpp
     algorithm/overload.cpp
     algorithm/path_conversion.cpp
-    algorithm/pop_back_vector.cpp
     algorithm/pop_while.cpp
     algorithm/random_select.cpp
     algorithm/range.cpp
@@ -40,6 +38,7 @@ set(LS_CORE_SOURCES
     algorithm/trim_whitespace.cpp
     algorithm/u8_conversion.cpp
     algorithm/uniform_int_distribution.cpp
+    algorithm/vector_operations.cpp
 
     allocated_size/ankerl_unordered_dense.cpp
     allocated_size/folly_small_vector.cpp

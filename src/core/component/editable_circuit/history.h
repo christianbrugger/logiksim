@@ -77,6 +77,22 @@ struct HistoryStack {
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto size() const -> std::size_t;
     auto clear() -> void;
+
+    //
+    // Decoration
+    //
+
+    auto push_decoration_create_temporary(decoration_key_t decoration_key,
+                                          PlacedDecoration&& placed_decoration) -> void;
+    auto push_decoration_delete_temporary(decoration_key_t decoration_key) -> void;
+    auto push_decoration_colliding_to_temporary(decoration_key_t decoration_key) -> void;
+    auto push_decoration_temporary_to_colliding(decoration_key_t decoration_key) -> void;
+    auto push_decoration_colliding_to_insert(decoration_key_t decoration_key) -> void;
+    auto push_decoration_insert_to_colliding(decoration_key_t decoration_key) -> void;
+    auto push_decoration_move_temporary(decoration_key_t decoration_key, int dx,
+                                        int dy) -> void;
+    auto push_decoration_change_attributes(decoration_key_t decoration_key,
+                                           PlacedDecoration&& placed_decoration) -> void;
 };
 
 static_assert(std::regular<HistoryStack>);

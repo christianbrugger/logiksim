@@ -1,6 +1,7 @@
 #include "core/component/editable_circuit/history.h"
 
 #include "core/algorithm/fmt_join.h"
+#include "core/algorithm/vector_operations.h"
 #include "core/allocated_size/std_pair.h"
 #include "core/allocated_size/std_vector.h"
 #include "core/format/container.h"
@@ -123,6 +124,112 @@ auto HistoryStack::clear() -> void {
     if (!empty()) {
         *this = HistoryStack {};
     }
+}
+
+auto HistoryStack::push_decoration_create_temporary(
+    decoration_key_t decoration_key, PlacedDecoration&& placed_decoration) -> void {
+    // skip if it was just deleted
+    if (get_back_vector(entries) == HistoryEntry::decoration_delete_temporary &&
+        at_back_vector(decoration_keys) == decoration_key) {
+        pop_back_vector(entries);
+        pop_back_vector(decoration_keys);
+        return;
+    }
+
+    entries.emplace_back(HistoryEntry::decoration_create_temporary);
+    decoration_keys.emplace_back(decoration_key);
+    placed_decorations.emplace_back(std::move(placed_decoration));
+}
+
+auto HistoryStack::push_decoration_delete_temporary(decoration_key_t decoration_key)
+    -> void {
+    // skip if it was just created
+    if (get_back_vector(entries) == HistoryEntry::decoration_create_temporary &&
+        at_back_vector(decoration_keys) == decoration_key) {
+        pop_back_vector(entries);
+        pop_back_vector(decoration_keys);
+        pop_back_vector(placed_decorations);
+        return;
+    }
+
+    entries.emplace_back(HistoryEntry::decoration_delete_temporary);
+    decoration_keys.emplace_back(decoration_key);
+}
+
+auto HistoryStack::push_decoration_colliding_to_temporary(decoration_key_t decoration_key)
+    -> void {
+    // skip if it was just colliding
+    if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_colliding &&
+        at_back_vector(decoration_keys) == decoration_key) {
+        pop_back_vector(entries);
+        pop_back_vector(decoration_keys);
+        return;
+    }
+
+    entries.emplace_back(HistoryEntry::decoration_to_mode_temporary);
+    decoration_keys.emplace_back(decoration_key);
+}
+
+auto HistoryStack::push_decoration_temporary_to_colliding(decoration_key_t decoration_key)
+    -> void {
+    // skip if it was just temporary
+    if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_temporary &&
+        at_back_vector(decoration_keys) == decoration_key) {
+        pop_back_vector(entries);
+        pop_back_vector(decoration_keys);
+        return;
+    }
+
+    entries.emplace_back(HistoryEntry::decoration_to_mode_colliding);
+    decoration_keys.emplace_back(decoration_key);
+}
+
+auto HistoryStack::push_decoration_colliding_to_insert(decoration_key_t decoration_key)
+    -> void {
+    // skip if it was just colliding
+    if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_colliding &&
+        at_back_vector(decoration_keys) == decoration_key) {
+        pop_back_vector(entries);
+        pop_back_vector(decoration_keys);
+        return;
+    }
+
+    entries.emplace_back(HistoryEntry::decoration_to_mode_insert);
+    decoration_keys.emplace_back(decoration_key);
+}
+
+auto HistoryStack::push_decoration_insert_to_colliding(decoration_key_t decoration_key)
+    -> void {
+    // skip if it was just inserted
+    if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_insert &&
+        at_back_vector(decoration_keys) == decoration_key) {
+        pop_back_vector(entries);
+        pop_back_vector(decoration_keys);
+        return;
+    }
+
+    entries.emplace_back(HistoryEntry::decoration_to_mode_colliding);
+    decoration_keys.emplace_back(decoration_key);
+}
+
+auto HistoryStack::push_decoration_move_temporary(decoration_key_t decoration_key, int dx,
+                                                  int dy) -> void {
+    entries.emplace_back(HistoryEntry::decoration_move_temporary);
+    decoration_keys.emplace_back(decoration_key);
+    move_deltas.emplace_back(dx, dy);
+}
+
+auto HistoryStack::push_decoration_change_attributes(
+    decoration_key_t decoration_key, PlacedDecoration&& placed_decoration) -> void {
+    // skip similar changes
+    if (last_non_group_entry(entries) == HistoryEntry::decoration_change_attributes &&
+        at_back_vector(decoration_keys) == decoration_key) {
+        return;
+    }
+
+    entries.emplace_back(HistoryEntry::decoration_change_attributes);
+    decoration_keys.emplace_back(decoration_key);
+    placed_decorations.emplace_back(std::move(placed_decoration));
 }
 
 //

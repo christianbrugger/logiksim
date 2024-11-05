@@ -1,6 +1,6 @@
 #include "core/component/editable_circuit/editing/edit_history.h"
 
-#include "core/algorithm/pop_back_vector.h"
+#include "core/algorithm/vector_operations.h"
 #include "core/component/editable_circuit/circuit_data.h"
 #include "core/component/editable_circuit/editing/edit_decoration.h"
 #include "core/component/editable_circuit/editing/edit_visible_selection.h"

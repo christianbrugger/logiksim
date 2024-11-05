@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_CORE_ALGORITHM_AT_BACK_VECTOR_H
-#define LOGICSIM_CORE_ALGORITHM_AT_BACK_VECTOR_H
+#ifndef LOGICSIM_CORE_ALGORITHM_VECTOR_OPERATIONS_H
+#define LOGICSIM_CORE_ALGORITHM_VECTOR_OPERATIONS_H
 
 #include <gsl/gsl>
 
@@ -28,6 +28,19 @@ auto get_back_vector(std::vector<T>& data) -> std::optional<std::decay_t<T>> {
         return std::make_optional(data.back());
     }
     return std::nullopt;
+}
+
+/**
+ * @brief: remove and return the last element.
+ *
+ * Teminates if the vector is empty.
+ */
+template <typename T>
+auto pop_back_vector(std::vector<T>& data) {
+    Expects(!data.empty());
+    auto entry = std::move(data.back());
+    data.pop_back();
+    return entry;
 }
 
 }  // namespace logicsim

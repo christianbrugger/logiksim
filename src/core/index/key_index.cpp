@@ -40,7 +40,9 @@ auto KeyIndex::get(decoration_id_t decoration_id) const -> decoration_key_t {
 
     if (const auto it = decoration_keys_.find(decoration_id);
         it != decoration_keys_.end()) {
-        return it->second;
+        const auto res = it->second;
+        Ensures(res);
+        return res;
     }
     throw std::runtime_error("id does not exist");
 }
@@ -50,7 +52,9 @@ auto KeyIndex::get(decoration_key_t decoration_key) const -> decoration_id_t {
 
     if (const auto it = decoration_ids_.find(decoration_key);
         it != decoration_ids_.end()) {
-        return it->second;
+        const auto res = it->second;
+        Ensures(res);
+        return res;
     }
     throw std::runtime_error("key does not exist");
 }
