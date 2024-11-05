@@ -245,14 +245,14 @@ class TrackedSelection {
         Ensures(state_matches(editable_circuit_, selection_id_, insertion_mode_));
     }
 
-    auto move_or_delete(int delta_x, int delta_y) -> void {
-        editable_circuit_.move_or_delete_temporary(selection_id_, delta_x, delta_y);
+    auto move_or_delete(move_delta_t delta) -> void {
+        editable_circuit_.move_or_delete_temporary(selection_id_, delta);
         Expects(is_valid(editable_circuit_));
     }
 
-    auto move_unchecked(int delta_x, int delta_y) -> void {
+    auto move_unchecked(move_delta_t delta) -> void {
         editable_circuit_.move_temporary_unchecked(
-            editable_circuit_.selection(selection_id_), delta_x, delta_y);
+            editable_circuit_.selection(selection_id_), delta);
         Expects(is_valid(editable_circuit_));
     }
 
@@ -279,7 +279,7 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
         TrackedSelection {editable_circuit, editable_circuit.visible_selection(),
                           InsertionMode::insert_or_discard};
     tracker_1.convert_to(InsertionMode::temporary);
-    tracker_1.move_unchecked(10, 10);
+    tracker_1.move_unchecked(move_delta_t {10, 10});
     tracker_1.convert_to(InsertionMode::insert_or_discard);
 
     // Mark rest as temporary
@@ -300,7 +300,7 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
 
     // Move second part
     tracker_2.convert_to(InsertionMode::temporary);
-    tracker_2.move_unchecked(10, 10);
+    tracker_2.move_unchecked(move_delta_t {10, 10});
     tracker_2.convert_to(InsertionMode::insert_or_discard);
 
     // delete example

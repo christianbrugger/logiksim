@@ -3,7 +3,6 @@
 #include "core/component/editable_circuit/editing/edit_wire.h"
 #include "core/component/editable_circuit/modifier.h"
 #include "core/layout_message.h"
-#include "core/vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -415,12 +414,27 @@ TEST(EditableCircuitModifierWire, IsWirePositionRepresentable) {
 
     constexpr static auto overflow = int {grid_t::max()} + 100;
 
-    ASSERT_EQ(is_wire_position_representable(layout, segment_part, 10, 10), true);
-    ASSERT_EQ(is_wire_position_representable(layout, segment_part, -10, -10), true);
+    {
+        const auto delta = move_delta_t {10, 10};
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), true);
+    }
+    {
+        const auto delta = move_delta_t {-10, -10};
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), true);
+    }
 
-    ASSERT_EQ(is_wire_position_representable(layout, segment_part, overflow, 10), false);
-    ASSERT_EQ(is_wire_position_representable(layout, segment_part, -overflow, 10), false);
-    ASSERT_EQ(is_wire_position_representable(layout, segment_part, 0, overflow), false);
+    {
+        const auto delta = move_delta_t {overflow, 10};
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), false);
+    }
+    {
+        const auto delta = move_delta_t {-overflow, 10};
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), false);
+    }
+    {
+        const auto delta = move_delta_t {0, overflow};
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), false);
+    }
 }
 
 TEST(EditableCircuitModifierWire, IsWirePositionRepresentablePart) {
@@ -436,16 +450,25 @@ TEST(EditableCircuitModifierWire, IsWirePositionRepresentablePart) {
 
     const auto segment = segment_t {wire_id, segment_index};
     const auto segment_part = segment_part_t {segment, part_t {0, 10}};
-    const auto segment_full = segment_part_t {
-        segment,
-        m_tree.part(segment_index),
-    };
+    const auto segment_full = segment_part_t {segment, m_tree.part(segment_index)};
 
-    ASSERT_EQ(is_wire_position_representable(layout, segment_part, -10, -10), true);
-    ASSERT_EQ(is_wire_position_representable(layout, segment_part, 10, 10), true);
+    {
+        const auto delta = move_delta_t {-10, -10};
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), true);
+    }
+    {
+        const auto delta = move_delta_t {10, 10};
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), true);
+    }
 
-    ASSERT_EQ(is_wire_position_representable(layout, segment_full, -10, -10), true);
-    ASSERT_EQ(is_wire_position_representable(layout, segment_full, 10, 10), false);
+    {
+        const auto delta = move_delta_t {-10, -10};
+        ASSERT_EQ(is_wire_position_representable(layout, segment_full, delta), true);
+    }
+    {
+        const auto delta = move_delta_t {10, 10};
+        ASSERT_EQ(is_wire_position_representable(layout, segment_full, delta), false);
+    }
 }
 
 //
@@ -471,7 +494,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMove) {
     auto modifier = get_logging_modifier(layout);
 
     auto segment_part = segment_part_0;
-    modifier.move_or_delete_temporary_wire(segment_part, 100, 200);
+    modifier.move_or_delete_temporary_wire(segment_part, move_delta_t {100, 200});
     Expects(is_valid(modifier));
 
     assert_wire_count(modifier, 1);
@@ -507,7 +530,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
     auto modifier = get_logging_modifier(layout);
 
     auto segment_part = segment_part_0;
-    modifier.move_or_delete_temporary_wire(segment_part, 100, 200);
+    modifier.move_or_delete_temporary_wire(segment_part, move_delta_t {100, 200});
     Expects(is_valid(modifier));
 
     ASSERT_EQ(segment_part, segment_part_1);
@@ -553,7 +576,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialEnd) {
     auto modifier = get_logging_modifier(layout);
 
     auto segment_part = segment_part_0;
-    modifier.move_or_delete_temporary_wire(segment_part, 100, 200);
+    modifier.move_or_delete_temporary_wire(segment_part, move_delta_t {100, 200});
     Expects(is_valid(modifier));
 
     ASSERT_EQ(segment_part, segment_part_1);
@@ -609,7 +632,7 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
     auto segment_part = segment_part_0;
 
     auto modifier = get_logging_modifier(layout);
-    modifier.move_or_delete_temporary_wire(segment_part, 100, 200);
+    modifier.move_or_delete_temporary_wire(segment_part, move_delta_t {100, 200});
     Expects(is_valid(modifier));
 
     ASSERT_EQ(segment_part, segment_part_2);

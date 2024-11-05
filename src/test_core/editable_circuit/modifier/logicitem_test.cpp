@@ -141,25 +141,38 @@ TEST(EditableCircuitModifierLogicItem, IsRepresentableAndElement) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto logicitem_id_0 =
+    auto item_id_0 =
         add_and_element(layout, temporary, connection_count_t {2}, point_t {0, 0});
 
     constexpr static auto overflow = int {grid_t::max()} + 100;
 
     // true
-    ASSERT_EQ(is_logicitem_position_representable(layout, logicitem_id_0, 10, 10), true);
-    ASSERT_EQ(is_logicitem_position_representable(layout, logicitem_id_0, -10, -10),
-              true);
+    {
+        const auto delta = move_delta_t {10, 10};
+        ASSERT_EQ(is_logicitem_position_representable(layout, item_id_0, delta), true);
+    }
+    {
+        const auto delta = move_delta_t {-10, -10};
+        ASSERT_EQ(is_logicitem_position_representable(layout, item_id_0, delta), true);
+    }
 
     // false
-    ASSERT_EQ(is_logicitem_position_representable(layout, logicitem_id_0, overflow, 10),
-              false);
-    ASSERT_EQ(is_logicitem_position_representable(layout, logicitem_id_0, -overflow, 10),
-              false);
-    ASSERT_EQ(is_logicitem_position_representable(layout, logicitem_id_0, 0, overflow),
-              false);
-    ASSERT_EQ(is_logicitem_position_representable(layout, logicitem_id_0, 0, -overflow),
-              false);
+    {
+        const auto delta = move_delta_t {overflow, 10};
+        ASSERT_EQ(is_logicitem_position_representable(layout, item_id_0, delta), false);
+    }
+    {
+        const auto delta = move_delta_t {-overflow, 10};
+        ASSERT_EQ(is_logicitem_position_representable(layout, item_id_0, delta), false);
+    }
+    {
+        const auto delta = move_delta_t {0, overflow};
+        ASSERT_EQ(is_logicitem_position_representable(layout, item_id_0, delta), false);
+    }
+    {
+        const auto delta = move_delta_t {0, -overflow};
+        ASSERT_EQ(is_logicitem_position_representable(layout, item_id_0, delta), false);
+    }
 }
 
 //
@@ -178,7 +191,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemSuccess) {
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
 
     auto modifier = get_logging_modifier(layout);
-    modifier.move_or_delete_temporary_logicitem(logicitem_id_0, 9, -11);
+    modifier.move_or_delete_temporary_logicitem(logicitem_id_0, move_delta_t {9, -11});
     Expects(is_valid(modifier));
 
     //  logicitem_ids
@@ -203,7 +216,7 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemUnchecked) {
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
 
     auto modifier = get_logging_modifier(layout);
-    modifier.move_temporary_logicitem_unchecked(logicitem_id_0, 9, -11);
+    modifier.move_temporary_logicitem_unchecked(logicitem_id_0, move_delta_t {9, -11});
     Expects(is_valid(modifier));
 
     //  logicitem_ids
@@ -229,7 +242,8 @@ TEST(EditableCircuitModifierLogicItem, MoveLogicItemDeleted) {
 
     auto modifier = get_logging_modifier(layout);
     constexpr static auto overflow = int {grid_t::max()} + 100;
-    modifier.move_or_delete_temporary_logicitem(logicitem_id_0, overflow, 0);
+    modifier.move_or_delete_temporary_logicitem(logicitem_id_0,
+                                                move_delta_t {overflow, 0});
     Expects(is_valid(modifier));
 
     //  logicitem_ids
@@ -542,7 +556,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemCombineAddMoveDelete) {
     auto id_0 = add_xor_element(modifier, point_t {1, 1}, temporary);
     auto id_1 = add_xor_element(modifier, point_t {10, 10}, insert_or_discard);
 
-    modifier.move_or_delete_temporary_logicitem(id_0, 10, 10);
+    modifier.move_or_delete_temporary_logicitem(id_0, move_delta_t {10, 10});
     Expects(is_valid(modifier));
 
     modifier.change_logicitem_insertion_mode(id_0, collisions);
