@@ -166,7 +166,7 @@ namespace {
                                         move_delta_t delta = {})
     -> std::optional<PlacedDecoration> {
     // definition
-    const auto definition = DecorationDefinition {
+    auto definition = DecorationDefinition {
         .decoration_type = obj.decoration_type,
         .size = obj.size,
 
@@ -189,7 +189,7 @@ namespace {
     }
 
     return PlacedDecoration {
-        .definition = definition,
+        .definition = std::move(definition),
         .position = moved_position,
     };
 }
@@ -482,8 +482,8 @@ auto LoadLayoutResult::add_to(EditableCircuit& editable_circuit,
 
     // decorations
     for (const auto& item : data_->decorations) {
-        if (const auto data = to_placed_decoration(item, delta)) {
-            editable_circuit.add_decoration(data->definition, data->position,
+        if (auto data = to_placed_decoration(item, delta)) {
+            editable_circuit.add_decoration(std::move(data->definition), data->position,
                                             parameters.insertion_mode,
                                             parameters.selection_id);
         }

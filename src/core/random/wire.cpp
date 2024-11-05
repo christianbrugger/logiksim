@@ -38,7 +38,7 @@ auto add_random_wire(Rng& rng, EditableCircuit& editable_circuit, grid_t min, gr
 
 auto add_random_button(Rng& rng, EditableCircuit& editable_circuit, grid_t min,
                        grid_t max, bool random_modes) -> void {
-    const auto definition = LogicItemDefinition {
+    auto definition = LogicItemDefinition {
         .logicitem_type = LogicItemType::button,
         .input_count = connection_count_t {0},
         .output_count = connection_count_t {1},
@@ -48,13 +48,13 @@ auto add_random_button(Rng& rng, EditableCircuit& editable_circuit, grid_t min,
     const auto mode =
         random_modes ? get_random_insertion_mode(rng) : InsertionMode::insert_or_discard;
 
-    editable_circuit.add_logicitem(definition, position, mode);
+    editable_circuit.add_logicitem(std::move(definition), position, mode);
 }
 
 auto add_random_text(Rng& rng, EditableCircuit& editable_circuit, grid_t min, grid_t max,
                      bool random_modes) -> void {
     const auto width = 1;
-    const auto definition = DecorationDefinition {
+    auto definition = DecorationDefinition {
         .decoration_type = DecorationType::text_element,
         .size = size_2d_t {width, 0},
         .attrs_text_element = attributes_text_element_t {.text = ""},
@@ -63,7 +63,7 @@ auto add_random_text(Rng& rng, EditableCircuit& editable_circuit, grid_t min, gr
     const auto mode =
         random_modes ? get_random_insertion_mode(rng) : InsertionMode::insert_or_discard;
 
-    editable_circuit.add_decoration(definition, position, mode);
+    editable_circuit.add_decoration(std::move(definition), position, mode);
 }
 
 auto add_many_wires(Rng& rng, EditableCircuit& editable_circuit, bool random_modes,

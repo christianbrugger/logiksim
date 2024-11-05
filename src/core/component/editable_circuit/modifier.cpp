@@ -342,7 +342,7 @@ auto Modifier::change_decoration_insertion_mode(
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::add_decoration(const DecorationDefinition& definition, point_t position,
+auto Modifier::add_decoration(DecorationDefinition&& definition, point_t position,
                               InsertionMode insertion_mode) -> decoration_id_t {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
@@ -352,8 +352,8 @@ auto Modifier::add_decoration(const DecorationDefinition& definition, point_t po
             circuit_data_.layout, definition, position, insertion_mode);
     }
 
-    const auto decoration_id =
-        editing::add_decoration(circuit_data_, definition, position, insertion_mode);
+    const auto decoration_id = editing::add_decoration(
+        circuit_data_, std::move(definition), position, insertion_mode);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);

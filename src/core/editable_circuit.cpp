@@ -103,11 +103,11 @@ auto EditableCircuit::add_wire_segment(ordered_line_t line, InsertionMode insert
     return segment_part;
 }
 
-auto EditableCircuit::add_decoration(const DecorationDefinition& definition,
-                                     point_t position, InsertionMode insertion_mode,
+auto EditableCircuit::add_decoration(DecorationDefinition&& definition, point_t position,
+                                     InsertionMode insertion_mode,
                                      selection_id_t selection_id) -> void {
     const auto decoration_id =
-        modifier_.add_decoration(definition, position, insertion_mode);
+        modifier_.add_decoration(std::move(definition), position, insertion_mode);
 
     if (selection_id && decoration_id) {
         modifier_.add_to_selection(selection_id, decoration_id);
@@ -346,10 +346,10 @@ auto add_placed_logicitem(EditableCircuit& editable_circuit,
 }
 
 auto add_placed_decoration(EditableCircuit& editable_circuit,
-                           const PlacedDecoration& placed_decoration,
+                           PlacedDecoration placed_decoration,
                            InsertionMode insertion_mode,
                            selection_id_t selection_id) -> void {
-    editable_circuit.add_decoration(placed_decoration.definition,
+    editable_circuit.add_decoration(std::move(placed_decoration.definition),
                                     placed_decoration.position, insertion_mode,
                                     selection_id);
 }

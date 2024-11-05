@@ -62,7 +62,7 @@ class EditableCircuit {
                           selection_id_t selection_id = null_selection_id)
         -> segment_part_t;
 
-    auto add_decoration(const DecorationDefinition& definition, point_t position,
+    auto add_decoration(DecorationDefinition&& definition, point_t position,
                         InsertionMode insertion_mode,
                         selection_id_t selection_id = null_selection_id) -> void;
 
@@ -187,7 +187,7 @@ auto add_placed_logicitem(EditableCircuit& editable_circuit,
                           InsertionMode insertion_mode,
                           selection_id_t selection_id = null_selection_id) -> void;
 auto add_placed_decoration(EditableCircuit& editable_circuit,
-                           const PlacedDecoration& placed_decoration,
+                           PlacedDecoration placed_decoration,
                            InsertionMode insertion_mode,
                            selection_id_t selection_id = null_selection_id) -> void;
 auto add_placed_element(EditableCircuit& editable_circuit,

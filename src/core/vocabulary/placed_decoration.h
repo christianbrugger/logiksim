@@ -2,6 +2,7 @@
 #define LOGICSIM_CORE_VOCABULARY_PLACED_DECORATION_H
 
 #include "core/format/struct.h"
+#include "core/logging.h"
 #include "core/vocabulary/decoration_definition.h"
 #include "core/vocabulary/point.h"
 

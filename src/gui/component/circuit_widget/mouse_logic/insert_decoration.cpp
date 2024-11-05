@@ -25,8 +25,8 @@ auto remove_and_insert(EditableCircuit& editable_circuit, selection_id_t selecti
     }
 
     if (position) {
-        editable_circuit.add_decoration(element_definition, position.value(), mode,
-                                        selection_id);
+        editable_circuit.add_decoration(DecorationDefinition {element_definition},
+                                        position.value(), mode, selection_id);
     }
 
     return selection_id;

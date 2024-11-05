@@ -12,6 +12,7 @@
 #include <ankerl/unordered_dense.h>
 
 #include <vector>
+#include <type_traits>
 
 namespace logicsim {
 
@@ -22,6 +23,7 @@ struct PlacedDecoration;
 namespace layout {
 
 template <typename T>
+    requires std::is_nothrow_move_constructible_v<T>
 using decoration_attr_t = ankerl::unordered_dense::map<decoration_id_t, T>;
 
 /**
@@ -39,9 +41,10 @@ class DecorationStore {
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     // add & delete
-    auto add(const DecorationDefinition &definition, point_t position,
+    auto add(DecorationDefinition &&definition, point_t position,
              display_state_t display_state) -> decoration_id_t;
-    auto swap_and_delete(decoration_id_t decoration_id) -> decoration_id_t;
+    auto swap_and_delete(decoration_id_t decoration_id)
+        -> std::pair<decoration_id_t, PlacedDecoration>;
     auto swap_items(decoration_id_t decoration_id_1,
                     decoration_id_t decoration_id_2) -> void;
 
@@ -67,11 +70,11 @@ class DecorationStore {
     auto set_display_state(decoration_id_t decoration_id,
                            display_state_t display_state) -> void;
     auto set_attributes(decoration_id_t decoration_id,
-                        attributes_text_element_t attrs) -> void;
+                        attributes_text_element_t attrs) -> attributes_text_element_t;
 
    private:
-    auto delete_last() -> void;
-    auto last_decoration_id() const -> decoration_id_t;
+    auto delete_last() -> PlacedDecoration;
+    [[nodiscard]] auto last_decoration_id() const -> decoration_id_t;
 
    private:
     std::vector<DecorationType> decoration_types_ {};

@@ -213,7 +213,7 @@ auto HistoryStack::push_decoration_move_temporary(decoration_key_t decoration_ke
 }
 
 auto HistoryStack::push_decoration_change_attributes(
-    decoration_key_t decoration_key, PlacedDecoration&& placed_decoration) -> void {
+    decoration_key_t decoration_key, attributes_text_element_t&& attrs) -> void {
     // skip similar changes
     if (last_non_group_entry(entries_) == HistoryEntry::decoration_change_attributes &&
         at_back_vector(decoration_keys_) == decoration_key) {
@@ -222,7 +222,8 @@ auto HistoryStack::push_decoration_change_attributes(
 
     entries_.emplace_back(HistoryEntry::decoration_change_attributes);
     decoration_keys_.emplace_back(decoration_key);
-    placed_decorations_.emplace_back(std::move(placed_decoration));
+    placed_decorations_.emplace_back(PlacedDecoration {
+        .definition = DecorationDefinition {.attrs_text_element = std::move(attrs)}});
 }
 
 auto HistoryStack::pop_decoration_create_temporary()
@@ -258,9 +259,10 @@ auto HistoryStack::pop_decoration_move_temporary()
 }
 
 auto HistoryStack::pop_decoration_change_attributes()
-    -> std::pair<decoration_key_t, PlacedDecoration> {
+    -> std::pair<decoration_key_t, attributes_text_element_t> {
     Expects(pop_back_vector(entries_) == HistoryEntry::decoration_change_attributes);
-    return {pop_back_vector(decoration_keys_), pop_back_vector(placed_decorations_)};
+    return {pop_back_vector(decoration_keys_),
+            pop_back_vector(placed_decorations_).definition.attrs_text_element.value()};
 }
 
 //

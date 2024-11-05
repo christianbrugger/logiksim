@@ -10,6 +10,7 @@
 
 #include <ankerl/unordered_dense.h>
 
+#include <type_traits>
 #include <vector>
 
 namespace logicsim {
@@ -19,6 +20,7 @@ struct layout_calculation_data_t;
 namespace layout {
 
 template <typename T>
+    requires std::is_nothrow_move_constructible_v<T>
 using attr_map_t = ankerl::unordered_dense::map<logicitem_id_t, T>;
 
 /**

@@ -36,7 +36,7 @@ auto DecorationStore::allocated_size() const -> std::size_t {
            get_allocated_size(map_text_element_);
 }
 
-auto DecorationStore::add(const DecorationDefinition &definition, point_t position,
+auto DecorationStore::add(DecorationDefinition &&definition, point_t position,
                           display_state_t display_state) -> decoration_id_t {
     if (!is_valid(definition)) [[unlikely]] {
         throw std::runtime_error("Invalid decoration definition.");
@@ -59,25 +59,26 @@ auto DecorationStore::add(const DecorationDefinition &definition, point_t positi
     display_states_.push_back(display_state);
     bounding_rects_.push_back(bounding_rect);
 
-    // attributes
-    const auto add_map_entry = [&](auto &map, const auto &optional) {
-        if (optional && !map.emplace(decoration_id, *optional).second) {
-            std::terminate();  // value already esists
-        }
-    };
 
-    add_map_entry(map_text_element_, definition.attrs_text_element);
+
+    // attributes
+    if (definition.decoration_type == DecorationType::text_element) {
+        Expects(
+            map_text_element_
+                .emplace(decoration_id, std::move(definition.attrs_text_element.value()))
+                .second);
+    }
 
     return decoration_id;
 }
 
-auto DecorationStore::swap_and_delete(decoration_id_t decoration_id) -> decoration_id_t {
+auto DecorationStore::swap_and_delete(decoration_id_t decoration_id)
+    -> std::pair<decoration_id_t, PlacedDecoration> {
     const auto last_id = last_decoration_id();
 
     swap_items(decoration_id, last_id);
-    delete_last();
 
-    return last_id;
+    return {last_id, delete_last()};
 }
 
 auto DecorationStore::swap_items(decoration_id_t decoration_id_1,
@@ -234,7 +235,8 @@ auto DecorationStore::set_display_state(decoration_id_t decoration_id,
 }
 
 auto DecorationStore::set_attributes(decoration_id_t decoration_id,
-                                     attributes_text_element_t attrs) -> void {
+                                     attributes_text_element_t attrs)
+    -> attributes_text_element_t {
     const auto it = map_text_element_.find(decoration_id);
 
     if (it == map_text_element_.end()) [[unlikely]] {
@@ -244,24 +246,45 @@ auto DecorationStore::set_attributes(decoration_id_t decoration_id,
         throw std::runtime_error("attributes not valid");
     }
 
-    it->second = std::move(attrs);
+    {
+        using namespace std;
+        swap(it->second, attrs);
+    }
+    return attrs;
 }
 
-auto DecorationStore::delete_last() -> void {
+auto DecorationStore::delete_last() -> PlacedDecoration {
     if (empty()) {
         throw std::runtime_error("Cannot delete last decoration of empty layout.");
     }
 
     const auto last_id = last_decoration_id();
+    const auto it_text_element = map_text_element_.find(last_id);
 
+    // move
+    const auto result = PlacedDecoration {
+        .definition =
+            DecorationDefinition {
+                .decoration_type = decoration_types_.back(),
+                .size = sizes_.back(),
+                .attrs_text_element =
+                    it_text_element != map_text_element_.end()
+                        ? std::make_optional(std::move(it_text_element->second))
+                        : std::nullopt},
+        .position = positions_.back(),
+    };
+
+    // pop
     decoration_types_.pop_back();
     sizes_.pop_back();
-
     positions_.pop_back();
     display_states_.pop_back();
     bounding_rects_.pop_back();
+    if (it_text_element != map_text_element_.end()) {
+        map_text_element_.erase(it_text_element);
+    }
 
-    map_text_element_.erase(last_id);
+    return result;
 }
 
 auto DecorationStore::last_decoration_id() const -> decoration_id_t {

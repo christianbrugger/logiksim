@@ -129,7 +129,7 @@ class Modifier {
     auto change_decoration_insertion_mode(decoration_id_t& decoration_id,
                                           InsertionMode new_insertion_mode) -> void;
 
-    auto add_decoration(const DecorationDefinition& definition, point_t position,
+    auto add_decoration(DecorationDefinition&& definition, point_t position,
                         InsertionMode insertion_mode) -> decoration_id_t;
 
     auto set_attributes(decoration_id_t decoration_id,

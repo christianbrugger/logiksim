@@ -103,15 +103,10 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case decoration_change_attributes: {
-            auto [decoration_key, placed_decoration] =
-                stack.pop_decoration_change_attributes();
+            auto [decoration_key, attrs] = stack.pop_decoration_change_attributes();
             const auto decoration_id = to_id(decoration_key, circuit);
 
-            if (placed_decoration.definition.attrs_text_element.has_value()) {
-                editing::set_attributes_decoration(
-                    circuit, decoration_id,
-                    std::move(placed_decoration.definition.attrs_text_element.value()));
-            }
+            editing::set_attributes_decoration(circuit, decoration_id, std::move(attrs));
             return;
         }
 

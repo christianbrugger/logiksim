@@ -82,7 +82,7 @@ class HistoryStack {
     auto push_decoration_move_temporary(decoration_key_t decoration_key,
                                         move_delta_t delta) -> void;
     auto push_decoration_change_attributes(decoration_key_t decoration_key,
-                                           PlacedDecoration&& placed_decoration) -> void;
+                                           attributes_text_element_t&& attrs) -> void;
 
     auto pop_decoration_create_temporary()
         -> std::pair<decoration_key_t, PlacedDecoration>;
@@ -92,7 +92,7 @@ class HistoryStack {
     auto pop_decoration_to_mode_insert() -> decoration_key_t;
     auto pop_decoration_move_temporary() -> std::pair<decoration_key_t, move_delta_t>;
     auto pop_decoration_change_attributes()
-        -> std::pair<decoration_key_t, PlacedDecoration>;
+        -> std::pair<decoration_key_t, attributes_text_element_t>;
 
     //
     // Visible Selection

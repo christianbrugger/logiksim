@@ -50,7 +50,7 @@ auto change_decoration_insertion_mode(CircuitData& circuit,
                                       decoration_id_t& decoration_id,
                                       InsertionMode new_mode) -> void;
 
-auto add_decoration(CircuitData& circuit, const DecorationDefinition& definition,
+auto add_decoration(CircuitData& circuit, DecorationDefinition&& definition,
                     point_t position, InsertionMode insertion_mode,
                     decoration_key_t decoration_key = null_decoration_key)
     -> decoration_id_t;

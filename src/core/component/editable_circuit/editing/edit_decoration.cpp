@@ -18,8 +18,85 @@ namespace editable_circuit {
 namespace editing {
 
 //
+// History
+//
+
+namespace {
+
+auto _store_history_create_decoration(CircuitData& circuit, decoration_id_t decoration_id,
+                                      PlacedDecoration&& deleted_definition) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto decoration_key = circuit.index.key_index().get(decoration_id);
+
+        stack->push_decoration_create_temporary(decoration_key,
+                                                std::move(deleted_definition));
+    }
+}
+
+auto _store_history_move_temporary_decoration(CircuitData& circuit,
+                                              decoration_id_t decoration_id,
+                                              move_delta_t delta) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto decoration_key = circuit.index.key_index().get(decoration_id);
+        stack->push_decoration_move_temporary(decoration_key, delta);
+    }
+}
+
+auto _store_history_to_insertion_colliding_to_temporary(
+    CircuitData& circuit, decoration_id_t decoration_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto decoration_key = circuit.index.key_index().get(decoration_id);
+        stack->push_decoration_colliding_to_temporary(decoration_key);
+    }
+}
+
+auto _store_history_to_insertion_temporary_to_colliding(
+    CircuitData& circuit, decoration_id_t decoration_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto decoration_key = circuit.index.key_index().get(decoration_id);
+        stack->push_decoration_temporary_to_colliding(decoration_key);
+    }
+}
+
+auto _store_history_to_insertion_insert_to_colliding(
+    CircuitData& circuit, decoration_id_t decoration_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto decoration_key = circuit.index.key_index().get(decoration_id);
+        stack->push_decoration_insert_to_colliding(decoration_key);
+    }
+}
+
+auto _store_history_to_insertion_colliding_to_insert(
+    CircuitData& circuit, decoration_id_t decoration_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto decoration_key = circuit.index.key_index().get(decoration_id);
+        stack->push_decoration_colliding_to_insert(decoration_key);
+    }
+}
+
+auto _store_history_delete_temporary_decoration(CircuitData& circuit,
+                                                decoration_id_t decoration_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto decoration_key = circuit.index.key_index().get(decoration_id);
+        stack->push_decoration_delete_temporary(decoration_key);
+    }
+}
+
+auto _store_history_change_attribute_decoration(
+    CircuitData& circuit, decoration_id_t decoration_id,
+    attributes_text_element_t&& attrs) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto decoration_key = circuit.index.key_index().get(decoration_id);
+        stack->push_decoration_change_attributes(decoration_key, std::move(attrs));
+    }
+}
+
+}  // namespace
+
+//
 // Delete Decoration
 //
+
 namespace {
 
 auto _notify_decoration_id_change(CircuitData& circuit,
@@ -41,17 +118,6 @@ auto _notify_decoration_id_change(CircuitData& circuit,
     }
 }
 
-auto _store_history_create_decoration(CircuitData& circuit,
-                                      decoration_id_t decoration_id) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto decoration_key = circuit.index.key_index().get(decoration_id);
-
-        // TODO elide copy
-        stack->push_decoration_create_temporary(
-            decoration_key, to_placed_decoration(circuit.layout, decoration_id));
-    }
-}
-
 }  // namespace
 
 auto delete_temporary_decoration(CircuitData& circuit,
@@ -64,10 +130,13 @@ auto delete_temporary_decoration(CircuitData& circuit,
         throw std::runtime_error("can only delete temporary objects");
     }
 
-    _store_history_create_decoration(circuit, decoration_id);
+    auto [last_id, deleted_definition] =
+        circuit.layout.decorations().swap_and_delete(decoration_id);
+
+    _store_history_create_decoration(circuit, decoration_id,
+                                     std::move(deleted_definition));
 
     circuit.submit(info_message::DecorationDeleted {decoration_id});
-    const auto last_id = circuit.layout.decorations().swap_and_delete(decoration_id);
 
     if (decoration_id != last_id) {
         _notify_decoration_id_change(circuit, decoration_id, last_id);
@@ -107,19 +176,6 @@ auto are_decoration_positions_representable(const Layout& layout,
 
     return std::ranges::all_of(selection.selected_decorations(), decoration_valid);
 }
-
-namespace {
-
-auto _store_history_move_temporary_decoration(CircuitData& circuit,
-                                              decoration_id_t decoration_id,
-                                              move_delta_t delta) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto decoration_key = circuit.index.key_index().get(decoration_id);
-        stack->push_decoration_move_temporary(decoration_key, delta);
-    }
-}
-
-}  // namespace
 
 auto move_temporary_decoration_unchecked(CircuitData& circuit,
                                          const decoration_id_t decoration_id,
@@ -163,38 +219,6 @@ auto move_or_delete_temporary_decoration(CircuitData& circuit,
 //
 
 namespace {
-
-auto _store_history_to_insertion_colliding_to_temporary(
-    CircuitData& circuit, decoration_id_t decoration_id) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto decoration_key = circuit.index.key_index().get(decoration_id);
-        stack->push_decoration_colliding_to_temporary(decoration_key);
-    }
-}
-
-auto _store_history_to_insertion_temporary_to_colliding(
-    CircuitData& circuit, decoration_id_t decoration_id) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto decoration_key = circuit.index.key_index().get(decoration_id);
-        stack->push_decoration_temporary_to_colliding(decoration_key);
-    }
-}
-
-auto _store_history_to_insertion_insert_to_colliding(
-    CircuitData& circuit, decoration_id_t decoration_id) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto decoration_key = circuit.index.key_index().get(decoration_id);
-        stack->push_decoration_insert_to_colliding(decoration_key);
-    }
-}
-
-auto _store_history_to_insertion_colliding_to_insert(
-    CircuitData& circuit, decoration_id_t decoration_id) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto decoration_key = circuit.index.key_index().get(decoration_id);
-        stack->push_decoration_colliding_to_insert(decoration_key);
-    }
-}
 
 auto _decoration_change_temporary_to_colliding(
     CircuitData& circuit, const decoration_id_t decoration_id) -> void {
@@ -314,19 +338,7 @@ auto change_decoration_insertion_mode(CircuitData& circuit,
 // Add decoration
 //
 
-namespace {
-
-auto _store_history_delete_temporary_decoration(CircuitData& circuit,
-                                                decoration_id_t decoration_id) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto decoration_key = circuit.index.key_index().get(decoration_id);
-        stack->push_decoration_delete_temporary(decoration_key);
-    }
-}
-
-}  // namespace
-
-auto add_decoration(CircuitData& circuit, const DecorationDefinition& definition,
+auto add_decoration(CircuitData& circuit, DecorationDefinition&& definition,
                     point_t position, InsertionMode insertion_mode,
                     decoration_key_t decoration_key) -> decoration_id_t {
     if (!is_representable(to_decoration_layout_data(definition, position))) {
@@ -334,7 +346,7 @@ auto add_decoration(CircuitData& circuit, const DecorationDefinition& definition
     }
 
     // create
-    auto decoration_id = circuit.layout.decorations().add(definition, position,
+    auto decoration_id = circuit.layout.decorations().add(std::move(definition), position,
                                                           display_state_t::temporary);
     circuit.submit(info_message::DecorationCreated {decoration_id});
     if (decoration_key) {
@@ -352,25 +364,13 @@ auto add_decoration(CircuitData& circuit, const DecorationDefinition& definition
 // Attributes
 //
 
-namespace {
-
-auto _store_history_change_attribute_decoration(CircuitData& circuit,
-                                                decoration_id_t decoration_id) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto decoration_key = circuit.index.key_index().get(decoration_id);
-        // TODO elide copy
-        stack->push_decoration_change_attributes(
-            decoration_key, to_placed_decoration(circuit.layout, decoration_id));
-    }
-}
-
-}  // namespace
-
 auto set_attributes_decoration(CircuitData& circuit, decoration_id_t decoration_id,
                                attributes_text_element_t&& attrs) -> void {
-    _store_history_change_attribute_decoration(circuit, decoration_id);
+    auto old_attr =
+        circuit.layout.decorations().set_attributes(decoration_id, std::move(attrs));
 
-    circuit.layout.decorations().set_attributes(decoration_id, std::move(attrs));
+    _store_history_change_attribute_decoration(circuit, decoration_id,
+                                               std::move(old_attr));
 }
 
 }  // namespace editing
