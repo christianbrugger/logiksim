@@ -70,11 +70,11 @@ auto resize_element(EditableCircuit& editable_circuit, const PlacedElement& orig
 
     // add resized
     {
-        const auto new_element = get_resized_element(original, size_handle, new_delta);
+        auto new_element = get_resized_element(original, size_handle, new_delta);
 
         const auto guard = SelectionGuard {editable_circuit};
-        add_placed_element(editable_circuit, new_element, InsertionMode::collisions,
-                           guard.selection_id());
+        add_placed_element(editable_circuit, std::move(new_element),
+                           InsertionMode::collisions, guard.selection_id());
         editable_circuit.set_visible_selection(
             editable_circuit.selection(guard.selection_id()));
     }

@@ -81,11 +81,11 @@ auto EditableCircuit::has_ungrouped_undo_entries() const -> bool {
 // Elements
 //
 
-auto EditableCircuit::add_logicitem(const LogicItemDefinition& definition,
-                                    point_t position, InsertionMode insertion_mode,
+auto EditableCircuit::add_logicitem(LogicItemDefinition&& definition, point_t position,
+                                    InsertionMode insertion_mode,
                                     selection_id_t selection_id) -> void {
     const auto logicitem_id =
-        modifier_.add_logicitem(definition, position, insertion_mode);
+        modifier_.add_logicitem(std::move(definition), position, insertion_mode);
 
     if (selection_id && logicitem_id) {
         modifier_.add_to_selection(selection_id, logicitem_id);
@@ -338,15 +338,16 @@ auto is_valid(const EditableCircuit& editable_circuit) -> bool {
 }
 
 auto add_placed_logicitem(EditableCircuit& editable_circuit,
-                          const PlacedLogicItem& placed_logicitem,
+                          PlacedLogicItem&& placed_logicitem,
                           InsertionMode insertion_mode,
                           selection_id_t selection_id) -> void {
-    editable_circuit.add_logicitem(placed_logicitem.definition, placed_logicitem.position,
-                                   insertion_mode, selection_id);
+    editable_circuit.add_logicitem(std::move(placed_logicitem.definition),
+                                   placed_logicitem.position, insertion_mode,
+                                   selection_id);
 }
 
 auto add_placed_decoration(EditableCircuit& editable_circuit,
-                           PlacedDecoration placed_decoration,
+                           PlacedDecoration&& placed_decoration,
                            InsertionMode insertion_mode,
                            selection_id_t selection_id) -> void {
     editable_circuit.add_decoration(std::move(placed_decoration.definition),
@@ -354,19 +355,20 @@ auto add_placed_decoration(EditableCircuit& editable_circuit,
                                     selection_id);
 }
 
-auto add_placed_element(EditableCircuit& editable_circuit,
-                        const PlacedElement& placed_element, InsertionMode insertion_mode,
+auto add_placed_element(EditableCircuit& editable_circuit, PlacedElement&& placed_element,
+                        InsertionMode insertion_mode,
                         selection_id_t selection_id) -> void {
     std::visit(overload(
-                   [&](const PlacedLogicItem& placed_logicitem) {
-                       add_placed_logicitem(editable_circuit, placed_logicitem,
+                   [&](PlacedLogicItem&& placed_logicitem) {
+                       add_placed_logicitem(editable_circuit, std::move(placed_logicitem),
                                             insertion_mode, selection_id);
                    },
-                   [&](const PlacedDecoration& placed_decoration) {
-                       add_placed_decoration(editable_circuit, placed_decoration,
-                                             insertion_mode, selection_id);
+                   [&](PlacedDecoration&& placed_decoration) {
+                       add_placed_decoration(editable_circuit,
+                                             std::move(placed_decoration), insertion_mode,
+                                             selection_id);
                    }),
-               placed_element);
+               std::move(placed_element));
 }
 
 namespace {

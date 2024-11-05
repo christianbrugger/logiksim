@@ -104,7 +104,7 @@ namespace {
         return std::nullopt;
     }
 
-    const auto definition = LogicItemDefinition {
+    auto definition = LogicItemDefinition {
         .logicitem_type = obj.logicitem_type,
         .input_count = input_count.value(),
         .output_count = output_count.value(),
@@ -132,7 +132,7 @@ namespace {
     }
 
     return PlacedLogicItem {
-        .definition = definition,
+        .definition = std::move(definition),
         .position = moved_position,
     };
 }
@@ -473,8 +473,8 @@ auto LoadLayoutResult::add_to(EditableCircuit& editable_circuit,
 
     // logic items
     for (const auto& item : data_->logicitems) {
-        if (const auto data = to_placed_logicitem(item, delta)) {
-            editable_circuit.add_logicitem(data->definition, data->position,
+        if (auto data = to_placed_logicitem(item, delta)) {
+            editable_circuit.add_logicitem(std::move(data->definition), data->position,
                                            parameters.insertion_mode,
                                            parameters.selection_id);
         }

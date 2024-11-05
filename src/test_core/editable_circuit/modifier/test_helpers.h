@@ -84,14 +84,14 @@ namespace editable_circuit {
 inline auto add_and_element(Layout &layout, display_state_t display_type,
                             connection_count_t input_count = connection_count_t {3},
                             point_t position = point_t {0, 0}) -> logicitem_id_t {
-    const auto definition = LogicItemDefinition {
+    auto definition = LogicItemDefinition {
         .logicitem_type = LogicItemType::and_element,
 
         .input_count = input_count,
         .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     };
-    return layout.logicitems().add(definition, position, display_type);
+    return layout.logicitems().add(std::move(definition), position, display_type);
 }
 
 inline auto assert_logicitem_count(const Layout &layout, std::size_t count) -> void {

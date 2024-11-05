@@ -7,6 +7,7 @@
 #include "core/timer.h"
 #include "core/vocabulary/grid.h"
 #include "core/vocabulary/insertion_mode.h"
+#include "core/vocabulary/logicitem_definition.h"
 #include "core/vocabulary/point.h"
 
 #include <stdexcept>
@@ -42,7 +43,8 @@ auto load_circuit_example_2(EditableCircuit& editable_circuit) -> void {
 
     for (auto x : range(5, max_grid_value, 5)) {
         for (auto y : range(5, max_grid_value, 5)) {
-            editable_circuit.add_logicitem(definition, point_t {grid_t {x}, grid_t {y}},
+            editable_circuit.add_logicitem(LogicItemDefinition {definition},
+                                           point_t {grid_t {x}, grid_t {y}},
                                            InsertionMode::insert_or_discard);
 
             add_wire_segments(editable_circuit, point_t {grid_t {x + 2}, grid_t {y + 1}},
@@ -69,7 +71,8 @@ auto load_circuit_example_3(EditableCircuit& editable_circuit) -> void {
 
     for (auto x : range(5, max_grid_value, 5)) {
         for (auto y : range(5, max_grid_value, 5)) {
-            editable_circuit.add_logicitem(definition, point_t {grid_t {x}, grid_t {y}},
+            editable_circuit.add_logicitem(LogicItemDefinition {definition},
+                                           point_t {grid_t {x}, grid_t {y}},
                                            InsertionMode::insert_or_discard);
         }
     }

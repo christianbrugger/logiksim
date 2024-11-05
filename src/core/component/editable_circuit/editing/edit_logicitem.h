@@ -46,7 +46,7 @@ auto move_or_delete_temporary_logicitem(CircuitData& circuit,
 auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logicitem_id,
                                      InsertionMode new_mode) -> void;
 
-auto add_logicitem(CircuitData& circuit, const LogicItemDefinition& definition,
+auto add_logicitem(CircuitData& circuit, LogicItemDefinition&& definition,
                    point_t position, InsertionMode insertion_mode) -> logicitem_id_t;
 
 auto toggle_inverter(CircuitData& circuit, point_t point) -> void;

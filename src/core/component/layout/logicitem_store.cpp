@@ -43,7 +43,7 @@ auto LogicItemStore::allocated_size() const -> std::size_t {
            get_allocated_size(map_clock_generator_);
 }
 
-auto LogicItemStore::add(const LogicItemDefinition &definition, point_t position,
+auto LogicItemStore::add(LogicItemDefinition &&definition, point_t position,
                          display_state_t display_state) -> logicitem_id_t {
     if (!is_valid(definition)) [[unlikely]] {
         throw std::runtime_error("Invalid element definition.");
@@ -78,12 +78,12 @@ auto LogicItemStore::add(const LogicItemDefinition &definition, point_t position
     if (definition.input_inverters.empty()) {
         input_inverters_.emplace_back(definition.input_count.count(), false);
     } else {
-        input_inverters_.emplace_back(definition.input_inverters);
+        input_inverters_.emplace_back(std::move(definition.input_inverters));
     }
     if (definition.output_inverters.empty()) {
         output_inverters_.emplace_back(definition.output_count.count(), false);
     } else {
-        output_inverters_.emplace_back(definition.output_inverters);
+        output_inverters_.emplace_back(std::move(definition.output_inverters));
     }
 
     positions_.push_back(position);
@@ -91,13 +91,12 @@ auto LogicItemStore::add(const LogicItemDefinition &definition, point_t position
     bounding_rects_.push_back(bounding_rect);
 
     // attributes
-    const auto add_map_entry = [&](auto &map, const auto &optional) {
-        if (optional && !map.emplace(logicitem_id, *optional).second) {
-            std::terminate();  // value already esists
-        }
-    };
-
-    add_map_entry(map_clock_generator_, definition.attrs_clock_generator);
+    if (definition.logicitem_type == LogicItemType::clock_generator) {
+        Expects(map_clock_generator_
+                    .emplace(logicitem_id,
+                             std::move(definition.attrs_clock_generator.value()))
+                    .second);
+    }
 
     return logicitem_id;
 }

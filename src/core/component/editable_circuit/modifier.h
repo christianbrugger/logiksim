@@ -106,7 +106,7 @@ class Modifier {
     auto change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
                                          InsertionMode new_insertion_mode) -> void;
 
-    auto add_logicitem(const LogicItemDefinition& definition, point_t position,
+    auto add_logicitem(LogicItemDefinition&& definition, point_t position,
                        InsertionMode insertion_mode) -> logicitem_id_t;
 
     auto toggle_inverter(point_t point) -> void;

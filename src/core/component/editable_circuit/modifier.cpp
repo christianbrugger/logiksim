@@ -224,7 +224,7 @@ auto Modifier::change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::add_logicitem(const LogicItemDefinition& definition, point_t position,
+auto Modifier::add_logicitem(LogicItemDefinition&& definition, point_t position,
                              InsertionMode insertion_mode) -> logicitem_id_t {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
@@ -234,8 +234,8 @@ auto Modifier::add_logicitem(const LogicItemDefinition& definition, point_t posi
             circuit_data_.layout, definition, position, insertion_mode);
     }
 
-    const auto logicitem_id =
-        editing::add_logicitem(circuit_data_, definition, position, insertion_mode);
+    const auto logicitem_id = editing::add_logicitem(circuit_data_, std::move(definition),
+                                                     position, insertion_mode);
 
     Ensures(debug_class_invariant_holds(*this));
     return logicitem_id;

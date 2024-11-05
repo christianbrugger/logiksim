@@ -92,10 +92,10 @@ TEST(Layout, EqualityOperators) {
         .orientation = orientation_t::right,
     };
 
-    auto element_0 =
-        layout.logicitems().add(definition, point_t {}, display_state_t::temporary);
-    auto element_1 =
-        layout.logicitems().add(definition, point_t {}, display_state_t::temporary);
+    auto element_0 = layout.logicitems().add(LogicItemDefinition {definition}, point_t {},
+                                             display_state_t::temporary);
+    auto element_1 = layout.logicitems().add(LogicItemDefinition {definition}, point_t {},
+                                             display_state_t::temporary);
 
     EXPECT_NE(element_0, element_1);
     EXPECT_EQ(element_0, logicitem_id_t {0});
@@ -134,12 +134,16 @@ TEST(Layout, TestNormalization) {
     };
 
     auto layout_1 = Layout {};
-    layout_1.logicitems().add(definition_1, point_t {1, 2}, display_state_t::temporary);
-    layout_1.logicitems().add(definition_2, point_t {3, 4}, display_state_t::colliding);
+    layout_1.logicitems().add(LogicItemDefinition {definition_1}, point_t {1, 2},
+                              display_state_t::temporary);
+    layout_1.logicitems().add(LogicItemDefinition {definition_2}, point_t {3, 4},
+                              display_state_t::colliding);
 
     auto layout_2 = Layout {};
-    layout_2.logicitems().add(definition_2, point_t {3, 4}, display_state_t::colliding);
-    layout_2.logicitems().add(definition_1, point_t {1, 2}, display_state_t::temporary);
+    layout_2.logicitems().add(LogicItemDefinition {definition_2}, point_t {3, 4},
+                              display_state_t::colliding);
+    layout_2.logicitems().add(LogicItemDefinition {definition_1}, point_t {1, 2},
+                              display_state_t::temporary);
 
     EXPECT_NE(layout_1, layout_2);
 

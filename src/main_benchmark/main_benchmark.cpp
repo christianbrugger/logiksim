@@ -89,14 +89,14 @@ static void BM_Benchmark_Add_Element_Delete(benchmark::State& state) {
             x = 0;
         }
 
-        const auto definition = LogicItemDefinition {
+        auto definition = LogicItemDefinition {
             .logicitem_type = LogicItemType::and_element,
             .input_count = connection_count_t {3},
             .output_count = connection_count_t {1},
             .orientation = orientation_t::right,
         };
 
-        ec.add_logicitem(definition, point_t {grid_t {x}, grid_t {y}},
+        ec.add_logicitem(std::move(definition), point_t {grid_t {x}, grid_t {y}},
                          InsertionMode::insert_or_discard);
         // ec.delete_all(std::move(handle));
         benchmark::DoNotOptimize(ec);

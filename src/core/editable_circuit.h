@@ -54,7 +54,7 @@ class EditableCircuit {
     // Elements
     //
 
-    auto add_logicitem(const LogicItemDefinition& definition, point_t position,
+    auto add_logicitem(LogicItemDefinition&& definition, point_t position,
                        InsertionMode insertion_mode,
                        selection_id_t selection_id = null_selection_id) -> void;
 
@@ -183,15 +183,15 @@ using SelectionGuard = editable_circuit::SelectionGuardTemplate<EditableCircuit>
 [[nodiscard]] auto is_valid(const EditableCircuit& editable_circuit) -> bool;
 
 auto add_placed_logicitem(EditableCircuit& editable_circuit,
-                          const PlacedLogicItem& placed_logicitem,
+                          PlacedLogicItem&& placed_logicitem,
                           InsertionMode insertion_mode,
                           selection_id_t selection_id = null_selection_id) -> void;
 auto add_placed_decoration(EditableCircuit& editable_circuit,
-                           PlacedDecoration placed_decoration,
+                           PlacedDecoration&& placed_decoration,
                            InsertionMode insertion_mode,
                            selection_id_t selection_id = null_selection_id) -> void;
-auto add_placed_element(EditableCircuit& editable_circuit,
-                        const PlacedElement& placed_element, InsertionMode insertion_mode,
+auto add_placed_element(EditableCircuit& editable_circuit, PlacedElement&& placed_element,
+                        InsertionMode insertion_mode,
                         selection_id_t selection_id = null_selection_id) -> void;
 
 auto add_wire_segments(EditableCircuit& editable_circuit, point_t p0, point_t p1,

@@ -299,7 +299,8 @@ auto clamp_offset(offset_t width, int delta, offset_t min, offset_t max) -> offs
 }
 
 [[nodiscard]] auto adjust_decoration_size(const PlacedDecoration& original,
-                                          size_handle_t handle, delta_movement_t delta) {
+                                          size_handle_t handle,
+                                          delta_movement_t delta) -> PlacedDecoration {
     if (handle.index != 0 && handle.index != 1) {
         throw std::runtime_error("unknown handle index");
     }

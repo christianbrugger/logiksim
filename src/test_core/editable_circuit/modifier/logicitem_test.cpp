@@ -499,7 +499,7 @@ TEST(EditableCircuitModifierLogicItem, LogicItemAddElement) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    const auto definition = LogicItemDefinition {
+    auto definition = LogicItemDefinition {
         .logicitem_type = LogicItemType::xor_element,
         .input_count = connection_count_t {7},
         .output_count = connection_count_t {1},
@@ -507,8 +507,8 @@ TEST(EditableCircuitModifierLogicItem, LogicItemAddElement) {
     };
 
     auto modifier = get_logging_modifier(layout);
-    const auto logicitem_id = modifier.add_logicitem(definition, point_t {2, 3},
-                                                     InsertionMode::insert_or_discard);
+    const auto logicitem_id = modifier.add_logicitem(
+        std::move(definition), point_t {2, 3}, InsertionMode::insert_or_discard);
     Expects(is_valid(modifier));
 
     //  logicitem_ids
@@ -537,13 +537,14 @@ TEST(EditableCircuitModifierLogicItem, LogicItemAddElement) {
 
 auto add_xor_element(Modifier &modifier, point_t position,
                      InsertionMode insertion_mode) -> logicitem_id_t {
-    const auto definition = LogicItemDefinition {
+    auto definition = LogicItemDefinition {
         .logicitem_type = LogicItemType::xor_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     };
-    const auto id = modifier.add_logicitem(definition, position, insertion_mode);
+    const auto id =
+        modifier.add_logicitem(std::move(definition), position, insertion_mode);
     Expects(is_valid(modifier));
     return id;
 }

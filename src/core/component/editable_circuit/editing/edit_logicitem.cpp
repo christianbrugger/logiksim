@@ -240,11 +240,11 @@ auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logic
 // Add Logic Item
 //
 
-auto add_logicitem(CircuitData& circuit, const LogicItemDefinition& definition,
+auto add_logicitem(CircuitData& circuit, LogicItemDefinition&& definition,
                    point_t position, InsertionMode insertion_mode) -> logicitem_id_t {
     // insert into underlying
-    auto logicitem_id = circuit.layout.logicitems().add(definition, point_t {0, 0},
-                                                        display_state_t::temporary);
+    auto logicitem_id = circuit.layout.logicitems().add(
+        std::move(definition), point_t {0, 0}, display_state_t::temporary);
     circuit.submit(info_message::LogicItemCreated {logicitem_id});
 
     // assume final position
