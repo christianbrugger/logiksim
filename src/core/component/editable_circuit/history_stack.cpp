@@ -73,29 +73,29 @@ auto HistoryStack::format() const -> std::string {
         "    selection_rects = {},\n"
         "    selection_functions = {},\n"
         "  )",
-        format_stack_vector(entries), decoration_keys,
-        format_stack_vector(placed_decorations), move_deltas, selections.size(),
-        selection_rects, selection_functions);
+        format_stack_vector(entries_), decoration_keys_,
+        format_stack_vector(placed_decorations_), move_deltas_, selections_.size(),
+        selection_rects_, selection_functions_);
 }
 
 auto HistoryStack::allocated_size() const -> std::size_t {
-    return get_allocated_size(entries) +             //
-                                                     //
-           get_allocated_size(decoration_keys) +     //
-           get_allocated_size(placed_decorations) +  //
-           get_allocated_size(move_deltas) +         //
-                                                     //
-           get_allocated_size(selections) +          //
-           get_allocated_size(selection_rects) +     //
-           get_allocated_size(selection_functions);
+    return get_allocated_size(entries_) +             //
+                                                      //
+           get_allocated_size(decoration_keys_) +     //
+           get_allocated_size(placed_decorations_) +  //
+           get_allocated_size(move_deltas_) +         //
+                                                      //
+           get_allocated_size(selections_) +          //
+           get_allocated_size(selection_rects_) +     //
+           get_allocated_size(selection_functions_);
 }
 
 auto HistoryStack::empty() const -> bool {
-    return entries.empty();
+    return entries_.empty();
 }
 
 auto HistoryStack::size() const -> std::size_t {
-    return entries.size();
+    return entries_.size();
 }
 
 auto HistoryStack::clear() -> void {
@@ -105,7 +105,7 @@ auto HistoryStack::clear() -> void {
 }
 
 auto HistoryStack::top_entry() const -> std::optional<HistoryEntry> {
-    return get_back_vector(entries);
+    return get_back_vector(entries_);
 }
 
 //
@@ -113,15 +113,14 @@ auto HistoryStack::top_entry() const -> std::optional<HistoryEntry> {
 //
 
 auto HistoryStack::push_new_group() -> void {
-    // skip if it is already grouped
-    if (entries.empty() || entries.back() == HistoryEntry::new_group) {
+    if (!has_ungrouped_entries(*this)) {
         return;
     }
-    entries.emplace_back(HistoryEntry::new_group);
+    entries_.emplace_back(HistoryEntry::new_group);
 }
 
 auto HistoryStack::pop_new_group() -> void {
-    Expects(pop_back_vector(entries) == HistoryEntry::new_group);
+    Expects(pop_back_vector(entries_) == HistoryEntry::new_group);
 }
 
 //
@@ -130,138 +129,138 @@ auto HistoryStack::pop_new_group() -> void {
 auto HistoryStack::push_decoration_create_temporary(
     decoration_key_t decoration_key, PlacedDecoration&& placed_decoration) -> void {
     // skip if it was just deleted
-    if (get_back_vector(entries) == HistoryEntry::decoration_delete_temporary &&
-        at_back_vector(decoration_keys) == decoration_key) {
+    if (get_back_vector(entries_) == HistoryEntry::decoration_delete_temporary &&
+        at_back_vector(decoration_keys_) == decoration_key) {
         pop_decoration_delete_temporary();
         return;
     }
 
-    entries.emplace_back(HistoryEntry::decoration_create_temporary);
-    decoration_keys.emplace_back(decoration_key);
-    placed_decorations.emplace_back(std::move(placed_decoration));
+    entries_.emplace_back(HistoryEntry::decoration_create_temporary);
+    decoration_keys_.emplace_back(decoration_key);
+    placed_decorations_.emplace_back(std::move(placed_decoration));
 }
 
 auto HistoryStack::push_decoration_delete_temporary(decoration_key_t decoration_key)
     -> void {
     // skip if it was just created
-    if (get_back_vector(entries) == HistoryEntry::decoration_create_temporary &&
-        at_back_vector(decoration_keys) == decoration_key) {
+    if (get_back_vector(entries_) == HistoryEntry::decoration_create_temporary &&
+        at_back_vector(decoration_keys_) == decoration_key) {
         pop_decoration_create_temporary();
         return;
     }
 
-    entries.emplace_back(HistoryEntry::decoration_delete_temporary);
-    decoration_keys.emplace_back(decoration_key);
+    entries_.emplace_back(HistoryEntry::decoration_delete_temporary);
+    decoration_keys_.emplace_back(decoration_key);
 }
 
 auto HistoryStack::push_decoration_colliding_to_temporary(decoration_key_t decoration_key)
     -> void {
     // skip if it was just colliding
-    if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_colliding &&
-        at_back_vector(decoration_keys) == decoration_key) {
+    if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_colliding &&
+        at_back_vector(decoration_keys_) == decoration_key) {
         pop_decoration_to_mode_colliding();
         return;
     }
 
-    entries.emplace_back(HistoryEntry::decoration_to_mode_temporary);
-    decoration_keys.emplace_back(decoration_key);
+    entries_.emplace_back(HistoryEntry::decoration_to_mode_temporary);
+    decoration_keys_.emplace_back(decoration_key);
 }
 
 auto HistoryStack::push_decoration_temporary_to_colliding(decoration_key_t decoration_key)
     -> void {
     // skip if it was just temporary
-    if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_temporary &&
-        at_back_vector(decoration_keys) == decoration_key) {
+    if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_temporary &&
+        at_back_vector(decoration_keys_) == decoration_key) {
         pop_decoration_to_mode_temporary();
         return;
     }
 
-    entries.emplace_back(HistoryEntry::decoration_to_mode_colliding);
-    decoration_keys.emplace_back(decoration_key);
+    entries_.emplace_back(HistoryEntry::decoration_to_mode_colliding);
+    decoration_keys_.emplace_back(decoration_key);
 }
 
 auto HistoryStack::push_decoration_colliding_to_insert(decoration_key_t decoration_key)
     -> void {
     // skip if it was just colliding
-    if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_colliding &&
-        at_back_vector(decoration_keys) == decoration_key) {
+    if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_colliding &&
+        at_back_vector(decoration_keys_) == decoration_key) {
         pop_decoration_to_mode_colliding();
         return;
     }
 
-    entries.emplace_back(HistoryEntry::decoration_to_mode_insert);
-    decoration_keys.emplace_back(decoration_key);
+    entries_.emplace_back(HistoryEntry::decoration_to_mode_insert);
+    decoration_keys_.emplace_back(decoration_key);
 }
 
 auto HistoryStack::push_decoration_insert_to_colliding(decoration_key_t decoration_key)
     -> void {
     // skip if it was just inserted
-    if (get_back_vector(entries) == HistoryEntry::decoration_to_mode_insert &&
-        at_back_vector(decoration_keys) == decoration_key) {
+    if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_insert &&
+        at_back_vector(decoration_keys_) == decoration_key) {
         pop_decoration_to_mode_insert();
         return;
     }
 
-    entries.emplace_back(HistoryEntry::decoration_to_mode_colliding);
-    decoration_keys.emplace_back(decoration_key);
+    entries_.emplace_back(HistoryEntry::decoration_to_mode_colliding);
+    decoration_keys_.emplace_back(decoration_key);
 }
 
 auto HistoryStack::push_decoration_move_temporary(decoration_key_t decoration_key,
                                                   move_delta_t delta) -> void {
-    entries.emplace_back(HistoryEntry::decoration_move_temporary);
-    decoration_keys.emplace_back(decoration_key);
-    move_deltas.emplace_back(delta);
+    entries_.emplace_back(HistoryEntry::decoration_move_temporary);
+    decoration_keys_.emplace_back(decoration_key);
+    move_deltas_.emplace_back(delta);
 }
 
 auto HistoryStack::push_decoration_change_attributes(
     decoration_key_t decoration_key, PlacedDecoration&& placed_decoration) -> void {
     // skip similar changes
-    if (last_non_group_entry(entries) == HistoryEntry::decoration_change_attributes &&
-        at_back_vector(decoration_keys) == decoration_key) {
+    if (last_non_group_entry(entries_) == HistoryEntry::decoration_change_attributes &&
+        at_back_vector(decoration_keys_) == decoration_key) {
         return;
     }
 
-    entries.emplace_back(HistoryEntry::decoration_change_attributes);
-    decoration_keys.emplace_back(decoration_key);
-    placed_decorations.emplace_back(std::move(placed_decoration));
+    entries_.emplace_back(HistoryEntry::decoration_change_attributes);
+    decoration_keys_.emplace_back(decoration_key);
+    placed_decorations_.emplace_back(std::move(placed_decoration));
 }
 
 auto HistoryStack::pop_decoration_create_temporary()
     -> std::pair<decoration_key_t, PlacedDecoration> {
-    Expects(pop_back_vector(entries) == HistoryEntry::decoration_create_temporary);
-    return {pop_back_vector(decoration_keys), pop_back_vector(placed_decorations)};
+    Expects(pop_back_vector(entries_) == HistoryEntry::decoration_create_temporary);
+    return {pop_back_vector(decoration_keys_), pop_back_vector(placed_decorations_)};
 }
 
 auto HistoryStack::pop_decoration_delete_temporary() -> decoration_key_t {
-    Expects(pop_back_vector(entries) == HistoryEntry::decoration_delete_temporary);
-    return pop_back_vector(decoration_keys);
+    Expects(pop_back_vector(entries_) == HistoryEntry::decoration_delete_temporary);
+    return pop_back_vector(decoration_keys_);
 }
 
 auto HistoryStack::pop_decoration_to_mode_temporary() -> decoration_key_t {
-    Expects(pop_back_vector(entries) == HistoryEntry::decoration_to_mode_temporary);
-    return pop_back_vector(decoration_keys);
+    Expects(pop_back_vector(entries_) == HistoryEntry::decoration_to_mode_temporary);
+    return pop_back_vector(decoration_keys_);
 }
 
 auto HistoryStack::pop_decoration_to_mode_colliding() -> decoration_key_t {
-    Expects(pop_back_vector(entries) == HistoryEntry::decoration_to_mode_colliding);
-    return pop_back_vector(decoration_keys);
+    Expects(pop_back_vector(entries_) == HistoryEntry::decoration_to_mode_colliding);
+    return pop_back_vector(decoration_keys_);
 }
 
 auto HistoryStack::pop_decoration_to_mode_insert() -> decoration_key_t {
-    Expects(pop_back_vector(entries) == HistoryEntry::decoration_to_mode_insert);
-    return pop_back_vector(decoration_keys);
+    Expects(pop_back_vector(entries_) == HistoryEntry::decoration_to_mode_insert);
+    return pop_back_vector(decoration_keys_);
 }
 
 auto HistoryStack::pop_decoration_move_temporary()
     -> std::pair<decoration_key_t, move_delta_t> {
-    Expects(pop_back_vector(entries) == HistoryEntry::decoration_move_temporary);
-    return {pop_back_vector(decoration_keys), pop_back_vector(move_deltas)};
+    Expects(pop_back_vector(entries_) == HistoryEntry::decoration_move_temporary);
+    return {pop_back_vector(decoration_keys_), pop_back_vector(move_deltas_)};
 }
 
 auto HistoryStack::pop_decoration_change_attributes()
     -> std::pair<decoration_key_t, PlacedDecoration> {
-    Expects(pop_back_vector(entries) == HistoryEntry::decoration_change_attributes);
-    return {pop_back_vector(decoration_keys), pop_back_vector(placed_decorations)};
+    Expects(pop_back_vector(entries_) == HistoryEntry::decoration_change_attributes);
+    return {pop_back_vector(decoration_keys_), pop_back_vector(placed_decorations_)};
 }
 
 //
@@ -269,70 +268,70 @@ auto HistoryStack::pop_decoration_change_attributes()
 //
 
 auto HistoryStack::push_visible_selection_clear() -> void {
-    entries.emplace_back(HistoryEntry::visible_selection_clear);
+    entries_.emplace_back(HistoryEntry::visible_selection_clear);
 }
 
 auto HistoryStack::push_visible_selection_set(StableSelection&& stable_selection)
     -> void {
-    entries.emplace_back(HistoryEntry::visible_selection_set);
-    selections.emplace_back(std::move(stable_selection));
+    entries_.emplace_back(HistoryEntry::visible_selection_set);
+    selections_.emplace_back(std::move(stable_selection));
 }
 
 auto HistoryStack::push_visible_selection_add(
     const VisibleSelection::operation_t& operation) -> void {
     // remove rects added and removed in the same group
-    if (get_entry_before_skip(entries, HistoryEntry::visible_selection_update_last) ==
+    if (get_entry_before_skip(entries_, HistoryEntry::visible_selection_update_last) ==
         HistoryEntry::visible_selection_pop_last) {
-        while (at_back_vector(entries) == HistoryEntry::visible_selection_update_last) {
+        while (at_back_vector(entries_) == HistoryEntry::visible_selection_update_last) {
             pop_visible_selection_update_last();
         }
         pop_visible_selection_pop_last();
         return;
     }
 
-    entries.emplace_back(HistoryEntry::visible_selection_add);
-    selection_functions.emplace_back(operation.function);
-    selection_rects.emplace_back(operation.rect);
+    entries_.emplace_back(HistoryEntry::visible_selection_add);
+    selection_functions_.emplace_back(operation.function);
+    selection_rects_.emplace_back(operation.rect);
 }
 
 auto HistoryStack::push_visible_selection_update_last(const rect_fine_t& rect) -> void {
     // skip similar changes
-    if (last_non_group_entry(entries) == HistoryEntry::visible_selection_update_last) {
+    if (last_non_group_entry(entries_) == HistoryEntry::visible_selection_update_last) {
         return;
     }
 
-    entries.emplace_back(HistoryEntry::visible_selection_update_last);
-    selection_rects.emplace_back(rect);
+    entries_.emplace_back(HistoryEntry::visible_selection_update_last);
+    selection_rects_.emplace_back(rect);
 }
 
 auto HistoryStack::push_visible_selection_pop_last() -> void {
-    entries.emplace_back(HistoryEntry::visible_selection_pop_last);
+    entries_.emplace_back(HistoryEntry::visible_selection_pop_last);
 }
 
 auto HistoryStack::pop_visible_selection_clear() -> void {
-    Expects(pop_back_vector(entries) == HistoryEntry::visible_selection_clear);
+    Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_clear);
 }
 
 auto HistoryStack::pop_visible_selection_set() -> StableSelection {
-    Expects(pop_back_vector(entries) == HistoryEntry::visible_selection_set);
-    return pop_back_vector(selections);
+    Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_set);
+    return pop_back_vector(selections_);
 }
 
 auto HistoryStack::pop_visible_selection_add() -> visible_selection::operation_t {
-    Expects(pop_back_vector(entries) == HistoryEntry::visible_selection_add);
+    Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_add);
     return visible_selection::operation_t {
-        .function = pop_back_vector(selection_functions),
-        .rect = pop_back_vector(selection_rects),
+        .function = pop_back_vector(selection_functions_),
+        .rect = pop_back_vector(selection_rects_),
     };
 }
 
 auto HistoryStack::pop_visible_selection_update_last() -> rect_fine_t {
-    Expects(pop_back_vector(entries) == HistoryEntry::visible_selection_update_last);
-    return pop_back_vector(selection_rects);
+    Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_update_last);
+    return pop_back_vector(selection_rects_);
 }
 
 auto HistoryStack::pop_visible_selection_pop_last() -> void {
-    Expects(pop_back_vector(entries) == HistoryEntry::visible_selection_pop_last);
+    Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_pop_last);
 }
 
 //

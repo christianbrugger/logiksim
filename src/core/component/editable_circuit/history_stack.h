@@ -43,8 +43,13 @@ template <>
 
 namespace editable_circuit {
 
-// TODO make class
-struct HistoryStack {
+/**
+ * @brief: Store history actions of the editable circuit.
+ *
+ * Class-invariants:
+ *  +
+ */
+class HistoryStack {
    public:
     [[nodiscard]] auto operator==(const HistoryStack&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
@@ -107,18 +112,17 @@ struct HistoryStack {
     auto pop_visible_selection_pop_last() -> void;
 
    private:
-    // TODO rename
-    std::vector<HistoryEntry> entries {};
+    std::vector<HistoryEntry> entries_ {};
 
     // decoration
-    std::vector<decoration_key_t> decoration_keys {};
-    std::vector<PlacedDecoration> placed_decorations {};
-    std::vector<move_delta_t> move_deltas {};
+    std::vector<decoration_key_t> decoration_keys_ {};
+    std::vector<PlacedDecoration> placed_decorations_ {};
+    std::vector<move_delta_t> move_deltas_ {};
 
     // visible selection
-    std::vector<StableSelection> selections {};
-    std::vector<rect_fine_t> selection_rects {};
-    std::vector<SelectionFunction> selection_functions {};
+    std::vector<StableSelection> selections_ {};
+    std::vector<rect_fine_t> selection_rects_ {};
+    std::vector<SelectionFunction> selection_functions_ {};
 };
 
 static_assert(std::regular<HistoryStack>);
