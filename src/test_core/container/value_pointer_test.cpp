@@ -72,8 +72,8 @@ struct MoveOnlyType {
     MoveOnlyType(const MoveOnlyType&) = delete;
     auto operator=(const MoveOnlyType&) -> MoveOnlyType& = delete;
 
-    MoveOnlyType(MoveOnlyType&&) = default;
-    auto operator=(MoveOnlyType&&) -> MoveOnlyType& = default;
+    MoveOnlyType(MoveOnlyType&&) noexcept = default;
+    auto operator=(MoveOnlyType&&) noexcept -> MoveOnlyType& = default;
 
     int value {};
 };

@@ -5,7 +5,6 @@
 
 #include <fmt/core.h>
 
-#include <any>
 #include <compare>
 #include <concepts>
 #include <memory>
@@ -62,7 +61,7 @@ class value_pointer {
     // this constructor requires T to be complete and is generated on demand
     // this is not a problem as it is generally only needed on the private pimpl side
     template <std::same_as<T> Complete>
-    [[nodiscard]] explicit value_pointer(Complete&& value);
+    [[nodiscard]] explicit value_pointer(Complete&& value) noexcept;
 
     template <class... Args>
     [[nodiscard]] explicit value_pointer(std::in_place_t /*unused*/, Args&&... args)
@@ -132,8 +131,8 @@ value_pointer<T, C, O>::value_pointer(const T& value)
 
 template <typename T, equality_comparable_tag C, ordering_or_void O>
 template <std::same_as<T> Complete>
-value_pointer<T, C, O>::value_pointer(Complete&& value)
-    : value_ {std::make_unique<value_type>(std::move(value))} {
+value_pointer<T, C, O>::value_pointer(Complete&& value) noexcept
+    : value_ {std::make_unique<value_type>(std::forward<Complete>(value))} {
     static_assert(is_value_pointer_compatible<T>);
 }
 
