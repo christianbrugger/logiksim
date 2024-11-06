@@ -502,29 +502,6 @@ auto is_valid_selection(const Selection &selection, const Layout &layout) -> boo
            std::ranges::all_of(selection.selected_segments(), segment_valid);
 }
 
-auto select_all(const Layout &layout) -> Selection {
-    auto result = Selection {};
-
-    for (const auto logicitem_id : logicitem_ids(layout)) {
-        result.add_logicitem(logicitem_id);
-    }
-
-    for (const auto decoration_id : decoration_ids(layout)) {
-        result.add_decoration(decoration_id);
-    }
-
-    for (const auto wire_id : wire_ids(layout)) {
-        const auto &tree = layout.wires().segment_tree(wire_id);
-
-        for (const auto segment_index : tree.indices()) {
-            result.add_segment(segment_part_t {segment_t {wire_id, segment_index},
-                                               tree.part(segment_index)});
-        }
-    }
-
-    return result;
-}
-
 //
 //
 //
@@ -698,7 +675,8 @@ auto add_segment_tree(Selection &selection, wire_id_t wire_id,
                       const Layout &layout) -> void {
     const auto &tree = layout.wires().segment_tree(wire_id);
     for (const auto &segment_index : tree.indices()) {
-        add_segment(selection, segment_t {wire_id, segment_index}, layout);
+        selection.add_segment(segment_part_t {segment_t {wire_id, segment_index},
+                                              tree.part(segment_index)});
     }
 }
 
@@ -712,7 +690,8 @@ auto remove_segment_tree(Selection &selection, wire_id_t wire_id,
                          const Layout &layout) -> void {
     const auto &tree = layout.wires().segment_tree(wire_id);
     for (const auto &segment_index : tree.indices()) {
-        remove_segment(selection, segment_t {wire_id, segment_index}, layout);
+        selection.remove_segment(segment_part_t {segment_t {wire_id, segment_index},
+                                                 tree.part(segment_index)});
     }
 }
 
@@ -759,6 +738,24 @@ auto toggle_segment_part(Selection &selection, const Layout &layout, segment_t s
             }
         }
     });
+}
+
+auto select_all(const Layout &layout) -> Selection {
+    auto result = Selection {};
+
+    for (const auto logicitem_id : logicitem_ids(layout)) {
+        result.add_logicitem(logicitem_id);
+    }
+
+    for (const auto decoration_id : decoration_ids(layout)) {
+        result.add_decoration(decoration_id);
+    }
+
+    for (const auto wire_id : wire_ids(layout)) {
+        add_segment_tree(result, wire_id, layout);
+    }
+
+    return result;
 }
 
 auto get_single_logicitem(const Selection &selection) -> logicitem_id_t {

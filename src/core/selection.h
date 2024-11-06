@@ -121,8 +121,6 @@ class Selection {
 [[nodiscard]] auto is_valid_selection(const Selection &selection,
                                       const Layout &layout) -> bool;
 
-[[nodiscard]] auto select_all(const Layout &layout) -> Selection;
-
 //
 //
 //
@@ -166,6 +164,8 @@ auto remove_segment_part(Selection &selection, const Layout &layout, segment_t s
 
 auto toggle_segment_part(Selection &selection, const Layout &layout, segment_t segment,
                          point_fine_t point) -> void;
+
+[[nodiscard]] auto select_all(const Layout &layout) -> Selection;
 
 auto get_single_logicitem(const Selection &selection) -> logicitem_id_t;
 auto get_single_decoration(const Selection &selection) -> decoration_id_t;
