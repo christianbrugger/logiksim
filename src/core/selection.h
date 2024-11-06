@@ -121,6 +121,8 @@ class Selection {
 [[nodiscard]] auto is_valid_selection(const Selection &selection,
                                       const Layout &layout) -> bool;
 
+[[nodiscard]] auto select_all(const Layout &layout) -> Selection;
+
 //
 //
 //

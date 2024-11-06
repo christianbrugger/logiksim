@@ -214,9 +214,6 @@ auto save_delete_all(EditableCircuit& editable_circuit,
 auto save_destroy_selection(EditableCircuit& editable_circuit,
                             selection_id_t selection_id) -> void;
 
-[[nodiscard]] auto visible_selection_everything_selected(
-    EditableCircuit& editable_circuit) -> bool;
-
 auto visible_selection_select_all(EditableCircuit& editable_circuit) -> void;
 
 auto visible_selection_delete_all(EditableCircuit& editable_circuit) -> void;

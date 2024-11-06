@@ -502,6 +502,29 @@ auto is_valid_selection(const Selection &selection, const Layout &layout) -> boo
            std::ranges::all_of(selection.selected_segments(), segment_valid);
 }
 
+auto select_all(const Layout &layout) -> Selection {
+    auto result = Selection {};
+
+    for (const auto logicitem_id : logicitem_ids(layout)) {
+        result.add_logicitem(logicitem_id);
+    }
+
+    for (const auto decoration_id : decoration_ids(layout)) {
+        result.add_decoration(decoration_id);
+    }
+
+    for (const auto wire_id : wire_ids(layout)) {
+        const auto &tree = layout.wires().segment_tree(wire_id);
+
+        for (const auto segment_index : tree.indices()) {
+            result.add_segment(segment_part_t {segment_t {wire_id, segment_index},
+                                               tree.part(segment_index)});
+        }
+    }
+
+    return result;
+}
+
 //
 //
 //
