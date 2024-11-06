@@ -855,9 +855,10 @@ auto CircuitWidget::paste_clipboard() -> void {
     if (paste_result.is_colliding) {
         editing_logic_manager_.setup_colliding_move(circuit_store_.editable_circuit(),
                                                     std::move(paste_result.cross_points));
+    } else {
+        circuit_store_.editable_circuit().finish_undo_group();
     }
 
-    circuit_store_.editable_circuit().finish_undo_group();
     update();
     print("Pasted", visible_selection_format(circuit_store_), "in", t);
 
