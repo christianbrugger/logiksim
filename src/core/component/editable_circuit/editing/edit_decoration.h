@@ -58,6 +58,11 @@ auto add_decoration(CircuitData& circuit, DecorationDefinition&& definition,
 auto set_attributes_decoration(CircuitData& circuit, decoration_id_t decoration_id,
                                attributes_text_element_t&& attrs) -> void;
 
+auto add_to_visible_selection(CircuitData& circuit_data,
+                              decoration_id_t decoration_id) -> void;
+auto remove_from_visible_selection(CircuitData& circuit_data,
+                                   decoration_id_t decoration_id) -> void;
+
 }  // namespace editing
 
 }  // namespace editable_circuit

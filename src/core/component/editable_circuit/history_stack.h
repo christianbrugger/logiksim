@@ -27,6 +27,8 @@ enum class HistoryEntry : uint8_t {
     decoration_to_mode_colliding,
     decoration_to_mode_insert,
     decoration_change_attributes,
+    decoration_add_visible_selection,
+    decoration_remove_visible_selection,
 
     // visible selection
     visible_selection_clear,
@@ -34,7 +36,6 @@ enum class HistoryEntry : uint8_t {
     visible_selection_add_operation,
     visible_selection_update_last,
     visible_selection_pop_last,
-    visible_selection_select_decoration,
 };
 
 }
@@ -84,6 +85,9 @@ class HistoryStack {
                                         move_delta_t delta) -> void;
     auto push_decoration_change_attributes(decoration_key_t decoration_key,
                                            attributes_text_element_t&& attrs) -> void;
+    auto push_decoration_add_visible_selection(decoration_key_t decoration_key) -> void;
+    auto push_decoration_remove_visible_selection(decoration_key_t decoration_key)
+        -> void;
 
     auto pop_decoration_create_temporary()
         -> std::pair<decoration_key_t, PlacedDecoration>;
@@ -94,6 +98,8 @@ class HistoryStack {
     auto pop_decoration_move_temporary() -> std::pair<decoration_key_t, move_delta_t>;
     auto pop_decoration_change_attributes()
         -> std::pair<decoration_key_t, attributes_text_element_t>;
+    auto pop_decoration_add_visible_selection() -> decoration_key_t;
+    auto pop_decoration_remove_visible_selection() -> decoration_key_t;
 
     //
     // Visible Selection
@@ -105,15 +111,12 @@ class HistoryStack {
         const VisibleSelection::operation_t& operation) -> void;
     auto push_visible_selection_update_last(const rect_fine_t& rect) -> void;
     auto push_visible_selection_pop_last() -> void;
-    auto push_visible_selection_select_decoration(decoration_key_t decoration_key)
-        -> void;
 
     auto pop_visible_selection_clear() -> void;
     auto pop_visible_selection_set() -> StableSelection;
     auto pop_visible_selection_add_operation() -> visible_selection::operation_t;
     auto pop_visible_selection_update_last() -> rect_fine_t;
     auto pop_visible_selection_pop_last() -> void;
-    auto pop_visible_selection_select_decoration() -> decoration_key_t;
 
    private:
     std::vector<HistoryEntry> entries_ {};

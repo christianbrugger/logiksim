@@ -57,6 +57,9 @@ class VisibleSelection {
     [[nodiscard]] auto operations() const -> std::span<const operation_t>;
     [[nodiscard]] auto initial_selection() const -> const Selection &;
 
+    template <std::invocable<Selection &> Func>
+    auto modify_initial_selection(Func func) -> void;
+
     auto submit(const InfoMessage &message) -> void;
 
    private:
@@ -70,8 +73,26 @@ class VisibleSelection {
 
 static_assert(std::regular<VisibleSelection>);
 
+//
+// Free Functions
+//
+
 [[nodiscard]] auto last_operation(const VisibleSelection &visible_selection)
     -> std::optional<visible_selection::operation_t>;
+
+//
+// Implementation
+//
+
+template <std::invocable<Selection &> Func>
+auto VisibleSelection::modify_initial_selection(Func func) -> void {
+    Expects(class_invariant_holds());
+
+    std::invoke(func, initial_selection_);
+    cached_selection_.reset();
+
+    Ensures(class_invariant_holds());
+}
 
 }  // namespace logicsim
 

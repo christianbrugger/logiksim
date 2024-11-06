@@ -147,10 +147,6 @@ auto SelectionMoveLogic::finalize(EditableCircuit& editable_circuit) -> void {
     }
     convert_selection_to(editable_circuit, InsertionMode::insert_or_discard);
 
-    if (state_ == State::finished_confirmed) {
-        editable_circuit.clear_visible_selection();
-    }
-
     editable_circuit.finish_undo_group();
 
     Ensures(expected_history_enabled_ == editable_circuit.is_history_enabled());

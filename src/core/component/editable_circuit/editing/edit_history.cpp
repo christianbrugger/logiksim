@@ -110,6 +110,20 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
+        case decoration_add_visible_selection: {
+            const auto decoration_id =
+                to_id(stack.pop_decoration_add_visible_selection(), circuit);
+            editing::add_to_visible_selection(circuit, decoration_id);
+            return;
+        }
+
+        case decoration_remove_visible_selection: {
+            const auto decoration_id =
+                to_id(stack.pop_decoration_remove_visible_selection(), circuit);
+            editing::remove_from_visible_selection(circuit, decoration_id);
+            return;
+        }
+
         case visible_selection_clear: {
             stack.pop_visible_selection_clear();
             editing::clear_visible_selection(circuit);
@@ -139,11 +153,6 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         case visible_selection_pop_last: {
             stack.pop_visible_selection_pop_last();
             editing::pop_last_visible_selection_rect(circuit);
-            return;
-        }
-
-        case visible_selection_select_decoration: {
-            stack.pop_visible_selection_select_decoration();
             return;
         }
     };

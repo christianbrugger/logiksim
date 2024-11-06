@@ -23,11 +23,36 @@ namespace editing {
 
 namespace {
 
+auto _store_history_add_visible_selection(CircuitData& circuit,
+                                          decoration_id_t decoration_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto decoration_key = circuit.index.key_index().get(decoration_id);
+
+        if (circuit.visible_selection.initial_selection().is_selected(decoration_id)) {
+            stack->push_decoration_add_visible_selection(decoration_key);
+        }
+    }
+}
+
+auto _store_history_remove_visible_selection(CircuitData& circuit,
+                                             decoration_id_t decoration_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto decoration_key = circuit.index.key_index().get(decoration_id);
+
+        if (circuit.visible_selection.initial_selection().is_selected(decoration_id)) {
+            stack->push_decoration_remove_visible_selection(decoration_key);
+        }
+    }
+}
+
 auto _store_history_create_decoration(CircuitData& circuit, decoration_id_t decoration_id,
                                       PlacedDecoration&& deleted_definition) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
 
+        if (circuit.visible_selection.initial_selection().is_selected(decoration_id)) {
+            stack->push_decoration_add_visible_selection(decoration_key);
+        }
         stack->push_decoration_create_temporary(decoration_key,
                                                 std::move(deleted_definition));
     }
@@ -371,6 +396,30 @@ auto set_attributes_decoration(CircuitData& circuit, decoration_id_t decoration_
 
     _store_history_change_attribute_decoration(circuit, decoration_id,
                                                std::move(old_attr));
+}
+
+//
+// Visible Selection
+//
+
+auto add_to_visible_selection(CircuitData& circuit_data,
+                              decoration_id_t decoration_id) -> void {
+    _store_history_remove_visible_selection(circuit_data, decoration_id);
+
+    circuit_data.visible_selection.modify_initial_selection(
+        [decoration_id](Selection& initial_selection) {
+            initial_selection.add_decoration(decoration_id);
+        });
+}
+
+auto remove_from_visible_selection(CircuitData& circuit_data,
+                                   decoration_id_t decoration_id) -> void {
+    _store_history_add_visible_selection(circuit_data, decoration_id);
+
+    circuit_data.visible_selection.modify_initial_selection(
+        [decoration_id](Selection& initial_selection) {
+            initial_selection.remove_decoration(decoration_id);
+        });
 }
 
 }  // namespace editing

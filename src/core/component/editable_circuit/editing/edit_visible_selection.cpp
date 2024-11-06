@@ -11,12 +11,12 @@ namespace editing {
 namespace {
 
 auto _store_history_visible_selection_set(History& history,
-                                          VisibleSelection& visible_selection,
+                                          const VisibleSelection& visible_selection,
                                           const KeyIndex& key_index,
                                           const Selection& new_selection) -> void {
     if (const auto stack = history.get_stack()) {
-        while (!visible_selection.operations().empty()) {
-            const auto operation = visible_selection.pop_last();
+        for (const auto& operation :
+             visible_selection.operations() | std::ranges::views::reverse) {
             stack->push_visible_selection_add_operation(operation);
         }
 
