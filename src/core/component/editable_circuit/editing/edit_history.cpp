@@ -53,6 +53,7 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
     switch (stack.top_entry().value()) {
         using enum HistoryEntry;
         case new_group: {
+            stack.pop_new_group();
             return;
         }
 
@@ -60,7 +61,6 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             auto [decoration_key, placed_decoration] =
                 stack.pop_decoration_create_temporary();
 
-            // TODO fix std::move
             editing::add_decoration(circuit, std::move(placed_decoration.definition),
                                     placed_decoration.position, InsertionMode::temporary,
                                     decoration_key);
@@ -123,8 +123,8 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
-        case visible_selection_add: {
-            const auto operation = stack.pop_visible_selection_add();
+        case visible_selection_add_operation: {
+            const auto operation = stack.pop_visible_selection_add_operation();
             editing::add_visible_selection_rect(circuit, operation.function,
                                                 operation.rect);
             return;
@@ -139,6 +139,11 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         case visible_selection_pop_last: {
             stack.pop_visible_selection_pop_last();
             editing::pop_last_visible_selection_rect(circuit);
+            return;
+        }
+
+        case visible_selection_select_decoration: {
+            stack.pop_visible_selection_select_decoration();
             return;
         }
     };

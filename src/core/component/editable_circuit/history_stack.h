@@ -31,9 +31,10 @@ enum class HistoryEntry : uint8_t {
     // visible selection
     visible_selection_clear,
     visible_selection_set,
-    visible_selection_add,
+    visible_selection_add_operation,
     visible_selection_update_last,
     visible_selection_pop_last,
+    visible_selection_select_decoration,
 };
 
 }
@@ -47,7 +48,7 @@ namespace editable_circuit {
  * @brief: Store history actions of the editable circuit.
  *
  * Class-invariants:
- *  +
+ *  + All substacks have correct size to fit the entries in the main stack.
  */
 class HistoryStack {
    public:
@@ -100,16 +101,19 @@ class HistoryStack {
 
     auto push_visible_selection_clear() -> void;
     auto push_visible_selection_set(StableSelection&& stable_selection) -> void;
-    auto push_visible_selection_add(const VisibleSelection::operation_t& operation)
-        -> void;
+    auto push_visible_selection_add_operation(
+        const VisibleSelection::operation_t& operation) -> void;
     auto push_visible_selection_update_last(const rect_fine_t& rect) -> void;
     auto push_visible_selection_pop_last() -> void;
+    auto push_visible_selection_select_decoration(decoration_key_t decoration_key)
+        -> void;
 
     auto pop_visible_selection_clear() -> void;
     auto pop_visible_selection_set() -> StableSelection;
-    auto pop_visible_selection_add() -> visible_selection::operation_t;
+    auto pop_visible_selection_add_operation() -> visible_selection::operation_t;
     auto pop_visible_selection_update_last() -> rect_fine_t;
     auto pop_visible_selection_pop_last() -> void;
+    auto pop_visible_selection_select_decoration() -> decoration_key_t;
 
    private:
     std::vector<HistoryEntry> entries_ {};

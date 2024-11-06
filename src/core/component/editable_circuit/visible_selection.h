@@ -50,7 +50,7 @@ class VisibleSelection {
 
     auto add(SelectionFunction function, rect_fine_t rect) -> void;
     auto update_last(rect_fine_t rect) -> void;
-    auto pop_last() -> void;
+    auto pop_last() -> operation_t;
 
     [[nodiscard]] auto selection(
         const Layout &layout, const LayoutIndex &layout_index) const -> const Selection &;

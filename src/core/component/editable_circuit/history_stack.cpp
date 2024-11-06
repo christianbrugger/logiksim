@@ -36,12 +36,14 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
             return "visble_selection_clear";
         case visible_selection_set:
             return "visble_selection_set";
-        case visible_selection_add:
-            return "visible_selection_add";
+        case visible_selection_add_operation:
+            return "visible_selection_add_operation";
         case visible_selection_update_last:
             return "visible_selection_update_last";
         case visible_selection_pop_last:
             return "visible_selection_pop_last";
+        case visible_selection_select_decoration:
+            return "visible_selection_select_decoration";
     };
     std::terminate();
 }
@@ -279,7 +281,7 @@ auto HistoryStack::push_visible_selection_set(StableSelection&& stable_selection
     selections_.emplace_back(std::move(stable_selection));
 }
 
-auto HistoryStack::push_visible_selection_add(
+auto HistoryStack::push_visible_selection_add_operation(
     const VisibleSelection::operation_t& operation) -> void {
     // remove rects added and removed in the same group
     if (get_entry_before_skip(entries_, HistoryEntry::visible_selection_update_last) ==
@@ -291,7 +293,7 @@ auto HistoryStack::push_visible_selection_add(
         return;
     }
 
-    entries_.emplace_back(HistoryEntry::visible_selection_add);
+    entries_.emplace_back(HistoryEntry::visible_selection_add_operation);
     selection_functions_.emplace_back(operation.function);
     selection_rects_.emplace_back(operation.rect);
 }
@@ -310,6 +312,12 @@ auto HistoryStack::push_visible_selection_pop_last() -> void {
     entries_.emplace_back(HistoryEntry::visible_selection_pop_last);
 }
 
+auto HistoryStack::push_visible_selection_select_decoration(
+    decoration_key_t decoration_key) -> void {
+    entries_.emplace_back(HistoryEntry::visible_selection_select_decoration);
+    decoration_keys_.emplace_back(decoration_key);
+}
+
 auto HistoryStack::pop_visible_selection_clear() -> void {
     Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_clear);
 }
@@ -319,8 +327,9 @@ auto HistoryStack::pop_visible_selection_set() -> StableSelection {
     return pop_back_vector(selections_);
 }
 
-auto HistoryStack::pop_visible_selection_add() -> visible_selection::operation_t {
-    Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_add);
+auto HistoryStack::pop_visible_selection_add_operation()
+    -> visible_selection::operation_t {
+    Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_add_operation);
     return visible_selection::operation_t {
         .function = pop_back_vector(selection_functions_),
         .rect = pop_back_vector(selection_rects_),
@@ -334,6 +343,12 @@ auto HistoryStack::pop_visible_selection_update_last() -> rect_fine_t {
 
 auto HistoryStack::pop_visible_selection_pop_last() -> void {
     Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_pop_last);
+}
+
+auto HistoryStack::pop_visible_selection_select_decoration() -> decoration_key_t {
+    Expects(pop_back_vector(entries_) ==
+            HistoryEntry::visible_selection_select_decoration);
+    return pop_back_vector(decoration_keys_);
 }
 
 //

@@ -1,6 +1,5 @@
 #include "core/component/editable_circuit/editing/edit_visible_selection.h"
 
-#include "core/algorithm/vector_operations.h"
 #include "core/component/editable_circuit/circuit_data.h"
 
 namespace logicsim {
@@ -11,27 +10,26 @@ namespace editing {
 
 namespace {
 
-auto _store_history_visible_selection_set_operations(
-    History& history, const VisibleSelection& visible_selection) -> void {
-    if (const auto stack = history.get_stack()) {
-        for (const auto& operation :
-             visible_selection.operations() | std::ranges::views::reverse) {
-            stack->push_visible_selection_add(operation);
-        }
-    }
-}
-
 auto _store_history_visible_selection_set(History& history,
-                                          const VisibleSelection& visible_selection,
-                                          const KeyIndex& key_index) -> void {
+                                          VisibleSelection& visible_selection,
+                                          const KeyIndex& key_index,
+                                          const Selection& new_selection) -> void {
     if (const auto stack = history.get_stack()) {
-        if (const auto& initial_selection = visible_selection.initial_selection();
-            !initial_selection.empty()) {
-            stack->push_visible_selection_set(
-                to_stable_selection(initial_selection, key_index));
-        } else {
-            stack->push_visible_selection_clear();
+        while (!visible_selection.operations().empty()) {
+            const auto operation = visible_selection.pop_last();
+            stack->push_visible_selection_add_operation(operation);
         }
+
+        const auto& selection = visible_selection.initial_selection();
+
+        if (selection == new_selection) {
+            return;
+        }
+        if (selection.empty()) {
+            stack->push_visible_selection_clear();
+            return;
+        }
+        stack->push_visible_selection_set(to_stable_selection(selection, key_index));
     }
 }
 
@@ -41,11 +39,11 @@ auto _store_history_visible_selection_pop_last(History& history) -> void {
     }
 }
 
-auto _store_history_visible_selection_add(CircuitData& circuit_data) -> void {
+auto _store_history_visible_selection_add_operation(CircuitData& circuit_data) -> void {
     static_cast<void>(circuit_data);
     if (const auto stack = circuit_data.history.get_stack()) {
         const auto operation = last_operation(circuit_data.visible_selection).value();
-        stack->push_visible_selection_add(operation);
+        stack->push_visible_selection_add_operation(operation);
     }
 }
 
@@ -63,21 +61,16 @@ auto clear_visible_selection(CircuitData& circuit_data) -> void {
     set_visible_selection(circuit_data, Selection {});
 }
 
-auto set_visible_selection(CircuitData& circuit_data, Selection&& selection_) -> void {
-    if (!is_valid_selection(selection_, circuit_data.layout)) {
+auto set_visible_selection(CircuitData& circuit_data, Selection&& selection) -> void {
+    if (!is_valid_selection(selection, circuit_data.layout)) {
         throw std::runtime_error("Selection contains elements not in layout");
     }
 
-    _store_history_visible_selection_set_operations(circuit_data.history,
-                                                    circuit_data.visible_selection);
+    _store_history_visible_selection_set(circuit_data.history,
+                                         circuit_data.visible_selection,
+                                         circuit_data.index.key_index(), selection);
 
-    if (circuit_data.visible_selection.initial_selection() != selection_) {
-        _store_history_visible_selection_set(circuit_data.history,
-                                             circuit_data.visible_selection,
-                                             circuit_data.index.key_index());
-    }
-
-    circuit_data.visible_selection = VisibleSelection {std::move(selection_)};
+    circuit_data.visible_selection = VisibleSelection {std::move(selection)};
 }
 
 auto add_visible_selection_rect(CircuitData& circuit_data, SelectionFunction function,
@@ -88,7 +81,7 @@ auto add_visible_selection_rect(CircuitData& circuit_data, SelectionFunction fun
 }
 
 auto pop_last_visible_selection_rect(CircuitData& circuit_data) -> void {
-    _store_history_visible_selection_add(circuit_data);
+    _store_history_visible_selection_add_operation(circuit_data);
 
     circuit_data.visible_selection.pop_last();
 }

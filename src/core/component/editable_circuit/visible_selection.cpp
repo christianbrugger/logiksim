@@ -1,5 +1,6 @@
 #include "core/component/editable_circuit/visible_selection.h"
 
+#include "core/algorithm/vector_operations.h"
 #include "core/allocated_size/std_optional.h"
 #include "core/allocated_size/std_vector.h"
 #include "core/allocated_size/trait.h"
@@ -106,17 +107,18 @@ auto VisibleSelection::update_last(rect_fine_t rect) -> void {
     Ensures(class_invariant_holds());
 }
 
-auto VisibleSelection::pop_last() -> void {
+auto VisibleSelection::pop_last() -> operation_t {
     Expects(class_invariant_holds());
 
     if (operations_.empty()) [[unlikely]] {
         throw std::runtime_error("Cannot remove last with no operations.");
     }
 
-    operations_.pop_back();
+    const auto result = pop_back_vector(operations_);
     cached_selection_.reset();
 
     Ensures(class_invariant_holds());
+    return result;
 }
 
 auto VisibleSelection::operations() const -> std::span<const operation_t> {
