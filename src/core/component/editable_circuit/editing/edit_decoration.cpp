@@ -273,16 +273,15 @@ auto _decoration_change_colliding_to_insert(CircuitData& circuit,
                                             decoration_id_t& decoration_id) -> void {
     const auto display_state = circuit.layout.decorations().display_state(decoration_id);
 
-    _store_history_to_insertion_insert_to_colliding(circuit, decoration_id);
-
     if (display_state == display_state_t::valid) {
+        _store_history_to_insertion_insert_to_colliding(circuit, decoration_id);
         circuit.layout.decorations().set_display_state(decoration_id,
                                                        display_state_t::normal);
         return;
     }
 
     if (display_state == display_state_t::colliding) [[likely]] {
-        // we can only delete temporary elements
+        _store_history_to_insertion_temporary_to_colliding(circuit, decoration_id);
         circuit.layout.decorations().set_display_state(decoration_id,
                                                        display_state_t::temporary);
         delete_temporary_decoration(circuit, decoration_id);
