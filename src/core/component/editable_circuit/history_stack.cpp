@@ -178,6 +178,11 @@ auto HistoryStack::push_decoration_temporary_to_colliding(decoration_key_t decor
         pop_decoration_to_mode_temporary();
         return;
     }
+    // skip if unecessary in between-state
+    if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_insert &&
+        at_back_vector(decoration_keys_) == decoration_key) {
+        return;
+    }
 
     entries_.emplace_back(HistoryEntry::decoration_to_mode_colliding);
     decoration_keys_.emplace_back(decoration_key);
@@ -202,6 +207,11 @@ auto HistoryStack::push_decoration_insert_to_colliding(decoration_key_t decorati
     if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_insert &&
         at_back_vector(decoration_keys_) == decoration_key) {
         pop_decoration_to_mode_insert();
+        return;
+    }
+    // skip if unecessary in between-state
+    if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_temporary &&
+        at_back_vector(decoration_keys_) == decoration_key) {
         return;
     }
 
