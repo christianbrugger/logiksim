@@ -132,7 +132,6 @@ auto HistoryStack::pop_new_group() -> void {
 //
 auto HistoryStack::push_decoration_create_temporary(
     decoration_key_t decoration_key, PlacedDecoration&& placed_decoration) -> void {
-    // skip if it was just deleted
     if (get_back_vector(entries_) == HistoryEntry::decoration_delete_temporary &&
         at_back_vector(decoration_keys_) == decoration_key) {
         pop_decoration_delete_temporary();
@@ -157,12 +156,29 @@ auto HistoryStack::push_decoration_delete_temporary(decoration_key_t decoration_
     decoration_keys_.emplace_back(decoration_key);
 }
 
+namespace {
+
+[[nodiscard]] auto just_changed_insertion_mode(
+    const std::vector<HistoryEntry>& entries,
+    std::vector<decoration_key_t> decoration_keys, decoration_key_t current_key) -> bool {
+    using enum HistoryEntry;
+
+    const auto last = get_back_vector(entries);
+    return (last == decoration_to_mode_temporary ||
+            last == decoration_to_mode_colliding || last == decoration_to_mode_insert) &&
+           at_back_vector(decoration_keys) == current_key;
+}
+
+}  // namespace
+
 auto HistoryStack::push_decoration_colliding_to_temporary(decoration_key_t decoration_key)
     -> void {
-    // skip if it was just colliding
     if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_colliding &&
         at_back_vector(decoration_keys_) == decoration_key) {
         pop_decoration_to_mode_colliding();
+        return;
+    }
+    if (just_changed_insertion_mode(entries_, decoration_keys_, decoration_key)) {
         return;
     }
 
@@ -172,15 +188,12 @@ auto HistoryStack::push_decoration_colliding_to_temporary(decoration_key_t decor
 
 auto HistoryStack::push_decoration_temporary_to_colliding(decoration_key_t decoration_key)
     -> void {
-    // skip if it was just temporary
     if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_temporary &&
         at_back_vector(decoration_keys_) == decoration_key) {
         pop_decoration_to_mode_temporary();
         return;
     }
-    // skip if unecessary in between-state
-    if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_insert &&
-        at_back_vector(decoration_keys_) == decoration_key) {
+    if (just_changed_insertion_mode(entries_, decoration_keys_, decoration_key)) {
         return;
     }
 
@@ -196,6 +209,9 @@ auto HistoryStack::push_decoration_colliding_to_insert(decoration_key_t decorati
         pop_decoration_to_mode_colliding();
         return;
     }
+    if (just_changed_insertion_mode(entries_, decoration_keys_, decoration_key)) {
+        return;
+    }
 
     entries_.emplace_back(HistoryEntry::decoration_to_mode_insert);
     decoration_keys_.emplace_back(decoration_key);
@@ -209,9 +225,7 @@ auto HistoryStack::push_decoration_insert_to_colliding(decoration_key_t decorati
         pop_decoration_to_mode_insert();
         return;
     }
-    // skip if unecessary in between-state
-    if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_temporary &&
-        at_back_vector(decoration_keys_) == decoration_key) {
+    if (just_changed_insertion_mode(entries_, decoration_keys_, decoration_key)) {
         return;
     }
 
@@ -228,7 +242,6 @@ auto HistoryStack::push_decoration_move_temporary(decoration_key_t decoration_ke
 
 auto HistoryStack::push_decoration_change_attributes(
     decoration_key_t decoration_key, attributes_text_element_t&& attrs) -> void {
-    // skip similar changes
     if (last_non_group_entry(entries_) == HistoryEntry::decoration_change_attributes &&
         at_back_vector(decoration_keys_) == decoration_key) {
         return;
@@ -242,12 +255,24 @@ auto HistoryStack::push_decoration_change_attributes(
 
 auto HistoryStack::push_decoration_add_visible_selection(decoration_key_t decoration_key)
     -> void {
+    if (get_back_vector(entries_) == HistoryEntry::decoration_remove_visible_selection &&
+        at_back_vector(decoration_keys_) == decoration_key) {
+        pop_decoration_remove_visible_selection();
+        return;
+    }
+
     entries_.emplace_back(HistoryEntry::decoration_add_visible_selection);
     decoration_keys_.emplace_back(decoration_key);
 }
 
 auto HistoryStack::push_decoration_remove_visible_selection(
     decoration_key_t decoration_key) -> void {
+    if (get_back_vector(entries_) == HistoryEntry::decoration_add_visible_selection &&
+        at_back_vector(decoration_keys_) == decoration_key) {
+        pop_decoration_add_visible_selection();
+        return;
+    }
+
     entries_.emplace_back(HistoryEntry::decoration_remove_visible_selection);
     decoration_keys_.emplace_back(decoration_key);
 }

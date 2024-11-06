@@ -74,9 +74,12 @@ auto resize_element(EditableCircuit& editable_circuit, const PlacedElement& orig
 
         const auto guard = SelectionGuard {editable_circuit};
         add_placed_element(editable_circuit, std::move(new_element),
-                           InsertionMode::collisions, guard.selection_id());
+                           InsertionMode::temporary, guard.selection_id());
         editable_circuit.set_visible_selection(
             editable_circuit.selection(guard.selection_id()));
+        // simplifies the history, to select first then change to colliding
+        editable_circuit.change_insertion_mode(guard.selection_id(),
+                                               InsertionMode::collisions);
     }
 
     // check collisions

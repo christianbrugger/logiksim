@@ -752,4 +752,12 @@ auto get_single_decoration(const Selection &selection) -> decoration_id_t {
     return selection.selected_decorations().front();
 }
 
+auto get_single_segment(const Selection &selection)
+    -> std::optional<selection::segment_pair_t> {
+    if (selection.selected_segments().size() != 1 || selection.size() != 1) {
+        return std::nullopt;
+    }
+    return selection.selected_segments().front();
+}
+
 }  // namespace logicsim

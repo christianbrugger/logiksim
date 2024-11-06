@@ -10,6 +10,7 @@
 
 #include <ankerl/unordered_dense.h>
 
+#include <optional>
 #include <utility>  // std::pair
 #include <vector>
 
@@ -33,6 +34,7 @@ static_assert(sizeof(map_key_t) == 8);
 static_assert(sizeof(map_value_t) == 10);
 static_assert(sizeof(map_pair_t) == 20);
 
+using segment_pair_t = selection::map_pair_t;
 using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
 
 }  // namespace selection
@@ -46,7 +48,7 @@ using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
  */
 class Selection {
    public:
-    using segment_pair_t = selection::map_pair_t;
+    using segment_pair_t = selection::segment_pair_t;
 
     using logicitems_set_t = selection::logicitems_set_t;
     using decorations_set_t = selection::decorations_set_t;
@@ -165,6 +167,8 @@ auto toggle_segment_part(Selection &selection, const Layout &layout, segment_t s
 
 auto get_single_logicitem(const Selection &selection) -> logicitem_id_t;
 auto get_single_decoration(const Selection &selection) -> decoration_id_t;
+auto get_single_segment(const Selection &selection)
+    -> std::optional<selection::segment_pair_t>;
 
 }  // namespace logicsim
 
