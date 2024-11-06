@@ -441,10 +441,22 @@ auto save_destroy_selection(EditableCircuit& editable_circuit,
     }
 }
 
+auto visible_selection_everything_selected(EditableCircuit& editable_circuit) -> bool {
+    const auto& selection = editable_circuit.visible_selection();
+    const auto& layout = editable_circuit.layout();
+
+    return selection.size() == get_inserted_logicitem_count(layout) +
+                                   get_inserted_decoration_count(layout) +
+                                   get_inserted_segment_count(layout);
+}
+
 auto visible_selection_select_all(EditableCircuit& editable_circuit) -> void {
+    if (visible_selection_everything_selected(editable_circuit)) {
+        return;
+    }
+
     const auto rect = rect_fine_t {point_fine_t {grid_t::min(), grid_t::min()},
                                    point_fine_t {grid_t::max(), grid_t::max()}};
-
     editable_circuit.clear_visible_selection();
     editable_circuit.add_visible_selection_rect(SelectionFunction::add, rect);
     // for optimization
