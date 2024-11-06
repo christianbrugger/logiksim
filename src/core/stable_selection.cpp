@@ -8,19 +8,14 @@
 namespace logicsim {
 
 auto StableSelection::format() const -> std::string {
-    return fmt::format(
-        "StableSlection(\n"
-        "  logicitems = {},\n"
-        "  decorations = {},\n"
-        "  segments = {},\n"
-        ")",
-        logicitems, segments, decorations);
+    return fmt::format("StableSlection(logicitems = {}, decorations = {}, segments = {})",
+                       logicitems, decorations, segments);
 }
 
 auto StableSelection::allocated_size() const -> std::size_t {
-    return get_allocated_size(logicitems) +  //
-           get_allocated_size(segments) +    //
-           get_allocated_size(decorations);
+    return get_allocated_size(logicitems) +   //
+           get_allocated_size(decorations) +  //
+           get_allocated_size(segments);
 }
 
 [[nodiscard]] auto to_stable_selection(const Selection& selection,

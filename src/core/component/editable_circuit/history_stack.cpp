@@ -78,8 +78,8 @@ auto HistoryStack::format() const -> std::string {
         "    selection_functions = {},\n"
         "  )",
         format_stack_vector(entries_), decoration_keys_,
-        format_stack_vector(placed_decorations_), move_deltas_, selections_.size(),
-        selection_rects_, selection_functions_);
+        format_stack_vector(placed_decorations_), move_deltas_,
+        format_stack_vector(selections_), selection_rects_, selection_functions_);
 }
 
 auto HistoryStack::allocated_size() const -> std::size_t {
