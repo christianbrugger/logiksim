@@ -39,7 +39,7 @@ auto _store_history_remove_visible_selection(CircuitData& circuit,
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
 
-        if (circuit.visible_selection.initial_selection().is_selected(decoration_id)) {
+        if (!circuit.visible_selection.initial_selection().is_selected(decoration_id)) {
             stack->push_decoration_remove_visible_selection(decoration_key);
         }
     }
