@@ -12,7 +12,7 @@
 #
 
 name: logiksim
-version: '2.2.0'
+version: '2.2.1'
 summary: Design and simulation circuits with predefined logic items.
 description: |
   Design and simulation circuits with predefined logic items.
@@ -146,6 +146,7 @@ parts:
   logiksim:
     plugin: nil
     source: https://github.com/christianbrugger/logiksim.git
+    source-branch: release/2.2.x
     source-type: git
     source-submodules: []
     build-environment:
