@@ -51,10 +51,7 @@ auto History::get_stack() -> HistoryStack* {
         case disabled: {
             return nullptr;
         }
-        case track_undo_new: {
-            redo_stack.clear();
-            return &undo_stack;
-        }
+        case track_undo_new:
         case track_undo_replay: {
             return &undo_stack;
         }

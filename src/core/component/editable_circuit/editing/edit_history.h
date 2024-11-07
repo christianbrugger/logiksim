@@ -23,10 +23,8 @@ auto undo_group(CircuitData& circuit) -> void;
 auto redo_group(CircuitData& circuit) -> void;
 
 auto finish_undo_group(History& history) -> void;
-auto finish_redo_group(History& history) -> void;
 
 auto reopen_undo_group(History& history) -> void;
-auto reopen_redo_group(History& history) -> void;
 
 }  // namespace editing
 

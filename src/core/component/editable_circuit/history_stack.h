@@ -67,7 +67,7 @@ class HistoryStack {
     // Groups
     //
 
-    auto push_new_group() -> void;
+    auto push_new_group() -> bool;
     auto pop_new_group() -> void;
 
     //

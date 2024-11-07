@@ -169,48 +169,56 @@ auto _apply_last_group(CircuitData& circuit, HistoryStack& stack) -> void {
     }
 }
 
+enum class ReplayStack { undo, redo };
+
+auto _replay_stack(CircuitData& circuit, ReplayStack kind) -> void {
+    if (circuit.history.state != HistoryState::track_undo_new) [[unlikely]] {
+        throw std::runtime_error("history is in wrong state");
+    }
+    if (has_ungrouped_entries(circuit.history.undo_stack) ||
+        has_ungrouped_entries(circuit.history.redo_stack)) [[unlikely]] {
+        throw std::runtime_error("stack needs to have finished group");
+    }
+
+    auto& replay_stack = kind == ReplayStack::undo ? circuit.history.undo_stack  //
+                                                   : circuit.history.redo_stack;
+
+    const auto _ =
+        gsl::finally([&]() { circuit.history.state = HistoryState::track_undo_new; });
+    circuit.history.state = kind == ReplayStack::undo ? HistoryState::track_redo_replay
+                                                      : HistoryState::track_undo_replay;
+
+    _apply_last_group(circuit, replay_stack);
+    if (auto stack = circuit.history.get_stack()) {
+        stack->push_new_group();
+    }
+
+    Ensures(!has_ungrouped_entries(circuit.history.undo_stack));
+    Ensures(!has_ungrouped_entries(circuit.history.redo_stack));
+}
+
 }  // namespace
 
 auto undo_group(CircuitData& circuit) -> void {
-    const auto _ = gsl::finally([&, initial_state = circuit.history.state]() {
-        circuit.history.state = initial_state;
-    });
-    circuit.history.state = HistoryState::track_redo_replay;
-
-    _apply_last_group(circuit, circuit.history.undo_stack);
-    finish_redo_group(circuit.history);
-
-    Ensures(!has_ungrouped_undo_entries(circuit.history));
-    Ensures(!has_ungrouped_redo_entries(circuit.history));
+    _replay_stack(circuit, ReplayStack::undo);
 }
 
 auto redo_group(CircuitData& circuit) -> void {
-    const auto _ = gsl::finally([&, initial_state = circuit.history.state]() {
-        circuit.history.state = initial_state;
-    });
-    circuit.history.state = HistoryState::track_undo_replay;
-
-    _apply_last_group(circuit, circuit.history.redo_stack);
-    finish_undo_group(circuit.history);
-
-    Ensures(!has_ungrouped_undo_entries(circuit.history));
-    Ensures(!has_ungrouped_redo_entries(circuit.history));
+    _replay_stack(circuit, ReplayStack::redo);
 }
 
 auto finish_undo_group(History& history) -> void {
-    history.undo_stack.push_new_group();
-}
-
-auto finish_redo_group(History& history) -> void {
-    history.redo_stack.push_new_group();
+    if (history.state != HistoryState::track_undo_new) {
+        return;
+    }
+    // Clear redo stack when a new group has been added to the undo stack
+    if (history.undo_stack.push_new_group()) {
+        history.redo_stack.clear();
+    }
 }
 
 auto reopen_undo_group(History& history) -> void {
     return reopen_group(history.undo_stack);
-}
-
-auto reopen_redo_group(History& history) -> void {
-    return reopen_group(history.redo_stack);
 }
 
 }  // namespace editing

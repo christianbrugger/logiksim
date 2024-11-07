@@ -116,11 +116,13 @@ auto HistoryStack::top_entry() const -> std::optional<HistoryEntry> {
 // Groups
 //
 
-auto HistoryStack::push_new_group() -> void {
+auto HistoryStack::push_new_group() -> bool {
     if (!has_ungrouped_entries(*this)) {
-        return;
+        return false;
     }
     entries_.emplace_back(HistoryEntry::new_group);
+
+    return true;
 }
 
 auto HistoryStack::pop_new_group() -> void {
