@@ -3,8 +3,9 @@
 #include "core/algorithm/pop_while.h"
 #include "core/component/simulation/simulation_event_group.h"
 
-#include <stdexcept>
 #include <fmt/core.h>
+
+#include <stdexcept>
 
 namespace logicsim {
 

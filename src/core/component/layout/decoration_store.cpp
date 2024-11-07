@@ -59,8 +59,6 @@ auto DecorationStore::add(DecorationDefinition &&definition, point_t position,
     display_states_.push_back(display_state);
     bounding_rects_.push_back(bounding_rect);
 
-
-
     // attributes
     if (definition.decoration_type == DecorationType::text_element) {
         Expects(

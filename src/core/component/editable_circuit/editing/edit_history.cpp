@@ -184,7 +184,7 @@ auto _replay_stack(CircuitData& circuit, ReplayStack kind) -> void {
         throw std::runtime_error("stack needs to have finished group");
     }
 
-    auto& replay_stack = kind == ReplayStack::undo ? circuit.history.undo_stack  //
+    auto& replay_stack = kind == ReplayStack::undo ? circuit.history.undo_stack
                                                    : circuit.history.redo_stack;
     if (replay_stack.empty()) {
         return;

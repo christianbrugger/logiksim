@@ -36,8 +36,9 @@ struct setting_handle_t {
 [[nodiscard]] auto setting_handle_position(
     const Layout& layout, logicitem_id_t logicitem_id) -> std::optional<setting_handle_t>;
 
-[[nodiscard]] auto setting_handle_position(
-    const Layout& layout, decoration_id_t decoration_id) -> std::optional<setting_handle_t>;
+[[nodiscard]] auto setting_handle_position(const Layout& layout,
+                                           decoration_id_t decoration_id)
+    -> std::optional<setting_handle_t>;
 
 [[nodiscard]] auto setting_handle_position(
     const Layout& layout, const Selection& selection) -> std::optional<setting_handle_t>;

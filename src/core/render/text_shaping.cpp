@@ -522,8 +522,8 @@ auto calculate_max_glyph_count(const ClusterBoxesUser &cluster_boxes,
     };
 
     const auto fitting =
-        ranges::views::partial_sum(cluster_boxes.span(), union_box_data)  //
-        | ranges::views::take_while(box_fitting);
+        ranges::views::partial_sum(cluster_boxes.span(), union_box_data) |
+        ranges::views::take_while(box_fitting);
 
     const auto max = ranges::max_element(fitting, {}, &ClusterBox::end_index);
     const auto glyph_count = max != fitting.end() ? (*max).end_index : std::size_t {0};

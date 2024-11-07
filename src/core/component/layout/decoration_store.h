@@ -11,8 +11,8 @@
 
 #include <ankerl/unordered_dense.h>
 
-#include <vector>
 #include <type_traits>
+#include <vector>
 
 namespace logicsim {
 
