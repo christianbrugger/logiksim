@@ -28,6 +28,7 @@ auto _store_history_visible_selection_set(History& history,
 
         // remove selection
         if (selection.empty()) {
+            // remove single entry
             if (const auto decoration_id = get_single_decoration(new_selection)) {
                 const auto decoration_key = key_index.get(decoration_id);
                 stack->push_decoration_remove_visible_selection(decoration_key);
@@ -36,6 +37,15 @@ auto _store_history_visible_selection_set(History& history,
 
             stack->push_visible_selection_clear();
             return;
+        }
+
+        if (new_selection.empty()) {
+            // add single entry
+            if (const auto decoration_id = get_single_decoration(selection)) {
+                const auto decoration_key = key_index.get(decoration_id);
+                stack->push_decoration_add_visible_selection(decoration_key);
+                return;
+            }
         }
 
         // set to previous selection
