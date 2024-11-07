@@ -2,7 +2,7 @@
 
 Design and simulation circuits with predefined logic items.
 
-![jk-flip-flop](example_circuits/2.1.0/jk-flip-flop.PNG)
+![jk-flip-flop](example_circuits/2.2.0/jk-flip-flop.png)
 
 
 
