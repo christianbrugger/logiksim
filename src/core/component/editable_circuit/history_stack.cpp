@@ -120,8 +120,8 @@ auto HistoryStack::push_new_group() -> bool {
     if (!has_ungrouped_entries(*this)) {
         return false;
     }
-    entries_.emplace_back(HistoryEntry::new_group);
 
+    entries_.emplace_back(HistoryEntry::new_group);
     return true;
 }
 
@@ -147,13 +147,6 @@ auto HistoryStack::push_decoration_create_temporary(
 
 auto HistoryStack::push_decoration_delete_temporary(decoration_key_t decoration_key)
     -> void {
-    // skip if it was just created
-    if (get_back_vector(entries_) == HistoryEntry::decoration_create_temporary &&
-        at_back_vector(decoration_keys_) == decoration_key) {
-        pop_decoration_create_temporary();
-        return;
-    }
-
     entries_.emplace_back(HistoryEntry::decoration_delete_temporary);
     decoration_keys_.emplace_back(decoration_key);
 }
@@ -164,8 +157,8 @@ namespace {
     const std::vector<HistoryEntry>& entries,
     std::vector<decoration_key_t> decoration_keys, decoration_key_t current_key) -> bool {
     using enum HistoryEntry;
-
     const auto last = get_back_vector(entries);
+
     return (last == decoration_to_mode_temporary ||
             last == decoration_to_mode_colliding || last == decoration_to_mode_insert) &&
            at_back_vector(decoration_keys) == current_key;
@@ -244,6 +237,7 @@ auto HistoryStack::push_decoration_move_temporary(decoration_key_t decoration_ke
 
 auto HistoryStack::push_decoration_change_attributes(
     decoration_key_t decoration_key, attributes_text_element_t&& attrs) -> void {
+    // ignore even if in separate group, as GUI fires many
     if (last_non_group_entry(entries_) == HistoryEntry::decoration_change_attributes &&
         at_back_vector(decoration_keys_) == decoration_key) {
         return;
@@ -345,7 +339,6 @@ auto HistoryStack::push_visible_selection_set(StableSelection&& stable_selection
 
 auto HistoryStack::push_visible_selection_add_operation(
     const VisibleSelection::operation_t& operation) -> void {
-    // remove rects added and removed in the same group
     if (get_entry_before_skip(entries_, HistoryEntry::visible_selection_update_last) ==
         HistoryEntry::visible_selection_pop_last) {
         while (at_back_vector(entries_) == HistoryEntry::visible_selection_update_last) {
@@ -361,7 +354,6 @@ auto HistoryStack::push_visible_selection_add_operation(
 }
 
 auto HistoryStack::push_visible_selection_update_last(const rect_fine_t& rect) -> void {
-    // skip similar changes
     if (last_non_group_entry(entries_) == HistoryEntry::visible_selection_update_last) {
         return;
     }
