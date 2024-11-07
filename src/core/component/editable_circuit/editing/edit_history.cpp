@@ -1,11 +1,9 @@
 #include "core/component/editable_circuit/editing/edit_history.h"
 
-#include "core/algorithm/vector_operations.h"
 #include "core/component/editable_circuit/circuit_data.h"
 #include "core/component/editable_circuit/editing/edit_decoration.h"
 #include "core/component/editable_circuit/editing/edit_visible_selection.h"
 #include "core/component/editable_circuit/history.h"
-#include "core/logging.h"
 
 #include <gsl/gsl>
 
@@ -49,11 +47,18 @@ auto to_id(decoration_key_t decoration_key, CircuitData& circuit) -> decoration_
     return circuit.index.key_index().get(decoration_key);
 }
 
-auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
+auto _store_history_new_group(History& history) -> void {
+    if (auto stack = history.get_stack()) {
+        stack->push_new_group();
+    }
+}
+
+auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
     switch (stack.top_entry().value()) {
         using enum HistoryEntry;
         case new_group: {
             stack.pop_new_group();
+            _store_history_new_group(circuit.history);
             return;
         }
 
@@ -159,13 +164,12 @@ auto _apply_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
     std::terminate();
 }
 
-auto _apply_last_group(CircuitData& circuit, HistoryStack& stack) -> void {
-    while (stack.top_entry() == HistoryEntry::new_group) {
-        stack.pop_new_group();
-    }
+auto _replay_one_group(CircuitData& circuit, HistoryStack& stack) -> void {
+    Expects(stack.top_entry() == HistoryEntry::new_group);
+    _replay_last_entry(circuit, stack);
 
     while (has_ungrouped_entries(stack)) {
-        _apply_last_entry(circuit, stack);
+        _replay_last_entry(circuit, stack);
     }
 }
 
@@ -182,16 +186,17 @@ auto _replay_stack(CircuitData& circuit, ReplayStack kind) -> void {
 
     auto& replay_stack = kind == ReplayStack::undo ? circuit.history.undo_stack  //
                                                    : circuit.history.redo_stack;
+    if (replay_stack.empty()) {
+        return;
+    }
 
     const auto _ =
         gsl::finally([&]() { circuit.history.state = HistoryState::track_undo_new; });
     circuit.history.state = kind == ReplayStack::undo ? HistoryState::track_redo_replay
                                                       : HistoryState::track_undo_replay;
 
-    _apply_last_group(circuit, replay_stack);
-    if (auto stack = circuit.history.get_stack()) {
-        stack->push_new_group();
-    }
+    _replay_one_group(circuit, replay_stack);
+    _store_history_new_group(circuit.history);
 
     Ensures(!has_ungrouped_entries(circuit.history.undo_stack));
     Ensures(!has_ungrouped_entries(circuit.history.redo_stack));
