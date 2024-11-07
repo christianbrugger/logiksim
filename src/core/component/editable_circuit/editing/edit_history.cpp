@@ -190,16 +190,21 @@ auto _replay_stack(CircuitData& circuit, ReplayStack kind) -> void {
         return;
     }
 
-    const auto _ =
-        gsl::finally([&]() { circuit.history.state = HistoryState::track_undo_new; });
-    circuit.history.state = kind == ReplayStack::undo ? HistoryState::track_redo_replay
-                                                      : HistoryState::track_undo_replay;
+    {
+        const auto _ = gsl::finally([&]() {  //
+            circuit.history.state = HistoryState::track_undo_new;
+        });
+        circuit.history.state = kind == ReplayStack::undo
+                                    ? HistoryState::track_redo_replay
+                                    : HistoryState::track_undo_replay;
 
-    _replay_one_group(circuit, replay_stack);
-    _store_history_new_group(circuit.history);
+        _replay_one_group(circuit, replay_stack);
+        _store_history_new_group(circuit.history);
+    }
 
     Ensures(!has_ungrouped_entries(circuit.history.undo_stack));
     Ensures(!has_ungrouped_entries(circuit.history.redo_stack));
+    Ensures(circuit.history.state == HistoryState::track_undo_new);
 }
 
 }  // namespace
