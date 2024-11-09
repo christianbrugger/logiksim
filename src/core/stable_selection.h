@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_CORE_STABLE_SELECTION_H
 #define LOGICSIM_CORE_STABLE_SELECTION_H
 
-#include "vocabulary/decoration_key_t.h"
+#include "core/vocabulary/decoration_key.h"
 
 #include <vector>
 

@@ -15,6 +15,7 @@ struct PlacedLogicItem {
     point_t position {0, 0};
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto operator==(const PlacedLogicItem& other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const PlacedLogicItem&) const = default;

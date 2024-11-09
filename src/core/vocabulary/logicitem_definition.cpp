@@ -1,5 +1,6 @@
 #include "core/vocabulary/logicitem_definition.h"
 
+#include "core/allocated_size/std_optional.h"
 #include "core/allocated_size/std_string.h"
 
 #include <fmt/core.h>
@@ -33,6 +34,10 @@ auto LogicItemDefinition::format() const -> std::string {
         ")",
         input_count, output_count, logicitem_type, orientation,  //
         sub_circuit_id, input_inverters, output_inverters, attr_str);
+}
+
+auto LogicItemDefinition::allocated_size() const -> std::size_t {
+    return get_allocated_size(attrs_clock_generator);
 }
 
 }  // namespace logicsim

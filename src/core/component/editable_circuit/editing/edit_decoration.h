@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_CORE_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_DECORATION_H
 #define LOGICSIM_CORE_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_DECORATION_H
 
-#include "core/vocabulary/decoration_key_t.h"
+#include "core/vocabulary/decoration_key.h"
 #include "core/vocabulary/insertion_mode.h"
 
 namespace logicsim {

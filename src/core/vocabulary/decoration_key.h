@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_CORE_VOCABULARY_DECORATION_KEY_T_H
-#define LOGICSIM_CORE_VOCABULARY_DECORATION_KEY_T_H
+#ifndef LOGICSIM_CORE_VOCABULARY_DECORATION_KEY_H
+#define LOGICSIM_CORE_VOCABULARY_DECORATION_KEY_H
 
 #include "core/algorithm/narrow_integral.h"
 #include "core/concept/explicitly_convertible.h"

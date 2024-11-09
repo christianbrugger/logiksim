@@ -17,6 +17,25 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
         case new_group:
             return "new_group";
 
+        case logicitem_create_temporary:
+            return "logicitem_create_temporary";
+        case logicitem_delete_temporary:
+            return "logicitem_delete_temporary";
+        case logicitem_move_temporary:
+            return "logicitem_move_temporary";
+        case logicitem_to_mode_temporary:
+            return "logicitem_to_mode_temporary";
+        case logicitem_to_mode_colliding:
+            return "logicitem_to_mode_colliding";
+        case logicitem_to_mode_insert:
+            return "logicitem_to_mode_insert";
+        case logicitem_change_attributes:
+            return "logicitem_change_attributes";
+        case logicitem_add_visible_selection:
+            return "logicitem_add_visible_selection";
+        case logicitem_remove_visible_selection:
+            return "logicitem_remove_visible_selection";
+
         case decoration_create_temporary:
             return "decoration_create_temporary";
         case decoration_delete_temporary:
@@ -68,26 +87,33 @@ auto HistoryStack::format() const -> std::string {
     return fmt::format(
         "Stack(\n"
         "    entries = {},\n"
+        "    move_delta_stack = {},\n"
+        "    \n"
+        "    logicitem_keys = {},\n"
+        "    placed_logicitems = {},\n"
         "    \n"
         "    decoration_keys = {},\n"
         "    placed_decorations = {},\n"
-        "    move_delta_stack = {},\n"
         "    \n"
         "    visible_selections = {},\n"
         "    selection_rects = {},\n"
         "    selection_functions = {},\n"
         "  )",
-        format_stack_vector(entries_), decoration_keys_,
-        format_stack_vector(placed_decorations_), move_deltas_,
+        format_stack_vector(entries_), move_deltas_,                 //
+        logicitem_keys_, format_stack_vector(placed_logicitems_),    //
+        decoration_keys_, format_stack_vector(placed_decorations_),  //
         format_stack_vector(selections_), selection_rects_, selection_functions_);
 }
 
 auto HistoryStack::allocated_size() const -> std::size_t {
     return get_allocated_size(entries_) +             //
+           get_allocated_size(move_deltas_) +         //
+                                                      //
+           get_allocated_size(logicitem_keys_) +      //
+           get_allocated_size(placed_logicitems_) +   //
                                                       //
            get_allocated_size(decoration_keys_) +     //
            get_allocated_size(placed_decorations_) +  //
-           get_allocated_size(move_deltas_) +         //
                                                       //
            get_allocated_size(selections_) +          //
            get_allocated_size(selection_rects_) +     //
@@ -130,8 +156,204 @@ auto HistoryStack::pop_new_group() -> void {
 }
 
 //
+// Logic Items
+//
+
+auto HistoryStack::push_logicitem_create_temporary(
+    logicitem_key_t logicitem_key, PlacedLogicItem&& placed_logicitem) -> void {
+    if (get_back_vector(entries_) == HistoryEntry::logicitem_delete_temporary &&
+        at_back_vector(logicitem_keys_) == logicitem_key) {
+        pop_logicitem_delete_temporary();
+        return;
+    }
+
+    entries_.emplace_back(HistoryEntry::logicitem_create_temporary);
+    logicitem_keys_.emplace_back(logicitem_key);
+    placed_logicitems_.emplace_back(std::move(placed_logicitem));
+}
+
+auto HistoryStack::push_logicitem_delete_temporary(logicitem_key_t logicitem_key)
+    -> void {
+    entries_.emplace_back(HistoryEntry::logicitem_delete_temporary);
+    logicitem_keys_.emplace_back(logicitem_key);
+}
+
+namespace {
+
+[[nodiscard]] auto just_changed_insertion_mode(
+    const std::vector<HistoryEntry>& entries, std::vector<logicitem_key_t> logicitem_keys,
+    logicitem_key_t current_key) -> bool {
+    using enum HistoryEntry;
+    const auto last = get_back_vector(entries);
+
+    return (last == logicitem_to_mode_temporary || last == logicitem_to_mode_colliding ||
+            last == logicitem_to_mode_insert) &&
+           at_back_vector(logicitem_keys) == current_key;
+}
+
+}  // namespace
+
+auto HistoryStack::push_logicitem_colliding_to_temporary(logicitem_key_t logicitem_key)
+    -> void {
+    if (get_back_vector(entries_) == HistoryEntry::logicitem_to_mode_colliding &&
+        at_back_vector(logicitem_keys_) == logicitem_key) {
+        pop_logicitem_to_mode_colliding();
+        return;
+    }
+    if (just_changed_insertion_mode(entries_, logicitem_keys_, logicitem_key)) {
+        return;
+    }
+
+    entries_.emplace_back(HistoryEntry::logicitem_to_mode_temporary);
+    logicitem_keys_.emplace_back(logicitem_key);
+}
+
+auto HistoryStack::push_logicitem_temporary_to_colliding(logicitem_key_t logicitem_key)
+    -> void {
+    if (get_back_vector(entries_) == HistoryEntry::logicitem_to_mode_temporary &&
+        at_back_vector(logicitem_keys_) == logicitem_key) {
+        pop_logicitem_to_mode_temporary();
+        return;
+    }
+    if (just_changed_insertion_mode(entries_, logicitem_keys_, logicitem_key)) {
+        return;
+    }
+
+    entries_.emplace_back(HistoryEntry::logicitem_to_mode_colliding);
+    logicitem_keys_.emplace_back(logicitem_key);
+}
+
+auto HistoryStack::push_logicitem_colliding_to_insert(logicitem_key_t logicitem_key)
+    -> void {
+    // skip if it was just colliding
+    if (get_back_vector(entries_) == HistoryEntry::logicitem_to_mode_colliding &&
+        at_back_vector(logicitem_keys_) == logicitem_key) {
+        pop_logicitem_to_mode_colliding();
+        return;
+    }
+    if (just_changed_insertion_mode(entries_, logicitem_keys_, logicitem_key)) {
+        return;
+    }
+
+    entries_.emplace_back(HistoryEntry::logicitem_to_mode_insert);
+    logicitem_keys_.emplace_back(logicitem_key);
+}
+
+auto HistoryStack::push_logicitem_insert_to_colliding(logicitem_key_t logicitem_key)
+    -> void {
+    // skip if it was just inserted
+    if (get_back_vector(entries_) == HistoryEntry::logicitem_to_mode_insert &&
+        at_back_vector(logicitem_keys_) == logicitem_key) {
+        pop_logicitem_to_mode_insert();
+        return;
+    }
+    if (just_changed_insertion_mode(entries_, logicitem_keys_, logicitem_key)) {
+        return;
+    }
+
+    entries_.emplace_back(HistoryEntry::logicitem_to_mode_colliding);
+    logicitem_keys_.emplace_back(logicitem_key);
+}
+
+auto HistoryStack::push_logicitem_move_temporary(logicitem_key_t logicitem_key,
+                                                 move_delta_t delta) -> void {
+    entries_.emplace_back(HistoryEntry::logicitem_move_temporary);
+    logicitem_keys_.emplace_back(logicitem_key);
+    move_deltas_.emplace_back(delta);
+}
+
+auto HistoryStack::push_logicitem_change_attributes(
+    logicitem_key_t logicitem_key, attributes_clock_generator_t&& attrs) -> void {
+    // ignore even if in separate group, as GUI fires many
+    if (last_non_group_entry(entries_) == HistoryEntry::logicitem_change_attributes &&
+        at_back_vector(logicitem_keys_) == logicitem_key) {
+        return;
+    }
+
+    entries_.emplace_back(HistoryEntry::logicitem_change_attributes);
+    logicitem_keys_.emplace_back(logicitem_key);
+    placed_logicitems_.emplace_back(PlacedLogicItem {
+        .definition = LogicItemDefinition {.attrs_clock_generator = std::move(attrs)}});
+}
+
+auto HistoryStack::push_logicitem_add_visible_selection(logicitem_key_t logicitem_key)
+    -> void {
+    if (get_back_vector(entries_) == HistoryEntry::logicitem_remove_visible_selection &&
+        at_back_vector(logicitem_keys_) == logicitem_key) {
+        pop_logicitem_remove_visible_selection();
+        return;
+    }
+
+    entries_.emplace_back(HistoryEntry::logicitem_add_visible_selection);
+    logicitem_keys_.emplace_back(logicitem_key);
+}
+
+auto HistoryStack::push_logicitem_remove_visible_selection(logicitem_key_t logicitem_key)
+    -> void {
+    if (get_back_vector(entries_) == HistoryEntry::logicitem_add_visible_selection &&
+        at_back_vector(logicitem_keys_) == logicitem_key) {
+        pop_logicitem_add_visible_selection();
+        return;
+    }
+
+    entries_.emplace_back(HistoryEntry::logicitem_remove_visible_selection);
+    logicitem_keys_.emplace_back(logicitem_key);
+}
+
+auto HistoryStack::pop_logicitem_create_temporary()
+    -> std::pair<logicitem_key_t, PlacedLogicItem> {
+    Expects(pop_back_vector(entries_) == HistoryEntry::logicitem_create_temporary);
+    return {pop_back_vector(logicitem_keys_), pop_back_vector(placed_logicitems_)};
+}
+
+auto HistoryStack::pop_logicitem_delete_temporary() -> logicitem_key_t {
+    Expects(pop_back_vector(entries_) == HistoryEntry::logicitem_delete_temporary);
+    return pop_back_vector(logicitem_keys_);
+}
+
+auto HistoryStack::pop_logicitem_to_mode_temporary() -> logicitem_key_t {
+    Expects(pop_back_vector(entries_) == HistoryEntry::logicitem_to_mode_temporary);
+    return pop_back_vector(logicitem_keys_);
+}
+
+auto HistoryStack::pop_logicitem_to_mode_colliding() -> logicitem_key_t {
+    Expects(pop_back_vector(entries_) == HistoryEntry::logicitem_to_mode_colliding);
+    return pop_back_vector(logicitem_keys_);
+}
+
+auto HistoryStack::pop_logicitem_to_mode_insert() -> logicitem_key_t {
+    Expects(pop_back_vector(entries_) == HistoryEntry::logicitem_to_mode_insert);
+    return pop_back_vector(logicitem_keys_);
+}
+
+auto HistoryStack::pop_logicitem_move_temporary()
+    -> std::pair<logicitem_key_t, move_delta_t> {
+    Expects(pop_back_vector(entries_) == HistoryEntry::logicitem_move_temporary);
+    return {pop_back_vector(logicitem_keys_), pop_back_vector(move_deltas_)};
+}
+
+auto HistoryStack::pop_logicitem_change_attributes()
+    -> std::pair<logicitem_key_t, attributes_clock_generator_t> {
+    Expects(pop_back_vector(entries_) == HistoryEntry::logicitem_change_attributes);
+    return {pop_back_vector(logicitem_keys_),
+            pop_back_vector(placed_logicitems_).definition.attrs_clock_generator.value()};
+}
+
+auto HistoryStack::pop_logicitem_add_visible_selection() -> logicitem_key_t {
+    Expects(pop_back_vector(entries_) == HistoryEntry::logicitem_add_visible_selection);
+    return pop_back_vector(logicitem_keys_);
+}
+
+auto HistoryStack::pop_logicitem_remove_visible_selection() -> logicitem_key_t {
+    Expects(pop_back_vector(entries_) ==
+            HistoryEntry::logicitem_remove_visible_selection);
+    return pop_back_vector(logicitem_keys_);
+}
+
+//
 // Decoration
 //
+
 auto HistoryStack::push_decoration_create_temporary(
     decoration_key_t decoration_key, PlacedDecoration&& placed_decoration) -> void {
     if (get_back_vector(entries_) == HistoryEntry::decoration_delete_temporary &&

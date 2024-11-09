@@ -57,6 +57,7 @@ struct LogicItemDefinition {
     std::optional<attributes_clock_generator_t> attrs_clock_generator {};
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto operator==(const LogicItemDefinition& other) const -> bool =
                                                                                  default;

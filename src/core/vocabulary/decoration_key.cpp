@@ -1,4 +1,4 @@
-#include "core/vocabulary/decoration_key_t.h"
+#include "core/vocabulary/decoration_key.h"
 
 namespace logicsim {
 

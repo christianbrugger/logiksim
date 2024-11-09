@@ -5,9 +5,11 @@
 #include "core/format/enum.h"
 #include "core/format/struct.h"
 #include "core/stable_selection.h"
-#include "core/vocabulary/decoration_key_t.h"
+#include "core/vocabulary/decoration_key.h"
+#include "core/vocabulary/logicitem_key.h"
 #include "core/vocabulary/move_delta.h"
 #include "core/vocabulary/placed_decoration.h"
+#include "core/vocabulary/placed_logicitem.h"
 
 #include <utility>
 #include <vector>
@@ -18,6 +20,17 @@ namespace editable_circuit {
 
 enum class HistoryEntry : uint8_t {
     new_group,
+
+    // decoration
+    logicitem_create_temporary,
+    logicitem_delete_temporary,
+    logicitem_move_temporary,
+    logicitem_to_mode_temporary,
+    logicitem_to_mode_colliding,
+    logicitem_to_mode_insert,
+    logicitem_change_attributes,
+    logicitem_add_visible_selection,
+    logicitem_remove_visible_selection,
 
     // decoration
     decoration_create_temporary,
@@ -71,6 +84,35 @@ class HistoryStack {
     auto pop_new_group() -> void;
 
     //
+    // Logicitems
+    //
+
+    auto push_logicitem_create_temporary(logicitem_key_t logicitem_key,
+                                         PlacedLogicItem&& placed_logicitem) -> void;
+    auto push_logicitem_delete_temporary(logicitem_key_t logicitem_key) -> void;
+    auto push_logicitem_colliding_to_temporary(logicitem_key_t logicitem_key) -> void;
+    auto push_logicitem_temporary_to_colliding(logicitem_key_t logicitem_key) -> void;
+    auto push_logicitem_colliding_to_insert(logicitem_key_t logicitem_key) -> void;
+    auto push_logicitem_insert_to_colliding(logicitem_key_t logicitem_key) -> void;
+    auto push_logicitem_move_temporary(logicitem_key_t logicitem_key,
+                                       move_delta_t delta) -> void;
+    auto push_logicitem_change_attributes(logicitem_key_t logicitem_key,
+                                          attributes_clock_generator_t&& attrs) -> void;
+    auto push_logicitem_add_visible_selection(logicitem_key_t logicitem_key) -> void;
+    auto push_logicitem_remove_visible_selection(logicitem_key_t logicitem_key) -> void;
+
+    auto pop_logicitem_create_temporary() -> std::pair<logicitem_key_t, PlacedLogicItem>;
+    auto pop_logicitem_delete_temporary() -> logicitem_key_t;
+    auto pop_logicitem_to_mode_temporary() -> logicitem_key_t;
+    auto pop_logicitem_to_mode_colliding() -> logicitem_key_t;
+    auto pop_logicitem_to_mode_insert() -> logicitem_key_t;
+    auto pop_logicitem_move_temporary() -> std::pair<logicitem_key_t, move_delta_t>;
+    auto pop_logicitem_change_attributes()
+        -> std::pair<logicitem_key_t, attributes_clock_generator_t>;
+    auto pop_logicitem_add_visible_selection() -> logicitem_key_t;
+    auto pop_logicitem_remove_visible_selection() -> logicitem_key_t;
+
+    //
     // Decoration
     //
 
@@ -119,12 +161,17 @@ class HistoryStack {
     auto pop_visible_selection_pop_last() -> void;
 
    private:
+    // general
     std::vector<HistoryEntry> entries_ {};
+    std::vector<move_delta_t> move_deltas_ {};
+
+    // logicitem
+    std::vector<logicitem_key_t> logicitem_keys_ {};
+    std::vector<PlacedLogicItem> placed_logicitems_ {};
 
     // decoration
     std::vector<decoration_key_t> decoration_keys_ {};
     std::vector<PlacedDecoration> placed_decorations_ {};
-    std::vector<move_delta_t> move_deltas_ {};
 
     // visible selection
     std::vector<StableSelection> selections_ {};

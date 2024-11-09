@@ -2,6 +2,7 @@
 
 #include "core/component/editable_circuit/circuit_data.h"
 #include "core/component/editable_circuit/editing/edit_decoration.h"
+#include "core/component/editable_circuit/editing/edit_logicitem.h"
 #include "core/component/editable_circuit/editing/edit_visible_selection.h"
 #include "core/component/editable_circuit/history.h"
 
@@ -47,6 +48,10 @@ auto to_id(decoration_key_t decoration_key, CircuitData& circuit) -> decoration_
     return circuit.index.key_index().get(decoration_key);
 }
 
+// auto to_id(logicitem_key_t logicitem_key, CircuitData& circuit) -> decoration_id_t {
+//     return circuit.index.key_index().get(logicitem_key);
+// }
+
 auto _store_history_new_group(History& history) -> void {
     if (auto stack = history.get_stack()) {
         stack->push_new_group();
@@ -61,6 +66,81 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             _store_history_new_group(circuit.history);
             return;
         }
+
+            //
+            // Logic Item
+            //
+
+        case logicitem_create_temporary: {
+            // auto [logicitem_key, placed_logicitem] =
+            //     stack.pop_logicitem_create_temporary();
+            //
+            // editing::add_logicitem(circuit, std::move(placed_logicitem.definition),
+            //                        placed_logicitem.position, InsertionMode::temporary,
+            //                        logicitem_key);
+            return;
+        }
+
+        case logicitem_delete_temporary: {
+            // auto logicitem_id = to_id(stack.pop_logicitem_delete_temporary(), circuit);
+            // editing::delete_temporary_logicitem(circuit, logicitem_id);
+            return;
+        }
+
+        case logicitem_move_temporary: {
+            // const auto [logicitem_key, delta] = stack.pop_logicitem_move_temporary();
+            // const auto logicitem_id = to_id(logicitem_key, circuit);
+            //
+            // editing::move_temporary_logicitem_unchecked(circuit, logicitem_id, delta);
+            return;
+        }
+
+        case logicitem_to_mode_temporary: {
+            // auto logicitem_id = to_id(stack.pop_logicitem_to_mode_temporary(),
+            // circuit); editing::change_logicitem_insertion_mode(circuit, logicitem_id,
+            //                                          InsertionMode::temporary);
+            return;
+        }
+
+        case logicitem_to_mode_colliding: {
+            // auto logicitem_id = to_id(stack.pop_logicitem_to_mode_colliding(),
+            // circuit); editing::change_logicitem_insertion_mode(circuit, logicitem_id,
+            //                                          InsertionMode::collisions);
+            return;
+        }
+
+        case logicitem_to_mode_insert: {
+            // auto logicitem_id = to_id(stack.pop_logicitem_to_mode_insert(), circuit);
+            // editing::change_logicitem_insertion_mode(circuit, logicitem_id,
+            //                                          InsertionMode::insert_or_discard);
+            return;
+        }
+
+        case logicitem_change_attributes: {
+            // auto [logicitem_key, attrs] = stack.pop_logicitem_change_attributes();
+            // const auto logicitem_id = to_id(logicitem_key, circuit);
+            //
+            // editing::set_attributes_logicitem(circuit, logicitem_id, std::move(attrs));
+            return;
+        }
+
+        case logicitem_add_visible_selection: {
+            // const auto logicitem_id =
+            //     to_id(stack.pop_logicitem_add_visible_selection(), circuit);
+            // editing::add_to_visible_selection(circuit, logicitem_id);
+            return;
+        }
+
+        case logicitem_remove_visible_selection: {
+            // const auto logicitem_id =
+            //     to_id(stack.pop_logicitem_remove_visible_selection(), circuit);
+            // editing::remove_from_visible_selection(circuit, logicitem_id);
+            return;
+        }
+
+            //
+            // Decoration
+            //
 
         case decoration_create_temporary: {
             auto [decoration_key, placed_decoration] =
@@ -128,6 +208,10 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             editing::remove_from_visible_selection(circuit, decoration_id);
             return;
         }
+
+            //
+            // Visible Selection
+            //
 
         case visible_selection_clear: {
             stack.pop_visible_selection_clear();

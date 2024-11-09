@@ -241,7 +241,7 @@ set(LS_CORE_SOURCES
     vocabulary/context_render_settings.cpp
     vocabulary/decoration_definition.cpp
     vocabulary/decoration_id.cpp
-    vocabulary/decoration_key_t.cpp
+    vocabulary/decoration_key.cpp
     vocabulary/decoration_layout_data.cpp
     vocabulary/decoration_type.cpp
     vocabulary/default_mouse_action.cpp
@@ -277,6 +277,7 @@ set(LS_CORE_SOURCES
     vocabulary/logicitem_connection.cpp
     vocabulary/logicitem_definition.cpp
     vocabulary/logicitem_id.cpp
+    vocabulary/logicitem_key.cpp
     vocabulary/logicitem_type.cpp
     vocabulary/mouse_postion_info.cpp
     vocabulary/move_delta.cpp
