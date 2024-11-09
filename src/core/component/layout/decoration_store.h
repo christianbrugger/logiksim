@@ -70,7 +70,7 @@ class DecorationStore {
     auto set_display_state(decoration_id_t decoration_id,
                            display_state_t display_state) -> void;
     auto set_attributes(decoration_id_t decoration_id,
-                        attributes_text_element_t attrs) -> attributes_text_element_t;
+                        attributes_text_element_t &&attrs) -> attributes_text_element_t;
 
    private:
     auto delete_last() -> PlacedDecoration;

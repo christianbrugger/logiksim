@@ -63,6 +63,11 @@ auto LayoutIndex::set_key(decoration_id_t decoration_id,
     key_index_.set(decoration_id, decoration_key);
 }
 
+auto LayoutIndex::set_key(logicitem_id_t logicitem_id,
+                          logicitem_key_t logicitem_key) -> void {
+    key_index_.set(logicitem_id, logicitem_key);
+}
+
 auto LayoutIndex::logicitem_input_index() const -> const LogicItemInputIndex& {
     return logicitems_inputs_;
 }

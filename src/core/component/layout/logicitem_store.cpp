@@ -8,6 +8,7 @@
 #include "core/layout_info.h"
 #include "core/validate_definition_logicitem.h"
 #include "core/vocabulary/layout_calculation_data.h"
+#include "core/vocabulary/placed_logicitem.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/zip.hpp>
@@ -101,13 +102,13 @@ auto LogicItemStore::add(LogicItemDefinition &&definition, point_t position,
     return logicitem_id;
 }
 
-auto LogicItemStore::swap_and_delete(logicitem_id_t logicitem_id) -> logicitem_id_t {
+auto LogicItemStore::swap_and_delete(logicitem_id_t logicitem_id)
+    -> std::pair<logicitem_id_t, PlacedLogicItem> {
     const auto last_id = last_logicitem_id();
 
     swap_items(logicitem_id, last_id);
-    delete_last();
 
-    return last_id;
+    return {last_id, delete_last()};
 }
 
 auto LogicItemStore::swap_items(logicitem_id_t logicitem_id_1,
@@ -305,7 +306,8 @@ auto LogicItemStore::set_display_state(logicitem_id_t logicitem_id,
 }
 
 auto LogicItemStore::set_attributes(logicitem_id_t logicitem_id,
-                                    attributes_clock_generator_t attrs) -> void {
+                                    attributes_clock_generator_t &&attrs)
+    -> attributes_clock_generator_t {
     const auto it = map_clock_generator_.find(logicitem_id);
 
     if (it == map_clock_generator_.end()) [[unlikely]] {
@@ -315,7 +317,11 @@ auto LogicItemStore::set_attributes(logicitem_id_t logicitem_id,
         throw std::runtime_error("attributes not valid");
     }
 
-    it->second = std::move(attrs);
+    {
+        using namespace std;
+        swap(it->second, attrs);
+    }
+    return attrs;
 }
 
 auto LogicItemStore::set_input_inverter(logicitem_id_t logicitem_id,
@@ -330,13 +336,35 @@ auto LogicItemStore::set_output_inverter(logicitem_id_t logicitem_id,
     output_inverters_.at(logicitem_id.value).at(connection_id.value) = value;
 }
 
-auto LogicItemStore::delete_last() -> void {
+auto LogicItemStore::delete_last() -> PlacedLogicItem {
     if (empty()) {
         throw std::runtime_error("Cannot delete last logicitem of empty layout.");
     }
 
     const auto last_id = last_logicitem_id();
+    const auto it_clock_generator = map_clock_generator_.find(last_id);
 
+    // move
+    const auto result = PlacedLogicItem {
+        .definition =
+            LogicItemDefinition {
+                .logicitem_type = logicitem_types_.back(),
+                .input_count = input_counts_.back(),
+                .output_count = output_counts_.back(),
+                .orientation = orientations_.back(),
+                //
+                .sub_circuit_id = sub_circuit_ids_.back(),
+                .input_inverters = std::move(input_inverters_.back()),
+                .output_inverters = std::move(output_inverters_.back()),
+                //
+                .attrs_clock_generator =
+                    it_clock_generator != map_clock_generator_.end()
+                        ? std::make_optional(std::move(it_clock_generator->second))
+                        : std::nullopt},
+        .position = positions_.back(),
+    };
+
+    // pop
     logicitem_types_.pop_back();
     input_counts_.pop_back();
     output_counts_.pop_back();
@@ -350,7 +378,11 @@ auto LogicItemStore::delete_last() -> void {
     display_states_.pop_back();
     bounding_rects_.pop_back();
 
-    map_clock_generator_.erase(last_id);
+    if (it_clock_generator != map_clock_generator_.end()) {
+        map_clock_generator_.erase(it_clock_generator);
+    }
+
+    return result;
 }
 
 auto LogicItemStore::last_logicitem_id() const -> logicitem_id_t {

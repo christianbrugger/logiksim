@@ -17,7 +17,7 @@ namespace logicsim {
 namespace editable_circuit {
 
 constexpr static inline auto DEBUG_PRINT_MODIFIER_METHODS = false;
-constexpr static inline auto DEBUG_PRINT_CIRCUIT_HISTORY = true;
+constexpr static inline auto DEBUG_PRINT_CIRCUIT_HISTORY = false;
 constexpr static inline auto DEBUG_CHECK_CLASS_INVARIANTS = false;
 
 namespace {
@@ -177,6 +177,9 @@ auto Modifier::delete_temporary_logicitem(logicitem_id_t& logicitem_id) -> void 
 
     editing::delete_temporary_logicitem(circuit_data_, logicitem_id);
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -190,8 +193,11 @@ auto Modifier::move_temporary_logicitem_unchecked(const logicitem_id_t logicitem
             circuit_data_.layout, logicitem_id, delta);
     }
 
-    editing::move_temporary_logicitem_unchecked(circuit_data_.layout, logicitem_id,
-                                                delta);
+    editing::move_temporary_logicitem_unchecked(circuit_data_, logicitem_id, delta);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -206,6 +212,10 @@ auto Modifier::move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id,
     }
 
     editing::move_or_delete_temporary_logicitem(circuit_data_, logicitem_id, delta);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -221,6 +231,10 @@ auto Modifier::change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
 
     editing::change_logicitem_insertion_mode(circuit_data_, logicitem_id,
                                              new_insertion_mode);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -237,6 +251,9 @@ auto Modifier::add_logicitem(LogicItemDefinition&& definition, point_t position,
     const auto logicitem_id = editing::add_logicitem(circuit_data_, std::move(definition),
                                                      position, insertion_mode);
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
     return logicitem_id;
 }
@@ -251,6 +268,10 @@ auto Modifier::toggle_inverter(point_t point) -> void {
     }
 
     editing::toggle_inverter(circuit_data_, point);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
 }
 
 auto Modifier::set_attributes(logicitem_id_t logicitem_id,
@@ -263,7 +284,11 @@ auto Modifier::set_attributes(logicitem_id_t logicitem_id,
             circuit_data_.layout, logicitem_id, attrs_);
     }
 
-    circuit_data_.layout.logicitems().set_attributes(logicitem_id, std::move(attrs_));
+    editing::set_attributes_logicitem(circuit_data_, logicitem_id, std::move(attrs_));
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 

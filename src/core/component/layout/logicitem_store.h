@@ -16,6 +16,7 @@
 namespace logicsim {
 
 struct layout_calculation_data_t;
+struct PlacedLogicItem;
 
 namespace layout {
 
@@ -41,7 +42,8 @@ class LogicItemStore {
     // add & delete
     auto add(LogicItemDefinition &&definition, point_t position,
              display_state_t display_state) -> logicitem_id_t;
-    auto swap_and_delete(logicitem_id_t logicitem_id) -> logicitem_id_t;
+    auto swap_and_delete(logicitem_id_t logicitem_id)
+        -> std::pair<logicitem_id_t, PlacedLogicItem>;
     auto swap_items(logicitem_id_t logicitem_id_1, logicitem_id_t logicitem_id_2) -> void;
 
     /**
@@ -79,15 +81,15 @@ class LogicItemStore {
     auto set_position(logicitem_id_t logicitem_id, point_t position) -> void;
     auto set_display_state(logicitem_id_t logicitem_id,
                            display_state_t display_state) -> void;
-    auto set_attributes(logicitem_id_t logicitem_id,
-                        attributes_clock_generator_t attrs) -> void;
+    auto set_attributes(logicitem_id_t logicitem_id, attributes_clock_generator_t &&attrs)
+        -> attributes_clock_generator_t;
     auto set_input_inverter(logicitem_id_t logicitem_id, connection_id_t connection_id,
                             bool value) -> void;
     auto set_output_inverter(logicitem_id_t logicitem_id, connection_id_t connection_id,
                              bool value) -> void;
 
    private:
-    auto delete_last() -> void;
+    auto delete_last() -> PlacedLogicItem;
     auto last_logicitem_id() const -> logicitem_id_t;
 
    private:

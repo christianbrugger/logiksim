@@ -2,6 +2,7 @@
 #define LOGICSIM_VOCABULARY_LOGIK_ITEM_DEFINITION_H
 
 #include "core/format/struct.h"
+#include "core/logging.h"
 #include "core/vocabulary/circuit_id.h"
 #include "core/vocabulary/connection_count.h"
 #include "core/vocabulary/delay.h"
@@ -15,6 +16,46 @@
 #include <type_traits>
 
 namespace logicsim {
+
+class CopyTest {
+   public:
+    explicit CopyTest() {
+        print("CopyTest: default construct");
+    };
+
+    explicit CopyTest(const CopyTest&) {
+        print("CopyTest: COPY construct  !!!");
+    };
+
+    explicit CopyTest(CopyTest&&) noexcept {
+        print("CopyTest: move construct");
+    };
+
+    auto operator=(const CopyTest&) -> CopyTest& {
+        print("CopyTest: COPY assignment  !!!");
+        return *this;
+    };
+
+    auto operator=(CopyTest&&) noexcept -> CopyTest& {
+        print("CopyTest: move assignment");
+        return *this;
+    };
+
+    ~CopyTest() {
+        print("CopyTest: destroy");
+    };
+
+    [[nodiscard]] auto format() const -> std::string {
+        return "";
+    }
+
+    [[nodiscard]] auto allocated_size() const -> std::size_t {
+        return 0;
+    };
+
+    [[nodiscard]] auto operator==(const CopyTest& other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const CopyTest&) const = default;
+};
 
 /**
  * @brief: Clock generator specific attributes.
@@ -55,6 +96,8 @@ struct LogicItemDefinition {
     logic_small_vector_t output_inverters {};
 
     std::optional<attributes_clock_generator_t> attrs_clock_generator {};
+
+    CopyTest test {};
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;

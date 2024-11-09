@@ -72,55 +72,55 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             //
 
         case logicitem_create_temporary: {
-            // auto [logicitem_key, placed_logicitem] =
-            //     stack.pop_logicitem_create_temporary();
-            //
-            // editing::add_logicitem(circuit, std::move(placed_logicitem.definition),
-            //                        placed_logicitem.position, InsertionMode::temporary,
-            //                        logicitem_key);
+            auto [logicitem_key, placed_logicitem] =
+                stack.pop_logicitem_create_temporary();
+
+            editing::add_logicitem(circuit, std::move(placed_logicitem.definition),
+                                   placed_logicitem.position, InsertionMode::temporary,
+                                   logicitem_key);
             return;
         }
 
         case logicitem_delete_temporary: {
-            // auto logicitem_id = to_id(stack.pop_logicitem_delete_temporary(), circuit);
-            // editing::delete_temporary_logicitem(circuit, logicitem_id);
+            auto logicitem_id = to_id(stack.pop_logicitem_delete_temporary(), circuit);
+            editing::delete_temporary_logicitem(circuit, logicitem_id);
             return;
         }
 
         case logicitem_move_temporary: {
-            // const auto [logicitem_key, delta] = stack.pop_logicitem_move_temporary();
-            // const auto logicitem_id = to_id(logicitem_key, circuit);
-            //
-            // editing::move_temporary_logicitem_unchecked(circuit, logicitem_id, delta);
+            const auto [logicitem_key, delta] = stack.pop_logicitem_move_temporary();
+            const auto logicitem_id = to_id(logicitem_key, circuit);
+
+            editing::move_temporary_logicitem_unchecked(circuit, logicitem_id, delta);
             return;
         }
 
         case logicitem_to_mode_temporary: {
-            // auto logicitem_id = to_id(stack.pop_logicitem_to_mode_temporary(),
-            // circuit); editing::change_logicitem_insertion_mode(circuit, logicitem_id,
-            //                                          InsertionMode::temporary);
+            auto logicitem_id = to_id(stack.pop_logicitem_to_mode_temporary(), circuit);
+            editing::change_logicitem_insertion_mode(circuit, logicitem_id,
+                                                     InsertionMode::temporary);
             return;
         }
 
         case logicitem_to_mode_colliding: {
-            // auto logicitem_id = to_id(stack.pop_logicitem_to_mode_colliding(),
-            // circuit); editing::change_logicitem_insertion_mode(circuit, logicitem_id,
-            //                                          InsertionMode::collisions);
+            auto logicitem_id = to_id(stack.pop_logicitem_to_mode_colliding(), circuit);
+            editing::change_logicitem_insertion_mode(circuit, logicitem_id,
+                                                     InsertionMode::collisions);
             return;
         }
 
         case logicitem_to_mode_insert: {
-            // auto logicitem_id = to_id(stack.pop_logicitem_to_mode_insert(), circuit);
-            // editing::change_logicitem_insertion_mode(circuit, logicitem_id,
-            //                                          InsertionMode::insert_or_discard);
+            auto logicitem_id = to_id(stack.pop_logicitem_to_mode_insert(), circuit);
+            editing::change_logicitem_insertion_mode(circuit, logicitem_id,
+                                                     InsertionMode::insert_or_discard);
             return;
         }
 
         case logicitem_change_attributes: {
-            // auto [logicitem_key, attrs] = stack.pop_logicitem_change_attributes();
-            // const auto logicitem_id = to_id(logicitem_key, circuit);
-            //
-            // editing::set_attributes_logicitem(circuit, logicitem_id, std::move(attrs));
+            auto [logicitem_key, attrs] = stack.pop_logicitem_change_attributes();
+            const auto logicitem_id = to_id(logicitem_key, circuit);
+
+            editing::set_attributes_logicitem(circuit, logicitem_id, std::move(attrs));
             return;
         }
 

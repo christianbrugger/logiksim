@@ -2,7 +2,6 @@
 #define LOGICSIM_CORE_VOCABULARY_DECORATION_DEFINITION_H
 
 #include "core/format/struct.h"
-#include "core/logging.h"
 #include "core/vocabulary/color.h"
 #include "core/vocabulary/decoration_type.h"
 #include "core/vocabulary/font_style.h"
@@ -15,46 +14,6 @@
 
 namespace logicsim {
 
-class CopyTest {
-   public:
-    explicit CopyTest() {
-        print("CopyTest: default construct");
-    };
-
-    explicit CopyTest(const CopyTest&) {
-        print("CopyTest: COPY construct  !!!");
-    };
-
-    explicit CopyTest(CopyTest&&) noexcept {
-        print("CopyTest: move construct");
-    };
-
-    auto operator=(const CopyTest&) -> CopyTest& {
-        print("CopyTest: COPY assignment  !!!");
-        return *this;
-    };
-
-    auto operator=(CopyTest&&) noexcept -> CopyTest& {
-        print("CopyTest: move assignment");
-        return *this;
-    };
-
-    ~CopyTest() {
-        print("CopyTest: destroy");
-    };
-
-    [[nodiscard]] auto format() const -> std::string {
-        return "";
-    }
-
-    [[nodiscard]] auto allocated_size() const -> std::size_t {
-        return 0;
-    };
-
-    [[nodiscard]] auto operator==(const CopyTest& other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const CopyTest&) const = default;
-};
-
 /**
  * @brief: Text element specific attributes.
  */
@@ -63,8 +22,6 @@ struct attributes_text_element_t {
     HTextAlignment horizontal_alignment {HTextAlignment::center};
     FontStyle font_style {FontStyle::regular};
     color_t text_color {defaults::color_black};
-
-    CopyTest test {};
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;

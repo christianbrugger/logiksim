@@ -233,7 +233,7 @@ auto DecorationStore::set_display_state(decoration_id_t decoration_id,
 }
 
 auto DecorationStore::set_attributes(decoration_id_t decoration_id,
-                                     attributes_text_element_t attrs)
+                                     attributes_text_element_t &&attrs)
     -> attributes_text_element_t {
     const auto it = map_text_element_.find(decoration_id);
 

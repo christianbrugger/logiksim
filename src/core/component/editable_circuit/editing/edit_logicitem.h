@@ -2,10 +2,12 @@
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_LOGICITEM_H
 
 #include "core/vocabulary/insertion_mode.h"
+#include "core/vocabulary/logicitem_key.h"
 
 namespace logicsim {
 
 struct logicitem_id_t;
+struct attributes_clock_generator_t;
 struct LogicItemDefinition;
 struct point_t;
 struct move_delta_t;
@@ -36,7 +38,7 @@ auto delete_temporary_logicitem(CircuitData& circuit,
  *    + logicitem is temporary
  *    + new position is representable
  */
-auto move_temporary_logicitem_unchecked(Layout& layout, logicitem_id_t logicitem_id,
+auto move_temporary_logicitem_unchecked(CircuitData& circuit, logicitem_id_t logicitem_id,
                                         move_delta_t delta) -> void;
 
 auto move_or_delete_temporary_logicitem(CircuitData& circuit,
@@ -47,7 +49,11 @@ auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logic
                                      InsertionMode new_mode) -> void;
 
 auto add_logicitem(CircuitData& circuit, LogicItemDefinition&& definition,
-                   point_t position, InsertionMode insertion_mode) -> logicitem_id_t;
+                   point_t position, InsertionMode insertion_mode,
+                   logicitem_key_t logicitem_key = null_logicitem_key) -> logicitem_id_t;
+
+auto set_attributes_logicitem(CircuitData& circuit, logicitem_id_t logicitem_id,
+                              attributes_clock_generator_t&& attrs) -> void;
 
 auto toggle_inverter(CircuitData& circuit, point_t point) -> void;
 
