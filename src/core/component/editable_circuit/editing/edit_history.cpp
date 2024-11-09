@@ -48,9 +48,9 @@ auto to_id(decoration_key_t decoration_key, CircuitData& circuit) -> decoration_
     return circuit.index.key_index().get(decoration_key);
 }
 
-// auto to_id(logicitem_key_t logicitem_key, CircuitData& circuit) -> decoration_id_t {
-//     return circuit.index.key_index().get(logicitem_key);
-// }
+auto to_id(logicitem_key_t logicitem_key, CircuitData& circuit) -> logicitem_id_t {
+    return circuit.index.key_index().get(logicitem_key);
+}
 
 auto _store_history_new_group(History& history) -> void {
     if (auto stack = history.get_stack()) {
@@ -125,16 +125,16 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case logicitem_add_visible_selection: {
-            // const auto logicitem_id =
-            //     to_id(stack.pop_logicitem_add_visible_selection(), circuit);
-            // editing::add_to_visible_selection(circuit, logicitem_id);
+            const auto logicitem_id =
+                to_id(stack.pop_logicitem_add_visible_selection(), circuit);
+            editing::add_to_visible_selection(circuit, logicitem_id);
             return;
         }
 
         case logicitem_remove_visible_selection: {
-            // const auto logicitem_id =
-            //     to_id(stack.pop_logicitem_remove_visible_selection(), circuit);
-            // editing::remove_from_visible_selection(circuit, logicitem_id);
+            const auto logicitem_id =
+                to_id(stack.pop_logicitem_remove_visible_selection(), circuit);
+            editing::remove_from_visible_selection(circuit, logicitem_id);
             return;
         }
 

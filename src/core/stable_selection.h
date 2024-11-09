@@ -2,6 +2,7 @@
 #define LOGICSIM_CORE_STABLE_SELECTION_H
 
 #include "core/vocabulary/decoration_key.h"
+#include "core/vocabulary/logicitem_key.h"
 
 #include <vector>
 
@@ -14,7 +15,7 @@ class KeyIndex;
  * @brief: A stable selection based on the unchanging keys.
  */
 struct StableSelection {
-    std::vector<decoration_key_t> logicitems {};
+    std::vector<logicitem_key_t> logicitems {};
     std::vector<decoration_key_t> decorations {};
     std::vector<decoration_key_t> segments {};
 

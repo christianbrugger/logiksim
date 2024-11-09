@@ -20,6 +20,36 @@ namespace editable_circuit {
 namespace editing {
 
 //
+// History
+//
+
+namespace {
+
+auto _store_history_add_visible_selection(CircuitData& circuit,
+                                          logicitem_id_t logicitem_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
+
+        if (circuit.visible_selection.initial_selection().is_selected(logicitem_id)) {
+            stack->push_logicitem_add_visible_selection(logicitem_key);
+        }
+    }
+}
+
+auto _store_history_remove_visible_selection(CircuitData& circuit,
+                                             logicitem_id_t logicitem_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
+
+        if (!circuit.visible_selection.initial_selection().is_selected(logicitem_id)) {
+            stack->push_logicitem_remove_visible_selection(logicitem_key);
+        }
+    }
+}
+
+}  // namespace
+
+//
 // Delete Logicitem
 //
 
@@ -288,6 +318,30 @@ auto toggle_inverter(CircuitData& circuit, point_t point) -> void {
                                                             entry->connection_id, !value);
         }
     }
+}
+
+//
+// Visible Selection
+//
+
+auto add_to_visible_selection(CircuitData& circuit_data,
+                              logicitem_id_t logicitem_id) -> void {
+    _store_history_remove_visible_selection(circuit_data, logicitem_id);
+
+    circuit_data.visible_selection.modify_initial_selection(
+        [logicitem_id](Selection& initial_selection) {
+            initial_selection.add_logicitem(logicitem_id);
+        });
+}
+
+auto remove_from_visible_selection(CircuitData& circuit_data,
+                                   logicitem_id_t logicitem_id) -> void {
+    _store_history_add_visible_selection(circuit_data, logicitem_id);
+
+    circuit_data.visible_selection.modify_initial_selection(
+        [logicitem_id](Selection& initial_selection) {
+            initial_selection.remove_logicitem(logicitem_id);
+        });
 }
 
 }  // namespace editing

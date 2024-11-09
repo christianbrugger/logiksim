@@ -51,6 +51,10 @@ auto add_logicitem(CircuitData& circuit, LogicItemDefinition&& definition,
 
 auto toggle_inverter(CircuitData& circuit, point_t point) -> void;
 
+auto add_to_visible_selection(CircuitData& circuit_data,
+                              logicitem_id_t logicitem_id) -> void;
+auto remove_from_visible_selection(CircuitData& circuit_data,
+                                   logicitem_id_t logicitem_id) -> void;
 }  // namespace editing
 
 }  // namespace editable_circuit
