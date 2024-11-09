@@ -4,7 +4,9 @@
 #include "core/format/struct.h"
 #include "core/layout_message_forward.h"
 #include "core/vocabulary/decoration_id.h"
-#include "core/vocabulary/decoration_key_t.h"
+#include "core/vocabulary/decoration_key.h"
+#include "core/vocabulary/logicitem_id.h"
+#include "core/vocabulary/logicitem_key.h"
 
 #include <ankerl/unordered_dense.h>
 
@@ -36,15 +38,23 @@ class KeyIndex {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
-    // return null if ids are not found
+    [[nodiscard]] auto get(logicitem_id_t logicitem_id) const -> logicitem_key_t;
+    [[nodiscard]] auto get(logicitem_key_t logicitem_key) const -> logicitem_id_t;
+    auto set(logicitem_id_t logicitem_id, logicitem_key_t logicitem_key) -> void;
+
     [[nodiscard]] auto get(decoration_id_t decoration_id) const -> decoration_key_t;
     [[nodiscard]] auto get(decoration_key_t decoration_key) const -> decoration_id_t;
     auto set(decoration_id_t decoration_id, decoration_key_t decoration_key) -> void;
 
     auto submit(const InfoMessage& message) -> void;
+
     [[nodiscard]] auto has_all_ids_inserted(const Layout& layout) const -> bool;
 
    private:
+    auto handle(const info_message::LogicItemCreated& message) -> void;
+    auto handle(const info_message::LogicItemIdUpdated& message) -> void;
+    auto handle(const info_message::LogicItemDeleted& message) -> void;
+
     auto handle(const info_message::DecorationCreated& message) -> void;
     auto handle(const info_message::DecorationIdUpdated& message) -> void;
     auto handle(const info_message::DecorationDeleted& message) -> void;
@@ -52,9 +62,12 @@ class KeyIndex {
     [[nodiscard]] auto class_invariant_holds() const -> bool;
 
    private:
+    map_type<logicitem_id_t, logicitem_key_t> logicitem_keys_ {};
+    map_type<logicitem_key_t, logicitem_id_t> logicitem_ids_ {};
+    logicitem_key_t next_logicitem_key_ {0};
+
     map_type<decoration_id_t, decoration_key_t> decoration_keys_ {};
     map_type<decoration_key_t, decoration_id_t> decoration_ids_ {};
-
     decoration_key_t next_decoration_key_ {0};
 };
 
