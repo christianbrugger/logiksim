@@ -71,6 +71,8 @@ struct attributes_clock_generator_t {
     bool is_symmetric {true};
     bool show_simulation_controls {true};
 
+    CopyTest test {};
+
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_period() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
@@ -96,8 +98,6 @@ struct LogicItemDefinition {
     logic_small_vector_t output_inverters {};
 
     std::optional<attributes_clock_generator_t> attrs_clock_generator {};
-
-    CopyTest test {};
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;

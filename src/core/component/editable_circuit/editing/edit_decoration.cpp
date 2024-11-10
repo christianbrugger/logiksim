@@ -23,8 +23,8 @@ namespace editing {
 
 namespace {
 
-auto _store_history_add_visible_selection(CircuitData& circuit,
-                                          decoration_id_t decoration_id) -> void {
+auto _store_history_decoration_add_visible_selection(
+    CircuitData& circuit, decoration_id_t decoration_id) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
 
@@ -34,8 +34,8 @@ auto _store_history_add_visible_selection(CircuitData& circuit,
     }
 }
 
-auto _store_history_remove_visible_selection(CircuitData& circuit,
-                                             decoration_id_t decoration_id) -> void {
+auto _store_history_decoration_remove_visible_selection(
+    CircuitData& circuit, decoration_id_t decoration_id) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
 
@@ -403,7 +403,7 @@ auto set_attributes_decoration(CircuitData& circuit, decoration_id_t decoration_
 
 auto add_to_visible_selection(CircuitData& circuit_data,
                               decoration_id_t decoration_id) -> void {
-    _store_history_remove_visible_selection(circuit_data, decoration_id);
+    _store_history_decoration_remove_visible_selection(circuit_data, decoration_id);
 
     circuit_data.visible_selection.modify_initial_selection(
         [decoration_id](Selection& initial_selection) {
@@ -413,7 +413,7 @@ auto add_to_visible_selection(CircuitData& circuit_data,
 
 auto remove_from_visible_selection(CircuitData& circuit_data,
                                    decoration_id_t decoration_id) -> void {
-    _store_history_add_visible_selection(circuit_data, decoration_id);
+    _store_history_decoration_add_visible_selection(circuit_data, decoration_id);
 
     circuit_data.visible_selection.modify_initial_selection(
         [decoration_id](Selection& initial_selection) {

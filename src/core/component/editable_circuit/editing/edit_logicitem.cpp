@@ -25,8 +25,8 @@ namespace editing {
 
 namespace {
 
-auto _store_history_add_visible_selection(CircuitData& circuit,
-                                          logicitem_id_t logicitem_id) -> void {
+auto _store_history_logicitem_add_visible_selection(CircuitData& circuit,
+                                                    logicitem_id_t logicitem_id) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
 
@@ -36,8 +36,8 @@ auto _store_history_add_visible_selection(CircuitData& circuit,
     }
 }
 
-auto _store_history_remove_visible_selection(CircuitData& circuit,
-                                             logicitem_id_t logicitem_id) -> void {
+auto _store_history_logicitem_remove_visible_selection(
+    CircuitData& circuit, logicitem_id_t logicitem_id) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
 
@@ -115,6 +115,35 @@ auto _store_history_change_attribute_logicitem(
     if (const auto stack = circuit.history.get_stack()) {
         const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
         stack->push_logicitem_change_attributes(logicitem_key, std::move(attrs));
+    }
+}
+
+auto _store_history_logicitem_loggle_inverter(CircuitData& circuit,
+                                              logicitem_id_t logicitem_id) -> void {
+    // inverter toggles are rare event, nut performed in bulk
+    // so other history events are re-used to map it
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
+        const auto state = circuit.layout.logicitems().display_state(logicitem_id);
+
+        // create old one
+        if (state == display_state_t::normal) {
+            stack->push_logicitem_colliding_to_insert(logicitem_key);
+        }
+        if (state != display_state_t::temporary) {
+            stack->push_logicitem_temporary_to_colliding(logicitem_key);
+        }
+        stack->push_logicitem_create_temporary(
+            logicitem_key, to_placed_logicitem(circuit.layout, logicitem_id));
+
+        // delete new one
+        stack->push_logicitem_delete_temporary(logicitem_key);
+        if (state != display_state_t::temporary) {
+            stack->push_logicitem_colliding_to_temporary(logicitem_key);
+        }
+        if (state == display_state_t::normal) {
+            stack->push_logicitem_insert_to_colliding(logicitem_key);
+        }
     }
 }
 
@@ -385,33 +414,65 @@ auto add_logicitem(CircuitData& circuit, LogicItemDefinition&& definition,
 // Toggle Inverter
 //
 
-auto toggle_inverter(CircuitData& circuit, point_t point) -> void {
+namespace {
+
+auto _get_toggleable_input(const CircuitData& circuit,
+                           point_t point) -> std::optional<logicitem_connection_t> {
     if (const auto entry = circuit.index.logicitem_input_index().find(point)) {
         const auto layout_data =
             to_layout_calculation_data(circuit.layout, entry->logicitem_id);
+
         const auto info = input_locations(layout_data).at(entry->connection_id.value);
         Expects(info.position == point);
 
         if (is_directed(info.orientation)) {
-            const auto value = circuit.layout.logicitems().input_inverted(
-                entry->logicitem_id, entry->connection_id);
-            circuit.layout.logicitems().set_input_inverter(entry->logicitem_id,
-                                                           entry->connection_id, !value);
+            return entry;
         }
     }
 
+    return std::nullopt;
+}
+
+auto _get_toggleable_output(const CircuitData& circuit,
+                            point_t point) -> std::optional<logicitem_connection_t> {
     if (const auto entry = circuit.index.logicitem_output_index().find(point)) {
         const auto layout_data =
             to_layout_calculation_data(circuit.layout, entry->logicitem_id);
+
         const auto info = output_locations(layout_data).at(entry->connection_id.value);
         Expects(info.position == point);
 
         if (is_directed(info.orientation)) {
-            const auto value = circuit.layout.logicitems().output_inverted(
-                entry->logicitem_id, entry->connection_id);
-            circuit.layout.logicitems().set_output_inverter(entry->logicitem_id,
-                                                            entry->connection_id, !value);
+            return entry;
         }
+    }
+
+    return std::nullopt;
+}
+
+}  // namespace
+
+auto toggle_inverter(CircuitData& circuit, point_t point) -> void {
+    // input
+    if (const auto entry = _get_toggleable_input(circuit, point)) {
+        _store_history_logicitem_loggle_inverter(circuit, entry->logicitem_id);
+
+        const auto value = circuit.layout.logicitems().input_inverted(
+            entry->logicitem_id, entry->connection_id);
+        circuit.layout.logicitems().set_input_inverter(entry->logicitem_id,
+                                                       entry->connection_id, !value);
+        return;
+    }
+
+    // output
+    if (const auto entry = _get_toggleable_output(circuit, point)) {
+        _store_history_logicitem_loggle_inverter(circuit, entry->logicitem_id);
+
+        const auto value = circuit.layout.logicitems().output_inverted(
+            entry->logicitem_id, entry->connection_id);
+        circuit.layout.logicitems().set_output_inverter(entry->logicitem_id,
+                                                        entry->connection_id, !value);
+        return;
     }
 }
 
@@ -433,7 +494,7 @@ auto set_attributes_logicitem(CircuitData& circuit, logicitem_id_t logicitem_id,
 
 auto add_to_visible_selection(CircuitData& circuit_data,
                               logicitem_id_t logicitem_id) -> void {
-    _store_history_remove_visible_selection(circuit_data, logicitem_id);
+    _store_history_logicitem_remove_visible_selection(circuit_data, logicitem_id);
 
     circuit_data.visible_selection.modify_initial_selection(
         [logicitem_id](Selection& initial_selection) {
@@ -443,7 +504,7 @@ auto add_to_visible_selection(CircuitData& circuit_data,
 
 auto remove_from_visible_selection(CircuitData& circuit_data,
                                    logicitem_id_t logicitem_id) -> void {
-    _store_history_add_visible_selection(circuit_data, logicitem_id);
+    _store_history_logicitem_add_visible_selection(circuit_data, logicitem_id);
 
     circuit_data.visible_selection.modify_initial_selection(
         [logicitem_id](Selection& initial_selection) {
