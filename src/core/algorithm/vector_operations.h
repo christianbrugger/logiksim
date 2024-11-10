@@ -14,7 +14,7 @@ namespace logicsim {
  * Teminates if the vector is empty.
  */
 template <typename T>
-auto at_back_vector(std::vector<T>& data) {
+auto at_back_vector(const std::vector<T>& data) {
     Expects(!data.empty());
     return data.back();
 }
