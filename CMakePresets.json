@@ -406,7 +406,6 @@
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "OFF"
-                
             }
         },
         {
@@ -419,7 +418,6 @@
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "OFF",
                 "LS_ENABLE_LTO": "OFF"
-                
             }
         },
         {
@@ -432,7 +430,18 @@
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
                 "LS_ENABLE_LTO": "ON"
-                
+            }
+        },
+        {
+            "name": "win-clang-relwithdeb",
+            "displayName": "Clang RelWithDeb",
+            "description": "Compile release with debug info with Clang compiler",
+            "inherits": "common-win-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "ON"
             }
         },
         {
@@ -447,7 +456,6 @@
                 "LS_ENABLE_LTO": "ON",
 
                 "LS_WIN32_APPLICATON": "ON"
-                
             }
         },
         {
