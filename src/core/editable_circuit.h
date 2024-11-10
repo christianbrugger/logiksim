@@ -95,6 +95,17 @@ class EditableCircuit {
     // Wire Regularization
     //
 
+    /**
+     * @brief: Regulaizes temporary segments so no artefacts arise from their history.
+     *
+     * When uninseting only a view segments from existing tree, the resulting
+     * selection might contain split segments which are not necessary.
+     * This would result in unexpected split points when reinserting the selection
+     * later on.
+     *
+     * The regularization shall be applies to a selection of wires that is moved
+     * together to a new location.
+     */
     auto regularize_temporary_selection(
         const Selection& selection,
         std::optional<std::vector<point_t>> true_cross_points = {})
@@ -106,6 +117,7 @@ class EditableCircuit {
      * Without splits wires would be colliding with endpoints of inserted wires.
      *
      * Throws, if any segment in the selection is not temporary.
+     * Throws, if any segment is partially selected.
      */
     auto split_temporary_before_insert(selection_id_t selection_id) -> void;
     auto split_temporary_before_insert(const Selection& selection) -> void;
