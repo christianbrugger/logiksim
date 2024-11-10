@@ -100,6 +100,13 @@ class EditableCircuit {
         std::optional<std::vector<point_t>> true_cross_points = {})
         -> std::vector<point_t>;
 
+    /**
+     * @brief: Return points where temporary wires shall be split before insertion.
+     *
+     * Without splits wires would be colliding with endpoints of inserted wires.
+     *
+     * Throws, if any segment in the selection is not temporary.
+     */
     auto split_temporary_before_insert(selection_id_t selection_id) -> void;
     auto split_temporary_before_insert(const Selection& selection) -> void;
 
@@ -204,6 +211,9 @@ auto add_example(Rng& rng, EditableCircuit& editable_circuit) -> void;
                                                const Selection& selection,
                                                move_delta_t delta) -> bool;
 
+/**
+ * @brief: Return a list of cross points (3 or 4 wires ending) of the selection.
+ */
 [[nodiscard]] auto get_inserted_cross_points(const EditableCircuit& editable_circuit,
                                              const Selection& selection)
     -> std::vector<point_t>;

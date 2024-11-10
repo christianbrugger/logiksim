@@ -5,6 +5,7 @@
 #include "core/component/editable_circuit/editing/edit_logicitem.h"
 #include "core/component/editable_circuit/editing/edit_visible_selection.h"
 #include "core/component/editable_circuit/history.h"
+#include "core/timer.h"
 
 #include <gsl/gsl>
 
@@ -294,10 +295,12 @@ auto _replay_stack(CircuitData& circuit, ReplayStack kind) -> void {
 }  // namespace
 
 auto undo_group(CircuitData& circuit) -> void {
+    const auto _ = Timer {"undo", Timer::Unit::ms};
     _replay_stack(circuit, ReplayStack::undo);
 }
 
 auto redo_group(CircuitData& circuit) -> void {
+    const auto _ = Timer {"redo", Timer::Unit::ms};
     _replay_stack(circuit, ReplayStack::redo);
 }
 
