@@ -51,7 +51,8 @@ auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_pa
  * + Source tree can become empty
  * + Newly inserts endpoints as shadow points
  */
-auto remove_segment_from_tree(CircuitData& circuit, segment_part_t& segment_part) -> void;
+auto remove_full_segment_from_uninserted_tree(CircuitData& circuit,
+                                              segment_part_t& full_segment_part) -> void;
 
 auto split_line_segment(CircuitData& circuit, segment_t segment,
                         point_t position) -> segment_part_t;

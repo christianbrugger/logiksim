@@ -142,7 +142,7 @@ auto to_part(ordered_line_t full_line, ordered_line_t sub_line) -> part_t {
 }
 
 auto to_line(ordered_line_t full_line, part_t part) -> ordered_line_t {
-    if (!is_part_valid(part, full_line)) {
+    if (!is_part_valid(part, full_line)) [[unlikely]] {
         throw std::runtime_error("part needs to be within line");
     }
 

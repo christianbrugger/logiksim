@@ -28,11 +28,9 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
     if (!is_temporary(segment_part.segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("can only delete temporary segments");
     }
-    if (!is_full_segment(circuit.layout, segment_part)) [[unlikely]] {
-        throw std::runtime_error("can only delete full segments");
-    }
 
-    remove_segment_from_tree(circuit, segment_part);
+    move_segment_between_trees(circuit, segment_part, temporary_wire_id);
+    remove_full_segment_from_uninserted_tree(circuit, segment_part);
 }
 
 //
@@ -88,7 +86,7 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
 
     if (!is_wire_position_representable(circuit.layout, segment_part, delta)) {
         // delete
-        remove_segment_from_tree(circuit, segment_part);
+        remove_full_segment_from_uninserted_tree(circuit, segment_part);
         return;
     }
 

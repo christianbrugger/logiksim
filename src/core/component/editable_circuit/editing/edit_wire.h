@@ -29,7 +29,6 @@ namespace editing {
  * @brief: Delete the temporary wire segment.
  *
  * Throws, if segment is not temporary.
- * Throws, if segment_part is not the full segment.
  */
 auto delete_temporary_wire_segment(CircuitData& circuit,
                                    segment_part_t& segment_part) -> void;

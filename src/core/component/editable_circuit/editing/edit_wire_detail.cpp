@@ -315,8 +315,7 @@ auto _move_splitting_segment_between_trees(CircuitData& circuit,
 auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_part,
                                 const wire_id_t destination_id) -> void {
     const auto moving_part = segment_part.part;
-    const auto full_line = get_line(circuit.layout, segment_part.segment);
-    const auto full_part = to_part(full_line);
+    const auto full_part = to_part(get_line(circuit.layout, segment_part.segment));
 
     if (a_equal_b(moving_part, full_part)) {
         _move_full_segment_between_trees(circuit, segment_part.segment, destination_id);
@@ -333,10 +332,15 @@ auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_pa
 // Remove Segment from Tree
 //
 
-namespace {
+auto remove_full_segment_from_uninserted_tree(CircuitData& circuit,
+                                              segment_part_t& full_segment_part) -> void {
+    if (is_inserted(full_segment_part.segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("can only remove from non-inserted segments");
+    }
+    if (!is_full_segment(circuit.layout, full_segment_part)) [[unlikely]] {
+        throw std::runtime_error("can only delete full segments");
+    }
 
-auto _remove_full_segment_from_tree(CircuitData& circuit,
-                                    segment_part_t& full_segment_part) {
     const auto wire_id = full_segment_part.segment.wire_id;
     const auto segment_index = full_segment_part.segment.segment_index;
     auto& m_tree = circuit.layout.wires().modifiable_segment_tree(wire_id);
@@ -356,85 +360,6 @@ auto _remove_full_segment_from_tree(CircuitData& circuit,
     }
 
     full_segment_part = null_segment_part;
-}
-
-auto _remove_touching_segment_from_tree(CircuitData& circuit,
-                                        segment_part_t& segment_part) {
-    const auto wire_id = segment_part.segment.wire_id;
-    const auto index = segment_part.segment.segment_index;
-    const auto part = segment_part.part;
-
-    auto& m_tree = circuit.layout.wires().modifiable_segment_tree(wire_id);
-
-    const auto full_part = m_tree.part(index);
-    const auto part_kept = difference_touching_one_side(full_part, part);
-
-    // delete
-    m_tree.shrink_segment(index, part_kept);
-
-    // messages
-    circuit.submit(info_message::SegmentPartDeleted {segment_part});
-
-    if (part_kept.begin != full_part.begin) {
-        circuit.submit(info_message::SegmentPartMoved {
-            .destination = segment_part_t {.segment = segment_part.segment,
-                                           .part = m_tree.part(index)},
-            .source = segment_part_t {.segment = segment_part.segment, .part = part_kept},
-        });
-    }
-
-    segment_part = null_segment_part;
-}
-
-auto _remove_splitting_segment_from_tree(CircuitData& circuit,
-                                         segment_part_t& segment_part) {
-    const auto wire_id = segment_part.segment.wire_id;
-    const auto index = segment_part.segment.segment_index;
-    const auto part = segment_part.part;
-
-    auto& m_tree = circuit.layout.wires().modifiable_segment_tree(wire_id);
-
-    const auto full_part = m_tree.part(index);
-    const auto [part0, part1] = difference_not_touching(full_part, part);
-
-    // delete
-    const auto index1 = m_tree.copy_segment(m_tree, index, part1);
-    m_tree.shrink_segment(index, part0);
-
-    // messages
-    const auto segment_part_1 =
-        segment_part_t {segment_t {wire_id, index1}, m_tree.part(index1)};
-
-    circuit.submit(info_message::SegmentPartMoved {
-        .destination = segment_part_1,
-        .source = segment_part_t {segment_part.segment, part1}});
-
-    circuit.submit(info_message::SegmentPartDeleted {segment_part});
-
-    segment_part = null_segment_part;
-}
-
-}  // namespace
-
-auto remove_segment_from_tree(CircuitData& circuit,
-                              segment_part_t& segment_part) -> void {
-    if (is_inserted(segment_part.segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("can only remove from non-inserted segments");
-    }
-
-    const auto removed_part = segment_part.part;
-    const auto full_line = get_line(circuit.layout, segment_part.segment);
-    const auto full_part = to_part(full_line);
-
-    if (a_equal_b(removed_part, full_part)) {
-        _remove_full_segment_from_tree(circuit, segment_part);
-    } else if (a_inside_b_touching_one_side(removed_part, full_part)) {
-        _remove_touching_segment_from_tree(circuit, segment_part);
-    } else if (a_inside_b_not_touching(removed_part, full_part)) {
-        _remove_splitting_segment_from_tree(circuit, segment_part);
-    } else [[unlikely]] {
-        throw std::runtime_error("segment part is invalid");
-    }
 }
 
 auto split_line_segment(CircuitData& circuit, const segment_t segment,
