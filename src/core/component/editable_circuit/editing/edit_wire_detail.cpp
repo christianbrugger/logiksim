@@ -416,7 +416,6 @@ auto _remove_splitting_segment_from_tree(CircuitData& circuit,
 
 }  // namespace
 
-// TODO does this only work for temporary wires ?
 auto remove_segment_from_tree(CircuitData& circuit,
                               segment_part_t& segment_part) -> void {
     if (is_inserted(segment_part.segment.wire_id)) [[unlikely]] {
@@ -561,24 +560,30 @@ auto merge_all_line_segments(
     std::ranges::sort(pairs, std::ranges::greater {});
 
     // Sorted pairs example:
-    //  (<Element 0, Segment 6>, <Element 0, Segment 5>)
-    //  (<Element 0, Segment 5>, <Element 0, Segment 3>)
-    //  (<Element 0, Segment 4>, <Element 0, Segment 2>)
-    //  (<Element 0, Segment 4>, <Element 0, Segment 0>)  <-- 4 needs to become 2
-    //  (<Element 0, Segment 3>, <Element 0, Segment 1>)
-    //  (<Element 0, Segment 2>, <Element 0, Segment 1>)
-    //                                                    <-- move here & become 1
+    //  (<Wire 0, Segment 6>, <Wire 0, Segment 5>)
+    //  (<Wire 0, Segment 5>, <Wire 0, Segment 3>)
+    //  (<Wire 0, Segment 4>, <Wire 0, Segment 2>)
+    //  (<Wire 0, Segment 4>, <Wire 0, Segment 0>)  <-- 4 needs to become 2 (as merged)
+    //  (<Wire 0, Segment 3>, <Wire 0, Segment 1>)
+    //  (<Wire 0, Segment 2>, <Wire 0, Segment 1>)
+    //                                              <-- move here & become 1
 
     for (auto it = pairs.begin(); it != pairs.end(); ++it) {
+        // first one is save to merge, as it has the largest indices in first and second
         merge_line_segments(circuit, it->first, it->second, nullptr);
 
+        // check if there is another element merged with the same segment
         const auto other = std::ranges::lower_bound(
             std::next(it), pairs.end(), it->first, std::ranges::greater {},
             [](std::pair<segment_t, segment_t> pair) { return pair.first; });
 
+        // if one is found there is at most one other segment
+        // the first part now moved and is now the second, as it has been merged
         if (other != pairs.end() && other->first == it->first) {
+            // update the other side of the merged element to the lower index
             other->first = it->second;
 
+            // rebuild the ordering
             sort_inplace(other->first, other->second, std::ranges::greater {});
             std::ranges::sort(std::next(it), pairs.end(), std::ranges::greater {});
         }

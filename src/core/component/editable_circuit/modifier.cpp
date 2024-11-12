@@ -452,19 +452,17 @@ auto Modifier::change_wire_insertion_mode(segment_part_t& segment_part,
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::move_temporary_wire_unchecked(segment_t segment, part_t verify_full_part,
+auto Modifier::move_temporary_wire_unchecked(segment_t segment,
                                              move_delta_t delta) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_temporary_wire_unchecked(segment = {}, verify_full_part = {}, "
-            "delta = {});\n"
+            "move_temporary_wire_unchecked(segment = {},  delta = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, segment, verify_full_part, delta);
+            circuit_data_.layout, segment, delta);
     }
 
-    editing::move_temporary_wire_unchecked(circuit_data_.layout, segment,
-                                           verify_full_part, delta);
+    editing::move_temporary_wire_unchecked(circuit_data_.layout, segment, delta);
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -906,35 +904,16 @@ auto new_positions_representable(const Layout& layout, const Selection& selectio
 auto move_temporary_unchecked(Modifier& modifier, const Selection& selection,
                               move_delta_t delta) -> void {
     for (const auto& logicitem_id : selection.selected_logicitems()) {
-        // TODO move checks to low-level method
-        if (modifier.circuit_data().layout.logicitems().display_state(logicitem_id) !=
-            display_state_t::temporary) [[unlikely]] {
-            throw std::runtime_error("selected logic items need to be temporary");
-        }
-
         modifier.move_temporary_logicitem_unchecked(logicitem_id, delta);
     }
 
     for (const auto& decoration_id : selection.selected_decorations()) {
-        // TODO move checks to low-level method
-        if (modifier.circuit_data().layout.decorations().display_state(decoration_id) !=
-            display_state_t::temporary) [[unlikely]] {
-            throw std::runtime_error("selected decorations need to be temporary");
-        }
-
         modifier.move_temporary_decoration_unchecked(decoration_id, delta);
     }
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
-        // TODO move checks to low-level method
-        if (parts.size() != 1) [[unlikely]] {
-            throw std::runtime_error("Method assumes segments are fully selected");
-        }
-        if (!is_temporary(segment.wire_id)) [[unlikely]] {
-            throw std::runtime_error("selected wires need to be temporary");
-        }
-
-        modifier.move_temporary_wire_unchecked(segment, parts.front(), delta);
+        assert(full_part_selected(segment, parts, modifier.circuit_data().layout));
+        modifier.move_temporary_wire_unchecked(segment, delta);
     }
 }
 

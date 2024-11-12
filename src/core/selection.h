@@ -143,6 +143,12 @@ class Selection {
 [[nodiscard]] auto is_selected(const Selection &selection, const Layout &layout,
                                segment_t segment, point_fine_t point) -> bool;
 
+[[nodiscard]] auto full_part_selected(segment_t segment, const PartSelection &parts,
+                                      const Layout &layout) -> bool;
+[[nodiscard]] auto full_part_selected(const selection::segment_pair_t &pair,
+                                      const Layout &layout) -> bool;
+[[nodiscard]] auto full_part_selected(const Selection &selection, segment_t segment,
+                                      const Layout &layout) -> bool;
 //
 //
 //

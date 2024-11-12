@@ -69,21 +69,14 @@ auto new_wire_positions_representable(const Layout& layout, const Selection& sel
 }
 
 auto move_temporary_wire_unchecked(Layout& layout, segment_t segment,
-                                   part_t verify_full_part, move_delta_t delta) -> void {
+                                   move_delta_t delta) -> void {
     assert(is_temporary(segment.wire_id));
-    assert(verify_full_part == to_part(get_line(layout, segment)));
     assert(is_wire_position_representable(
-        layout, segment_part_t {segment, verify_full_part}, delta));
+        layout, segment_part_t {segment, to_part(get_line(layout, segment))}, delta));
 
     auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
-
     auto info = m_tree.info(segment.segment_index);
     info.line = add_unchecked(info.line, delta.x, delta.y);
-
-    if (to_part(info.line) != verify_full_part) {
-        throw std::runtime_error("need to select full line part");
-    }
-
     m_tree.update_segment(segment.segment_index, info);
 }
 
@@ -110,15 +103,12 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
     }
 
     // move
+    // TODO reuse move_temporary_wire_unchecked
     auto& m_tree =
         circuit.layout.wires().modifiable_segment_tree(segment_part.segment.wire_id);
     auto info = m_tree.info(segment_part.segment.segment_index);
     info.line = add_unchecked(part_line, delta.x, delta.y);
     m_tree.update_segment(segment_part.segment.segment_index, info);
-
-    // We don't need a message to update visible-selection here
-    // as uninserted wires are not part of the selection cache
-    // and are not selected by area operators.
 }
 
 //
@@ -407,6 +397,7 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
 
     iter_crosspoints(
         map, [&](point_t point, const segment_map::adjacent_segments_t& segments) {
+            assert(segments.count() >= 3);
             using enum orientation_t;
 
             if (segments.count() == 3 || !true_cross_points ||
@@ -418,6 +409,7 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
                                          : segments.at(left);
                 set_segment_crosspoint(circuit.layout, segment, point);
             } else {
+                // merge wire crossings without true cross points
                 mergeable_segments.emplace_back(segments.at(right), segments.at(left));
                 mergeable_segments.emplace_back(segments.at(up), segments.at(down));
             }

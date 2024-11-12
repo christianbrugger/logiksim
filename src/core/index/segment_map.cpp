@@ -40,7 +40,7 @@ auto get_mergeable_segments(const adjacent_segments_t& segments)
     -> std::optional<mergable_t> {
     using enum orientation_t;
 
-    // if point has more than 3 segments, its not mergable, as it has a cross-point
+    // if point has more than 2 segments, its not mergable, as it has a cross-point
     if (segments.count() != 2) {
         return std::nullopt;
     }
@@ -69,7 +69,8 @@ namespace {
 auto add_point(map_t& map, point_t point, segment_t segment,
                orientation_t orientation) -> void {
     if (const auto it = map.find(point); it != map.end()) {
-        // throws if it does not exist
+        // allow overwriting of segments, as temporary wires can be of any arrangement
+        // throws for orientation_t::undirected
         it->second.at(orientation) = segment;
     } else {
         auto value = adjacent_segments_t {};

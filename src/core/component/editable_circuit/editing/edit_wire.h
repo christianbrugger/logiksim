@@ -36,9 +36,8 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
                                                     const Selection& selection,
                                                     move_delta_t delta) -> bool;
 
-// TODO why verify_full_part ??
 auto move_temporary_wire_unchecked(Layout& layout, segment_t segment,
-                                   part_t verify_full_part, move_delta_t delta) -> void;
+                                   move_delta_t delta) -> void;
 
 auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment_part,
                                    move_delta_t delta) -> void;
