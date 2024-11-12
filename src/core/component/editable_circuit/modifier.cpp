@@ -466,17 +466,17 @@ auto Modifier::move_temporary_wire_unchecked(segment_t segment,
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::move_or_delete_temporary_wire(segment_part_t& segment_part,
+auto Modifier::move_or_delete_temporary_wire(segment_t& segment,
                                              move_delta_t delta) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_or_delete_temporary_wire(segment_part = {}, delta = {});\n"
+            "move_or_delete_temporary_wire(segment = {}, delta = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, segment_part, delta);
+            circuit_data_.layout, segment, delta);
     }
 
-    editing::move_or_delete_temporary_wire(circuit_data_, segment_part, delta);
+    editing::move_or_delete_temporary_wire(circuit_data_, segment, delta);
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -937,7 +937,13 @@ auto move_or_delete_temporary_consuming(Modifier& modifier, selection_id_t selec
         auto segment_part = get_first_segment(modifier, selection_id);
         modifier.remove_from_selection(selection_id, segment_part);
 
-        modifier.move_or_delete_temporary_wire(segment_part, delta);
+        if (!full_part_selected(modifier.circuit_data().selection_store.at(selection_id),
+                                segment_part.segment, modifier.circuit_data().layout))
+            [[unlikely]] {
+            throw std::runtime_error("full line needs to be selected");
+        }
+
+        modifier.move_or_delete_temporary_wire(segment_part.segment, delta);
     }
 }
 

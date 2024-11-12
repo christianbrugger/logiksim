@@ -149,8 +149,7 @@ class Modifier {
 
     auto move_temporary_wire_unchecked(segment_t segment, move_delta_t delta) -> void;
 
-    auto move_or_delete_temporary_wire(segment_part_t& segment_part,
-                                       move_delta_t delta) -> void;
+    auto move_or_delete_temporary_wire(segment_t& segment, move_delta_t delta) -> void;
 
     auto toggle_wire_crosspoint(point_t point) -> void;
 
@@ -244,7 +243,6 @@ auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selectio
 auto new_positions_representable(const Layout& Layout, const Selection& selection,
                                  move_delta_t delta) -> bool;
 
-// TODO move checks to low-level method
 auto move_temporary_unchecked(Modifier& modifier, const Selection& selection,
                               move_delta_t delta) -> void;
 

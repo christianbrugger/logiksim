@@ -170,12 +170,14 @@ auto SelectionMoveLogic::move_selection(EditableCircuit& editable_circuit,
     const auto t [[maybe_unused]] =
         Timer {insertion_mode_ != InsertionMode::temporary ? "uninsert selection" : ""};
 
+
+    convert_selection_to(editable_circuit, InsertionMode::temporary);
+
     if (!new_positions_representable(editable_circuit,
                                      editable_circuit.visible_selection(), delta)) {
         return;
     }
 
-    convert_selection_to(editable_circuit, InsertionMode::temporary);
     editable_circuit.move_temporary_unchecked(editable_circuit.visible_selection(),
                                               delta);
     if (cross_points_) {

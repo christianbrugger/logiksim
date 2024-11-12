@@ -667,7 +667,8 @@ auto full_part_selected(const segment_t segment, const PartSelection &parts,
     return parts.size() == 1 && parts.front() == to_part(get_line(layout, segment));
 }
 
-auto full_part_selected(selection::segment_pair_t &pair, const Layout &layout) -> bool {
+auto full_part_selected(const selection::segment_pair_t &pair,
+                        const Layout &layout) -> bool {
     return full_part_selected(pair.first, pair.second, layout);
 }
 
