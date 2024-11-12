@@ -1,7 +1,6 @@
 #include "core/component/editable_circuit/editing/edit_wire.h"
 
 #include "core/algorithm/make_unique.h"
-#include "core/algorithm/sort_pair.h"
 #include "core/algorithm/transform_to_vector.h"
 #include "core/component/editable_circuit/circuit_data.h"
 #include "core/component/editable_circuit/editing/edit_wire_detail.h"
@@ -104,6 +103,10 @@ namespace {
 
 auto _find_wire_for_inserting_segment(CircuitData& circuit,
                                       const segment_part_t segment_part) -> wire_id_t {
+    if (is_inserted(segment_part.segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("can only find wire for uninserted segments");
+    }
+
     const auto line = get_line(circuit.layout, segment_part);
 
     auto candidate_0 = circuit.index.collision_index().get_first_wire(line.p0);
@@ -116,11 +119,10 @@ auto _find_wire_for_inserting_segment(CircuitData& circuit,
 
     // 2 wires
     if (candidate_0 && candidate_1) {
-        // we assume segment is part of aggregates that have ID 0 and 1
-        if (segment_part.segment.wire_id > candidate_0 ||
-            segment_part.segment.wire_id > candidate_1) {
-            throw std::runtime_error("cannot preserve segment wire_id");
-        }
+        // This is needed, so segment_part.segment.wire_id is preserved
+        // It should always be true, as uinserted wires have wire_id 0 and 1
+        Expects(segment_part.segment.wire_id < candidate_0);
+        Expects(segment_part.segment.wire_id < candidate_1);
 
         if (candidate_0 > candidate_1) {
             using std::swap;
@@ -135,9 +137,9 @@ auto _find_wire_for_inserting_segment(CircuitData& circuit,
     return circuit.layout.wires().add_wire();
 }
 
-auto _insert_temporary_segment(CircuitData& circuit,
-                               segment_part_t& segment_part) -> void {
-    if (is_inserted(segment_part.segment.wire_id)) {
+auto _insert_uninserted_segment(CircuitData& circuit,
+                                segment_part_t& segment_part) -> void {
+    if (is_inserted(segment_part.segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("segment is already inserted");
     }
     const auto target_wire_id = _find_wire_for_inserting_segment(circuit, segment_part);
@@ -164,27 +166,8 @@ auto _wire_change_temporary_to_colliding(CircuitData& circuit,
         move_segment_between_trees(circuit, segment_part, destination);
         reset_segment_endpoints(circuit.layout, segment_part.segment);
     } else {
-        _insert_temporary_segment(circuit, segment_part);
+        _insert_uninserted_segment(circuit, segment_part);
         mark_valid(circuit.layout, segment_part);
-    }
-}
-
-auto _wire_change_colliding_to_insert(CircuitData& circuit,
-                                      segment_part_t& segment_part) -> void {
-    const auto wire_id = segment_part.segment.wire_id;
-
-    // from valid
-    if (is_inserted(wire_id)) {
-        unmark_valid(circuit.layout, segment_part);
-    }
-
-    // from colliding
-    else if (is_colliding(wire_id)) {
-        remove_segment_from_tree(circuit, segment_part);
-    }
-
-    else {
-        throw std::runtime_error("wire needs to be in inserted or colliding state");
     }
 }
 
@@ -197,7 +180,6 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
                                          segment_part_t& segment_part) -> void {
     auto source_id = segment_part.segment.wire_id;
     const auto was_inserted = is_inserted(segment_part.segment.wire_id);
-    const auto moved_line = get_line(circuit.layout, segment_part);
 
     if (was_inserted) {
         unmark_valid(circuit.layout, segment_part);
@@ -211,6 +193,7 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
         if (circuit.layout.wires().segment_tree(source_id).empty()) {
             swap_and_delete_empty_wire(circuit, source_id, &segment_part.segment.wire_id);
         } else {
+            const auto moved_line = get_line(circuit.layout, segment_part);
             fix_and_merge_segments(circuit, moved_line.p0);
             fix_and_merge_segments(circuit, moved_line.p1);
 
@@ -220,16 +203,33 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
     }
 }
 
+auto _wire_change_colliding_to_insert(CircuitData& circuit,
+                                      segment_part_t& segment_part) -> void {
+    const auto wire_id = segment_part.segment.wire_id;
+
+    // from valid
+    if (is_inserted(wire_id)) {
+        unmark_valid(circuit.layout, segment_part);
+        return;
+    }
+
+    // from colliding
+    if (is_colliding(wire_id)) {
+        _wire_change_colliding_to_temporary(circuit, segment_part);
+        delete_temporary_wire_segment(circuit, segment_part);
+        return;
+    }
+    throw std::runtime_error("wire needs to be in inserted or colliding state");
+}
+
 }  // namespace
 
 auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_part,
                                 InsertionMode new_mode) -> void {
-    if (!segment_part) [[unlikely]] {
-        throw std::runtime_error("segment part is invalid");
-    }
-
-    // as parts have length, the line segment can have two possible modes
-    // a part could be in state valid (insert_or_discard) and another in state normal
+    // As segments have length, the given segment can have two possible modes.
+    // The mixed state could be:
+    //   + InsertionMode::collisions (display_state_t::valid)
+    //   + InsertionMode::insert_or_discard (display_state_t::normal)
     const auto old_modes = get_insertion_modes(circuit.layout, segment_part);
 
     if (old_modes.first == new_mode && old_modes.second == new_mode) {

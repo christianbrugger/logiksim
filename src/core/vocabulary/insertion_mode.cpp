@@ -27,7 +27,6 @@ auto to_insertion_mode(display_state_t display_state) -> InsertionMode {
         case normal:
             return InsertionMode::insert_or_discard;
         case colliding:
-            return InsertionMode::collisions;
         case valid:
             return InsertionMode::collisions;
         case temporary:

@@ -25,29 +25,70 @@ struct CircuitData;
 
 namespace editing {
 
+/**
+ * @brief: Delete the temporary wire segment.
+ *
+ * Throws, if segment is not temporary.
+ * Throws, if segment_part is not the full segment.
+ */
 auto delete_temporary_wire_segment(CircuitData& circuit,
                                    segment_part_t& segment_part) -> void;
 
+/**
+ * @brief: Check if moved wire segment is representable.
+ *
+ * Throws, if segment_part is not the full segment.
+ */
 [[nodiscard]] auto is_wire_position_representable(const Layout& layout,
                                                   segment_part_t segment_part,
                                                   move_delta_t delta) -> bool;
 
+/**
+ * @brief: Check if all moved segment of the selection are representable.
+ *
+ * Throws, if any segment in the selection is not fully selected.
+ */
 [[nodiscard]] auto new_wire_positions_representable(const Layout& layout,
                                                     const Selection& selection,
                                                     move_delta_t delta) -> bool;
 
+/**
+ * @brief: Move the wire segment without checks.
+ *
+ * Pre-conditions (checked in debug builds):
+ *      + segment needs to be temporary.
+ *      + moved segment needs to be representable.
+ *      + segment_part needs to be the full segment.
+ */
 auto move_temporary_wire_unchecked(Layout& layout, segment_part_t segment_part,
                                    move_delta_t delta) -> void;
 
+/**
+ * @brief: Move the wire segment if it is representable, otherwise delete it.
+ *
+ * Throws, if segment is not temporary.
+ * Throws, if segment_part is not the full segment.
+ */
 auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment_part,
                                    move_delta_t delta) -> void;
 
+/**
+ * @brief: Change the insertion mode of the segment_part.
+ */
 auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_part,
                                 InsertionMode new_mode) -> void;
 
+/**
+ * @brief: Add a new line to the circuit with the given insertion mode.
+ *
+ * Returns the segment_part of the inserted line.
+ */
 auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
                       InsertionMode insertion_mode) -> segment_part_t;
 
+/**
+ * @brief: Toggle the wire crosspoint on two crossing inserted wire segments.
+ */
 auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void;
 
 //
