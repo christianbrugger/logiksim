@@ -283,7 +283,11 @@ auto has_segments(const Layout &layout) -> bool {
     });
 }
 
-auto full_segment_selected(const Layout &layout, segment_part_t segment_part) -> bool {
+auto get_segment_part(const Layout &layout, segment_t segment) -> segment_part_t {
+    return segment_part_t {segment, to_part(get_line(layout, segment))};
+}
+
+auto is_full_segment(const Layout &layout, segment_part_t segment_part) -> bool {
     return segment_part.part == to_part(get_line(layout, segment_part.segment));
 }
 

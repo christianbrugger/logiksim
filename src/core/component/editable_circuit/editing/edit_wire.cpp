@@ -26,11 +26,11 @@ namespace editing {
 
 auto delete_temporary_wire_segment(CircuitData& circuit,
                                    segment_part_t& segment_part) -> void {
-    if (!segment_part) [[unlikely]] {
-        throw std::runtime_error("segment part is invalid");
-    }
     if (!is_temporary(segment_part.segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("can only delete temporary segments");
+    }
+    if (!is_full_segment(circuit.layout, segment_part)) [[unlikely]] {
+        throw std::runtime_error("can only delete full segments");
     }
 
     remove_segment_from_tree(circuit, segment_part);
@@ -43,11 +43,12 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
 auto is_wire_position_representable(const Layout& layout,
                                     const segment_part_t segment_part,
                                     move_delta_t delta) -> bool {
-    if (!full_segment_selected(layout, segment_part)) [[unlikely]] {
-        throw std::runtime_error("full segment needs to be selected");
+    const auto line = get_line(layout, segment_part.segment);
+
+    if (segment_part.part != to_part(line)) [[unlikely]] {
+        throw std::runtime_error("can only check full segments");
     }
 
-    const auto line = get_line(layout, segment_part.segment);
     return is_representable(line, delta.x, delta.y);
 }
 
@@ -55,10 +56,10 @@ auto new_wire_positions_representable(const Layout& layout, const Selection& sel
                                       move_delta_t delta) -> bool {
     return std::ranges::all_of(
         selection.selected_segments(), [&, delta](const selection::segment_pair_t& pair) {
-            if (pair.second.size() != 1) [[unlikely]] {
-                throw std::runtime_error("line need to be fully selected");
-            }
-            const auto segment_part = segment_part_t {pair.first, pair.second.front()};
+            const auto& [segment, parts] = pair;
+
+            Expects(!parts.empty());
+            const auto segment_part = segment_part_t {segment, parts.front()};
             return is_wire_position_representable(layout, segment_part, delta);
         });
 }
@@ -66,7 +67,7 @@ auto new_wire_positions_representable(const Layout& layout, const Selection& sel
 auto move_temporary_wire_unchecked(Layout& layout, segment_part_t segment_part,
                                    move_delta_t delta) -> void {
     assert(is_temporary(segment_part.segment.wire_id));
-    assert(full_segment_selected(layout, segment_part));
+    assert(is_full_segment(layout, segment_part));
     assert(is_wire_position_representable(layout, segment_part, delta));
 
     const auto segment = segment_part.segment;
@@ -82,8 +83,8 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
     if (!is_temporary(segment_part.segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("can only move temporary segments");
     }
-    if (!full_segment_selected(circuit.layout, segment_part)) [[unlikely]] {
-        throw std::runtime_error("full segment needs to be selected");
+    if (!is_full_segment(circuit.layout, segment_part)) [[unlikely]] {
+        throw std::runtime_error("can only move full segments");
     }
 
     if (!is_wire_position_representable(circuit.layout, segment_part, delta)) {
@@ -270,7 +271,7 @@ auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
 namespace {
 
 auto _delete_all_selectable_wires_at(CircuitData& circuit, point_t point) -> void {
-    // segment ids change during deletion, so we need to query after each deletion
+    // segment ids change during deletion, new query is needed after each deletion
     while (true) {
         const auto segments = circuit.index.selection_index().query_line_segments(point);
 
@@ -281,8 +282,7 @@ auto _delete_all_selectable_wires_at(CircuitData& circuit, point_t point) -> voi
             throw std::runtime_error("only works on inserted elements");
         }
 
-        const auto line = get_line(circuit.layout, segments.at(0));
-        auto segment_part = segment_part_t {segments.at(0), to_part(line)};
+        auto segment_part = get_segment_part(circuit.layout, segments.at(0));
 
         change_wire_insertion_mode(circuit, segment_part, InsertionMode::temporary);
         delete_temporary_wire_segment(circuit, segment_part);
