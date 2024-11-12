@@ -452,17 +452,18 @@ auto Modifier::change_wire_insertion_mode(segment_part_t& segment_part,
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::move_temporary_wire_unchecked(segment_part_t segment_part,
+auto Modifier::move_temporary_wire_unchecked(segment_part_t full_segment_part,
                                              move_delta_t delta) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_temporary_wire_unchecked(segment_part = {},  delta = {});\n"
+            "move_temporary_wire_unchecked(full_segment_part = {},  delta = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, segment_part, delta);
+            circuit_data_.layout, full_segment_part, delta);
     }
 
-    editing::move_temporary_wire_unchecked(circuit_data_.layout, segment_part, delta);
+    editing::move_temporary_wire_unchecked(circuit_data_.layout, full_segment_part,
+                                           delta);
     Ensures(debug_class_invariant_holds(*this));
 }
 

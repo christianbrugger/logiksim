@@ -170,7 +170,6 @@ auto SelectionMoveLogic::move_selection(EditableCircuit& editable_circuit,
     const auto t [[maybe_unused]] =
         Timer {insertion_mode_ != InsertionMode::temporary ? "uninsert selection" : ""};
 
-
     convert_selection_to(editable_circuit, InsertionMode::temporary);
 
     if (!new_positions_representable(editable_circuit,

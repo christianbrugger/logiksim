@@ -44,7 +44,7 @@ auto KeyIndex::allocated_size() const -> std::size_t {
 namespace {
 
 template <typename K, typename V>
-auto _get_value(const KeyIndex::map_type<K, V> &map, K key) -> V {
+auto _get_value(const KeyIndex::map_type<K, V>& map, K key) -> V {
     if (const auto it = map.find(key); it != map.end()) {
         return it->second;
     }

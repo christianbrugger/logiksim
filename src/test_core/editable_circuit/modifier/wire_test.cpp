@@ -500,6 +500,155 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMove) {
     ASSERT_EQ(modifier.circuit_data().messages.value().size(), 0);
 }
 
+TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
+    using namespace info_message;
+    auto layout = Layout {};
+
+    const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
+    const auto line_0 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
+    const auto line_1 = ordered_line_t {point_t {100, 200}, point_t {105, 200}};
+
+    const auto wire_id = wire_id_t {0};
+    auto &m_tree = layout.wires().modifiable_segment_tree(wire_id);
+    const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
+
+    const auto segment_part_0 =
+        segment_part_t {segment_t {wire_id, segment_index}, part_t {0, 5}};
+    const auto segment_part_1 =
+        segment_part_t {segment_t {wire_id, segment_index_t {1}}, part_t {0, 5}};
+
+    auto modifier = get_logging_modifier(layout);
+
+    auto segment_part = segment_part_0;
+    modifier.move_or_delete_temporary_wire(segment_part, move_delta_t {100, 200});
+    Expects(is_valid(modifier));
+
+    ASSERT_EQ(segment_part, segment_part_1);
+    assert_wire_count(modifier, 1);
+    ASSERT_EQ(is_temporary(wire_id_t {0}), true);
+
+    const auto &tree = get_segment_tree(modifier, wire_id_t {0});
+    ASSERT_EQ(tree.size(), 2);
+    ASSERT_EQ(tree.line(segment_index_t {0}), line_0);
+    ASSERT_EQ(tree.line(segment_index_t {1}), line_1);
+
+    // messages
+    const auto m0 = Message {SegmentPartMoved {
+        .destination = segment_part_1,
+        .source = segment_part_0,
+    }};
+    const auto m1 = Message {SegmentPartMoved {
+        .destination = segment_part_t {segment_t {wire_id, segment_index}, part_t {0, 5}},
+        .source = segment_part_t {segment_t {wire_id, segment_index}, part_t {5, 10}},
+    }};
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(1), m1);
+}
+
+TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialEnd) {
+    using namespace info_message;
+    auto layout = Layout {};
+
+    const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
+    const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
+    const auto line_1 = ordered_line_t {point_t {105, 200}, point_t {110, 200}};
+
+    const auto wire_id = wire_id_t {0};
+    auto &m_tree = layout.wires().modifiable_segment_tree(wire_id);
+    const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
+
+    const auto segment_part_0 =
+        segment_part_t {segment_t {wire_id, segment_index}, part_t {5, 10}};
+    const auto segment_part_1 =
+        segment_part_t {segment_t {wire_id, segment_index_t {1}}, part_t {0, 5}};
+
+    auto modifier = get_logging_modifier(layout);
+
+    auto segment_part = segment_part_0;
+    modifier.move_or_delete_temporary_wire(segment_part, move_delta_t {100, 200});
+    Expects(is_valid(modifier));
+
+    ASSERT_EQ(segment_part, segment_part_1);
+    assert_wire_count(modifier, 1);
+    ASSERT_EQ(is_temporary(wire_id_t {0}), true);
+
+    const auto &tree = get_segment_tree(modifier, wire_id_t {0});
+    ASSERT_EQ(tree.size(), 2);
+    ASSERT_EQ(tree.line(segment_index_t {0}), line_0);
+    ASSERT_EQ(tree.line(segment_index_t {1}), line_1);
+
+    // messages
+    const auto m0 = Message {SegmentPartMoved {
+        .destination = segment_part_1,
+        .source = segment_part_0,
+    }};
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
+}
+
+TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
+    using namespace info_message;
+    auto layout = Layout {};
+
+    const auto line = ordered_line_t {point_t {0, 0}, point_t {20, 0}};
+    const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
+    const auto line_1 = ordered_line_t {point_t {15, 0}, point_t {20, 0}};
+    const auto line_2 = ordered_line_t {point_t {110, 200}, point_t {115, 200}};
+
+    const auto wire_id = wire_id_t {0};
+    auto &m_tree = layout.wires().modifiable_segment_tree(wire_id);
+    const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
+
+    const auto segment_part_0 = segment_part_t {
+        segment_t {wire_id, segment_index},
+        part_t {10, 15},
+    };
+
+    const auto segment_part_1_from = segment_part_t {
+        segment_t {wire_id, segment_index_t {0}},
+        part_t {15, 20},
+    };
+    const auto segment_part_1_to = segment_part_t {
+        segment_t {wire_id, segment_index_t {1}},
+        part_t {0, 5},
+    };
+
+    const auto segment_part_2 = segment_part_t {
+        segment_t {wire_id, segment_index_t {2}},
+        part_t {0, 5},
+    };
+
+    auto segment_part = segment_part_0;
+
+    auto modifier = get_logging_modifier(layout);
+    modifier.move_or_delete_temporary_wire(segment_part, move_delta_t {100, 200});
+    Expects(is_valid(modifier));
+
+    ASSERT_EQ(segment_part, segment_part_2);
+    assert_wire_count(modifier, 1);
+    ASSERT_EQ(is_temporary(wire_id_t {0}), true);
+
+    const auto &tree = get_segment_tree(modifier, wire_id_t {0});
+    ASSERT_EQ(tree.size(), 3);
+    ASSERT_EQ(tree.line(segment_index_t {0}), line_0);
+    ASSERT_EQ(tree.line(segment_index_t {1}), line_1);
+    ASSERT_EQ(tree.line(segment_index_t {2}), line_2);
+
+    // messages
+    const auto m0 = Message {SegmentPartMoved {
+        .destination = segment_part_1_to,
+        .source = segment_part_1_from,
+    }};
+    const auto m1 = Message {SegmentPartMoved {
+        .destination = segment_part_2,
+        .source = segment_part_0,
+    }};
+    ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
+    ASSERT_EQ(modifier.circuit_data().messages.value().at(1), m1);
+}
+
 }  // namespace editable_circuit
 
 }  // namespace logicsim

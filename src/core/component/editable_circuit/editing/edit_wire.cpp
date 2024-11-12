@@ -40,34 +40,32 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
 auto is_wire_position_representable(const Layout& layout,
                                     const segment_part_t segment_part,
                                     move_delta_t delta) -> bool {
-    const auto line = get_line(layout, segment_part.segment);
-
-    if (segment_part.part != to_part(line)) [[unlikely]] {
-        throw std::runtime_error("can only check full segments");
-    }
-
+    const auto line = get_line(layout, segment_part);
     return is_representable(line, delta.x, delta.y);
 }
 
 auto new_wire_positions_representable(const Layout& layout, const Selection& selection,
                                       move_delta_t delta) -> bool {
-    return std::ranges::all_of(
-        selection.selected_segments(), [&, delta](const selection::segment_pair_t& pair) {
-            const auto& [segment, parts] = pair;
+    const auto segment_representable = [&, delta](const selection::segment_pair_t& pair) {
+        const auto& [segment, parts] = pair;
+        const auto part_representable =
+            [delta, full_line = get_line(layout, segment)](const part_t& part) {
+                return is_representable(to_line(full_line, part), delta.x, delta.y);
+            };
 
-            Expects(!parts.empty());
-            const auto segment_part = segment_part_t {segment, parts.front()};
-            return is_wire_position_representable(layout, segment_part, delta);
-        });
+        return std::ranges::all_of(parts, part_representable);
+    };
+
+    return std::ranges::all_of(selection.selected_segments(), segment_representable);
 }
 
-auto move_temporary_wire_unchecked(Layout& layout, segment_part_t segment_part,
+auto move_temporary_wire_unchecked(Layout& layout, segment_part_t full_segment_part,
                                    move_delta_t delta) -> void {
-    assert(is_temporary(segment_part.segment.wire_id));
-    assert(is_full_segment(layout, segment_part));
-    assert(is_wire_position_representable(layout, segment_part, delta));
+    assert(is_temporary(full_segment_part.segment.wire_id));
+    assert(is_full_segment(layout, full_segment_part));
+    assert(is_wire_position_representable(layout, full_segment_part, delta));
 
-    const auto segment = segment_part.segment;
+    const auto segment = full_segment_part.segment;
 
     auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
     auto info = m_tree.info(segment.segment_index);
@@ -80,16 +78,13 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
     if (!is_temporary(segment_part.segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("can only move temporary segments");
     }
-    if (!is_full_segment(circuit.layout, segment_part)) [[unlikely]] {
-        throw std::runtime_error("can only move full segments");
-    }
 
     if (!is_wire_position_representable(circuit.layout, segment_part, delta)) {
-        // delete
-        remove_full_segment_from_uninserted_tree(circuit, segment_part);
+        delete_temporary_wire_segment(circuit, segment_part);
         return;
     }
 
+    move_segment_between_trees(circuit, segment_part, segment_part.segment.wire_id);
     move_temporary_wire_unchecked(circuit.layout, segment_part, delta);
 }
 

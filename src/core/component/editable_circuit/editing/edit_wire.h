@@ -35,8 +35,6 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
 
 /**
  * @brief: Check if moved wire segment is representable.
- *
- * Throws, if segment_part is not the full segment.
  */
 [[nodiscard]] auto is_wire_position_representable(const Layout& layout,
                                                   segment_part_t segment_part,
@@ -44,8 +42,6 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
 
 /**
  * @brief: Check if all moved segment of the selection are representable.
- *
- * Throws, if any segment in the selection is not fully selected.
  */
 [[nodiscard]] auto new_wire_positions_representable(const Layout& layout,
                                                     const Selection& selection,
@@ -57,16 +53,15 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
  * Pre-conditions (checked in debug builds):
  *      + segment needs to be temporary.
  *      + moved segment needs to be representable.
- *      + segment_part needs to be the full segment.
+ *      + segment_part needs to be a full segment
  */
-auto move_temporary_wire_unchecked(Layout& layout, segment_part_t segment_part,
+auto move_temporary_wire_unchecked(Layout& layout, segment_part_t full_segment_part,
                                    move_delta_t delta) -> void;
 
 /**
  * @brief: Move the wire segment if it is representable, otherwise delete it.
  *
  * Throws, if segment is not temporary.
- * Throws, if segment_part is not the full segment.
  */
 auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment_part,
                                    move_delta_t delta) -> void;

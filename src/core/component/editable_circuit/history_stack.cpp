@@ -181,7 +181,8 @@ auto HistoryStack::push_logicitem_delete_temporary(logicitem_key_t logicitem_key
 namespace {
 
 [[nodiscard]] auto just_changed_insertion_mode(
-    const std::vector<HistoryEntry>& entries, const std::vector<logicitem_key_t> &logicitem_keys,
+    const std::vector<HistoryEntry>& entries,
+    const std::vector<logicitem_key_t>& logicitem_keys,
     logicitem_key_t current_key) -> bool {
     using enum HistoryEntry;
     const auto last = get_back_vector(entries);
@@ -377,7 +378,8 @@ namespace {
 
 [[nodiscard]] auto just_changed_insertion_mode(
     const std::vector<HistoryEntry>& entries,
-    const std::vector<decoration_key_t> &decoration_keys, decoration_key_t current_key) -> bool {
+    const std::vector<decoration_key_t>& decoration_keys,
+    decoration_key_t current_key) -> bool {
     using enum HistoryEntry;
     const auto last = get_back_vector(entries);
 

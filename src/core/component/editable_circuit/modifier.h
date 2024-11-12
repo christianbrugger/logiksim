@@ -147,7 +147,7 @@ class Modifier {
     auto change_wire_insertion_mode(segment_part_t& segment_part,
                                     InsertionMode new_insertion_mode) -> void;
 
-    auto move_temporary_wire_unchecked(segment_part_t segment_part,
+    auto move_temporary_wire_unchecked(segment_part_t full_segment_part,
                                        move_delta_t delta) -> void;
 
     auto move_or_delete_temporary_wire(segment_part_t& segment_part,
