@@ -410,29 +410,30 @@ TEST(EditableCircuitModifierWire, IsWirePositionRepresentable) {
         segment_info_t {.line = ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
 
     const auto segment = segment_t {wire_id, segment_index};
+    const auto segment_part = segment_part_t {segment, part_t {0, 10}};
 
     constexpr static auto overflow = int {grid_t::max()} + 100;
 
     {
         const auto delta = move_delta_t {10, 10};
-        ASSERT_EQ(is_wire_position_representable(layout, segment, delta), true);
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), true);
     }
     {
         const auto delta = move_delta_t {-10, -10};
-        ASSERT_EQ(is_wire_position_representable(layout, segment, delta), true);
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), true);
     }
 
     {
         const auto delta = move_delta_t {overflow, 10};
-        ASSERT_EQ(is_wire_position_representable(layout, segment, delta), false);
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), false);
     }
     {
         const auto delta = move_delta_t {-overflow, 10};
-        ASSERT_EQ(is_wire_position_representable(layout, segment, delta), false);
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), false);
     }
     {
         const auto delta = move_delta_t {0, overflow};
-        ASSERT_EQ(is_wire_position_representable(layout, segment, delta), false);
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), false);
     }
 }
 
@@ -448,14 +449,15 @@ TEST(EditableCircuitModifierWire, IsWirePositionRepresentablePart) {
         segment_info_t {.line = ordered_line_t {point_t {0, 0}, point_t {p1_x, 0}}});
 
     const auto segment = segment_t {wire_id, segment_index};
+    const auto segment_part = segment_part_t {segment, m_tree.part(segment_index)};
 
     {
         const auto delta = move_delta_t {-10, -10};
-        ASSERT_EQ(is_wire_position_representable(layout, segment, delta), true);
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), true);
     }
     {
         const auto delta = move_delta_t {10, 10};
-        ASSERT_EQ(is_wire_position_representable(layout, segment, delta), false);
+        ASSERT_EQ(is_wire_position_representable(layout, segment_part, delta), false);
     }
 }
 
@@ -474,20 +476,21 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMove) {
     auto &m_tree = layout.wires().modifiable_segment_tree(wire_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
-    const auto segment_0 = segment_t {
+    const auto segment_part_0 = segment_part_t {
         segment_t {wire_id, segment_index},
+        part_t {0, 10},
     };
 
     auto modifier = get_logging_modifier(layout);
 
-    auto segment = segment_0;
-    modifier.move_or_delete_temporary_wire(segment, move_delta_t {100, 200});
+    auto segment_part = segment_part_0;
+    modifier.move_or_delete_temporary_wire(segment_part, move_delta_t {100, 200});
     Expects(is_valid(modifier));
 
     assert_wire_count(modifier, 1);
     ASSERT_EQ(is_temporary(wire_id_t {0}), true);
 
-    ASSERT_EQ(segment, segment_0);
+    ASSERT_EQ(segment_part, segment_part_0);
 
     const auto &tree = get_segment_tree(modifier, wire_id_t {0});
     ASSERT_EQ(tree.size(), 1);

@@ -662,19 +662,19 @@ auto is_selected(const Selection &selection, const Layout &layout, segment_t seg
     return std::ranges::any_of(selection.selected_segments(segment), is_part_selected);
 }
 
-auto full_part_selected(const segment_t segment, const PartSelection &parts,
-                        const Layout &layout) -> bool {
+auto full_segment_selected(const segment_t segment, const PartSelection &parts,
+                           const Layout &layout) -> bool {
     return parts.size() == 1 && parts.front() == to_part(get_line(layout, segment));
 }
 
 auto full_part_selected(const selection::segment_pair_t &pair,
                         const Layout &layout) -> bool {
-    return full_part_selected(pair.first, pair.second, layout);
+    return full_segment_selected(pair.first, pair.second, layout);
 }
 
 auto full_part_selected(const Selection &selection, segment_t segment,
                         const Layout &layout) -> bool {
-    return full_part_selected(segment, selection.selected_segments(segment), layout);
+    return full_segment_selected(segment, selection.selected_segments(segment), layout);
 }
 
 //

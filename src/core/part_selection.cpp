@@ -98,12 +98,14 @@ auto PartSelection::end() const -> iterator {
 
 auto PartSelection::front() const -> part_t {
     Expects(class_invariant_holds());
+    Expects(!parts_.empty());
 
     return parts_.front();
 }
 
 auto PartSelection::back() const -> part_t {
     Expects(class_invariant_holds());
+    Expects(!parts_.empty());
 
     return parts_.back();
 }

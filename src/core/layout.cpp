@@ -283,6 +283,10 @@ auto has_segments(const Layout &layout) -> bool {
     });
 }
 
+auto full_segment_selected(const Layout &layout, segment_part_t segment_part) -> bool {
+    return segment_part.part == to_part(get_line(layout, segment_part.segment));
+}
+
 auto moved_layout(Layout layout, int delta_x, int delta_y) -> std::optional<Layout> {
     // logic items
     for (const auto logicitem_id : logicitem_ids(layout)) {

@@ -119,6 +119,9 @@ class Layout {
 
 [[nodiscard]] auto has_segments(const Layout &layout) -> bool;
 
+[[nodiscard]] auto full_segment_selected(const Layout &layout,
+                                         segment_part_t segment_part) -> bool;
+
 [[nodiscard]] auto moved_layout(Layout layout, int delta_x,
                                 int delta_y) -> std::optional<Layout>;
 
