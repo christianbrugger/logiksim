@@ -1,6 +1,7 @@
 #include "core/geometry/segment_info.h"
 
 #include "core/geometry/part.h"
+#include "core/vocabulary/endpoints.h"
 #include "core/vocabulary/part.h"
 #include "core/vocabulary/point.h"
 #include "core/vocabulary/segment_info.h"
@@ -81,6 +82,21 @@ auto get_segment_point_type(const segment_info_t &info,
         return info.p1_type;
     };
     throw std::runtime_error("Position needs to be an endpoint of the segment.");
+}
+
+auto get_endpoints(const segment_info_t &info) -> endpoints_t {
+    return endpoints_t {
+        .p0_type = info.p0_type,
+        .p1_type = info.p1_type,
+    };
+}
+
+auto to_segment_info(ordered_line_t line, endpoints_t endpoints) -> segment_info_t {
+    return segment_info_t {
+        .line = line,
+        .p0_type = endpoints.p0_type,
+        .p1_type = endpoints.p1_type,
+    };
 }
 
 }  // namespace logicsim

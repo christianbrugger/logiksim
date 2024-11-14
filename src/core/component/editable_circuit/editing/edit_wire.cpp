@@ -19,6 +19,26 @@ namespace editable_circuit {
 
 namespace editing {
 
+namespace {
+
+auto _store_history_segment_create_temporary(CircuitData& circuit,
+                                             segment_part_t segment_part) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        Expects(is_full_segment(circuit.layout, segment_part));
+        const auto segment_key = circuit.index.key_index().get(segment_part.segment);
+
+        // if (circuit.visible_selection.initial_selection().is_selected(
+        //         segment_part.segment)) {
+        //     stack->push_segment_add_visible_selection();
+        // }
+
+        const auto info = get_segment_info(circuit.layout, segment_part.segment);
+        stack->push_segment_create_temporary(segment_key, info);
+    }
+}
+
+}  // namespace
+
 //
 // Delete Wires
 //
@@ -30,6 +50,8 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
     }
 
     move_segment_between_trees(circuit, segment_part, temporary_wire_id);
+
+    _store_history_segment_create_temporary(circuit, segment_part);
     remove_full_segment_from_uninserted_tree(circuit, segment_part);
 }
 

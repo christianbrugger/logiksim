@@ -17,7 +17,7 @@ namespace logicsim {
 namespace editable_circuit {
 
 constexpr static inline auto DEBUG_PRINT_MODIFIER_METHODS = false;
-constexpr static inline auto DEBUG_PRINT_CIRCUIT_HISTORY = false;
+constexpr static inline auto DEBUG_PRINT_CIRCUIT_HISTORY = true;
 constexpr static inline auto DEBUG_CHECK_CLASS_INVARIANTS = false;
 
 namespace {
@@ -419,6 +419,10 @@ auto Modifier::delete_temporary_wire_segment(segment_part_t& segment_part) -> vo
     }
 
     editing::delete_temporary_wire_segment(circuit_data_, segment_part);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -434,6 +438,9 @@ auto Modifier::add_wire_segment(ordered_line_t line,
 
     const auto segment = editing::add_wire_segment(circuit_data_, line, insertion_mode);
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
     return segment;
 }
@@ -449,6 +456,10 @@ auto Modifier::change_wire_insertion_mode(segment_part_t& segment_part,
     }
 
     editing::change_wire_insertion_mode(circuit_data_, segment_part, new_insertion_mode);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -464,6 +475,9 @@ auto Modifier::move_temporary_wire_unchecked(segment_part_t full_segment_part,
 
     editing::move_temporary_wire_unchecked(circuit_data_.layout, full_segment_part,
                                            delta);
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -478,6 +492,10 @@ auto Modifier::move_or_delete_temporary_wire(segment_part_t& segment_part,
     }
 
     editing::move_or_delete_temporary_wire(circuit_data_, segment_part, delta);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -491,6 +509,10 @@ auto Modifier::toggle_wire_crosspoint(point_t point) -> void {
     }
 
     editing::toggle_wire_crosspoint(circuit_data_, point);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 
@@ -512,6 +534,9 @@ auto Modifier::regularize_temporary_selection(
     const auto points = editing::regularize_temporary_selection(
         circuit_data_, selection, std::move(true_cross_points_));
 
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
     return points;
 }
@@ -527,6 +552,10 @@ auto Modifier::split_temporary_segments(const Selection& selection,
     }
 
     editing::split_temporary_segments(circuit_data_, selection, split_points);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
     Ensures(debug_class_invariant_holds(*this));
 }
 

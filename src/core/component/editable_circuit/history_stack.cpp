@@ -4,6 +4,7 @@
 #include "core/algorithm/vector_operations.h"
 #include "core/allocated_size/std_vector.h"
 #include "core/format/container.h"
+#include "core/geometry/segment_info.h"
 
 namespace logicsim {
 
@@ -118,6 +119,10 @@ auto HistoryStack::format() const -> std::string {
         "    decoration_keys = {},\n"
         "    placed_decorations = {},\n"
         "    \n"
+        "    segment_keys = {},\n"
+        "    lines = {},\n"
+        "    endpoints = {},\n"
+        "    \n"
         "    visible_selections = {},\n"
         "    selection_rects = {},\n"
         "    selection_functions = {},\n"
@@ -125,6 +130,7 @@ auto HistoryStack::format() const -> std::string {
         format_stack_vector(entries_), move_deltas_,                 //
         logicitem_keys_, format_stack_vector(placed_logicitems_),    //
         decoration_keys_, format_stack_vector(placed_decorations_),  //
+        segment_keys_, lines_, endpoints_,                           //
         format_stack_vector(selections_), selection_rects_, selection_functions_);
 }
 
@@ -137,6 +143,10 @@ auto HistoryStack::allocated_size() const -> std::size_t {
                                                       //
            get_allocated_size(decoration_keys_) +     //
            get_allocated_size(placed_decorations_) +  //
+                                                      //
+           get_allocated_size(segment_keys_) +        //
+           get_allocated_size(lines_) +               //
+           get_allocated_size(endpoints_) +           //
                                                       //
            get_allocated_size(selections_) +          //
            get_allocated_size(selection_rects_) +     //
@@ -574,8 +584,12 @@ auto HistoryStack::pop_decoration_remove_visible_selection() -> decoration_key_t
 // Segment
 //
 
-auto HistoryStack::push_segment_create_temporary() -> void {
+auto HistoryStack::push_segment_create_temporary(segment_key_t segment_key,
+                                                 segment_info_t info) -> void {
     entries_.emplace_back(HistoryEntry::segment_create_temporary);
+    segment_keys_.emplace_back(segment_key);
+    lines_.emplace_back(info.line);
+    endpoints_.emplace_back(get_endpoints(info));
 }
 
 auto HistoryStack::push_segment_delete_temporary() -> void {
@@ -618,8 +632,13 @@ auto HistoryStack::push_segment_remove_visible_selection() -> void {
     entries_.emplace_back(HistoryEntry::segment_remove_visible_selection);
 }
 
-auto HistoryStack::pop_segment_create_temporary() -> void {
+auto HistoryStack::pop_segment_create_temporary()
+    -> std::pair<segment_key_t, segment_info_t> {
     Expects(pop_back_vector(entries_) == HistoryEntry::segment_create_temporary);
+    return {
+        pop_back_vector(segment_keys_),
+        to_segment_info(pop_back_vector(lines_), pop_back_vector(endpoints_)),
+    };
 }
 
 auto HistoryStack::pop_segment_delete_temporary() -> void {

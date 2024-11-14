@@ -10,8 +10,10 @@
 namespace logicsim {
 
 struct part_t;
+struct endpoints_t;
 struct segment_info_t;
 struct point_t;
+struct ordered_line_t;
 
 [[nodiscard]] auto order_points(segment_info_t a, segment_info_t b)
     -> std::tuple<segment_info_t, segment_info_t>;
@@ -32,6 +34,10 @@ auto set_segment_point_type(segment_info_t &info, point_t position,
 
 [[nodiscard]] auto get_segment_point_type(const segment_info_t &info,
                                           point_t position) -> SegmentPointType;
+
+[[nodiscard]] auto get_endpoints(const segment_info_t &info) -> endpoints_t;
+[[nodiscard]] auto to_segment_info(ordered_line_t line,
+                                   endpoints_t endpoints) -> segment_info_t;
 
 }  // namespace logicsim
 

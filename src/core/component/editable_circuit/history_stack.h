@@ -6,10 +6,13 @@
 #include "core/format/struct.h"
 #include "core/stable_selection.h"
 #include "core/vocabulary/decoration_key.h"
+#include "core/vocabulary/endpoints.h"
 #include "core/vocabulary/logicitem_key.h"
 #include "core/vocabulary/move_delta.h"
+#include "core/vocabulary/ordered_line.h"
 #include "core/vocabulary/placed_decoration.h"
 #include "core/vocabulary/placed_logicitem.h"
+#include "core/vocabulary/segment_key.h"
 
 #include <utility>
 #include <vector>
@@ -160,7 +163,8 @@ class HistoryStack {
     // Segment
     //
 
-    auto push_segment_create_temporary() -> void;
+    auto push_segment_create_temporary(segment_key_t segment_key,
+                                       segment_info_t info) -> void;
     auto push_segment_delete_temporary() -> void;
     auto push_segment_move_temporary() -> void;
     auto push_segment_to_mode_temporary() -> void;
@@ -172,7 +176,7 @@ class HistoryStack {
     auto push_segment_add_visible_selection() -> void;
     auto push_segment_remove_visible_selection() -> void;
 
-    auto pop_segment_create_temporary() -> void;
+    auto pop_segment_create_temporary() -> std::pair<segment_key_t, segment_info_t>;
     auto pop_segment_delete_temporary() -> void;
     auto pop_segment_move_temporary() -> void;
     auto pop_segment_to_mode_temporary() -> void;
@@ -213,6 +217,11 @@ class HistoryStack {
     // decoration
     std::vector<decoration_key_t> decoration_keys_ {};
     std::vector<PlacedDecoration> placed_decorations_ {};
+
+    // segment
+    std::vector<segment_key_t> segment_keys_ {};
+    std::vector<ordered_line_t> lines_ {};
+    std::vector<endpoints_t> endpoints_ {};
 
     // visible selection
     std::vector<StableSelection> selections_ {};

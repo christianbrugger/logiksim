@@ -254,6 +254,7 @@ set(LS_CORE_SOURCES
     vocabulary/element_draw_state.cpp
     vocabulary/element_id.cpp
     vocabulary/element_type.cpp
+    vocabulary/endpoints.cpp
     vocabulary/fallback_info.cpp
     vocabulary/font_style.cpp
     vocabulary/grid.cpp
