@@ -305,6 +305,7 @@ set(LS_CORE_SOURCES
     vocabulary/segment.cpp
     vocabulary/segment_index.cpp
     vocabulary/segment_info.cpp
+    vocabulary/segment_key.cpp
     vocabulary/segment_part.cpp
     vocabulary/segment_point_type.cpp
     vocabulary/selection_function.cpp
