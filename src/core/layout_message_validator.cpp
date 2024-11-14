@@ -348,25 +348,25 @@ auto MessageValidator::handle(const info_message::SegmentPartMoved &message) -> 
 
         if (message.source.segment == message.destination.segment) {
             // source moved
-            Expects(!message.delete_source);
             Expects(message.source.part == source.part);
             source.part = message.destination.part;
         } else if (message.source.part == source.part) {
             // source completely deleted
-            Expects(message.delete_source);
             Expects(all_segments_.erase(message.source.segment) == 1);
         } else if (message.source.part.begin == source.part.begin) {
             // shrinking front
-            Expects(!message.delete_source);
             source.part = part_t {message.source.part.end, source.part.end};
         } else if (message.source.part.end == source.part.end) {
             // shrinking back
-            Expects(!message.delete_source);
             source.part = part_t {source.part.begin, message.source.part.begin};
         } else {
             std::terminate();
         }
     }
+
+    Expects(!all_segments_.contains(message.source.segment) == message.delete_source);
+    Expects(!all_segments_.contains(message.destination.segment) ==
+            message.create_destination);
 
     // adapt destination
     if (message.source.segment != message.destination.segment) {
@@ -374,7 +374,6 @@ auto MessageValidator::handle(const info_message::SegmentPartMoved &message) -> 
 
         if (it == all_segments_.end()) {
             // new destination
-            Expects(message.create_destination);
             const auto value = all_segment_value_t {
                 .unique_id = get_next_unique_id(),
                 .part = message.destination.part,
@@ -382,19 +381,15 @@ auto MessageValidator::handle(const info_message::SegmentPartMoved &message) -> 
             Expects(all_segments_.emplace(message.destination.segment, value).second);
         } else if (it->second.part.begin == message.destination.part.end) {
             // expanding front
-            Expects(!message.create_destination);
             it->second.part =
                 part_t {message.destination.part.begin, it->second.part.end};
         } else if (it->second.part.end == message.destination.part.begin) {
             // expanding back
-            Expects(!message.create_destination);
             it->second.part =
                 part_t {it->second.part.begin, message.destination.part.end};
         } else {
             std::terminate();
         }
-    } else {
-        Expects(!message.create_destination);
     }
 
     // segments are not inserted during move
@@ -408,19 +403,19 @@ auto MessageValidator::handle(const info_message::SegmentPartDeleted &message) -
     if (message.segment_part.part.begin == message.segment_part.part.begin &&
         message.segment_part.part.end == message.segment_part.part.end) {
         // delete complete segment
-        Expects(message.delete_segment);
         Expects(all_segments_.erase(message.segment_part.segment) == 1);
     } else if (message.segment_part.part.begin == message.segment_part.part.begin) {
         // shrink front
-        Expects(!message.delete_segment);
         value.part = part_t {message.segment_part.part.end, value.part.end};
     } else if (message.segment_part.part.end == message.segment_part.part.end) {
         // shrink back
-        Expects(!message.delete_segment);
         value.part = part_t {value.part.begin, message.segment_part.part.begin};
     } else {
         std::terminate();
     }
+
+    Expects(!all_segments_.contains(message.segment_part.segment) ==
+            message.delete_segment);
 
     // segment is not inserted during deletion
     Expects(!inserted_segments_.contains(message.segment_part.segment));
