@@ -241,8 +241,7 @@ auto move_temporary_logicitem_unchecked(CircuitData& circuit,
            display_state_t::temporary);
     assert(is_logicitem_position_representable(circuit.layout, logicitem_id, delta));
 
-    _store_history_move_temporary_logicitem(circuit, logicitem_id,
-                                            move_delta_t {-delta.x, -delta.y});
+    _store_history_move_temporary_logicitem(circuit, logicitem_id, -delta);
 
     const auto position = add_unchecked(
         circuit.layout.logicitems().position(logicitem_id), delta.x, delta.y);

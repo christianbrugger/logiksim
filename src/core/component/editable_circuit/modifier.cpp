@@ -473,8 +473,8 @@ auto Modifier::move_temporary_wire_unchecked(segment_part_t full_segment_part,
             circuit_data_.layout, full_segment_part, delta);
     }
 
-    editing::move_temporary_wire_unchecked(circuit_data_.layout, full_segment_part,
-                                           delta);
+    editing::move_temporary_wire_unchecked(circuit_data_, full_segment_part, delta);
+
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
     }

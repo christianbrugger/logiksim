@@ -54,7 +54,7 @@ enum class HistoryEntry : uint8_t {
     segment_to_mode_colliding,
     segment_to_mode_insert,
     segment_set_endpoints,
-    segment_merge_with,
+    segment_merge,
     segment_split_at,
     segment_add_visible_selection,
     segment_remove_visible_selection,
@@ -166,24 +166,26 @@ class HistoryStack {
     auto push_segment_create_temporary(segment_key_t segment_key,
                                        segment_info_t info) -> void;
     auto push_segment_delete_temporary() -> void;
-    auto push_segment_move_temporary() -> void;
+    auto push_segment_move_temporary(segment_key_t segment_key,
+                                     move_delta_t delta) -> void;
     auto push_segment_to_mode_temporary() -> void;
     auto push_segment_to_mode_colliding() -> void;
     auto push_segment_to_mode_insert() -> void;
     auto push_segment_set_endpoints() -> void;
-    auto push_segment_merge_with() -> void;
+    auto push_segment_merge(segment_key_t segment_key_1,
+                            segment_key_t segment_key_0) -> void;
     auto push_segment_split_at() -> void;
     auto push_segment_add_visible_selection() -> void;
     auto push_segment_remove_visible_selection() -> void;
 
     auto pop_segment_create_temporary() -> std::pair<segment_key_t, segment_info_t>;
     auto pop_segment_delete_temporary() -> void;
-    auto pop_segment_move_temporary() -> void;
+    auto pop_segment_move_temporary() -> std::pair<segment_key_t, move_delta_t>;
     auto pop_segment_to_mode_temporary() -> void;
     auto pop_segment_to_mode_colliding() -> void;
     auto pop_segment_to_mode_insert() -> void;
     auto pop_segment_set_endpoints() -> void;
-    auto pop_segment_merge_with() -> void;
+    auto pop_segment_merge() -> std::pair<segment_key_t, segment_key_t>;
     auto pop_segment_split_at() -> void;
     auto pop_segment_add_visible_selection() -> void;
     auto pop_segment_remove_visible_selection() -> void;

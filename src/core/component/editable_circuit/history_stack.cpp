@@ -70,8 +70,8 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
             return "segment_to_mode_insert";
         case segment_set_endpoints:
             return "segment_set_endpoints";
-        case segment_merge_with:
-            return "segment_merge_with";
+        case segment_merge:
+            return "segment_merge";
         case segment_split_at:
             return "segment_split_at";
         case segment_add_visible_selection:
@@ -596,8 +596,11 @@ auto HistoryStack::push_segment_delete_temporary() -> void {
     entries_.emplace_back(HistoryEntry::segment_delete_temporary);
 }
 
-auto HistoryStack::push_segment_move_temporary() -> void {
+auto HistoryStack::push_segment_move_temporary(segment_key_t segment_key,
+                                               move_delta_t delta) -> void {
     entries_.emplace_back(HistoryEntry::segment_move_temporary);
+    segment_keys_.emplace_back(segment_key);
+    move_deltas_.emplace_back(delta);
 }
 
 auto HistoryStack::push_segment_to_mode_temporary() -> void {
@@ -616,8 +619,11 @@ auto HistoryStack::push_segment_set_endpoints() -> void {
     entries_.emplace_back(HistoryEntry::segment_set_endpoints);
 }
 
-auto HistoryStack::push_segment_merge_with() -> void {
-    entries_.emplace_back(HistoryEntry::segment_merge_with);
+auto HistoryStack::push_segment_merge(segment_key_t segment_key_1,
+                                      segment_key_t segment_key_0) -> void {
+    entries_.emplace_back(HistoryEntry::segment_merge);
+    segment_keys_.emplace_back(segment_key_0);
+    segment_keys_.emplace_back(segment_key_1);
 }
 
 auto HistoryStack::push_segment_split_at() -> void {
@@ -645,8 +651,10 @@ auto HistoryStack::pop_segment_delete_temporary() -> void {
     Expects(pop_back_vector(entries_) == HistoryEntry::segment_delete_temporary);
 }
 
-auto HistoryStack::pop_segment_move_temporary() -> void {
+auto HistoryStack::pop_segment_move_temporary()
+    -> std::pair<segment_key_t, move_delta_t> {
     Expects(pop_back_vector(entries_) == HistoryEntry::segment_move_temporary);
+    return {pop_back_vector(segment_keys_), pop_back_vector(move_deltas_)};
 }
 
 auto HistoryStack::pop_segment_to_mode_temporary() -> void {
@@ -665,8 +673,11 @@ auto HistoryStack::pop_segment_set_endpoints() -> void {
     Expects(pop_back_vector(entries_) == HistoryEntry::segment_set_endpoints);
 }
 
-auto HistoryStack::pop_segment_merge_with() -> void {
-    Expects(pop_back_vector(entries_) == HistoryEntry::segment_merge_with);
+auto HistoryStack::pop_segment_merge() -> std::pair<segment_key_t, segment_key_t> {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_merge);
+    const auto key_1 = pop_back_vector(segment_keys_);
+    const auto key_0 = pop_back_vector(segment_keys_);
+    return {key_0, key_1};
 }
 
 auto HistoryStack::pop_segment_split_at() -> void {

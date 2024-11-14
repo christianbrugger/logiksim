@@ -55,7 +55,7 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
  *      + moved segment needs to be representable.
  *      + segment_part needs to be a full segment
  */
-auto move_temporary_wire_unchecked(Layout& layout, segment_part_t full_segment_part,
+auto move_temporary_wire_unchecked(CircuitData& circuit, segment_part_t full_segment_part,
                                    move_delta_t delta) -> void;
 
 /**

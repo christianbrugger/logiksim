@@ -43,7 +43,8 @@ auto add_segment_to_tree(CircuitData& circuit, wire_id_t wire_id,
  * + Newly inserted endpoints as shadow points
  */
 auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_part,
-                                wire_id_t destination_id) -> void;
+                                wire_id_t destination_id)
+    -> std::pair<segment_part_t, segment_part_t>;
 
 /**
  * @brief: Deletes segment_part of tree (only uninserted)

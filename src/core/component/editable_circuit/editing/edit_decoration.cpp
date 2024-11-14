@@ -212,8 +212,7 @@ auto move_temporary_decoration_unchecked(CircuitData& circuit,
         return;
     }
 
-    _store_history_move_temporary_decoration(circuit, decoration_id,
-                                             move_delta_t {-delta.x, -delta.y});
+    _store_history_move_temporary_decoration(circuit, decoration_id, -delta);
 
     const auto position = add_unchecked(
         circuit.layout.decorations().position(decoration_id), delta.x, delta.y);

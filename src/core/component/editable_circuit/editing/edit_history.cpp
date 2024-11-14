@@ -249,8 +249,8 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
-        case segment_merge_with: {
-            stack.pop_segment_merge_with();
+        case segment_merge: {
+            stack.pop_segment_merge();
             return;
         }
 

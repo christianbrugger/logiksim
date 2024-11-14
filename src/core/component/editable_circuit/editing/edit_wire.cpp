@@ -24,7 +24,7 @@ namespace {
 auto _store_history_segment_create_temporary(CircuitData& circuit,
                                              segment_part_t segment_part) -> void {
     if (const auto stack = circuit.history.get_stack()) {
-        Expects(is_full_segment(circuit.layout, segment_part));
+        assert(is_full_segment(circuit.layout, segment_part));
         const auto segment_key = circuit.index.key_index().get(segment_part.segment);
 
         // if (circuit.visible_selection.initial_selection().is_selected(
@@ -34,6 +34,41 @@ auto _store_history_segment_create_temporary(CircuitData& circuit,
 
         const auto info = get_segment_info(circuit.layout, segment_part.segment);
         stack->push_segment_create_temporary(segment_key, info);
+    }
+}
+
+auto move_segment_between_trees_with_history(CircuitData& circuit,
+                                             segment_part_t& segment_part,
+                                             const wire_id_t destination_id) -> void {
+    const auto [left1, left2] =
+        move_segment_between_trees(circuit, segment_part, destination_id);
+
+    if (!left1 && !left2) {
+        return;
+    }
+
+    if (const auto stack = circuit.history.get_stack()) {
+        assert(is_full_segment(circuit.layout, segment_part));
+        const auto segment_key = circuit.index.key_index().get(segment_part.segment);
+
+        if (left1) {
+            assert(is_full_segment(circuit.layout, left1));
+            const auto other_key = circuit.index.key_index().get(left1.segment);
+            stack->push_segment_merge(segment_key, other_key);
+        }
+        if (left2) {
+            assert(is_full_segment(circuit.layout, left2));
+            const auto other_key = circuit.index.key_index().get(left2.segment);
+            stack->push_segment_merge(segment_key, other_key);
+        }
+    }
+}
+
+auto _store_history_segment_move_temporary(CircuitData& circuit, segment_t segment,
+                                           move_delta_t delta) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto segment_key = circuit.index.key_index().get(segment);
+        stack->push_segment_move_temporary(segment_key, delta);
     }
 }
 
@@ -49,7 +84,7 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
         throw std::runtime_error("can only delete temporary segments");
     }
 
-    move_segment_between_trees(circuit, segment_part, temporary_wire_id);
+    move_segment_between_trees_with_history(circuit, segment_part, temporary_wire_id);
 
     _store_history_segment_create_temporary(circuit, segment_part);
     remove_full_segment_from_uninserted_tree(circuit, segment_part);
@@ -81,18 +116,20 @@ auto new_wire_positions_representable(const Layout& layout, const Selection& sel
     return std::ranges::all_of(selection.selected_segments(), segment_representable);
 }
 
-auto move_temporary_wire_unchecked(Layout& layout, segment_part_t full_segment_part,
+auto move_temporary_wire_unchecked(CircuitData& circuit, segment_part_t full_segment_part,
                                    move_delta_t delta) -> void {
     assert(is_temporary(full_segment_part.segment.wire_id));
-    assert(is_full_segment(layout, full_segment_part));
-    assert(is_wire_position_representable(layout, full_segment_part, delta));
+    assert(is_full_segment(circuit.layout, full_segment_part));
+    assert(is_wire_position_representable(circuit.layout, full_segment_part, delta));
 
     const auto segment = full_segment_part.segment;
 
-    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
+    auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
     auto info = m_tree.info(segment.segment_index);
     info.line = add_unchecked(info.line, delta.x, delta.y);
     m_tree.update_segment(segment.segment_index, info);
+
+    _store_history_segment_move_temporary(circuit, segment, -delta);
 }
 
 auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment_part,
@@ -106,8 +143,9 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
         return;
     }
 
-    move_segment_between_trees(circuit, segment_part, segment_part.segment.wire_id);
-    move_temporary_wire_unchecked(circuit.layout, segment_part, delta);
+    move_segment_between_trees_with_history(circuit, segment_part,
+                                            segment_part.segment.wire_id);
+    move_temporary_wire_unchecked(circuit, segment_part, delta);
 }
 
 //

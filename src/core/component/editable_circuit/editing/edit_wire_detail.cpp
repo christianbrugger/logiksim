@@ -105,7 +105,7 @@ auto _notify_segment_id_changed(CircuitData& circuit, const segment_t source_seg
 }
 
 auto _move_full_segment_between_trees(CircuitData& circuit, segment_t& source_segment,
-                                      const wire_id_t destination_id) {
+                                      const wire_id_t destination_id) -> void {
     if (source_segment.wire_id == destination_id) {
         return;
     }
@@ -211,9 +211,9 @@ auto _shrink_segment_end(CircuitData& circuit, const segment_t segment,
 
 }  // namespace move_segment
 
-auto _move_touching_segment_between_trees(CircuitData& circuit,
-                                          segment_part_t& source_segment_part,
-                                          const wire_id_t destination_id) {
+auto _move_touching_segment_between_trees(
+    CircuitData& circuit, segment_part_t& source_segment_part,
+    const wire_id_t destination_id) -> segment_part_t {
     const auto full_part = to_part(get_line(circuit.layout, source_segment_part.segment));
     const auto part_kept =
         difference_touching_one_side(full_part, source_segment_part.part);
@@ -259,11 +259,12 @@ auto _move_touching_segment_between_trees(CircuitData& circuit,
     }
 
     source_segment_part = destination_segment_part;
+    return leftover_segment_part;
 }
 
-auto _move_splitting_segment_between_trees(CircuitData& circuit,
-                                           segment_part_t& source_segment_part,
-                                           const wire_id_t destination_id) {
+auto _move_splitting_segment_between_trees(
+    CircuitData& circuit, segment_part_t& source_segment_part,
+    const wire_id_t destination_id) -> std::pair<segment_part_t, segment_part_t> {
     const auto full_part = to_part(get_line(circuit.layout, source_segment_part.segment));
     const auto [part0, part1] =
         difference_not_touching(full_part, source_segment_part.part);
@@ -316,24 +317,35 @@ auto _move_splitting_segment_between_trees(CircuitData& circuit,
     }
 
     source_segment_part = destination_segment_part;
+    return {leftover_segment_part, destination_part1};
 }
 
 }  // namespace
 
 auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_part,
-                                const wire_id_t destination_id) -> void {
+                                const wire_id_t destination_id)
+    -> std::pair<segment_part_t, segment_part_t> {
     const auto moving_part = segment_part.part;
     const auto full_part = to_part(get_line(circuit.layout, segment_part.segment));
 
     if (a_equal_b(moving_part, full_part)) {
         _move_full_segment_between_trees(circuit, segment_part.segment, destination_id);
-    } else if (a_inside_b_touching_one_side(moving_part, full_part)) {
-        _move_touching_segment_between_trees(circuit, segment_part, destination_id);
-    } else if (a_inside_b_not_touching(moving_part, full_part)) {
-        _move_splitting_segment_between_trees(circuit, segment_part, destination_id);
-    } else [[unlikely]] {
-        throw std::runtime_error("segment part is invalid");
+        return {null_segment_part, null_segment_part};
     }
+
+    if (a_inside_b_touching_one_side(moving_part, full_part)) {
+        return {
+            _move_touching_segment_between_trees(circuit, segment_part, destination_id),
+            null_segment_part,
+        };
+    }
+
+    if (a_inside_b_not_touching(moving_part, full_part)) {
+        return _move_splitting_segment_between_trees(circuit, segment_part,
+                                                     destination_id);
+    }
+
+    throw std::runtime_error("segment part is invalid");
 }
 
 //
