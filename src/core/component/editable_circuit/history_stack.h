@@ -165,13 +165,17 @@ class HistoryStack {
 
     auto push_segment_create_temporary(segment_key_t segment_key,
                                        segment_info_t info) -> void;
-    auto push_segment_delete_temporary() -> void;
+    auto push_segment_delete_temporary(segment_key_t segment_key) -> void;
     auto push_segment_move_temporary(segment_key_t segment_key,
                                      move_delta_t delta) -> void;
-    auto push_segment_to_mode_temporary() -> void;
-    auto push_segment_to_mode_colliding() -> void;
-    auto push_segment_to_mode_insert() -> void;
-    auto push_segment_set_endpoints() -> void;
+    auto push_segment_colliding_to_temporary(segment_key_t segment_key,
+                                             part_t part) -> void;
+    auto push_segment_temporary_to_colliding(segment_key_t segment_key,
+                                             part_t part) -> void;
+    auto push_segment_colliding_to_insert(segment_key_t segment_key, part_t part) -> void;
+    auto push_segment_insert_to_colliding(segment_key_t segment_key, part_t part) -> void;
+    auto push_segment_set_endpoints(segment_key_t segment_key,
+                                    endpoints_t endpoints) -> void;
     auto push_segment_merge(segment_key_t segment_key_1,
                             segment_key_t segment_key_0) -> void;
     auto push_segment_split_at() -> void;
@@ -179,12 +183,12 @@ class HistoryStack {
     auto push_segment_remove_visible_selection() -> void;
 
     auto pop_segment_create_temporary() -> std::pair<segment_key_t, segment_info_t>;
-    auto pop_segment_delete_temporary() -> void;
+    auto pop_segment_delete_temporary() -> segment_key_t;
     auto pop_segment_move_temporary() -> std::pair<segment_key_t, move_delta_t>;
-    auto pop_segment_to_mode_temporary() -> void;
-    auto pop_segment_to_mode_colliding() -> void;
-    auto pop_segment_to_mode_insert() -> void;
-    auto pop_segment_set_endpoints() -> void;
+    auto pop_segment_to_mode_temporary() -> std::pair<segment_key_t, part_t>;
+    auto pop_segment_to_mode_colliding() -> std::pair<segment_key_t, part_t>;
+    auto pop_segment_to_mode_insert() -> std::pair<segment_key_t, part_t>;
+    auto pop_segment_set_endpoints() -> std::pair<segment_key_t, endpoints_t>;
     auto pop_segment_merge() -> std::pair<segment_key_t, segment_key_t>;
     auto pop_segment_split_at() -> void;
     auto pop_segment_add_visible_selection() -> void;
@@ -224,6 +228,7 @@ class HistoryStack {
     std::vector<segment_key_t> segment_keys_ {};
     std::vector<ordered_line_t> lines_ {};
     std::vector<endpoints_t> endpoints_ {};
+    std::vector<part_t> parts_ {};
 
     // visible selection
     std::vector<StableSelection> selections_ {};
