@@ -229,6 +229,8 @@ auto _move_touching_segment_between_trees(CircuitData& circuit,
     circuit.submit(info_message::SegmentPartMoved {
         .destination = destination_segment_part,
         .source = source_segment_part,
+        .create_destination = true,
+        .delete_source = false,
     });
 
     if (part_kept.begin != full_part.begin) {
@@ -236,6 +238,8 @@ auto _move_touching_segment_between_trees(CircuitData& circuit,
             .destination = leftover_segment_part,
             .source = segment_part_t {.segment = source_segment_part.segment,
                                       .part = part_kept},
+            .create_destination = false,
+            .delete_source = false,
         });
     }
 
@@ -279,11 +283,15 @@ auto _move_splitting_segment_between_trees(CircuitData& circuit,
     circuit.submit(info_message::SegmentPartMoved {
         .destination = destination_part1,
         .source = source_part1,
+        .create_destination = true,
+        .delete_source = false,
     });
 
     circuit.submit(info_message::SegmentPartMoved {
         .destination = destination_segment_part,
         .source = source_segment_part,
+        .create_destination = true,
+        .delete_source = false,
     });
 
     if (is_inserted(leftover_segment_part.segment.wire_id)) {
@@ -350,7 +358,10 @@ auto remove_full_segment_from_uninserted_tree(CircuitData& circuit,
     m_tree.swap_and_delete_segment(segment_index);
 
     // messages
-    circuit.submit(info_message::SegmentPartDeleted {full_segment_part});
+    circuit.submit(info_message::SegmentPartDeleted {
+        .segment_part = full_segment_part,
+        .delete_segment = true,
+    });
 
     if (last_index != segment_index) {
         circuit.submit(info_message::SegmentIdUpdated {
@@ -415,6 +426,8 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
                     to_part(info_merged.line, info_0.line),
                 },
             .source = segment_part_t {segment_0, to_part(info_0.line)},
+            .create_destination = false,
+            .delete_source = false,
         });
     }
 
@@ -425,6 +438,8 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
                 to_part(info_merged.line, info_1.line),
             },
         .source = segment_part_t {segment_1, to_part(info_1.line)},
+        .create_destination = false,
+        .delete_source = true,
     });
 
     if (was_inserted) {

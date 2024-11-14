@@ -75,7 +75,7 @@ auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_pa
 /**
  * @brief: Add a new line to the circuit with the given insertion mode.
  *
- * Returns the segment_part of the inserted line.
+ * Returns the segment_part of the inserted line, possibly a partial segment.
  */
 auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
                       InsertionMode insertion_mode) -> segment_part_t;

@@ -85,12 +85,15 @@ auto SegmentIdUpdated::format() const -> std::string {
 }
 
 auto SegmentPartMoved::format() const -> std::string {
-    return fmt::format("SegmentPartMoved(destination = {}, source = {})", destination,
-                       source);
+    return fmt::format(
+        "SegmentPartMoved(destination = {}, source = {}, create_destination = {}, "
+        "delete_source = {})",
+        destination, source, create_destination, delete_source);
 }
 
 auto SegmentPartDeleted::format() const -> std::string {
-    return fmt::format("SegmentPartDeleted(segment_part = {})", segment_part);
+    return fmt::format("SegmentPartDeleted(segment_part = {}, delete_segment = {})",
+                       segment_part, delete_segment);
 }
 
 // Inserted Segments

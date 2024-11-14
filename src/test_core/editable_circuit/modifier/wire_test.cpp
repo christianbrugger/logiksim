@@ -204,6 +204,8 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialOneSide) {
                 segment_t {wire_id_t {0}, segment_index_t {0}},
                 part_t {0, 5},
             },
+        .create_destination = true,
+        .delete_source = false,
     }};
     const auto m1 = Message {SegmentPartMoved {
         .destination =
@@ -216,6 +218,8 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialOneSide) {
                 segment_t {wire_id_t {0}, segment_index_t {0}},
                 part_t {5, 10},
             },
+        .create_destination = false,
+        .delete_source = false,
     }};
     ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
     ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
@@ -288,6 +292,8 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialMiddle) {
                 segment_t {wire_id_t {0}, segment_index_t {0}},
                 part_t {offset_t {5}, offset_t {10}},
             },
+        .create_destination = true,
+        .delete_source = false,
     }};
     const auto m1 = Message {SegmentPartMoved {
         .destination =
@@ -300,6 +306,8 @@ TEST(EditableCircuitModifierWire, TempToCollidingPartialMiddle) {
                 segment_t {wire_id_t {0}, segment_index_t {0}},
                 part_t {offset_t {2}, offset_t {5}},
             },
+        .create_destination = true,
+        .delete_source = false,
     }};
 
     ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
@@ -536,10 +544,14 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialBegin) {
     const auto m0 = Message {SegmentPartMoved {
         .destination = segment_part_1,
         .source = segment_part_0,
+        .create_destination = true,
+        .delete_source = false,
     }};
     const auto m1 = Message {SegmentPartMoved {
         .destination = segment_part_t {segment_t {wire_id, segment_index}, part_t {0, 5}},
         .source = segment_part_t {segment_t {wire_id, segment_index}, part_t {5, 10}},
+        .create_destination = false,
+        .delete_source = false,
     }};
     ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
     ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
@@ -582,6 +594,8 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialEnd) {
     const auto m0 = Message {SegmentPartMoved {
         .destination = segment_part_1,
         .source = segment_part_0,
+        .create_destination = true,
+        .delete_source = false,
     }};
     ASSERT_EQ(modifier.circuit_data().messages.value().size(), 1);
     ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
@@ -639,10 +653,14 @@ TEST(EditableCircuitModifierWire, MoveOrDeleteWireMovePartialMiddle) {
     const auto m0 = Message {SegmentPartMoved {
         .destination = segment_part_1_to,
         .source = segment_part_1_from,
+        .create_destination = true,
+        .delete_source = false,
     }};
     const auto m1 = Message {SegmentPartMoved {
         .destination = segment_part_2,
         .source = segment_part_0,
+        .create_destination = true,
+        .delete_source = false,
     }};
     ASSERT_EQ(modifier.circuit_data().messages.value().size(), 2);
     ASSERT_EQ(modifier.circuit_data().messages.value().at(0), m0);
