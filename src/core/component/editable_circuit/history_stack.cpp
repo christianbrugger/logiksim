@@ -55,6 +55,29 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
         case decoration_remove_visible_selection:
             return "decoration_remove_visible_selection";
 
+        case segment_create_temporary:
+            return "segment_create_temporary";
+        case segment_delete_temporary:
+            return "segment_delete_temporary";
+        case segment_move_temporary:
+            return "segment_move_temporary";
+        case segment_to_mode_temporary:
+            return "segment_to_mode_temporary";
+        case segment_to_mode_colliding:
+            return "segment_to_mode_colliding";
+        case segment_to_mode_insert:
+            return "segment_to_mode_insert";
+        case segment_set_endpoints:
+            return "segment_set_endpoints";
+        case segment_merge_with:
+            return "segment_merge_with";
+        case segment_split_at:
+            return "segment_split_at";
+        case segment_add_visible_selection:
+            return "segment_add_visible_selection";
+        case segment_remove_visible_selection:
+            return "segment_remove_visible_selection";
+
         case visible_selection_clear:
             return "visble_selection_clear";
         case visible_selection_set:
@@ -545,6 +568,98 @@ auto HistoryStack::pop_decoration_remove_visible_selection() -> decoration_key_t
     Expects(pop_back_vector(entries_) ==
             HistoryEntry::decoration_remove_visible_selection);
     return pop_back_vector(decoration_keys_);
+}
+
+//
+// Segment
+//
+
+auto HistoryStack::push_segment_create_temporary() -> void {
+    entries_.emplace_back(HistoryEntry::segment_create_temporary);
+}
+
+auto HistoryStack::push_segment_delete_temporary() -> void {
+    entries_.emplace_back(HistoryEntry::segment_delete_temporary);
+}
+
+auto HistoryStack::push_segment_move_temporary() -> void {
+    entries_.emplace_back(HistoryEntry::segment_move_temporary);
+}
+
+auto HistoryStack::push_segment_to_mode_temporary() -> void {
+    entries_.emplace_back(HistoryEntry::segment_to_mode_temporary);
+}
+
+auto HistoryStack::push_segment_to_mode_colliding() -> void {
+    entries_.emplace_back(HistoryEntry::segment_to_mode_colliding);
+}
+
+auto HistoryStack::push_segment_to_mode_insert() -> void {
+    entries_.emplace_back(HistoryEntry::segment_to_mode_insert);
+}
+
+auto HistoryStack::push_segment_set_endpoints() -> void {
+    entries_.emplace_back(HistoryEntry::segment_set_endpoints);
+}
+
+auto HistoryStack::push_segment_merge_with() -> void {
+    entries_.emplace_back(HistoryEntry::segment_merge_with);
+}
+
+auto HistoryStack::push_segment_split_at() -> void {
+    entries_.emplace_back(HistoryEntry::segment_split_at);
+}
+
+auto HistoryStack::push_segment_add_visible_selection() -> void {
+    entries_.emplace_back(HistoryEntry::segment_add_visible_selection);
+}
+
+auto HistoryStack::push_segment_remove_visible_selection() -> void {
+    entries_.emplace_back(HistoryEntry::segment_remove_visible_selection);
+}
+
+auto HistoryStack::pop_segment_create_temporary() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_create_temporary);
+}
+
+auto HistoryStack::pop_segment_delete_temporary() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_delete_temporary);
+}
+
+auto HistoryStack::pop_segment_move_temporary() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_move_temporary);
+}
+
+auto HistoryStack::pop_segment_to_mode_temporary() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_to_mode_temporary);
+}
+
+auto HistoryStack::pop_segment_to_mode_colliding() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_to_mode_colliding);
+}
+
+auto HistoryStack::pop_segment_to_mode_insert() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_to_mode_insert);
+}
+
+auto HistoryStack::pop_segment_set_endpoints() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_set_endpoints);
+}
+
+auto HistoryStack::pop_segment_merge_with() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_merge_with);
+}
+
+auto HistoryStack::pop_segment_split_at() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_split_at);
+}
+
+auto HistoryStack::pop_segment_add_visible_selection() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_add_visible_selection);
+}
+
+auto HistoryStack::pop_segment_remove_visible_selection() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_add_visible_selection);
 }
 
 //

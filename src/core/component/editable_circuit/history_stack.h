@@ -21,7 +21,7 @@ namespace editable_circuit {
 enum class HistoryEntry : uint8_t {
     new_group,
 
-    // decoration
+    // logicitem
     logicitem_create_temporary,
     logicitem_delete_temporary,
     logicitem_move_temporary,
@@ -42,6 +42,19 @@ enum class HistoryEntry : uint8_t {
     decoration_change_attributes,
     decoration_add_visible_selection,
     decoration_remove_visible_selection,
+
+    // segment
+    segment_create_temporary,
+    segment_delete_temporary,
+    segment_move_temporary,
+    segment_to_mode_temporary,
+    segment_to_mode_colliding,
+    segment_to_mode_insert,
+    segment_set_endpoints,
+    segment_merge_with,
+    segment_split_at,
+    segment_add_visible_selection,
+    segment_remove_visible_selection,
 
     // visible selection
     visible_selection_clear,
@@ -142,6 +155,34 @@ class HistoryStack {
         -> std::pair<decoration_key_t, attributes_text_element_t>;
     auto pop_decoration_add_visible_selection() -> decoration_key_t;
     auto pop_decoration_remove_visible_selection() -> decoration_key_t;
+
+    //
+    // Segment
+    //
+
+    auto push_segment_create_temporary() -> void;
+    auto push_segment_delete_temporary() -> void;
+    auto push_segment_move_temporary() -> void;
+    auto push_segment_to_mode_temporary() -> void;
+    auto push_segment_to_mode_colliding() -> void;
+    auto push_segment_to_mode_insert() -> void;
+    auto push_segment_set_endpoints() -> void;
+    auto push_segment_merge_with() -> void;
+    auto push_segment_split_at() -> void;
+    auto push_segment_add_visible_selection() -> void;
+    auto push_segment_remove_visible_selection() -> void;
+
+    auto pop_segment_create_temporary() -> void;
+    auto pop_segment_delete_temporary() -> void;
+    auto pop_segment_move_temporary() -> void;
+    auto pop_segment_to_mode_temporary() -> void;
+    auto pop_segment_to_mode_colliding() -> void;
+    auto pop_segment_to_mode_insert() -> void;
+    auto pop_segment_set_endpoints() -> void;
+    auto pop_segment_merge_with() -> void;
+    auto pop_segment_split_at() -> void;
+    auto pop_segment_add_visible_selection() -> void;
+    auto pop_segment_remove_visible_selection() -> void;
 
     //
     // Visible Selection

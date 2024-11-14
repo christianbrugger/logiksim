@@ -211,6 +211,65 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
             //
+            // Segment
+            //
+
+        case segment_create_temporary: {
+            stack.pop_segment_create_temporary();
+            return;
+        }
+
+        case segment_delete_temporary: {
+            stack.pop_segment_delete_temporary();
+            return;
+        }
+
+        case segment_move_temporary: {
+            stack.pop_segment_move_temporary();
+            return;
+        }
+
+        case segment_to_mode_temporary: {
+            stack.pop_segment_to_mode_temporary();
+            return;
+        }
+
+        case segment_to_mode_colliding: {
+            stack.pop_segment_to_mode_colliding();
+            return;
+        }
+
+        case segment_to_mode_insert: {
+            stack.pop_segment_to_mode_insert();
+            return;
+        }
+
+        case segment_set_endpoints: {
+            stack.pop_segment_set_endpoints();
+            return;
+        }
+
+        case segment_merge_with: {
+            stack.pop_segment_merge_with();
+            return;
+        }
+
+        case segment_split_at: {
+            stack.pop_segment_split_at();
+            return;
+        }
+
+        case segment_add_visible_selection: {
+            stack.pop_segment_add_visible_selection();
+            return;
+        }
+
+        case segment_remove_visible_selection: {
+            stack.pop_segment_remove_visible_selection();
+            return;
+        }
+
+            //
             // Visible Selection
             //
 
