@@ -39,6 +39,13 @@ auto _store_history_segment_create_temporary(CircuitData& circuit,
     }
 }
 
+auto adjust_merge_order(merge_segment_key_t& definition,
+                        segment_key_t key_before) -> void {
+    if (key_before != definition.keep) {
+        std::swap(definition.keep, definition.merge_and_delete);
+    }
+}
+
 auto move_segment_between_trees_with_history(CircuitData& circuit,
                                              segment_part_t& segment_part,
                                              const wire_id_t destination_id) -> void {
@@ -56,60 +63,41 @@ auto move_segment_between_trees_with_history(CircuitData& circuit,
     assert(!left2 || is_full_segment(circuit.layout, left2));
 
     if (stack != nullptr && left1 && !left2) {
-        auto key_0 = circuit.index.key_index().get(segment_part.segment);
-        auto key_1 = circuit.index.key_index().get(left1.segment);
+        const auto key_0 = circuit.index.key_index().get(segment_part.segment);
+        const auto key_1 = circuit.index.key_index().get(left1.segment);
 
-        if (key_before == key_0) {
-            stack->push_segment_merge(merge_segment_key_t {
-                .keep = key_0,
-                .merge_and_delete = key_1,
-            });
-        } else if (key_before == key_1) {
-            stack->push_segment_merge(merge_segment_key_t {
-                .keep = key_1,
-                .merge_and_delete = key_0,
-            });
-        } else {
-            std::terminate();
-        }
+        auto definition = merge_segment_key_t {
+            .keep = key_0,
+            .merge_and_delete = key_1,
+        };
+        adjust_merge_order(definition, key_before);
+
+        Expects(definition.keep == key_before);
+        stack->push_segment_merge(definition);
     }
 
     if (stack != nullptr && left1 && left2) {
-        // key_0 is between key_1 and key_2
-        auto key_0 = circuit.index.key_index().get(segment_part.segment);
-        auto key_1 = circuit.index.key_index().get(left1.segment);
-        auto key_2 = circuit.index.key_index().get(left2.segment);
+        // key_0 is between key_1 and key_2 => key_0 needs to be merged first
+        const auto key_0 = circuit.index.key_index().get(segment_part.segment);
+        const auto key_1 = circuit.index.key_index().get(left1.segment);
+        const auto key_2 = circuit.index.key_index().get(left2.segment);
 
-        if (key_before == key_0) {
-            stack->push_segment_merge(merge_segment_key_t {
-                .keep = key_0,
-                .merge_and_delete = key_2,
-            });
-            stack->push_segment_merge(merge_segment_key_t {
-                .keep = key_0,
-                .merge_and_delete = key_1,
-            });
-        } else if (key_before == key_1) {
-            stack->push_segment_merge(merge_segment_key_t {
-                .keep = key_1,
-                .merge_and_delete = key_2,
-            });
-            stack->push_segment_merge(merge_segment_key_t {
-                .keep = key_1,
-                .merge_and_delete = key_0,
-            });
-        } else if (key_before == key_2) {
-            stack->push_segment_merge(merge_segment_key_t {
-                .keep = key_2,
-                .merge_and_delete = key_0,
-            });
-            stack->push_segment_merge(merge_segment_key_t {
-                .keep = key_0,
-                .merge_and_delete = key_1,
-            });
-        } else {
-            std::terminate();
-        }
+        auto def_0 = merge_segment_key_t {
+            .keep = key_0,
+            .merge_and_delete = key_1,
+        };
+        adjust_merge_order(def_0, key_before);
+
+        auto def_1 = merge_segment_key_t {
+            .keep = def_0.keep,
+            .merge_and_delete = key_2,
+        };
+        adjust_merge_order(def_0, key_before);
+        Expects(def_1.keep == key_before);
+
+        // restored in reverse order
+        stack->push_segment_merge(def_1);
+        stack->push_segment_merge(def_0);
     }
 }
 
