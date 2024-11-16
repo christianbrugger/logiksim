@@ -82,7 +82,10 @@ auto WireStore::normalize() -> void {
         tree.normalize();
     }
 
-    std::ranges::sort(segment_trees_);
+    // sort inserted
+    Expects(segment_trees_.size() > first_inserted_wire_id.value);
+    std::ranges::sort(segment_trees_.begin() + first_inserted_wire_id.value,
+                      segment_trees_.end());
 }
 
 auto WireStore::operator==(const WireStore &other) const -> bool {
