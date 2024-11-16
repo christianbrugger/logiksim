@@ -520,6 +520,23 @@ auto Modifier::toggle_wire_crosspoint(point_t point) -> void {
 // Wire Normalization
 //
 
+auto Modifier::set_temporary_endpoints(segment_t segment, endpoints_t endpoints) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "set_temporary_crosspoint(segment = {}, endpoints = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, segment, endpoints);
+    }
+
+    editing::set_temporary_endpoints(circuit_data_, segment, endpoints);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
+    Ensures(debug_class_invariant_holds(*this));
+}
+
 auto Modifier::regularize_temporary_selection(
     const Selection& selection,
     std::optional<std::vector<point_t>> true_cross_points_) -> std::vector<point_t> {

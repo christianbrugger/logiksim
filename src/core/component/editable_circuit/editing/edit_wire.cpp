@@ -11,6 +11,7 @@
 #include "core/index/spatial_point_index.h"
 #include "core/layout.h"
 #include "core/tree_normalization.h"
+#include "core/vocabulary/endpoints.h"
 
 #include <algorithm>
 
@@ -374,7 +375,7 @@ auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_pa
 
 auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
                       InsertionMode insertion_mode) -> segment_part_t {
-    auto segment_part = add_segment_to_tree(circuit, temporary_wire_id, line);
+    auto segment_part = add_temporary_segment(circuit, line);
 
     _store_history_segment_delete_temporary(circuit, segment_part);
 
@@ -485,6 +486,27 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
 //
 // Regularization
 //
+
+auto set_temporary_endpoints(CircuitData& circuit, segment_t segment,
+                             endpoints_t endpoints) -> void {
+    const auto valid_temporary = [](SegmentPointType type) {
+        return type == SegmentPointType::shadow_point ||
+               type == SegmentPointType::cross_point;
+    };
+
+    if (!is_temporary(segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("Segment needs to be temporary");
+    }
+    if (!valid_temporary(endpoints.p0_type) || !valid_temporary(endpoints.p1_type))
+        [[unlikely]] {
+        throw std::runtime_error("Point type needs to be shadow_point or cross_point");
+    }
+
+    auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
+
+    const auto info = to_segment_info(m_tree.line(segment.segment_index), endpoints);
+    m_tree.update_segment(segment.segment_index, info);
+}
 
 auto regularize_temporary_selection(CircuitData& circuit, const Selection& selection,
                                     std::optional<std::vector<point_t>> true_cross_points)

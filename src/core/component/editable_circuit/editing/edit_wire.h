@@ -16,6 +16,8 @@ struct segment_part_t;
 struct point_t;
 struct move_delta_t;
 struct ordered_line_t;
+struct segment_info_t;
+struct endpoints_t;
 class Layout;
 class Selection;
 
@@ -81,6 +83,16 @@ auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
                       InsertionMode insertion_mode) -> segment_part_t;
 
 /**
+ * @brief: Add a new line to the circuit with the given insertion mode.
+ *
+ * Note, point types can only be: shadow_point or cross_point.
+ *
+ * Returns the segment_part of the inserted line, possibly a partial segment.
+ */
+auto add_wire_segment(CircuitData& circuit, segment_info_t info,
+                      InsertionMode insertion_mode) -> segment_part_t;
+
+/**
  * @brief: Toggle the wire crosspoint on two crossing inserted wire segments.
  */
 auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void;
@@ -88,6 +100,14 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void;
 //
 // Regularization
 //
+
+/**
+ * @brief: Set endpoints of a temporary segment.
+ *
+ * Allowed point types: shadow_point, cross_point
+ */
+auto set_temporary_endpoints(CircuitData& circuit, segment_t segment,
+                             endpoints_t endpoints) -> void;
 
 /**
  * @brief: Regularizes temporary segments in the selection.

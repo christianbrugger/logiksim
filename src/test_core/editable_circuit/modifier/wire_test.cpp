@@ -11,29 +11,6 @@ namespace logicsim {
 
 namespace editable_circuit {
 
-namespace {
-
-auto add_to_wire(Layout &layout, wire_id_t wire_id, SegmentPointType point_type,
-                 std::span<const ordered_line_t> lines) {
-    auto &m_tree = layout.wires().modifiable_segment_tree(wire_id);
-
-    for (const auto &line : lines) {
-        m_tree.add_segment(segment_info_t {
-            .line = line,
-            .p0_type = point_type,
-            .p1_type = point_type,
-        });
-    }
-}
-
-auto add_test_wire(Layout &layout, SegmentPointType point_type,
-                   std::span<const ordered_line_t> lines) {
-    const auto wire_id = layout.wires().add_wire();
-    add_to_wire(layout, wire_id, point_type, lines);
-}
-
-}  // namespace
-
 //
 // add_line_segment
 //

@@ -20,19 +20,18 @@ namespace editing {
 // Segment Operations
 //
 
-auto add_segment_to_tree(CircuitData& circuit, const wire_id_t wire_id,
-                         ordered_line_t line) -> segment_part_t {
-    // insert new segment
-    auto& m_tree = circuit.layout.wires().modifiable_segment_tree(wire_id);
+auto add_temporary_segment(CircuitData& circuit, ordered_line_t line) -> segment_part_t {
+    auto& m_tree = circuit.layout.wires().modifiable_segment_tree(temporary_wire_id);
 
     const auto segment_info = segment_info_t {
         .line = line,
         .p0_type = SegmentPointType::shadow_point,
         .p1_type = SegmentPointType::shadow_point,
     };
+
     const auto segment_index = m_tree.add_segment(segment_info);
-    const auto segment = segment_t {wire_id, segment_index};
-    const auto part = to_part(line);
+    const auto segment = segment_t {temporary_wire_id, segment_index};
+    const auto part = to_part(segment_info.line);
 
     // messages
     Expects(part.begin == offset_t {0});
@@ -40,9 +39,6 @@ auto add_segment_to_tree(CircuitData& circuit, const wire_id_t wire_id,
         .segment = segment,
         .size = part.end,
     });
-    if (is_inserted(wire_id)) {
-        circuit.submit(info_message::SegmentInserted {segment, segment_info});
-    }
 
     return segment_part_t {segment, part};
 }

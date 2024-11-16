@@ -34,6 +34,8 @@ struct ModifierConfig {
 /**
  * @brief: Low level circuit editing that maintains a valid layout.
  *
+ * Note this class exists, so the low level methods can be direclty tested.
+ *
  * Class-invariants:
  *   Logic Items:
  *      + Element body is fully representable within the grid.
@@ -158,6 +160,8 @@ class Modifier {
     //
     // Wire Normalization
     //
+
+    auto set_temporary_endpoints(segment_t segment, endpoints_t endpoints) -> void;
 
     auto regularize_temporary_selection(
         const Selection& selection,

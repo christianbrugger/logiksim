@@ -4,7 +4,9 @@
 #include "core/component/editable_circuit/editing/edit_decoration.h"
 #include "core/component/editable_circuit/editing/edit_logicitem.h"
 #include "core/component/editable_circuit/editing/edit_visible_selection.h"
+#include "core/component/editable_circuit/editing/edit_wire.h"
 #include "core/component/editable_circuit/history.h"
+#include "core/geometry/segment_info.h"
 #include "core/timer.h"
 
 #include <gsl/gsl>
@@ -215,7 +217,14 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             //
 
         case segment_create_temporary: {
-            stack.pop_segment_create_temporary();
+            const auto [segment_key, info] = stack.pop_segment_create_temporary();
+            const auto segment_part =
+                editing::add_wire_segment(circuit, info.line, InsertionMode::temporary);
+            if (info.p0_type != SegmentPointType::shadow_point ||
+                info.p1_type != SegmentPointType::shadow_point) {
+                editing::set_temporary_endpoints(circuit, segment_part.segment,
+                                                 get_endpoints(info));
+            }
             return;
         }
 
@@ -355,6 +364,7 @@ auto _replay_stack(CircuitData& circuit, ReplayStack kind) -> void {
 
 auto undo_group(CircuitData& circuit) -> void {
     const auto _ = Timer {"undo", Timer::Unit::ms};
+    finish_undo_group(circuit.history);
     _replay_stack(circuit, ReplayStack::undo);
 }
 

@@ -1,8 +1,6 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_WIRE_DETAIL_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_WIRE_DETAIL_H
 
-#include "core/vocabulary/display_state.h"
-#include "core/vocabulary/insertion_mode.h"
 #include "core/vocabulary/segment_point_type.h"
 
 #include <initializer_list>
@@ -15,6 +13,7 @@ struct wire_id_t;
 struct segment_index_t;
 struct segment_t;
 struct segment_part_t;
+struct segment_info_t;
 
 struct point_t;
 struct ordered_line_t;
@@ -31,8 +30,7 @@ namespace editing {
 // Segment Operations
 //
 
-auto add_segment_to_tree(CircuitData& circuit, wire_id_t wire_id,
-                         ordered_line_t line) -> segment_part_t;
+auto add_temporary_segment(CircuitData& circuit, ordered_line_t line) -> segment_part_t;
 
 /**
  * @brief: Moves the segment_part to the destination tree.

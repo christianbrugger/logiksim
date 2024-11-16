@@ -17,9 +17,9 @@ namespace logicsim {
 
 namespace editable_circuit {
 
-[[nodiscard]] inline auto get_modifier(Layout layout__ = Layout {}) -> Modifier {
+[[nodiscard]] inline auto get_modifier(Layout layout_ = Layout {}) -> Modifier {
     const auto modifier = Modifier {
-        std::move(layout__),
+        std::move(layout_),
         ModifierConfig {
             .store_messages = false,
             .validate_messages = true,
@@ -31,9 +31,16 @@ namespace editable_circuit {
     return modifier;
 }
 
-[[nodiscard]] inline auto get_logging_modifier(Layout layout__ = Layout {}) -> Modifier {
+[[nodiscard]] inline auto get_modifier_with_history(Layout layout_ = Layout {})
+    -> Modifier {
+    auto modifier = get_modifier(std::move(layout_));
+    modifier.enable_history();
+    return modifier;
+}
+
+[[nodiscard]] inline auto get_logging_modifier(Layout layout_ = Layout {}) -> Modifier {
     const auto modifier = Modifier {
-        std::move(layout__),
+        std::move(layout_),
         ModifierConfig {
             .store_messages = true,
             .validate_messages = true,
@@ -47,10 +54,10 @@ namespace editable_circuit {
 
 }  // namespace editable_circuit
 
-[[nodiscard]] inline auto get_editable_circuit(Layout layout__ = Layout {})
+[[nodiscard]] inline auto get_editable_circuit(Layout layout_ = Layout {})
     -> EditableCircuit {
     const auto editable_circuit = EditableCircuit {
-        std::move(layout__),
+        std::move(layout_),
         EditableCircuit::Config {
             .store_messages = false,
             .validate_messages = true,
@@ -62,10 +69,10 @@ namespace editable_circuit {
     return editable_circuit;
 }
 
-[[nodiscard]] inline auto get_logging_editable_circuit(Layout layout__ = Layout {})
+[[nodiscard]] inline auto get_logging_editable_circuit(Layout layout_ = Layout {})
     -> EditableCircuit {
     const auto editable_circuit = EditableCircuit {
-        std::move(layout__),
+        std::move(layout_),
         EditableCircuit::Config {
             .store_messages = true,
             .validate_messages = true,
@@ -132,6 +139,40 @@ inline auto assert_wire_count(const Modifier &modifier, std::size_t count) -> vo
 inline auto get_segment_tree(const Modifier &modifier,
                              wire_id_t wire_id) -> const SegmentTree & {
     return modifier.circuit_data().layout.wires().segment_tree(wire_id);
+}
+
+//
+// Add Wire
+//
+
+inline auto add_to_wire(Layout &layout, wire_id_t wire_id, SegmentPointType point_type,
+                        ordered_line_t line) -> segment_index_t {
+    auto &m_tree = layout.wires().modifiable_segment_tree(wire_id);
+
+    return m_tree.add_segment(segment_info_t {
+        .line = line,
+        .p0_type = point_type,
+        .p1_type = point_type,
+    });
+}
+
+inline auto add_to_wire(Layout &layout, wire_id_t wire_id, SegmentPointType point_type,
+                        std::span<const ordered_line_t> lines) -> void {
+    auto &m_tree = layout.wires().modifiable_segment_tree(wire_id);
+
+    for (const auto &line : lines) {
+        m_tree.add_segment(segment_info_t {
+            .line = line,
+            .p0_type = point_type,
+            .p1_type = point_type,
+        });
+    }
+}
+
+inline auto add_test_wire(Layout &layout, SegmentPointType point_type,
+                          std::span<const ordered_line_t> lines) -> void {
+    const auto wire_id = layout.wires().add_wire();
+    add_to_wire(layout, wire_id, point_type, lines);
 }
 
 }  // namespace editable_circuit
