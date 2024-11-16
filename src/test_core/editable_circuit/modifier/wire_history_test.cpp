@@ -11,6 +11,10 @@ namespace logicsim {
 
 namespace editable_circuit {
 
+//
+// Delete
+//
+
 TEST(EditableCircuitWireHistory, DeleteFullSegment) {
     auto layout = Layout {};
     const auto segment_index =
@@ -28,10 +32,10 @@ TEST(EditableCircuitWireHistory, DeleteFullSegment) {
 
     // before undo
     ASSERT_EQ(get_segment_count(modifier.circuit_data().layout), 0);
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(get_segment_count(modifier.circuit_data().layout), 1);
     ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
 }
 
@@ -55,6 +59,7 @@ TEST(EditableCircuitWireHistory, DeleteSegmentKey) {
     ASSERT_THROW(
         static_cast<void>(modifier.circuit_data().index.key_index().get(segment)),
         std::runtime_error);
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
 
     // after undo
     modifier.undo_group();
@@ -78,10 +83,10 @@ TEST(EditableCircuitWireHistory, DeleteFullCrosspoint) {
 
     // before undo
     ASSERT_EQ(get_segment_count(modifier.circuit_data().layout), 0);
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(get_segment_count(modifier.circuit_data().layout), 1);
     ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
 }
 
@@ -103,10 +108,10 @@ TEST(EditableCircuitWireHistory, DeletePartialSide) {
 
     // before undo
     ASSERT_EQ(get_segment_count(modifier.circuit_data().layout), 1);
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(get_segment_count(modifier.circuit_data().layout), 1);
     ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
     ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
 }
@@ -132,7 +137,87 @@ TEST(EditableCircuitWireHistory, DeletePartialMidle) {
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(get_segment_count(modifier.circuit_data().layout), 1);
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
+}
+
+//
+// Move
+//
+
+TEST(EditableCircuitWireHistory, MoveFull) {
+    auto layout = Layout {};
+    const auto segment_index =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point,
+                    ordered_line_t {point_t {0, 0}, point_t {10, 0}});
+    const auto segment = segment_t {temporary_wire_id, segment_index};
+    const auto segment_part = segment_part_t {segment, part_t {0, 10}};
+
+    auto modifier = get_modifier_with_history(layout);
+    const auto segment_key = modifier.circuit_data().index.key_index().get(segment);
+    {
+        auto segment_part_0 = segment_part;
+        modifier.move_or_delete_temporary_wire(segment_part_0, move_delta_t {10, 10});
+    }
+    Expects(is_valid(modifier));
+
+    // before undo
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+
+    // after undo
+    modifier.undo_group();
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
+}
+
+TEST(EditableCircuitWireHistory, MovePartialMiddle) {
+    auto layout = Layout {};
+    const auto segment_index =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point,
+                    ordered_line_t {point_t {0, 0}, point_t {10, 0}});
+    const auto segment = segment_t {temporary_wire_id, segment_index};
+    const auto segment_part = segment_part_t {segment, part_t {2, 7}};
+
+    auto modifier = get_modifier_with_history(layout);
+    const auto segment_key = modifier.circuit_data().index.key_index().get(segment);
+    {
+        auto segment_part_0 = segment_part;
+        modifier.move_or_delete_temporary_wire(segment_part_0, move_delta_t {10, 10});
+    }
+    Expects(is_valid(modifier));
+
+    // before undo
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+
+    // after undo
+    modifier.undo_group();
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
+}
+
+TEST(EditableCircuitWireHistory, MovePartialDelete) {
+    auto layout = Layout {};
+    const auto segment_index =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point,
+                    ordered_line_t {point_t {0, 0}, point_t {10, 0}});
+    const auto segment = segment_t {temporary_wire_id, segment_index};
+    const auto segment_part = segment_part_t {segment, part_t {2, 7}};
+
+    auto modifier = get_modifier_with_history(layout);
+    const auto segment_key = modifier.circuit_data().index.key_index().get(segment);
+    {
+        auto segment_part_0 = segment_part;
+        const auto overflow = int {offset_t::max()};
+        modifier.move_or_delete_temporary_wire(segment_part_0,
+                                               move_delta_t {overflow, overflow});
+    }
+    Expects(is_valid(modifier));
+
+    // before undo
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+
+    // after undo
+    modifier.undo_group();
     ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
     ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
 }

@@ -238,7 +238,9 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case segment_move_temporary: {
-            stack.pop_segment_move_temporary();
+            const auto [segment_key, delta] = stack.pop_segment_move_temporary();
+            const auto segment = to_id(segment_key, circuit);
+            editing::move_temporary_wire_unchecked(circuit, segment, delta);
             return;
         }
 
