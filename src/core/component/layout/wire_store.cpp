@@ -83,7 +83,7 @@ auto WireStore::normalize() -> void {
     }
 
     // sort inserted
-    Expects(segment_trees_.size() > first_inserted_wire_id.value);
+    Expects(segment_trees_.size() >= first_inserted_wire_id.value);
     std::ranges::sort(segment_trees_.begin() + first_inserted_wire_id.value,
                       segment_trees_.end());
 }
