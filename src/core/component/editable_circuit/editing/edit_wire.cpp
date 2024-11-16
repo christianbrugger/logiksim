@@ -356,7 +356,12 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
 
     // move to temporary
     const auto destination_id = temporary_wire_id;
-    move_segment_between_trees_with_history(circuit, segment_part, destination_id);
+
+    if (was_inserted) {
+        move_segment_between_trees(circuit, segment_part, destination_id);
+    } else {
+        move_segment_between_trees_with_history(circuit, segment_part, destination_id);
+    }
 
     if (was_inserted) {
         if (circuit.layout.wires().segment_tree(source_id).empty()) {
