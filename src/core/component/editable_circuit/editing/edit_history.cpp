@@ -60,7 +60,12 @@ auto to_id(segment_key_t segment_key, CircuitData& circuit) -> segment_t {
 }
 
 auto to_part(segment_key_t segment_key, CircuitData& circuit) -> segment_part_t {
-    return get_segment_part(circuit.layout, circuit.index.key_index().get(segment_key));
+    return get_segment_part(circuit.layout, to_id(segment_key, circuit));
+}
+
+auto to_part(std::pair<segment_key_t, part_t> value,
+             CircuitData& circuit) -> segment_part_t {
+    return segment_part_t {to_id(value.first, circuit), value.second};
 }
 
 auto _store_history_new_group(History& history) -> void {
@@ -245,7 +250,9 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case segment_to_mode_temporary: {
-            stack.pop_segment_to_mode_temporary();
+            auto segment_part = to_part(stack.pop_segment_to_mode_temporary(), circuit);
+            editing::change_wire_insertion_mode(circuit, segment_part,
+                                                InsertionMode::temporary);
             return;
         }
 

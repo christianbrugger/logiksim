@@ -156,6 +156,19 @@ auto _store_history_segment_set_endpoints(CircuitData& circuit,
     }
 }
 
+auto reset_segment_endpoints_with_history(CircuitData& circuit,
+                                          const segment_t segment) -> void {
+    const auto endpoints = get_endpoints(get_segment_info(circuit.layout, segment));
+
+    if (endpoints.p0_type == SegmentPointType::shadow_point &&
+        endpoints.p1_type == SegmentPointType::shadow_point) {
+        return;
+    }
+
+    _store_history_segment_set_endpoints(circuit, segment);
+    reset_segment_endpoints(circuit.layout, segment);
+}
+
 auto _store_history_segment_delete_temporary(CircuitData& circuit,
                                              segment_part_t segment_part) -> void {
     if (const auto stack = circuit.history.get_stack()) {
@@ -296,8 +309,7 @@ auto _insert_uninserted_segment(CircuitData& circuit,
     }
     const auto target_wire_id = _find_wire_for_inserting_segment(circuit, segment_part);
 
-    _store_history_segment_set_endpoints(circuit, segment_part.segment);
-    reset_segment_endpoints(circuit.layout, segment_part.segment);
+    reset_segment_endpoints_with_history(circuit, segment_part.segment);
     set_wire_inputs_at_logicitem_outputs(circuit, segment_part.segment);
     move_segment_between_trees_with_history(circuit, segment_part, target_wire_id);
 
@@ -317,8 +329,7 @@ auto _wire_change_temporary_to_colliding(CircuitData& circuit,
     if (colliding) {
         const auto destination = colliding_wire_id;
         move_segment_between_trees_with_history(circuit, segment_part, destination);
-        _store_history_segment_set_endpoints(circuit, segment_part.segment);
-        reset_segment_endpoints(circuit.layout, segment_part.segment);
+        reset_segment_endpoints_with_history(circuit, segment_part.segment);
     } else {
         _insert_uninserted_segment(circuit, segment_part);
         mark_valid(circuit.layout, segment_part);

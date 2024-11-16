@@ -142,6 +142,91 @@ TEST(EditableCircuitWireHistory, DeletePartialMidle) {
 }
 
 //
+// Temporary to Colliding
+//
+
+TEST(EditableCircuitWireHistory, TemporaryToCollidingFull) {
+    auto layout = Layout {};
+    add_test_wire(layout, SegmentPointType::output,
+                  std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
+    const auto segment_index =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point,
+                    ordered_line_t {point_t {0, 0}, point_t {10, 0}});
+    const auto segment = segment_t {temporary_wire_id, segment_index};
+    const auto segment_part = segment_part_t {segment, part_t {0, 10}};
+
+    auto modifier = get_modifier_with_history(layout);
+    const auto segment_key = modifier.circuit_data().index.key_index().get(segment);
+    {
+        auto segment_part_0 = segment_part;
+        modifier.change_wire_insertion_mode(segment_part_0, InsertionMode::collisions);
+    }
+    Expects(is_valid(modifier));
+
+    // before undo
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+
+    // after undo
+    modifier.undo_group();
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
+}
+
+TEST(EditableCircuitWireHistory, TemporaryToCollidingPartialMiddle) {
+    auto layout = Layout {};
+    add_test_wire(layout, SegmentPointType::output,
+                  std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
+    const auto segment_index =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point,
+                    ordered_line_t {point_t {0, 0}, point_t {10, 0}});
+    const auto segment = segment_t {temporary_wire_id, segment_index};
+    const auto segment_part = segment_part_t {segment, part_t {3, 7}};
+
+    auto modifier = get_modifier_with_history(layout);
+    const auto segment_key = modifier.circuit_data().index.key_index().get(segment);
+    {
+        auto segment_part_0 = segment_part;
+        modifier.change_wire_insertion_mode(segment_part_0, InsertionMode::collisions);
+    }
+    Expects(is_valid(modifier));
+
+    // before undo
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+
+    // after undo
+    modifier.undo_group();
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
+}
+
+TEST(EditableCircuitWireHistory, TemporaryToCollidingPartialSideCrosspoint) {
+    auto layout = Layout {};
+    add_test_wire(layout, SegmentPointType::output,
+                  std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
+    const auto segment_index =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::cross_point,
+                    ordered_line_t {point_t {0, 0}, point_t {10, 0}});
+    const auto segment = segment_t {temporary_wire_id, segment_index};
+    const auto segment_part = segment_part_t {segment, part_t {5, 10}};
+
+    auto modifier = get_modifier_with_history(layout);
+    const auto segment_key = modifier.circuit_data().index.key_index().get(segment);
+    {
+        auto segment_part_0 = segment_part;
+        modifier.change_wire_insertion_mode(segment_part_0, InsertionMode::collisions);
+    }
+    Expects(is_valid(modifier));
+
+    // before undo
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+
+    // after undo
+    modifier.undo_group();
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
+}
+
+//
 // Move
 //
 
@@ -226,7 +311,7 @@ TEST(EditableCircuitWireHistory, MovePartialDelete) {
 // Create
 //
 
-TEST(EditableCircuitWireHistory, CreateTemporary) {
+TEST(EditableCircuitWireHistory, AddTemporary) {
     auto layout = Layout {};
 
     auto modifier = get_modifier_with_history(layout);
