@@ -225,14 +225,9 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             //
 
         case segment_create_temporary: {
-            const auto [segment_key, info] = stack.pop_segment_create_temporary();
-            const auto segment_part = editing::add_wire_segment(
-                circuit, info.line, InsertionMode::temporary, segment_key);
-            if (info.p0_type != SegmentPointType::shadow_point ||
-                info.p1_type != SegmentPointType::shadow_point) {
-                editing::set_temporary_endpoints(circuit, segment_part.segment,
-                                                 get_endpoints(info));
-            }
+            const auto [segment_key, line] = stack.pop_segment_create_temporary();
+            editing::add_wire_segment(circuit, line, InsertionMode::temporary,
+                                      segment_key);
             return;
         }
 
@@ -265,7 +260,9 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case segment_set_endpoints: {
-            stack.pop_segment_set_endpoints();
+            const auto [segment_key, endpoints] = stack.pop_segment_set_endpoints();
+            const auto segment = to_id(segment_key, circuit);
+            editing::set_temporary_endpoints(circuit, segment, endpoints);
             return;
         }
 

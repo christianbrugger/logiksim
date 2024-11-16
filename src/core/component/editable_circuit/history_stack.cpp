@@ -592,7 +592,7 @@ auto HistoryStack::pop_decoration_remove_visible_selection() -> decoration_key_t
 //
 
 auto HistoryStack::push_segment_create_temporary(segment_key_t segment_key,
-                                                 segment_info_t info) -> void {
+                                                 ordered_line_t line) -> void {
     if (get_back_vector(entries_) == HistoryEntry::segment_delete_temporary &&
         at_back_vector(segment_keys_) == segment_key) {
         pop_segment_delete_temporary();
@@ -601,8 +601,7 @@ auto HistoryStack::push_segment_create_temporary(segment_key_t segment_key,
 
     entries_.emplace_back(HistoryEntry::segment_create_temporary);
     segment_keys_.emplace_back(segment_key);
-    lines_.emplace_back(info.line);
-    endpoints_.emplace_back(get_endpoints(info));
+    lines_.emplace_back(line);
 }
 
 auto HistoryStack::push_segment_delete_temporary(segment_key_t segment_key) -> void {
@@ -671,11 +670,11 @@ auto HistoryStack::push_segment_remove_visible_selection() -> void {
 }
 
 auto HistoryStack::pop_segment_create_temporary()
-    -> std::pair<segment_key_t, segment_info_t> {
+    -> std::pair<segment_key_t, ordered_line_t> {
     Expects(pop_back_vector(entries_) == HistoryEntry::segment_create_temporary);
     return {
         pop_back_vector(segment_keys_),
-        to_segment_info(pop_back_vector(lines_), pop_back_vector(endpoints_)),
+        pop_back_vector(lines_),
     };
 }
 

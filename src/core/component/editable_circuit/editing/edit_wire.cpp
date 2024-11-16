@@ -35,7 +35,12 @@ auto _store_history_segment_create_temporary(CircuitData& circuit,
         // }
 
         const auto info = get_segment_info(circuit.layout, segment_part.segment);
-        stack->push_segment_create_temporary(segment_key, info);
+
+        if (info.p0_type != SegmentPointType::shadow_point ||
+            info.p1_type != SegmentPointType::shadow_point) {
+            stack->push_segment_set_endpoints(segment_key, get_endpoints(info));
+        }
+        stack->push_segment_create_temporary(segment_key, info.line);
     }
 }
 

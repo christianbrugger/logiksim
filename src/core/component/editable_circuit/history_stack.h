@@ -177,7 +177,7 @@ class HistoryStack {
     //
 
     auto push_segment_create_temporary(segment_key_t segment_key,
-                                       segment_info_t info) -> void;
+                                       ordered_line_t line) -> void;
     auto push_segment_delete_temporary(segment_key_t segment_key) -> void;
     auto push_segment_move_temporary(segment_key_t segment_key,
                                      move_delta_t delta) -> void;
@@ -194,7 +194,7 @@ class HistoryStack {
     auto push_segment_add_visible_selection() -> void;
     auto push_segment_remove_visible_selection() -> void;
 
-    auto pop_segment_create_temporary() -> std::pair<segment_key_t, segment_info_t>;
+    auto pop_segment_create_temporary() -> std::pair<segment_key_t, ordered_line_t>;
     auto pop_segment_delete_temporary() -> segment_key_t;
     auto pop_segment_move_temporary() -> std::pair<segment_key_t, move_delta_t>;
     auto pop_segment_to_mode_temporary() -> std::pair<segment_key_t, part_t>;
