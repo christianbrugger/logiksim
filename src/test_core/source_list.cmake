@@ -21,6 +21,7 @@ set(LS_TEST_SOURCES
 
     editable_circuit/modifier/logicitem_test.cpp
     editable_circuit/modifier/modifier_config_test.cpp
+    editable_circuit/modifier/wire_history_mode_test.cpp
     editable_circuit/modifier/wire_history_test.cpp
     editable_circuit/modifier/wire_random_test.cpp
     editable_circuit/modifier/wire_test.cpp
