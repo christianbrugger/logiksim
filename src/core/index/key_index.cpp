@@ -73,6 +73,10 @@ auto set_new_key(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys, Id id,
     const auto key_it = map_keys.find(id);
     Expects(key_it != map_keys.end());
 
+    if (key_it->second == key) {
+        return;
+    }
+
     const auto id_it = map_ids.find(key_it->second);
     Expects(id_it != map_ids.end());
     Expects(id_it->second == id);
@@ -85,6 +89,10 @@ auto set_new_key(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys, Id id,
 template <typename Id, typename Key>
 auto set_new_id(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys, Id old_id,
                 Id new_id) -> void {
+    if (old_id == new_id) {
+        return;
+    }
+
     const auto key_it = map_keys.find(old_id);
     Expects(key_it != map_keys.end());
 
