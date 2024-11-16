@@ -396,7 +396,7 @@ namespace {
 
 auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_0,
                                   const segment_t segment_1,
-                                  segment_part_t* preserve_segment) -> void {
+                                  segment_part_t* preserve_segment) -> segment_t {
     if (segment_0.wire_id != segment_1.wire_id) [[unlikely]] {
         throw std::runtime_error("Cannot merge segments of different trees.");
     }
@@ -484,17 +484,19 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
             *preserve_segment = segment_part_t {segment_t {wire_id, index_1}, p_part};
         }
     }
+
+    return segment_0;
 }
 
 }  // namespace
 
 auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
-                         segment_part_t* preserve_segment) -> void {
+                         segment_part_t* preserve_segment) -> segment_t {
     if (segment_0.segment_index < segment_1.segment_index) {
-        _merge_line_segments_ordered(circuit, segment_0, segment_1, preserve_segment);
-    } else {
-        _merge_line_segments_ordered(circuit, segment_1, segment_0, preserve_segment);
+        return _merge_line_segments_ordered(circuit, segment_0, segment_1,
+                                            preserve_segment);
     }
+    return _merge_line_segments_ordered(circuit, segment_1, segment_0, preserve_segment);
 }
 
 auto merge_all_line_segments(

@@ -17,7 +17,7 @@ namespace logicsim {
 namespace editable_circuit {
 
 constexpr static inline auto DEBUG_PRINT_MODIFIER_METHODS = false;
-constexpr static inline auto DEBUG_PRINT_CIRCUIT_HISTORY = true;
+constexpr static inline auto DEBUG_PRINT_CIRCUIT_HISTORY = false;
 constexpr static inline auto DEBUG_CHECK_CLASS_INVARIANTS = false;
 
 namespace {

@@ -42,26 +42,73 @@ auto _store_history_segment_create_temporary(CircuitData& circuit,
 auto move_segment_between_trees_with_history(CircuitData& circuit,
                                              segment_part_t& segment_part,
                                              const wire_id_t destination_id) -> void {
+    auto stack = circuit.history.get_stack();
+
+    const auto key_before = stack == nullptr
+                                ? null_segment_key
+                                : circuit.index.key_index().get(segment_part.segment);
+
     const auto [left1, left2] =
         move_segment_between_trees(circuit, segment_part, destination_id);
 
-    if (!left1 && !left2) {
-        return;
+    assert(is_full_segment(circuit.layout, segment_part));
+    assert(!left1 || is_full_segment(circuit.layout, left1));
+    assert(!left2 || is_full_segment(circuit.layout, left2));
+
+    if (stack != nullptr && left1 && !left2) {
+        auto key_0 = circuit.index.key_index().get(segment_part.segment);
+        auto key_1 = circuit.index.key_index().get(left1.segment);
+
+        if (key_before == key_0) {
+            stack->push_segment_merge(merge_segment_key_t {
+                .keep = key_0,
+                .merge_and_delete = key_1,
+            });
+        } else if (key_before == key_1) {
+            stack->push_segment_merge(merge_segment_key_t {
+                .keep = key_1,
+                .merge_and_delete = key_0,
+            });
+        } else {
+            std::terminate();
+        }
     }
 
-    if (const auto stack = circuit.history.get_stack()) {
-        assert(is_full_segment(circuit.layout, segment_part));
-        const auto segment_key = circuit.index.key_index().get(segment_part.segment);
+    if (stack != nullptr && left1 && left2) {
+        // key_0 is between key_1 and key_2
+        auto key_0 = circuit.index.key_index().get(segment_part.segment);
+        auto key_1 = circuit.index.key_index().get(left1.segment);
+        auto key_2 = circuit.index.key_index().get(left2.segment);
 
-        if (left1) {
-            assert(is_full_segment(circuit.layout, left1));
-            const auto other_key = circuit.index.key_index().get(left1.segment);
-            stack->push_segment_merge(segment_key, other_key);
-        }
-        if (left2) {
-            assert(is_full_segment(circuit.layout, left2));
-            const auto other_key = circuit.index.key_index().get(left2.segment);
-            stack->push_segment_merge(segment_key, other_key);
+        if (key_before == key_0) {
+            stack->push_segment_merge(merge_segment_key_t {
+                .keep = key_0,
+                .merge_and_delete = key_2,
+            });
+            stack->push_segment_merge(merge_segment_key_t {
+                .keep = key_0,
+                .merge_and_delete = key_1,
+            });
+        } else if (key_before == key_1) {
+            stack->push_segment_merge(merge_segment_key_t {
+                .keep = key_1,
+                .merge_and_delete = key_2,
+            });
+            stack->push_segment_merge(merge_segment_key_t {
+                .keep = key_1,
+                .merge_and_delete = key_0,
+            });
+        } else if (key_before == key_2) {
+            stack->push_segment_merge(merge_segment_key_t {
+                .keep = key_2,
+                .merge_and_delete = key_0,
+            });
+            stack->push_segment_merge(merge_segment_key_t {
+                .keep = key_0,
+                .merge_and_delete = key_1,
+            });
+        } else {
+            std::terminate();
         }
     }
 }
@@ -374,9 +421,13 @@ auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_pa
 //
 
 auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
-                      InsertionMode insertion_mode) -> segment_part_t {
+                      InsertionMode insertion_mode,
+                      segment_key_t segment_key) -> segment_part_t {
     auto segment_part = add_temporary_segment(circuit, line);
 
+    if (segment_key) {
+        circuit.index.set_key(segment_part.segment, segment_key);
+    }
     _store_history_segment_delete_temporary(circuit, segment_part);
 
     change_wire_insertion_mode(circuit, segment_part, insertion_mode);
@@ -506,6 +557,25 @@ auto set_temporary_endpoints(CircuitData& circuit, segment_t segment,
 
     const auto info = to_segment_info(m_tree.line(segment.segment_index), endpoints);
     m_tree.update_segment(segment.segment_index, info);
+}
+
+auto merge_segment_t::format() const -> std::string {
+    return fmt::format("merge_segment_t{{segment_0 = {}, segment_1 = {}, new_key = {}}}",
+                       segment_0, segment_1, new_key);
+}
+
+auto merge_uninserted_segments(CircuitData& circuit, merge_segment_t definition) -> void {
+    if (is_inserted(definition.segment_0.wire_id) ||
+        is_inserted(definition.segment_1.wire_id)) [[unlikely]] {
+        throw std::runtime_error("can only merge uninserted wires");
+    }
+
+    const auto segment =
+        merge_line_segments(circuit, definition.segment_0, definition.segment_1, nullptr);
+
+    circuit.index.set_key(segment, definition.new_key);
+
+    // TODO add split history event
 }
 
 auto regularize_temporary_selection(CircuitData& circuit, const Selection& selection,

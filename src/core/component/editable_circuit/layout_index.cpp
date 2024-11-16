@@ -68,6 +68,10 @@ auto LayoutIndex::set_key(logicitem_id_t logicitem_id,
     key_index_.set(logicitem_id, logicitem_key);
 }
 
+auto LayoutIndex::set_key(segment_t segment, segment_key_t segment_key) -> void {
+    key_index_.set(segment, segment_key);
+}
+
 auto LayoutIndex::logicitem_input_index() const -> const LogicItemInputIndex& {
     return logicitems_inputs_;
 }

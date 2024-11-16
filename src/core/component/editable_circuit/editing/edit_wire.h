@@ -3,6 +3,8 @@
 
 #include "core/vocabulary/insertion_mode.h"
 #include "core/vocabulary/point.h"
+#include "core/vocabulary/segment.h"
+#include "core/vocabulary/segment_key.h"
 
 #include <optional>
 #include <span>
@@ -80,17 +82,8 @@ auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_pa
  * Returns the segment_part of the inserted line, possibly a partial segment.
  */
 auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
-                      InsertionMode insertion_mode) -> segment_part_t;
-
-/**
- * @brief: Add a new line to the circuit with the given insertion mode.
- *
- * Note, point types can only be: shadow_point or cross_point.
- *
- * Returns the segment_part of the inserted line, possibly a partial segment.
- */
-auto add_wire_segment(CircuitData& circuit, segment_info_t info,
-                      InsertionMode insertion_mode) -> segment_part_t;
+                      InsertionMode insertion_mode,
+                      segment_key_t segment_key = null_segment_key) -> segment_part_t;
 
 /**
  * @brief: Toggle the wire crosspoint on two crossing inserted wire segments.
@@ -108,6 +101,25 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void;
  */
 auto set_temporary_endpoints(CircuitData& circuit, segment_t segment,
                              endpoints_t endpoints) -> void;
+
+/*
+ * @brief: Define merging of two segments.
+ *
+ * Note, the resulting segment has the key of new_key
+ */
+struct merge_segment_t {
+    segment_t segment_0;
+    segment_t segment_1;
+    segment_key_t new_key;
+
+    [[nodiscard]] auto operator==(const merge_segment_t&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+/**
+ * @brief: Merge two uninserted line segments.
+ */
+auto merge_uninserted_segments(CircuitData& circuit, merge_segment_t definition) -> void;
 
 /**
  * @brief: Regularizes temporary segments in the selection.

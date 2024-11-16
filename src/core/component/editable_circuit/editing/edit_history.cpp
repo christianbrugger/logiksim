@@ -55,6 +55,10 @@ auto to_id(logicitem_key_t logicitem_key, CircuitData& circuit) -> logicitem_id_
     return circuit.index.key_index().get(logicitem_key);
 }
 
+auto to_id(segment_key_t segment_key, CircuitData& circuit) -> segment_t {
+    return circuit.index.key_index().get(segment_key);
+}
+
 auto _store_history_new_group(History& history) -> void {
     if (auto stack = history.get_stack()) {
         stack->push_new_group();
@@ -218,8 +222,8 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
 
         case segment_create_temporary: {
             const auto [segment_key, info] = stack.pop_segment_create_temporary();
-            const auto segment_part =
-                editing::add_wire_segment(circuit, info.line, InsertionMode::temporary);
+            const auto segment_part = editing::add_wire_segment(
+                circuit, info.line, InsertionMode::temporary, segment_key);
             if (info.p0_type != SegmentPointType::shadow_point ||
                 info.p1_type != SegmentPointType::shadow_point) {
                 editing::set_temporary_endpoints(circuit, segment_part.segment,
@@ -259,7 +263,14 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case segment_merge: {
-            stack.pop_segment_merge();
+            const auto definition = stack.pop_segment_merge();
+            const auto segment_0 = to_id(definition.keep, circuit);
+            const auto segment_1 = to_id(definition.merge_and_delete, circuit);
+            editing::merge_uninserted_segments(circuit, merge_segment_t {
+                                                            .segment_0 = segment_0,
+                                                            .segment_1 = segment_1,
+                                                            .new_key = definition.keep,
+                                                        });
             return;
         }
 

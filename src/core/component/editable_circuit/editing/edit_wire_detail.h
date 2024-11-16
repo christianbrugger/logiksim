@@ -57,7 +57,7 @@ auto split_line_segment(CircuitData& circuit, segment_t segment,
                         point_t position) -> segment_part_t;
 
 auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
-                         segment_part_t* preserve_segment) -> void;
+                         segment_part_t* preserve_segment) -> segment_t;
 
 auto merge_all_line_segments(CircuitData& circuit,
                              std::vector<std::pair<segment_t, segment_t>>& pairs) -> void;
