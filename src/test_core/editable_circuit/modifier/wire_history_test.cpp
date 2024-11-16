@@ -222,6 +222,28 @@ TEST(EditableCircuitWireHistory, MovePartialDelete) {
     ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
 }
 
+//
+// Create
+//
+
+TEST(EditableCircuitWireHistory, CreateTemporary) {
+    auto layout = Layout {};
+
+    auto modifier = get_modifier_with_history(layout);
+    {
+        modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
+                                  InsertionMode::temporary);
+    }
+    Expects(is_valid(modifier));
+
+    // before undo
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+
+    // after undo
+    modifier.undo_group();
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+}
+
 }  // namespace editable_circuit
 
 }  // namespace logicsim

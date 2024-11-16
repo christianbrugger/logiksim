@@ -59,6 +59,10 @@ auto to_id(segment_key_t segment_key, CircuitData& circuit) -> segment_t {
     return circuit.index.key_index().get(segment_key);
 }
 
+auto to_part(segment_key_t segment_key, CircuitData& circuit) -> segment_part_t {
+    return get_segment_part(circuit.layout, circuit.index.key_index().get(segment_key));
+}
+
 auto _store_history_new_group(History& history) -> void {
     if (auto stack = history.get_stack()) {
         stack->push_new_group();
@@ -233,7 +237,8 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case segment_delete_temporary: {
-            stack.pop_segment_delete_temporary();
+            auto segment_part = to_part(stack.pop_segment_delete_temporary(), circuit);
+            editing::delete_temporary_wire_segment(circuit, segment_part);
             return;
         }
 
