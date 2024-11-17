@@ -196,6 +196,20 @@ auto reset_segment_endpoints_with_history(CircuitData& circuit,
     reset_segment_endpoints(circuit.layout, segment);
 }
 
+auto set_segment_crosspoint_with_history(CircuitData& circuit, segment_t segment,
+                                         point_t point) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto info = get_segment_info(circuit.layout, segment);
+
+        if (get_segment_point_type(info, point) != SegmentPointType::cross_point) {
+            const auto segment_key = circuit.index.key_index().get(segment);
+            stack->push_segment_set_endpoints(segment_key, get_endpoints(info));
+        }
+    }
+
+    set_segment_crosspoint(circuit.layout, segment, point);
+}
+
 auto _store_history_segment_delete_temporary(CircuitData& circuit,
                                              segment_part_t segment_part) -> void {
     if (const auto stack = circuit.history.get_stack()) {
@@ -724,7 +738,7 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
                 const auto segment = segments.has(right)  //
                                          ? segments.at(right)
                                          : segments.at(left);
-                set_segment_crosspoint(circuit.layout, segment, point);
+                set_segment_crosspoint_with_history(circuit, segment, point);
             } else {
                 // merge wire crossings without true cross points
                 mergeable_segments.emplace_back(segments.at(right), segments.at(left));

@@ -104,6 +104,105 @@ TEST(EditableCircuitWireHistory, RegularizeMergeSingle) {
 
     // before undo
     ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+
+    // after undo
+    modifier.undo_group();
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+
+    ASSERT_EQ(get_line(modifier.circuit_data().layout,
+                       modifier.circuit_data().index.key_index().get(segment_key_0)),
+              line_0);
+    ASSERT_EQ(get_line(modifier.circuit_data().layout,
+                       modifier.circuit_data().index.key_index().get(segment_key_1)),
+              line_1);
+}
+
+TEST(EditableCircuitWireHistory, RegularizeSetCrosspoint) {
+    // setup
+    auto layout = Layout {};
+    const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
+    const auto line_1 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
+    const auto line_2 = ordered_line_t {point_t {5, 0}, point_t {5, 10}};
+    const auto segment_index_0 =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point, line_0);
+    const auto segment_index_1 =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point, line_1);
+    const auto segment_index_2 =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point, line_2);
+    const auto segment_part_0 =
+        segment_part_t {segment_t {temporary_wire_id, segment_index_0}, part_t {0, 5}};
+    const auto segment_part_1 =
+        segment_part_t {segment_t {temporary_wire_id, segment_index_1}, part_t {0, 5}};
+    const auto segment_part_2 =
+        segment_part_t {segment_t {temporary_wire_id, segment_index_2}, part_t {0, 10}};
+
+    // build history
+    auto modifier = get_modifier_with_history(layout);
+    const auto segment_key_0 =
+        modifier.circuit_data().index.key_index().get(segment_part_0.segment);
+    const auto segment_key_1 =
+        modifier.circuit_data().index.key_index().get(segment_part_1.segment);
+    const auto segment_key_2 =
+        modifier.circuit_data().index.key_index().get(segment_part_2.segment);
+    {
+        auto selection = Selection {};
+        selection.add_segment(segment_part_0);
+        selection.add_segment(segment_part_1);
+        selection.add_segment(segment_part_2);
+        modifier.regularize_temporary_selection(selection, {});
+    }
+    Expects(is_valid(modifier));
+
+    // before undo
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+
+    // after undo
+    modifier.undo_group();
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+
+    ASSERT_EQ(get_line(modifier.circuit_data().layout,
+                       modifier.circuit_data().index.key_index().get(segment_key_0)),
+              line_0);
+    ASSERT_EQ(get_line(modifier.circuit_data().layout,
+                       modifier.circuit_data().index.key_index().get(segment_key_1)),
+              line_1);
+    ASSERT_EQ(get_line(modifier.circuit_data().layout,
+                       modifier.circuit_data().index.key_index().get(segment_key_2)),
+              line_2);
+}
+
+TEST(EditableCircuitWireHistory, RegularizeTrueCrosspoint) {
+    // setup
+    auto layout = Layout {};
+    const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
+    const auto line_1 = ordered_line_t {point_t {5, -5}, point_t {5, 5}};
+    const auto segment_index_0 =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point, line_0);
+    const auto segment_index_1 =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point, line_1);
+    const auto segment_part_0 =
+        segment_part_t {segment_t {temporary_wire_id, segment_index_0}, part_t {0, 10}};
+    const auto segment_part_1 =
+        segment_part_t {segment_t {temporary_wire_id, segment_index_1}, part_t {0, 10}};
+
+    // build history
+    auto modifier = get_modifier_with_history(layout);
+    const auto segment_key_0 =
+        modifier.circuit_data().index.key_index().get(segment_part_0.segment);
+    const auto segment_key_1 =
+        modifier.circuit_data().index.key_index().get(segment_part_1.segment);
+    {
+        auto guard = ModifierSelectionGuard {modifier};
+        modifier.add_to_selection(guard.selection_id(), segment_part_0);
+        modifier.add_to_selection(guard.selection_id(), segment_part_1);
+        const auto& selection =
+            modifier.circuit_data().selection_store.at(guard.selection_id());
+        modifier.regularize_temporary_selection(selection, std::vector {point_t {5, 0}});
+    }
+    Expects(is_valid(modifier));
+
+    // before undo
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
     // print(modifier.circuit_data().history);
     // print(modifier.circuit_data().layout);
     // print(layout);

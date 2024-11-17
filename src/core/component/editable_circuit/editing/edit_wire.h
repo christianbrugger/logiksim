@@ -169,6 +169,7 @@ auto merge_uninserted_segment(CircuitData& circuit, merge_segment_t definition) 
  * Throws, if any segment is partially selected.
  *
  * Returns the internally build list of cross points.  */
+// TODO how to make clear selection needs to be registered ???
 auto regularize_temporary_selection(CircuitData& circuit, const Selection& selection,
                                     std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t>;
