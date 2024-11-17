@@ -19,10 +19,10 @@ namespace logicsim {
  *     * line has positive length, p0 != p1
  */
 struct ordered_line_t {
-    point_t p0 {};
-    point_t p1 {};
+    point_t p0;
+    point_t p1;
 
-    [[nodiscard]] explicit constexpr ordered_line_t() = default;
+    [[nodiscard]] explicit constexpr ordered_line_t();
     [[nodiscard]] explicit constexpr ordered_line_t(point_t p0_, point_t p1_);
     [[nodiscard]] explicit constexpr ordered_line_t(line_t line) noexcept;
 
@@ -41,6 +41,9 @@ static_assert(std::is_trivially_copy_assignable_v<ordered_line_t>);
 //
 // Implementation
 //
+
+constexpr ordered_line_t::ordered_line_t()
+    : ordered_line_t {point_t {0, 0}, point_t {1, 0}} {}
 
 constexpr ordered_line_t::ordered_line_t(point_t p0_, point_t p1_) : p0 {p0_}, p1 {p1_} {
     if (!(is_orthogonal_line(p0_, p1_) && p0_ < p1_)) [[unlikely]] {
