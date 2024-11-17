@@ -114,8 +114,8 @@ auto merge_segment_key_t::format() const -> std::string {
 
 auto split_segment_key_t::format() const -> std::string {
     return fmt::format(
-        "split_segment_key_t{{source = {}, new_segment = {}, split_offset = {}}}", source,
-        new_segment, split_offset);
+        "split_segment_key_t{{source = {}, new_key = {}, split_offset = {}}}", source,
+        new_key, split_offset);
 }
 
 auto HistoryStack::format() const -> std::string {
@@ -668,7 +668,7 @@ auto HistoryStack::push_segment_merge(merge_segment_key_t definition) -> void {
 auto HistoryStack::push_segment_split(split_segment_key_t definition) -> void {
     entries_.emplace_back(HistoryEntry::segment_split);
     segment_keys_.emplace_back(definition.source);
-    segment_keys_.emplace_back(definition.new_segment);
+    segment_keys_.emplace_back(definition.new_key);
     offsets_.emplace_back(definition.split_offset);
 }
 
@@ -736,7 +736,7 @@ auto HistoryStack::pop_segment_split() -> split_segment_key_t {
     const auto source = pop_back_vector(segment_keys_);
     return split_segment_key_t {
         .source = source,
-        .new_segment = new_segment,
+        .new_key = new_segment,
         .split_offset = pop_back_vector(offsets_),
     };
 }

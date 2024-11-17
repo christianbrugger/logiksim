@@ -290,7 +290,13 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case segment_split: {
-            stack.pop_segment_split();
+            const auto definition = stack.pop_segment_split();
+            editing::split_uninserted_segment(circuit,
+                                              split_segment_t {
+                                                  .source_key = definition.source,
+                                                  .new_key = definition.new_key,
+                                                  .split_offset = definition.split_offset,
+                                              });
             return;
         }
 

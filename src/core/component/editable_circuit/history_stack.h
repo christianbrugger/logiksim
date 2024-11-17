@@ -95,7 +95,7 @@ struct merge_segment_key_t {
  */
 struct split_segment_key_t {
     segment_key_t source;
-    segment_key_t new_segment;
+    segment_key_t new_key;
     offset_t split_offset;
 
     [[nodiscard]] auto operator==(const split_segment_key_t&) const -> bool = default;

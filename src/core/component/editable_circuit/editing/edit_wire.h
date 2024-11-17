@@ -2,6 +2,7 @@
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_WIRE_H
 
 #include "core/vocabulary/insertion_mode.h"
+#include "core/vocabulary/offset.h"
 #include "core/vocabulary/point.h"
 #include "core/vocabulary/segment.h"
 #include "core/vocabulary/segment_key.h"
@@ -122,6 +123,31 @@ struct merge_segment_t {
  * @brief: Merge two uninserted line segments.
  */
 auto merge_uninserted_segments(CircuitData& circuit, merge_segment_t definition) -> void;
+
+/*
+ * @brief: Define split of two segments.
+ *
+ * Source segment is split into two segments at the given offset.
+ * The new segment has new_key as key.
+ */
+struct split_segment_t {
+    segment_key_t source_key;
+    segment_key_t new_key;
+    offset_t split_offset;
+
+    [[nodiscard]] auto operator==(const split_segment_t&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+/**
+ * @brief: Split two uninserted line segments.
+ */
+auto split_uninserted_segment(CircuitData& circuit, split_segment_t definition) -> void;
+
+/**
+ * @brief: Merge two uninserted line segments.
+ */
+auto merge_uninserted_segment(CircuitData& circuit, merge_segment_t definition) -> void;
 
 /**
  * @brief: Regularizes temporary segments in the selection.
