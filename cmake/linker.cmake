@@ -1,7 +1,7 @@
 
-
 # speedup incremental builds with custom linkers
-function(ls_setup_linker sanitizer_selection)
+macro(ls_setup_linker sanitizer_selection)
+    set(CMAKE_LINKER_TYPE DEFAULT)
 
     # Clang-CL Debug
     # For debug build the MSVC linker is much faster then lld-link from clang.
@@ -9,18 +9,23 @@ function(ls_setup_linker sanitizer_selection)
     if (MSVC AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
         CMAKE_BUILD_TYPE STREQUAL "Debug" AND
         sanitizer_selection STREQUAL "")
-        find_program(LS_LINK_PROGRAM link)
-        set(CMAKE_LINKER ${LS_LINK_PROGRAM} PARENT_SCOPE)
+        set(CMAKE_LINKER_TYPE MSVC)
     endif ()
 
     # Clang-CL Address Sanitizer is only supported with MSVC linker, not ldd-link
     if (MSVC AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
         sanitizer_selection STREQUAL "Address")
-        find_program(LS_LINK_PROGRAM link)
-        set(CMAKE_LINKER ${LS_LINK_PROGRAM} PARENT_SCOPE)
+        set(CMAKE_LINKER_TYPE MSVC)
     endif()
 
-    message(NOTICE "LOGIKSIM: Using linker ${CMAKE_LINKER}.")
+    # On Linux mold linker is faster, if available
+    if (UNIX)
+        find_program(LS_LINK_PROGRAM mold)
+        if (LS_LINK_PROGRAM)
+            set(CMAKE_LINKER_TYPE MOLD)
+        endif()
+    endif ()
 
-endfunction()
+    message(NOTICE "LOGIKSIM: Using linker ${CMAKE_LINKER_TYPE}.")
+endmacro()
 
