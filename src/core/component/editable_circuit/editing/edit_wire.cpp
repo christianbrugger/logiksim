@@ -106,6 +106,17 @@ auto move_segment_between_trees_with_history(CircuitData& circuit,
     }
 }
 
+auto split_line_segment_with_history(CircuitData& circuit, const segment_t segment,
+                                     const point_t position) -> segment_part_t {
+    const auto full_line = get_line(circuit.layout, segment);
+    const auto line_moved = ordered_line_t {position, full_line.p1};
+
+    auto move_segment_part = segment_part_t {segment, to_part(full_line, line_moved)};
+    move_segment_between_trees_with_history(circuit, move_segment_part, segment.wire_id);
+
+    return move_segment_part;
+}
+
 auto _store_history_segment_move_temporary(CircuitData& circuit, segment_t segment,
                                            move_delta_t delta) -> void {
     if (const auto stack = circuit.history.get_stack()) {
@@ -682,7 +693,7 @@ auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
         // need to be sorted in descendant order
         for (const auto& point : query_result) {
             if (is_inside(point, full_line)) {
-                split_line_segment(circuit, segment, point);
+                split_line_segment_with_history(circuit, segment, point);
             }
         }
     }
