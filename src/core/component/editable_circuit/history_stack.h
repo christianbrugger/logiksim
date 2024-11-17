@@ -55,7 +55,7 @@ enum class HistoryEntry : uint8_t {
     segment_to_mode_insert,
     segment_set_endpoints,
     segment_merge,
-    segment_split_at,
+    segment_split,
     segment_add_visible_selection,
     segment_remove_visible_selection,
 
@@ -77,13 +77,28 @@ namespace editable_circuit {
 /*
  * @brief: Define merging of two segments.
  *
- * Note, the resulting segment has the key of merge_and_keep
+ * Note, the resulting segment has the key of keep
  */
 struct merge_segment_key_t {
     segment_key_t keep;
     segment_key_t merge_and_delete;
 
     [[nodiscard]] auto operator==(const merge_segment_key_t&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+/*
+ * @brief: Define splitting of two segments.
+ *
+ * Source segment is split into two segments at the offset. The additional
+ * segment has new_segment as key.
+ */
+struct split_segment_key_t {
+    segment_key_t source;
+    segment_key_t new_segment;
+    offset_t split_offset;
+
+    [[nodiscard]] auto operator==(const split_segment_key_t&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -190,7 +205,7 @@ class HistoryStack {
     auto push_segment_set_endpoints(segment_key_t segment_key,
                                     endpoints_t endpoints) -> void;
     auto push_segment_merge(merge_segment_key_t definition) -> void;
-    auto push_segment_split_at() -> void;
+    auto push_segment_split(split_segment_key_t definition) -> void;
     auto push_segment_add_visible_selection() -> void;
     auto push_segment_remove_visible_selection() -> void;
 
@@ -202,7 +217,7 @@ class HistoryStack {
     auto pop_segment_to_mode_insert() -> std::pair<segment_key_t, part_t>;
     auto pop_segment_set_endpoints() -> std::pair<segment_key_t, endpoints_t>;
     auto pop_segment_merge() -> merge_segment_key_t;
-    auto pop_segment_split_at() -> void;
+    auto pop_segment_split() -> split_segment_key_t;
     auto pop_segment_add_visible_selection() -> void;
     auto pop_segment_remove_visible_selection() -> void;
 
@@ -241,6 +256,7 @@ class HistoryStack {
     std::vector<ordered_line_t> lines_ {};
     std::vector<endpoints_t> endpoints_ {};
     std::vector<part_t> parts_ {};
+    std::vector<offset_t> offsets_ {};
 
     // visible selection
     std::vector<StableSelection> selections_ {};

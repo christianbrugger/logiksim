@@ -289,8 +289,8 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
-        case segment_split_at: {
-            stack.pop_segment_split_at();
+        case segment_split: {
+            stack.pop_segment_split();
             return;
         }
 

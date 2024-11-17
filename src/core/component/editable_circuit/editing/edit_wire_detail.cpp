@@ -1,6 +1,5 @@
 #include "core/component/editable_circuit/editing/edit_wire_detail.h"
 
-#include "core/algorithm/sort_pair.h"
 #include "core/component/editable_circuit/circuit_data.h"
 #include "core/geometry/line.h"
 #include "core/geometry/orientation.h"
@@ -501,43 +500,11 @@ auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t se
 
 auto merge_all_line_segments(
     CircuitData& circuit, std::vector<std::pair<segment_t, segment_t>>& pairs) -> void {
-    // merging deletes the segment with highest segment index,
-    // so for this to work with multiple segments
-    // we need to be sort them in descendant order
-    for (auto& pair : pairs) {
-        sort_inplace(pair.first, pair.second, std::ranges::greater {});
-    }
-    std::ranges::sort(pairs, std::ranges::greater {});
-
-    // Sorted pairs example:
-    //  (<Wire 0, Segment 6>, <Wire 0, Segment 5>)
-    //  (<Wire 0, Segment 5>, <Wire 0, Segment 3>)
-    //  (<Wire 0, Segment 4>, <Wire 0, Segment 2>)
-    //  (<Wire 0, Segment 4>, <Wire 0, Segment 0>)  <-- 4 needs to become 2 (as merged)
-    //  (<Wire 0, Segment 3>, <Wire 0, Segment 1>)
-    //  (<Wire 0, Segment 2>, <Wire 0, Segment 1>)
-    //                                              <-- move here & become 1
-
-    for (auto it = pairs.begin(); it != pairs.end(); ++it) {
-        // first one is save to merge, as it has the largest indices in first and second
-        merge_line_segments(circuit, it->first, it->second, nullptr);
-
-        // check if there is another element merged with the same segment
-        const auto other = std::ranges::lower_bound(
-            std::next(it), pairs.end(), it->first, std::ranges::greater {},
-            [](std::pair<segment_t, segment_t> pair) { return pair.first; });
-
-        // if one is found there is at most one other segment
-        // the first part now moved and is now the second, as it has been merged
-        if (other != pairs.end() && other->first == it->first) {
-            // update the other side of the merged element to the lower index
-            other->first = it->second;
-
-            // rebuild the ordering
-            sort_inplace(other->first, other->second, std::ranges::greater {});
-            std::ranges::sort(std::next(it), pairs.end(), std::ranges::greater {});
-        }
-    }
+    merge_all_line_segments(
+        circuit, pairs,
+        [](CircuitData& circuit, segment_t segment_0, segment_t segment_1) -> void {
+            merge_line_segments(circuit, segment_0, segment_1, nullptr);
+        });
 }
 
 //

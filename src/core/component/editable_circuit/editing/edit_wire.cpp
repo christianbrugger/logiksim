@@ -5,6 +5,7 @@
 #include "core/component/editable_circuit/circuit_data.h"
 #include "core/component/editable_circuit/editing/edit_wire_detail.h"
 #include "core/geometry/line.h"
+#include "core/geometry/offset.h"
 #include "core/geometry/orientation.h"
 #include "core/geometry/segment_info.h"
 #include "core/index/segment_map.h"
@@ -188,6 +189,60 @@ auto _store_history_segment_delete_temporary(CircuitData& circuit,
         const auto segment_key = circuit.index.key_index().get(segment_part.segment);
         stack->push_segment_delete_temporary(segment_key);
     }
+}
+
+auto adjust_split_order(split_segment_key_t& definition,
+                        segment_key_t key_after) -> void {
+    if (key_after != definition.source) {
+        std::swap(definition.source, definition.new_segment);
+    }
+}
+
+struct merge_memory_t {
+    segment_key_t key_0 {null_segment_key};
+    segment_key_t key_1 {null_segment_key};
+    ordered_line_t line_0 {};
+    ordered_line_t line_1 {};
+};
+
+auto merge_line_segments_with_history(CircuitData& circuit, segment_t segment_0,
+                                      segment_t segment_1) -> void {
+    auto stack = circuit.history.get_stack();
+
+    const auto before = [&]() {
+        if (stack == nullptr) {
+            return merge_memory_t {};
+        }
+        return merge_memory_t {
+            .key_0 = circuit.index.key_index().get(segment_0),
+            .key_1 = circuit.index.key_index().get(segment_1),
+            .line_0 = get_line(circuit.layout, segment_0),
+            .line_1 = get_line(circuit.layout, segment_1),
+        };
+    }();
+
+    const auto segment_after =
+        merge_line_segments(circuit, segment_0, segment_1, nullptr);
+
+    if (stack != nullptr) {
+        const auto key_after = circuit.index.key_index().get(segment_after);
+        const auto split_offset = to_offset(std::min(before.line_0, before.line_1));
+
+        auto definition = split_segment_key_t {
+            .source = before.key_0,
+            .new_segment = before.key_1,
+            .split_offset = split_offset,
+        };
+        adjust_split_order(definition, key_after);
+        Expects(definition.source == key_after);
+
+        stack->push_segment_split(definition);
+    }
+}
+
+auto merge_all_line_segments_with_history(
+    CircuitData& circuit, std::vector<std::pair<segment_t, segment_t>>& pairs) -> void {
+    merge_all_line_segments(circuit, pairs, merge_line_segments_with_history);
 }
 
 }  // namespace
@@ -635,7 +690,7 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
             }
         });
 
-    merge_all_line_segments(circuit, mergeable_segments);
+    merge_all_line_segments_with_history(circuit, mergeable_segments);
 
     return cross_points;
 }

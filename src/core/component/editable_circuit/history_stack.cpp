@@ -72,8 +72,8 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
             return "segment_set_endpoints";
         case segment_merge:
             return "segment_merge";
-        case segment_split_at:
-            return "segment_split_at";
+        case segment_split:
+            return "segment_split";
         case segment_add_visible_selection:
             return "segment_add_visible_selection";
         case segment_remove_visible_selection:
@@ -112,6 +112,12 @@ auto merge_segment_key_t::format() const -> std::string {
                        merge_and_delete);
 }
 
+auto split_segment_key_t::format() const -> std::string {
+    return fmt::format(
+        "split_segment_key_t{{source = {}, new_segment = {}, split_offset = {}}}", source,
+        new_segment, split_offset);
+}
+
 auto HistoryStack::format() const -> std::string {
     return fmt::format(
         "Stack(\n"
@@ -128,6 +134,7 @@ auto HistoryStack::format() const -> std::string {
         "    lines = {},\n"
         "    endpoints = {},\n"
         "    parts = {},\n"
+        "    offsets = {},\n"
         "    \n"
         "    visible_selections = {},\n"
         "    selection_rects = {},\n"
@@ -136,7 +143,7 @@ auto HistoryStack::format() const -> std::string {
         format_stack_vector(entries_), move_deltas_,                 //
         logicitem_keys_, format_stack_vector(placed_logicitems_),    //
         decoration_keys_, format_stack_vector(placed_decorations_),  //
-        segment_keys_, lines_, endpoints_, parts_,                   //
+        segment_keys_, lines_, endpoints_, parts_, offsets_,         //
         format_stack_vector(selections_), selection_rects_, selection_functions_);
 }
 
@@ -154,6 +161,7 @@ auto HistoryStack::allocated_size() const -> std::size_t {
            get_allocated_size(lines_) +               //
            get_allocated_size(endpoints_) +           //
            get_allocated_size(parts_) +               //
+           get_allocated_size(offsets_) +             //
                                                       //
            get_allocated_size(selections_) +          //
            get_allocated_size(selection_rects_) +     //
@@ -657,8 +665,11 @@ auto HistoryStack::push_segment_merge(merge_segment_key_t definition) -> void {
     segment_keys_.emplace_back(definition.merge_and_delete);
 }
 
-auto HistoryStack::push_segment_split_at() -> void {
-    entries_.emplace_back(HistoryEntry::segment_split_at);
+auto HistoryStack::push_segment_split(split_segment_key_t definition) -> void {
+    entries_.emplace_back(HistoryEntry::segment_split);
+    segment_keys_.emplace_back(definition.source);
+    segment_keys_.emplace_back(definition.new_segment);
+    offsets_.emplace_back(definition.split_offset);
 }
 
 auto HistoryStack::push_segment_add_visible_selection() -> void {
@@ -719,8 +730,15 @@ auto HistoryStack::pop_segment_merge() -> merge_segment_key_t {
     };
 }
 
-auto HistoryStack::pop_segment_split_at() -> void {
-    Expects(pop_back_vector(entries_) == HistoryEntry::segment_split_at);
+auto HistoryStack::pop_segment_split() -> split_segment_key_t {
+    Expects(pop_back_vector(entries_) == HistoryEntry::segment_split);
+    const auto new_segment = pop_back_vector(segment_keys_);
+    const auto source = pop_back_vector(segment_keys_);
+    return split_segment_key_t {
+        .source = source,
+        .new_segment = new_segment,
+        .split_offset = pop_back_vector(offsets_),
+    };
 }
 
 auto HistoryStack::pop_segment_add_visible_selection() -> void {
