@@ -163,6 +163,9 @@ class Modifier {
 
     auto set_temporary_endpoints(segment_t segment, endpoints_t endpoints) -> void;
 
+    auto merge_uninserted_segment(segment_t segment_0, segment_t segment_1,
+                                  bool restore_segment_0_key = false) -> segment_t;
+
     auto regularize_temporary_selection(
         const Selection& selection,
         std::optional<std::vector<point_t>> true_cross_points) -> std::vector<point_t>;

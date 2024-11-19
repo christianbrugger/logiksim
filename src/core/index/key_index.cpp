@@ -61,6 +61,9 @@ auto get_value(const map_type<K, V>& map, K key) -> V {
 template <typename Key, typename Id>
 auto create_new_entry(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys,
                       Key& next_key, Id new_id) {
+    Expects(new_id);
+    Expects(next_key);
+
     Expects(map_ids.emplace(next_key, new_id).second);
     Expects(map_keys.emplace(new_id, next_key).second);
 
@@ -70,6 +73,8 @@ auto create_new_entry(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys,
 template <typename Key, typename Id>
 auto set_new_key(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys, Id id,
                  Key key) -> void {
+    Expects(key);
+
     const auto key_it = map_keys.find(id);
     Expects(key_it != map_keys.end());
 
@@ -92,6 +97,7 @@ auto set_new_id(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys, Id old_
     if (old_id == new_id) {
         return;
     }
+    Expects(new_id);
 
     const auto key_it = map_keys.find(old_id);
     Expects(key_it != map_keys.end());

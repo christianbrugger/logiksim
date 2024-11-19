@@ -537,6 +537,27 @@ auto Modifier::set_temporary_endpoints(segment_t segment, endpoints_t endpoints)
     Ensures(debug_class_invariant_holds(*this));
 }
 
+auto Modifier::merge_uninserted_segment(segment_t segment_0, segment_t segment_1,
+                                        bool restore_segment_0_key) -> segment_t {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "merge_uninserted_segment(segment_0 = {}, segment_1 = {}, "
+            "restore_segment_0_key = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, segment_0, segment_1, restore_segment_0_key);
+    }
+
+    const auto segment_merged = editing::merge_uninserted_segment_with_history(
+        circuit_data_, segment_0, segment_1, restore_segment_0_key);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
+    Ensures(debug_class_invariant_holds(*this));
+    return segment_merged;
+}
+
 auto Modifier::regularize_temporary_selection(
     const Selection& selection,
     std::optional<std::vector<point_t>> true_cross_points_) -> std::vector<point_t> {

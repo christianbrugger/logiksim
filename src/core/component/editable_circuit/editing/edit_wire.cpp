@@ -109,30 +109,6 @@ auto move_segment_between_trees_with_history(
     return {left1, left2};
 }
 
-auto split_line_segment_with_history(CircuitData& circuit, const segment_t segment,
-                                     offset_t offset) -> std::pair<segment_t, segment_t> {
-    auto move_segment_part = segment_part_t {segment, part_t {0, offset}};
-
-    const auto [left1, left2] = move_segment_between_trees_with_history(
-        circuit, move_segment_part, segment.wire_id);
-
-    Expects(left1);
-    Expects(!left2);
-    assert(is_full_segment(circuit.layout, left1));
-    assert(is_full_segment(circuit.layout, move_segment_part));
-
-    return {move_segment_part.segment, left1.segment};
-}
-
-auto split_line_segment_with_history(CircuitData& circuit, const segment_t segment,
-                                     const point_t position) -> void {
-    const auto full_line = get_line(circuit.layout, segment);
-    const auto line_moved = ordered_line_t {position, full_line.p1};
-
-    auto move_segment_part = segment_part_t {segment, to_part(full_line, line_moved)};
-    move_segment_between_trees_with_history(circuit, move_segment_part, segment.wire_id);
-}
-
 auto _store_history_segment_move_temporary(CircuitData& circuit, segment_t segment,
                                            move_delta_t delta) -> void {
     if (const auto stack = circuit.history.get_stack()) {
@@ -185,20 +161,6 @@ auto _store_history_segment_set_endpoints(CircuitData& circuit, segment_t segmen
     }
 }
 
-auto set_segment_crosspoint_with_history(CircuitData& circuit, segment_t segment,
-                                         point_t point) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto info = get_segment_info(circuit.layout, segment);
-
-        if (get_segment_point_type(info, point) != SegmentPointType::cross_point) {
-            const auto segment_key = circuit.index.key_index().get(segment);
-            stack->push_segment_set_endpoints(segment_key, get_endpoints(info));
-        }
-    }
-
-    set_uninserted_crosspoint(circuit.layout, segment, point);
-}
-
 auto _store_history_segment_delete_temporary(CircuitData& circuit,
                                              segment_part_t segment_part) -> void {
     if (const auto stack = circuit.history.get_stack()) {
@@ -207,60 +169,6 @@ auto _store_history_segment_delete_temporary(CircuitData& circuit,
         const auto segment_key = circuit.index.key_index().get(segment_part.segment);
         stack->push_segment_delete_temporary(segment_key);
     }
-}
-
-auto adjust_split_order(split_segment_key_t& definition,
-                        segment_key_t key_after) -> void {
-    if (key_after != definition.source) {
-        std::swap(definition.source, definition.new_key);
-    }
-}
-
-struct merge_memory_t {
-    segment_key_t key_0 {null_segment_key};
-    segment_key_t key_1 {null_segment_key};
-    ordered_line_t line_0 {};
-    ordered_line_t line_1 {};
-};
-
-auto merge_line_segments_with_history(CircuitData& circuit, segment_t segment_0,
-                                      segment_t segment_1) -> void {
-    auto stack = circuit.history.get_stack();
-
-    const auto before = [&]() {
-        if (stack == nullptr) {
-            return merge_memory_t {};
-        }
-        return merge_memory_t {
-            .key_0 = circuit.index.key_index().get(segment_0),
-            .key_1 = circuit.index.key_index().get(segment_1),
-            .line_0 = get_line(circuit.layout, segment_0),
-            .line_1 = get_line(circuit.layout, segment_1),
-        };
-    }();
-
-    const auto segment_after =
-        merge_line_segments(circuit, segment_0, segment_1, nullptr);
-
-    if (stack != nullptr) {
-        const auto key_after = circuit.index.key_index().get(segment_after);
-        const auto split_offset = to_offset(std::min(before.line_0, before.line_1));
-
-        auto definition = split_segment_key_t {
-            .source = before.key_0,
-            .new_key = before.key_1,
-            .split_offset = split_offset,
-        };
-        adjust_split_order(definition, key_after);
-        Expects(definition.source == key_after);
-
-        stack->push_segment_split(definition);
-    }
-}
-
-auto merge_all_line_segments_with_history(
-    CircuitData& circuit, std::vector<std::pair<segment_t, segment_t>>& pairs) -> void {
-    merge_all_line_segments(circuit, pairs, merge_line_segments_with_history);
 }
 
 }  // namespace
@@ -651,29 +559,130 @@ auto reset_segment_endpoints_with_history(CircuitData& circuit,
                      .p1_type = SegmentPointType::shadow_point});
 }
 
-auto merge_segment_t::format() const -> std::string {
-    return fmt::format("merge_segment_t{{segment_0 = {}, segment_1 = {}, new_key = {}}}",
-                       segment_0, segment_1, new_key);
-}
+auto set_uninserted_crosspoint_with_history(CircuitData& circuit, segment_t segment,
+                                            point_t point) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto info = get_segment_info(circuit.layout, segment);
 
-auto merge_uninserted_segment(CircuitData& circuit, merge_segment_t definition) -> void {
-    if (is_inserted(definition.segment_0.wire_id) ||
-        is_inserted(definition.segment_1.wire_id)) [[unlikely]] {
-        throw std::runtime_error("can only merge uninserted wires");
+        if (get_segment_point_type(info, point) != SegmentPointType::cross_point) {
+            const auto segment_key = circuit.index.key_index().get(segment);
+            stack->push_segment_set_endpoints(segment_key, get_endpoints(info));
+        }
     }
 
-    const auto segment =
-        merge_line_segments(circuit, definition.segment_0, definition.segment_1, nullptr);
+    set_uninserted_crosspoint(circuit.layout, segment, point);
+}
 
-    circuit.index.set_key(segment, definition.new_key);
+struct merge_memory_t {
+    segment_key_t key_0 {null_segment_key};
+    segment_key_t key_1 {null_segment_key};
+    ordered_line_t line_0 {};
+    ordered_line_t line_1 {};
+};
 
-    // TODO add split history event
+auto adjust_split_order(split_segment_key_t& definition,
+                        segment_key_t key_after) -> void {
+    if (key_after != definition.source) {
+        std::swap(definition.source, definition.new_key);
+    }
+}
+
+auto merge_uninserted_segment_with_history(CircuitData& circuit, segment_t segment_0,
+                                           segment_t segment_1,
+                                           bool restore_segment_0_key) -> segment_t {
+    if (is_inserted(segment_0.wire_id) || is_inserted(segment_1.wire_id)) [[unlikely]] {
+        throw std::runtime_error("can only merge uninserted wires");
+    }
+    auto stack = circuit.history.get_stack();
+
+    const auto before = [&]() {
+        if (stack != nullptr) {
+            return merge_memory_t {
+                .key_0 = circuit.index.key_index().get(segment_0),
+                .key_1 = circuit.index.key_index().get(segment_1),
+                .line_0 = get_line(circuit.layout, segment_0),
+                .line_1 = get_line(circuit.layout, segment_1),
+            };
+        }
+        if (restore_segment_0_key) {
+            return merge_memory_t {
+                .key_0 = circuit.index.key_index().get(segment_0),
+            };
+        }
+        return merge_memory_t {};
+    }();
+
+    // merge
+    const auto segment_after =
+        merge_line_segments(circuit, segment_0, segment_1, nullptr);
+
+    // restore key
+    if (restore_segment_0_key) {
+        assert(before.key_0);
+        assert(segment_after == segment_1 || segment_after == segment_0);
+        if (segment_after != segment_0) {
+            circuit.index.set_key(segment_after, before.key_0);
+        }
+        assert(circuit.index.key_index().get(segment_after) == before.key_0);
+    };
+
+    if (stack != nullptr) {
+        const auto key_after = restore_segment_0_key
+                                   ? before.key_0
+                                   : circuit.index.key_index().get(segment_after);
+        const auto split_offset = to_offset(std::min(before.line_0, before.line_1));
+
+        auto definition = split_segment_key_t {
+            .source = before.key_0,
+            .new_key = before.key_1,
+            .split_offset = split_offset,
+        };
+        adjust_split_order(definition, key_after);
+        Expects(definition.source == key_after);
+
+        stack->push_segment_split(definition);
+    }
+
+    return segment_after;
+}
+
+auto merge_all_line_segments_with_history(
+    CircuitData& circuit, std::vector<std::pair<segment_t, segment_t>>& pairs) -> void {
+    merge_all_line_segments(
+        circuit, pairs,
+        [](CircuitData& circuit_, segment_t segment_0, segment_t segment_1) {
+            merge_uninserted_segment_with_history(circuit_, segment_0, segment_1);
+        });
 }
 
 auto split_segment_t::format() const -> std::string {
     return fmt::format(
         "split_segment_t{{source_key = {}, new_key = {}, split_offset = {}}}", source_key,
         new_key, split_offset);
+}
+
+auto split_line_segment_with_history(CircuitData& circuit, const segment_t segment,
+                                     offset_t offset) -> std::pair<segment_t, segment_t> {
+    auto move_segment_part = segment_part_t {segment, part_t {0, offset}};
+
+    const auto [left1, left2] = move_segment_between_trees_with_history(
+        circuit, move_segment_part, segment.wire_id);
+
+    Expects(left1);
+    Expects(!left2);
+    assert(is_full_segment(circuit.layout, left1));
+    assert(is_full_segment(circuit.layout, move_segment_part));
+
+    return {move_segment_part.segment, left1.segment};
+}
+
+auto split_line_segment_with_history(CircuitData& circuit, const segment_t segment,
+                                     const point_t position) -> void {
+    const auto full_line = get_line(circuit.layout, segment);
+    const auto line_moved = ordered_line_t {position, full_line.p1};
+
+    auto move_segment_part = segment_part_t {segment, to_part(full_line, line_moved)};
+    move_segment_between_trees_with_history(circuit, move_segment_part, segment.wire_id);
 }
 
 auto split_uninserted_segment(CircuitData& circuit, split_segment_t definition) -> void {
@@ -721,7 +730,7 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
                 const auto segment = segments.has(right)  //
                                          ? segments.at(right)
                                          : segments.at(left);
-                set_segment_crosspoint_with_history(circuit, segment, point);
+                set_uninserted_crosspoint_with_history(circuit, segment, point);
             } else {
                 // merge wire crossings without true cross points
                 mergeable_segments.emplace_back(segments.at(right), segments.at(left));

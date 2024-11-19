@@ -281,11 +281,9 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             const auto definition = stack.pop_segment_merge();
             const auto segment_0 = to_id(definition.keep, circuit);
             const auto segment_1 = to_id(definition.merge_and_delete, circuit);
-            editing::merge_uninserted_segment(circuit, merge_segment_t {
-                                                           .segment_0 = segment_0,
-                                                           .segment_1 = segment_1,
-                                                           .new_key = definition.keep,
-                                                       });
+            bool restore_segment_0_key = true;
+            editing::merge_uninserted_segment_with_history(circuit, segment_0, segment_1,
+                                                           restore_segment_0_key);
             return;
         }
 
@@ -346,6 +344,7 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
     };
+
     std::terminate();
 }
 

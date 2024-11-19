@@ -106,25 +106,18 @@ auto set_uninserted_endpoints_with_history(CircuitData& circuit, segment_t segme
                                            endpoints_t endpoints) -> void;
 auto reset_segment_endpoints_with_history(CircuitData& circuit,
                                           segment_t segment) -> void;
-
-/*
- * @brief: Define merging of two segments.
- *
- * Note, the resulting segment has the key of new_key
- */
-struct merge_segment_t {
-    segment_t segment_0;
-    segment_t segment_1;
-    segment_key_t new_key;
-
-    [[nodiscard]] auto operator==(const merge_segment_t&) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
+auto set_uninserted_crosspoint_with_history(CircuitData& circuit, segment_t segment,
+                                            point_t point) -> void;
 
 /**
  * @brief: Merge two uninserted line segments.
+ *
+ * Note, the resulting segment has the key of optional_new_key.
+ * Otherwise it reuses the key from either segment_0 or segment_1.
  */
-auto merge_uninserted_segment(CircuitData& circuit, merge_segment_t definition) -> void;
+auto merge_uninserted_segment_with_history(
+    CircuitData& circuit, segment_t segment_0, segment_t segment_1,
+    bool restore_segment_0_key = false) -> segment_t;
 
 /*
  * @brief: Define split of two segments.
