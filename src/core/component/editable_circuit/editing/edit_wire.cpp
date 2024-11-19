@@ -45,18 +45,39 @@ auto _store_history_segment_create_temporary(CircuitData& circuit,
     }
 }
 
+using optional_key_pair_t = std::pair<segment_key_t, segment_key_t>;
+constexpr static inline auto null_optional_key_pair =
+    optional_key_pair_t {null_segment_key, null_segment_key};
+
 auto move_segment_between_trees_with_history(
-    CircuitData& circuit, segment_part_t& segment_part,
-    const wire_id_t destination_id) -> std::pair<segment_part_t, segment_part_t> {
+    CircuitData& circuit, segment_part_t& segment_part, const wire_id_t destination_id,
+    optional_key_pair_t optional_new_keys = null_optional_key_pair)
+    -> std::pair<segment_part_t, segment_part_t> {
     auto stack = circuit.history.get_stack();
 
     const auto [left1, left2] =
         move_segment_between_trees(circuit, segment_part, destination_id);
 
+    // validation
     assert(is_full_segment(circuit.layout, segment_part));
     assert(!left1 || is_full_segment(circuit.layout, left1));
     assert(!left2 || is_full_segment(circuit.layout, left2));
 
+    // set new keys
+    // TODO: !!! needs rework !!!
+    if (optional_new_keys.first) {
+        Expects(left1);
+        Expects(!left2);
+
+        const auto line_0 = get_line(circuit.layout, segment_part.segment);
+        const auto line_1 = get_line(circuit.layout, left1.segment);
+
+        const auto new_segment = line_1 > line_0 ? left1 : segment_part;
+        circuit.index.set_key(new_segment.segment, optional_new_keys.first);
+    }
+    Expects(!optional_new_keys.second);
+
+    // history
     if (stack != nullptr && left1 && !left2) {
         const auto key_0 = circuit.index.key_index().get(segment_part.segment);
         const auto key_1 = circuit.index.key_index().get(left1.segment);
@@ -610,18 +631,20 @@ auto split_segment_t::format() const -> std::string {
 }
 
 auto split_line_segment_with_history(CircuitData& circuit, const segment_t segment,
-                                     offset_t offset) -> std::pair<segment_t, segment_t> {
-    auto move_segment_part = segment_part_t {segment, part_t {0, offset}};
+                                     offset_t offset, segment_key_t optional_new_key)
+    -> std::pair<segment_t, segment_t> {
+    // less work to split end part, as no copy is required within the segment
+    const auto part = get_part(circuit.layout, segment);
+    auto segment_part_1 = segment_part_t {segment, part_t {offset, part.end}};
 
-    const auto [left1, left2] = move_segment_between_trees_with_history(
-        circuit, move_segment_part, segment.wire_id);
+    const auto segment_part_0 =
+        move_segment_between_trees_with_history(circuit, segment_part_1, segment.wire_id,
+                                                {optional_new_key, null_segment_key})
+            .first;
 
-    Expects(left1);
-    Expects(!left2);
-    assert(is_full_segment(circuit.layout, left1));
-    assert(is_full_segment(circuit.layout, move_segment_part));
-
-    return {move_segment_part.segment, left1.segment};
+    assert(get_line(circuit.layout, segment_part_0) <
+           get_line(circuit.layout, segment_part_1));
+    return {segment_part_0.segment, segment_part_1.segment};
 }
 
 auto split_line_segment_with_history(CircuitData& circuit, const segment_t segment,
@@ -640,18 +663,8 @@ auto split_uninserted_segment(CircuitData& circuit, split_segment_t definition) 
         throw std::runtime_error("can only split uninserted wires");
     }
 
-    const auto [segment_0, segment_1] =
-        split_line_segment_with_history(circuit, source_segment, definition.split_offset);
-
-    // determine ordering
-    const auto line_0 = get_line(circuit.layout, segment_0);
-    const auto line_1 = get_line(circuit.layout, segment_1);
-    const auto [first, second] = line_0 < line_1 ? std::pair {segment_0, segment_1}
-                                                 : std::pair {segment_1, segment_0};
-
-    // first set new key to avoid collision
-    circuit.index.set_key(second, definition.new_key);
-    circuit.index.set_key(first, definition.source_key);
+    split_line_segment_with_history(circuit, source_segment, definition.split_offset,
+                                    definition.new_key);
 }
 
 auto regularize_temporary_selection(CircuitData& circuit, const Selection& selection,

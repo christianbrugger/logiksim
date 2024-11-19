@@ -165,6 +165,10 @@ class Modifier {
 
     auto merge_uninserted_segment(segment_t segment_0, segment_t segment_1) -> segment_t;
 
+    auto split_uninserted_segment(segment_t segment, offset_t offset,
+                                  segment_key_t optional_new_key = null_segment_key)
+        -> std::pair<segment_t, segment_t>;
+
     auto regularize_temporary_selection(
         const Selection& selection,
         std::optional<std::vector<point_t>> true_cross_points) -> std::vector<point_t>;

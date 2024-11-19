@@ -277,14 +277,18 @@ auto get_line(const Layout &layout, segment_part_t segment_part) -> ordered_line
     return to_line(full_line, segment_part.part);
 }
 
-auto has_segments(const Layout &layout) -> bool {
-    return std::ranges::any_of(wire_ids(layout), [&](wire_id_t wire_id) {
-        return !layout.wires().segment_tree(wire_id).empty();
-    });
+auto get_part(const Layout &layout, segment_t segment) -> part_t {
+    return to_part(get_line(layout, segment));
 }
 
 auto get_segment_part(const Layout &layout, segment_t segment) -> segment_part_t {
     return segment_part_t {segment, to_part(get_line(layout, segment))};
+}
+
+auto has_segments(const Layout &layout) -> bool {
+    return std::ranges::any_of(wire_ids(layout), [&](wire_id_t wire_id) {
+        return !layout.wires().segment_tree(wire_id).empty();
+    });
 }
 
 auto is_full_segment(const Layout &layout, segment_part_t segment_part) -> bool {

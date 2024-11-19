@@ -135,6 +135,9 @@ struct split_segment_t {
 /**
  * @brief: Split two uninserted line segments.
  */
+auto split_line_segment_with_history(CircuitData& circuit, segment_t segment,
+                                     offset_t offset, segment_key_t optional_new_key)
+    -> std::pair<segment_t, segment_t>;
 auto split_uninserted_segment(CircuitData& circuit, split_segment_t definition) -> void;
 
 /**

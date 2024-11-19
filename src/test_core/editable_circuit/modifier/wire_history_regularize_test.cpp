@@ -118,11 +118,46 @@ TEST(EditableCircuitWireHistory, MergeSingleRestoreFlipped) {
 // Split Uninserted Segment (Single)
 //
 
+TEST(EditableCircuitWireHistory, SplitTemporary) {
+    auto layout = Layout {};
+    const auto line_orig = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
+    const auto segment_index =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point, line_orig);
+    const auto segment = segment_t {temporary_wire_id, segment_index};
+
+    auto modifier = get_modifier_with_history(layout);
+    const auto segment_key = modifier.circuit_data().index.key_index().get(segment);
+    const auto new_key = [=]() {
+        auto key = segment_key;
+        return ++(++(++key));
+    }();
+    modifier.split_uninserted_segment(segment, offset_t {5}, new_key);
+    Expects(is_valid(modifier));
+
+    // before undo
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+    const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
+    const auto line_1 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
+    ASSERT_EQ(get_line(modifier.circuit_data().layout,
+                       modifier.circuit_data().index.key_index().get(segment_key)),
+              line_0);
+    ASSERT_EQ(get_line(modifier.circuit_data().layout,
+                       modifier.circuit_data().index.key_index().get(new_key)),
+              line_1);
+
+    // after undo
+    modifier.undo_group();
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_EQ(get_line(modifier.circuit_data().layout,
+                       modifier.circuit_data().index.key_index().get(segment_key)),
+              line_orig);
+}
+
 //
 // Split Temporary Segments (Multiple)
 //
 
-TEST(EditableCircuitWireHistory, SplitTemporarySingle) {
+TEST(EditableCircuitWireHistory, SplitsTemporarySingle) {
     auto layout = Layout {};
     const auto segment_index =
         add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point,
@@ -148,7 +183,7 @@ TEST(EditableCircuitWireHistory, SplitTemporarySingle) {
     ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
 }
 
-TEST(EditableCircuitWireHistory, SplitTemporaryMultiple) {
+TEST(EditableCircuitWireHistory, SplitsTemporaryMultiple) {
     auto layout = Layout {};
     const auto segment_index =
         add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point,

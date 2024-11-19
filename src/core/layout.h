@@ -117,10 +117,11 @@ class Layout {
 [[nodiscard]] auto get_line(const Layout &layout,
                             segment_part_t segment_part) -> ordered_line_t;
 
-[[nodiscard]] auto has_segments(const Layout &layout) -> bool;
-
+[[nodiscard]] auto get_part(const Layout &layout, segment_t segment) -> part_t;
 [[nodiscard]] auto get_segment_part(const Layout &layout,
                                     segment_t segment) -> segment_part_t;
+
+[[nodiscard]] auto has_segments(const Layout &layout) -> bool;
 
 [[nodiscard]] auto is_full_segment(const Layout &layout,
                                    segment_part_t segment_part) -> bool;

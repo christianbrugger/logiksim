@@ -557,6 +557,28 @@ auto Modifier::merge_uninserted_segment(segment_t segment_0,
     return segment_merged;
 }
 
+auto Modifier::split_uninserted_segment(segment_t segment, offset_t offset,
+                                        segment_key_t optional_new_key)
+    -> std::pair<segment_t, segment_t> {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "merge_uninserted_segment(segment = {}, offset = {}, "
+            "optional_new_key = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, segment, offset, optional_new_key);
+    }
+
+    const auto result = editing::split_line_segment_with_history(
+        circuit_data_, segment, offset, optional_new_key);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
+    Ensures(debug_class_invariant_holds(*this));
+    return result;
+}
+
 auto Modifier::regularize_temporary_selection(
     const Selection& selection,
     std::optional<std::vector<point_t>> true_cross_points_) -> std::vector<point_t> {
