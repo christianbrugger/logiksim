@@ -75,19 +75,6 @@ template <>
 namespace editable_circuit {
 
 /*
- * @brief: Define merging of two segments.
- *
- * Note, the resulting segment has the key of keep
- */
-struct merge_segment_key_t {
-    segment_key_t keep;
-    segment_key_t merge_and_delete;
-
-    [[nodiscard]] auto operator==(const merge_segment_key_t&) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
-/*
  * @brief: Define splitting of two segments.
  *
  * Source segment is split into two segments at the offset. The additional
@@ -204,7 +191,8 @@ class HistoryStack {
     auto push_segment_insert_to_colliding(segment_key_t segment_key, part_t part) -> void;
     auto push_segment_set_endpoints(segment_key_t segment_key,
                                     endpoints_t endpoints) -> void;
-    auto push_segment_merge(merge_segment_key_t definition) -> void;
+    auto push_segment_merge(segment_key_t segment_key_0,
+                            segment_key_t segment_key_1) -> void;
     auto push_segment_split(split_segment_key_t definition) -> void;
     auto push_segment_add_visible_selection() -> void;
     auto push_segment_remove_visible_selection() -> void;
@@ -216,7 +204,7 @@ class HistoryStack {
     auto pop_segment_to_mode_colliding() -> std::pair<segment_key_t, part_t>;
     auto pop_segment_to_mode_insert() -> std::pair<segment_key_t, part_t>;
     auto pop_segment_set_endpoints() -> std::pair<segment_key_t, endpoints_t>;
-    auto pop_segment_merge() -> merge_segment_key_t;
+    auto pop_segment_merge() -> std::pair<segment_key_t, segment_key_t>;
     auto pop_segment_split() -> split_segment_key_t;
     auto pop_segment_add_visible_selection() -> void;
     auto pop_segment_remove_visible_selection() -> void;

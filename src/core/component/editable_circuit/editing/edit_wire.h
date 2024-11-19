@@ -112,12 +112,10 @@ auto set_uninserted_crosspoint_with_history(CircuitData& circuit, segment_t segm
 /**
  * @brief: Merge two uninserted line segments.
  *
- * Note, the resulting segment has the key of optional_new_key.
- * Otherwise it reuses the key from either segment_0 or segment_1.
+ * Note, the resulting segment has the key of first segment when ordered by lines.
  */
-auto merge_uninserted_segment_with_history(
-    CircuitData& circuit, segment_t segment_0, segment_t segment_1,
-    bool restore_segment_0_key = false) -> segment_t;
+auto merge_uninserted_segment_with_history(CircuitData& circuit, segment_t segment_0,
+                                           segment_t segment_1) -> segment_t;
 
 /*
  * @brief: Define split of two segments.

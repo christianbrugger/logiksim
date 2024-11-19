@@ -107,11 +107,6 @@ auto format_stack_vector(const std::vector<T>& data) -> std::string {
 
 }  // namespace
 
-auto merge_segment_key_t::format() const -> std::string {
-    return fmt::format("merge_segment_key_t{{keep = {}, merge_and_delete = {}}}", keep,
-                       merge_and_delete);
-}
-
 auto split_segment_key_t::format() const -> std::string {
     return fmt::format(
         "split_segment_key_t{{source = {}, new_key = {}, split_offset = {}}}", source,
@@ -659,10 +654,11 @@ auto HistoryStack::push_segment_set_endpoints(segment_key_t segment_key,
     endpoints_.emplace_back(endpoints);
 }
 
-auto HistoryStack::push_segment_merge(merge_segment_key_t definition) -> void {
+auto HistoryStack::push_segment_merge(segment_key_t segment_key_0,
+                                      segment_key_t segment_key_1) -> void {
     entries_.emplace_back(HistoryEntry::segment_merge);
-    segment_keys_.emplace_back(definition.keep);
-    segment_keys_.emplace_back(definition.merge_and_delete);
+    segment_keys_.emplace_back(segment_key_0);
+    segment_keys_.emplace_back(segment_key_1);
 }
 
 auto HistoryStack::push_segment_split(split_segment_key_t definition) -> void {
@@ -720,14 +716,12 @@ auto HistoryStack::pop_segment_set_endpoints() -> std::pair<segment_key_t, endpo
     return {pop_back_vector(segment_keys_), pop_back_vector(endpoints_)};
 }
 
-auto HistoryStack::pop_segment_merge() -> merge_segment_key_t {
+auto HistoryStack::pop_segment_merge() -> std::pair<segment_key_t, segment_key_t> {
     Expects(pop_back_vector(entries_) == HistoryEntry::segment_merge);
-    const auto merge_and_delete = pop_back_vector(segment_keys_);
-    const auto keep = pop_back_vector(segment_keys_);
-    return merge_segment_key_t {
-        .keep = keep,
-        .merge_and_delete = merge_and_delete,
-    };
+    // separate pop to guarantee order
+    const auto segment_key_1 = pop_back_vector(segment_keys_);
+    const auto segment_key_0 = pop_back_vector(segment_keys_);
+    return {segment_key_0, segment_key_1};
 }
 
 auto HistoryStack::pop_segment_split() -> split_segment_key_t {

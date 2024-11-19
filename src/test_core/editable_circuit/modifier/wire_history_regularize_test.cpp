@@ -42,7 +42,7 @@ TEST(EditableCircuitWireHistory, SetEndpointsCross) {
 // Merge Uninserted Segment (Single)
 //
 
-TEST(EditableCircuitWireHistory, MergeSingleRestoreFirst) {
+TEST(EditableCircuitWireHistory, MergeSingleRestoreOrdered) {
     // setup
     auto layout = Layout {};
     const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
@@ -58,9 +58,7 @@ TEST(EditableCircuitWireHistory, MergeSingleRestoreFirst) {
     auto modifier = get_modifier_with_history(layout);
     const auto segment_key_0 = modifier.circuit_data().index.key_index().get(segment_0);
     const auto segment_key_1 = modifier.circuit_data().index.key_index().get(segment_1);
-    const auto restore_segment_0_key = true;
-    const auto segment_merged =
-        modifier.merge_uninserted_segment(segment_0, segment_1, restore_segment_0_key);
+    const auto segment_merged = modifier.merge_uninserted_segment(segment_0, segment_1);
     Expects(is_valid(modifier));
 
     // before undo
@@ -80,7 +78,7 @@ TEST(EditableCircuitWireHistory, MergeSingleRestoreFirst) {
               line_1);
 }
 
-TEST(EditableCircuitWireHistory, MergeSingleRestoreSecond) {
+TEST(EditableCircuitWireHistory, MergeSingleRestoreFlipped) {
     // setup
     auto layout = Layout {};
     const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
@@ -96,15 +94,13 @@ TEST(EditableCircuitWireHistory, MergeSingleRestoreSecond) {
     auto modifier = get_modifier_with_history(layout);
     const auto segment_key_0 = modifier.circuit_data().index.key_index().get(segment_0);
     const auto segment_key_1 = modifier.circuit_data().index.key_index().get(segment_1);
-    const auto restore_segment_0_key = true;
-    const auto segment_merged =
-        modifier.merge_uninserted_segment(segment_1, segment_0, restore_segment_0_key);
+    const auto segment_merged = modifier.merge_uninserted_segment(segment_1, segment_0);
     Expects(is_valid(modifier));
 
     // before undo
     ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
     ASSERT_EQ(modifier.circuit_data().index.key_index().get(segment_merged),
-              segment_key_1);
+              segment_key_0);
 
     // after undo
     modifier.undo_group();

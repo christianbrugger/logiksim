@@ -537,19 +537,18 @@ auto Modifier::set_temporary_endpoints(segment_t segment, endpoints_t endpoints)
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::merge_uninserted_segment(segment_t segment_0, segment_t segment_1,
-                                        bool restore_segment_0_key) -> segment_t {
+auto Modifier::merge_uninserted_segment(segment_t segment_0,
+                                        segment_t segment_1) -> segment_t {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "merge_uninserted_segment(segment_0 = {}, segment_1 = {}, "
-            "restore_segment_0_key = {});\n"
+            "merge_uninserted_segment(segment_0 = {}, segment_1 = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, segment_0, segment_1, restore_segment_0_key);
+            circuit_data_.layout, segment_0, segment_1);
     }
 
     const auto segment_merged = editing::merge_uninserted_segment_with_history(
-        circuit_data_, segment_0, segment_1, restore_segment_0_key);
+        circuit_data_, segment_0, segment_1);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);

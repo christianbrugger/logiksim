@@ -278,12 +278,10 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case segment_merge: {
-            const auto definition = stack.pop_segment_merge();
-            const auto segment_0 = to_id(definition.keep, circuit);
-            const auto segment_1 = to_id(definition.merge_and_delete, circuit);
-            bool restore_segment_0_key = true;
-            editing::merge_uninserted_segment_with_history(circuit, segment_0, segment_1,
-                                                           restore_segment_0_key);
+            const auto [segment_key_0, segment_key_1] = stack.pop_segment_merge();
+            const auto segment_0 = to_id(segment_key_0, circuit);
+            const auto segment_1 = to_id(segment_key_1, circuit);
+            editing::merge_uninserted_segment_with_history(circuit, segment_0, segment_1);
             return;
         }
 
