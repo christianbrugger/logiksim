@@ -38,10 +38,13 @@ auto add_temporary_segment(CircuitData& circuit, ordered_line_t line) -> segment
 /**
  * @brief: Moves the segment_part to the destination tree.
  *
- * Note either one of the trees can be inserted or uninserted
+ * + Works for inserted and uninserted trees.
+ * + Source tree can become empty.
+ * + Newly inserted endpoints as of type shadow_point.
  *
- * + Source tree can become empty
- * + Newly inserted endpoints as shadow points
+ * Note, the segment with the smallest line preserves the initial key.
+ *
+ * Returns up to two newly created parts, or null_segment_t;
  */
 auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_part,
                                 wire_id_t destination_id)
@@ -56,6 +59,11 @@ auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_pa
 auto remove_full_segment_from_uninserted_tree(CircuitData& circuit,
                                               segment_part_t& full_segment_part) -> void;
 
+/**
+ * @brief: Split the line segment at the position.
+ *
+ * Note, the segment with the smallest line preserves the initial key.
+ */
 auto split_line_segment(CircuitData& circuit, segment_t segment,
                         point_t position) -> segment_part_t;
 

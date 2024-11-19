@@ -46,6 +46,7 @@ class LayoutIndex {
     auto set_key(decoration_id_t decoration_id, decoration_key_t decoration_key) -> void;
     auto set_key(logicitem_id_t logicitem_id, logicitem_key_t logicitem_key) -> void;
     auto set_key(segment_t segment, segment_key_t segment_key) -> void;
+    auto swap_key(segment_t segment_0, segment_t segment_1) -> void;
 
    private:
     LogicItemInputIndex logicitems_inputs_ {};

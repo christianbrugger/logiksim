@@ -74,6 +74,7 @@ class KeyIndex {
     [[nodiscard]] auto get(segment_t segment) const -> segment_key_t;
     [[nodiscard]] auto get(segment_key_t segment_key) const -> segment_t;
     auto set(segment_t segment, segment_key_t segment_key) -> void;
+    auto swap(segment_t segment_0, segment_t segment_1) -> void;
 
     auto submit(const InfoMessage& message) -> void;
 

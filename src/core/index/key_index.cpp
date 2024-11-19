@@ -91,6 +91,27 @@ auto set_new_key(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys, Id id,
     Expects(map_ids.emplace(key, id).second);
 }
 
+template <typename Key, typename Id>
+auto swap_two_keys(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys, Id id_0,
+                   Id id_1) -> void {
+    const auto key_it_0 = map_keys.find(id_0);
+    const auto key_it_1 = map_keys.find(id_1);
+    Expects(key_it_0 != map_keys.end());
+    Expects(key_it_1 != map_keys.end());
+
+    const auto id_it_0 = map_ids.find(key_it_0->second);
+    const auto id_it_1 = map_ids.find(key_it_1->second);
+    Expects(id_it_0 != map_ids.end());
+    Expects(id_it_1 != map_ids.end());
+
+    // validation
+    Expects(id_it_0->second == key_it_0->first);
+    Expects(id_it_1->second == key_it_1->first);
+
+    std::swap(key_it_0->second, key_it_1->second);
+    std::swap(id_it_0->second, id_it_1->second);
+}
+
 template <typename Id, typename Key>
 auto set_new_id(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys, Id old_id,
                 Id new_id) -> void {
@@ -219,6 +240,14 @@ auto KeyIndex::set(segment_t segment, segment_key_t segment_key) -> void {
         next_segment_key_ = segment_key;
         ++next_segment_key_;
     }
+
+    assert(class_invariant_holds());
+}
+
+auto KeyIndex::swap(segment_t segment_0, segment_t segment_1) -> void {
+    assert(class_invariant_holds());
+
+    key_index::swap_two_keys(segment_ids_, segment_keys_, segment_0, segment_1);
 
     assert(class_invariant_holds());
 }

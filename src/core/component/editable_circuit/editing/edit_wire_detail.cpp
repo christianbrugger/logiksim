@@ -254,6 +254,12 @@ auto _move_touching_segment_between_trees(
         }));
     }
 
+    // keep source key for the smallest line
+    if (part_kept > source_segment_part.part) {
+        circuit.index.swap_key(source_segment_part.segment,
+                               destination_segment_part.segment);
+    }
+
     source_segment_part = destination_segment_part;
     return leftover_segment_part;
 }
@@ -264,6 +270,14 @@ auto _move_splitting_segment_between_trees(
     const auto full_part = to_part(get_line(circuit.layout, source_segment_part.segment));
     const auto [part0, part1] =
         difference_not_touching(full_part, source_segment_part.part);
+
+    // Two new parts are created:
+    //
+    // leftover_segment_part | source_segment_part       | source_part_1
+    // leftover_segment_part | destination_segment_part  | destination_part_1
+    //
+    // Note, key is preserved for left_over_segment_part. It is the smallest
+    // line / segment, so no adjustment is needed.
 
     // move
     const auto source_part1 = segment_part_t {source_segment_part.segment, part1};
@@ -419,9 +433,9 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
     const auto info_0 = segment_info_t {m_tree.info(index_0)};
     const auto info_1 = segment_info_t {m_tree.info(index_1)};
 
-    const auto require_key_1 = info_0.line > info_1.line;
+    const auto merge_key_1 = info_0.line > info_1.line;
     const auto key_1 =
-        require_key_1 ? circuit.index.key_index().get(segment_1) : null_segment_key;
+        merge_key_1 ? circuit.index.key_index().get(segment_1) : null_segment_key;
 
     // merge
     m_tree.swap_and_merge_segment({.index_merge_to = index_0, .index_deleted = index_1});
@@ -476,7 +490,7 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
     }
 
     // update key
-    if (require_key_1) {
+    if (merge_key_1) {
         circuit.index.set_key(segment_0, key_1);
     }
 
