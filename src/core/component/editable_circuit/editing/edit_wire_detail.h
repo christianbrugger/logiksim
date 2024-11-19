@@ -59,6 +59,15 @@ auto remove_full_segment_from_uninserted_tree(CircuitData& circuit,
 auto split_line_segment(CircuitData& circuit, segment_t segment,
                         point_t position) -> segment_part_t;
 
+/**
+ * @brief: Merges the two given segments. Optionally preserves an additional segment.
+ *
+ * Throws, if segments are not adjacent
+ *
+ * Note, key of the smaller line is the final key.
+ *
+ * Returns merged segment.
+ */
 auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
                          segment_part_t* preserve_segment) -> segment_t;
 

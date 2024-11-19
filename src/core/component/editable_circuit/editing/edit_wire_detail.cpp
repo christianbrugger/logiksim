@@ -394,6 +394,9 @@ auto split_line_segment(CircuitData& circuit, const segment_t segment,
 
 namespace {
 
+/**
+ * @brief: Mergest segment_1 into segment_1
+ */
 auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_0,
                                   const segment_t segment_1,
                                   segment_part_t* preserve_segment) -> segment_t {
@@ -415,6 +418,10 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
 
     const auto info_0 = segment_info_t {m_tree.info(index_0)};
     const auto info_1 = segment_info_t {m_tree.info(index_1)};
+
+    const auto require_key_1 = info_0.line > info_1.line;
+    const auto key_1 =
+        require_key_1 ? circuit.index.key_index().get(segment_1) : null_segment_key;
 
     // merge
     m_tree.swap_and_merge_segment({.index_merge_to = index_0, .index_deleted = index_1});
@@ -466,6 +473,11 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
                 .segment_info = m_tree.info(index_1),
             });
         }
+    }
+
+    // update key
+    if (require_key_1) {
+        circuit.index.set_key(segment_0, key_1);
     }
 
     // preserve

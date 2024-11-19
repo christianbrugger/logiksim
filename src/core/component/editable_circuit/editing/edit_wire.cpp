@@ -555,6 +555,7 @@ auto merge_uninserted_segment_with_history(CircuitData& circuit, segment_t segme
         throw std::runtime_error("can only merge uninserted wires");
     }
 
+    // remember state
     const auto before = merge_memory_t {
         .key_0 = circuit.index.key_index().get(segment_0),
         .key_1 = circuit.index.key_index().get(segment_1),
@@ -566,11 +567,12 @@ auto merge_uninserted_segment_with_history(CircuitData& circuit, segment_t segme
     const auto segment_after =
         merge_line_segments(circuit, segment_0, segment_1, nullptr);
 
-    // restore key of first segment
-    const auto key_after = before.line_0 < before.line_1 ? before.key_0 : before.key_1;
-    circuit.index.set_key(segment_after, key_after);
-
+    // history
     if (const auto stack = circuit.history.get_stack()) {
+        const auto key_after =
+            before.line_0 < before.line_1 ? before.key_0 : before.key_1;
+        assert(key_after == circuit.index.key_index().get(segment_after));
+
         const auto split_offset = to_offset(std::min(before.line_0, before.line_1));
 
         auto definition = split_segment_key_t {
