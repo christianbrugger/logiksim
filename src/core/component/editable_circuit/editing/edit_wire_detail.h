@@ -94,12 +94,12 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 // Endpoints
 //
 
-auto set_segment_endpoints(Layout& layout, segment_t segment,
-                           endpoints_t endpoints) -> void;
+auto set_uninserted_endpoints(Layout& layout, segment_t segment,
+                              endpoints_t endpoints) -> void;
 
-auto reset_segment_endpoints(Layout& layout, segment_t segment) -> void;
+auto reset_uninserted_endpoints(Layout& layout, segment_t segment) -> void;
 
-auto set_segment_crosspoint(Layout& layout, segment_t segment, point_t point) -> void;
+auto set_uninserted_crosspoint(Layout& layout, segment_t segment, point_t point) -> void;
 
 using point_update_t =
     std::initializer_list<const std::pair<segment_index_t, SegmentPointType>>;

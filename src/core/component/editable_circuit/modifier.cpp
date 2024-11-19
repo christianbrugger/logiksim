@@ -529,7 +529,7 @@ auto Modifier::set_temporary_endpoints(segment_t segment, endpoints_t endpoints)
             circuit_data_.layout, segment, endpoints);
     }
 
-    editing::set_uninserted_endpoints(circuit_data_, segment, endpoints);
+    editing::set_uninserted_endpoints_with_history(circuit_data_, segment, endpoints);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);

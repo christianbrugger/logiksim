@@ -273,7 +273,7 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         case segment_set_endpoints: {
             const auto [segment_key, endpoints] = stack.pop_segment_set_endpoints();
             const auto segment = to_id(segment_key, circuit);
-            editing::set_uninserted_endpoints(circuit, segment, endpoints);
+            editing::set_uninserted_endpoints_with_history(circuit, segment, endpoints);
             return;
         }
 

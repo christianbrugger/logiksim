@@ -185,13 +185,6 @@ auto _store_history_segment_set_endpoints(CircuitData& circuit, segment_t segmen
     }
 }
 
-auto reset_segment_endpoints_with_history(CircuitData& circuit,
-                                          const segment_t segment) -> void {
-    set_uninserted_endpoints(circuit, segment,
-                             endpoints_t {.p0_type = SegmentPointType::shadow_point,
-                                          .p1_type = SegmentPointType::shadow_point});
-}
-
 auto set_segment_crosspoint_with_history(CircuitData& circuit, segment_t segment,
                                          point_t point) -> void {
     if (const auto stack = circuit.history.get_stack()) {
@@ -203,7 +196,7 @@ auto set_segment_crosspoint_with_history(CircuitData& circuit, segment_t segment
         }
     }
 
-    set_segment_crosspoint(circuit.layout, segment, point);
+    set_uninserted_crosspoint(circuit.layout, segment, point);
 }
 
 auto _store_history_segment_delete_temporary(CircuitData& circuit,
@@ -464,7 +457,7 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
 
             split_broken_tree(circuit, moved_line.p0, moved_line.p1);
         }
-        reset_segment_endpoints(circuit.layout, segment_part.segment);
+        reset_uninserted_endpoints(circuit.layout, segment_part.segment);
     }
 
     _store_history_segment_temporary_to_colliding(circuit, segment_part);
@@ -643,11 +636,19 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
 // Regularization
 //
 
-auto set_uninserted_endpoints(CircuitData& circuit, segment_t segment,
-                              endpoints_t endpoints) -> void {
+auto set_uninserted_endpoints_with_history(CircuitData& circuit, segment_t segment,
+                                           endpoints_t endpoints) -> void {
     _store_history_segment_set_endpoints(circuit, segment, endpoints);
 
-    set_segment_endpoints(circuit.layout, segment, endpoints);
+    set_uninserted_endpoints(circuit.layout, segment, endpoints);
+}
+
+auto reset_segment_endpoints_with_history(CircuitData& circuit,
+                                          const segment_t segment) -> void {
+    set_uninserted_endpoints_with_history(
+        circuit, segment,
+        endpoints_t {.p0_type = SegmentPointType::shadow_point,
+                     .p1_type = SegmentPointType::shadow_point});
 }
 
 auto merge_segment_t::format() const -> std::string {

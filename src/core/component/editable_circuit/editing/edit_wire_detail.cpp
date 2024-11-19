@@ -648,8 +648,8 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 // Endpoints
 //
 
-auto set_segment_endpoints(Layout& layout, segment_t segment,
-                           endpoints_t endpoints) -> void {
+auto set_uninserted_endpoints(Layout& layout, segment_t segment,
+                              endpoints_t endpoints) -> void {
     if (is_inserted(segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("Segment cannot be inserted to change endpoints.");
     }
@@ -673,16 +673,16 @@ auto set_segment_endpoints(Layout& layout, segment_t segment,
     m_tree.update_segment(segment.segment_index, new_info);
 }
 
-auto reset_segment_endpoints(Layout& layout, const segment_t segment) -> void {
-    set_segment_endpoints(layout, segment,
-                          endpoints_t {
-                              .p0_type = SegmentPointType::shadow_point,
-                              .p1_type = SegmentPointType::shadow_point,
-                          });
+auto reset_uninserted_endpoints(Layout& layout, const segment_t segment) -> void {
+    set_uninserted_endpoints(layout, segment,
+                             endpoints_t {
+                                 .p0_type = SegmentPointType::shadow_point,
+                                 .p1_type = SegmentPointType::shadow_point,
+                             });
 }
 
-auto set_segment_crosspoint(Layout& layout, const segment_t segment,
-                            point_t point) -> void {
+auto set_uninserted_crosspoint(Layout& layout, const segment_t segment,
+                               point_t point) -> void {
     if (is_inserted(segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("cannot set endpoints of inserted wire segment");
     }
