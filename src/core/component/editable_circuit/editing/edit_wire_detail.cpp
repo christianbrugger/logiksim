@@ -5,6 +5,7 @@
 #include "core/geometry/orientation.h"
 #include "core/geometry/segment_info.h"
 #include "core/tree_normalization.h"
+#include "core/vocabulary/endpoints.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -647,19 +648,37 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 // Endpoints
 //
 
-auto reset_segment_endpoints(Layout& layout, const segment_t segment) -> void {
+auto set_segment_endpoints(Layout& layout, segment_t segment,
+                           endpoints_t endpoints) -> void {
     if (is_inserted(segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("cannot reset endpoints of inserted wire segment");
+        throw std::runtime_error("Segment cannot be inserted to change endpoints.");
     }
-    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
 
-    const auto new_info = segment_info_t {
-        .line = m_tree.line(segment.segment_index),
-        .p0_type = SegmentPointType::shadow_point,
-        .p1_type = SegmentPointType::shadow_point,
+    const auto valid_temporary = [](SegmentPointType type) {
+        return type == SegmentPointType::shadow_point ||
+               type == SegmentPointType::cross_point;
     };
+    if (!valid_temporary(endpoints.p0_type) || !valid_temporary(endpoints.p1_type))
+        [[unlikely]] {
+        throw std::runtime_error(
+            "New point type needs to be shadow_point or cross_point");
+    }
 
+    if (get_endpoints(get_segment_info(layout, segment)) == endpoints) {
+        return;
+    }
+
+    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
+    const auto new_info = to_segment_info(m_tree.line(segment.segment_index), endpoints);
     m_tree.update_segment(segment.segment_index, new_info);
+}
+
+auto reset_segment_endpoints(Layout& layout, const segment_t segment) -> void {
+    set_segment_endpoints(layout, segment,
+                          endpoints_t {
+                              .p0_type = SegmentPointType::shadow_point,
+                              .p1_type = SegmentPointType::shadow_point,
+                          });
 }
 
 auto set_segment_crosspoint(Layout& layout, const segment_t segment,

@@ -16,6 +16,7 @@ struct segment_index_t;
 struct segment_t;
 struct segment_part_t;
 struct segment_info_t;
+struct endpoints_t;
 
 struct point_t;
 struct ordered_line_t;
@@ -92,6 +93,9 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 //
 // Endpoints
 //
+
+auto set_segment_endpoints(Layout& layout, segment_t segment,
+                           endpoints_t endpoints) -> void;
 
 auto reset_segment_endpoints(Layout& layout, segment_t segment) -> void;
 

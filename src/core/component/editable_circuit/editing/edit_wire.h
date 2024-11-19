@@ -102,8 +102,8 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void;
  *
  * Allowed point types: shadow_point, cross_point
  */
-auto set_temporary_endpoints(CircuitData& circuit, segment_t segment,
-                             endpoints_t endpoints) -> void;
+auto set_uninserted_endpoints(CircuitData& circuit, segment_t segment,
+                              endpoints_t endpoints) -> void;
 
 /*
  * @brief: Define merging of two segments.
@@ -122,7 +122,7 @@ struct merge_segment_t {
 /**
  * @brief: Merge two uninserted line segments.
  */
-auto merge_uninserted_segments(CircuitData& circuit, merge_segment_t definition) -> void;
+auto merge_uninserted_segment(CircuitData& circuit, merge_segment_t definition) -> void;
 
 /*
  * @brief: Define split of two segments.
@@ -143,11 +143,6 @@ struct split_segment_t {
  * @brief: Split two uninserted line segments.
  */
 auto split_uninserted_segment(CircuitData& circuit, split_segment_t definition) -> void;
-
-/**
- * @brief: Merge two uninserted line segments.
- */
-auto merge_uninserted_segment(CircuitData& circuit, merge_segment_t definition) -> void;
 
 /**
  * @brief: Regularizes temporary segments in the selection.

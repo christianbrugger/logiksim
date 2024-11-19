@@ -1,5 +1,4 @@
 
-
 #include "test_core/editable_circuit/modifier/test_helpers.h"
 
 #include "core/component/editable_circuit/editing/edit_wire.h"
@@ -13,7 +12,42 @@ namespace logicsim {
 namespace editable_circuit {
 
 //
-// Split Temporary Segments
+// Set Temporary Endpoints
+//
+
+TEST(EditableCircuitWireHistory, SetEndpointsCross) {
+    auto layout = Layout {};
+    const auto segment_index =
+        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point,
+                    ordered_line_t {point_t {0, 0}, point_t {10, 0}});
+    const auto segment = segment_t {temporary_wire_id, segment_index};
+
+    auto modifier = get_modifier_with_history(layout);
+    {
+        modifier.set_temporary_endpoints(
+            segment,
+            endpoints_t {SegmentPointType::cross_point, SegmentPointType::shadow_point});
+    }
+    Expects(is_valid(modifier));
+
+    // before undo
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+
+    // after undo
+    modifier.undo_group();
+    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+}
+
+//
+// Merge Uninserted Segment (Single)
+//
+
+//
+// Split Uninserted Segment (Single)
+//
+
+//
+// Split Temporary Segments (Multiple)
 //
 
 TEST(EditableCircuitWireHistory, SplitTemporarySingle) {

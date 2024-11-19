@@ -273,7 +273,7 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         case segment_set_endpoints: {
             const auto [segment_key, endpoints] = stack.pop_segment_set_endpoints();
             const auto segment = to_id(segment_key, circuit);
-            editing::set_temporary_endpoints(circuit, segment, endpoints);
+            editing::set_uninserted_endpoints(circuit, segment, endpoints);
             return;
         }
 
@@ -281,11 +281,11 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             const auto definition = stack.pop_segment_merge();
             const auto segment_0 = to_id(definition.keep, circuit);
             const auto segment_1 = to_id(definition.merge_and_delete, circuit);
-            editing::merge_uninserted_segments(circuit, merge_segment_t {
-                                                            .segment_0 = segment_0,
-                                                            .segment_1 = segment_1,
-                                                            .new_key = definition.keep,
-                                                        });
+            editing::merge_uninserted_segment(circuit, merge_segment_t {
+                                                           .segment_0 = segment_0,
+                                                           .segment_1 = segment_1,
+                                                           .new_key = definition.keep,
+                                                       });
             return;
         }
 
