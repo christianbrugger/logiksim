@@ -64,7 +64,6 @@ auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t se
 
 auto merge_all_line_segments(CircuitData& circuit,
                              std::vector<std::pair<segment_t, segment_t>>& pairs) -> void;
-
 template <std::invocable<CircuitData&, segment_t, segment_t> MergeFunc>
 auto merge_all_line_segments(CircuitData& circuit,
                              std::vector<std::pair<segment_t, segment_t>>& pairs,

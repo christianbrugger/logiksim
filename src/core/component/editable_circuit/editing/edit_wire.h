@@ -105,7 +105,7 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void;
 auto set_uninserted_endpoints_with_history(CircuitData& circuit, segment_t segment,
                                            endpoints_t endpoints) -> void;
 auto reset_segment_endpoints_with_history(CircuitData& circuit,
-                                          const segment_t segment) -> void;
+                                          segment_t segment) -> void;
 
 /*
  * @brief: Define merging of two segments.

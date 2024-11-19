@@ -636,7 +636,7 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
 // Regularization
 //
 
-auto set_uninserted_endpoints_with_history(CircuitData& circuit, segment_t segment,
+auto set_uninserted_endpoints_with_history(CircuitData& circuit, const segment_t segment,
                                            endpoints_t endpoints) -> void {
     _store_history_segment_set_endpoints(circuit, segment, endpoints);
 

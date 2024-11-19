@@ -503,8 +503,8 @@ auto merge_all_line_segments(
     CircuitData& circuit, std::vector<std::pair<segment_t, segment_t>>& pairs) -> void {
     merge_all_line_segments(
         circuit, pairs,
-        [](CircuitData& circuit, segment_t segment_0, segment_t segment_1) -> void {
-            merge_line_segments(circuit, segment_0, segment_1, nullptr);
+        [](CircuitData& circuit_, segment_t segment_0, segment_t segment_1) -> void {
+            merge_line_segments(circuit_, segment_0, segment_1, nullptr);
         });
 }
 
