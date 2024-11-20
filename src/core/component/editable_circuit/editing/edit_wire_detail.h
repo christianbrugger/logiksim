@@ -75,14 +75,14 @@ auto move_full_segment_between_trees(CircuitData& circuit, segment_t& source_seg
 
 struct move_touching_result_t {
     // the moved segment
-    segment_part_t moved_segment_part;
+    segment_part_t moved;
     // the non moved segment that was remaining
-    segment_part_t other_segment_part;
+    segment_part_t other;
 
     // the part that was at the beginning of the segment
-    segment_part_t begin_segment_part;
+    segment_part_t begin;
     // the part at the end of the segment
-    segment_part_t end_segment_part;
+    segment_part_t end;
 
     [[nodiscard]] auto operator==(const move_touching_result_t&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
@@ -101,9 +101,9 @@ struct move_splitting_keys_t {
 };
 
 struct move_splitting_result_t {
-    segment_part_t begin_segment_part;
-    segment_part_t middle_segment_part;
-    segment_part_t end_segment_part;
+    segment_part_t begin;
+    segment_part_t middle;
+    segment_part_t end;
 
     [[nodiscard]] auto operator==(const move_splitting_result_t&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
@@ -140,7 +140,7 @@ auto split_line_segment(CircuitData& circuit, segment_t segment,
  * Returns merged segment.
  */
 auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
-                         segment_part_t* preserve_segment) -> segment_t;
+                         segment_part_t* preserve_segment = nullptr) -> segment_t;
 
 auto merge_all_line_segments(CircuitData& circuit,
                              std::vector<std::pair<segment_t, segment_t>>& pairs) -> void;

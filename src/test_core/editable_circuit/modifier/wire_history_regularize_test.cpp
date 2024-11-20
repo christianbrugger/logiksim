@@ -42,11 +42,12 @@ TEST(EditableCircuitWireHistory, SetEndpointsCross) {
 // Merge Uninserted Segment (Single)
 //
 
-TEST(EditableCircuitWireHistory, MergeSingleRestoreOrdered) {
+namespace {
+
+auto _test_merge_single_restore(ordered_line_t line_0, ordered_line_t line_1,
+                                bool flip_merge) {
     // setup
     auto layout = Layout {};
-    const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
-    const auto line_1 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
     const auto segment_index_0 =
         add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point, line_0);
     const auto segment_index_1 =
@@ -58,13 +59,16 @@ TEST(EditableCircuitWireHistory, MergeSingleRestoreOrdered) {
     auto modifier = get_modifier_with_history(layout);
     const auto segment_key_0 = modifier.circuit_data().index.key_index().get(segment_0);
     const auto segment_key_1 = modifier.circuit_data().index.key_index().get(segment_1);
-    const auto segment_merged = modifier.merge_uninserted_segment(segment_0, segment_1);
+    const auto segment_merged =
+        flip_merge ? modifier.merge_uninserted_segment(segment_1, segment_0)
+                   : modifier.merge_uninserted_segment(segment_0, segment_1);
     Expects(is_valid(modifier));
 
     // before undo
     ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+    const auto expected_merged_key = line_0 < line_1 ? segment_key_0 : segment_key_1;
     ASSERT_EQ(modifier.circuit_data().index.key_index().get(segment_merged),
-              segment_key_0);
+              expected_merged_key);
 
     // after undo
     modifier.undo_group();
@@ -78,40 +82,34 @@ TEST(EditableCircuitWireHistory, MergeSingleRestoreOrdered) {
               line_1);
 }
 
-TEST(EditableCircuitWireHistory, MergeSingleRestoreFlipped) {
-    // setup
-    auto layout = Layout {};
+}  // namespace
+
+TEST(EditableCircuitWireHistory, MergeSingleRestoreOrdered) {
     const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
     const auto line_1 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
-    const auto segment_index_0 =
-        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point, line_0);
-    const auto segment_index_1 =
-        add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point, line_1);
-    const auto segment_0 = segment_t {temporary_wire_id, segment_index_0};
-    const auto segment_1 = segment_t {temporary_wire_id, segment_index_1};
+    const auto flip_merge = false;
+    _test_merge_single_restore(line_0, line_1, flip_merge);
+}
 
-    // build history
-    auto modifier = get_modifier_with_history(layout);
-    const auto segment_key_0 = modifier.circuit_data().index.key_index().get(segment_0);
-    const auto segment_key_1 = modifier.circuit_data().index.key_index().get(segment_1);
-    const auto segment_merged = modifier.merge_uninserted_segment(segment_1, segment_0);
-    Expects(is_valid(modifier));
+TEST(EditableCircuitWireHistory, MergeSingleRestoreFlipped1) {
+    const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
+    const auto line_1 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
+    const auto flip_merge = true;
+    _test_merge_single_restore(line_0, line_1, flip_merge);
+}
 
-    // before undo
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
-    ASSERT_EQ(modifier.circuit_data().index.key_index().get(segment_merged),
-              segment_key_0);
+TEST(EditableCircuitWireHistory, MergeSingleRestoreFlipped2) {
+    const auto line_0 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
+    const auto line_1 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
+    const auto flip_merge = false;
+    _test_merge_single_restore(line_0, line_1, flip_merge);
+}
 
-    // after undo
-    modifier.undo_group();
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
-
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key_0)),
-              line_0);
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key_1)),
-              line_1);
+TEST(EditableCircuitWireHistory, MergeSingleRestoreFlipped3) {
+    const auto line_0 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
+    const auto line_1 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
+    const auto flip_merge = true;
+    _test_merge_single_restore(line_0, line_1, flip_merge);
 }
 
 //

@@ -52,10 +52,8 @@ auto move_touching_segment_between_trees_with_history(
         circuit, source_segment_part, destination_id, optional_end_key);
 
     if (const auto stack = circuit.history.get_stack()) {
-        const auto key_begin =
-            circuit.index.key_index().get(result.begin_segment_part.segment);
-        const auto key_end =
-            circuit.index.key_index().get(result.end_segment_part.segment);
+        const auto key_begin = circuit.index.key_index().get(result.begin.segment);
+        const auto key_end = circuit.index.key_index().get(result.end.segment);
 
         stack->push_segment_merge(key_begin, key_end);
     }
@@ -70,12 +68,9 @@ auto move_splitting_segment_between_trees_with_history(
         circuit, source_segment_part, destination_id, optional_keys);
 
     if (const auto stack = circuit.history.get_stack()) {
-        const auto key_begin =
-            circuit.index.key_index().get(result.begin_segment_part.segment);
-        const auto key_middle =
-            circuit.index.key_index().get(result.middle_segment_part.segment);
-        const auto key_end =
-            circuit.index.key_index().get(result.end_segment_part.segment);
+        const auto key_begin = circuit.index.key_index().get(result.begin.segment);
+        const auto key_middle = circuit.index.key_index().get(result.middle.segment);
+        const auto key_end = circuit.index.key_index().get(result.end.segment);
 
         // restored in reverse order
         stack->push_segment_merge(key_begin, key_middle);
@@ -603,8 +598,7 @@ auto merge_uninserted_segment_with_history(CircuitData& circuit, segment_t segme
     }();
 
     // merge
-    const auto segment_after =
-        merge_line_segments(circuit, segment_0, segment_1, nullptr);
+    const auto segment_after = merge_line_segments(circuit, segment_0, segment_1);
 
     // history
     if (stack != nullptr) {
@@ -650,7 +644,7 @@ auto _split_end_part_with_history(CircuitData& circuit, segment_part_t& split_en
     const auto result = move_touching_segment_between_trees_with_history(
         circuit, split_end_part, split_end_part.segment.wire_id, optional_new_key);
 
-    return {result.begin_segment_part.segment, result.end_segment_part.segment};
+    return {result.begin.segment, result.end.segment};
 }
 
 }  // namespace

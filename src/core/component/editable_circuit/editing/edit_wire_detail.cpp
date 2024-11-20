@@ -266,27 +266,23 @@ auto move_touching_segment_between_trees(
 
     // result
     const auto result = move_touching_result_t {
-        .moved_segment_part = destination_segment_part,
-        .other_segment_part = leftover_segment_part,
-        .begin_segment_part =
-            leftover_at_end ? destination_segment_part : leftover_segment_part,
-        .end_segment_part =
-            leftover_at_end ? leftover_segment_part : destination_segment_part,
+        .moved = destination_segment_part,
+        .other = leftover_segment_part,
+        .begin = leftover_at_end ? destination_segment_part : leftover_segment_part,
+        .end = leftover_at_end ? leftover_segment_part : destination_segment_part,
     };
 
     // keys
     if (leftover_at_end) {
-        circuit.index.swap_key(result.moved_segment_part.segment,
-                               result.other_segment_part.segment);
+        circuit.index.swap_key(result.moved.segment, result.other.segment);
     }
     if (optional_end_key) {
-        circuit.index.set_key(result.end_segment_part.segment, optional_end_key);
+        circuit.index.set_key(result.end.segment, optional_end_key);
     }
 
-    source_segment_part = result.moved_segment_part;
-    Ensures(result.moved_segment_part != result.other_segment_part);
-    assert(get_line(circuit.layout, result.begin_segment_part) <
-           get_line(circuit.layout, result.end_segment_part));
+    source_segment_part = result.moved;
+    Ensures(result.moved != result.other);
+    assert(get_line(circuit.layout, result.begin) < get_line(circuit.layout, result.end));
     return result;
 }
 
@@ -354,25 +350,24 @@ auto move_splitting_segment_between_trees(
     }
 
     const auto result = move_splitting_result_t {
-        .begin_segment_part = leftover_segment_part,
-        .middle_segment_part = destination_segment_part,
-        .end_segment_part = destination_part1,
+        .begin = leftover_segment_part,
+        .middle = destination_segment_part,
+        .end = destination_part1,
     };
 
     // keys
     if (optional_keys.new_middle_key) {
-        circuit.index.set_key(result.middle_segment_part.segment,
-                              optional_keys.new_middle_key);
+        circuit.index.set_key(result.middle.segment, optional_keys.new_middle_key);
     }
     if (optional_keys.new_end_key) {
-        circuit.index.set_key(result.end_segment_part.segment, optional_keys.new_end_key);
+        circuit.index.set_key(result.end.segment, optional_keys.new_end_key);
     }
 
-    source_segment_part = result.middle_segment_part;
-    assert(get_line(circuit.layout, result.begin_segment_part) <
-           get_line(circuit.layout, result.middle_segment_part));
-    assert(get_line(circuit.layout, result.middle_segment_part) <
-           get_line(circuit.layout, result.end_segment_part));
+    source_segment_part = result.middle;
+    assert(get_line(circuit.layout, result.begin) <
+           get_line(circuit.layout, result.middle));
+    assert(get_line(circuit.layout, result.middle) <
+           get_line(circuit.layout, result.end));
     return result;
 }
 
@@ -380,7 +375,7 @@ auto move_touching_result_t::format() const -> std::string {
     return fmt::format(
         "move_touching_result_t{{moved_part = {}, other_part = {}, "
         "begin_part = {}, end_part = {}}}",
-        moved_segment_part, other_segment_part, begin_segment_part, end_segment_part);
+        moved, other, begin, end);
 }
 
 auto move_splitting_keys_t::format() const -> std::string {
@@ -391,7 +386,7 @@ auto move_splitting_keys_t::format() const -> std::string {
 auto move_splitting_result_t::format() const -> std::string {
     return fmt::format(
         "move_splitting_result_t{{begin_part = {}, middle_part = {}, end_part = {}}}",
-        begin_segment_part, middle_segment_part, end_segment_part);
+        begin, middle, end);
 }
 
 }  // namespace editing
