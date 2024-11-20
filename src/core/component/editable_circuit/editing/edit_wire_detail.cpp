@@ -7,6 +7,8 @@
 #include "core/tree_normalization.h"
 #include "core/vocabulary/endpoints.h"
 
+#include <fmt/core.h>
+
 #include <algorithm>
 #include <stdexcept>
 
@@ -100,8 +102,10 @@ auto _notify_segment_id_changed(CircuitData& circuit, const segment_t source_seg
     }
 }
 
-auto _move_full_segment_between_trees(CircuitData& circuit, segment_t& source_segment,
-                                      const wire_id_t destination_id) -> void {
+}  // namespace
+
+auto move_full_segment_between_trees(CircuitData& circuit, segment_t& source_segment,
+                                     const wire_id_t destination_id) -> void {
     if (source_segment.wire_id == destination_id) {
         return;
     }
@@ -127,6 +131,8 @@ auto _move_full_segment_between_trees(CircuitData& circuit, segment_t& source_se
 
     source_segment = destination_segment;
 }
+
+namespace {
 
 namespace move_segment {
 
@@ -207,12 +213,16 @@ auto _shrink_segment_end(CircuitData& circuit, const segment_t segment,
 
 }  // namespace move_segment
 
-auto _move_touching_segment_between_trees(
+}  // namespace
+
+auto move_touching_segment_between_trees(
     CircuitData& circuit, segment_part_t& source_segment_part,
-    const wire_id_t destination_id) -> segment_part_t {
+    const wire_id_t destination_id,
+    segment_key_t optional_end_key) -> move_touching_result_t {
     const auto full_part = to_part(get_line(circuit.layout, source_segment_part.segment));
     const auto part_kept =
         difference_touching_one_side(full_part, source_segment_part.part);
+    const auto leftover_at_end = part_kept.begin != full_part.begin;
 
     // move
     move_segment::_shrink_segment_begin(circuit, source_segment_part.segment);
@@ -229,7 +239,7 @@ auto _move_touching_segment_between_trees(
         .delete_source = false,
     });
 
-    if (part_kept.begin != full_part.begin) {
+    if (leftover_at_end) {
         circuit.submit(info_message::SegmentPartMoved {
             .destination = leftover_segment_part,
             .source = segment_part_t {.segment = source_segment_part.segment,
@@ -254,19 +264,36 @@ auto _move_touching_segment_between_trees(
         }));
     }
 
-    // keep source key for the smallest line
-    if (part_kept > source_segment_part.part) {
-        circuit.index.swap_key(source_segment_part.segment,
-                               destination_segment_part.segment);
+    // result
+    const auto result = move_touching_result_t {
+        .moved_segment_part = destination_segment_part,
+        .other_segment_part = leftover_segment_part,
+        .begin_segment_part =
+            leftover_at_end ? destination_segment_part : leftover_segment_part,
+        .end_segment_part =
+            leftover_at_end ? leftover_segment_part : destination_segment_part,
+    };
+
+    // keys
+    if (leftover_at_end) {
+        circuit.index.swap_key(result.moved_segment_part.segment,
+                               result.other_segment_part.segment);
+    }
+    if (optional_end_key) {
+        circuit.index.set_key(result.end_segment_part.segment, optional_end_key);
     }
 
-    source_segment_part = destination_segment_part;
-    return leftover_segment_part;
+    source_segment_part = result.moved_segment_part;
+    Ensures(result.moved_segment_part != result.other_segment_part);
+    assert(get_line(circuit.layout, result.begin_segment_part) <
+           get_line(circuit.layout, result.end_segment_part));
+    return result;
 }
 
-auto _move_splitting_segment_between_trees(
+auto move_splitting_segment_between_trees(
     CircuitData& circuit, segment_part_t& source_segment_part,
-    const wire_id_t destination_id) -> std::pair<segment_part_t, segment_part_t> {
+    const wire_id_t destination_id,
+    move_splitting_keys_t optional_keys) -> move_splitting_result_t {
     const auto full_part = to_part(get_line(circuit.layout, source_segment_part.segment));
     const auto [part0, part1] =
         difference_not_touching(full_part, source_segment_part.part);
@@ -326,36 +353,109 @@ auto _move_splitting_segment_between_trees(
         }));
     }
 
-    source_segment_part = destination_segment_part;
-    return {leftover_segment_part, destination_part1};
+    const auto result = move_splitting_result_t {
+        .begin_segment_part = leftover_segment_part,
+        .middle_segment_part = destination_segment_part,
+        .end_segment_part = destination_part1,
+    };
+
+    // keys
+    if (optional_keys.new_middle_key) {
+        circuit.index.set_key(result.middle_segment_part.segment,
+                              optional_keys.new_middle_key);
+    }
+    if (optional_keys.new_end_key) {
+        circuit.index.set_key(result.end_segment_part.segment, optional_keys.new_end_key);
+    }
+
+    source_segment_part = result.middle_segment_part;
+    assert(get_line(circuit.layout, result.begin_segment_part) <
+           get_line(circuit.layout, result.middle_segment_part));
+    assert(get_line(circuit.layout, result.middle_segment_part) <
+           get_line(circuit.layout, result.end_segment_part));
+    return result;
 }
 
-}  // namespace
+auto move_touching_result_t::format() const -> std::string {
+    return fmt::format(
+        "move_touching_result_t{{moved_part = {}, other_part = {}, "
+        "begin_part = {}, end_part = {}}}",
+        moved_segment_part, other_segment_part, begin_segment_part, end_segment_part);
+}
 
-auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_part,
-                                const wire_id_t destination_id)
-    -> std::pair<segment_part_t, segment_part_t> {
+auto move_splitting_keys_t::format() const -> std::string {
+    return fmt::format("move_splitting_keys_t{{new_middle_key = {}, new_end_key = {}}}",
+                       new_middle_key, new_end_key);
+}
+
+auto move_splitting_result_t::format() const -> std::string {
+    return fmt::format(
+        "move_splitting_result_t{{begin_part = {}, middle_part = {}, end_part = {}}}",
+        begin_segment_part, middle_segment_part, end_segment_part);
+}
+
+}  // namespace editing
+}  // namespace editable_circuit
+
+template <>
+auto format(editable_circuit::editing::move_segment_type type) -> std::string {
+    switch (type) {
+        using enum editable_circuit::editing::move_segment_type;
+
+        case move_full_segment:
+            return "move_full_segment";
+        case move_touching_segment:
+            return "move_touching_segment";
+        case move_splitting_segment:
+            return "move_splitting_segment";
+    };
+}
+
+namespace editable_circuit {
+namespace editing {
+
+auto get_move_segment_type(const Layout& layout,
+                           segment_part_t segment_part) -> move_segment_type {
     const auto moving_part = segment_part.part;
-    const auto full_part = to_part(get_line(circuit.layout, segment_part.segment));
+    const auto full_part = get_part(layout, segment_part.segment);
+
+    using enum move_segment_type;
 
     if (a_equal_b(moving_part, full_part)) {
-        _move_full_segment_between_trees(circuit, segment_part.segment, destination_id);
-        return {null_segment_part, null_segment_part};
+        return move_full_segment;
     }
 
     if (a_inside_b_touching_one_side(moving_part, full_part)) {
-        return {
-            _move_touching_segment_between_trees(circuit, segment_part, destination_id),
-            null_segment_part,
-        };
-    }
+        return move_touching_segment;
+    };
 
     if (a_inside_b_not_touching(moving_part, full_part)) {
-        return _move_splitting_segment_between_trees(circuit, segment_part,
-                                                     destination_id);
+        return move_splitting_segment;
     }
 
     throw std::runtime_error("segment part is invalid");
+}
+
+auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_part,
+                                const wire_id_t destination_id) -> void {
+    switch (get_move_segment_type(circuit.layout, segment_part)) {
+        using enum move_segment_type;
+
+        case move_full_segment: {
+            move_full_segment_between_trees(circuit, segment_part.segment,
+                                            destination_id);
+            return;
+        }
+
+        case move_touching_segment: {
+            move_touching_segment_between_trees(circuit, segment_part, destination_id);
+            return;
+        }
+        case move_splitting_segment: {
+            move_splitting_segment_between_trees(circuit, segment_part, destination_id);
+            return;
+        }
+    }
 }
 
 //

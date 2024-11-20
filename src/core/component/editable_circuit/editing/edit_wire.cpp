@@ -45,58 +45,69 @@ auto _store_history_segment_create_temporary(CircuitData& circuit,
     }
 }
 
-using optional_key_pair_t = std::pair<segment_key_t, segment_key_t>;
-constexpr static inline auto null_optional_key_pair =
-    optional_key_pair_t {null_segment_key, null_segment_key};
+auto move_touching_segment_between_trees_with_history(
+    CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
+    segment_key_t optional_end_key = null_segment_key) -> move_touching_result_t {
+    const auto result = move_touching_segment_between_trees(
+        circuit, source_segment_part, destination_id, optional_end_key);
 
-auto move_segment_between_trees_with_history(
-    CircuitData& circuit, segment_part_t& segment_part, const wire_id_t destination_id,
-    optional_key_pair_t optional_new_keys = null_optional_key_pair)
-    -> std::pair<segment_part_t, segment_part_t> {
-    auto stack = circuit.history.get_stack();
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto key_begin =
+            circuit.index.key_index().get(result.begin_segment_part.segment);
+        const auto key_end =
+            circuit.index.key_index().get(result.end_segment_part.segment);
 
-    const auto [left1, left2] =
-        move_segment_between_trees(circuit, segment_part, destination_id);
-
-    // validation
-    assert(is_full_segment(circuit.layout, segment_part));
-    assert(!left1 || is_full_segment(circuit.layout, left1));
-    assert(!left2 || is_full_segment(circuit.layout, left2));
-
-    // set new keys
-    // TODO: !!! needs rework !!!
-    if (optional_new_keys.first) {
-        Expects(left1);
-        Expects(!left2);
-
-        const auto line_0 = get_line(circuit.layout, segment_part.segment);
-        const auto line_1 = get_line(circuit.layout, left1.segment);
-
-        const auto new_segment = line_1 > line_0 ? left1 : segment_part;
-        circuit.index.set_key(new_segment.segment, optional_new_keys.first);
-    }
-    Expects(!optional_new_keys.second);
-
-    // history
-    if (stack != nullptr && left1 && !left2) {
-        const auto key_0 = circuit.index.key_index().get(segment_part.segment);
-        const auto key_1 = circuit.index.key_index().get(left1.segment);
-
-        stack->push_segment_merge(key_0, key_1);
+        stack->push_segment_merge(key_begin, key_end);
     }
 
-    if (stack != nullptr && left1 && left2) {
-        // key_0 is between key_1 and key_2 => key_0 can be merged with both
-        const auto key_0 = circuit.index.key_index().get(segment_part.segment);
-        const auto key_1 = circuit.index.key_index().get(left1.segment);
-        const auto key_2 = circuit.index.key_index().get(left2.segment);
+    return result;
+}
+
+auto move_splitting_segment_between_trees_with_history(
+    CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
+    move_splitting_keys_t optional_keys = {}) -> move_splitting_result_t {
+    const auto result = move_splitting_segment_between_trees(
+        circuit, source_segment_part, destination_id, optional_keys);
+
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto key_begin =
+            circuit.index.key_index().get(result.begin_segment_part.segment);
+        const auto key_middle =
+            circuit.index.key_index().get(result.middle_segment_part.segment);
+        const auto key_end =
+            circuit.index.key_index().get(result.end_segment_part.segment);
 
         // restored in reverse order
-        stack->push_segment_merge(key_0, key_1);
-        stack->push_segment_merge(key_0, key_2);
+        stack->push_segment_merge(key_begin, key_middle);
+        stack->push_segment_merge(key_middle, key_end);
     }
 
-    return {left1, left2};
+    return result;
+}
+
+auto move_segment_between_trees_with_history(CircuitData& circuit,
+                                             segment_part_t& segment_part,
+                                             const wire_id_t destination_id) -> void {
+    switch (get_move_segment_type(circuit.layout, segment_part)) {
+        using enum move_segment_type;
+
+        case move_full_segment: {
+            move_full_segment_between_trees(circuit, segment_part.segment,
+                                            destination_id);
+            return;
+        }
+
+        case move_touching_segment: {
+            move_touching_segment_between_trees_with_history(circuit, segment_part,
+                                                             destination_id);
+            return;
+        }
+        case move_splitting_segment: {
+            move_splitting_segment_between_trees_with_history(circuit, segment_part,
+                                                              destination_id);
+            return;
+        }
+    }
 }
 
 auto _store_history_segment_move_temporary(CircuitData& circuit, segment_t segment,
@@ -626,27 +637,20 @@ auto merge_all_line_segments_with_history(
 
 namespace {
 
-auto _split_end_part_with_history(
-    CircuitData& circuit, const segment_part_t split_end_part,
-    segment_key_t optional_new_key) -> std::pair<segment_t, segment_t> {
+auto _split_end_part_with_history(CircuitData& circuit, segment_part_t& split_end_part,
+                                  segment_key_t optional_new_key)
+    -> std::pair<segment_t, segment_t> {
     if (is_inserted(split_end_part.segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("can only split uninserted wires");
     }
-
     assert(a_inside_b_touching_end(split_end_part.part,
                                    get_part(circuit.layout, split_end_part.segment)));
 
     // less work to move end part, as no copy is required within the segment
-    auto segment_part_1 = split_end_part;
-    const auto segment_part_0 =
-        move_segment_between_trees_with_history(circuit, segment_part_1,
-                                                segment_part_1.segment.wire_id,
-                                                {optional_new_key, null_segment_key})
-            .first;
+    const auto result = move_touching_segment_between_trees_with_history(
+        circuit, split_end_part, split_end_part.segment.wire_id, optional_new_key);
 
-    assert(get_line(circuit.layout, segment_part_0) <
-           get_line(circuit.layout, segment_part_1));
-    return {segment_part_0.segment, segment_part_1.segment};
+    return {result.begin_segment_part.segment, result.end_segment_part.segment};
 }
 
 }  // namespace
@@ -655,8 +659,8 @@ auto split_uninserted_segment_with_history(
     CircuitData& circuit, const segment_t segment, offset_t offset,
     segment_key_t optional_new_key) -> std::pair<segment_t, segment_t> {
     const auto part = get_part(circuit.layout, segment);
-    auto split_end_part = segment_part_t {segment, part_t {offset, part.end}};
 
+    auto split_end_part = segment_part_t {segment, part_t {offset, part.end}};
     return _split_end_part_with_history(circuit, split_end_part, optional_new_key);
 }
 
@@ -666,8 +670,8 @@ auto split_uninserted_segment_with_history(
     // less work to move end part, as no copy is required within the segment
     const auto full_line = get_line(circuit.layout, segment);
     const auto line_moved = ordered_line_t {position, full_line.p1};
-    const auto split_end_part = segment_part_t {segment, to_part(full_line, line_moved)};
 
+    auto split_end_part = segment_part_t {segment, to_part(full_line, line_moved)};
     return _split_end_part_with_history(circuit, split_end_part, optional_new_key);
 }
 

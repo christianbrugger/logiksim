@@ -2,7 +2,11 @@
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_EDITING_EDIT_WIRE_DETAIL_H
 
 #include "core/algorithm/sort_pair.h"
+#include "core/format/enum.h"
+#include "core/format/struct.h"
 #include "core/vocabulary/segment.h"
+#include "core/vocabulary/segment_key.h"
+#include "core/vocabulary/segment_part.h"
 #include "core/vocabulary/segment_point_type.h"
 
 #include <initializer_list>
@@ -43,12 +47,71 @@ auto add_temporary_segment(CircuitData& circuit, ordered_line_t line) -> segment
  * + Newly inserted endpoints as of type shadow_point.
  *
  * Note, the segment with the smallest line preserves the initial key.
- *
- * Returns up to two newly created parts, or null_segment_t;
  */
 auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_part,
-                                wire_id_t destination_id)
-    -> std::pair<segment_part_t, segment_part_t>;
+                                wire_id_t destination_id) -> void;
+
+enum class move_segment_type {
+    move_full_segment,
+    move_touching_segment,
+    move_splitting_segment,
+};
+
+}  // namespace editing
+}  // namespace editable_circuit
+
+template <>
+[[nodiscard]] auto format(editable_circuit::editing::move_segment_type type)
+    -> std::string;
+
+namespace editable_circuit {
+namespace editing {
+
+[[nodiscard]] auto get_move_segment_type(
+    const Layout& layout, segment_part_t segment_part) -> move_segment_type;
+
+auto move_full_segment_between_trees(CircuitData& circuit, segment_t& source_segment,
+                                     wire_id_t destination_id) -> void;
+
+struct move_touching_result_t {
+    // the moved segment
+    segment_part_t moved_segment_part;
+    // the non moved segment that was remaining
+    segment_part_t other_segment_part;
+
+    // the part that was at the beginning of the segment
+    segment_part_t begin_segment_part;
+    // the part at the end of the segment
+    segment_part_t end_segment_part;
+
+    [[nodiscard]] auto operator==(const move_touching_result_t&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+auto move_touching_segment_between_trees(
+    CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
+    segment_key_t optional_end_key = null_segment_key) -> move_touching_result_t;
+
+struct move_splitting_keys_t {
+    segment_key_t new_middle_key {null_segment_key};
+    segment_key_t new_end_key {null_segment_key};
+
+    [[nodiscard]] auto operator==(const move_splitting_keys_t&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct move_splitting_result_t {
+    segment_part_t begin_segment_part;
+    segment_part_t middle_segment_part;
+    segment_part_t end_segment_part;
+
+    [[nodiscard]] auto operator==(const move_splitting_result_t&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+auto move_splitting_segment_between_trees(
+    CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
+    move_splitting_keys_t optional_keys = {}) -> move_splitting_result_t;
 
 /**
  * @brief: Deletes segment_part of tree (only uninserted)
