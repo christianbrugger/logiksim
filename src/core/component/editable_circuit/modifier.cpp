@@ -569,7 +569,7 @@ auto Modifier::split_uninserted_segment(segment_t segment, offset_t offset,
             circuit_data_.layout, segment, offset, optional_new_key);
     }
 
-    const auto result = editing::split_line_segment_with_history(
+    const auto result = editing::split_uninserted_segment_with_history(
         circuit_data_, segment, offset, optional_new_key);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {

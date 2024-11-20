@@ -287,12 +287,9 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
 
         case segment_split: {
             const auto definition = stack.pop_segment_split();
-            editing::split_uninserted_segment(circuit,
-                                              split_segment_t {
-                                                  .source_key = definition.source,
-                                                  .new_key = definition.new_key,
-                                                  .split_offset = definition.split_offset,
-                                              });
+            const auto source_segment = to_id(definition.source, circuit);
+            editing::split_uninserted_segment_with_history(
+                circuit, source_segment, definition.split_offset, definition.new_key);
             return;
         }
 

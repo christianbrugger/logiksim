@@ -117,28 +117,19 @@ auto set_uninserted_crosspoint_with_history(CircuitData& circuit, segment_t segm
 auto merge_uninserted_segment_with_history(CircuitData& circuit, segment_t segment_0,
                                            segment_t segment_1) -> segment_t;
 
-/*
- * @brief: Define split of two segments.
- *
- * Source segment is split into two segments at the given offset.
- * The new segment has new_key as key.
- */
-struct split_segment_t {
-    segment_key_t source_key;
-    segment_key_t new_key;
-    offset_t split_offset;
-
-    [[nodiscard]] auto operator==(const split_segment_t&) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
 /**
  * @brief: Split two uninserted line segments.
+ *
+ * The smaller part gets the key of the old segment. The larger split part
+ * the optional new key.
  */
-auto split_line_segment_with_history(CircuitData& circuit, segment_t segment,
-                                     offset_t offset, segment_key_t optional_new_key)
-    -> std::pair<segment_t, segment_t>;
-auto split_uninserted_segment(CircuitData& circuit, split_segment_t definition) -> void;
+auto split_uninserted_segment_with_history(
+    CircuitData& circuit, segment_t segment, offset_t offset,
+    segment_key_t optional_new_key = null_segment_key) -> std::pair<segment_t, segment_t>;
+
+auto split_uninserted_segment_with_history(
+    CircuitData& circuit, segment_t segment, point_t position,
+    segment_key_t optional_new_key = null_segment_key) -> std::pair<segment_t, segment_t>;
 
 /**
  * @brief: Regularizes temporary segments in the selection.
