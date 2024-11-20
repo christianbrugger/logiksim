@@ -427,6 +427,11 @@ auto all_normal_display_state(const Layout &layout) -> bool {
            std::ranges::all_of(inserted_wire_ids(layout), wire_normal);
 }
 
+auto get_normalized(Layout layout) -> Layout {
+    layout.normalize();
+    return layout;
+}
+
 auto are_normalized_equal(Layout layout1, Layout layout2) -> bool {
     layout1.normalize();
     layout2.normalize();
