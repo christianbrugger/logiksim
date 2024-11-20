@@ -11,65 +11,6 @@ namespace logicsim {
 
 namespace editable_circuit {
 
-struct key_state_entry_t {
-    segment_key_t key;
-    ordered_line_t line;
-    std::pair<display_state_t, display_state_t> display_states;
-
-    [[nodiscard]] auto operator==(const key_state_entry_t&) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const key_state_entry_t&) const = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
-auto key_state_entry_t::format() const -> std::string {
-    return fmt::format("({}, {}, {})", key, line, display_states);
-}
-
-using key_state_t = std::vector<key_state_entry_t>;
-
-[[nodiscard]] auto get_key_state(const Modifier& modifier) -> key_state_t {
-    const auto& layout = modifier.circuit_data().layout;
-    auto result = key_state_t {};
-
-    for (const auto wire_id : wire_ids(layout)) {
-        for (const segment_t segment :
-             layout.wires().segment_tree(wire_id).indices(wire_id)) {
-            const auto segment_part = get_segment_part(layout, segment);
-            result.emplace_back(modifier.circuit_data().index.key_index().get(segment),
-                                get_line(layout, segment),
-                                get_display_states(layout, segment_part));
-            ;
-        }
-    }
-
-    std::ranges::sort(result);
-    return result;
-}
-
-struct layout_key_state_t {
-    Layout layout;          // normalized
-    key_state_t key_state;  // sorted
-
-    [[nodiscard]] auto operator==(const layout_key_state_t&) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
-auto layout_key_state_t::format() const -> std::string {
-    return fmt::format(
-        "layout_key_state(\n"
-        "  {}\n"
-        "  key_state = {},\n"
-        ")",
-        layout, key_state);
-}
-
-[[nodiscard]] auto get_layout_key_state(const Modifier& modifier) -> layout_key_state_t {
-    return layout_key_state_t {
-        .layout = get_normalized(modifier.circuit_data().layout),
-        .key_state = get_key_state(modifier),
-    };
-}
-
 //
 // Delete
 //

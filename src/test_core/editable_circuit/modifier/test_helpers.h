@@ -3,6 +3,7 @@
 
 #include "core/component/editable_circuit/modifier.h"
 #include "core/editable_circuit.h"
+#include "core/format/struct.h"
 #include "core/layout.h"
 #include "core/vocabulary/logicitem_definition.h"
 
@@ -174,6 +175,34 @@ inline auto add_test_wire(Layout &layout, SegmentPointType point_type,
     const auto wire_id = layout.wires().add_wire();
     add_to_wire(layout, wire_id, point_type, lines);
 }
+
+//
+// Layout - Key - State
+//
+
+struct key_state_entry_t {
+    segment_key_t key;
+    ordered_line_t line;
+    std::pair<display_state_t, display_state_t> display_states;
+
+    [[nodiscard]] auto operator==(const key_state_entry_t &) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const key_state_entry_t &) const = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+using key_state_t = std::vector<key_state_entry_t>;
+
+[[nodiscard]] auto get_key_state(const Modifier &modifier) -> key_state_t;
+
+struct layout_key_state_t {
+    Layout layout;          // normalized
+    key_state_t key_state;  // sorted
+
+    [[nodiscard]] auto operator==(const layout_key_state_t &) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+[[nodiscard]] auto get_layout_key_state(const Modifier &modifier) -> layout_key_state_t;
 
 }  // namespace editable_circuit
 

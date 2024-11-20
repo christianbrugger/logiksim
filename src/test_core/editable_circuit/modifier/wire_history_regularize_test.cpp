@@ -23,19 +23,25 @@ TEST(EditableCircuitWireHistory, SetEndpointsCross) {
     const auto segment = segment_t {temporary_wire_id, segment_index};
 
     auto modifier = get_modifier_with_history(layout);
+    const auto state_0 = get_layout_key_state(modifier);
     {
         modifier.set_temporary_endpoints(
             segment,
             endpoints_t {SegmentPointType::cross_point, SegmentPointType::shadow_point});
     }
+    const auto state_1 = get_layout_key_state(modifier);
     Expects(is_valid(modifier));
 
     // before undo
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+    ASSERT_TRUE(state_0 != state_1);
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+
+    // after redo
+    modifier.redo_group();
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
 }
 
 //
@@ -57,29 +63,28 @@ auto _test_merge_single_restore(ordered_line_t line_0, ordered_line_t line_1,
 
     // build history
     auto modifier = get_modifier_with_history(layout);
+    const auto state_0 = get_layout_key_state(modifier);
     const auto segment_key_0 = modifier.circuit_data().index.key_index().get(segment_0);
     const auto segment_key_1 = modifier.circuit_data().index.key_index().get(segment_1);
     const auto segment_merged =
         flip_merge ? modifier.merge_uninserted_segment(segment_1, segment_0)
                    : modifier.merge_uninserted_segment(segment_0, segment_1);
+    const auto state_1 = get_layout_key_state(modifier);
     Expects(is_valid(modifier));
 
     // before undo
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+    ASSERT_TRUE(state_0 != state_1);
     const auto expected_merged_key = line_0 < line_1 ? segment_key_0 : segment_key_1;
     ASSERT_EQ(modifier.circuit_data().index.key_index().get(segment_merged),
               expected_merged_key);
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
 
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key_0)),
-              line_0);
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key_1)),
-              line_1);
+    // after redo
+    modifier.redo_group();
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
 }
 
 }  // namespace
@@ -124,16 +129,18 @@ TEST(EditableCircuitWireHistory, SplitTemporary) {
     const auto segment = segment_t {temporary_wire_id, segment_index};
 
     auto modifier = get_modifier_with_history(layout);
+    const auto state_0 = get_layout_key_state(modifier);
     const auto segment_key = modifier.circuit_data().index.key_index().get(segment);
     const auto new_key = [=]() {
         auto key = segment_key;
         return ++(++(++key));
     }();
     modifier.split_uninserted_segment(segment, offset_t {5}, new_key);
+    const auto state_1 = get_layout_key_state(modifier);
     Expects(is_valid(modifier));
 
     // before undo
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+    ASSERT_TRUE(state_0 != state_1);
     const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
     const auto line_1 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
     ASSERT_EQ(get_line(modifier.circuit_data().layout,
@@ -145,10 +152,11 @@ TEST(EditableCircuitWireHistory, SplitTemporary) {
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key)),
-              line_orig);
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+
+    // after redo
+    modifier.redo_group();
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
 }
 
 //
@@ -164,21 +172,25 @@ TEST(EditableCircuitWireHistory, SplitsTemporarySingle) {
     const auto segment_part = segment_part_t {segment, part_t {0, 10}};
 
     auto modifier = get_modifier_with_history(layout);
-    const auto segment_key = modifier.circuit_data().index.key_index().get(segment);
+    const auto state_0 = get_layout_key_state(modifier);
     {
         auto selection = Selection {};
         selection.add_segment(segment_part);
         modifier.split_temporary_segments(selection, std::array {point_t {5, 0}});
     }
+    const auto state_1 = get_layout_key_state(modifier);
     Expects(is_valid(modifier));
 
     // before undo
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+    ASSERT_TRUE(state_0 != state_1);
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
-    ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+
+    // after redo
+    modifier.redo_group();
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
 }
 
 TEST(EditableCircuitWireHistory, SplitsTemporaryMultiple) {
@@ -190,7 +202,7 @@ TEST(EditableCircuitWireHistory, SplitsTemporaryMultiple) {
     const auto segment_part = segment_part_t {segment, part_t {0, 10}};
 
     auto modifier = get_modifier_with_history(layout);
-    const auto segment_key = modifier.circuit_data().index.key_index().get(segment);
+    const auto state_0 = get_layout_key_state(modifier);
     {
         auto selection = Selection {};
         selection.add_segment(segment_part);
@@ -198,15 +210,19 @@ TEST(EditableCircuitWireHistory, SplitsTemporaryMultiple) {
             selection, std::array {point_t {5, 0}, point_t {4, 0}, point_t {3, 0},
                                    point_t {7, 0}, point_t {8, 0}, point_t {9, 0}});
     }
+    const auto state_1 = get_layout_key_state(modifier);
     Expects(is_valid(modifier));
 
     // before undo
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+    ASSERT_TRUE(state_0 != state_1);
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
-    ASSERT_EQ(segment_key, modifier.circuit_data().index.key_index().get(segment));
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+
+    // after redo
+    modifier.redo_group();
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
 }
 
 //
@@ -229,31 +245,26 @@ TEST(EditableCircuitWireHistory, RegularizeMergeSingle) {
 
     // build history
     auto modifier = get_modifier_with_history(layout);
-    const auto segment_key_0 =
-        modifier.circuit_data().index.key_index().get(segment_part_0.segment);
-    const auto segment_key_1 =
-        modifier.circuit_data().index.key_index().get(segment_part_1.segment);
+    const auto state_0 = get_layout_key_state(modifier);
     {
         auto selection = Selection {};
         selection.add_segment(segment_part_0);
         selection.add_segment(segment_part_1);
         modifier.regularize_temporary_selection(selection, {});
     }
+    const auto state_1 = get_layout_key_state(modifier);
     Expects(is_valid(modifier));
 
     // before undo
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+    ASSERT_TRUE(state_0 != state_1);
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
 
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key_0)),
-              line_0);
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key_1)),
-              line_1);
+    // after redo
+    modifier.redo_group();
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
 }
 
 TEST(EditableCircuitWireHistory, RegularizeSetCrosspoint) {
@@ -277,12 +288,7 @@ TEST(EditableCircuitWireHistory, RegularizeSetCrosspoint) {
 
     // build history
     auto modifier = get_modifier_with_history(layout);
-    const auto segment_key_0 =
-        modifier.circuit_data().index.key_index().get(segment_part_0.segment);
-    const auto segment_key_1 =
-        modifier.circuit_data().index.key_index().get(segment_part_1.segment);
-    const auto segment_key_2 =
-        modifier.circuit_data().index.key_index().get(segment_part_2.segment);
+    const auto state_0 = get_layout_key_state(modifier);
     {
         auto selection = Selection {};
         selection.add_segment(segment_part_0);
@@ -290,24 +296,19 @@ TEST(EditableCircuitWireHistory, RegularizeSetCrosspoint) {
         selection.add_segment(segment_part_2);
         modifier.regularize_temporary_selection(selection, {});
     }
+    const auto state_1 = get_layout_key_state(modifier);
     Expects(is_valid(modifier));
 
     // before undo
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
+    ASSERT_TRUE(state_0 != state_1);
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
 
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key_0)),
-              line_0);
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key_1)),
-              line_1);
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key_2)),
-              line_2);
+    // after redo
+    modifier.redo_group();
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
 }
 
 TEST(EditableCircuitWireHistory, RegularizeTrueCrosspoint) {
@@ -326,10 +327,7 @@ TEST(EditableCircuitWireHistory, RegularizeTrueCrosspoint) {
 
     // build history
     auto modifier = get_modifier_with_history(layout);
-    const auto segment_key_0 =
-        modifier.circuit_data().index.key_index().get(segment_part_0.segment);
-    const auto segment_key_1 =
-        modifier.circuit_data().index.key_index().get(segment_part_1.segment);
+    const auto state_0 = get_layout_key_state(modifier);
     {
         auto guard = ModifierSelectionGuard {modifier};
         modifier.add_to_selection(guard.selection_id(), segment_part_0);
@@ -338,24 +336,19 @@ TEST(EditableCircuitWireHistory, RegularizeTrueCrosspoint) {
             modifier.circuit_data().selection_store.at(guard.selection_id());
         modifier.regularize_temporary_selection(selection, std::vector {point_t {5, 0}});
     }
+    const auto state_1 = get_layout_key_state(modifier);
     Expects(is_valid(modifier));
 
     // before undo
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), false);
-    // print(modifier.circuit_data().history);
-    // print(modifier.circuit_data().layout);
-    // print(layout);
+    ASSERT_TRUE(state_0 != state_1);
 
     // after undo
     modifier.undo_group();
-    ASSERT_EQ(are_normalized_equal(modifier.circuit_data().layout, layout), true);
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
 
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key_0)),
-              line_0);
-    ASSERT_EQ(get_line(modifier.circuit_data().layout,
-                       modifier.circuit_data().index.key_index().get(segment_key_1)),
-              line_1);
+    // after redo
+    modifier.redo_group();
+    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
 }
 
 }  // namespace editable_circuit
