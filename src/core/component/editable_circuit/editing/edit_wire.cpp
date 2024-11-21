@@ -240,6 +240,8 @@ auto _insert_uninserted_segment(CircuitData& circuit,
     set_wire_inputs_at_logicitem_outputs(circuit, segment_part.segment);
     move_segment_between_trees_with_history(circuit, segment_part, target_wire_id);
 
+    _store_history_segment_colliding_to_temporary(circuit, segment_part);
+
     const auto line = get_line(circuit.layout, segment_part);
     fix_and_merge_segments(circuit, line.p0, &segment_part);
     fix_and_merge_segments(circuit, line.p1, &segment_part);
@@ -257,12 +259,11 @@ auto _wire_change_temporary_to_colliding(CircuitData& circuit,
         const auto destination = colliding_wire_id;
         move_segment_between_trees_with_history(circuit, segment_part, destination);
         reset_segment_endpoints_with_history(circuit, segment_part.segment);
+        _store_history_segment_colliding_to_temporary(circuit, segment_part);
     } else {
         _insert_uninserted_segment(circuit, segment_part);
         mark_valid(circuit.layout, segment_part);
     }
-
-    _store_history_segment_colliding_to_temporary(circuit, segment_part);
 }
 
 auto _wire_change_insert_to_colliding(CircuitData& circuit,
@@ -286,9 +287,12 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
 
     if (was_inserted) {
         move_segment_between_trees(circuit, segment_part, destination_id);
+        reset_uninserted_endpoints(circuit.layout, segment_part.segment);
     } else {
         move_segment_between_trees_with_history(circuit, segment_part, destination_id);
     }
+
+    _store_history_segment_temporary_to_colliding(circuit, segment_part);
 
     if (was_inserted) {
         if (circuit.layout.wires().segment_tree(source_id).empty()) {
@@ -300,10 +304,7 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
 
             split_broken_tree(circuit, moved_line.p0, moved_line.p1);
         }
-        reset_uninserted_endpoints(circuit.layout, segment_part.segment);
     }
-
-    _store_history_segment_temporary_to_colliding(circuit, segment_part);
 }
 
 auto _wire_change_colliding_to_insert(CircuitData& circuit,
@@ -531,15 +532,32 @@ namespace {
 auto _split_end_part_with_history(CircuitData& circuit, segment_part_t& split_end_part,
                                   segment_key_t optional_new_key)
     -> std::pair<segment_t, segment_t> {
-    if (is_inserted(split_end_part.segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("can only split uninserted wires");
-    }
+    // TODO: !!! put back in
+    // if (is_inserted(split_end_part.segment.wire_id)) [[unlikely]] {
+    //     throw std::runtime_error("can only split uninserted wires");
+    // }
     assert(a_inside_b_touching_end(split_end_part.part,
                                    get_part(circuit.layout, split_end_part.segment)));
 
     // less work to move end part, as no copy is required within the segment
-    const auto result = move_touching_segment_between_trees_with_history(
-        circuit, split_end_part, split_end_part.segment.wire_id, optional_new_key);
+    const auto result = is_inserted(split_end_part.segment.wire_id)
+                            ? move_touching_segment_between_trees(
+                                  circuit, split_end_part, split_end_part.segment.wire_id,
+                                  optional_new_key)
+                            : move_touching_segment_between_trees_with_history(
+                                  circuit, split_end_part, split_end_part.segment.wire_id,
+                                  optional_new_key);
+
+    if (is_inserted(split_end_part.segment.wire_id)) {
+        update_segment_point_types(circuit, result.begin.segment.wire_id,
+                                   {
+                                       std::pair {result.begin.segment.segment_index,
+                                                  SegmentPointType::corner_point},
+                                       std::pair {result.end.segment.segment_index,
+                                                  SegmentPointType::shadow_point},
+                                   },
+                                   get_line(circuit.layout, result.begin.segment).p1);
+    };
 
     return {result.begin.segment, result.end.segment};
 }

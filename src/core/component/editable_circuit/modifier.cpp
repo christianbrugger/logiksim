@@ -104,6 +104,7 @@ auto Modifier::enable_history() -> void {
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
     }
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::disable_history() -> void {
@@ -112,6 +113,7 @@ auto Modifier::disable_history() -> void {
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
     }
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::undo_group() -> void {
@@ -120,6 +122,7 @@ auto Modifier::undo_group() -> void {
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
     }
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::redo_group() -> void {
@@ -128,6 +131,7 @@ auto Modifier::redo_group() -> void {
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
     }
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::finish_undo_group() -> void {
@@ -136,6 +140,7 @@ auto Modifier::finish_undo_group() -> void {
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
     }
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::reopen_undo_group() -> void {
@@ -144,6 +149,7 @@ auto Modifier::reopen_undo_group() -> void {
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
     }
+    Ensures(debug_class_invariant_holds(*this));
 }
 
 auto Modifier::is_history_enabled() const -> bool {

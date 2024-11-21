@@ -689,7 +689,8 @@ struct merge_memory_t {
 };
 
 auto merge_line_segment_with_history(CircuitData& circuit, segment_t segment_0,
-                                     segment_t segment_1) -> segment_t {
+                                     segment_t segment_1,
+                                     segment_part_t* preserve_segment) -> segment_t {
     const auto stack = circuit.history.get_stack();
 
     // remember state
@@ -706,7 +707,8 @@ auto merge_line_segment_with_history(CircuitData& circuit, segment_t segment_0,
     }();
 
     // merge
-    const auto segment_after = merge_line_segment(circuit, segment_0, segment_1);
+    const auto segment_after =
+        merge_line_segment(circuit, segment_0, segment_1, preserve_segment);
 
     // history
     if (stack != nullptr) {
@@ -1017,7 +1019,8 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
         const auto parallel = horizontal_0 == horizontal_1;
 
         if (parallel) {
-            merge_line_segment(circuit, segments.at(0), segments.at(1), preserve_segment);
+            merge_line_segment_with_history(circuit, segments.at(0), segments.at(1),
+                                            preserve_segment);
             return;
         }
 
