@@ -2,6 +2,7 @@
 
 #include "core/component/editable_circuit/circuit_data.h"
 #include "core/geometry/line.h"
+#include "core/geometry/offset.h"
 #include "core/geometry/orientation.h"
 #include "core/geometry/segment_info.h"
 #include "core/tree_normalization.h"
@@ -453,6 +454,66 @@ auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_pa
     }
 }
 
+auto move_touching_segment_between_trees_with_history(
+    CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
+    segment_key_t optional_end_key) -> move_touching_result_t {
+    const auto result = move_touching_segment_between_trees(
+        circuit, source_segment_part, destination_id, optional_end_key);
+
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto key_begin = circuit.index.key_index().get(result.begin.segment);
+        const auto key_end = circuit.index.key_index().get(result.end.segment);
+
+        stack->push_segment_merge(key_begin, key_end);
+    }
+
+    return result;
+}
+
+auto move_splitting_segment_between_trees_with_history(
+    CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
+    move_splitting_keys_t optional_keys) -> move_splitting_result_t {
+    const auto result = move_splitting_segment_between_trees(
+        circuit, source_segment_part, destination_id, optional_keys);
+
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto key_begin = circuit.index.key_index().get(result.begin.segment);
+        const auto key_middle = circuit.index.key_index().get(result.middle.segment);
+        const auto key_end = circuit.index.key_index().get(result.end.segment);
+
+        // restored in reverse order
+        stack->push_segment_merge(key_begin, key_middle);
+        stack->push_segment_merge(key_middle, key_end);
+    }
+
+    return result;
+}
+
+auto move_segment_between_trees_with_history(CircuitData& circuit,
+                                             segment_part_t& segment_part,
+                                             const wire_id_t destination_id) -> void {
+    switch (get_move_segment_type(circuit.layout, segment_part)) {
+        using enum move_segment_type;
+
+        case move_full_segment: {
+            move_full_segment_between_trees(circuit, segment_part.segment,
+                                            destination_id);
+            return;
+        }
+
+        case move_touching_segment: {
+            move_touching_segment_between_trees_with_history(circuit, segment_part,
+                                                             destination_id);
+            return;
+        }
+        case move_splitting_segment: {
+            move_splitting_segment_between_trees_with_history(circuit, segment_part,
+                                                              destination_id);
+            return;
+        }
+    }
+}
+
 //
 // Remove Segment from Tree
 //
@@ -611,8 +672,8 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
 
 }  // namespace
 
-auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
-                         segment_part_t* preserve_segment) -> segment_t {
+auto merge_line_segment(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
+                        segment_part_t* preserve_segment) -> segment_t {
     if (segment_0.segment_index < segment_1.segment_index) {
         return _merge_line_segments_ordered(circuit, segment_0, segment_1,
                                             preserve_segment);
@@ -620,12 +681,59 @@ auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t se
     return _merge_line_segments_ordered(circuit, segment_1, segment_0, preserve_segment);
 }
 
+struct merge_memory_t {
+    segment_key_t key_0 {null_segment_key};
+    segment_key_t key_1 {null_segment_key};
+    ordered_line_t line_0 {};
+    ordered_line_t line_1 {};
+};
+
+auto merge_line_segment_with_history(CircuitData& circuit, segment_t segment_0,
+                                     segment_t segment_1) -> segment_t {
+    const auto stack = circuit.history.get_stack();
+
+    // remember state
+    const auto before = [&]() {
+        if (stack != nullptr) {
+            return merge_memory_t {
+                .key_0 = circuit.index.key_index().get(segment_0),
+                .key_1 = circuit.index.key_index().get(segment_1),
+                .line_0 = get_line(circuit.layout, segment_0),
+                .line_1 = get_line(circuit.layout, segment_1),
+            };
+        }
+        return merge_memory_t {};
+    }();
+
+    // merge
+    const auto segment_after = merge_line_segment(circuit, segment_0, segment_1);
+
+    // history
+    if (stack != nullptr) {
+        const auto key_after =
+            before.line_0 < before.line_1 ? before.key_0 : before.key_1;
+        assert(key_after == circuit.index.key_index().get(segment_after));
+
+        const auto split_offset = to_offset(std::min(before.line_0, before.line_1));
+
+        auto definition = split_segment_key_t {
+            .source = key_after,
+            .new_key = key_after == before.key_0 ? before.key_1 : before.key_0,
+            .split_offset = split_offset,
+        };
+
+        stack->push_segment_split(definition);
+    }
+
+    return segment_after;
+}
+
 auto merge_all_line_segments(
     CircuitData& circuit, std::vector<std::pair<segment_t, segment_t>>& pairs) -> void {
     merge_all_line_segments(
         circuit, pairs,
         [](CircuitData& circuit_, segment_t segment_0, segment_t segment_1) -> void {
-            merge_line_segments(circuit_, segment_0, segment_1, nullptr);
+            merge_line_segment(circuit_, segment_0, segment_1, nullptr);
         });
 }
 
@@ -909,8 +1017,7 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
         const auto parallel = horizontal_0 == horizontal_1;
 
         if (parallel) {
-            merge_line_segments(circuit, segments.at(0), segments.at(1),
-                                preserve_segment);
+            merge_line_segment(circuit, segments.at(0), segments.at(1), preserve_segment);
             return;
         }
 

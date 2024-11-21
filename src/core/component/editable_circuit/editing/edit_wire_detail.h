@@ -51,6 +51,10 @@ auto add_temporary_segment(CircuitData& circuit, ordered_line_t line) -> segment
 auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_part,
                                 wire_id_t destination_id) -> void;
 
+auto move_segment_between_trees_with_history(CircuitData& circuit,
+                                             segment_part_t& segment_part,
+                                             wire_id_t destination_id) -> void;
+
 enum class move_segment_type {
     move_full_segment,
     move_touching_segment,
@@ -92,6 +96,10 @@ auto move_touching_segment_between_trees(
     CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
     segment_key_t optional_end_key = null_segment_key) -> move_touching_result_t;
 
+auto move_touching_segment_between_trees_with_history(
+    CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
+    segment_key_t optional_end_key = null_segment_key) -> move_touching_result_t;
+
 struct move_splitting_keys_t {
     segment_key_t new_middle_key {null_segment_key};
     segment_key_t new_end_key {null_segment_key};
@@ -110,6 +118,10 @@ struct move_splitting_result_t {
 };
 
 auto move_splitting_segment_between_trees(
+    CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
+    move_splitting_keys_t optional_keys = {}) -> move_splitting_result_t;
+
+auto move_splitting_segment_between_trees_with_history(
     CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
     move_splitting_keys_t optional_keys = {}) -> move_splitting_result_t;
 
@@ -139,8 +151,16 @@ auto split_line_segment(CircuitData& circuit, segment_t segment,
  *
  * Returns merged segment.
  */
-auto merge_line_segments(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
-                         segment_part_t* preserve_segment = nullptr) -> segment_t;
+auto merge_line_segment(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
+                        segment_part_t* preserve_segment = nullptr) -> segment_t;
+
+/**
+ * @brief: Merge two line segments.
+ *
+ * Note, the resulting segment has the key of first segment when ordered by lines.
+ */
+auto merge_line_segment_with_history(CircuitData& circuit, segment_t segment_0,
+                                     segment_t segment_1) -> segment_t;
 
 auto merge_all_line_segments(CircuitData& circuit,
                              std::vector<std::pair<segment_t, segment_t>>& pairs) -> void;
