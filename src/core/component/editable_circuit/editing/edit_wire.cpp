@@ -529,35 +529,46 @@ auto merge_all_line_segments_with_history(
 
 namespace {
 
-auto _split_end_part_with_history(CircuitData& circuit, segment_part_t& split_end_part,
-                                  segment_key_t optional_new_key)
-    -> std::pair<segment_t, segment_t> {
-    // TODO: !!! put back in
-    // if (is_inserted(split_end_part.segment.wire_id)) [[unlikely]] {
-    //     throw std::runtime_error("can only split uninserted wires");
-    // }
+auto _split_uninserted_end_part_with_history(
+    CircuitData& circuit, segment_part_t& split_end_part,
+    segment_key_t optional_new_key) -> std::pair<segment_t, segment_t> {
+    if (is_inserted(split_end_part.segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("can only split uninserted wires");
+    }
     assert(a_inside_b_touching_end(split_end_part.part,
                                    get_part(circuit.layout, split_end_part.segment)));
 
     // less work to move end part, as no copy is required within the segment
-    const auto result = is_inserted(split_end_part.segment.wire_id)
-                            ? move_touching_segment_between_trees(
-                                  circuit, split_end_part, split_end_part.segment.wire_id,
-                                  optional_new_key)
-                            : move_touching_segment_between_trees_with_history(
-                                  circuit, split_end_part, split_end_part.segment.wire_id,
-                                  optional_new_key);
+    const auto result = move_touching_segment_between_trees_with_history(
+        circuit, split_end_part, split_end_part.segment.wire_id, optional_new_key);
 
-    if (is_inserted(split_end_part.segment.wire_id)) {
-        update_segment_point_types(circuit, result.begin.segment.wire_id,
-                                   {
-                                       std::pair {result.begin.segment.segment_index,
-                                                  SegmentPointType::corner_point},
-                                       std::pair {result.end.segment.segment_index,
-                                                  SegmentPointType::shadow_point},
-                                   },
-                                   get_line(circuit.layout, result.begin.segment).p1);
-    };
+    return {result.begin.segment, result.end.segment};
+}
+
+auto _split_inserted_end_part(CircuitData& circuit, segment_part_t& split_end_part,
+                              segment_key_t optional_new_key)
+    -> std::pair<segment_t, segment_t> {
+    if (!is_inserted(split_end_part.segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("can only split inserted wires");
+    }
+    assert(a_inside_b_touching_end(split_end_part.part,
+                                   get_part(circuit.layout, split_end_part.segment)));
+
+    // less work to move end part, as no copy is required within the segment
+    const auto result = move_touching_segment_between_trees(
+        circuit, split_end_part, split_end_part.segment.wire_id, optional_new_key);
+
+    // This is needed so the segments are registered in the collision cache
+    {
+        using enum SegmentPointType;
+        update_segment_point_types(
+            circuit, result.begin.segment.wire_id,
+            {
+                std::pair {result.begin.segment.segment_index, corner_point},
+                std::pair {result.end.segment.segment_index, shadow_point},
+            },
+            get_line(circuit.layout, result.begin.segment).p1);
+    }
 
     return {result.begin.segment, result.end.segment};
 }
@@ -570,7 +581,8 @@ auto split_uninserted_segment_with_history(
     const auto part = get_part(circuit.layout, segment);
 
     auto split_end_part = segment_part_t {segment, part_t {offset, part.end}};
-    return _split_end_part_with_history(circuit, split_end_part, optional_new_key);
+    return _split_uninserted_end_part_with_history(circuit, split_end_part,
+                                                   optional_new_key);
 }
 
 auto split_uninserted_segment_with_history(
@@ -581,7 +593,17 @@ auto split_uninserted_segment_with_history(
     const auto line_moved = ordered_line_t {position, full_line.p1};
 
     auto split_end_part = segment_part_t {segment, to_part(full_line, line_moved)};
-    return _split_end_part_with_history(circuit, split_end_part, optional_new_key);
+    return _split_uninserted_end_part_with_history(circuit, split_end_part,
+                                                   optional_new_key);
+}
+
+auto split_inserted_segment(CircuitData& circuit, segment_t segment, offset_t offset,
+                            segment_key_t optional_new_key)
+    -> std::pair<segment_t, segment_t> {
+    const auto part = get_part(circuit.layout, segment);
+
+    auto split_end_part = segment_part_t {segment, part_t {offset, part.end}};
+    return _split_inserted_end_part(circuit, split_end_part, optional_new_key);
 }
 
 auto regularize_temporary_selection(CircuitData& circuit, const Selection& selection,

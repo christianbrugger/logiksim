@@ -132,6 +132,21 @@ auto split_uninserted_segment_with_history(
     segment_key_t optional_new_key = null_segment_key) -> std::pair<segment_t, segment_t>;
 
 /**
+ * @brief: Splits inserted segment.
+ *
+ * Note this methods leaves the circuit in an invalid state.
+ * This method is called by the history just before inserting wires.
+ * Where the endpoints are fixed.
+ *
+ * While spliting requires history entries even for inserted wires, merging doesn't.
+ * This is because splitting produces new keys which need to be set to previous ones.
+ * This is why split does not produce merge history events.
+ */
+auto split_inserted_segment(CircuitData& circuit, segment_t segment, offset_t offset,
+                            segment_key_t optional_new_key = null_segment_key)
+    -> std::pair<segment_t, segment_t>;
+
+/**
  * @brief: Regularizes temporary segments in the selection.
  *
  * Internally the functions first splits the segments at the given true cross points.
