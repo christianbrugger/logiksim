@@ -140,7 +140,6 @@ auto split_uninserted_segment_with_history(
  *
  * While spliting requires history entries even for inserted wires, merging doesn't.
  * This is because splitting produces new keys which need to be set to previous ones.
- * This is why split does not produce merge history events.
  */
 auto split_inserted_segment(CircuitData& circuit, segment_t segment, offset_t offset,
                             segment_key_t optional_new_key = null_segment_key)

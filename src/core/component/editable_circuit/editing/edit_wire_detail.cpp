@@ -405,6 +405,7 @@ auto format(editable_circuit::editing::move_segment_type type) -> std::string {
         case move_splitting_segment:
             return "move_splitting_segment";
     };
+    std::terminate();
 }
 
 namespace editable_circuit {
