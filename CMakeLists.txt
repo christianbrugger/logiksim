@@ -56,6 +56,7 @@ include(cmake/ccache.cmake)
 include(cmake/compiler_colors.cmake)
 include(cmake/compiler_options.cmake)
 include(cmake/compiler_warnings.cmake)
+include(cmake/coverage.cmake)
 include(cmake/debug_print.cmake)
 include(cmake/link_time_optimization.cmake)
 include(cmake/linker.cmake)
@@ -99,6 +100,7 @@ ls_setup_standard_library_shared(
     "${LS_SANITIZE}"
 )
 ls_setup_sanitizers(logiksim_global_options "${LS_SANITIZE}")
+ls_setup_coverage(logiksim_global_options "${LS_ENABLE_COVERAGE}")
 # Automatically add it to all new targets from here on
 link_libraries(logiksim_global_options)
 

@@ -205,6 +205,19 @@
             }
         },
         {
+            "name": "linux-clang-debug-cov",
+            "displayName": "Clang Debug Coverage",
+            "description": "Compile debug build type with Clang compiler with Coverage",
+            "inherits": "common-linux-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF",
+                "LS_ENABLE_COVERAGE": "ON"
+            }
+        },
+        {
             "name": "linux-clang-debug-no-jit",
             "displayName": "Clang Debug",
             "description": "Compile debug build type with Clang compiler without JIT",
@@ -336,6 +349,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "LS_SANITIZE": "Address;Fuzzer",
+                "LS_ENABLE_COVERAGE": "ON",
 
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",
@@ -350,6 +364,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "LS_SANITIZE": "Address;Fuzzer",
+                "LS_ENABLE_COVERAGE": "ON",
 
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",

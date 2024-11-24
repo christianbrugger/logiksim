@@ -6,10 +6,18 @@
 namespace logicsim {
 
 auto process_data(std::span<const uint8_t> data) -> void {
-    if (data.size() > 20 && data[0] == 'H' && data[1] == 'e' && data[2] == 'l' &&
-        data[3] == 'l' && data[4] == 'o') {
+    if (data.size() > 20 &&  //
+        data[0] == 'H' &&    //
+        data[1] == 'e' &&    //
+        data[2] == 'l' &&    //
+        data[3] == 'l' &&    //
+        data[4] == 'o' &&    //
+        data[5] == ' ' &&    //
+        data[6] == 'W' &&    //
+        data[7] == 'o' &&    //
+        data[8] == 'l' &&    //
+        data[9] == 'd') {
         std::terminate();
-        return;
     }
 }
 
