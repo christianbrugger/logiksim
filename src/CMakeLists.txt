@@ -27,3 +27,6 @@ if (LS_BUILD_GUI)
     add_subdirectory(test_gui)
 endif()
 
+# fuzz
+add_subdirectory(fuzz_core)
+

@@ -14,7 +14,8 @@ macro(ls_setup_linker sanitizer_selection)
 
     # Clang-CL Address Sanitizer is only supported with MSVC linker, not ldd-link
     if (MSVC AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
-        "${sanitizer_selection}" STREQUAL "Address")
+        ("${sanitizer_selection}" STREQUAL "Address" 
+         OR "${sanitizer_selection}" STREQUAL "Address;Fuzzer"))
         set(CMAKE_LINKER_TYPE MSVC)
     endif()
 

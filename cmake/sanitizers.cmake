@@ -103,8 +103,25 @@ function(ls_setup_sanitizers_msvc target_name sanitizer_selection)
         # nothing to do
 
     elseif(sanitizer_selection STREQUAL "Address")
-        target_compile_options("${target_name}" INTERFACE "/fsanitize=address") 
-        target_link_options("${target_name}" INTERFACE "/fsanitize=address") 
+        target_compile_options("${target_name}" INTERFACE
+            "/fsanitize=address"
+        )
+        target_link_options("${target_name}" INTERFACE
+            "/fsanitize=address"
+            "/INFERASANLIBS"
+        )
+
+    elseif(sanitizer_selection STREQUAL "Address;Fuzzer"
+           AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+        target_compile_options("${target_name}" INTERFACE
+            "/fsanitize=address"
+            "/fsanitize=fuzzer"
+        )
+        target_link_options("${target_name}" INTERFACE
+            "/fsanitize=address"
+            "/fsanitize=fuzzer"
+            "/INFERASANLIBS"
+        )
 
     elseif(sanitizer_selection STREQUAL "Undefined")
         target_compile_options("${target_name}" INTERFACE "-fsanitize=undefined") 

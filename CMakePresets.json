@@ -395,6 +395,34 @@
                 "LS_ENABLE_LTO": "OFF"
             }
         },
+        {
+            "name": "win-msvc-fuzz-debug",
+            "displayName": "MSVC Fuzz Debug",
+            "description": "Compile debug libfuzz with MSVC compiler",
+            "inherits": "common-win-msvc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Address;Fuzzer",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "win-msvc-fuzz-relwithdeb",
+            "displayName": "MSVC Fuzz RelWithDeb",
+            "description": "Compile relwithdeb libfuzz with MSVC compiler",
+            "inherits": "common-win-msvc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "LS_SANITIZE": "Address;Fuzzer",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
         
         {
             "name": "win-clang-debug",

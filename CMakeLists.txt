@@ -26,15 +26,16 @@ option(LS_WIN32_APPLICATON "Do not build as console application on windows." OFF
 #    * Address
 #    * Undefined
 #    * Address;Undefined
+#    * Address;Fuzzer
 #    * Memory
 #    * MemoryWithOrigins
 #    * Thread
 set(LS_SANITIZE "" CACHE STRING
-    "Enable sanitizers (Options: Address Undefined Address;Undefined 
+    "Enable sanitizers (Options: Address Undefined Address;Undefined Address;Fuzzer
     Memory MemoryWithOrigins Thread). Defaults to empty string.")
 set_property(
     CACHE LS_SANITIZE PROPERTY STRINGS 
-    "" Address Undefined Address;Undefined Memory MemoryWithOrigins Thread
+    "" Address Undefined Address;Undefined Address;Fuzzer Memory MemoryWithOrigins Thread
 )
 
 # LS_USE_LIBCXX
@@ -149,6 +150,8 @@ set(LS_GUI_TARGET "ls_gui")
 
 set(LS_CORE_TEST_TARGET "ls_test_core")
 set(LS_GUI_TEST_TARGET "ls_test_gui")
+
+set(LS_FUZZ_CORE "ls_fuzz_core")
 
 
 # MAIN
