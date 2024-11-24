@@ -328,6 +328,34 @@
                 "LS_ENABLE_LTO": "OFF"
             }
         },
+        {
+            "name": "linux-clang-fuzz-debug",
+            "displayName": "Clang Fuzz Debug",
+            "description": "Compile libfuzz & address sanitizier and Clang compiler under debug",
+            "inherits": "common-linux-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Address;Fuzzer",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "linux-clang-fuzz-relwithdeb",
+            "displayName": "Clang Fuzz RelWithDeb",
+            "description": "Compile libfuzz & address sanitizier and Clang compiler under RelWithDebInfo",
+            "inherits": "common-linux-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "LS_SANITIZE": "Address;Fuzzer",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
 		
 
 

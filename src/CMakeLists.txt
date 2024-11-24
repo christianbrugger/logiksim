@@ -10,23 +10,22 @@ endif()
 
 # libraries
 add_subdirectory(core)
-if (LS_BUILD_GUI)
-    add_subdirectory(gui)
-endif()
 
-# executables
-add_subdirectory(main_benchmark)
-add_subdirectory(main_cli)
-if (LS_BUILD_GUI)
-    add_subdirectory(main_gui)
-endif()
 
-# tests
-add_subdirectory(test_core)
-if (LS_BUILD_GUI)
-    add_subdirectory(test_gui)
-endif()
+if(LS_SANITIZE MATCHES "Fuzzer")
+    # fuzz
+    add_subdirectory(fuzz_core)
+else()
+    # executables & tests
+    add_subdirectory(main_benchmark)
+    add_subdirectory(main_cli)
+    add_subdirectory(test_core)
 
-# fuzz
-add_subdirectory(fuzz_core)
+    # gui lib, executables & tests
+    if (LS_BUILD_GUI)
+        add_subdirectory(gui)
+        add_subdirectory(main_gui)
+        add_subdirectory(test_gui)
+    endif()
+endif()
 

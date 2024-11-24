@@ -11,6 +11,13 @@ macro(ls_setup_sanitizers target_name sanitizer_selection)
     else()
         ls_setup_sanitizers_gnu("${target_name}" "${sanitizer_selection}")
     endif()
+
+    # common options
+    if ("${sanitizer_selection}" MATCHES "Fuzzer")
+        target_compile_definitions("${target_name}" INTERFACE
+            FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+        )
+    endif()
 endmacro()
 
 #
@@ -40,6 +47,17 @@ function(ls_setup_sanitizers_gnu target_name sanitizer_selection)
             INTERFACE
             "-fsanitize=address"
             "-fsanitize=undefined"
+        )
+
+    elseif(sanitizer_selection STREQUAL "Address;Fuzzer"
+           AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        target_compile_options("${target_name}" INTERFACE
+            "-fsanitize=address"
+            "-fsanitize=fuzzer"
+        )
+        target_link_options("${target_name}" INTERFACE
+            "-fsanitize=address"
+            "-fsanitize=fuzzer"
         )
 
     elseif(sanitizer_selection STREQUAL "Memory")

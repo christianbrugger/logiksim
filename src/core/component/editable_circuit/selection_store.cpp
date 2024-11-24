@@ -22,16 +22,20 @@ namespace {
  * @brief: Return random start value for selection ids.
  *
  * By setting a random start value for selection ids, it is very unlikely
- * that two selection ids for two different editable-circuit with different
- * selection stores are the same.
+ * that two selection ids for two different editable-circuit are the same.
  */
 auto get_random_start_id() -> selection_id_t {
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    // in fuzzing mode behavior should be deterministic
+    return selection_id_t {0};
+#else
     constexpr auto max_value = std::numeric_limits<int32_t>::max();
 
     auto rd = std::random_device {};
     auto dist = uint_distribution(int64_t {0}, int64_t {max_value});
 
     return selection_id_t {dist(rd)};
+#endif
 }
 
 }  // namespace

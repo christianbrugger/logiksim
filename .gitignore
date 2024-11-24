@@ -6,9 +6,7 @@ CMakeUserPresets.json
 .cache
 .idea
 .vs
-.vscode/browse.vc.db
-.vscode/browse.vc.db-shm
-.vscode/browse.vc.db-wal
+.vscode
 .python-version
 __pycache__
 
