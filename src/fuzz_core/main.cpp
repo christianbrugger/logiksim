@@ -1,5 +1,6 @@
 
 #include "core/component/editable_circuit/modifier.h"
+#include "core/concept/integral.h"
 #include "core/logging.h"
 #include "core/random/fuzz.h"
 
@@ -10,7 +11,7 @@ namespace logicsim {
 
 namespace editable_circuit {
 
-auto parse_message(FuzzStream& stream, Modifier& modifier) -> void {
+auto add_wire_segment(FuzzStream& stream, Modifier& modifier) -> void {
     const bool horizontal = fuzz_bool(stream);
 
     const auto a = fuzz_small_int(stream, 0, 4);
@@ -40,6 +41,43 @@ auto parse_message(FuzzStream& stream, Modifier& modifier) -> void {
     modifier.add_wire_segment(line, mode);
 }
 
+auto delete_temporary_wire_segment(FuzzStream& stream, Modifier& modifier) -> void {
+    const auto temporary_count =
+        get_temporary_segment_count(modifier.circuit_data().layout);
+
+    if (temporary_count == 0) {
+        return;
+    }
+
+    // pick random segment
+    const auto max_segment_index = clamp_to_fuzz_stream(temporary_count - 1);
+    const auto segment_index =
+        segment_index_t {fuzz_small_int(stream, 0, max_segment_index)};
+    const auto segment = segment_t {temporary_wire_id, segment_index};
+
+    // pick random part
+    const auto part_full = get_part(modifier.circuit_data().layout, segment);
+    const auto max_offset = clamp_to_fuzz_stream(part_full.end.value);
+    const auto a = fuzz_small_int(stream, 0, max_offset - 1);
+    const auto b = fuzz_small_int(stream, a + 1, max_offset);
+    const auto part = part_t {a, b};
+
+    auto segment_part = segment_part_t {segment, part};
+    modifier.delete_temporary_wire_segment(segment_part);
+}
+
+auto editing_operation(FuzzStream& stream, Modifier& modifier) -> void {
+    switch (fuzz_small_int(stream, 0, 1)) {
+        case 0:
+            add_wire_segment(stream, modifier);
+            return;
+        case 1:
+            delete_temporary_wire_segment(stream, modifier);
+            return;
+    }
+    std::terminate();
+}
+
 auto process_data(std::span<const uint8_t> data) -> void {
     auto stream = FuzzStream(data);
 
@@ -49,7 +87,7 @@ auto process_data(std::span<const uint8_t> data) -> void {
                                          }};
 
     while (!stream.empty()) {
-        parse_message(stream, modifier);
+        editing_operation(stream, modifier);
     }
 }
 

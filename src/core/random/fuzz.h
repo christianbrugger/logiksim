@@ -1,7 +1,10 @@
 #ifndef LOGICSIM_CORE_RANDOM_FUZZ_H
 #define LOGICSIM_CORE_RANDOM_FUZZ_H
 
+#include "core/concept/integral.h"
 #include "core/format/struct.h"
+
+#include <gsl/gsl>
 
 #include <cstdint>
 #include <limits>
@@ -32,6 +35,8 @@ class FuzzStream {
 // Free Functions
 //
 
+[[nodiscard]] auto clamp_to_fuzz_stream(integral auto number) -> FuzzStream::value_type;
+
 [[nodiscard]] auto fuzz_small_int(FuzzStream& stream, int lower, int upper) -> int;
 [[nodiscard]] auto fuzz_bool(FuzzStream& stream) -> bool;
 
@@ -44,6 +49,13 @@ constexpr auto FuzzStream::min() -> uint8_t {
 
 constexpr auto FuzzStream::max() -> uint8_t {
     return std::numeric_limits<uint8_t>::max();
+}
+
+auto clamp_to_fuzz_stream(integral auto number) -> FuzzStream::value_type {
+    Expects(number >= decltype(number) {0});
+
+    return gsl::narrow_cast<FuzzStream::value_type>(
+        std::min(uint64_t {FuzzStream::max()}, uint64_t {number}));
 }
 
 }  // namespace logicsim

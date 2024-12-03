@@ -88,6 +88,8 @@ class Layout {
 [[nodiscard]] auto get_inserted_decoration_count(const Layout &layout) -> std::size_t;
 
 [[nodiscard]] auto get_segment_count(const Layout &layout) -> std::size_t;
+[[nodiscard]] auto get_temporary_segment_count(const Layout &layout) -> std::size_t;
+[[nodiscard]] auto get_colliding_segment_count(const Layout &layout) -> std::size_t;
 [[nodiscard]] auto get_inserted_segment_count(const Layout &layout) -> std::size_t;
 
 [[nodiscard]] auto format_stats(const Layout &layout) -> std::string;

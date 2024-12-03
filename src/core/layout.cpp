@@ -194,6 +194,14 @@ auto get_segment_count(const Layout &layout) -> std::size_t {
     });
 }
 
+auto get_temporary_segment_count(const Layout &layout) -> std::size_t {
+    return layout.wires().segment_tree(temporary_wire_id).size();
+}
+
+auto get_colliding_segment_count(const Layout &layout) -> std::size_t {
+    return layout.wires().segment_tree(colliding_wire_id).size();
+}
+
 auto get_inserted_segment_count(const Layout &layout) -> std::size_t {
     return accumulate(inserted_wire_ids(layout), std::size_t {0}, [&](wire_id_t wire_id) {
         return layout.wires().segment_tree(wire_id).size();
