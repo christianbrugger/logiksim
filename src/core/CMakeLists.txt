@@ -42,6 +42,14 @@ add_subdirectory(
     SYSTEM
 )
 
+# flux
+add_subdirectory(
+    ${PROJECT_SOURCE_DIR}/external/flux
+    ${CMAKE_BINARY_DIR}/external/flux
+    EXCLUDE_FROM_ALL
+    SYSTEM
+)
+
 # fmt
 set(FMT_INSTALL FALSE)
 add_subdirectory(
@@ -178,6 +186,7 @@ set(LS_CORE_DEPENDENCIES
     Boost::random
 	Boost::safe_numerics
     
+    flux::flux
     fmt::fmt
     folly
     unordered_dense::unordered_dense

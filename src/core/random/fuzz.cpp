@@ -1,5 +1,6 @@
 #include "core/random/fuzz.h"
 
+#include "core/algorithm/numeric.h"
 #include "core/format/container.h"
 
 namespace logicsim {
@@ -36,9 +37,7 @@ auto fuzz_small_int(FuzzStream& stream, int lower, int upper) -> int {
     if (lower == upper) {
         return lower;
     }
-
-    // TODO add safe numerics
-    const auto range = upper - lower;
+    const auto range = checked_sub(upper, lower);
 
     const auto offset = [range, &stream]() -> FuzzStream::value_type {
         Expects(range <= stream.max());
@@ -54,7 +53,9 @@ auto fuzz_small_int(FuzzStream& stream, int lower, int upper) -> int {
 }
 
 auto fuzz_bool(FuzzStream& stream) -> bool {
-    return fuzz_small_int(stream, 0, 1) == 1;
+    static_assert(FuzzStream::min() == 0);
+    const auto res = (stream.pop_or() % FuzzStream::value_type {2});
+    return res == 1;
 }
 
 }  // namespace logicsim

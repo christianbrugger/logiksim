@@ -17,6 +17,7 @@ set(LS_CORE_SOURCES
     algorithm/merged_for_each.cpp
     algorithm/merged_none_of.cpp
     algorithm/narrow_integral.cpp
+    algorithm/numeric.cpp
     algorithm/overload.cpp
     algorithm/path_conversion.cpp
     algorithm/pop_while.cpp
