@@ -3,6 +3,8 @@
 #include "core/algorithm/numeric.h"
 #include "core/format/container.h"
 
+#include <gsl/gsl>
+
 namespace logicsim {
 
 //
