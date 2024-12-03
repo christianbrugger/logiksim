@@ -168,6 +168,7 @@ set(LS_CORE_SOURCES
 
     random/bool.cpp
     random/connection_count.cpp
+    random/fuzz.cpp
     random/generator.cpp
     random/grid.cpp
     random/insertion_mode.cpp
