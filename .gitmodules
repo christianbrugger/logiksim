@@ -28,6 +28,11 @@
 	url = https://github.com/TartanLlama/expected.git
 	ignore = dirty
 
+[submodule "external/flux"]
+	path = external/flux
+	url = https://github.com/tcbrindle/flux
+	ignore = dirty
+
 [submodule "external/fmt"]
 	path = external/fmt
 	url = https://github.com/fmtlib/fmt
