@@ -46,6 +46,7 @@ MODULES = [
     "external/boost",
     "external/catch2",
     "external/expected",
+    "external/flux",
     "external/fmt",
     "external/gcem",
     "external/glaze",
