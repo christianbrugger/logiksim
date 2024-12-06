@@ -306,6 +306,10 @@ auto KeyIndex::handle(const info_message::SegmentPartDeleted& message) -> void {
     }
 }
 
+auto KeyIndex::segments() const -> std::span<const std::pair<segment_t, segment_key_t>> {
+    return segment_keys_.values();
+}
+
 auto KeyIndex::submit(const InfoMessage& message) -> void {
     assert(class_invariant_holds());
 

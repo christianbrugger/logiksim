@@ -76,6 +76,9 @@ class KeyIndex {
     auto set(segment_t segment, segment_key_t segment_key) -> void;
     auto swap(segment_t segment_0, segment_t segment_1) -> void;
 
+    [[nodiscard]] auto segments() const
+        -> std::span<const std::pair<segment_t, segment_key_t>>;
+
     auto submit(const InfoMessage& message) -> void;
 
     [[nodiscard]] auto has_all_ids_inserted(const Layout& layout) const -> bool;
