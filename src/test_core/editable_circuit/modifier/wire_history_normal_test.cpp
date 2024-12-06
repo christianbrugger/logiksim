@@ -2,6 +2,7 @@
 #include "test_core/editable_circuit/modifier/test_helpers.h"
 
 #include "core/component/editable_circuit/editing/edit_wire.h"
+#include "core/component/editable_circuit/key_state.h"
 #include "core/component/editable_circuit/modifier.h"
 
 #include <gmock/gmock.h>
@@ -24,12 +25,12 @@ TEST(EditableCircuitWireHistory, DeleteFullShadow) {
     const auto segment_part = segment_part_t {segment, part_t {0, 10}};
 
     auto modifier = get_modifier_with_history(layout);
-    const auto state_0 = get_layout_key_state(modifier);
+    const auto state_0 = layout_key_state_t {modifier};
     {
         auto segment_part_0 = segment_part;
         modifier.delete_temporary_wire_segment(segment_part_0);
     }
-    const auto state_1 = get_layout_key_state(modifier);
+    const auto state_1 = layout_key_state_t {modifier};
     Expects(is_valid(modifier));
 
     // before undo
@@ -38,11 +39,11 @@ TEST(EditableCircuitWireHistory, DeleteFullShadow) {
 
     // after undo
     modifier.undo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_0);
 
     // after redo
     modifier.redo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
 }
 
 TEST(EditableCircuitWireHistory, DeleteFullCrosspoint) {
@@ -54,12 +55,12 @@ TEST(EditableCircuitWireHistory, DeleteFullCrosspoint) {
     const auto segment_part = segment_part_t {segment, part_t {0, 10}};
 
     auto modifier = get_modifier_with_history(layout);
-    const auto state_0 = get_layout_key_state(modifier);
+    const auto state_0 = layout_key_state_t {modifier};
     {
         auto segment_part_0 = segment_part;
         modifier.delete_temporary_wire_segment(segment_part_0);
     }
-    const auto state_1 = get_layout_key_state(modifier);
+    const auto state_1 = layout_key_state_t {modifier};
     Expects(is_valid(modifier));
 
     // before undo
@@ -68,11 +69,11 @@ TEST(EditableCircuitWireHistory, DeleteFullCrosspoint) {
 
     // after undo
     modifier.undo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_0);
 
     // after redo
     modifier.redo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
 }
 
 TEST(EditableCircuitWireHistory, DeletePartialFront) {
@@ -84,12 +85,12 @@ TEST(EditableCircuitWireHistory, DeletePartialFront) {
     const auto segment_part = segment_part_t {segment, part_t {0, 5}};
 
     auto modifier = get_modifier_with_history(layout);
-    const auto state_0 = get_layout_key_state(modifier);
+    const auto state_0 = layout_key_state_t {modifier};
     {
         auto segment_part_0 = segment_part;
         modifier.delete_temporary_wire_segment(segment_part_0);
     }
-    const auto state_1 = get_layout_key_state(modifier);
+    const auto state_1 = layout_key_state_t {modifier};
     Expects(is_valid(modifier));
 
     // before undo
@@ -98,11 +99,11 @@ TEST(EditableCircuitWireHistory, DeletePartialFront) {
 
     // after undo
     modifier.undo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_0);
 
     // after redo
     modifier.redo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
 }
 
 TEST(EditableCircuitWireHistory, DeletePartialEnd) {
@@ -114,12 +115,12 @@ TEST(EditableCircuitWireHistory, DeletePartialEnd) {
     const auto segment_part = segment_part_t {segment, part_t {5, 10}};
 
     auto modifier = get_modifier_with_history(layout);
-    const auto state_0 = get_layout_key_state(modifier);
+    const auto state_0 = layout_key_state_t {modifier};
     {
         auto segment_part_0 = segment_part;
         modifier.delete_temporary_wire_segment(segment_part_0);
     }
-    const auto state_1 = get_layout_key_state(modifier);
+    const auto state_1 = layout_key_state_t {modifier};
     Expects(is_valid(modifier));
 
     // before undo
@@ -128,11 +129,11 @@ TEST(EditableCircuitWireHistory, DeletePartialEnd) {
 
     // after undo
     modifier.undo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_0);
 
     // after redo
     modifier.redo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
 }
 
 TEST(EditableCircuitWireHistory, DeletePartialMiddle) {
@@ -144,12 +145,12 @@ TEST(EditableCircuitWireHistory, DeletePartialMiddle) {
     const auto segment_part = segment_part_t {segment, part_t {3, 6}};
 
     auto modifier = get_modifier_with_history(layout);
-    const auto state_0 = get_layout_key_state(modifier);
+    const auto state_0 = layout_key_state_t {modifier};
     {
         auto segment_part_0 = segment_part;
         modifier.delete_temporary_wire_segment(segment_part_0);
     }
-    const auto state_1 = get_layout_key_state(modifier);
+    const auto state_1 = layout_key_state_t {modifier};
     Expects(is_valid(modifier));
 
     // before undo
@@ -158,11 +159,11 @@ TEST(EditableCircuitWireHistory, DeletePartialMiddle) {
 
     // after undo
     modifier.undo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_0);
 
     // after redo
     modifier.redo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
 }
 
 //
@@ -178,12 +179,12 @@ TEST(EditableCircuitWireHistory, MoveFull) {
     const auto segment_part = segment_part_t {segment, part_t {0, 10}};
 
     auto modifier = get_modifier_with_history(layout);
-    const auto state_0 = get_layout_key_state(modifier);
+    const auto state_0 = layout_key_state_t {modifier};
     {
         auto segment_part_0 = segment_part;
         modifier.move_or_delete_temporary_wire(segment_part_0, move_delta_t {10, 10});
     }
-    const auto state_1 = get_layout_key_state(modifier);
+    const auto state_1 = layout_key_state_t {modifier};
     Expects(is_valid(modifier));
 
     // before undo
@@ -193,11 +194,11 @@ TEST(EditableCircuitWireHistory, MoveFull) {
 
     // after undo
     modifier.undo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_0);
 
     // after redo
     modifier.redo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
 }
 
 TEST(EditableCircuitWireHistory, MovePartialMiddle) {
@@ -209,12 +210,12 @@ TEST(EditableCircuitWireHistory, MovePartialMiddle) {
     const auto segment_part = segment_part_t {segment, part_t {2, 7}};
 
     auto modifier = get_modifier_with_history(layout);
-    const auto state_0 = get_layout_key_state(modifier);
+    const auto state_0 = layout_key_state_t {modifier};
     {
         auto segment_part_0 = segment_part;
         modifier.move_or_delete_temporary_wire(segment_part_0, move_delta_t {10, 10});
     }
-    const auto state_1 = get_layout_key_state(modifier);
+    const auto state_1 = layout_key_state_t {modifier};
     Expects(is_valid(modifier));
 
     // before undo
@@ -223,11 +224,11 @@ TEST(EditableCircuitWireHistory, MovePartialMiddle) {
 
     // after undo
     modifier.undo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_0);
 
     // after redo
     modifier.redo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
 }
 
 TEST(EditableCircuitWireHistory, MovePartialDelete) {
@@ -239,14 +240,14 @@ TEST(EditableCircuitWireHistory, MovePartialDelete) {
     const auto segment_part = segment_part_t {segment, part_t {2, 7}};
 
     auto modifier = get_modifier_with_history(layout);
-    const auto state_0 = get_layout_key_state(modifier);
+    const auto state_0 = layout_key_state_t {modifier};
     {
         auto segment_part_0 = segment_part;
         const auto overflow = int {offset_t::max()};
         modifier.move_or_delete_temporary_wire(segment_part_0,
                                                move_delta_t {overflow, overflow});
     }
-    const auto state_1 = get_layout_key_state(modifier);
+    const auto state_1 = layout_key_state_t {modifier};
     Expects(is_valid(modifier));
 
     // before undo
@@ -255,11 +256,11 @@ TEST(EditableCircuitWireHistory, MovePartialDelete) {
 
     // after undo
     modifier.undo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_0);
 
     // after redo
     modifier.redo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
 }
 
 //
@@ -270,10 +271,10 @@ TEST(EditableCircuitWireHistory, AddTemporary) {
     auto layout = Layout {};
 
     auto modifier = get_modifier_with_history(layout);
-    const auto state_0 = get_layout_key_state(modifier);
+    const auto state_0 = layout_key_state_t {modifier};
     modifier.add_wire_segment(ordered_line_t {point_t {0, 0}, point_t {10, 0}},
                               InsertionMode::temporary);
-    const auto state_1 = get_layout_key_state(modifier);
+    const auto state_1 = layout_key_state_t {modifier};
     Expects(is_valid(modifier));
 
     // before undo
@@ -282,11 +283,11 @@ TEST(EditableCircuitWireHistory, AddTemporary) {
 
     // after undo
     modifier.undo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_0);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_0);
 
     // after redo
     modifier.redo_group();
-    ASSERT_TRUE(get_layout_key_state(modifier) == state_1);
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
 }
 
 }  // namespace editable_circuit

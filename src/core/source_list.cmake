@@ -65,6 +65,7 @@ set(LS_CORE_SOURCES
     component/editable_circuit/circuit_data.cpp
     component/editable_circuit/history.cpp
     component/editable_circuit/history_stack.cpp
+    component/editable_circuit/key_state.cpp
     component/editable_circuit/layout_index.cpp
     component/editable_circuit/modifier.cpp
     component/editable_circuit/selection_guard.cpp
