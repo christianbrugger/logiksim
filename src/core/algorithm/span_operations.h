@@ -7,7 +7,9 @@
 namespace logicsim {
 
 template <typename T>
-[[nodiscard]] constexpr auto checked_at(const std::span<T> &data, std::size_t pos) {
+[[nodiscard]] constexpr auto checked_at(const std::span<T> &data,
+                                        typename std::span<T>::size_type pos)
+    -> std::span<T>::reference {
     if (pos >= data.size()) {
         throw std::out_of_range {"span pos >= size"};
     }
