@@ -7,7 +7,6 @@
 #include "core/component/editable_circuit/editing/edit_wire.h"
 #include "core/component/editable_circuit/history.h"
 #include "core/geometry/segment_info.h"
-#include "core/timer.h"
 
 #include <gsl/gsl>
 
@@ -396,13 +395,11 @@ auto _replay_stack(CircuitData& circuit, ReplayStack kind) -> void {
 }  // namespace
 
 auto undo_group(CircuitData& circuit) -> void {
-    const auto _ = Timer {"undo", Timer::Unit::ms};
     finish_undo_group(circuit.history);
     _replay_stack(circuit, ReplayStack::undo);
 }
 
 auto redo_group(CircuitData& circuit) -> void {
-    const auto _ = Timer {"redo", Timer::Unit::ms};
     _replay_stack(circuit, ReplayStack::redo);
 }
 

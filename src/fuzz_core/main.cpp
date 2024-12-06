@@ -1,4 +1,6 @@
 
+#include "core/algorithm/vector_operations.h"
+#include "core/component/editable_circuit/key_state.h"
 #include "core/component/editable_circuit/modifier.h"
 #include "core/concept/integral.h"
 #include "core/logging.h"
@@ -10,6 +12,8 @@
 namespace logicsim {
 
 namespace editable_circuit {
+
+namespace {
 
 auto add_wire_segment(FuzzStream& stream, Modifier& modifier) -> void {
     const bool horizontal = fuzz_bool(stream);
@@ -78,6 +82,30 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier) -> void {
     std::terminate();
 }
 
+auto validate_undo_redo(Modifier& modifier,
+                        const std::vector<layout_key_state_t>& key_state_stack) {
+    Expects(key_state_stack.empty() ||
+            layout_key_state_t {modifier} == key_state_stack.back());
+    Expects(!modifier.has_ungrouped_undo_entries());
+
+    // undo completely
+    for (const auto& state : std::ranges::views::reverse(key_state_stack)  //
+                                 | std::ranges::views::drop(1)) {
+        Expects(modifier.has_undo());
+        modifier.undo_group();
+        Expects(layout_key_state_t {modifier} == state);
+    }
+    Expects(!modifier.has_undo());
+
+    // redo completely
+    for (const auto& state : key_state_stack | std::ranges::views::drop(1)) {
+        Expects(modifier.has_redo());
+        modifier.redo_group();
+        Expects(layout_key_state_t {modifier} == state);
+    }
+    Expects(!modifier.has_redo());
+}
+
 auto process_data(std::span<const uint8_t> data) -> void {
     auto stream = FuzzStream(data);
 
@@ -85,11 +113,24 @@ auto process_data(std::span<const uint8_t> data) -> void {
                                              .enable_history = true,
                                              .validate_messages = true,
                                          }};
+    auto key_state_stack = std::vector<layout_key_state_t> {
+        layout_key_state_t {modifier},
+    };
 
     while (!stream.empty()) {
         editing_operation(stream, modifier);
+
+        // store history state
+        if (modifier.has_ungrouped_undo_entries()) {
+            modifier.finish_undo_group();
+            key_state_stack.emplace_back(modifier);
+        }
     }
+
+    validate_undo_redo(modifier, key_state_stack);
 }
+
+}  // namespace
 
 }  // namespace editable_circuit
 
