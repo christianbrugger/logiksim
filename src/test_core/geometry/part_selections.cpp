@@ -283,6 +283,17 @@ auto iter_parts_result(part_t full_part,
     return result;
 }
 
+auto iter_parts_partial_result(part_t iterated_part,
+                               std::initializer_list<part_t> list) -> IterPartsResult {
+    auto result = IterPartsResult {};
+
+    iter_parts_partial(
+        iterated_part, to_selection(list),
+        [&](part_t part, bool selected) { result.push_back({part, selected}); });
+
+    return result;
+}
+
 }  // namespace
 
 TEST(GeometryPartSelections, IterPartsSelection0) {
@@ -370,6 +381,99 @@ TEST(GeometryPartSelections, IterPartsSelection2) {
             {part_t {0, 20}, true},
             {part_t {20, 50}, false},
             {part_t {50, 60}, true},
+        };
+
+        ASSERT_EQ(result, expected);
+    }
+}
+
+//
+// Iter Parts Partial
+//
+
+TEST(GeometryPartSelections, IterPartsPartialSelection0) {
+    {
+        const auto result = iter_parts_partial_result(part_t {50, 100}, {});
+        const auto expected = IterPartsResult {
+            {part_t {50, 100}, false},
+        };
+
+        ASSERT_EQ(result, expected);
+    }
+}
+
+TEST(GeometryPartSelections, IterPartsPartialSelection1) {
+    {
+        const auto result = iter_parts_partial_result(part_t {5, 100}, {part_t {10, 20}});
+        const auto expected = IterPartsResult {
+            {part_t {5, 10}, false},
+            {part_t {10, 20}, true},
+            {part_t {20, 100}, false},
+        };
+
+        ASSERT_EQ(result, expected);
+    }
+
+    {
+        const auto result = iter_parts_partial_result(part_t {5, 15}, {part_t {10, 20}});
+        const auto expected = IterPartsResult {
+            {part_t {5, 10}, false},
+            {part_t {10, 15}, true},
+        };
+
+        ASSERT_EQ(result, expected);
+    }
+
+    {
+        const auto result =
+            iter_parts_partial_result(part_t {10, 100}, {part_t {10, 20}});
+        const auto expected = IterPartsResult {
+            {part_t {10, 20}, true},
+            {part_t {20, 100}, false},
+        };
+
+        ASSERT_EQ(result, expected);
+    }
+
+    {
+        const auto result = iter_parts_partial_result(part_t {10, 20}, {part_t {10, 20}});
+        const auto expected = IterPartsResult {
+            {part_t {10, 20}, true},
+        };
+
+        ASSERT_EQ(result, expected);
+    }
+}
+
+TEST(GeometryPartSelections, IterPartsPartialSelection2) {
+    {
+        const auto result = iter_parts_partial_result(part_t {5, 100},
+                                                      {part_t {10, 20}, part_t {50, 60}});
+        const auto expected = IterPartsResult {
+            {part_t {5, 10}, false}, {part_t {10, 20}, true},   {part_t {20, 50}, false},
+            {part_t {50, 60}, true}, {part_t {60, 100}, false},
+        };
+
+        ASSERT_EQ(result, expected);
+    }
+
+    {
+        const auto result = iter_parts_partial_result(part_t {20, 55},
+                                                      {part_t {10, 20}, part_t {50, 60}});
+        const auto expected = IterPartsResult {
+            {part_t {20, 50}, false},
+            {part_t {50, 55}, true},
+        };
+
+        ASSERT_EQ(result, expected);
+    }
+
+    {
+        const auto result =
+            iter_parts_partial_result(part_t {10, 30}, {part_t {0, 20}, part_t {50, 60}});
+        const auto expected = IterPartsResult {
+            {part_t {10, 20}, true},
+            {part_t {20, 30}, false},
         };
 
         ASSERT_EQ(result, expected);

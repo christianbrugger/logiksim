@@ -2,6 +2,7 @@
 #define LOGICSIM_GEOMETRY_PART_SELECTIONS_H
 
 #include "core/geometry/part.h"
+#include "core/logging.h"
 #include "core/part_selection.h"
 #include "core/vocabulary/part.h"
 
@@ -37,6 +38,42 @@ auto iter_parts(part_t full_part, const PartSelection& parts, Func func) {
     }
 
     Ensures(pivot <= full_part.end);
+}
+
+/**
+ * @brief: Iterator over selected and unselected parts.
+ *
+ * [&](part_t part, bool selected){}
+ */
+template <typename Func>
+auto iter_parts_partial(part_t iterated_part, const PartSelection& parts, Func func) {
+    offset_t pivot = iterated_part.begin;
+
+    for (const auto& part : parts) {
+        if (iterated_part.begin >= part.end) {
+            continue;
+        }
+        if (iterated_part.end <= part.begin) {
+            break;
+        }
+
+        if (pivot < part.begin) {
+            func(part_t {pivot, part.begin}, false);
+        }
+
+        const auto intersect = part_t {
+            std::max(pivot, part.begin),
+            std::min(part.end, iterated_part.end),
+        };
+        func(intersect, true);
+        pivot = intersect.end;
+    }
+
+    if (pivot != iterated_part.end) {
+        func(part_t {pivot, iterated_part.end}, false);
+    }
+
+    Ensures(pivot <= iterated_part.end);
 }
 
 /**

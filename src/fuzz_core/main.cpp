@@ -246,7 +246,7 @@ auto process_data(std::span<const uint8_t> data) -> void {
         }
     }
 
-    if (false) {
+    if (true) {
         validate_undo_redo(modifier, key_state_stack);
     }
 }

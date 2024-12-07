@@ -6,6 +6,7 @@
 #include "core/component/editable_circuit/editing/edit_wire_detail.h"
 #include "core/geometry/line.h"
 #include "core/geometry/orientation.h"
+#include "core/geometry/part_selections.h"
 #include "core/geometry/segment_info.h"
 #include "core/index/segment_map.h"
 #include "core/index/spatial_point_index.h"
@@ -105,6 +106,37 @@ auto _store_history_segment_delete_temporary(CircuitData& circuit,
         const auto segment_key = circuit.index.key_index().get(segment_part.segment);
         stack->push_segment_delete_temporary(segment_key);
     }
+}
+
+auto mark_valid_with_history(CircuitData& circuit,
+                             const segment_part_t segment_part) -> void {
+    const auto& valid_parts = circuit.layout.wires()
+                                  .segment_tree(segment_part.segment.wire_id)
+                                  .valid_parts(segment_part.segment.segment_index);
+
+    iter_parts_partial(segment_part.part, valid_parts, [&](part_t part, bool is_valid) {
+        if (!is_valid) {
+            _store_history_segment_colliding_to_insert(
+                circuit, segment_part_t {segment_part.segment, part});
+        }
+    });
+
+    mark_valid(circuit.layout, segment_part);
+}
+
+auto unmark_valid_with_history(CircuitData& circuit,
+                               const segment_part_t segment_part) -> void {
+    const auto& valid_parts = circuit.layout.wires()
+                                  .segment_tree(segment_part.segment.wire_id)
+                                  .valid_parts(segment_part.segment.segment_index);
+
+    iter_parts_partial(segment_part.part, valid_parts, [&](part_t part, bool is_valid) {
+        if (is_valid) {
+            _store_history_segment_insert_to_colliding(
+                circuit, segment_part_t {segment_part.segment, part});
+        }
+    });
+    unmark_valid(circuit.layout, segment_part);
 }
 
 }  // namespace
@@ -269,9 +301,7 @@ auto _wire_change_temporary_to_colliding(CircuitData& circuit,
 
 auto _wire_change_insert_to_colliding(CircuitData& circuit,
                                       const segment_part_t segment_part) -> void {
-    mark_valid(circuit.layout, segment_part);
-
-    _store_history_segment_colliding_to_insert(circuit, segment_part);
+    mark_valid_with_history(circuit, segment_part);
 }
 
 auto _wire_change_colliding_to_temporary(CircuitData& circuit,
@@ -314,8 +344,7 @@ auto _wire_change_colliding_to_insert(CircuitData& circuit,
 
     // from valid
     if (is_inserted(wire_id)) {
-        unmark_valid(circuit.layout, segment_part);
-        _store_history_segment_insert_to_colliding(circuit, segment_part);
+        unmark_valid_with_history(circuit, segment_part);
         return;
     }
 
@@ -338,7 +367,6 @@ auto change_wire_insertion_mode_requires_sanitization(wire_id_t wire_id,
 
 auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_part,
                                 InsertionMode new_mode) -> void {
-    // segments that are uninserted need to be sanitized
     if (change_wire_insertion_mode_requires_sanitization(segment_part.segment.wire_id,
                                                          new_mode) &&
         !is_sanitized(segment_part, circuit.layout, circuit.index.collision_index()))
