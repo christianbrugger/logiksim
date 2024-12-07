@@ -15,6 +15,33 @@ namespace editable_circuit {
 
 namespace {
 
+struct FuzzLimits {
+    int x_min {0};
+    int x_max {5};
+    int y_min {0};
+    int y_max {5};
+};
+
+[[nodiscard]] auto line_within_limits(const ordered_line_t& line,
+                                      const FuzzLimits& limits) -> bool {
+    return (limits.x_min <= int {line.p0.x} && int {line.p1.x} <= limits.x_max) &&
+           (limits.y_min <= int {line.p0.y} && int {line.p1.y} <= limits.y_max);
+}
+
+[[nodiscard]] auto all_segments_within_limits(const SegmentTree& tree,
+                                              const FuzzLimits& limits) {
+    return std::ranges::all_of(tree.segments(), [=](const segment_info_t& info) {
+        return line_within_limits(info.line, limits);
+    });
+}
+
+[[nodiscard]] auto all_within_limits(const Layout& layout,
+                                     const FuzzLimits& limits) -> bool {
+    return std::ranges::all_of(wire_ids(layout), [&](wire_id_t wire_id) {
+        return all_segments_within_limits(layout.wires().segment_tree(wire_id), limits);
+    });
+}
+
 auto fuzz_select_insertion_mode(FuzzStream& stream) -> InsertionMode {
     switch (fuzz_small_int(stream, 0, 2)) {
         case 0:
@@ -65,6 +92,18 @@ auto fuzz_select_part(FuzzStream& stream, Modifier& modifier,
     return part_t {a, b};
 }
 
+auto fuzz_select_move_delta(FuzzStream& stream, ordered_line_t line,
+                            const FuzzLimits& limits) -> move_delta_t {
+    return move_delta_t {
+        .x = fuzz_small_int(stream,  //
+                            limits.x_min - int {line.p0.x},
+                            limits.x_max - int {line.p1.x}),
+        .y = fuzz_small_int(stream,  //
+                            limits.y_min - int {line.p0.y},
+                            limits.y_max - int {line.p1.y}),
+    };
+}
+
 auto add_wire_segment(FuzzStream& stream, Modifier& modifier) -> void {
     const bool horizontal = fuzz_bool(stream);
 
@@ -113,8 +152,36 @@ auto change_wire_insertion_mode(FuzzStream& stream, Modifier& modifier) -> void 
     }
 }
 
+auto move_temporary_wire_unchecked(FuzzStream& stream, Modifier& modifier,
+                                   const FuzzLimits& limits) -> void {
+    if (const auto segment = fuzz_select_temporary_segment(stream, modifier)) {
+        const auto segment_part =
+            get_segment_part(modifier.circuit_data().layout, *segment);
+
+        const auto line = get_line(modifier.circuit_data().layout, *segment);
+        const auto delta = fuzz_select_move_delta(stream, line, limits);
+
+        modifier.move_temporary_wire_unchecked(segment_part, delta);
+    }
+}
+
+auto move_or_delete_temporary_wire(FuzzStream& stream, Modifier& modifier,
+                                   const FuzzLimits& limits) -> void {
+    if (const auto segment = fuzz_select_temporary_segment(stream, modifier)) {
+        const auto part = fuzz_select_part(stream, modifier, *segment);
+        auto segment_part = segment_part_t {*segment, part};
+
+        const auto line = get_line(modifier.circuit_data().layout, segment_part);
+        const auto delta = fuzz_select_move_delta(stream, line, limits);
+
+        modifier.move_or_delete_temporary_wire(segment_part, delta);
+    }
+}
+
 auto editing_operation(FuzzStream& stream, Modifier& modifier) -> void {
-    switch (fuzz_small_int(stream, 0, 2)) {
+    const auto limits = FuzzLimits {};
+
+    switch (fuzz_small_int(stream, 0, 4)) {
         case 0:
             add_wire_segment(stream, modifier);
             return;
@@ -123,6 +190,12 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier) -> void {
             return;
         case 2:
             change_wire_insertion_mode(stream, modifier);
+            return;
+        case 3:
+            move_temporary_wire_unchecked(stream, modifier, limits);
+            return;
+        case 4:
+            move_or_delete_temporary_wire(stream, modifier, limits);
             return;
     }
     std::terminate();
@@ -154,6 +227,7 @@ auto validate_undo_redo(Modifier& modifier,
 
 auto process_data(std::span<const uint8_t> data) -> void {
     auto stream = FuzzStream(data);
+    const auto limits = FuzzLimits {};
 
     auto modifier = Modifier {Layout {}, ModifierConfig {
                                              .enable_history = true,
@@ -165,6 +239,7 @@ auto process_data(std::span<const uint8_t> data) -> void {
 
     while (!stream.empty()) {
         editing_operation(stream, modifier);
+        Expects(all_within_limits(modifier.circuit_data().layout, limits));
 
         // store history state
         if (modifier.has_ungrouped_undo_entries()) {
