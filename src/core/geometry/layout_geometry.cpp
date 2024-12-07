@@ -3,8 +3,6 @@
 #include "core/geometry/rect.h"
 #include "core/layout.h"
 #include "core/layout_info.h"
-#include "core/vocabulary/decoration_layout_data.h"
-#include "core/vocabulary/layout_calculation_data.h"
 #include "core/vocabulary/rect.h"
 
 #include <ranges>
