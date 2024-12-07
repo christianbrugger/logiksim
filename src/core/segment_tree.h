@@ -210,7 +210,8 @@ static_assert(sizeof(SegmentTree) == 56);  // 24 + 24 + 6 + 2
 
 [[nodiscard]] auto has_valid_parts(const SegmentTree &tree) -> bool;
 
-[[nodiscard]] auto calculate_bounding_rect(const SegmentTree &tree) -> rect_t;
+[[nodiscard]] auto calculate_bounding_rect(const SegmentTree &tree)
+    -> std::optional<rect_t>;
 
 [[nodiscard]] inline auto all_lines(const SegmentTree &tree);
 

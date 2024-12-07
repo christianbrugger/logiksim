@@ -157,7 +157,7 @@ auto WireStore::bounding_rect(wire_id_t wire_id) const -> rect_t {
         if (segment_tree.empty()) {
             rect = empty_bounding_rect;
         } else {
-            rect = calculate_bounding_rect(segment_tree);
+            rect = calculate_bounding_rect(segment_tree).value();
         }
     }
 

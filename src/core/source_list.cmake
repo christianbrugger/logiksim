@@ -138,6 +138,7 @@ set(LS_CORE_SOURCES
     geometry/grid.cpp
     geometry/interpolation.cpp
     geometry/layout_calculation.cpp
+    geometry/layout_geometry.cpp
     geometry/line.cpp
     geometry/offset.cpp
     geometry/orientation.cpp

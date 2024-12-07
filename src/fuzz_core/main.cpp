@@ -2,6 +2,8 @@
 #include "core/algorithm/span_operations.h"
 #include "core/component/editable_circuit/key_state.h"
 #include "core/component/editable_circuit/modifier.h"
+#include "core/geometry/layout_geometry.h"
+#include "core/geometry/rect.h"
 #include "core/logging.h"
 #include "core/random/fuzz.h"
 #include "core/selection_sanitization.h"
@@ -16,30 +18,16 @@ namespace editable_circuit {
 namespace {
 
 struct FuzzLimits {
-    int x_min {0};
-    int x_max {5};
-    int y_min {0};
-    int y_max {5};
+    rect_t box {
+        point_t {0, 0},
+        point_t {5, 5},
+    };
+
+    [[nodiscard]] auto operator==(const FuzzLimits&) const -> bool = default;
 };
 
-[[nodiscard]] auto line_within_limits(const ordered_line_t& line,
-                                      const FuzzLimits& limits) -> bool {
-    return (limits.x_min <= int {line.p0.x} && int {line.p1.x} <= limits.x_max) &&
-           (limits.y_min <= int {line.p0.y} && int {line.p1.y} <= limits.y_max);
-}
-
-[[nodiscard]] auto all_segments_within_limits(const SegmentTree& tree,
-                                              const FuzzLimits& limits) {
-    return std::ranges::all_of(tree.segments(), [=](const segment_info_t& info) {
-        return line_within_limits(info.line, limits);
-    });
-}
-
-[[nodiscard]] auto all_within_limits(const Layout& layout,
-                                     const FuzzLimits& limits) -> bool {
-    return std::ranges::all_of(wire_ids(layout), [&](wire_id_t wire_id) {
-        return all_segments_within_limits(layout.wires().segment_tree(wire_id), limits);
-    });
+[[nodiscard]] auto all_within_limits(const Layout& layout, FuzzLimits limits) -> bool {
+    return enclosing_rect(bounding_rect(layout), limits.box) == limits.box;
 }
 
 auto fuzz_select_insertion_mode(FuzzStream& stream) -> InsertionMode {
@@ -96,11 +84,11 @@ auto fuzz_select_move_delta(FuzzStream& stream, ordered_line_t line,
                             const FuzzLimits& limits) -> move_delta_t {
     return move_delta_t {
         .x = fuzz_small_int(stream,  //
-                            limits.x_min - int {line.p0.x},
-                            limits.x_max - int {line.p1.x}),
+                            int {limits.box.p0.x} - int {line.p0.x},
+                            int {limits.box.p1.x} - int {line.p1.x}),
         .y = fuzz_small_int(stream,  //
-                            limits.y_min - int {line.p0.y},
-                            limits.y_max - int {line.p1.y}),
+                            int {limits.box.p0.y} - int {line.p0.y},
+                            int {limits.box.p1.y} - int {line.p1.y}),
     };
 }
 
@@ -178,9 +166,8 @@ auto move_or_delete_temporary_wire(FuzzStream& stream, Modifier& modifier,
     }
 }
 
-auto editing_operation(FuzzStream& stream, Modifier& modifier) -> void {
-    const auto limits = FuzzLimits {};
-
+auto editing_operation(FuzzStream& stream, Modifier& modifier,
+                       const FuzzLimits& limits) -> void {
     switch (fuzz_small_int(stream, 0, 4)) {
         case 0:
             add_wire_segment(stream, modifier);
@@ -201,13 +188,8 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier) -> void {
     std::terminate();
 }
 
-auto validate_undo_redo(Modifier& modifier,
-                        const std::vector<layout_key_state_t>& key_state_stack) {
-    Expects(key_state_stack.empty() ||
-            layout_key_state_t {modifier} == key_state_stack.back());
-    Expects(!modifier.has_ungrouped_undo_entries());
-
-    // undo completely
+auto validate_undo(Modifier& modifier,
+                   const std::vector<layout_key_state_t>& key_state_stack) {
     for (const auto& state : std::ranges::views::reverse(key_state_stack)  //
                                  | std::ranges::views::drop(1)) {
         Expects(modifier.has_undo());
@@ -215,14 +197,30 @@ auto validate_undo_redo(Modifier& modifier,
         Expects(layout_key_state_t {modifier} == state);
     }
     Expects(!modifier.has_undo());
+}
 
-    // redo completely
+auto validate_redo(Modifier& modifier,
+                   const std::vector<layout_key_state_t>& key_state_stack) {
     for (const auto& state : key_state_stack | std::ranges::views::drop(1)) {
         Expects(modifier.has_redo());
         modifier.redo_group();
         Expects(layout_key_state_t {modifier} == state);
     }
     Expects(!modifier.has_redo());
+}
+
+auto validate_undo_redo(Modifier& modifier,
+                        const std::vector<layout_key_state_t>& key_state_stack) {
+    Expects(key_state_stack.empty() ||
+            layout_key_state_t {modifier} == key_state_stack.back());
+    Expects(!modifier.has_ungrouped_undo_entries());
+
+    // Do it twise, as redo may generate different stack entries than the initial
+    // change operations
+    validate_undo(modifier, key_state_stack);
+    validate_redo(modifier, key_state_stack);
+    validate_undo(modifier, key_state_stack);
+    validate_redo(modifier, key_state_stack);
 }
 
 auto process_data(std::span<const uint8_t> data) -> void {
@@ -238,7 +236,7 @@ auto process_data(std::span<const uint8_t> data) -> void {
     };
 
     while (!stream.empty()) {
-        editing_operation(stream, modifier);
+        editing_operation(stream, modifier, limits);
         Expects(all_within_limits(modifier.circuit_data().layout, limits));
 
         // store history state

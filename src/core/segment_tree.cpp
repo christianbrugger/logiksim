@@ -547,9 +547,9 @@ auto has_valid_parts(const SegmentTree& tree) -> bool {
     return !std::ranges::all_of(tree.valid_parts(), &PartSelection::empty);
 }
 
-auto calculate_bounding_rect(const SegmentTree& tree) -> rect_t {
-    if (tree.empty()) [[unlikely]] {
-        throw std::runtime_error("empty segment tree has no bounding-rect");
+auto calculate_bounding_rect(const SegmentTree& tree) -> std::optional<rect_t> {
+    if (tree.empty()) {
+        return std::nullopt;
     }
 
     auto p_min = point_t {grid_t::max(), grid_t::max()};

@@ -39,6 +39,21 @@ auto enclosing_rect(rect_t rect, ordered_line_t line) -> rect_t {
     };
 }
 
+auto enclosing_rect(const std::optional<rect_t>& a,
+                    const std::optional<rect_t>& b) -> std::optional<rect_t> {
+    if (!a.has_value() && !b.has_value()) {
+        return std::nullopt;
+    }
+    if (!a.has_value()) {
+        return b;
+    }
+    if (!b.has_value()) {
+        return a;
+    }
+
+    return enclosing_rect(a.value(), b.value());
+};
+
 auto to_rect(point_fine_t center, grid_fine_t size) -> rect_fine_t {
     const auto half = size / 2.0;
 
