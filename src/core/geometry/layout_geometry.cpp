@@ -7,8 +7,6 @@
 #include "core/vocabulary/layout_calculation_data.h"
 #include "core/vocabulary/rect.h"
 
-#include <range/v3/algorithm/fold_left.hpp>
-
 #include <ranges>
 
 namespace logicsim {
@@ -34,9 +32,12 @@ auto bounding_rect_logicitems(const Layout& layout) -> std::optional<rect_t> {
         return layout.logicitems().bounding_rect(logicitem_id);
     };
 
-    return ranges::fold_left(
-        logicitem_ids(layout) | std::ranges::views::transform(to_bounding_rect),
-        std::nullopt, enclosing_rect_opt);
+    const auto view =
+        logicitem_ids(layout) | std::ranges::views::transform(to_bounding_rect);
+
+    // C++23 use std::ranges::fold_left
+    return std::accumulate(view.begin(), view.end(), std::optional<rect_t> {},
+                           enclosing_rect_opt);
 }
 
 auto bounding_rect_decorations(const Layout& layout) -> std::optional<rect_t> {
@@ -45,9 +46,12 @@ auto bounding_rect_decorations(const Layout& layout) -> std::optional<rect_t> {
         return layout.decorations().bounding_rect(decoration_id);
     };
 
-    return ranges::fold_left(
-        decoration_ids(layout) | std::ranges::views::transform(to_bounding_rect),
-        std::nullopt, enclosing_rect_opt);
+    const auto view =
+        decoration_ids(layout) | std::ranges::views::transform(to_bounding_rect);
+
+    // C++23 use std::ranges::fold_left
+    return std::accumulate(view.begin(), view.end(), std::optional<rect_t> {},
+                           enclosing_rect_opt);
 }
 
 auto bounding_rect_inserted_segments(const Layout& layout) -> std::optional<rect_t> {
@@ -55,9 +59,12 @@ auto bounding_rect_inserted_segments(const Layout& layout) -> std::optional<rect
         return layout.wires().bounding_rect(wire_id);
     };
 
-    return ranges::fold_left(
-        inserted_wire_ids(layout) | std::ranges::views::transform(to_bounding_rect),
-        std::nullopt, enclosing_rect_opt);
+    const auto view =
+        inserted_wire_ids(layout) | std::ranges::views::transform(to_bounding_rect);
+
+    // C++23 use std::ranges::fold_left
+    return std::accumulate(view.begin(), view.end(), std::optional<rect_t> {},
+                           enclosing_rect_opt);
 }
 
 auto bounding_rect_uninserted_segments(const Layout& layout) -> std::optional<rect_t> {
