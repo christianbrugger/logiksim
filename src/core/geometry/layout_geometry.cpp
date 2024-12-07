@@ -5,6 +5,7 @@
 #include "core/layout_info.h"
 #include "core/vocabulary/rect.h"
 
+#include <numeric>
 #include <ranges>
 
 namespace logicsim {
