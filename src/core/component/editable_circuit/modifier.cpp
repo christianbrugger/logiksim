@@ -888,6 +888,23 @@ auto is_valid(const Modifier& modifier) -> bool {
     return true;
 }
 
+auto change_wire_insertion_mode_requires_sanitization(wire_id_t wire_id,
+                                                      InsertionMode new_mode) -> bool {
+    return editing::change_wire_insertion_mode_requires_sanitization(wire_id, new_mode);
+}
+
+auto change_wire_insertion_mode_requires_sanitization(segment_t segment,
+                                                      InsertionMode new_mode) -> bool {
+    return editing::change_wire_insertion_mode_requires_sanitization(segment.wire_id,
+                                                                     new_mode);
+}
+
+auto change_wire_insertion_mode_requires_sanitization(segment_part_t segment_part,
+                                                      InsertionMode new_mode) -> bool {
+    return editing::change_wire_insertion_mode_requires_sanitization(
+        segment_part.segment.wire_id, new_mode);
+}
+
 auto get_inserted_cross_points(const Modifier& modifier,
                                const Selection& selection) -> std::vector<point_t> {
     return editing::get_inserted_cross_points(modifier.circuit_data(), selection);

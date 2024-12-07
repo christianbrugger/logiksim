@@ -361,7 +361,7 @@ set(LS_CORE_SOURCES
     schematic_generation.cpp
     segment_tree.cpp
     selection.cpp
-    selection_normalization.cpp
+    selection_sanitization.cpp
     serialize.cpp
     serialize_detail.cpp
     serialize_gui_setting.cpp

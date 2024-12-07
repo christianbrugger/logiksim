@@ -74,7 +74,15 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
                                    move_delta_t delta) -> void;
 
 /**
+ * @brief: Checks if mode change requires sanitization.
+ */
+[[nodiscard]] auto change_wire_insertion_mode_requires_sanitization(
+    wire_id_t wire_id, InsertionMode new_mode) -> bool;
+
+/**
  * @brief: Change the insertion mode of the segment_part.
+ *
+ * Throws, if segment is uninserted that is not sanitized.
  */
 auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_part,
                                 InsertionMode new_mode) -> void;

@@ -66,6 +66,13 @@ class EditableCircuit {
                         InsertionMode insertion_mode,
                         selection_id_t selection_id = null_selection_id) -> void;
 
+    /**
+     * @brief: Changes insertion mode of the selection.
+     *
+     * Note that when segments are uninserted they need to be sanitized.
+     *
+     * Throws, if unsanitized segments are uninserted.
+     */
     auto change_insertion_mode(selection_id_t selection_id,
                                InsertionMode new_insertion_mode) -> void;
     auto change_insertion_mode(Selection selection,

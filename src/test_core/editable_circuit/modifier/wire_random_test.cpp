@@ -9,7 +9,7 @@
 #include "core/random/ordered_line.h"
 #include "core/random/segment.h"
 #include "core/random/wire.h"
-#include "core/selection_normalization.h"
+#include "core/selection_sanitization.h"
 #include "core/tree_normalization.h"
 #include "core/vocabulary/segment_part.h"
 

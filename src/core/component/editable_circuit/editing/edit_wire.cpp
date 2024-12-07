@@ -10,6 +10,7 @@
 #include "core/index/segment_map.h"
 #include "core/index/spatial_point_index.h"
 #include "core/layout.h"
+#include "core/selection_sanitization.h"
 #include "core/tree_normalization.h"
 #include "core/vocabulary/endpoints.h"
 
@@ -330,8 +331,21 @@ auto _wire_change_colliding_to_insert(CircuitData& circuit,
 
 }  // namespace
 
+auto change_wire_insertion_mode_requires_sanitization(wire_id_t wire_id,
+                                                      InsertionMode new_mode) -> bool {
+    return new_mode == InsertionMode::temporary && is_inserted(wire_id);
+}
+
 auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_part,
                                 InsertionMode new_mode) -> void {
+    // segments that are uninserted need to be sanitized
+    if (change_wire_insertion_mode_requires_sanitization(segment_part.segment.wire_id,
+                                                         new_mode) &&
+        !is_sanitized(segment_part, circuit.layout, circuit.index.collision_index()))
+        [[unlikely]] {
+        throw std::runtime_error("trying to uninsert non-sanitized segment part");
+    }
+
     // As segments have length, the given segment can have two possible modes.
     // The mixed state could be:
     //   + InsertionMode::collisions (display_state_t::valid)

@@ -235,6 +235,15 @@ using ModifierSelectionGuard = SelectionGuardTemplate<Modifier>;
  */
 [[nodiscard]] auto is_valid(const Modifier& modifier) -> bool;
 
+[[nodiscard]] auto change_wire_insertion_mode_requires_sanitization(
+    wire_id_t wire_id, InsertionMode new_mode) -> bool;
+
+[[nodiscard]] auto change_wire_insertion_mode_requires_sanitization(
+    segment_t segment, InsertionMode new_mode) -> bool;
+
+[[nodiscard]] auto change_wire_insertion_mode_requires_sanitization(
+    segment_part_t segment_part, InsertionMode new_mode) -> bool;
+
 [[nodiscard]] auto get_inserted_cross_points(
     const Modifier& modifier, const Selection& selection) -> std::vector<point_t>;
 

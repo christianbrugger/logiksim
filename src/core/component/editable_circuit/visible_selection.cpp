@@ -11,7 +11,7 @@
 #include "core/layout.h"
 #include "core/layout_message.h"
 #include "core/selection.h"
-#include "core/selection_normalization.h"
+#include "core/selection_sanitization.h"
 
 #include <gsl/gsl>
 

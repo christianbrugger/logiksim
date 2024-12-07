@@ -1,5 +1,6 @@
-#include "core/selection_normalization.h"
+#include "core/selection_sanitization.h"
 
+#include "core/component/editable_circuit/modifier.h"
 #include "core/geometry/offset.h"
 #include "core/index/collision_index.h"
 #include "core/layout.h"
@@ -128,8 +129,22 @@ auto find_sanitized_parts(std::span<const part_t> parts, const CrossingCache &ca
 
 }  // namespace
 
+auto is_sanitized(segment_part_t segment_part, const Layout &layout,
+                  const CollisionIndex &cache) -> bool {
+    if (!is_inserted(segment_part.segment.wire_id)) {
+        return true;
+    }
+
+    const auto line = get_line(layout, segment_part);
+    return !cache.is_wires_crossing(line.p0) && !cache.is_wires_crossing(line.p1);
+}
+
 auto sanitize_part(segment_part_t segment_part, const Layout &layout,
                    const CollisionIndex &cache, SanitizeMode mode) -> segment_part_t {
+    if (!is_inserted(segment_part.segment.wire_id)) {
+        return segment_part;
+    }
+
     const auto full_line = get_line(layout, segment_part.segment);
     const auto crossing_cache = CrossingCache {cache, full_line};
 
@@ -140,21 +155,46 @@ auto sanitize_part(segment_part_t segment_part, const Layout &layout,
     return null_segment_part;
 }
 
+auto sanitize_part(segment_part_t segment_part,
+                   const editable_circuit::Modifier &modifier,
+                   SanitizeMode mode) -> segment_part_t {
+    return sanitize_part(segment_part, modifier.circuit_data().layout,
+                         modifier.circuit_data().index.collision_index(), mode);
+}
+
+namespace {
+
+auto new_sanitize_parts(segment_t segment, const PartSelection &parts,
+                        const Layout &layout, const CollisionIndex &cache,
+                        SanitizeMode &mode) -> std::optional<PartSelection> {
+    if (!is_inserted(segment.wire_id)) {
+        return std::nullopt;
+    }
+
+    const auto full_line = get_line(layout, segment);
+    const auto crossing_cache = CrossingCache {cache, full_line};
+
+    if (is_colliding(parts, crossing_cache)) {
+        return find_sanitized_parts(parts, crossing_cache, mode);
+    }
+
+    return std::nullopt;
+}
+
+}  // namespace
+
 auto sanitize_selection(Selection &selection, const Layout &layout,
                         const CollisionIndex &cache, SanitizeMode mode) -> void {
     std::vector<segment_t> to_delete {};
 
     for (const auto &entry : selection.selected_segments()) {
-        const auto segment = entry.first;
-        const auto full_line = get_line(layout, segment);
-        const auto crossing_cache = CrossingCache {cache, full_line};
+        const auto &[segment, parts] = entry;
 
-        if (is_colliding(entry.second, crossing_cache)) {
-            auto new_segments = find_sanitized_parts(entry.second, crossing_cache, mode);
-            if (new_segments.empty()) {
+        if (auto new_parts = new_sanitize_parts(segment, parts, layout, cache, mode)) {
+            if (new_parts->empty()) {
                 to_delete.push_back(segment);
             } else {
-                selection.set_selection(segment, std::move(new_segments));
+                selection.set_selection(segment, std::move(*new_parts));
             }
         }
     }

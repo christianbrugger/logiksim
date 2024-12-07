@@ -4,6 +4,7 @@
 #include "core/component/editable_circuit/modifier.h"
 #include "core/logging.h"
 #include "core/random/fuzz.h"
+#include "core/selection_sanitization.h"
 
 #include <cstdint>
 #include <span>
@@ -99,7 +100,16 @@ auto change_wire_insertion_mode(FuzzStream& stream, Modifier& modifier) -> void 
         const auto new_mode = fuzz_select_insertion_mode(stream);
 
         auto segment_part = segment_part_t {segment.value(), part};
-        modifier.change_wire_insertion_mode(segment_part, new_mode);
+
+        if (change_wire_insertion_mode_requires_sanitization(segment_part, new_mode)) {
+            const auto sanitize_mode =
+                fuzz_bool(stream) ? SanitizeMode::expand : SanitizeMode::shrink;
+            segment_part = sanitize_part(segment_part, modifier, sanitize_mode);
+        }
+
+        if (segment_part) {
+            modifier.change_wire_insertion_mode(segment_part, new_mode);
+        }
     }
 }
 
