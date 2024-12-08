@@ -8,6 +8,8 @@
 
 namespace logicsim {
 
+[[nodiscard]] auto a_inside_b(part_t a, const PartSelection& b) -> bool;
+
 [[nodiscard]] auto a_overlaps_any_of_b(part_t a, const PartSelection& b) -> bool;
 
 [[nodiscard]] auto a_overlaps_any_of_b(const PartSelection& a,

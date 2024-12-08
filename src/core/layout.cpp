@@ -4,6 +4,7 @@
 #include "core/algorithm/fmt_join.h"
 #include "core/allocated_size/trait.h"
 #include "core/geometry/line.h"
+#include "core/geometry/part_selections.h"
 #include "core/geometry/point.h"
 #include "core/geometry/segment_info.h"
 #include "core/vocabulary/decoration_layout_data.h"
@@ -274,6 +275,12 @@ auto get_segment_valid_parts(const Layout &layout,
     return layout.wires()
         .segment_tree(segment.wire_id)
         .valid_parts(segment.segment_index);
+}
+
+auto is_segment_all_marked_valid(const Layout &layout,
+                                 segment_part_t segment_part) -> bool {
+    return a_inside_b(segment_part.part,
+                      get_segment_valid_parts(layout, segment_part.segment));
 }
 
 auto get_line(const Layout &layout, segment_t segment) -> ordered_line_t {

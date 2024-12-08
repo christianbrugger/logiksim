@@ -262,6 +262,10 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
     const auto was_inserted = is_inserted(segment_part.segment.wire_id);
 
     if (was_inserted) {
+        // no history needed, because if segment contains normal (non-valid) segments,
+        // it would run first the method _wire_change_insert_to_colliding,
+        // which marks the whole segment as valid
+        assert(is_segment_all_marked_valid(circuit.layout, segment_part));
         unmark_valid(circuit.layout, segment_part);
     }
 

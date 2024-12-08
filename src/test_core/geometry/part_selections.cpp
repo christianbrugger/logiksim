@@ -20,6 +20,30 @@ auto to_selection(std::initializer_list<part_t> list) -> PartSelection {
 
 }  // namespace
 
+//
+TEST(GeometryPartSelections, PartInsideSelection) {
+    ASSERT_EQ(a_inside_b(part_t {15, 20}, to_selection({})), false);
+
+    ASSERT_EQ(a_inside_b(part_t {15, 20}, to_selection({part_t {10, 17}})), false);
+    ASSERT_EQ(a_inside_b(part_t {15, 20}, to_selection({part_t {12, 17}})), false);
+    ASSERT_EQ(a_inside_b(part_t {15, 20}, to_selection({part_t {17, 25}})), false);
+    ASSERT_EQ(a_inside_b(part_t {15, 20}, to_selection({part_t {10, 20}})), true);
+    ASSERT_EQ(a_inside_b(part_t {15, 20}, to_selection({part_t {15, 20}})), true);
+    ASSERT_EQ(a_inside_b(part_t {15, 20}, to_selection({part_t {17, 20}})), false);
+    ASSERT_EQ(a_inside_b(part_t {15, 20}, to_selection({part_t {17, 25}})), false);
+    ASSERT_EQ(a_inside_b(part_t {15, 20}, to_selection({part_t {5, 30}})), true);
+
+    ASSERT_EQ(
+        a_inside_b(part_t {15, 20}, to_selection({part_t {15, 17}, part_t {18, 20}})),
+        false);
+    ASSERT_EQ(
+        a_inside_b(part_t {15, 20}, to_selection({part_t {5, 10}, part_t {15, 20}})),
+        true);
+    ASSERT_EQ(
+        a_inside_b(part_t {15, 20}, to_selection({part_t {5, 10}, part_t {13, 24}})),
+        true);
+}
+
 TEST(GeometryPartSelections, PartOverlapsAnyOfSelection0) {
     ASSERT_EQ(a_overlaps_any_of_b(part_t {15, 20}, to_selection({})), false);
 }

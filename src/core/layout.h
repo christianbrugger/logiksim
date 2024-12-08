@@ -115,6 +115,9 @@ class Layout {
 [[nodiscard]] auto get_segment_valid_parts(const Layout &layout,
                                            segment_t segment) -> const PartSelection &;
 
+[[nodiscard]] auto is_segment_all_marked_valid(const Layout &layout,
+                                               segment_part_t segment_part) -> bool;
+
 [[nodiscard]] auto get_line(const Layout &layout, segment_t segment) -> ordered_line_t;
 [[nodiscard]] auto get_line(const Layout &layout,
                             segment_part_t segment_part) -> ordered_line_t;

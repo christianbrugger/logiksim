@@ -8,6 +8,14 @@
 
 namespace logicsim {
 
+auto a_inside_b(part_t a, const PartSelection& b) -> bool {
+    // first part where 'part.end' is bigger than 'a.begin'
+    const auto i1 = std::ranges::upper_bound(b, a.begin, {},
+                                             [](const part_t& part) { return part.end; });
+
+    return i1 != b.end() && a_inside_b(a, *i1);
+}
+
 auto a_overlaps_any_of_b(part_t a, const PartSelection& b) -> bool {
     const auto i1 = std::ranges::upper_bound(b, a.begin, {},
                                              [](const part_t& part) { return part.end; });

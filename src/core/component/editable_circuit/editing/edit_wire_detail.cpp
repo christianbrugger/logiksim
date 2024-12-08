@@ -1094,9 +1094,8 @@ auto unmark_valid(Layout& layout, const segment_part_t segment_part) -> void {
 auto mark_valid_with_history(CircuitData& circuit,
                              const segment_part_t segment_part) -> void {
     if (const auto stack = circuit.history.get_stack()) {
-        const auto& valid_parts = circuit.layout.wires()
-                                      .segment_tree(segment_part.segment.wire_id)
-                                      .valid_parts(segment_part.segment.segment_index);
+        const auto& valid_parts = get_segment_valid_parts(circuit.layout,  //
+                                                          segment_part.segment);
 
         const auto store_history = [segment = segment_part.segment, stack,
                                     &index = circuit.index.key_index()](part_t part,
@@ -1116,9 +1115,8 @@ auto mark_valid_with_history(CircuitData& circuit,
 auto unmark_valid_with_history(CircuitData& circuit,
                                const segment_part_t segment_part) -> void {
     if (const auto stack = circuit.history.get_stack()) {
-        const auto& valid_parts = circuit.layout.wires()
-                                      .segment_tree(segment_part.segment.wire_id)
-                                      .valid_parts(segment_part.segment.segment_index);
+        const auto& valid_parts = get_segment_valid_parts(circuit.layout,  //
+                                                          segment_part.segment);
 
         const auto store_history = [segment = segment_part.segment, stack,
                                     &index = circuit.index.key_index()](part_t part,
