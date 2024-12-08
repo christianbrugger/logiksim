@@ -6,7 +6,6 @@
 #include "core/component/editable_circuit/editing/edit_wire_detail.h"
 #include "core/geometry/line.h"
 #include "core/geometry/orientation.h"
-#include "core/geometry/part_selections.h"
 #include "core/geometry/segment_info.h"
 #include "core/index/segment_map.h"
 #include "core/index/spatial_point_index.h"
@@ -70,22 +69,6 @@ auto _store_history_segment_temporary_to_colliding(CircuitData& circuit,
     }
 }
 
-auto _store_history_segment_colliding_to_insert(CircuitData& circuit,
-                                                segment_part_t segment_part) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto segment_key = circuit.index.key_index().get(segment_part.segment);
-        stack->push_segment_colliding_to_insert(segment_key, segment_part.part);
-    }
-}
-
-auto _store_history_segment_insert_to_colliding(CircuitData& circuit,
-                                                segment_part_t segment_part) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto segment_key = circuit.index.key_index().get(segment_part.segment);
-        stack->push_segment_insert_to_colliding(segment_key, segment_part.part);
-    }
-}
-
 auto _store_history_segment_set_endpoints(CircuitData& circuit, segment_t segment,
                                           endpoints_t new_endpoints) -> void {
     if (const auto stack = circuit.history.get_stack()) {
@@ -106,37 +89,6 @@ auto _store_history_segment_delete_temporary(CircuitData& circuit,
         const auto segment_key = circuit.index.key_index().get(segment_part.segment);
         stack->push_segment_delete_temporary(segment_key);
     }
-}
-
-auto mark_valid_with_history(CircuitData& circuit,
-                             const segment_part_t segment_part) -> void {
-    const auto& valid_parts = circuit.layout.wires()
-                                  .segment_tree(segment_part.segment.wire_id)
-                                  .valid_parts(segment_part.segment.segment_index);
-
-    iter_parts_partial(segment_part.part, valid_parts, [&](part_t part, bool is_valid) {
-        if (!is_valid) {
-            _store_history_segment_colliding_to_insert(
-                circuit, segment_part_t {segment_part.segment, part});
-        }
-    });
-
-    mark_valid(circuit.layout, segment_part);
-}
-
-auto unmark_valid_with_history(CircuitData& circuit,
-                               const segment_part_t segment_part) -> void {
-    const auto& valid_parts = circuit.layout.wires()
-                                  .segment_tree(segment_part.segment.wire_id)
-                                  .valid_parts(segment_part.segment.segment_index);
-
-    iter_parts_partial(segment_part.part, valid_parts, [&](part_t part, bool is_valid) {
-        if (is_valid) {
-            _store_history_segment_insert_to_colliding(
-                circuit, segment_part_t {segment_part.segment, part});
-        }
-    });
-    unmark_valid(circuit.layout, segment_part);
 }
 
 }  // namespace

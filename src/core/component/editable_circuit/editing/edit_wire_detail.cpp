@@ -4,6 +4,7 @@
 #include "core/geometry/line.h"
 #include "core/geometry/offset.h"
 #include "core/geometry/orientation.h"
+#include "core/geometry/part_selections.h"
 #include "core/geometry/segment_info.h"
 #include "core/tree_normalization.h"
 #include "core/vocabulary/endpoints.h"
@@ -1088,6 +1089,50 @@ auto mark_valid(Layout& layout, const segment_part_t segment_part) -> void {
 auto unmark_valid(Layout& layout, const segment_part_t segment_part) -> void {
     auto& m_tree = layout.wires().modifiable_segment_tree(segment_part.segment.wire_id);
     m_tree.unmark_valid(segment_part.segment.segment_index, segment_part.part);
+}
+
+auto mark_valid_with_history(CircuitData& circuit,
+                             const segment_part_t segment_part) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto& valid_parts = circuit.layout.wires()
+                                      .segment_tree(segment_part.segment.wire_id)
+                                      .valid_parts(segment_part.segment.segment_index);
+
+        const auto store_history = [segment = segment_part.segment, stack,
+                                    &index = circuit.index.key_index()](part_t part,
+                                                                        bool is_valid) {
+            if (!is_valid) {
+                const auto segment_key = index.get(segment);
+                stack->push_segment_colliding_to_insert(segment_key, part);
+            }
+        };
+
+        iter_parts_partial(segment_part.part, valid_parts, store_history);
+    }
+
+    mark_valid(circuit.layout, segment_part);
+}
+
+auto unmark_valid_with_history(CircuitData& circuit,
+                               const segment_part_t segment_part) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto& valid_parts = circuit.layout.wires()
+                                      .segment_tree(segment_part.segment.wire_id)
+                                      .valid_parts(segment_part.segment.segment_index);
+
+        const auto store_history = [segment = segment_part.segment, stack,
+                                    &index = circuit.index.key_index()](part_t part,
+                                                                        bool is_valid) {
+            if (is_valid) {
+                const auto segment_key = index.get(segment);
+                stack->push_segment_insert_to_colliding(segment_key, part);
+            }
+        };
+
+        iter_parts_partial(segment_part.part, valid_parts, store_history);
+    }
+
+    unmark_valid(circuit.layout, segment_part);
 }
 
 //

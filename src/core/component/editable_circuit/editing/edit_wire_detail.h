@@ -218,6 +218,10 @@ auto mark_valid(Layout& layout, segment_part_t segment_part) -> void;
 
 auto unmark_valid(Layout& layout, segment_part_t segment_part) -> void;
 
+auto mark_valid_with_history(CircuitData& circuit, segment_part_t segment_part) -> void;
+
+auto unmark_valid_with_history(CircuitData& circuit, segment_part_t segment_part) -> void;
+
 //
 // Collisions
 //
