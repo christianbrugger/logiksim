@@ -35,4 +35,27 @@ auto to_insertion_mode(display_state_t display_state) -> InsertionMode {
     std::terminate();
 };
 
+template <>
+auto format(SegmentInsertionHint hint) -> std::string {
+    switch (hint) {
+        using enum SegmentInsertionHint;
+
+        case no_hint:
+            return "no_hint";
+        case assume_colliding:
+            return "assume_colliding";
+    }
+    std::terminate();
+}
+
+auto segment_insertion_hint_valid(InsertionMode mode, SegmentInsertionHint hint) -> bool {
+    if (hint == SegmentInsertionHint::assume_colliding &&
+        !(mode == InsertionMode::collisions ||
+          mode == InsertionMode::insert_or_discard)) {
+        return false;
+    }
+
+    return true;
+}
+
 }  // namespace logicsim

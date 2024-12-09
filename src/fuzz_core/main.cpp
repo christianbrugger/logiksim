@@ -176,6 +176,7 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
             delete_temporary_wire_segment(stream, modifier);
             return;
         case 2:
+            // TODO fuzz hint assume_colliding
             change_wire_insertion_mode(stream, modifier);
             return;
         case 3:
@@ -215,8 +216,7 @@ auto validate_undo_redo(Modifier& modifier,
             layout_key_state_t {modifier} == key_state_stack.back());
     Expects(!modifier.has_ungrouped_undo_entries());
 
-    // Do it twise, as redo may generate different stack entries than the initial
-    // change operations
+    // Do it twice, as redo may generate different stack entries than the initial entries
     validate_undo(modifier, key_state_stack);
     validate_redo(modifier, key_state_stack);
     validate_undo(modifier, key_state_stack);

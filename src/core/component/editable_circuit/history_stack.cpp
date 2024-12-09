@@ -66,6 +66,8 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
             return "segment_to_mode_temporary";
         case segment_to_mode_colliding:
             return "segment_to_mode_colliding";
+        case segment_to_mode_colliding_assume_colliding:
+            return "segment_to_mode_colliding_assume_colliding";
         case segment_to_mode_insert:
             return "segment_to_mode_insert";
         case segment_set_endpoints:
@@ -633,6 +635,13 @@ auto HistoryStack::push_segment_temporary_to_colliding(segment_key_t segment_key
     parts_.emplace_back(part);
 }
 
+auto HistoryStack::push_segment_temporary_to_colliding_assume_colliding(
+    segment_key_t segment_key, part_t part) -> void {
+    entries_.emplace_back(HistoryEntry::segment_to_mode_colliding_assume_colliding);
+    segment_keys_.emplace_back(segment_key);
+    parts_.emplace_back(part);
+}
+
 auto HistoryStack::push_segment_colliding_to_insert(segment_key_t segment_key,
                                                     part_t part) -> void {
     entries_.emplace_back(HistoryEntry::segment_to_mode_insert);
@@ -703,6 +712,13 @@ auto HistoryStack::pop_segment_to_mode_temporary() -> std::pair<segment_key_t, p
 
 auto HistoryStack::pop_segment_to_mode_colliding() -> std::pair<segment_key_t, part_t> {
     Expects(pop_back_vector(entries_) == HistoryEntry::segment_to_mode_colliding);
+    return {pop_back_vector(segment_keys_), pop_back_vector(parts_)};
+}
+
+auto HistoryStack::pop_segment_to_mode_colliding_assume_colliding()
+    -> std::pair<segment_key_t, part_t> {
+    Expects(pop_back_vector(entries_) ==
+            HistoryEntry::segment_to_mode_colliding_assume_colliding);
     return {pop_back_vector(segment_keys_), pop_back_vector(parts_)};
 }
 

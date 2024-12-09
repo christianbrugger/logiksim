@@ -22,6 +22,23 @@ template <>
 
 [[nodiscard]] auto to_insertion_mode(display_state_t display_state) -> InsertionMode;
 
+/**
+ * @brief: Specify additional hints for inserting wires.
+ */
+enum class SegmentInsertionHint {
+    no_hint,
+    /**
+     * brief: Wires are assumed to be colliding. Collision check is skipped.
+     */
+    assume_colliding,
+};
+
+template <>
+[[nodiscard]] auto format(SegmentInsertionHint hint) -> std::string;
+
+[[nodiscard]] auto segment_insertion_hint_valid(InsertionMode mode,
+                                                SegmentInsertionHint hint) -> bool;
+
 }  // namespace logicsim
 
 #endif

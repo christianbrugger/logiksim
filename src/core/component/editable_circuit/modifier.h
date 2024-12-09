@@ -146,8 +146,9 @@ class Modifier {
     auto add_wire_segment(ordered_line_t line,
                           InsertionMode insertion_mode) -> segment_part_t;
 
-    auto change_wire_insertion_mode(segment_part_t& segment_part,
-                                    InsertionMode new_insertion_mode) -> void;
+    auto change_wire_insertion_mode(
+        segment_part_t& segment_part, InsertionMode new_mode,
+        SegmentInsertionHint hint = SegmentInsertionHint::no_hint) -> void;
 
     auto move_temporary_wire_unchecked(segment_part_t full_segment_part,
                                        move_delta_t delta) -> void;

@@ -262,6 +262,15 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
+        case segment_to_mode_colliding_assume_colliding: {
+            auto segment_part =
+                to_part(stack.pop_segment_to_mode_colliding_assume_colliding(), circuit);
+            editing::change_wire_insertion_mode(circuit, segment_part,
+                                                InsertionMode::collisions,
+                                                SegmentInsertionHint::assume_colliding);
+            return;
+        }
+
         case segment_to_mode_insert: {
             auto segment_part = to_part(stack.pop_segment_to_mode_insert(), circuit);
             editing::change_wire_insertion_mode(circuit, segment_part,

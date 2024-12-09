@@ -69,6 +69,15 @@ auto _store_history_segment_temporary_to_colliding(CircuitData& circuit,
     }
 }
 
+auto _store_history_segment_temporary_to_colliding_assume_colliding(
+    CircuitData& circuit, segment_part_t segment_part) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto segment_key = circuit.index.key_index().get(segment_part.segment);
+        stack->push_segment_temporary_to_colliding_assume_colliding(segment_key,
+                                                                    segment_part.part);
+    }
+}
+
 auto _store_history_segment_set_endpoints(CircuitData& circuit, segment_t segment,
                                           endpoints_t new_endpoints) -> void {
     if (const auto stack = circuit.history.get_stack()) {
@@ -236,11 +245,12 @@ auto _insert_uninserted_segment(CircuitData& circuit,
 }
 
 auto _wire_change_temporary_to_colliding(CircuitData& circuit,
-                                         segment_part_t& segment_part) -> void {
+                                         segment_part_t& segment_part,
+                                         SegmentInsertionHint hint) -> void {
     const auto line = get_line(circuit.layout, segment_part);
     bool colliding = is_wire_colliding(circuit, line);
 
-    if (colliding) {
+    if (colliding || hint == SegmentInsertionHint::assume_colliding) {
         const auto destination = colliding_wire_id;
         move_segment_between_trees_with_history(circuit, segment_part, destination);
         reset_segment_endpoints_with_history(circuit, segment_part.segment);
@@ -262,8 +272,8 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
     const auto was_inserted = is_inserted(segment_part.segment.wire_id);
 
     if (was_inserted) {
-        // no history needed, because if segment contains normal (non-valid) segments,
-        // it would run first the method _wire_change_insert_to_colliding,
+        // no unmark history needed, because if segment contains normal (non-valid)
+        // segments, it would run first the method _wire_change_insert_to_colliding,
         // which marks the whole segment as valid
         assert(is_segment_all_marked_valid(circuit.layout, segment_part));
         unmark_valid(circuit.layout, segment_part);
@@ -279,7 +289,13 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
         move_segment_between_trees_with_history(circuit, segment_part, destination_id);
     }
 
-    _store_history_segment_temporary_to_colliding(circuit, segment_part);
+    // history
+    if (was_inserted) {
+        _store_history_segment_temporary_to_colliding(circuit, segment_part);
+    } else {
+        _store_history_segment_temporary_to_colliding_assume_colliding(circuit,
+                                                                       segment_part);
+    }
 
     if (was_inserted) {
         if (circuit.layout.wires().segment_tree(source_id).empty()) {
@@ -322,12 +338,17 @@ auto change_wire_insertion_mode_requires_sanitization(wire_id_t wire_id,
 }
 
 auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_part,
-                                InsertionMode new_mode) -> void {
+                                InsertionMode new_mode,
+                                SegmentInsertionHint hint) -> void {
     if (change_wire_insertion_mode_requires_sanitization(segment_part.segment.wire_id,
                                                          new_mode) &&
         !is_sanitized(segment_part, circuit.layout, circuit.index.collision_index()))
         [[unlikely]] {
         throw std::runtime_error("trying to uninsert non-sanitized segment part");
+    }
+
+    if (!segment_insertion_hint_valid(new_mode, hint)) [[unlikely]] {
+        throw std::runtime_error("invalid insertion hint provided");
     }
 
     // As segments have length, the given segment can have two possible modes.
@@ -342,7 +363,7 @@ auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_pa
 
     if (old_modes.first == InsertionMode::temporary ||
         old_modes.second == InsertionMode::temporary) {
-        _wire_change_temporary_to_colliding(circuit, segment_part);
+        _wire_change_temporary_to_colliding(circuit, segment_part, hint);
     }
     if (new_mode == InsertionMode::insert_or_discard) {
         _wire_change_colliding_to_insert(circuit, segment_part);

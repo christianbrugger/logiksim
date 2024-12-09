@@ -52,6 +52,7 @@ enum class HistoryEntry : uint8_t {
     segment_move_temporary,
     segment_to_mode_temporary,
     segment_to_mode_colliding,
+    segment_to_mode_colliding_assume_colliding,
     segment_to_mode_insert,
     segment_set_endpoints,
     segment_merge,
@@ -187,6 +188,8 @@ class HistoryStack {
                                              part_t part) -> void;
     auto push_segment_temporary_to_colliding(segment_key_t segment_key,
                                              part_t part) -> void;
+    auto push_segment_temporary_to_colliding_assume_colliding(segment_key_t segment_key,
+                                                              part_t part) -> void;
     auto push_segment_colliding_to_insert(segment_key_t segment_key, part_t part) -> void;
     auto push_segment_insert_to_colliding(segment_key_t segment_key, part_t part) -> void;
     auto push_segment_set_endpoints(segment_key_t segment_key,
@@ -202,6 +205,8 @@ class HistoryStack {
     auto pop_segment_move_temporary() -> std::pair<segment_key_t, move_delta_t>;
     auto pop_segment_to_mode_temporary() -> std::pair<segment_key_t, part_t>;
     auto pop_segment_to_mode_colliding() -> std::pair<segment_key_t, part_t>;
+    auto pop_segment_to_mode_colliding_assume_colliding()
+        -> std::pair<segment_key_t, part_t>;
     auto pop_segment_to_mode_insert() -> std::pair<segment_key_t, part_t>;
     auto pop_segment_set_endpoints() -> std::pair<segment_key_t, endpoints_t>;
     auto pop_segment_merge() -> std::pair<segment_key_t, segment_key_t>;

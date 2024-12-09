@@ -452,16 +452,17 @@ auto Modifier::add_wire_segment(ordered_line_t line,
 }
 
 auto Modifier::change_wire_insertion_mode(segment_part_t& segment_part,
-                                          InsertionMode new_insertion_mode) -> void {
+                                          InsertionMode new_mode,
+                                          SegmentInsertionHint hint) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "change_wire_insertion_mode(segment_part = {}, new_mode = {});\n"
+            "change_wire_insertion_mode(segment_part = {}, new_mode = {}, hint = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, segment_part, new_insertion_mode);
+            circuit_data_.layout, segment_part, new_mode, hint);
     }
 
-    editing::change_wire_insertion_mode(circuit_data_, segment_part, new_insertion_mode);
+    editing::change_wire_insertion_mode(circuit_data_, segment_part, new_mode, hint);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
