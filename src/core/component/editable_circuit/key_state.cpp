@@ -33,13 +33,28 @@ auto layout_key_state_t::format() const -> std::string {
         "layout_key_state(\n"
         "  {}\n"
         "  key_state = {},\n"
+        "  stable_selection = {},\n"
         ")",
-        normalized_layout_, sorted_key_state_);
+        normalized_layout_, sorted_key_state_, stable_selection_);
 }
+
+namespace {
+
+[[nodiscard]] auto to_stable_selection(const Modifier &modifier) -> StableSelection {
+    const auto &circuit = modifier.circuit_data();
+
+    const auto &selection =
+        circuit.visible_selection.selection(circuit.layout, circuit.index);
+
+    return to_stable_selection(selection, circuit.index.key_index());
+}
+
+}  // namespace
 
 layout_key_state_t::layout_key_state_t(const Modifier &modifier)
     : normalized_layout_ {get_normalized(modifier.circuit_data().layout)},
-      sorted_key_state_ {get_sorted_key_state(modifier)} {}
+      sorted_key_state_ {get_sorted_key_state(modifier)},
+      stable_selection_ {to_stable_selection(modifier)} {}
 
 }  // namespace editable_circuit
 

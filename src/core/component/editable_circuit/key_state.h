@@ -2,6 +2,7 @@
 #define LOGICSIM_CORE_COMPONENT_EDITABLE_CIRCUIT_KEY_STATE_H
 
 #include "core/layout.h"
+#include "core/stable_selection.h"
 #include "core/vocabulary/segment_key.h"
 
 namespace logicsim {
@@ -41,6 +42,7 @@ struct layout_key_state_t {
    private:
     Layout normalized_layout_;
     key_state_t sorted_key_state_;
+    StableSelection stable_selection_;
 };
 
 static_assert(std::regular<layout_key_state_t>);
