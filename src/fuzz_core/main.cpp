@@ -1,4 +1,5 @@
 
+#include "core/algorithm/range.h"
 #include "core/algorithm/span_operations.h"
 #include "core/component/editable_circuit/key_state.h"
 #include "core/component/editable_circuit/modifier.h"
@@ -166,9 +167,22 @@ auto move_or_delete_temporary_wire(FuzzStream& stream, Modifier& modifier,
     }
 }
 
+auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
+    auto selection = Selection {};
+
+    for (const auto _ : range(fuzz_small_int(stream, 0, 4))) {
+        if (const auto segment = fuzz_select_segment(stream, modifier)) {
+            const auto part = fuzz_select_part(stream, modifier, *segment);
+            selection.add_segment(segment_part_t {*segment, part});
+        }
+    }
+
+    modifier.set_visible_selection(std::move(selection));
+}
+
 auto editing_operation(FuzzStream& stream, Modifier& modifier,
                        const FuzzLimits& limits) -> void {
-    switch (fuzz_small_int(stream, 0, 4)) {
+    switch (fuzz_small_int(stream, 0, 5)) {
         case 0:
             add_wire_segment(stream, modifier);
             return;
@@ -184,6 +198,9 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
             return;
         case 4:
             move_or_delete_temporary_wire(stream, modifier, limits);
+            return;
+        case 5:
+            set_visible_selection(stream, modifier);
             return;
     }
     std::terminate();
