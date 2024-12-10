@@ -260,6 +260,21 @@ auto CircuitWidget::circuit_state() const -> CircuitWidgetState {
     return circuit_state_;
 }
 
+auto CircuitWidget::history_status() const -> HistoryStatus {
+    Expects(class_invariant_holds());
+
+    if (is_editing_state(circuit_state_)) {
+        return HistoryStatus {
+            .undo_available = circuit_store_.editable_circuit().has_undo(),
+            .redo_available = circuit_store_.editable_circuit().has_redo(),
+        };
+    }
+    return HistoryStatus {
+        .undo_available = false,
+        .redo_available = false,
+    };
+}
+
 auto CircuitWidget::serialized_circuit() -> std::string {
     Expects(class_invariant_holds());
 
@@ -510,6 +525,11 @@ auto CircuitWidget::renderEvent(BLImage bl_image, device_pixel_ratio_t device_pi
     last_render_mode_ = render_mode;
     simulation_image_update_pending_ = false;
 
+    // TODO update history status in other methods as history is changed
+    // and also add it to the invariant to make sure it is up to date
+    // for now update it only here, until refactoring this class into core
+    update_history_status();
+
     Ensures(class_invariant_holds());
 }
 
@@ -748,6 +768,19 @@ auto CircuitWidget::redo() -> void {
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+}
+
+auto CircuitWidget::update_history_status() -> void {
+    Expects(class_invariant_holds());
+
+    const auto status = history_status();
+
+    if (status != last_history_status_) {
+        last_history_status_ = status;
+        emit_history_status_changed(status);
+    }
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::select_all() -> void {

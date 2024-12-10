@@ -16,4 +16,8 @@ auto CircuitWidgetBase::emit_circuit_state_changed(CircuitWidgetState new_state)
     Q_EMIT circuit_state_changed(new_state);
 }
 
+auto CircuitWidgetBase::emit_history_status_changed(HistoryStatus new_status) -> void {
+    Q_EMIT history_status_changed(new_status);
+}
+
 }  // namespace logicsim

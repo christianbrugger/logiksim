@@ -116,10 +116,13 @@ TopWidget::TopWidget(QWidget* parent)
             &TopWidget::on_simulation_config_changed);
     connect(circuit_widget_, &CircuitWidgetBase::render_config_changed, this,
             &TopWidget::on_render_config_changed);
+    connect(circuit_widget_, &CircuitWidgetBase::history_status_changed, this,
+            &TopWidget::on_history_status_changed);
 
     on_circuit_state_changed(circuit_widget_->circuit_state());
     on_simulation_config_changed(circuit_widget_->simulation_config());
     on_render_config_changed(circuit_widget_->render_config());
+    on_history_status_changed(circuit_widget_->history_status());
 
     new_circuit();
     resize(914, 500);
@@ -1058,6 +1061,15 @@ Q_SLOT void TopWidget::on_render_config_changed(WidgetRenderConfig new_config) {
     }
     if (actions_.jit_rendering != nullptr) {
         actions_.jit_rendering->setChecked(new_config.jit_rendering);
+    }
+}
+
+Q_SLOT void TopWidget::on_history_status_changed(HistoryStatus new_status) {
+    if (actions_.undo != nullptr) {
+        actions_.undo->setEnabled(new_status.undo_available);
+    }
+    if (actions_.redo != nullptr) {
+        actions_.redo->setEnabled(new_status.redo_available);
     }
 }
 

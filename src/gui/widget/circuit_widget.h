@@ -118,6 +118,7 @@ class CircuitWidget : public CircuitWidgetBase {
     [[nodiscard]] auto render_config() const -> WidgetRenderConfig;
     [[nodiscard]] auto simulation_config() const -> SimulationConfig;
     [[nodiscard]] auto circuit_state() const -> CircuitWidgetState;
+    [[nodiscard]] auto history_status() const -> HistoryStatus;
 
     // actions without arguments
     auto do_action(UserAction action) -> void;
@@ -159,6 +160,7 @@ class CircuitWidget : public CircuitWidgetBase {
 
     auto undo() -> void;
     auto redo() -> void;
+    auto update_history_status() -> void;
     auto select_all() -> void;
     auto delete_selected() -> void;
     [[nodiscard]] auto copy_paste_position() -> point_t;
@@ -177,6 +179,7 @@ class CircuitWidget : public CircuitWidgetBase {
     WidgetRenderConfig render_config_ {};
     SimulationConfig simulation_config_ {};
     CircuitWidgetState circuit_state_ {};
+    HistoryStatus last_history_status_ {};
 
     circuit_widget::CircuitStore circuit_store_ {};
     circuit_widget::CircuitRenderer circuit_renderer_ {};

@@ -264,6 +264,7 @@ set(LS_CORE_SOURCES
     vocabulary/font_style.cpp
     vocabulary/grid.cpp
     vocabulary/grid_fine.cpp
+    vocabulary/history_status.cpp
     vocabulary/insertion_mode.cpp
     vocabulary/internal_connection.cpp
     vocabulary/internal_connections.cpp

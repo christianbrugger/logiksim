@@ -102,6 +102,7 @@ class TopWidget : public QMainWindow {
     Q_SLOT void on_circuit_state_changed(CircuitWidgetState new_state);
     Q_SLOT void on_simulation_config_changed(SimulationConfig new_config);
     Q_SLOT void on_render_config_changed(WidgetRenderConfig new_config);
+    Q_SLOT void on_history_status_changed(HistoryStatus new_status);
     // timer slots
     Q_SLOT void on_timer_update_title();
     Q_SLOT void on_timer_process_app_arguments_once();
