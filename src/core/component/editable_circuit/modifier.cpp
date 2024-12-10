@@ -1016,6 +1016,10 @@ auto new_positions_representable(const Layout& layout, const Selection& selectio
 
 auto move_temporary_unchecked(Modifier& modifier, const Selection& selection,
                               move_delta_t delta) -> void {
+    if (delta == move_delta_t {0, 0}) {
+        return;
+    }
+
     for (const auto& logicitem_id : selection.selected_logicitems()) {
         modifier.move_temporary_logicitem_unchecked(logicitem_id, delta);
     }
@@ -1033,6 +1037,10 @@ auto move_temporary_unchecked(Modifier& modifier, const Selection& selection,
 
 auto move_or_delete_temporary_consuming(Modifier& modifier, selection_id_t selection_id,
                                         move_delta_t delta) -> void {
+    if (delta == move_delta_t {0, 0}) {
+        return;
+    }
+
     while (has_logicitem(modifier, selection_id)) {
         auto logicitem_id = get_first_logicitem(modifier, selection_id);
         modifier.remove_from_selection(selection_id, logicitem_id);
