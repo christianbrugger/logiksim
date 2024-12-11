@@ -264,9 +264,11 @@ auto CircuitWidget::history_status() const -> HistoryStatus {
     Expects(class_invariant_holds());
 
     if (is_editing_state(circuit_state_)) {
+        const auto& editable_circuit = circuit_store_.editable_circuit();
         return HistoryStatus {
-            .undo_available = circuit_store_.editable_circuit().has_undo(),
-            .redo_available = circuit_store_.editable_circuit().has_redo(),
+            .undo_available = editable_circuit.has_undo() &&
+                              !editable_circuit.has_ungrouped_undo_entries(),
+            .redo_available = editable_circuit.has_redo(),
         };
     }
     return HistoryStatus {
