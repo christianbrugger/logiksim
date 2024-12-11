@@ -255,7 +255,7 @@ auto SelectionMoveLogic::restore_original_positions(EditableCircuit& editable_ci
     }
 
     convert_selection_to(editable_circuit, InsertionMode::temporary);
-    history_offsets_ = -total_offsets_;
+    history_offsets_ += -total_offsets_;
     editable_circuit.move_temporary_unchecked(editable_circuit.visible_selection(),
                                               -total_offsets_);
 }
