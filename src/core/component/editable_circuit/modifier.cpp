@@ -735,6 +735,14 @@ auto Modifier::remove_from_selection(selection_id_t selection_id,
 //
 
 auto Modifier::clear_visible_selection() -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "clear_visible_selection();\n"
+            "==========================================================\n\n",
+            circuit_data_.layout);
+    }
+
     editing::clear_visible_selection(circuit_data_);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
@@ -744,6 +752,14 @@ auto Modifier::clear_visible_selection() -> void {
 }
 
 auto Modifier::set_visible_selection(Selection selection_) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "set_visible_selection(selection = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, selection_);
+    }
+
     editing::set_visible_selection(circuit_data_, std::move(selection_));
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
@@ -754,6 +770,14 @@ auto Modifier::set_visible_selection(Selection selection_) -> void {
 
 auto Modifier::add_visible_selection_rect(SelectionFunction function,
                                           rect_fine_t rect) -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "add_visible_selection_rect(function = {}, rect = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, function, rect);
+    }
+
     editing::add_visible_selection_rect(circuit_data_, function, rect);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
@@ -763,6 +787,14 @@ auto Modifier::add_visible_selection_rect(SelectionFunction function,
 }
 
 auto Modifier::try_pop_last_visible_selection_rect() -> bool {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "try_pop_last_visible_selection_rect();\n"
+            "==========================================================\n\n",
+            circuit_data_.layout);
+    }
+
     if (circuit_data_.visible_selection.operations().empty()) {
         return false;
     }
@@ -776,6 +808,14 @@ auto Modifier::try_pop_last_visible_selection_rect() -> bool {
 }
 
 auto Modifier::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "try_update_last_visible_selection_rect(rect = {});\n"
+            "==========================================================\n\n",
+            circuit_data_.layout, rect);
+    }
+
     if (circuit_data_.visible_selection.operations().empty()) {
         return false;
     }
@@ -789,6 +829,14 @@ auto Modifier::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool 
 }
 
 auto Modifier::apply_all_visible_selection_operations() -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "apply_all_visible_selection_operations();\n"
+            "==========================================================\n\n",
+            circuit_data_.layout);
+    }
+
     editing::apply_all_visible_selection_operations(circuit_data_);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
