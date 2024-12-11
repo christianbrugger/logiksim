@@ -10,18 +10,32 @@ namespace circuit_widget {
 
 namespace {
 
-auto remove_and_insert(EditableCircuit& editable_circuit, selection_id_t selection_id,
-                       std::optional<point_t> first_position,
-                       std::optional<LineInsertionType> direction,
-                       std::optional<point_t> position,
-                       InsertionMode mode) -> selection_id_t {
+[[nodiscard]] auto remove_and_insert(EditableCircuit& editable_circuit,
+                                     selection_id_t selection_id,
+                                     std::optional<point_t> first_position,
+                                     std::optional<LineInsertionType> direction,
+                                     std::optional<point_t> position,
+                                     InsertionMode mode) -> selection_id_t {
+    const auto re_enable_history = [was_enabled = editable_circuit.is_history_enabled(),
+                                    &editable_circuit]() {  //
+        if (was_enabled && !editable_circuit.is_history_enabled()) {
+            editable_circuit.enable_history();
+        }
+    };
+    const auto _ = gsl::finally(re_enable_history);
+    editable_circuit.disable_history();
+
     save_delete_all(editable_circuit, selection_id);
 
-    if (!editable_circuit.selection_exists(selection_id)) {
-        selection_id = editable_circuit.create_selection();
+    if (mode == InsertionMode::insert_or_discard) {
+        re_enable_history();
     }
 
     if (position && first_position && direction && position != first_position) {
+        if (!editable_circuit.selection_exists(selection_id)) {
+            selection_id = editable_circuit.create_selection();
+        }
+
         // do insert
         add_wire_segments(editable_circuit, *first_position, *position, *direction,
                           InsertionMode::temporary, selection_id);
@@ -81,7 +95,8 @@ auto InsertWireLogic::mouse_release(EditableCircuit& editable_circuit,
 }
 
 auto InsertWireLogic::finalize(EditableCircuit& editable_circuit) -> void {
-    save_delete_all(editable_circuit, temp_wire_);
+    temp_wire_ = remove_and_insert(editable_circuit, temp_wire_, {}, {}, {},
+                                   InsertionMode::temporary);
     save_destroy_selection(editable_circuit, temp_wire_);
     *this = {};
 
