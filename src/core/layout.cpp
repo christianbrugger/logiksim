@@ -7,6 +7,7 @@
 #include "core/geometry/part_selections.h"
 #include "core/geometry/point.h"
 #include "core/geometry/segment_info.h"
+#include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/decoration_layout_data.h"
 #include "core/vocabulary/layout_calculation_data.h"
 #include "core/vocabulary/placed_decoration.h"
@@ -27,6 +28,14 @@ auto Layout::allocated_size() const -> std::size_t {
     return get_allocated_size(logicitems_) +  //
            get_allocated_size(wires_) +       //
            get_allocated_size(decorations_);
+}
+
+auto Layout::allocation_info() const -> LayoutAllocInfo {
+    return LayoutAllocInfo {
+        .logicitem_store = logicitems_.allocated_size(),
+        .wire_store = wires_.allocated_size(),
+        .decoration_store = decorations_.allocated_size(),
+    };
 }
 
 auto Layout::format() const -> std::string {

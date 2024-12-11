@@ -17,6 +17,7 @@
 #include "core/geometry/scene.h"
 #include "core/load_save_file.h"
 #include "core/logging.h"
+#include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/device_pixel_ratio.h"
 #include "core/vocabulary/simulation_config.h"
 #include "core/vocabulary/widget_render_config.h"
@@ -274,6 +275,15 @@ auto CircuitWidget::history_status() const -> HistoryStatus {
     return HistoryStatus {
         .undo_available = false,
         .redo_available = false,
+    };
+}
+
+auto CircuitWidget::allocation_info() const -> CircuitWidgetAllocInfo {
+    Expects(class_invariant_holds());
+
+    return CircuitWidgetAllocInfo {
+        .circuit_store = circuit_store_.allocation_info(),
+        .circuit_renderer = circuit_renderer_.allocation_info(),
     };
 }
 

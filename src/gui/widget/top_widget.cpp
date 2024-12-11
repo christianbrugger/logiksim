@@ -14,6 +14,7 @@
 #include "core/serialize.h"
 #include "core/serialize_gui_setting.h"
 #include "core/timer.h"
+#include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/simulation_config.h"
 
 #include <QActionGroup>
@@ -100,6 +101,8 @@ TopWidget::TopWidget(QWidget* parent)
     // timer title update
     connect(&timer_update_title_, &QTimer::timeout, this,
             &TopWidget::on_timer_update_title);
+    connect(&timer_update_title_, &QTimer::timeout, this,
+            &TopWidget::on_timer_update_debug_info);
     timer_update_title_.setInterval(100);
     timer_update_title_.start();
 
@@ -813,6 +816,15 @@ void TopWidget::on_timer_update_title() {
     if (title != windowTitle()) {
         setWindowTitle(title);
     }
+}
+
+void TopWidget::on_timer_update_debug_info() {
+    Expects(circuit_widget_ != nullptr);
+    if (debug_info_dialog_ == nullptr) {
+        return;
+    }
+
+    debug_info_dialog_->update_allocation_info(circuit_widget_->allocation_info());
 }
 
 void TopWidget::on_circuit_state_changed(CircuitWidgetState new_state) {

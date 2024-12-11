@@ -21,6 +21,7 @@ namespace logicsim {
 struct input_t;
 struct output_t;
 struct internal_state_t;
+struct SimulationAllocInfo;
 
 namespace simulation {
 class HistoryView;
@@ -103,6 +104,8 @@ class Simulation {
     [[nodiscard]] explicit Simulation(Schematic &&schematic,
                                       PrintEvents do_print = PrintEvents::no);
 
+    [[nodiscard]] auto allocation_info() const -> SimulationAllocInfo;
+
     // TODO: define equality
     // [[nodiscard]] auto operator==(const Simulation &) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
@@ -154,7 +157,8 @@ class Simulation {
      * the internal state is not changed. Note this can fail, if there is
      * constant input activity.
      *
-     * Throws if the elements internal state is not writable, e.g. for clock generators.
+     * Throws if the elements internal state is not writable, e.g. for clock
+     * generators.
      *
      * Returns true if state was successfully changed.
      */

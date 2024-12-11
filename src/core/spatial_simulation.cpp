@@ -2,6 +2,7 @@
 
 #include "core/layout.h"
 #include "core/schematic_generation.h"
+#include "core/vocabulary/allocation_info.h"
 
 #include <fmt/core.h>
 #include <gsl/gsl>
@@ -44,6 +45,14 @@ auto SpatialSimulation::line_tree(wire_id_t wire_id) const -> const LineTree & {
 
 auto SpatialSimulation::wire_delay_per_distance() const -> delay_t {
     return wire_delay_per_distance_;
+}
+
+auto SpatialSimulation::allocation_info() const -> SpatialSimulationAllocInfo {
+    return SpatialSimulationAllocInfo {
+        .layout = layout_.allocation_info(),
+        .line_trees = {},
+        .simulation = simulation_.allocation_info(),
+    };
 }
 
 auto SpatialSimulation::format() const -> std::string {

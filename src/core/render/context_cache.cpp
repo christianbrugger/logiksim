@@ -2,6 +2,7 @@
 
 #include "core/render/svg_cache.h"
 #include "core/render/text_cache.h"
+#include "core/vocabulary/allocation_info.h"
 
 namespace logicsim {
 
@@ -30,6 +31,14 @@ ContextCache::ContextCache() : cache_ {std::make_shared<context_cache::CacheData
 
 ContextCache::ContextCache(FontFaces faces)
     : cache_ {context_cache::create_cache_data(std::move(faces))} {}
+
+auto ContextCache::allocation_info() const -> ContextCacheAllocInfo {
+    Expects(cache_ != nullptr);
+    return ContextCacheAllocInfo {
+        .text_cache = cache_->text_cache.allocation_info(),
+        .svg_cache = {},
+    };
+}
 
 auto ContextCache::text_cache() const -> const TextCache& {
     Expects(cache_ != nullptr);

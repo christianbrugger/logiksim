@@ -4,6 +4,7 @@
 #include "core/logging.h"
 #include "core/serialize.h"
 #include "core/timer.h"
+#include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/insertion_mode.h"
 
 #include <fmt/core.h>
@@ -117,6 +118,19 @@ auto CircuitStore::simulation_config() const -> SimulationConfig {
     Expects(class_invariant_holds());
 
     return simulation_config_;
+}
+
+auto CircuitStore::allocation_info() const -> CircuitStoreAllocInfo {
+    Expects(class_invariant_holds());
+
+    return CircuitStoreAllocInfo {
+        .editable_circuit =
+            checked_editable_circuit_.editable_circuit().allocation_info(),
+        .interactive_simulation =
+            interactive_simulation_
+                ? std::make_optional(interactive_simulation_->allocation_info())
+                : std::nullopt,
+    };
 }
 
 auto CircuitStore::layout() const -> const Layout& {

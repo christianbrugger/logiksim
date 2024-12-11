@@ -25,6 +25,7 @@ namespace logicsim {
 
 class SettingDialogManager;
 struct selection_id_t;
+struct CircuitWidgetAllocInfo;
 
 namespace circuit_widget {
 
@@ -119,6 +120,7 @@ class CircuitWidget : public CircuitWidgetBase {
     [[nodiscard]] auto simulation_config() const -> SimulationConfig;
     [[nodiscard]] auto circuit_state() const -> CircuitWidgetState;
     [[nodiscard]] auto history_status() const -> HistoryStatus;
+    [[nodiscard]] auto allocation_info() const -> CircuitWidgetAllocInfo;
 
     // actions without arguments
     auto do_action(UserAction action) -> void;

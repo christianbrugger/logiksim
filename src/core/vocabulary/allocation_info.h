@@ -62,7 +62,7 @@ struct SimulationAllocInfo {
 static_assert(std::regular<SimulationAllocInfo>);
 
 struct SpatialSimulationAllocInfo {
-    std::size_t layout {};
+    LayoutAllocInfo layout {};
     std::size_t line_trees {};
 
     SimulationAllocInfo simulation {};
@@ -133,6 +133,7 @@ static_assert(std::regular<CircuitRendererAllocInfo>);
 
 struct CircuitWidgetAllocInfo {
     CircuitStoreAllocInfo circuit_store {};
+    CircuitRendererAllocInfo circuit_renderer {};
 
     [[nodiscard]] auto operator==(const CircuitWidgetAllocInfo& info) const
         -> bool = default;

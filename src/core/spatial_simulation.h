@@ -11,6 +11,7 @@
 namespace logicsim {
 
 struct schematic_generation_result_t;
+struct SpatialSimulationAllocInfo;
 
 /**
  * @brief: Simulation holding also the spatial information for wires and logic items.
@@ -46,6 +47,7 @@ class SpatialSimulation {
     [[nodiscard]] explicit SpatialSimulation(
         Layout &&layout, schematic_generation_result_t &&generation_result);
 
+    [[nodiscard]] auto allocation_info() const -> SpatialSimulationAllocInfo;
     // TODO: define equality
     // [[nodiscard]] auto operator==(const SpatialSimulation &) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;

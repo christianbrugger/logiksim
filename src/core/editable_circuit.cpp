@@ -3,6 +3,7 @@
 #include "core/algorithm/overload.h"
 #include "core/random/generator.h"
 #include "core/random/wire.h"
+#include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/placed_decoration.h"
 #include "core/vocabulary/placed_logicitem.h"
 
@@ -12,6 +13,22 @@ namespace logicsim {
 
 EditableCircuit::EditableCircuit(Layout&& layout, Config config)
     : modifier_ {std::move(layout), config} {}
+
+auto EditableCircuit::allocated_size() const -> std::size_t {
+    return modifier_.circuit_data().allocated_size();
+}
+
+auto EditableCircuit::allocation_info() const -> EditableCircuitAllocInfo {
+    const auto& circuit = modifier_.circuit_data();
+
+    return EditableCircuitAllocInfo {
+        .layout = circuit.layout.allocation_info(),
+        .index = circuit.index.allocation_info(),
+        .selection_store = circuit.selection_store.allocated_size(),
+        .visible_selection = circuit.selection_store.allocated_size(),
+        .history = circuit.allocated_size(),
+    };
+}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", modifier_.circuit_data().layout);

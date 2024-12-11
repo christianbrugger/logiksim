@@ -23,6 +23,7 @@ namespace logicsim {
 struct GeometryInfo;
 struct ViewPoint;
 struct ViewConfig;
+struct CircuitRendererAllocInfo;
 
 class Layout;
 class EditableCircuit;
@@ -58,6 +59,8 @@ static_assert(std::regular<SurfaceStatistics>);
 class CircuitRenderer {
    public:
     explicit CircuitRenderer();
+
+    [[nodiscard]] auto allocation_info() const -> CircuitRendererAllocInfo;
 
     /**
      * @brief: Free temporary memory for layers and caches.

@@ -12,6 +12,8 @@
 
 namespace logicsim {
 
+struct InteractiveSimulationAllocInfo;
+
 /**
  * @brief: Simulation that support mouse based interaction and can be run at
  *         a defined pace.
@@ -37,6 +39,8 @@ class InteractiveSimulation {
     [[nodiscard]] explicit InteractiveSimulation(Layout&& layout,
                                                  delay_t wire_delay_per_distance,
                                                  time_rate_t simulation_time_rate);
+
+    [[nodiscard]] auto allocation_info() const -> InteractiveSimulationAllocInfo;
 
     [[nodiscard]] auto spatial_simulation() const -> const SpatialSimulation&;
     [[nodiscard]] auto layout() const -> const Layout&;

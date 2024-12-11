@@ -9,6 +9,7 @@ namespace logicsim {
 class TextCache;
 class SVGCache;
 struct FontFaces;
+struct ContextCacheAllocInfo;
 
 namespace context_cache {
 struct CacheData;
@@ -23,6 +24,8 @@ class ContextCache {
    public:
     [[nodiscard]] ContextCache();
     [[nodiscard]] explicit ContextCache(FontFaces faces);
+
+    [[nodiscard]] auto allocation_info() const -> ContextCacheAllocInfo;
 
     [[nodiscard]] auto text_cache() const -> const TextCache&;
     [[nodiscard]] auto svg_cache() const -> const SVGCache&;

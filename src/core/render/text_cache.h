@@ -20,6 +20,8 @@
 
 namespace logicsim {
 
+struct TextCacheAllocInfo;
+
 namespace text_cache {
 
 struct cache_key_t {
@@ -83,6 +85,7 @@ class TextCache {
     explicit TextCache() = default;
     explicit TextCache(FontFaces faces);
 
+    [[nodiscard]] auto allocation_info() const -> TextCacheAllocInfo;
     [[nodiscard]] auto format() const -> std::string;
 
     auto clear() const -> void;

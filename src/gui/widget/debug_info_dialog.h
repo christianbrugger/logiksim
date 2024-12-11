@@ -3,13 +3,20 @@
 
 #include <QWidget>
 
+class QTextEdit;
+
 namespace logicsim {
+
+struct CircuitWidgetAllocInfo;
 
 class DebugInfoDialog : public QWidget {
    public:
     explicit DebugInfoDialog(QWidget* parent);
 
+    auto update_allocation_info(const CircuitWidgetAllocInfo& info) -> void;
+
    private:
+    QTextEdit* text_edit_ {};
 };
 
 }  // namespace logicsim

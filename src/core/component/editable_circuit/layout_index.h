@@ -10,6 +10,8 @@
 
 namespace logicsim {
 
+struct LayoutIndexAllocInfo;
+
 /**
  * @brief: Efficiently stores connection, collision info and selections of the Layout.
  *
@@ -30,6 +32,7 @@ class LayoutIndex {
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
+    [[nodiscard]] auto allocation_info() const -> LayoutIndexAllocInfo;
     [[nodiscard]] auto operator==(const LayoutIndex&) const -> bool = default;
 
     [[nodiscard]] auto logicitem_input_index() const -> const LogicItemInputIndex&;

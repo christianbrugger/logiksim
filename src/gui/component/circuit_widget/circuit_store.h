@@ -6,13 +6,14 @@
 #include "core/editable_circuit.h"
 #include "core/format/struct.h"
 #include "core/interactive_simulation.h"
-#include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/circuit_widget_state.h"
 #include "core/vocabulary/simulation_config.h"
 
 #include <optional>
 
 namespace logicsim {
+
+struct CircuitStoreAllocInfo;
 
 namespace circuit_widget {
 

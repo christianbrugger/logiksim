@@ -6,6 +6,7 @@
 #include "core/layout.h"
 #include "core/schematic.h"
 #include "core/schematic_generation.h"
+#include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/internal_state.h"
 #include "core/vocabulary/simulation_config.h"
 
@@ -49,6 +50,14 @@ InteractiveSimulation::InteractiveSimulation(Layout&& layout,
     Ensures(realtime_reference_ <= timer_t::now());
     Ensures(last_event_count_ <= simulation().processed_event_count());
     Ensures(simulation_time_rate_ >= time_rate_t {0us});
+}
+
+auto InteractiveSimulation::allocation_info() const -> InteractiveSimulationAllocInfo {
+    return InteractiveSimulationAllocInfo {
+        .spatial_simulation = spatial_simulation_.allocation_info(),
+        .interaction_cache = {},
+        .event_counter = {},
+    };
 }
 
 auto InteractiveSimulation::spatial_simulation() const -> const SpatialSimulation& {

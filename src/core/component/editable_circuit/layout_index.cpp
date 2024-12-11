@@ -1,5 +1,7 @@
 #include "core/component/editable_circuit/layout_index.h"
 
+#include "core/vocabulary/allocation_info.h"
+
 #include <fmt/core.h>
 
 namespace logicsim {
@@ -45,6 +47,18 @@ auto LayoutIndex::allocated_size() const -> std::size_t {
            collision_index_.allocated_size() +  //
            spatial_index_.allocated_size() +    //
            key_index_.allocated_size();
+}
+
+auto LayoutIndex::allocation_info() const -> LayoutIndexAllocInfo {
+    return LayoutIndexAllocInfo {
+        .connection_index = logicitems_inputs_.allocated_size() +   //
+                            logicitems_outputs_.allocated_size() +  //
+                            wire_inputs_.allocated_size() +         //
+                            wire_outputs_.allocated_size(),
+        .collision_index = collision_index_.allocated_size(),
+        .spatial_index = spatial_index_.allocated_size(),
+        .key_index = key_index_.allocated_size(),
+    };
 }
 
 auto LayoutIndex::submit(const InfoMessage& message) -> void {

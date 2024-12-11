@@ -17,6 +17,7 @@ struct layout_calculation_data_t;
 struct decoration_layout_data_t;
 struct PlacedLogicItem;
 struct PlacedDecoration;
+struct LayoutAllocInfo;
 
 /**
  * @brief: The layout is the visual representation of the circuit, consisting of
@@ -40,6 +41,7 @@ class Layout {
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto size() const -> std::size_t;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
+    [[nodiscard]] auto allocation_info() const -> LayoutAllocInfo;
     [[nodiscard]] auto format() const -> std::string;
 
     // TODO make logicitems and wires simple attributes?

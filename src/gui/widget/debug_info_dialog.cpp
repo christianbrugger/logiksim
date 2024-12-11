@@ -1,5 +1,7 @@
 #include "gui/widget/debug_info_dialog.h"
 
+#include "core/vocabulary/allocation_info.h"
+
 #include <QTextEdit>
 #include <QVBoxLayout>
 
@@ -14,10 +16,17 @@ DebugInfoDialog::DebugInfoDialog(QWidget* parent) : QWidget {parent} {
     const auto edit = new QTextEdit {this};
     layout->addWidget(edit);
     edit->setReadOnly(true);
-
-    edit->setText("<b>Heading</b><br/>Content");
+    text_edit_ = edit;
 
     resize(300, 400);
+}
+
+auto DebugInfoDialog::update_allocation_info(const CircuitWidgetAllocInfo& info) -> void {
+    if (text_edit_ == nullptr) {
+        return;
+    }
+
+    text_edit_->setText(QString::fromStdString(info.format()));
 }
 
 }  // namespace logicsim

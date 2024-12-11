@@ -4,6 +4,7 @@
 #include "core/render/bl_box.h"
 #include "core/render/context_guard.h"
 #include "core/render/text_cache.h"
+#include "core/vocabulary/allocation_info.h"
 
 #include <fmt/core.h>
 #include <gsl/gsl>
@@ -38,6 +39,14 @@ TextCache::TextCache(FontFaces faces)
     : font_faces_ {std::move(faces)},
       baseline_offsets_ {font_faces_},
       fonts_ {font_faces_, CACHE_FONT_INITIAL_SIZE} {}
+
+auto TextCache::allocation_info() const -> TextCacheAllocInfo {
+    return TextCacheAllocInfo {
+        .font_faces = {},
+        .fonts = {},
+        .glyph_map = {},
+    };
+}
 
 auto TextCache::format() const -> std::string {
     return fmt::format("TextCache({} glyphs)", glyph_map_.size());

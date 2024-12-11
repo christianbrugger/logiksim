@@ -9,6 +9,7 @@
 #include "core/render/circuit/render_size_handle.h"
 #include "core/render/text_cache.h"
 #include "core/spatial_simulation.h"
+#include "core/vocabulary/allocation_info.h"
 
 #include <gsl/gsl>
 
@@ -28,6 +29,13 @@ auto SurfaceStatistics::format() const -> std::string {
 
 CircuitRenderer::CircuitRenderer() {
     set_render_config(render_config_);
+}
+
+auto CircuitRenderer::allocation_info() const -> CircuitRendererAllocInfo {
+    return CircuitRendererAllocInfo {
+        .image_surface = {},
+        .context_cache = context_cache_.allocation_info(),
+    };
 }
 
 auto CircuitRenderer::set_render_config(WidgetRenderConfig new_config) -> void {

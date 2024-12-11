@@ -10,6 +10,7 @@
 #include "core/element/logicitem/simulation_info.h"
 #include "core/layout_info.h"
 #include "core/logging.h"
+#include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/connection_ids.h"
 #include "core/vocabulary/internal_state.h"
 
@@ -95,6 +96,10 @@ Simulation::Simulation(Schematic &&schematic, PrintEvents do_print)
     set_outputs_to_zero(schematic_, input_values_);
 
     initialize_circuit_state();
+}
+
+auto Simulation::allocation_info() const -> SimulationAllocInfo {
+    return SimulationAllocInfo {};
 }
 
 auto Simulation::format_element(element_id_t element_id) const -> std::string {
