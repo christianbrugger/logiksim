@@ -25,6 +25,7 @@ set(LS_TEST_SOURCES
     editable_circuit/modifier/wire_history_mode_test.cpp
     editable_circuit/modifier/wire_history_normal_test.cpp
     editable_circuit/modifier/wire_history_regularize_test.cpp
+    editable_circuit/modifier/wire_history_selection.cpp
     editable_circuit/modifier/wire_random_test.cpp
     editable_circuit/modifier/wire_test.cpp
     editable_circuit/editable_circuit_random_test.cpp
