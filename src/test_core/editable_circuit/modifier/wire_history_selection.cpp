@@ -43,8 +43,6 @@ TEST(EditableCircuitWireHistory, SelectionInsertRestore) {
 
     // after redo
     modifier.redo_group();
-    print(layout_key_state_t {modifier});
-    print(state_1);
     ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
 }
 }  // namespace editable_circuit

@@ -240,6 +240,14 @@ auto validate_undo_redo(Modifier& modifier,
     validate_redo(modifier, key_state_stack);
 }
 
+auto store_history_state(Modifier& modifier,
+                         std::vector<layout_key_state_t>& key_state_stack) {
+    if (modifier.has_ungrouped_undo_entries()) {
+        modifier.finish_undo_group();
+        key_state_stack.emplace_back(modifier);
+    }
+}
+
 auto process_data(std::span<const uint8_t> data) -> void {
     auto stream = FuzzStream(data);
     const auto limits = FuzzLimits {};
@@ -256,12 +264,11 @@ auto process_data(std::span<const uint8_t> data) -> void {
         editing_operation(stream, modifier, limits);
         Expects(all_within_limits(modifier.circuit_data().layout, limits));
 
-        // store history state
-        if (modifier.has_ungrouped_undo_entries()) {
-            modifier.finish_undo_group();
-            key_state_stack.emplace_back(modifier);
+        if (fuzz_bool(stream)) {
+            store_history_state(modifier, key_state_stack);
         }
     }
+    store_history_state(modifier, key_state_stack);
 
     if (true) {
         validate_undo_redo(modifier, key_state_stack);
