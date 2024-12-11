@@ -6,6 +6,7 @@
 #include "core/editable_circuit.h"
 #include "core/format/struct.h"
 #include "core/interactive_simulation.h"
+#include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/circuit_widget_state.h"
 #include "core/vocabulary/simulation_config.h"
 
@@ -34,6 +35,7 @@ class CircuitStore {
     auto set_simulation_config(SimulationConfig new_config) -> void;
     [[nodiscard]] auto circuit_state() const -> CircuitWidgetState;
     [[nodiscard]] auto simulation_config() const -> SimulationConfig;
+    [[nodiscard]] auto allocation_info() const -> CircuitStoreAllocInfo;
 
     /**
      * @brief: Set a new editable circuit in any state.

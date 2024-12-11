@@ -235,6 +235,7 @@ set(LS_CORE_SOURCES
     type_trait/safe_difference_type.cpp
 
     vocabulary/alignment.cpp
+    vocabulary/allocation_info.cpp
     vocabulary/circuit_id.cpp
     vocabulary/circuit_widget_state.cpp
     vocabulary/color.cpp
