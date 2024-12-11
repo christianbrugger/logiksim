@@ -240,8 +240,8 @@ auto validate_undo_redo(Modifier& modifier,
     validate_redo(modifier, key_state_stack);
 }
 
-auto store_history_state(Modifier& modifier,
-                         std::vector<layout_key_state_t>& key_state_stack) {
+auto history_finish_undo_group(Modifier& modifier,
+                               std::vector<layout_key_state_t>& key_state_stack) {
     if (modifier.has_ungrouped_undo_entries()) {
         modifier.finish_undo_group();
         key_state_stack.emplace_back(modifier);
@@ -265,10 +265,10 @@ auto process_data(std::span<const uint8_t> data) -> void {
         Expects(all_within_limits(modifier.circuit_data().layout, limits));
 
         if (fuzz_bool(stream)) {
-            store_history_state(modifier, key_state_stack);
+            history_finish_undo_group(modifier, key_state_stack);
         }
     }
-    store_history_state(modifier, key_state_stack);
+    history_finish_undo_group(modifier, key_state_stack);
 
     if (true) {
         validate_undo_redo(modifier, key_state_stack);
