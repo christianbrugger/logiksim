@@ -26,21 +26,25 @@ namespace {
 
 auto _store_history_segment_create_temporary(CircuitData& circuit,
                                              segment_part_t segment_part) -> void {
+    assert(is_full_segment(circuit.layout, segment_part));
+    const auto segment = segment_part.segment;
+
     if (const auto stack = circuit.history.get_stack()) {
-        assert(is_full_segment(circuit.layout, segment_part));
-        const auto segment_key = circuit.index.key_index().get(segment_part.segment);
-
-        // if (circuit.visible_selection.initial_selection().is_selected(
-        //         segment_part.segment)) {
-        //     stack->push_segment_add_visible_selection();
-        // }
-
+        const auto segment_key = circuit.index.key_index().get(segment);
         const auto info = get_segment_info(circuit.layout, segment_part.segment);
 
+        // selection
+        for (const auto part :
+             circuit.visible_selection.initial_selection().selected_segments(segment)) {
+            stack->push_segment_add_visible_selection(segment_key, part);
+        }
+
+        // endpoints
         if (info.p0_type != SegmentPointType::shadow_point ||
             info.p1_type != SegmentPointType::shadow_point) {
             stack->push_segment_set_endpoints(segment_key, get_endpoints(info));
         }
+
         stack->push_segment_create_temporary(segment_key, info.line);
     }
 }
@@ -394,6 +398,20 @@ auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
     change_wire_insertion_mode(circuit, segment_part, insertion_mode);
 
     return segment_part;
+}
+
+//
+// Selection
+//
+
+auto add_to_visible_selection(CircuitData& circuit_data,
+                              segment_part_t segment_part) -> void {
+    // _store_history_logicitem_remove_visible_selection(circuit_data, logicitem_id);
+
+    circuit_data.visible_selection.modify_initial_selection(
+        [segment_part](Selection& initial_selection) {
+            initial_selection.add_segment(segment_part);
+        });
 }
 
 //

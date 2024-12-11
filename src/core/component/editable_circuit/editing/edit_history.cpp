@@ -309,7 +309,10 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         }
 
         case segment_add_visible_selection: {
-            stack.pop_segment_add_visible_selection();
+            const auto [segment_key, part] = stack.pop_segment_add_visible_selection();
+            const auto segment = to_id(segment_key, circuit);
+
+            editing::add_to_visible_selection(circuit, segment_part_t {segment, part});
             return;
         }
 

@@ -677,8 +677,11 @@ auto HistoryStack::push_segment_split(split_segment_key_t definition) -> void {
     offsets_.emplace_back(definition.split_offset);
 }
 
-auto HistoryStack::push_segment_add_visible_selection() -> void {
+auto HistoryStack::push_segment_add_visible_selection(segment_key_t segment_key,
+                                                      part_t part) -> void {
     entries_.emplace_back(HistoryEntry::segment_add_visible_selection);
+    segment_keys_.emplace_back(segment_key);
+    parts_.emplace_back(part);
 }
 
 auto HistoryStack::push_segment_remove_visible_selection() -> void {
@@ -751,8 +754,10 @@ auto HistoryStack::pop_segment_split() -> split_segment_key_t {
     };
 }
 
-auto HistoryStack::pop_segment_add_visible_selection() -> void {
+auto HistoryStack::pop_segment_add_visible_selection()
+    -> std::pair<segment_key_t, part_t> {
     Expects(pop_back_vector(entries_) == HistoryEntry::segment_add_visible_selection);
+    return {pop_back_vector(segment_keys_), pop_back_vector(parts_)};
 }
 
 auto HistoryStack::pop_segment_remove_visible_selection() -> void {

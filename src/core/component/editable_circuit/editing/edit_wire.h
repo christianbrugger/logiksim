@@ -98,6 +98,12 @@ auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
                       segment_key_t segment_key = null_segment_key) -> segment_part_t;
 
 /**
+ * @brief: Add segment part to visible selection.
+ */
+auto add_to_visible_selection(CircuitData& circuit_data,
+                              segment_part_t segment_part) -> void;
+
+/**
  * @brief: Toggle the wire crosspoint on two crossing inserted wire segments.
  */
 auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void;

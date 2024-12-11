@@ -197,7 +197,9 @@ class HistoryStack {
     auto push_segment_merge(segment_key_t segment_key_0,
                             segment_key_t segment_key_1) -> void;
     auto push_segment_split(split_segment_key_t definition) -> void;
-    auto push_segment_add_visible_selection() -> void;
+    auto push_segment_add_visible_selection(segment_key_t segment_key,
+                                            part_t part) -> void;
+    // TODO remove if not needed
     auto push_segment_remove_visible_selection() -> void;
 
     auto pop_segment_create_temporary() -> std::pair<segment_key_t, ordered_line_t>;
@@ -211,7 +213,7 @@ class HistoryStack {
     auto pop_segment_set_endpoints() -> std::pair<segment_key_t, endpoints_t>;
     auto pop_segment_merge() -> std::pair<segment_key_t, segment_key_t>;
     auto pop_segment_split() -> split_segment_key_t;
-    auto pop_segment_add_visible_selection() -> void;
+    auto pop_segment_add_visible_selection() -> std::pair<segment_key_t, part_t>;
     auto pop_segment_remove_visible_selection() -> void;
 
     //
