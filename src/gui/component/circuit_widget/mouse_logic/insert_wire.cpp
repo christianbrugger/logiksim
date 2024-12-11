@@ -55,6 +55,7 @@ auto InsertWireLogic::mouse_press(EditableCircuit& editable_circuit,
                                   std::optional<point_t> position) -> void {
     direction_.reset();
     first_position_ = position;
+    second_position_last_ = {};
 
     temp_wire_ = remove_and_insert(editable_circuit, temp_wire_, first_position_,
                                    direction_, position, InsertionMode::collisions);
@@ -62,6 +63,10 @@ auto InsertWireLogic::mouse_press(EditableCircuit& editable_circuit,
 
 auto InsertWireLogic::mouse_move(EditableCircuit& editable_circuit,
                                  std::optional<point_t> position) -> void {
+    if (position == second_position_last_) {
+        return;
+    }
+
     if (position && first_position_) {
         if (position == first_position_) {
             direction_.reset();
@@ -77,6 +82,7 @@ auto InsertWireLogic::mouse_move(EditableCircuit& editable_circuit,
 
     temp_wire_ = remove_and_insert(editable_circuit, temp_wire_, first_position_,
                                    direction_, position, InsertionMode::collisions);
+    second_position_last_ = position;
 }
 
 auto InsertWireLogic::mouse_release(EditableCircuit& editable_circuit,

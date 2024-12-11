@@ -30,6 +30,7 @@ class InsertWireLogic {
     selection_id_t temp_wire_ {null_selection_id};
 
     std::optional<point_t> first_position_ {};
+    std::optional<point_t> second_position_last_ {};
     std::optional<LineInsertionType> direction_ {};
 };
 
