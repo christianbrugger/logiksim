@@ -4,6 +4,7 @@
 #include "gui/qt/path_conversion.h"
 #include "gui/qt/setting_location.h"
 #include "gui/widget/circuit_widget.h"
+#include "gui/widget/debug_info_dialog.h"
 
 #include "core/algorithm/round.h"
 #include "core/file.h"
@@ -411,11 +412,17 @@ auto TopWidget::create_menu() -> void {
         menu_debug_ = menu;
         menu_debug_->menuAction()->setVisible(debug_settings_.show_debug_menu);
 
-        // Benchmark
-        actions_.do_benchmark = add_action_checkable(
-            menu, tr("&Benchmark"), ActionAttributes {.icon = icon_t::benchmark},
+        {
+            actions_.do_benchmark = add_action_checkable(
+                menu, tr("&Benchmark"), ActionAttributes {.icon = icon_t::benchmark},
 
-            [this](bool checked) { set_do_benchmark(*circuit_widget_, checked); });
+                [this](bool checked) { set_do_benchmark(*circuit_widget_, checked); });
+
+            actions_.do_benchmark =
+                add_action(menu, tr("Debug In&fo Dialog"),
+                           ActionAttributes {.icon = icon_t::debug_info_dialog},
+                           [this]() { show_debug_info_dialog(); });
+        }
 
         menu->addSeparator();
         {
@@ -1099,6 +1106,15 @@ auto TopWidget::show_about_dialog() -> void {
     );
 
     QMessageBox::about(this, tr("About"), QString::fromStdString(text));
+}
+
+auto TopWidget::show_debug_info_dialog() -> void {
+    if (debug_info_dialog_ != nullptr) {
+        return;
+    }
+
+    debug_info_dialog_ = new DebugInfoDialog(this);
+    debug_info_dialog_->show();
 }
 
 auto TopWidget::save_gui_state() -> void {

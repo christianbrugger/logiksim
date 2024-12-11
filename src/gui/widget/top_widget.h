@@ -9,6 +9,7 @@
 #include <gsl/gsl>
 
 #include <QMainWindow>
+#include <QPointer>
 #include <QPushButton>
 #include <QTimer>
 #include <QWidget>
@@ -30,8 +31,9 @@ constexpr static auto inline LS_APP_WEBSITE =
     "https://github.com/christianbrugger/logiksim";
 constexpr static auto inline LS_APP_LICENSE = "Apache 2.0";
 
-class CircuitWidget;
 struct time_rate_t;
+class CircuitWidget;
+class DebugInfoDialog;
 
 class ElementButton : public QPushButton {
     Q_OBJECT
@@ -113,6 +115,7 @@ class TopWidget : public QMainWindow {
     // complex actions
     auto new_circuit() -> void;
     auto show_about_dialog() -> void;
+    auto show_debug_info_dialog() -> void;
 
     // load & safe
     [[nodiscard]] static auto filename_filter() -> QString;
@@ -155,6 +158,8 @@ class TopWidget : public QMainWindow {
     QMenu* menu_toolbars_ {};
     QSlider* time_rate_slider_ {};
     QMenu* menu_debug_ {};
+
+    QPointer<DebugInfoDialog> debug_info_dialog_ {};
 };
 
 }  // namespace logicsim

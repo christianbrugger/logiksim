@@ -35,6 +35,7 @@ set(LS_GUI_SOURCES
 
     widget/circuit_widget.cpp
     widget/circuit_widget_base.cpp
+    widget/debug_info_dialog.cpp
     widget/render_widget.cpp
     widget/setting_dialog.cpp
     widget/setting_dialog_manager.cpp

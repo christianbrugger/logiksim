@@ -80,6 +80,9 @@ auto format(icon_t icon) -> std::string {
         case benchmark: {
             return "benchmark";
         }
+        case debug_info_dialog: {
+            return "debug_info_dialog";
+        }
         case show_circuit: {
             return "show_circuit";
         }
@@ -282,6 +285,9 @@ namespace {
 
         case benchmark: {
             return std::filesystem::path {"icons/lucide/infinity.svg"};
+        }
+        case debug_info_dialog: {
+            return std::filesystem::path {"icons/lucide/message-circle-question.svg"};
         }
         case show_circuit: {
             return std::filesystem::path {"icons/lucide/cpu.svg"};

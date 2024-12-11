@@ -43,6 +43,7 @@ enum class icon_t {
 
     // debug
     benchmark,
+    debug_info_dialog,
     show_circuit,
     show_collision_cache,
     show_connection_cache,
