@@ -11,21 +11,24 @@
 
 namespace logicsim {
 
+/**
+ * @brief: Format each projected element of the container with given separator.
+ */
 template <typename T, class Proj = std::identity>
     requires requires(T container) {
         std::begin(container);
         std::end(container);
     }
-
-/**
- * @brief: Format each projected element of the container with given separator.
- */
-[[nodiscard]] constexpr auto fmt_join(std::string_view sep, const T &obj,
+[[nodiscard]] constexpr auto fmt_join(std::string_view sep, T &&obj,
                                       std::string_view fmt = "{}", Proj proj = {}) {
-    auto format_func = [&fmt, proj](const auto &item) {
-        return fmt::format(fmt::runtime(fmt), std::invoke(proj, item));
+    auto format_func = [&fmt, proj](auto &&item) {
+        return fmt::format(fmt::runtime(fmt),
+                           std::invoke(proj, std::forward<decltype(item)>(item)));
     };
-    return boost::join(transform_view(obj, format_func), sep);
+
+    // TODO refactor in c++23 to use std::views::join_with and std::views::transform
+    // use our own transform view, as boost does not work with std::views::transform
+    return boost::join(transform_view(std::forward<T>(obj), format_func), sep);
 }
 
 }  // namespace logicsim
