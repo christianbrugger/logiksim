@@ -283,13 +283,13 @@ auto CircuitWidget::allocation_info() const -> CircuitWidgetAllocInfo {
 
     const auto t = Timer {};
 
-    auto data = CircuitWidgetAllocInfo {
+    auto result = CircuitWidgetAllocInfo {
         .circuit_store = circuit_store_.allocation_info(),
         .circuit_renderer = circuit_renderer_.allocation_info(),
     };
 
-    data.collection_time = t.delta();
-    return data;
+    result.collection_time = t.delta();
+    return result;
 }
 
 auto CircuitWidget::serialized_circuit() -> std::string {

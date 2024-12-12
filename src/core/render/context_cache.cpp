@@ -35,8 +35,7 @@ ContextCache::ContextCache(FontFaces faces)
 auto ContextCache::allocation_info() const -> ContextCacheAllocInfo {
     Expects(cache_ != nullptr);
     return ContextCacheAllocInfo {
-        .text_cache = cache_->text_cache.allocation_info(),
-        .svg_cache = {},
+        .text_cache = cache_->text_cache.allocation_info(), .svg_cache = {},  // ???
     };
 }
 
