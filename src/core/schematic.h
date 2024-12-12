@@ -68,8 +68,9 @@ class Schematic {
 
    public:
     auto swap(Schematic &other) noexcept -> void;
-    [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const Schematic &) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto size() const noexcept -> std::size_t;
     [[nodiscard]] auto empty() const noexcept -> bool;

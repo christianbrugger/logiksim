@@ -1,6 +1,7 @@
 #include "core/component/simulation/simulation_queue.h"
 
 #include "core/algorithm/pop_while.h"
+#include "core/allocated_size/std_vector.h"
 #include "core/component/simulation/simulation_event_group.h"
 
 #include <fmt/core.h>
@@ -11,12 +12,25 @@ namespace logicsim {
 
 namespace simulation {
 
+namespace simulation_queue {
+
+auto queue_t::data() const -> const container_type & {
+    return c;
+}
+
+}  // namespace simulation_queue
+
 //
 // SimulationQueue
 //
 
 auto SimulationQueue::format() const -> std::string {
-    return fmt::format("SimulationQueue(time = {}, count = {})", time_, events_.size());
+    return fmt::format("SimulationQueue(time = {}, count = {}, events = {})", time_,
+                       events_.size(), events_.data());
+}
+
+auto SimulationQueue::allocated_size() const -> std::size_t {
+    return get_allocated_size(events_.data());
 }
 
 auto SimulationQueue::time() const noexcept -> time_t {

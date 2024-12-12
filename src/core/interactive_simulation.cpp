@@ -55,8 +55,8 @@ InteractiveSimulation::InteractiveSimulation(Layout&& layout,
 auto InteractiveSimulation::allocation_info() const -> InteractiveSimulationAllocInfo {
     return InteractiveSimulationAllocInfo {
         .spatial_simulation = spatial_simulation_.allocation_info(),
-        .interaction_cache = {},
-        .event_counter = {},
+        .interaction_cache = Byte {interaction_cache_.allocated_size()},
+        .event_counter = Byte {},  // ???
     };
 }
 

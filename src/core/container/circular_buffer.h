@@ -55,6 +55,7 @@ class circular_buffer {
     [[nodiscard]] auto ssize() const noexcept -> difference_type;
     [[nodiscard]] auto capacity() const -> size_type;
     [[nodiscard]] auto max_size() const -> size_t;
+    [[nodiscard]] auto buffer() const -> const buffer_t&;
 
     auto clear() noexcept -> void;
     auto reserve(size_type new_size) -> void;
@@ -191,6 +192,12 @@ template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeT
 auto circular_buffer<Value, RequestedMaxInline, InternalSizeType>::max_size() const
     -> size_t {
     return buffer_.max_size();
+}
+
+template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>
+[[nodiscard]] auto circular_buffer<Value, RequestedMaxInline, InternalSizeType>::buffer()
+    const -> const buffer_t& {
+    return buffer_;
 }
 
 template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>

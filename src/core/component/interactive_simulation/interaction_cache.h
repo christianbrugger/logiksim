@@ -30,6 +30,7 @@ class InteractionCache {
     explicit InteractionCache(const Layout& layout);
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto find(point_t position) const -> std::optional<element_id_t>;
 

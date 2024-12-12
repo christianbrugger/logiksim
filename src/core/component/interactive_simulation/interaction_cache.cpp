@@ -1,5 +1,6 @@
 #include "core/component/interactive_simulation/interaction_cache.h"
 
+#include "core/allocated_size/ankerl_unordered_dense.h"
 #include "core/format/std_type.h"
 #include "core/layout.h"
 #include "core/schematic_generation.h"
@@ -28,6 +29,10 @@ InteractionCache::InteractionCache(const Layout& layout) {
 
 auto InteractionCache::format() const -> std::string {
     return fmt::format("<InteractionCache: {}>", map_);
+}
+
+auto InteractionCache::allocated_size() const -> std::size_t {
+    return get_allocated_size(map_);
 }
 
 auto InteractionCache::find(point_t position) const -> std::optional<element_id_t> {

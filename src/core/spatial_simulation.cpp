@@ -1,5 +1,6 @@
 #include "core/spatial_simulation.h"
 
+#include "core/allocated_size/std_vector.h"
 #include "core/layout.h"
 #include "core/schematic_generation.h"
 #include "core/vocabulary/allocation_info.h"
@@ -50,7 +51,7 @@ auto SpatialSimulation::wire_delay_per_distance() const -> delay_t {
 auto SpatialSimulation::allocation_info() const -> SpatialSimulationAllocInfo {
     return SpatialSimulationAllocInfo {
         .layout = layout_.allocation_info(),
-        .line_trees = {},
+        .line_trees = Byte {get_allocated_size(line_trees_)},
         .simulation = simulation_.allocation_info(),
     };
 }

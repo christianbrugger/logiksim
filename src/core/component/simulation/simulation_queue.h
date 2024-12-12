@@ -14,6 +14,24 @@ namespace simulation {
 
 class SimulationEventGroup;
 
+namespace simulation_queue {
+
+using event_priority_queue =
+    std::priority_queue<simulation_event_t, std::vector<simulation_event_t>,
+                        greater_time_element_id>;
+
+class queue_t : public event_priority_queue {
+   public:
+    using event_priority_queue::priority_queue;
+
+    // TODO define equality
+    // [[nodiscard]] auto operator==(const queue_t &) const -> bool = default;
+
+    [[nodiscard]] auto data() const -> const container_type&;
+};
+
+}  // namespace simulation_queue
+
 /**
  * @brief: Stores Simulation Events in order
  *
@@ -22,14 +40,16 @@ class SimulationEventGroup;
  *     * time_ is never decreasing
  */
 class SimulationQueue {
-    using queue_t =
-        std::priority_queue<simulation_event_t, std::vector<simulation_event_t>,
-                            greater_time_element_id>;
+    // using queue_t =
+    //     std::priority_queue<simulation_event_t, std::vector<simulation_event_t>,
+    //                         greater_time_element_id>;
+    using queue_t = simulation_queue::queue_t;
 
    public:
     // TODO define equality
     // [[nodiscard]] auto operator==(const SimulationQueue&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto time() const noexcept -> time_t;
     [[nodiscard]] auto next_event_time() const noexcept -> time_t;

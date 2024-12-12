@@ -4,6 +4,8 @@
 #include "core/algorithm/fmt_join.h"
 #include "core/algorithm/range.h"
 #include "core/algorithm/transform_to_container.h"
+#include "core/allocated_size/folly_small_vector.h"
+#include "core/allocated_size/std_vector.h"
 #include "core/component/simulation/history_view.h"
 #include "core/component/simulation/simulation_event.h"
 #include "core/component/simulation/simulation_event_group.h"
@@ -100,12 +102,12 @@ Simulation::Simulation(Schematic &&schematic, PrintEvents do_print)
 
 auto Simulation::allocation_info() const -> SimulationAllocInfo {
     return SimulationAllocInfo {
-        .schematic = {},
-        .simulation_queue = {},
+        .schematic = Byte {schematic_.allocated_size()},
+        .simulation_queue = Byte {queue_.allocated_size()},
 
-        .input_values = {},
-        .internal_states = {},
-        .input_histories = {},
+        .input_values = Byte {get_allocated_size(input_values_)},
+        .internal_states = Byte {get_allocated_size(internal_states_)},
+        .input_histories = Byte {get_allocated_size(first_input_histories_)},
     };
 }
 

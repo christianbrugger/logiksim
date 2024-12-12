@@ -1,6 +1,8 @@
 #include "core/schematic.h"
 
 #include "core/algorithm/fmt_join.h"
+#include "core/allocated_size/folly_small_vector.h"
+#include "core/allocated_size/std_vector.h"
 #include "core/element/logicitem/schematic_info.h"
 #include "core/geometry/connection_count.h"
 #include "core/iterator_adaptor/transform_view.h"
@@ -100,6 +102,16 @@ auto Schematic::format() const -> std::string {
     };
     const auto list = fmt_join(",\n  ", element_ids(*this), "{}", format_element);
     return fmt::format("<Schematic with {} elements: [\n  {}\n]>", size(), list);
+}
+
+auto Schematic::allocated_size() const -> std::size_t {
+    return get_allocated_size(element_types_) +       //
+           get_allocated_size(sub_circuit_ids_) +     //
+           get_allocated_size(input_connections_) +   //
+           get_allocated_size(output_connections_) +  //
+           get_allocated_size(input_inverters_) +     //
+           get_allocated_size(output_delays_) +       //
+           get_allocated_size(history_lengths_);
 }
 
 auto Schematic::add_element(schematic::NewElement &&data) -> element_id_t {

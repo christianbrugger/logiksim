@@ -1,5 +1,6 @@
 #include "core/component/simulation/history_buffer.h"
 
+#include "core/allocated_size/folly_small_vector.h"
 #include "core/component/simulation/history_index.h"
 
 namespace logicsim {
@@ -10,6 +11,10 @@ HistoryBuffer::HistoryBuffer(std::initializer_list<value_type> list) : buffer_ {
     if (!std::ranges::is_sorted(list, std::ranges::less_equal {})) [[unlikely]] {
         throw std::runtime_error("times need to be sorted strictly ascending");
     }
+}
+
+auto HistoryBuffer::allocated_size() const -> std::size_t {
+    return get_allocated_size(buffer_.buffer());
 }
 
 auto HistoryBuffer::empty() const -> bool {
