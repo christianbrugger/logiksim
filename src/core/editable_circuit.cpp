@@ -24,9 +24,9 @@ auto EditableCircuit::allocation_info() const -> EditableCircuitAllocInfo {
     return EditableCircuitAllocInfo {
         .layout = circuit.layout.allocation_info(),
         .index = circuit.index.allocation_info(),
-        .selection_store = circuit.selection_store.allocated_size(),
-        .visible_selection = circuit.selection_store.allocated_size(),
-        .history = circuit.allocated_size(),
+        .selection_store = Byte {circuit.selection_store.allocated_size()},
+        .visible_selection = Byte {circuit.selection_store.allocated_size()},
+        .history = Byte {circuit.allocated_size()},
     };
 }
 

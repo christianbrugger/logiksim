@@ -12,6 +12,7 @@ set(LS_CORE_SOURCES
     algorithm/distance_fast.cpp
     algorithm/fmt_join.cpp
     algorithm/has_duplicates_quadratic.cpp
+    algorithm/indent.cpp
     algorithm/make_unique.cpp
     algorithm/merged_any_of.cpp
     algorithm/merged_for_each.cpp

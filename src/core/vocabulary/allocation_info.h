@@ -3,30 +3,39 @@
 
 #include "core/format/struct.h"
 
+#include <chrono>
 #include <concepts>
 #include <optional>
 
 namespace logicsim {
 
-struct LayoutAllocInfo {
-    std::size_t logicitem_store;
-    std::size_t wire_store;
-    std::size_t decoration_store;
+struct Byte {
+    std ::size_t value {};
 
-    [[nodiscard]] auto operator==(const LayoutAllocInfo& info) const -> bool = default;
+    [[nodiscard]] auto operator==(const Byte&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+static_assert(std::regular<Byte>);
+
+struct LayoutAllocInfo {
+    Byte logicitem_store {};
+    Byte wire_store {};
+    Byte decoration_store {};
+
+    [[nodiscard]] auto operator==(const LayoutAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::regular<LayoutAllocInfo>);
 
 struct LayoutIndexAllocInfo {
-    std::size_t connection_index;
-    std::size_t collision_index;
-    std::size_t spatial_index;
-    std::size_t key_index;
+    Byte connection_index {};
+    Byte collision_index {};
+    Byte spatial_index {};
+    Byte key_index {};
 
-    [[nodiscard]] auto operator==(const LayoutIndexAllocInfo& info) const -> bool =
-                                                                                 default;
+    [[nodiscard]] auto operator==(const LayoutIndexAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -35,27 +44,26 @@ static_assert(std::regular<LayoutIndexAllocInfo>);
 struct EditableCircuitAllocInfo {
     LayoutAllocInfo layout {};
     LayoutIndexAllocInfo index {};
-    std::size_t selection_store {};
-    std::size_t visible_selection {};
-    std::size_t history {};
+    Byte selection_store {};
+    Byte visible_selection {};
+    Byte history {};
 
-    [[nodiscard]] auto operator==(const EditableCircuitAllocInfo& info) const
-        -> bool = default;
+    [[nodiscard]] auto operator==(const EditableCircuitAllocInfo&) const -> bool =
+                                                                                default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::regular<EditableCircuitAllocInfo>);
 
 struct SimulationAllocInfo {
-    std::size_t schematic {};
-    std::size_t simulation_queue {};
+    Byte schematic {};
+    Byte simulation_queue {};
 
-    std::size_t input_values {};
-    std::size_t internal_states {};
-    std::size_t input_histories {};
+    Byte input_values {};
+    Byte internal_states {};
+    Byte input_histories {};
 
-    [[nodiscard]] auto operator==(const SimulationAllocInfo& info) const -> bool =
-                                                                                default;
+    [[nodiscard]] auto operator==(const SimulationAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -63,24 +71,24 @@ static_assert(std::regular<SimulationAllocInfo>);
 
 struct SpatialSimulationAllocInfo {
     LayoutAllocInfo layout {};
-    std::size_t line_trees {};
+    Byte line_trees {};
 
     SimulationAllocInfo simulation {};
 
-    [[nodiscard]] auto operator==(const SpatialSimulationAllocInfo& info) const
-        -> bool = default;
+    [[nodiscard]] auto operator==(const SpatialSimulationAllocInfo&) const -> bool =
+                                                                                  default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::regular<SpatialSimulationAllocInfo>);
 
 struct InteractiveSimulationAllocInfo {
-    SpatialSimulationAllocInfo spatial_simulation;
+    SpatialSimulationAllocInfo spatial_simulation {};
 
-    std::size_t interaction_cache {};
-    std::size_t event_counter {};
+    Byte interaction_cache {};
+    Byte event_counter {};
 
-    [[nodiscard]] auto operator==(const InteractiveSimulationAllocInfo& info) const
+    [[nodiscard]] auto operator==(const InteractiveSimulationAllocInfo&) const
         -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
@@ -88,44 +96,42 @@ struct InteractiveSimulationAllocInfo {
 static_assert(std::regular<InteractiveSimulationAllocInfo>);
 
 struct CircuitStoreAllocInfo {
-    EditableCircuitAllocInfo editable_circuit;
-    std::optional<InteractiveSimulationAllocInfo> interactive_simulation;
+    EditableCircuitAllocInfo editable_circuit {};
+    std::optional<InteractiveSimulationAllocInfo> interactive_simulation {};
 
-    [[nodiscard]] auto operator==(const CircuitStoreAllocInfo& info) const -> bool =
-                                                                                  default;
+    [[nodiscard]] auto operator==(const CircuitStoreAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::regular<CircuitStoreAllocInfo>);
 
 struct TextCacheAllocInfo {
-    std::size_t font_faces;
-    std::size_t fonts;
-    std::size_t glyph_map;
+    Byte faces {};
+    Byte fonts {};
+    Byte glyph_map {};
 
-    [[nodiscard]] auto operator==(const TextCacheAllocInfo& info) const -> bool = default;
+    [[nodiscard]] auto operator==(const TextCacheAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::regular<TextCacheAllocInfo>);
 
 struct ContextCacheAllocInfo {
-    TextCacheAllocInfo text_cache;
-    std::size_t svg_cache;
+    TextCacheAllocInfo text_cache {};
+    Byte svg_cache {};
 
-    [[nodiscard]] auto operator==(const ContextCacheAllocInfo& info) const -> bool =
-                                                                                  default;
+    [[nodiscard]] auto operator==(const ContextCacheAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::regular<ContextCacheAllocInfo>);
 
 struct CircuitRendererAllocInfo {
-    std::size_t image_surface;
-    ContextCacheAllocInfo context_cache;
+    Byte image_surface {};
+    ContextCacheAllocInfo context_cache {};
 
-    [[nodiscard]] auto operator==(const CircuitRendererAllocInfo& info) const
-        -> bool = default;
+    [[nodiscard]] auto operator==(const CircuitRendererAllocInfo&) const -> bool =
+                                                                                default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -135,8 +141,9 @@ struct CircuitWidgetAllocInfo {
     CircuitStoreAllocInfo circuit_store {};
     CircuitRendererAllocInfo circuit_renderer {};
 
-    [[nodiscard]] auto operator==(const CircuitWidgetAllocInfo& info) const
-        -> bool = default;
+    std::chrono::duration<double> collection_time {};
+
+    [[nodiscard]] auto operator==(const CircuitWidgetAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 

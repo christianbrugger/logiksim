@@ -16,6 +16,7 @@ DebugInfoDialog::DebugInfoDialog(QWidget* parent) : QWidget {parent} {
     const auto edit = new QTextEdit {this};
     layout->addWidget(edit);
     edit->setReadOnly(true);
+    edit->setFontFamily("monospace");
     text_edit_ = edit;
 
     resize(300, 400);

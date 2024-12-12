@@ -42,7 +42,7 @@ TextCache::TextCache(FontFaces faces)
 
 auto TextCache::allocation_info() const -> TextCacheAllocInfo {
     return TextCacheAllocInfo {
-        .font_faces = {},
+        .faces = {},
         .fonts = {},
         .glyph_map = {},
     };

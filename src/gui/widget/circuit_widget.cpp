@@ -281,10 +281,15 @@ auto CircuitWidget::history_status() const -> HistoryStatus {
 auto CircuitWidget::allocation_info() const -> CircuitWidgetAllocInfo {
     Expects(class_invariant_holds());
 
-    return CircuitWidgetAllocInfo {
+    const auto t = Timer {};
+
+    auto data = CircuitWidgetAllocInfo {
         .circuit_store = circuit_store_.allocation_info(),
         .circuit_renderer = circuit_renderer_.allocation_info(),
     };
+
+    data.collection_time = t.delta();
+    return data;
 }
 
 auto CircuitWidget::serialized_circuit() -> std::string {

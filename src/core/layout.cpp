@@ -32,9 +32,9 @@ auto Layout::allocated_size() const -> std::size_t {
 
 auto Layout::allocation_info() const -> LayoutAllocInfo {
     return LayoutAllocInfo {
-        .logicitem_store = logicitems_.allocated_size(),
-        .wire_store = wires_.allocated_size(),
-        .decoration_store = decorations_.allocated_size(),
+        .logicitem_store = Byte {logicitems_.allocated_size()},
+        .wire_store = Byte {wires_.allocated_size()},
+        .decoration_store = Byte {decorations_.allocated_size()},
     };
 }
 

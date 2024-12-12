@@ -51,13 +51,13 @@ auto LayoutIndex::allocated_size() const -> std::size_t {
 
 auto LayoutIndex::allocation_info() const -> LayoutIndexAllocInfo {
     return LayoutIndexAllocInfo {
-        .connection_index = logicitems_inputs_.allocated_size() +   //
-                            logicitems_outputs_.allocated_size() +  //
-                            wire_inputs_.allocated_size() +         //
-                            wire_outputs_.allocated_size(),
-        .collision_index = collision_index_.allocated_size(),
-        .spatial_index = spatial_index_.allocated_size(),
-        .key_index = key_index_.allocated_size(),
+        .connection_index = Byte {logicitems_inputs_.allocated_size() +   //
+                                  logicitems_outputs_.allocated_size() +  //
+                                  wire_inputs_.allocated_size() +         //
+                                  wire_outputs_.allocated_size()},
+        .collision_index = Byte {collision_index_.allocated_size()},
+        .spatial_index = Byte {spatial_index_.allocated_size()},
+        .key_index = Byte {key_index_.allocated_size()},
     };
 }
 
