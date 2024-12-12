@@ -106,6 +106,7 @@ class GlyphPositionsDesign {
 
     [[nodiscard]] auto operator==(const GlyphPositionsDesign &) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto size() const -> std::size_t;
@@ -129,6 +130,7 @@ class GlyphBoxesUser {
 
     [[nodiscard]] auto operator==(const GlyphBoxesUser &) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto size() const -> std::size_t;
@@ -169,6 +171,7 @@ class ClusterBoxesUser {
 
     [[nodiscard]] auto operator==(const ClusterBoxesUser &) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto size() const -> std::size_t;
@@ -214,6 +217,7 @@ struct GlyphGeometryData {
 
     [[nodiscard]] auto operator==(const GlyphGeometryData &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto size() const -> std::size_t;
@@ -244,6 +248,7 @@ class HbGlyphRun {
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const HbGlyphRun &other) const -> bool = default;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto glyph_run() const noexcept -> BLGlyphRun;
     [[nodiscard]] auto bounding_box() const noexcept -> BLBox;

@@ -93,7 +93,7 @@ static_assert(std::regular<SpatialSimulationAllocInfo>);
 struct InteractiveSimulationAllocInfo {
     SpatialSimulationAllocInfo spatial_simulation {};
     Byte interaction_cache {};
-    Byte event_counter {};
+    Byte event_counter {};  // TODO ???
 
     [[nodiscard]] auto operator==(const InteractiveSimulationAllocInfo&) const
         -> bool = default;
@@ -115,8 +115,8 @@ struct CircuitStoreAllocInfo {
 static_assert(std::regular<CircuitStoreAllocInfo>);
 
 struct TextCacheAllocInfo {
-    Byte faces {};
-    Byte fonts {};
+    Byte faces {};  // TODO ???
+    Byte fonts {};  // TODO ???
     Byte glyph_map {};
 
     [[nodiscard]] auto operator==(const TextCacheAllocInfo&) const -> bool = default;
@@ -128,7 +128,7 @@ static_assert(std::regular<TextCacheAllocInfo>);
 
 struct ContextCacheAllocInfo {
     TextCacheAllocInfo text_cache {};
-    Byte svg_cache {};
+    Byte svg_cache {};  // TODO ???
 
     [[nodiscard]] auto operator==(const ContextCacheAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;

@@ -1,5 +1,6 @@
 #include "core/render/text_cache.h"
 
+#include "core/allocated_size/ankerl_unordered_dense.h"
 #include "core/logging.h"
 #include "core/render/bl_box.h"
 #include "core/render/context_guard.h"
@@ -22,6 +23,10 @@ auto cache_entry_t::format() const -> std::string {
     return fmt::format("({}, {})", offset.x, offset.y);
 }
 
+auto cache_entry_t::allocated_size() const -> std::size_t {
+    return hb_glyph_run.allocated_size();
+}
+
 }  // namespace text_cache
 
 //
@@ -42,9 +47,9 @@ TextCache::TextCache(FontFaces faces)
 
 auto TextCache::allocation_info() const -> TextCacheAllocInfo {
     return TextCacheAllocInfo {
-        .faces = {},
-        .fonts = {},
-        .glyph_map = {},
+        .faces = {},  // ???
+        .fonts = {},  // ???
+        .glyph_map = Byte {get_allocated_size(glyph_map_)},
     };
 }
 

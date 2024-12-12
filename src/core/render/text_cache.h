@@ -44,6 +44,7 @@ struct cache_entry_t {
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const cache_entry_t &other) const -> bool = default;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 };
 
 static_assert(std::regular<cache_entry_t>);

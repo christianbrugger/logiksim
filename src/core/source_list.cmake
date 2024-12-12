@@ -44,6 +44,7 @@ set(LS_CORE_SOURCES
     algorithm/vector_operations.cpp
 
     allocated_size/ankerl_unordered_dense.cpp
+    allocated_size/bl_image.cpp
     allocated_size/folly_small_vector.cpp
     allocated_size/std_optional.cpp
     allocated_size/std_pair.cpp

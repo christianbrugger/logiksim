@@ -33,7 +33,7 @@ CircuitRenderer::CircuitRenderer() {
 
 auto CircuitRenderer::allocation_info() const -> CircuitRendererAllocInfo {
     return CircuitRendererAllocInfo {
-        .image_surface = {},
+        .image_surface = Byte {context_surface_.allocated_size()},
         .context_cache = context_cache_.allocation_info(),
     };
 }

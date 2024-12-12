@@ -1,10 +1,16 @@
 #include "core/render/image_surface.h"
 
+#include "core/allocated_size/bl_image.h"
+
 namespace logicsim {
 
 //
 // Image Context
 //
+
+auto ImageSurface::allocated_size() const -> std::size_t {
+    return get_allocated_size(bl_image_);
+}
 
 auto ImageSurface::bl_image() const -> const BLImage & {
     return bl_image_;

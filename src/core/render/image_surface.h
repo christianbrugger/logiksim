@@ -17,6 +17,8 @@ namespace logicsim {
  */
 class ImageSurface {
    public:
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
+
     [[nodiscard]] auto bl_image() const -> const BLImage &;
 
     /**

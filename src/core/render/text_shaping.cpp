@@ -1,6 +1,8 @@
 #include "core/render/text_shaping.h"
 
 #include "core/algorithm/transform_to_vector.h"
+#include "core/allocated_size/std_optional.h"
+#include "core/allocated_size/std_vector.h"
 #include "core/concept/input_range.h"
 #include "core/format/blend2d_type.h"
 #include "core/format/container.h"
@@ -335,6 +337,10 @@ auto GlyphPositionsDesign::format() const -> std::string {
     return fmt::format("{}", positions_);
 }
 
+auto GlyphPositionsDesign::allocated_size() const -> std::size_t {
+    return get_allocated_size(positions_);
+}
+
 auto GlyphPositionsDesign::span() const -> std::span<const BLPoint> {
     return positions_;
 }
@@ -390,6 +396,10 @@ auto GlyphBoxesUser::shrink_to_fit() -> void {
 
 auto GlyphBoxesUser::format() const -> std::string {
     return fmt::format("{}", glyph_boxes_);
+}
+
+auto GlyphBoxesUser::allocated_size() const -> std::size_t {
+    return get_allocated_size(glyph_boxes_);
 }
 
 auto GlyphBoxesUser::span() const -> std::span<const BLBox> {
@@ -477,6 +487,10 @@ auto ClusterBoxesUser::shrink_to_fit() -> void {
 
 auto ClusterBoxesUser::format() const -> std::string {
     return fmt::format("{}", cluster_boxes_);
+}
+
+auto ClusterBoxesUser::allocated_size() const -> std::size_t {
+    return get_allocated_size(cluster_boxes_);
 }
 
 auto ClusterBoxesUser::span() const -> std::span<const ClusterBox> {
@@ -587,6 +601,13 @@ auto GlyphGeometryData::format() const -> std::string {
         codepoints_, positions_, glyph_boxes_, cluster_boxes_);
 }
 
+auto GlyphGeometryData::allocated_size() const -> std::size_t {
+    return get_allocated_size(codepoints_) +   //
+           get_allocated_size(positions_) +    //
+           get_allocated_size(glyph_boxes_) +  //
+           get_allocated_size(cluster_boxes_);
+}
+
 auto GlyphGeometryData::empty() const -> bool {
     return codepoints_.empty();
 }
@@ -684,6 +705,10 @@ auto HbGlyphRun::cluster_bounding_boxes() const
 
 auto HbGlyphRun::format() const -> std::string {
     return fmt::format("HbGlyphRun(bounding_box = {}, data = {})", bounding_box_, data_);
+}
+
+auto HbGlyphRun::allocated_size() const -> std::size_t {
+    return data_.allocated_size();
 }
 
 }  // namespace logicsim
