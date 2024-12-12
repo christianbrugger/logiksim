@@ -52,8 +52,8 @@ struct CircuitDataAllocInfo {
     Byte selection_store {};
     Byte visible_selection {};
     Byte history {};
-    Byte messages {};
-    Byte message_validator {};
+    std::optional<Byte> messages {};
+    std::optional<Byte> message_validator {};
 
     [[nodiscard]] auto operator==(const CircuitDataAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;

@@ -54,27 +54,30 @@ auto LayoutIndexAllocInfo::total() const -> Byte {
 }
 
 auto CircuitDataAllocInfo::format() const -> std::string {
+    const auto messages_str =
+        messages ? fmt::format("\n  messages:          {}", *messages) : "";
+    const auto message_validator_str =
+        message_validator ? fmt::format("\n  message_validator: {}", *message_validator)
+                          : "";
     return fmt::format(
         "EditableCircuit ({}):\n"
         "{}\n"
         "{}\n"
         "  selection_store:   {}\n"
         "  visible_selection: {}\n"
-        "  history:           {}\n"
-        "  messages:          {}\n"
-        "  message_validator: {}",
+        "  history:           {}{}{}",
         total(), aindent(layout), aindent(index), selection_store, visible_selection,
-        history, messages, message_validator);
+        history, messages_str, message_validator_str);
 }
 
 auto CircuitDataAllocInfo::total() const -> Byte {
-    return layout.total() +     //
-           index.total() +      //
-           selection_store +    //
-           visible_selection +  //
-           history +            //
-           messages +           //
-           message_validator;
+    return layout.total() +                    //
+           index.total() +                     //
+           selection_store +                   //
+           visible_selection +                 //
+           history +                           //
+           (messages ? *messages : Byte {}) +  //
+           (message_validator ? *message_validator : Byte {});
 }
 
 auto SimulationAllocInfo::format() const -> std::string {

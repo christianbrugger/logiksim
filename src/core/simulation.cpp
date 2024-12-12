@@ -99,7 +99,14 @@ Simulation::Simulation(Schematic &&schematic, PrintEvents do_print)
 }
 
 auto Simulation::allocation_info() const -> SimulationAllocInfo {
-    return SimulationAllocInfo {};
+    return SimulationAllocInfo {
+        .schematic = {},
+        .simulation_queue = {},
+
+        .input_values = {},
+        .internal_states = {},
+        .input_histories = {},
+    };
 }
 
 auto Simulation::format_element(element_id_t element_id) const -> std::string {

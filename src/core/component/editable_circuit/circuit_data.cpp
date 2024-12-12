@@ -52,8 +52,12 @@ auto CircuitData::allocation_info() const -> CircuitDataAllocInfo {
         .visible_selection = Byte {visible_selection.allocated_size()},
         .history = Byte {history.allocated_size()},
 
-        .messages = Byte {get_allocated_size(messages)} +
-                    Byte {get_allocated_size(message_validator)},
+        .messages = messages ? std::make_optional(Byte {get_allocated_size(messages)})
+                             : std::nullopt,
+        .message_validator =
+            message_validator
+                ? std::make_optional(Byte {get_allocated_size(message_validator)})
+                : std::nullopt,
     };
 }
 
