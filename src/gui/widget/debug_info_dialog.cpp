@@ -19,7 +19,7 @@ DebugInfoDialog::DebugInfoDialog(QWidget* parent) : QWidget {parent} {
     edit->setFontFamily("monospace");
     text_edit_ = edit;
 
-    resize(300, 400);
+    resize(400, 650);
 }
 
 auto DebugInfoDialog::update_allocation_info(const CircuitWidgetAllocInfo& info) -> void {

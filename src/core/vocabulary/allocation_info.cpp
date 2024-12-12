@@ -15,72 +15,116 @@ namespace {
 }  // namespace
 
 auto Byte::format() const -> std::string {
-    if (value == 0) {
-        return "0";
+    if (value < std::size_t {1000} * std::size_t {1000}) {
+        return fmt::format("{:.3f} KB", static_cast<double>(value) / 1000.);
     }
-    if (value < 1000 * 1000) {
-        return fmt::format("{:.3g} KB", static_cast<double>(value) / 1000.);
-    }
-    return fmt::format("{:.3g} MB", static_cast<double>(value) / 1000. / 1000.);
+    return fmt::format("{:.3f} MB", static_cast<double>(value) / 1000. / 1000.);
 }
 
 auto LayoutAllocInfo::format() const -> std::string {
     return fmt::format(
-        "Layout:\n"
-        "  logicitem_store   {}\n"
-        "  wire_store        {}\n"
-        "  decoration_store  {}",
-        logicitem_store, wire_store, decoration_store);
+        "Layout ({}):\n"
+        "  logicitem_store:  {}\n"
+        "  wire_store:       {}\n"
+        "  decoration_store: {}",
+        total(), logicitem_store, wire_store, decoration_store);
+}
+
+auto LayoutAllocInfo::total() const -> Byte {
+    return logicitem_store +  //
+           wire_store +       //
+           decoration_store;
 }
 
 auto LayoutIndexAllocInfo::format() const -> std::string {
     return fmt::format(
-        "Index:\n"
-        "  connection_index = {}\n"
-        "  collision_index = {}\n"
-        "  spatial_index = {}\n"
-        "  key_index = {}",
-        connection_index, collision_index, spatial_index, key_index);
+        "Index ({}):\n"
+        "  connection_index: {}\n"
+        "  collision_index:  {}\n"
+        "  spatial_index:    {}\n"
+        "  key_index:        {}",
+        total(), connection_index, collision_index, spatial_index, key_index);
 }
 
-auto EditableCircuitAllocInfo::format() const -> std::string {
+auto LayoutIndexAllocInfo::total() const -> Byte {
+    return connection_index +  //
+           collision_index +   //
+           spatial_index +     //
+           key_index;
+}
+
+auto CircuitDataAllocInfo::format() const -> std::string {
     return fmt::format(
-        "EditableCircuit:\n"
+        "EditableCircuit ({}):\n"
         "{}\n"
         "{}\n"
-        "  selection_store = {}\n"
-        "  visible_selection = {}\n"
-        "  history = {}",
-        aindent(layout), aindent(index), selection_store, visible_selection, history);
+        "  selection_store:   {}\n"
+        "  visible_selection: {}\n"
+        "  history:           {}\n"
+        "  messages:          {}\n"
+        "  message_validator: {}",
+        total(), aindent(layout), aindent(index), selection_store, visible_selection,
+        history, messages, message_validator);
+}
+
+auto CircuitDataAllocInfo::total() const -> Byte {
+    return layout.total() +     //
+           index.total() +      //
+           selection_store +    //
+           visible_selection +  //
+           history +            //
+           messages +           //
+           message_validator;
 }
 
 auto SimulationAllocInfo::format() const -> std::string {
     return fmt::format(
-        "Simulation:\n"
-        "  schematic = {}\n"
-        "  simulation_queue = {}\n"
-        "  input_values = {}\n"
-        "  internal_states = {}\n"
-        "  input_histories = {}",
-        schematic, simulation_queue, input_values, internal_states, input_histories);
+        "Simulation ({}):\n"
+        "  schematic:        {}\n"
+        "  simulation_queue: {}\n"
+        "  input_values:     {}\n"
+        "  internal_states:  {}\n"
+        "  input_histories:  {}",
+        total(), schematic, simulation_queue, input_values, internal_states,
+        input_histories);
+}
+
+auto SimulationAllocInfo::total() const -> Byte {
+    return schematic +         //
+           simulation_queue +  //
+           input_values +      //
+           internal_states +   //
+           input_histories;
 }
 
 auto SpatialSimulationAllocInfo::format() const -> std::string {
     return fmt::format(
-        "SpatialSimulation:\n"
+        "SpatialSimulation ({}):\n"
         "{}\n"
-        "  svg_cache = {}\n"
+        "  line_trees: {}\n"
         "{}",
-        aindent(layout), line_trees, simulation);
+        total(), aindent(layout), line_trees, aindent(simulation));
+}
+
+auto SpatialSimulationAllocInfo::total() const -> Byte {
+    return layout.total() +  //
+           line_trees +      //
+           simulation.total();
 }
 
 auto InteractiveSimulationAllocInfo::format() const -> std::string {
     return fmt::format(
-        "InteractiveSimulation:\n"
+        "InteractiveSimulation ({}):\n"
         "{}\n"
-        "  svg_cache = {}\n"
-        "  svg_cache = {}",
-        aindent(spatial_simulation), interaction_cache, event_counter);
+        "  interaction_cache: {}\n"
+        "  event_counter:     {}",
+        total(), aindent(spatial_simulation), interaction_cache, event_counter);
+}
+
+auto InteractiveSimulationAllocInfo::total() const -> Byte {
+    return spatial_simulation.total() +  //
+           interaction_cache +           //
+           event_counter;
 }
 
 auto CircuitStoreAllocInfo::format() const -> std::string {
@@ -90,44 +134,72 @@ auto CircuitStoreAllocInfo::format() const -> std::string {
             : "";
 
     return fmt::format(
-        "CircuitStore:\n"
+        "CircuitStore ({}):\n"
         "{}{}",
-        aindent(editable_circuit), sim_str);
+        total(), aindent(editable_circuit), sim_str);
+}
+
+auto CircuitStoreAllocInfo::total() const -> Byte {
+    return editable_circuit.total() +  //
+           (interactive_simulation ? interactive_simulation->total() : Byte {});
 }
 
 auto TextCacheAllocInfo::format() const -> std::string {
     return fmt::format(
-        "EditableCircuit:\n"
-        "  faces = {}\n"
-        "  fonts = {}\n"
-        "  glyph_map = {}",
-        faces, fonts, glyph_map);
+        "TextCache ({}):\n"
+        "  faces:     {}\n"
+        "  fonts:     {}\n"
+        "  glyph_map: {}",
+        total(), faces, fonts, glyph_map);
+}
+
+auto TextCacheAllocInfo::total() const -> Byte {
+    return faces +  //
+           fonts +  //
+           glyph_map;
 }
 
 auto ContextCacheAllocInfo::format() const -> std::string {
     return fmt::format(
-        "Cache:\n"
+        "ContextCache ({}):\n"
         "{}\n"
-        "  svg_cache = {}",
-        aindent(text_cache), svg_cache);
+        "  svg_cache: {}",
+        total(), aindent(text_cache), svg_cache);
+}
+
+auto ContextCacheAllocInfo::total() const -> Byte {
+    return text_cache.total() +  //
+           svg_cache;
 }
 
 auto CircuitRendererAllocInfo::format() const -> std::string {
     return fmt::format(
-        "Renderer:\n"
-        "  image_surface = {}\n"
+        "Renderer ({}):\n"
+        "  image_surface: {}\n"
         "{}",
-        image_surface, aindent(context_cache));
+        total(), image_surface, aindent(context_cache));
+}
+
+auto CircuitRendererAllocInfo::total() const -> Byte {
+    return image_surface +  //
+           context_cache.total();
 }
 
 auto CircuitWidgetAllocInfo::format() const -> std::string {
+    const auto collection_time_ms = collection_time.count() * 1000;
+
     return fmt::format(
-        "CircuitWidget:\n"
+        "CircuitWidget ({}):\n"
         "{}\n"
         "{}\n"
-        "  collection_time = {:.3f} ms",
-        aindent(circuit_store), aindent(circuit_renderer),
-        collection_time.count() * 1000);
+        "\n"
+        "collection_time: {:.3f} ms",
+        total(), aindent(circuit_store), aindent(circuit_renderer), collection_time_ms);
+}
+
+auto CircuitWidgetAllocInfo::total() const -> Byte {
+    return circuit_store.total() +  //
+           circuit_renderer.total();
 }
 
 }  // namespace logicsim

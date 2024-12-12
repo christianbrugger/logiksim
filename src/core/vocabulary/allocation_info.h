@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_CORE_VOCABULARY_ALLOCATION_INFO_H
 #define LOGICSIM_CORE_VOCABULARY_ALLOCATION_INFO_H
 
+#include "core/algorithm/numeric.h"
 #include "core/format/struct.h"
 
 #include <chrono>
@@ -16,6 +17,8 @@ struct Byte {
     [[nodiscard]] auto format() const -> std::string;
 };
 
+[[nodiscard]] constexpr auto operator+(Byte a, Byte b) -> Byte;
+
 static_assert(std::regular<Byte>);
 
 struct LayoutAllocInfo {
@@ -25,6 +28,7 @@ struct LayoutAllocInfo {
 
     [[nodiscard]] auto operator==(const LayoutAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto total() const -> Byte;
 };
 
 static_assert(std::regular<LayoutAllocInfo>);
@@ -37,23 +41,26 @@ struct LayoutIndexAllocInfo {
 
     [[nodiscard]] auto operator==(const LayoutIndexAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto total() const -> Byte;
 };
 
 static_assert(std::regular<LayoutIndexAllocInfo>);
 
-struct EditableCircuitAllocInfo {
+struct CircuitDataAllocInfo {
     LayoutAllocInfo layout {};
     LayoutIndexAllocInfo index {};
     Byte selection_store {};
     Byte visible_selection {};
     Byte history {};
+    Byte messages {};
+    Byte message_validator {};
 
-    [[nodiscard]] auto operator==(const EditableCircuitAllocInfo&) const -> bool =
-                                                                                default;
+    [[nodiscard]] auto operator==(const CircuitDataAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto total() const -> Byte;
 };
 
-static_assert(std::regular<EditableCircuitAllocInfo>);
+static_assert(std::regular<CircuitDataAllocInfo>);
 
 struct SimulationAllocInfo {
     Byte schematic {};
@@ -65,6 +72,7 @@ struct SimulationAllocInfo {
 
     [[nodiscard]] auto operator==(const SimulationAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto total() const -> Byte;
 };
 
 static_assert(std::regular<SimulationAllocInfo>);
@@ -72,35 +80,36 @@ static_assert(std::regular<SimulationAllocInfo>);
 struct SpatialSimulationAllocInfo {
     LayoutAllocInfo layout {};
     Byte line_trees {};
-
     SimulationAllocInfo simulation {};
 
     [[nodiscard]] auto operator==(const SpatialSimulationAllocInfo&) const -> bool =
                                                                                   default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto total() const -> Byte;
 };
 
 static_assert(std::regular<SpatialSimulationAllocInfo>);
 
 struct InteractiveSimulationAllocInfo {
     SpatialSimulationAllocInfo spatial_simulation {};
-
     Byte interaction_cache {};
     Byte event_counter {};
 
     [[nodiscard]] auto operator==(const InteractiveSimulationAllocInfo&) const
         -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto total() const -> Byte;
 };
 
 static_assert(std::regular<InteractiveSimulationAllocInfo>);
 
 struct CircuitStoreAllocInfo {
-    EditableCircuitAllocInfo editable_circuit {};
+    CircuitDataAllocInfo editable_circuit {};
     std::optional<InteractiveSimulationAllocInfo> interactive_simulation {};
 
     [[nodiscard]] auto operator==(const CircuitStoreAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto total() const -> Byte;
 };
 
 static_assert(std::regular<CircuitStoreAllocInfo>);
@@ -112,6 +121,7 @@ struct TextCacheAllocInfo {
 
     [[nodiscard]] auto operator==(const TextCacheAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto total() const -> Byte;
 };
 
 static_assert(std::regular<TextCacheAllocInfo>);
@@ -122,6 +132,7 @@ struct ContextCacheAllocInfo {
 
     [[nodiscard]] auto operator==(const ContextCacheAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto total() const -> Byte;
 };
 
 static_assert(std::regular<ContextCacheAllocInfo>);
@@ -133,6 +144,7 @@ struct CircuitRendererAllocInfo {
     [[nodiscard]] auto operator==(const CircuitRendererAllocInfo&) const -> bool =
                                                                                 default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto total() const -> Byte;
 };
 
 static_assert(std::regular<CircuitRendererAllocInfo>);
@@ -145,9 +157,19 @@ struct CircuitWidgetAllocInfo {
 
     [[nodiscard]] auto operator==(const CircuitWidgetAllocInfo&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto total() const -> Byte;
 };
 
 static_assert(std::regular<CircuitWidgetAllocInfo>);
+
+//
+// Implementation
+//
+
+[[nodiscard]] constexpr auto operator+(Byte a, Byte b) -> Byte {
+    return Byte {checked_add(a.value, b.value)};
+}
+
 }  // namespace logicsim
 
 #endif

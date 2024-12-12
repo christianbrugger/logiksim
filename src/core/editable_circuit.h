@@ -13,7 +13,7 @@ namespace logicsim {
 
 struct PlacedLogicItem;
 struct PlacedDecoration;
-struct EditableCircuitAllocInfo;
+struct CircuitDataAllocInfo;
 
 class Layout;
 
@@ -26,7 +26,7 @@ class EditableCircuit {
     [[nodiscard]] explicit EditableCircuit(Layout&& layout, Config config = {});
 
     [[nodiscard]] auto allocated_size() const -> std::size_t;
-    [[nodiscard]] auto allocation_info() const -> EditableCircuitAllocInfo;
+    [[nodiscard]] auto allocation_info() const -> CircuitDataAllocInfo;
     [[nodiscard]] auto operator==(const EditableCircuit&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 

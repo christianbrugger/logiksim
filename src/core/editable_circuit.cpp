@@ -18,16 +18,8 @@ auto EditableCircuit::allocated_size() const -> std::size_t {
     return modifier_.circuit_data().allocated_size();
 }
 
-auto EditableCircuit::allocation_info() const -> EditableCircuitAllocInfo {
-    const auto& circuit = modifier_.circuit_data();
-
-    return EditableCircuitAllocInfo {
-        .layout = circuit.layout.allocation_info(),
-        .index = circuit.index.allocation_info(),
-        .selection_store = Byte {circuit.selection_store.allocated_size()},
-        .visible_selection = Byte {circuit.selection_store.allocated_size()},
-        .history = Byte {circuit.allocated_size()},
-    };
+auto EditableCircuit::allocation_info() const -> CircuitDataAllocInfo {
+    return modifier_.circuit_data().allocation_info();
 }
 
 auto EditableCircuit::format() const -> std::string {

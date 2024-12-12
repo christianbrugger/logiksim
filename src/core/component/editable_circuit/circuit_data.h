@@ -14,6 +14,8 @@
 
 namespace logicsim {
 
+struct CircuitDataAllocInfo;
+
 namespace editable_circuit {
 
 /**
@@ -32,6 +34,7 @@ struct CircuitData {
     [[nodiscard]] auto operator==(const CircuitData&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
+    [[nodiscard]] auto allocation_info() const -> CircuitDataAllocInfo;
 
     auto submit(const InfoMessage& message) -> void;
 };

@@ -6,6 +6,7 @@
 #include "core/format/container.h"
 #include "core/format/std_type.h"
 #include "core/logging.h"
+#include "core/vocabulary/allocation_info.h"
 
 namespace logicsim {
 
@@ -41,6 +42,19 @@ auto CircuitData::allocated_size() const -> std::size_t {
 
            get_allocated_size(messages) +  //
            get_allocated_size(message_validator);
+}
+
+auto CircuitData::allocation_info() const -> CircuitDataAllocInfo {
+    return CircuitDataAllocInfo {
+        .layout = layout.allocation_info(),
+        .index = index.allocation_info(),
+        .selection_store = Byte {selection_store.allocated_size()},
+        .visible_selection = Byte {visible_selection.allocated_size()},
+        .history = Byte {history.allocated_size()},
+
+        .messages = Byte {get_allocated_size(messages)} +
+                    Byte {get_allocated_size(message_validator)},
+    };
 }
 
 auto CircuitData::submit(const InfoMessage& message) -> void {
