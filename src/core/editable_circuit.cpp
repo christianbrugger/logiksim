@@ -86,6 +86,10 @@ auto EditableCircuit::has_ungrouped_undo_entries() const -> bool {
     return modifier_.has_ungrouped_undo_entries();
 }
 
+auto EditableCircuit::undo_groups_count() const -> std::size_t {
+    return modifier_.circuit_data().history.undo_stack.group_count();
+}
+
 //
 // Elements
 //

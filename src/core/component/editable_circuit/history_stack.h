@@ -114,6 +114,7 @@ class HistoryStack {
 
     auto push_new_group() -> bool;
     auto pop_new_group() -> void;
+    [[nodiscard]] auto group_count() const -> std::size_t;
 
     //
     // Logicitems
@@ -234,6 +235,8 @@ class HistoryStack {
     auto pop_visible_selection_pop_last() -> void;
 
    private:
+    std::size_t group_count_ {};
+
     // general
     std::vector<HistoryEntry> entries_ {};
     std::vector<move_delta_t> move_deltas_ {};

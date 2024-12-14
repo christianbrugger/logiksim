@@ -1,6 +1,7 @@
 #include "core/component/editable_circuit/history_stack.h"
 
 #include "core/algorithm/fmt_join.h"
+#include "core/algorithm/numeric.h"
 #include "core/algorithm/vector_operations.h"
 #include "core/allocated_size/std_vector.h"
 #include "core/format/container.h"
@@ -118,6 +119,7 @@ auto split_segment_key_t::format() const -> std::string {
 auto HistoryStack::format() const -> std::string {
     return fmt::format(
         "Stack(\n"
+        "    group_count = {},\n"
         "    entries = {},\n"
         "    move_delta_stack = {},\n"
         "    \n"
@@ -137,7 +139,7 @@ auto HistoryStack::format() const -> std::string {
         "    selection_rects = {},\n"
         "    selection_functions = {},\n"
         "  )",
-        format_stack_vector(entries_), move_deltas_,                 //
+        group_count_, format_stack_vector(entries_), move_deltas_,   //
         logicitem_keys_, format_stack_vector(placed_logicitems_),    //
         decoration_keys_, format_stack_vector(placed_decorations_),  //
         segment_keys_, lines_, endpoints_, parts_, offsets_,         //
@@ -193,11 +195,17 @@ auto HistoryStack::push_new_group() -> bool {
     }
 
     entries_.emplace_back(HistoryEntry::new_group);
+    group_count_ = checked_add(group_count_, std::size_t {1});
     return true;
 }
 
 auto HistoryStack::pop_new_group() -> void {
     Expects(pop_back_vector(entries_) == HistoryEntry::new_group);
+    group_count_ = checked_sub(group_count_, std::size_t {1});
+}
+
+auto HistoryStack::group_count() const -> std::size_t {
+    return group_count_;
 }
 
 //

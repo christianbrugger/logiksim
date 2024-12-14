@@ -52,6 +52,7 @@ class EditableCircuit {
     [[nodiscard]] auto has_undo() const -> bool;
     [[nodiscard]] auto has_redo() const -> bool;
     [[nodiscard]] auto has_ungrouped_undo_entries() const -> bool;
+    [[nodiscard]] auto undo_groups_count() const -> std::size_t;
 
     //
     // Elements
