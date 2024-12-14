@@ -172,10 +172,12 @@ auto toggle_segment_part(Selection &selection, const Layout &layout, segment_t s
                          point_fine_t point) -> void;
 
 [[nodiscard]] auto select_all(const Layout &layout) -> Selection;
+[[nodiscard]] auto is_all_selected(const Selection &selection,
+                                   const Layout &layout) -> bool;
 
-auto get_single_logicitem(const Selection &selection) -> logicitem_id_t;
-auto get_single_decoration(const Selection &selection) -> decoration_id_t;
-auto get_single_segment(const Selection &selection)
+[[nodiscard]] auto get_single_logicitem(const Selection &selection) -> logicitem_id_t;
+[[nodiscard]] auto get_single_decoration(const Selection &selection) -> decoration_id_t;
+[[nodiscard]] auto get_single_segment(const Selection &selection)
     -> std::optional<selection::segment_pair_t>;
 
 }  // namespace logicsim

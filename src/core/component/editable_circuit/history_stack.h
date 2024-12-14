@@ -58,7 +58,6 @@ enum class HistoryEntry : uint8_t {
     segment_merge,
     segment_split,
     segment_add_visible_selection,
-    segment_remove_visible_selection,
 
     // visible selection
     visible_selection_clear,
@@ -66,6 +65,7 @@ enum class HistoryEntry : uint8_t {
     visible_selection_add_operation,
     visible_selection_update_last,
     visible_selection_pop_last,
+    visible_selection_select_all,
 };
 
 }
@@ -200,8 +200,6 @@ class HistoryStack {
     auto push_segment_split(split_segment_key_t definition) -> void;
     auto push_segment_add_visible_selection(segment_key_t segment_key,
                                             part_t part) -> void;
-    // TODO remove if not needed
-    auto push_segment_remove_visible_selection() -> void;
 
     auto pop_segment_create_temporary() -> std::pair<segment_key_t, ordered_line_t>;
     auto pop_segment_delete_temporary() -> segment_key_t;
@@ -215,7 +213,6 @@ class HistoryStack {
     auto pop_segment_merge() -> std::pair<segment_key_t, segment_key_t>;
     auto pop_segment_split() -> split_segment_key_t;
     auto pop_segment_add_visible_selection() -> std::pair<segment_key_t, part_t>;
-    auto pop_segment_remove_visible_selection() -> void;
 
     //
     // Visible Selection
@@ -227,12 +224,14 @@ class HistoryStack {
         const VisibleSelection::operation_t& operation) -> void;
     auto push_visible_selection_update_last(const rect_fine_t& rect) -> void;
     auto push_visible_selection_pop_last() -> void;
+    auto push_visible_selection_select_all() -> void;
 
     auto pop_visible_selection_clear() -> void;
     auto pop_visible_selection_set() -> StableSelection;
     auto pop_visible_selection_add_operation() -> visible_selection::operation_t;
     auto pop_visible_selection_update_last() -> rect_fine_t;
     auto pop_visible_selection_pop_last() -> void;
+    auto pop_visible_selection_select_all() -> void;
 
    private:
     std::size_t group_count_ {};

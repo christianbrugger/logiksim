@@ -773,6 +773,26 @@ auto select_all(const Layout &layout) -> Selection {
     return result;
 }
 
+auto is_all_selected(const Selection &selection, const Layout &layout) -> bool {
+    const auto is_item_selected = [&](const auto &item) -> bool {
+        return selection.is_selected(item);
+    };
+    const auto segment_fully_selected = [&](const auto &segment) -> bool {
+        return is_full_segment(selection, segment, layout);
+    };
+    const auto wire_selected = [&](const wire_id_t &wire_id) -> bool {
+        return std::ranges::all_of(layout.wires().segment_tree(wire_id).indices(wire_id),
+                                   segment_fully_selected);
+    };
+
+    return layout.logicitems().size() == selection.selected_logicitems().size() &&
+           layout.decorations().size() == selection.selected_decorations().size() &&
+           get_segment_count(layout) == selection.selected_segments().size() &&
+           std::ranges::all_of(logicitem_ids(layout), is_item_selected) &&
+           std::ranges::all_of(decoration_ids(layout), is_item_selected) &&
+           std::ranges::all_of(wire_ids(layout), wire_selected);
+}
+
 auto get_single_logicitem(const Selection &selection) -> logicitem_id_t {
     if (selection.selected_logicitems().size() != 1 || selection.size() != 1) {
         return null_logicitem_id;

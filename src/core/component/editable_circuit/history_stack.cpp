@@ -79,8 +79,6 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
             return "segment_split";
         case segment_add_visible_selection:
             return "segment_add_visible_selection";
-        case segment_remove_visible_selection:
-            return "segment_remove_visible_selection";
 
         case visible_selection_clear:
             return "visble_selection_clear";
@@ -92,6 +90,8 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
             return "visible_selection_update_last";
         case visible_selection_pop_last:
             return "visible_selection_pop_last";
+        case visible_selection_select_all:
+            return "visible_selection_select_all";
     };
     std::terminate();
 }
@@ -692,10 +692,6 @@ auto HistoryStack::push_segment_add_visible_selection(segment_key_t segment_key,
     parts_.emplace_back(part);
 }
 
-auto HistoryStack::push_segment_remove_visible_selection() -> void {
-    entries_.emplace_back(HistoryEntry::segment_remove_visible_selection);
-}
-
 auto HistoryStack::pop_segment_create_temporary()
     -> std::pair<segment_key_t, ordered_line_t> {
     Expects(pop_back_vector(entries_) == HistoryEntry::segment_create_temporary);
@@ -768,10 +764,6 @@ auto HistoryStack::pop_segment_add_visible_selection()
     return {pop_back_vector(segment_keys_), pop_back_vector(parts_)};
 }
 
-auto HistoryStack::pop_segment_remove_visible_selection() -> void {
-    Expects(pop_back_vector(entries_) == HistoryEntry::segment_add_visible_selection);
-}
-
 //
 // Visible Selection
 //
@@ -815,6 +807,10 @@ auto HistoryStack::push_visible_selection_pop_last() -> void {
     entries_.emplace_back(HistoryEntry::visible_selection_pop_last);
 }
 
+auto HistoryStack::push_visible_selection_select_all() -> void {
+    entries_.emplace_back(HistoryEntry::visible_selection_select_all);
+}
+
 auto HistoryStack::pop_visible_selection_clear() -> void {
     Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_clear);
 }
@@ -840,6 +836,10 @@ auto HistoryStack::pop_visible_selection_update_last() -> rect_fine_t {
 
 auto HistoryStack::pop_visible_selection_pop_last() -> void {
     Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_pop_last);
+}
+
+auto HistoryStack::pop_visible_selection_select_all() -> void {
+    Expects(pop_back_vector(entries_) == HistoryEntry::visible_selection_select_all);
 }
 
 //

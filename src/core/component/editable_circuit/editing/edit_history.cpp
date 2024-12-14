@@ -316,11 +316,6 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
-        case segment_remove_visible_selection: {
-            stack.pop_segment_remove_visible_selection();
-            return;
-        }
-
             //
             // Visible Selection
             //
@@ -354,6 +349,12 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
         case visible_selection_pop_last: {
             stack.pop_visible_selection_pop_last();
             editing::pop_last_visible_selection_rect(circuit);
+            return;
+        }
+
+        case visible_selection_select_all: {
+            stack.pop_visible_selection_select_all();
+            editing::set_visible_selection(circuit, select_all(circuit.layout));
             return;
         }
     };

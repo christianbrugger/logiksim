@@ -10,7 +10,7 @@ namespace editing {
 
 namespace {
 
-auto _store_history_visible_selection_set(History& history,
+auto _store_history_visible_selection_set(History& history, const Layout& layout,
                                           const VisibleSelection& visible_selection,
                                           const KeyIndex& key_index,
                                           const Selection& new_selection) -> void {
@@ -20,14 +20,14 @@ auto _store_history_visible_selection_set(History& history,
             stack->push_visible_selection_add_operation(operation);
         }
 
-        const auto& selection = visible_selection.initial_selection();
+        const auto& old_selection = visible_selection.initial_selection();
 
-        if (selection == new_selection) {
+        if (old_selection == new_selection) {
             return;
         }
 
         // remove selection
-        if (selection.empty()) {
+        if (old_selection.empty()) {
             // remove single entry
             if (const auto logicitem_id = get_single_logicitem(new_selection)) {
                 const auto logicitem_key = key_index.get(logicitem_id);
@@ -46,20 +46,26 @@ auto _store_history_visible_selection_set(History& history,
 
         if (new_selection.empty()) {
             // add single entry
-            if (const auto logicitem_id = get_single_logicitem(selection)) {
+            if (const auto logicitem_id = get_single_logicitem(old_selection)) {
                 const auto logicitem_key = key_index.get(logicitem_id);
                 stack->push_logicitem_add_visible_selection(logicitem_key);
                 return;
             }
-            if (const auto decoration_id = get_single_decoration(selection)) {
+            if (const auto decoration_id = get_single_decoration(old_selection)) {
                 const auto decoration_key = key_index.get(decoration_id);
                 stack->push_decoration_add_visible_selection(decoration_key);
                 return;
             }
         }
 
+        // this saves a lot of memory
+        if (is_all_selected(old_selection, layout)) {
+            stack->push_visible_selection_select_all();
+            return;
+        }
+
         // set to previous selection
-        stack->push_visible_selection_set(to_stable_selection(selection, key_index));
+        stack->push_visible_selection_set(to_stable_selection(old_selection, key_index));
     }
 }
 
@@ -96,7 +102,7 @@ auto set_visible_selection(CircuitData& circuit_data, Selection&& selection) -> 
         throw std::runtime_error("Selection contains elements not in layout");
     }
 
-    _store_history_visible_selection_set(circuit_data.history,
+    _store_history_visible_selection_set(circuit_data.history, circuit_data.layout,
                                          circuit_data.visible_selection,
                                          circuit_data.index.key_index(), selection);
 
