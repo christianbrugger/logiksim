@@ -163,7 +163,7 @@ class Modifier {
     // Wire Normalization
     //
 
-    auto set_uninserted_endpoints(segment_t segment, endpoints_t endpoints) -> void;
+    auto set_temporary_endpoints(segment_t segment, endpoints_t endpoints) -> void;
 
     auto merge_uninserted_segment(segment_t segment_0, segment_t segment_1) -> segment_t;
 

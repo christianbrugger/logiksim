@@ -527,17 +527,16 @@ auto Modifier::toggle_wire_crosspoint(point_t point) -> void {
 // Wire Normalization
 //
 
-auto Modifier::set_uninserted_endpoints(segment_t segment,
-                                        endpoints_t endpoints) -> void {
+auto Modifier::set_temporary_endpoints(segment_t segment, endpoints_t endpoints) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "set_temporary_crosspoint(segment = {}, endpoints = {});\n"
+            "set_temporary_endpoints(segment = {}, endpoints = {});\n"
             "==========================================================\n\n",
             circuit_data_.layout, segment, endpoints);
     }
 
-    editing::set_uninserted_endpoints_with_history(circuit_data_, segment, endpoints);
+    editing::set_temporary_endpoints_with_history(circuit_data_, segment, endpoints);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);

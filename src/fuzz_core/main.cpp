@@ -227,13 +227,13 @@ auto toggle_wire_crosspoint(FuzzStream& stream, Modifier& modifier,
     modifier.toggle_wire_crosspoint(point);
 }
 
-auto set_uninserted_endpoints(FuzzStream& stream, Modifier& modifier) -> void {
-    if (const auto segment = fuzz_select_uninserted_segment(stream, modifier)) {
+auto set_temporary_endpoints(FuzzStream& stream, Modifier& modifier) -> void {
+    if (const auto segment = fuzz_select_temporary_segment(stream, modifier)) {
         const auto endpoints = endpoints_t {
             .p0_type = fuzz_select_shadow_or_crosspoint(stream),
             .p1_type = fuzz_select_shadow_or_crosspoint(stream),
         };
-        modifier.set_uninserted_endpoints(*segment, endpoints);
+        modifier.set_temporary_endpoints(*segment, endpoints);
     }
 }
 
@@ -285,7 +285,7 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
 
         // wire normalization
         case 6:
-            set_uninserted_endpoints(stream, modifier);
+            set_temporary_endpoints(stream, modifier);
             return;
         case 7:
             merge_uninserted_segment(stream, modifier);
@@ -305,6 +305,7 @@ auto validate_undo(Modifier& modifier,
                                  | std::ranges::views::drop(1)) {
         Expects(modifier.has_undo());
         modifier.undo_group();
+        Expects(is_valid(modifier));
         Expects(layout_key_state_t {modifier} == state);
     }
     Expects(!modifier.has_undo());
@@ -315,6 +316,7 @@ auto validate_redo(Modifier& modifier,
     for (const auto& state : key_state_stack | std::ranges::views::drop(1)) {
         Expects(modifier.has_redo());
         modifier.redo_group();
+        Expects(is_valid(modifier));
         Expects(layout_key_state_t {modifier} == state);
     }
     Expects(!modifier.has_redo());
@@ -356,6 +358,7 @@ auto process_data(std::span<const uint8_t> data) -> void {
     while (!stream.empty()) {
         editing_operation(stream, modifier, limits);
         Expects(all_within_limits(modifier.circuit_data().layout, limits));
+        Expects(is_valid(modifier));
 
         if (fuzz_bool(stream)) {
             history_finish_undo_group(modifier, key_state_stack);

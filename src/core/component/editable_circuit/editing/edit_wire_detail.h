@@ -196,23 +196,23 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 // Endpoints
 //
 
-[[nodiscard]] auto uninserted_endpoints_valid(endpoints_t) -> bool;
+[[nodiscard]] auto temporary_endpoints_valid(endpoints_t) -> bool;
 
-auto set_uninserted_endpoints(Layout& layout, segment_t segment,
-                              endpoints_t endpoints) -> void;
+auto set_temporary_endpoints(Layout& layout, segment_t segment,
+                             endpoints_t endpoints) -> void;
 
-auto reset_uninserted_endpoints(Layout& layout, segment_t segment) -> void;
+auto reset_temporary_endpoints(Layout& layout, segment_t segment) -> void;
 
-auto set_uninserted_crosspoint(Layout& layout, segment_t segment, point_t point) -> void;
+auto set_temporary_crosspoint(Layout& layout, segment_t segment, point_t point) -> void;
 
 using point_update_t =
     std::initializer_list<const std::pair<segment_index_t, SegmentPointType>>;
 
-auto update_segment_point_types(CircuitData& circuit, wire_id_t wire_id,
-                                point_update_t data, point_t position) -> void;
+auto update_inserted_segment_endpoints(CircuitData& circuit, wire_id_t wire_id,
+                                       point_update_t data, point_t position) -> void;
 
-auto fix_and_merge_segments(CircuitData& circuit, point_t position,
-                            segment_part_t* preserve_segment = nullptr) -> void;
+auto fix_and_merge_inserted_segments(CircuitData& circuit, point_t position,
+                                     segment_part_t* preserve_segment = nullptr) -> void;
 
 //
 // Valid

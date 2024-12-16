@@ -904,7 +904,7 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 // Endpoints
 //
 
-auto uninserted_endpoints_valid(endpoints_t endpoints) -> bool {
+auto temporary_endpoints_valid(endpoints_t endpoints) -> bool {
     const auto valid_temporary = [](SegmentPointType type) {
         return type == SegmentPointType::shadow_point ||
                type == SegmentPointType::cross_point;
@@ -912,12 +912,12 @@ auto uninserted_endpoints_valid(endpoints_t endpoints) -> bool {
     return valid_temporary(endpoints.p0_type) && valid_temporary(endpoints.p1_type);
 }
 
-auto set_uninserted_endpoints(Layout& layout, segment_t segment,
-                              endpoints_t endpoints) -> void {
-    if (is_inserted(segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("Segment cannot be inserted to change endpoints.");
+auto set_temporary_endpoints(Layout& layout, segment_t segment,
+                             endpoints_t endpoints) -> void {
+    if (!is_temporary(segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("Only temporary segment can change endpoints.");
     }
-    if (!uninserted_endpoints_valid(endpoints)) [[unlikely]] {
+    if (!temporary_endpoints_valid(endpoints)) [[unlikely]] {
         throw std::runtime_error(
             "New point type needs to be shadow_point or cross_point");
     }
@@ -931,18 +931,18 @@ auto set_uninserted_endpoints(Layout& layout, segment_t segment,
     m_tree.update_segment(segment.segment_index, new_info);
 }
 
-auto reset_uninserted_endpoints(Layout& layout, const segment_t segment) -> void {
-    set_uninserted_endpoints(layout, segment,
-                             endpoints_t {
-                                 .p0_type = SegmentPointType::shadow_point,
-                                 .p1_type = SegmentPointType::shadow_point,
-                             });
+auto reset_temporary_endpoints(Layout& layout, const segment_t segment) -> void {
+    set_temporary_endpoints(layout, segment,
+                            endpoints_t {
+                                .p0_type = SegmentPointType::shadow_point,
+                                .p1_type = SegmentPointType::shadow_point,
+                            });
 }
 
-auto set_uninserted_crosspoint(Layout& layout, const segment_t segment,
-                               point_t point) -> void {
-    if (is_inserted(segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("cannot set endpoints of inserted wire segment");
+auto set_temporary_crosspoint(Layout& layout, const segment_t segment,
+                              point_t point) -> void {
+    if (!is_temporary(segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("can only set endpoints of temporary wire segment");
     }
     auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
 
@@ -952,8 +952,9 @@ auto set_uninserted_crosspoint(Layout& layout, const segment_t segment,
     m_tree.update_segment(segment.segment_index, info);
 }
 
-auto update_segment_point_types(CircuitData& circuit, wire_id_t wire_id,
-                                point_update_t data, const point_t position) -> void {
+auto update_inserted_segment_endpoints(CircuitData& circuit, wire_id_t wire_id,
+                                       point_update_t data,
+                                       const point_t position) -> void {
     if (data.size() == 0) {
         return;
     }
@@ -1000,8 +1001,8 @@ auto _sort_through_lines_first(
 
 }  // namespace
 
-auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
-                            segment_part_t* preserve_segment) -> void {
+auto fix_and_merge_inserted_segments(CircuitData& circuit, const point_t position,
+                                     segment_part_t* preserve_segment) -> void {
     const auto segments = circuit.index.selection_index().query_line_segments(position);
     const auto segment_count = get_segment_count(segments);
 
@@ -1017,11 +1018,11 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
                                   ? SegmentPointType::input
                                   : SegmentPointType::output;
 
-        update_segment_point_types(circuit, wire_id,
-                                   {
-                                       std::pair {indices.at(0), new_type},
-                                   },
-                                   position);
+        update_inserted_segment_endpoints(circuit, wire_id,
+                                          {
+                                              std::pair {indices.at(0), new_type},
+                                          },
+                                          position);
 
         return;
     }
@@ -1037,7 +1038,7 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
         if (has_through_line_0) {
             split_line_segment(circuit, segment_t {wire_id, lines.at(0).second},
                                position);
-            fix_and_merge_segments(circuit, position, preserve_segment);
+            fix_and_merge_inserted_segments(circuit, position, preserve_segment);
             return;
         }
 
@@ -1052,7 +1053,7 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
         }
 
         // this handles corners
-        update_segment_point_types(
+        update_inserted_segment_endpoints(
             circuit, wire_id,
             {
                 std::pair {indices.at(0), SegmentPointType::corner_point},
@@ -1075,7 +1076,7 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
             throw std::runtime_error("This is not allowed, segment must be split");
         }
 
-        update_segment_point_types(
+        update_inserted_segment_endpoints(
             circuit, wire_id,
             {
                 std::pair {indices.at(0), SegmentPointType::cross_point},
@@ -1087,7 +1088,7 @@ auto fix_and_merge_segments(CircuitData& circuit, const point_t position,
     }
 
     if (segment_count == 4) {
-        update_segment_point_types(
+        update_inserted_segment_endpoints(
             circuit, wire_id,
             {
                 std::pair {indices.at(0), SegmentPointType::cross_point},

@@ -234,15 +234,15 @@ auto _insert_uninserted_segment(CircuitData& circuit,
     }
     const auto target_wire_id = _find_wire_for_inserting_segment(circuit, segment_part);
 
-    reset_segment_endpoints_with_history(circuit, segment_part.segment);
+    reset_temporary_endpoints_with_history(circuit, segment_part.segment);
     set_wire_inputs_at_logicitem_outputs(circuit, segment_part.segment);
     move_segment_between_trees_with_history(circuit, segment_part, target_wire_id);
 
     _store_history_segment_colliding_to_temporary(circuit, segment_part);
 
     const auto line = get_line(circuit.layout, segment_part);
-    fix_and_merge_segments(circuit, line.p0, &segment_part);
-    fix_and_merge_segments(circuit, line.p1, &segment_part);
+    fix_and_merge_inserted_segments(circuit, line.p0, &segment_part);
+    fix_and_merge_inserted_segments(circuit, line.p1, &segment_part);
 
     assert(is_contiguous_tree_with_correct_endpoints(
         std::as_const(circuit).layout.wires().segment_tree(target_wire_id)));
@@ -257,7 +257,7 @@ auto _wire_change_temporary_to_colliding(CircuitData& circuit,
     if (colliding || hint == SegmentInsertionHint::assume_colliding) {
         const auto destination = colliding_wire_id;
         move_segment_between_trees_with_history(circuit, segment_part, destination);
-        reset_segment_endpoints_with_history(circuit, segment_part.segment);
+        reset_temporary_endpoints_with_history(circuit, segment_part.segment);
         _store_history_segment_colliding_to_temporary(circuit, segment_part);
     } else {
         _insert_uninserted_segment(circuit, segment_part);
@@ -288,7 +288,7 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
 
     if (was_inserted) {
         move_segment_between_trees(circuit, segment_part, destination_id);
-        reset_uninserted_endpoints(circuit.layout, segment_part.segment);
+        reset_temporary_endpoints(circuit.layout, segment_part.segment);
     } else {
         move_segment_between_trees_with_history(circuit, segment_part, destination_id);
     }
@@ -306,8 +306,8 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
             swap_and_delete_empty_wire(circuit, source_id, &segment_part.segment.wire_id);
         } else {
             const auto moved_line = get_line(circuit.layout, segment_part);
-            fix_and_merge_segments(circuit, moved_line.p0);
-            fix_and_merge_segments(circuit, moved_line.p1);
+            fix_and_merge_inserted_segments(circuit, moved_line.p0);
+            fix_and_merge_inserted_segments(circuit, moved_line.p1);
 
             split_broken_tree(circuit, moved_line.p0, moved_line.p1);
         }
@@ -517,31 +517,31 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
 // Regularization
 //
 
-auto set_uninserted_endpoints_with_history(CircuitData& circuit, const segment_t segment,
-                                           endpoints_t endpoints) -> void {
-    if (is_inserted(segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("Segment cannot be inserted to change endpoints.");
+auto set_temporary_endpoints_with_history(CircuitData& circuit, const segment_t segment,
+                                          endpoints_t endpoints) -> void {
+    if (!is_temporary(segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("Segment needs to be temporary to change endpoints.");
     }
-    if (!uninserted_endpoints_valid(endpoints)) [[unlikely]] {
+    if (!temporary_endpoints_valid(endpoints)) [[unlikely]] {
         throw std::runtime_error(
             "New point type needs to be shadow_point or cross_point");
     }
 
     _store_history_segment_set_endpoints(circuit, segment, endpoints);
 
-    set_uninserted_endpoints(circuit.layout, segment, endpoints);
+    set_temporary_endpoints(circuit.layout, segment, endpoints);
 }
 
-auto reset_segment_endpoints_with_history(CircuitData& circuit,
-                                          const segment_t segment) -> void {
-    set_uninserted_endpoints_with_history(
+auto reset_temporary_endpoints_with_history(CircuitData& circuit,
+                                            const segment_t segment) -> void {
+    set_temporary_endpoints_with_history(
         circuit, segment,
         endpoints_t {.p0_type = SegmentPointType::shadow_point,
                      .p1_type = SegmentPointType::shadow_point});
 }
 
-auto set_uninserted_crosspoint_with_history(CircuitData& circuit, segment_t segment,
-                                            point_t point) -> void {
+auto set_temporary_crosspoint_with_history(CircuitData& circuit, segment_t segment,
+                                           point_t point) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto info = get_segment_info(circuit.layout, segment);
 
@@ -551,7 +551,7 @@ auto set_uninserted_crosspoint_with_history(CircuitData& circuit, segment_t segm
         }
     }
 
-    set_uninserted_crosspoint(circuit.layout, segment, point);
+    set_temporary_crosspoint(circuit.layout, segment, point);
 }
 
 auto are_uninserted_segments_mergeable(const Layout& layout, segment_t segment_0,
@@ -611,7 +611,7 @@ auto _split_inserted_end_part(CircuitData& circuit, segment_part_t& split_end_pa
     // This is needed so the segments are registered in the collision cache
     {
         using enum SegmentPointType;
-        update_segment_point_types(
+        update_inserted_segment_endpoints(
             circuit, result.begin.segment.wire_id,
             {
                 std::pair {result.begin.segment.segment_index, corner_point},
@@ -680,7 +680,7 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
                 const auto segment = segments.has(right)  //
                                          ? segments.at(right)
                                          : segments.at(left);
-                set_uninserted_crosspoint_with_history(circuit, segment, point);
+                set_temporary_crosspoint_with_history(circuit, segment, point);
             } else {
                 // merge wire crossings without true cross points
                 mergeable_segments.emplace_back(segments.at(right), segments.at(left));
