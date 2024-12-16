@@ -43,6 +43,21 @@ auto fuzz_select_insertion_mode(FuzzStream& stream) -> InsertionMode {
     std::terminate();
 }
 
+auto fuzz_select_insertion_hint(FuzzStream& stream,
+                                InsertionMode new_mode) -> SegmentInsertionHint {
+    if (new_mode == InsertionMode::temporary) {
+        return SegmentInsertionHint::no_hint;
+    }
+
+    switch (fuzz_small_int(stream, 0, 1)) {
+        case 0:
+            return SegmentInsertionHint::no_hint;
+        case 1:
+            return SegmentInsertionHint::assume_colliding;
+    }
+    std::terminate();
+}
+
 auto fuzz_select_temporary_segment(FuzzStream& stream,
                                    Modifier& modifier) -> std::optional<segment_t> {
     const auto temporary_count =
@@ -136,7 +151,8 @@ auto change_wire_insertion_mode(FuzzStream& stream, Modifier& modifier) -> void 
         }
 
         if (segment_part) {
-            modifier.change_wire_insertion_mode(segment_part, new_mode);
+            const auto hint = fuzz_select_insertion_hint(stream, new_mode);
+            modifier.change_wire_insertion_mode(segment_part, new_mode, hint);
         }
     }
 }
@@ -190,7 +206,6 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
             delete_temporary_wire_segment(stream, modifier);
             return;
         case 2:
-            // TODO fuzz hint assume_colliding
             change_wire_insertion_mode(stream, modifier);
             return;
         case 3:
