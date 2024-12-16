@@ -881,18 +881,20 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 // Endpoints
 //
 
+auto uninserted_endpoints_valid(endpoints_t endpoints) -> bool {
+    const auto valid_temporary = [](SegmentPointType type) {
+        return type == SegmentPointType::shadow_point ||
+               type == SegmentPointType::cross_point;
+    };
+    return valid_temporary(endpoints.p0_type) && valid_temporary(endpoints.p1_type);
+}
+
 auto set_uninserted_endpoints(Layout& layout, segment_t segment,
                               endpoints_t endpoints) -> void {
     if (is_inserted(segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("Segment cannot be inserted to change endpoints.");
     }
-
-    const auto valid_temporary = [](SegmentPointType type) {
-        return type == SegmentPointType::shadow_point ||
-               type == SegmentPointType::cross_point;
-    };
-    if (!valid_temporary(endpoints.p0_type) || !valid_temporary(endpoints.p1_type))
-        [[unlikely]] {
+    if (!uninserted_endpoints_valid(endpoints)) [[unlikely]] {
         throw std::runtime_error(
             "New point type needs to be shadow_point or cross_point");
     }

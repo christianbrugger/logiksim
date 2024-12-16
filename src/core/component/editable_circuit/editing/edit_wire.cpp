@@ -519,6 +519,14 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
 
 auto set_uninserted_endpoints_with_history(CircuitData& circuit, const segment_t segment,
                                            endpoints_t endpoints) -> void {
+    if (is_inserted(segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("Segment cannot be inserted to change endpoints.");
+    }
+    if (!uninserted_endpoints_valid(endpoints)) [[unlikely]] {
+        throw std::runtime_error(
+            "New point type needs to be shadow_point or cross_point");
+    }
+
     _store_history_segment_set_endpoints(circuit, segment, endpoints);
 
     set_uninserted_endpoints(circuit.layout, segment, endpoints);

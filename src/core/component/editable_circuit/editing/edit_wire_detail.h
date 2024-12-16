@@ -194,6 +194,8 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 // Endpoints
 //
 
+[[nodiscard]] auto uninserted_endpoints_valid(endpoints_t) -> bool;
+
 auto set_uninserted_endpoints(Layout& layout, segment_t segment,
                               endpoints_t endpoints) -> void;
 

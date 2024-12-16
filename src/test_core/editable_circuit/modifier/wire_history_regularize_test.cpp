@@ -26,7 +26,7 @@ TEST(EditableCircuitWireHistory, SetEndpointsCross) {
     auto modifier = get_modifier_with_history(layout);
     const auto state_0 = layout_key_state_t {modifier};
     {
-        modifier.set_temporary_endpoints(
+        modifier.set_uninserted_endpoints(
             segment,
             endpoints_t {SegmentPointType::cross_point, SegmentPointType::shadow_point});
     }

@@ -527,7 +527,8 @@ auto Modifier::toggle_wire_crosspoint(point_t point) -> void {
 // Wire Normalization
 //
 
-auto Modifier::set_temporary_endpoints(segment_t segment, endpoints_t endpoints) -> void {
+auto Modifier::set_uninserted_endpoints(segment_t segment,
+                                        endpoints_t endpoints) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"

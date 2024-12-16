@@ -115,6 +115,11 @@ auto fuzz_select_point(FuzzStream& stream, const FuzzLimits& limits) -> point_t 
     };
 }
 
+auto fuzz_select_shadow_or_crosspoint(FuzzStream& stream) -> SegmentPointType {
+    return fuzz_bool(stream) ? SegmentPointType::shadow_point
+                             : SegmentPointType::cross_point;
+}
+
 auto add_wire_segment(FuzzStream& stream, Modifier& modifier) -> void {
     const bool horizontal = fuzz_bool(stream);
 
@@ -196,6 +201,16 @@ auto toggle_wire_crosspoint(FuzzStream& stream, Modifier& modifier,
     modifier.toggle_wire_crosspoint(point);
 }
 
+auto set_uninserted_endpoints(FuzzStream& stream, Modifier& modifier) -> void {
+    if (const auto segment = fuzz_select_temporary_segment(stream, modifier)) {
+        const auto endpoints = endpoints_t {
+            .p0_type = fuzz_select_shadow_or_crosspoint(stream),
+            .p1_type = fuzz_select_shadow_or_crosspoint(stream),
+        };
+        modifier.set_uninserted_endpoints(*segment, endpoints);
+    }
+}
+
 auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
     auto selection = Selection {};
 
@@ -211,7 +226,7 @@ auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
 
 auto editing_operation(FuzzStream& stream, Modifier& modifier,
                        const FuzzLimits& limits) -> void {
-    switch (fuzz_small_int(stream, 0, 6)) {
+    switch (fuzz_small_int(stream, 0, 7)) {
         // wires
         case 0:
             add_wire_segment(stream, modifier);
@@ -232,8 +247,13 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
             toggle_wire_crosspoint(stream, modifier, limits);
             return;
 
-        // selection
+        // wire normalization
         case 6:
+            set_uninserted_endpoints(stream, modifier);
+            return;
+
+        // selection
+        case 7:
             set_visible_selection(stream, modifier);
             return;
     }
