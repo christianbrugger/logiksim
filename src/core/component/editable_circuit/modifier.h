@@ -246,6 +246,10 @@ using ModifierSelectionGuard = SelectionGuardTemplate<Modifier>;
 [[nodiscard]] auto change_wire_insertion_mode_requires_sanitization(
     segment_part_t segment_part, InsertionMode new_mode) -> bool;
 
+[[nodiscard]] auto are_uninserted_segments_mergeable(const Modifier& modifier,
+                                                     segment_t segment_0,
+                                                     segment_t segment_1) -> bool;
+
 [[nodiscard]] auto get_inserted_cross_points(
     const Modifier& modifier, const Selection& selection) -> std::vector<point_t>;
 

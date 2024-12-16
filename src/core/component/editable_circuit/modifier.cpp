@@ -955,6 +955,12 @@ auto change_wire_insertion_mode_requires_sanitization(segment_part_t segment_par
         segment_part.segment.wire_id, new_mode);
 }
 
+auto are_uninserted_segments_mergeable(const Modifier& modifier, segment_t segment_0,
+                                       segment_t segment_1) -> bool {
+    return editing::are_uninserted_segments_mergeable(modifier.circuit_data().layout,
+                                                      segment_0, segment_1);
+}
+
 auto get_inserted_cross_points(const Modifier& modifier,
                                const Selection& selection) -> std::vector<point_t> {
     return editing::get_inserted_cross_points(modifier.circuit_data(), selection);

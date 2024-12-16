@@ -554,6 +554,11 @@ auto set_uninserted_crosspoint_with_history(CircuitData& circuit, segment_t segm
     set_uninserted_crosspoint(circuit.layout, segment, point);
 }
 
+auto are_uninserted_segments_mergeable(const Layout& layout, segment_t segment_0,
+                                       segment_t segment_1) -> bool {
+    return are_segments_mergeable(layout, segment_0, segment_1);
+}
+
 auto merge_uninserted_segment_with_history(CircuitData& circuit, segment_t segment_0,
                                            segment_t segment_1) -> segment_t {
     if (is_inserted(segment_0.wire_id) || is_inserted(segment_1.wire_id)) [[unlikely]] {

@@ -124,6 +124,9 @@ auto reset_segment_endpoints_with_history(CircuitData& circuit,
 auto set_uninserted_crosspoint_with_history(CircuitData& circuit, segment_t segment,
                                             point_t point) -> void;
 
+[[nodiscard]] auto are_uninserted_segments_mergeable(const Layout& layout,
+                                                     segment_t segment_0,
+                                                     segment_t segment_1) -> bool;
 /**
  * @brief: Merge two uninserted line segments.
  *

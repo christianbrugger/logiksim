@@ -142,6 +142,8 @@ auto remove_full_segment_from_uninserted_tree(CircuitData& circuit,
 auto split_line_segment(CircuitData& circuit, segment_t segment,
                         point_t position) -> segment_part_t;
 
+[[nodiscard]] auto are_segments_mergeable(const Layout& layout, segment_t segment_0,
+                                          segment_t segment_1) -> bool;
 /**
  * @brief: Merges the two given segments. Optionally preserves an additional segment.
  *

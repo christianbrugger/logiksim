@@ -74,6 +74,32 @@ auto fuzz_select_temporary_segment(FuzzStream& stream,
     };
 }
 
+auto fuzz_select_uninserted_segment(FuzzStream& stream,
+                                    Modifier& modifier) -> std::optional<segment_t> {
+    const auto temporary_count =
+        get_temporary_segment_count(modifier.circuit_data().layout);
+    const auto uninserted_count =
+        temporary_count + get_colliding_segment_count(modifier.circuit_data().layout);
+
+    if (uninserted_count == 0) {
+        return std::nullopt;
+    }
+
+    const auto max_segment_index = clamp_to_fuzz_stream(uninserted_count - 1);
+    const auto segment_int = fuzz_small_int(stream, 0, max_segment_index);
+
+    if (std::cmp_less(segment_int, temporary_count)) {
+        return segment_t {
+            temporary_wire_id,
+            segment_index_t {segment_int},
+        };
+    }
+    return segment_t {
+        colliding_wire_id,
+        segment_index_t {segment_int - gsl::narrow_cast<int>(temporary_count)},
+    };
+}
+
 auto fuzz_select_segment(FuzzStream& stream,
                          Modifier& modifier) -> std::optional<segment_t> {
     const auto& segments = modifier.circuit_data().index.key_index().segments();
@@ -202,12 +228,22 @@ auto toggle_wire_crosspoint(FuzzStream& stream, Modifier& modifier,
 }
 
 auto set_uninserted_endpoints(FuzzStream& stream, Modifier& modifier) -> void {
-    if (const auto segment = fuzz_select_temporary_segment(stream, modifier)) {
+    if (const auto segment = fuzz_select_uninserted_segment(stream, modifier)) {
         const auto endpoints = endpoints_t {
             .p0_type = fuzz_select_shadow_or_crosspoint(stream),
             .p1_type = fuzz_select_shadow_or_crosspoint(stream),
         };
         modifier.set_uninserted_endpoints(*segment, endpoints);
+    }
+}
+
+auto merge_uninserted_segment(FuzzStream& stream, Modifier& modifier) -> void {
+    if (const auto segment1 = fuzz_select_uninserted_segment(stream, modifier)) {
+        if (const auto segment2 = fuzz_select_uninserted_segment(stream, modifier)) {
+            if (are_uninserted_segments_mergeable(modifier, *segment1, *segment2)) {
+                modifier.merge_uninserted_segment(*segment1, *segment2);
+            }
+        }
     }
 }
 
@@ -226,7 +262,7 @@ auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
 
 auto editing_operation(FuzzStream& stream, Modifier& modifier,
                        const FuzzLimits& limits) -> void {
-    switch (fuzz_small_int(stream, 0, 7)) {
+    switch (fuzz_small_int(stream, 0, 8)) {
         // wires
         case 0:
             add_wire_segment(stream, modifier);
@@ -251,9 +287,12 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
         case 6:
             set_uninserted_endpoints(stream, modifier);
             return;
+        case 7:
+            merge_uninserted_segment(stream, modifier);
+            return;
 
         // selection
-        case 7:
+        case 8:
             set_visible_selection(stream, modifier);
             return;
     }

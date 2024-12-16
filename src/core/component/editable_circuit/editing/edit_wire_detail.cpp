@@ -674,8 +674,31 @@ auto _merge_line_segments_ordered(CircuitData& circuit, const segment_t segment_
 
 }  // namespace
 
+auto are_segments_mergeable(const Layout& layout, segment_t segment_0,
+                            segment_t segment_1) -> bool {
+    if (!segment_0 || !segment_1) {
+        return false;
+    }
+    if (segment_0.wire_id != segment_1.wire_id) {
+        return false;
+    }
+    if (segment_0.segment_index == segment_1.segment_index) {
+        return false;
+    }
+
+    const auto [line_0, line_1] =
+        sorted(get_line(layout, segment_0), get_line(layout, segment_1));
+
+    return is_horizontal(line_0) == is_horizontal(line_1) &&  //
+           line_0.p1 == line_1.p0;
+}
+
 auto merge_line_segment(CircuitData& circuit, segment_t segment_0, segment_t segment_1,
                         segment_part_t* preserve_segment) -> segment_t {
+    if (!are_segments_mergeable(circuit.layout, segment_0, segment_1)) [[unlikely]] {
+        throw std::runtime_error("segments are not mergeable");
+    }
+
     if (segment_0.segment_index < segment_1.segment_index) {
         return _merge_line_segments_ordered(circuit, segment_0, segment_1,
                                             preserve_segment);
