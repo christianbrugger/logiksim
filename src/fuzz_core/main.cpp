@@ -108,6 +108,13 @@ auto fuzz_select_move_delta(FuzzStream& stream, ordered_line_t line,
     };
 }
 
+auto fuzz_select_point(FuzzStream& stream, const FuzzLimits& limits) -> point_t {
+    return point_t {
+        grid_t {fuzz_small_int(stream, int {limits.box.p0.x}, int {limits.box.p1.x})},
+        grid_t {fuzz_small_int(stream, int {limits.box.p0.y}, int {limits.box.p1.y})},
+    };
+}
+
 auto add_wire_segment(FuzzStream& stream, Modifier& modifier) -> void {
     const bool horizontal = fuzz_bool(stream);
 
@@ -183,6 +190,12 @@ auto move_or_delete_temporary_wire(FuzzStream& stream, Modifier& modifier,
     }
 }
 
+auto toggle_wire_crosspoint(FuzzStream& stream, Modifier& modifier,
+                            const FuzzLimits& limits) -> void {
+    const auto point = fuzz_select_point(stream, limits);
+    modifier.toggle_wire_crosspoint(point);
+}
+
 auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
     auto selection = Selection {};
 
@@ -198,7 +211,8 @@ auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
 
 auto editing_operation(FuzzStream& stream, Modifier& modifier,
                        const FuzzLimits& limits) -> void {
-    switch (fuzz_small_int(stream, 0, 5)) {
+    switch (fuzz_small_int(stream, 0, 6)) {
+        // wires
         case 0:
             add_wire_segment(stream, modifier);
             return;
@@ -215,6 +229,11 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
             move_or_delete_temporary_wire(stream, modifier, limits);
             return;
         case 5:
+            toggle_wire_crosspoint(stream, modifier, limits);
+            return;
+
+        // selection
+        case 6:
             set_visible_selection(stream, modifier);
             return;
     }
