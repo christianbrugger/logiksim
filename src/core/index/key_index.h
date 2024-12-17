@@ -76,6 +76,11 @@ class KeyIndex {
     auto set(segment_t segment, segment_key_t segment_key) -> void;
     auto swap(segment_t segment_0, segment_t segment_1) -> void;
 
+    // contains
+    [[nodiscard]] auto contains(logicitem_key_t logicitem_key) const -> bool;
+    [[nodiscard]] auto contains(decoration_key_t decoration_key) const -> bool;
+    [[nodiscard]] auto contains(segment_key_t segment_key) const -> bool;
+
     [[nodiscard]] auto segments() const
         -> std::span<const std::pair<segment_t, segment_key_t>>;
 

@@ -252,6 +252,18 @@ auto KeyIndex::swap(segment_t segment_0, segment_t segment_1) -> void {
     assert(class_invariant_holds());
 }
 
+auto KeyIndex::contains(logicitem_key_t logicitem_key) const -> bool {
+    return logicitem_ids_.contains(logicitem_key);
+}
+
+auto KeyIndex::contains(decoration_key_t decoration_key) const -> bool {
+    return decoration_ids_.contains(decoration_key);
+}
+
+auto KeyIndex::contains(segment_key_t segment_key) const -> bool {
+    return segment_ids_.contains(segment_key);
+}
+
 auto KeyIndex::handle(const info_message::LogicItemCreated& message) -> void {
     key_index::create_new_entry(logicitem_ids_, logicitem_keys_, next_logicitem_key_,
                                 message.logicitem_id);

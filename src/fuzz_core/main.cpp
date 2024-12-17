@@ -146,6 +146,27 @@ auto fuzz_select_shadow_or_crosspoint(FuzzStream& stream) -> SegmentPointType {
                              : SegmentPointType::cross_point;
 }
 
+auto fuzz_select_non_taken_key(FuzzStream& stream, const KeyIndex& key_index,
+                               int range = 15) -> segment_key_t {
+    const auto to_segment_key = [](int64_t i) { return segment_key_t {i}; };
+    const auto is_not_taken = [&key_index](const segment_key_t key) {
+        return !key_index.contains(key);
+    };
+
+    const auto index = fuzz_small_int(stream, 0, range);
+
+    auto key = std::ranges::views::iota(int64_t {0}) |
+               std::ranges::views::transform(to_segment_key) |
+               std::ranges::views::filter(is_not_taken) |  //
+               std::ranges::views::drop(index);
+
+    Expects(key.begin() != key.end());
+    const auto result = *key.begin();
+
+    Ensures(!key_index.contains(result));
+    return result;
+}
+
 auto add_wire_segment(FuzzStream& stream, Modifier& modifier) -> void {
     const bool horizontal = fuzz_bool(stream);
 
@@ -247,6 +268,30 @@ auto merge_uninserted_segment(FuzzStream& stream, Modifier& modifier) -> void {
     }
 }
 
+auto split_uninserted_segment(FuzzStream& stream, Modifier& modifier) -> void {
+    if (const auto segment = fuzz_select_uninserted_segment(stream, modifier)) {
+        const auto full_part = get_part(modifier.circuit_data().layout, *segment);
+        const auto size = distance(full_part);
+
+        if (size <= 1) {
+            return;
+        }
+        const auto offset = offset_t {
+            fuzz_small_int(stream, 1, clamp_to_fuzz_stream(size - 1)),
+        };
+
+        const auto new_key = [&stream, &modifier]() {
+            if (!fuzz_bool(stream)) {
+                return null_segment_key;
+            }
+            return fuzz_select_non_taken_key(stream,
+                                             modifier.circuit_data().index.key_index());
+        }();
+
+        modifier.split_uninserted_segment(*segment, offset, new_key);
+    }
+}
+
 auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
     auto selection = Selection {};
 
@@ -262,7 +307,7 @@ auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
 
 auto editing_operation(FuzzStream& stream, Modifier& modifier,
                        const FuzzLimits& limits) -> void {
-    switch (fuzz_small_int(stream, 0, 8)) {
+    switch (fuzz_small_int(stream, 0, 9)) {
         // wires
         case 0:
             add_wire_segment(stream, modifier);
@@ -290,9 +335,12 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
         case 7:
             merge_uninserted_segment(stream, modifier);
             return;
+        case 8:
+            split_uninserted_segment(stream, modifier);
+            return;
 
         // selection
-        case 8:
+        case 9:
             set_visible_selection(stream, modifier);
             return;
     }

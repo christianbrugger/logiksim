@@ -52,10 +52,11 @@ constexpr auto FuzzStream::max() -> uint8_t {
 }
 
 auto clamp_to_fuzz_stream(integral auto number) -> FuzzStream::value_type {
+    Expects(sizeof(number) <= sizeof(uint64_t));
     Expects(number >= decltype(number) {0});
 
     return gsl::narrow_cast<FuzzStream::value_type>(
-        std::min(uint64_t {FuzzStream::max()}, uint64_t {number}));
+        std::min(uint64_t {FuzzStream::max()}, gsl::narrow_cast<uint64_t>(number)));
 }
 
 }  // namespace logicsim

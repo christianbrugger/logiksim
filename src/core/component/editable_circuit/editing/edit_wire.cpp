@@ -644,6 +644,10 @@ auto split_uninserted_segment_with_history(
     segment_key_t optional_new_key) -> std::pair<segment_t, segment_t> {
     const auto part = get_part(circuit.layout, segment);
 
+    if (offset <= part.begin || offset >= part.end) [[unlikely]] {
+        throw std::runtime_error("offset out of part-range");
+    }
+
     auto split_end_part = segment_part_t {segment, part_t {offset, part.end}};
     return _split_uninserted_end_part_with_history(circuit, split_end_part,
                                                    optional_new_key);
