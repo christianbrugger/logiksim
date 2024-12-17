@@ -201,6 +201,11 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 auto set_temporary_endpoints(Layout& layout, segment_t segment,
                              endpoints_t endpoints) -> void;
 
+auto set_inserted_endpoints(CircuitData& circuit, segment_t segment,
+                            endpoints_t endpoints) -> void;
+auto set_inserted_endpoints(CircuitData& circuit, segment_t segment, point_t position,
+                            SegmentPointType type) -> void;
+
 auto reset_temporary_endpoints(Layout& layout, segment_t segment) -> void;
 
 auto set_temporary_crosspoint(Layout& layout, segment_t segment, point_t point) -> void;

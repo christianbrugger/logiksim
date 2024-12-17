@@ -943,7 +943,7 @@ auto temporary_endpoints_valid(endpoints_t endpoints) -> bool {
 auto set_temporary_endpoints(Layout& layout, segment_t segment,
                              endpoints_t endpoints) -> void {
     if (!is_temporary(segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("Only temporary segment can change endpoints.");
+        throw std::runtime_error("set_temporary_endpoints requires temporary segment.");
     }
     if (!temporary_endpoints_valid(endpoints)) [[unlikely]] {
         throw std::runtime_error(
@@ -957,6 +957,50 @@ auto set_temporary_endpoints(Layout& layout, segment_t segment,
     auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
     const auto new_info = to_segment_info(m_tree.line(segment.segment_index), endpoints);
     m_tree.update_segment(segment.segment_index, new_info);
+}
+
+namespace {
+
+template <class T>
+    requires std::invocable<T, const segment_info_t&> &&
+                 std::same_as<segment_info_t,
+                              std::invoke_result_t<T, const segment_info_t&>>
+auto _set_inserted_endpoints(CircuitData& circuit, segment_t segment, T func) -> void {
+    if (!is_inserted(segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("set_inserted_endpoints requires inserted segment.");
+    }
+
+    const auto old_info = get_segment_info(circuit.layout, segment);
+    const auto new_info = std::invoke(func, old_info);
+
+    if (old_info != new_info) {
+        auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
+        m_tree.update_segment(segment.segment_index, new_info);
+
+        circuit.submit(info_message::InsertedEndPointsUpdated {
+            .segment = segment,
+            .new_segment_info = new_info,
+            .old_segment_info = old_info,
+        });
+    }
+}
+
+}  // namespace
+
+auto set_inserted_endpoints(CircuitData& circuit, segment_t segment,
+                            endpoints_t endpoints) -> void {
+    const auto to_new_info = [endpoints](const segment_info_t& old_info) {
+        return to_segment_info(old_info.line, endpoints);
+    };
+    _set_inserted_endpoints(circuit, segment, to_new_info);
+}
+
+auto set_inserted_endpoints(CircuitData& circuit, segment_t segment, point_t position,
+                            SegmentPointType type) -> void {
+    const auto to_new_info = [position, type](const segment_info_t& old_info) {
+        return updated_segment_info(old_info, position, type);
+    };
+    _set_inserted_endpoints(circuit, segment, to_new_info);
 }
 
 auto reset_temporary_endpoints(Layout& layout, const segment_t segment) -> void {
@@ -991,6 +1035,7 @@ auto update_inserted_segment_endpoints(CircuitData& circuit, wire_id_t wire_id,
     }
     auto& m_tree = circuit.layout.wires().modifiable_segment_tree(wire_id);
 
+    // TODO check if set_inserted_endpoints can be used (benchmark)
     const auto run_point_update = [&](bool set_to_shadow) {
         for (auto [segment_index, point_type] : data) {
             const auto old_info = m_tree.info(segment_index);
@@ -1267,22 +1312,18 @@ auto is_wire_colliding(const CircuitData& circuit, const ordered_line_t line) ->
 
 auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit,
                                           segment_t segment) -> void {
+    if (!is_inserted(segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("wire needs to be inserted");
+    }
+
     const auto line = get_line(circuit.layout, segment);
 
     // find LogicItem outputs
     if (const auto entry = circuit.index.logicitem_output_index().find(line.p0)) {
-        auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
-        auto info = segment_info_t {m_tree.info(segment.segment_index)};
-
-        info.p0_type = SegmentPointType::input;
-        m_tree.update_segment(segment.segment_index, info);
+        set_inserted_endpoints(circuit, segment, line.p0, SegmentPointType::input);
     }
     if (const auto entry = circuit.index.logicitem_output_index().find(line.p1)) {
-        auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
-        auto info = m_tree.info(segment.segment_index);
-
-        info.p1_type = SegmentPointType::input;
-        m_tree.update_segment(segment.segment_index, info);
+        set_inserted_endpoints(circuit, segment, line.p1, SegmentPointType::input);
     }
 }
 
