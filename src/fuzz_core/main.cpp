@@ -340,8 +340,13 @@ auto split_uninserted_segment(FuzzStream& stream, Modifier& modifier) -> void {
 
 auto regularize_temporary_selection(FuzzStream& stream, Modifier& modifier,
                                     const FuzzLimits& limits) -> void {
-    const auto selection =
-        fuzz_select_temporary_selection_full_parts(stream, modifier, 4);
+    const auto guard = ModifierSelectionGuard {
+        modifier,
+        fuzz_select_temporary_selection_full_parts(stream, modifier, 4),
+    };
+
+    const auto& selection =
+        modifier.circuit_data().selection_store.at(guard.selection_id());
 
     auto true_cross_points = fuzz_select_points(stream, limits, 0, 4);
 
@@ -423,6 +428,10 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
         case 10:
             split_temporary_segments(stream, modifier, limits);
             return;
+
+            // TODO fuzz get_inserted_cross_points
+
+            // TODO fuzz get_temporary_selection_splitpoints
 
         // logicitems
         case 11:
