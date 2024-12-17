@@ -5,6 +5,7 @@
 #include "core/component/editable_circuit/modifier.h"
 #include "core/geometry/layout_geometry.h"
 #include "core/geometry/rect.h"
+#include "core/layout_info.h"
 #include "core/logging.h"
 #include "core/random/fuzz.h"
 #include "core/selection_sanitization.h"
@@ -292,6 +293,27 @@ auto split_uninserted_segment(FuzzStream& stream, Modifier& modifier) -> void {
     }
 }
 
+auto add_logicitem(FuzzStream& stream, Modifier& modifier,
+                   const FuzzLimits& limits) -> void {
+    auto definition = LogicItemDefinition {
+        .logicitem_type = LogicItemType::buffer_element,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
+        .orientation = orientation_t::right,
+    };
+
+    const auto size = element_size(to_layout_calculation_data(definition, point_t {}));
+    const auto position = point_t {
+        fuzz_small_int(stream, int {limits.box.p0.x},
+                       int {limits.box.p1.x} - int {size.x}),
+        fuzz_small_int(stream, int {limits.box.p0.y},
+                       int {limits.box.p1.y} - int {size.y}),
+    };
+
+    const auto mode = fuzz_select_insertion_mode(stream);
+    modifier.add_logicitem(std::move(definition), position, mode);
+}
+
 auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
     auto selection = Selection {};
 
@@ -307,7 +329,7 @@ auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
 
 auto editing_operation(FuzzStream& stream, Modifier& modifier,
                        const FuzzLimits& limits) -> void {
-    switch (fuzz_small_int(stream, 0, 9)) {
+    switch (fuzz_small_int(stream, 0, 10)) {
         // wires
         case 0:
             add_wire_segment(stream, modifier);
@@ -339,8 +361,15 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
             split_uninserted_segment(stream, modifier);
             return;
 
-        // selection
+        // logicitems
         case 9:
+            // TODO different types
+            add_logicitem(stream, modifier, limits);
+            return;
+
+        // selection
+        case 10:
+            // TODO select logicitems & decorations
             set_visible_selection(stream, modifier);
             return;
     }

@@ -135,6 +135,7 @@ struct decoration_layout_data_t;
 /**
  * @brief: calculates the demensions of an element.
  */
+// TODO use offset_t and size_2d_t
 [[nodiscard]] auto element_width(const layout_calculation_data_t &data) -> grid_t;
 [[nodiscard]] auto element_height(const layout_calculation_data_t &data) -> grid_t;
 [[nodiscard]] auto element_size(const layout_calculation_data_t &data) -> point_t;
