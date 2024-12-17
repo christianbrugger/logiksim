@@ -1027,31 +1027,18 @@ auto set_temporary_crosspoint(Layout& layout, const segment_t segment,
 auto update_inserted_segment_endpoints(CircuitData& circuit, wire_id_t wire_id,
                                        point_update_t data,
                                        const point_t position) -> void {
-    if (data.size() == 0) {
-        return;
-    }
     if (!is_inserted(wire_id)) [[unlikely]] {
         throw std::runtime_error("only works for inserted segment trees.");
     }
-    auto& m_tree = circuit.layout.wires().modifiable_segment_tree(wire_id);
+    if (data.size() == 0) {
+        return;
+    }
 
-    // TODO check if set_inserted_endpoints can be used (benchmark)
-    const auto run_point_update = [&](bool set_to_shadow) {
+    const auto run_point_update = [&](bool to_shadow) {
         for (auto [segment_index, point_type] : data) {
-            const auto old_info = m_tree.info(segment_index);
-            const auto new_info = updated_segment_info(
-                old_info, position,
-                set_to_shadow ? SegmentPointType::shadow_point : point_type);
-
-            if (old_info != new_info) {
-                m_tree.update_segment(segment_index, new_info);
-
-                circuit.submit(info_message::InsertedEndPointsUpdated {
-                    .segment = segment_t {wire_id, segment_index},
-                    .new_segment_info = new_info,
-                    .old_segment_info = old_info,
-                });
-            }
+            const auto segment = segment_t {wire_id, segment_index};
+            const auto type = to_shadow ? SegmentPointType::shadow_point : point_type;
+            set_inserted_endpoints(circuit, segment, position, type);
         }
     };
 

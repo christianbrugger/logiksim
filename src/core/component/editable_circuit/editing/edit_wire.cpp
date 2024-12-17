@@ -554,6 +554,7 @@ auto reset_temporary_endpoints_with_history(CircuitData& circuit,
                      .p1_type = SegmentPointType::shadow_point});
 }
 
+// TODO reuse set_temporary_endpoints && use template (see set_inserted_endpoints)
 auto set_temporary_crosspoint_with_history(CircuitData& circuit, segment_t segment,
                                            point_t point) -> void {
     if (const auto stack = circuit.history.get_stack()) {
