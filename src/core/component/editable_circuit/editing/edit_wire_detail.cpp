@@ -706,12 +706,29 @@ auto merge_line_segment(CircuitData& circuit, segment_t segment_0, segment_t seg
     return _merge_line_segments_ordered(circuit, segment_1, segment_0, preserve_segment);
 }
 
+namespace {
+
 struct merge_memory_t {
     segment_key_t key_0 {null_segment_key};
     segment_key_t key_1 {null_segment_key};
-    ordered_line_t line_0 {};
-    ordered_line_t line_1 {};
+    segment_info_t info_0 {};
+    segment_info_t info_1 {};
 };
+
+[[nodiscard]] auto sort_memory(const merge_memory_t& memory) -> merge_memory_t {
+    if (memory.info_0.line <= memory.info_1.line) {
+        return memory;
+    }
+
+    return merge_memory_t {
+        .key_0 = memory.key_1,
+        .key_1 = memory.key_0,
+        .info_0 = memory.info_1,
+        .info_1 = memory.info_0,
+    };
+};
+
+}  // namespace
 
 auto merge_line_segment_with_history(CircuitData& circuit, segment_t segment_0,
                                      segment_t segment_1,
@@ -721,12 +738,12 @@ auto merge_line_segment_with_history(CircuitData& circuit, segment_t segment_0,
     // remember state
     const auto before = [&]() {
         if (stack != nullptr) {
-            return merge_memory_t {
+            return sort_memory(merge_memory_t {
                 .key_0 = circuit.index.key_index().get(segment_0),
                 .key_1 = circuit.index.key_index().get(segment_1),
-                .line_0 = get_line(circuit.layout, segment_0),
-                .line_1 = get_line(circuit.layout, segment_1),
-            };
+                .info_0 = get_segment_info(circuit.layout, segment_0),
+                .info_1 = get_segment_info(circuit.layout, segment_1),
+            });
         }
         return merge_memory_t {};
     }();
@@ -737,16 +754,27 @@ auto merge_line_segment_with_history(CircuitData& circuit, segment_t segment_0,
 
     // history
     if (stack != nullptr) {
-        const auto key_after =
-            before.line_0 < before.line_1 ? before.key_0 : before.key_1;
-        assert(key_after == circuit.index.key_index().get(segment_after));
+        Expects(before.info_0.line <= before.info_1.line);
 
-        const auto split_offset = to_offset(std::min(before.line_0, before.line_1));
+        if (is_temporary(segment_0.wire_id)) {
+            if (before.info_0.p1_type != SegmentPointType::shadow_point) {
+                stack->push_segment_set_endpoints(before.key_0,
+                                                  get_endpoints(before.info_0));
+            }
+            if (before.info_1.p0_type != SegmentPointType::shadow_point) {
+                stack->push_segment_set_endpoints(before.key_1,
+                                                  get_endpoints(before.info_1));
+            }
+        }
+
+        // merge preserves key of the first line
+        const auto key_after = before.key_0;
+        assert(key_after == circuit.index.key_index().get(segment_after));
 
         auto definition = split_segment_key_t {
             .source = key_after,
-            .new_key = key_after == before.key_0 ? before.key_1 : before.key_0,
-            .split_offset = split_offset,
+            .new_key = before.key_1,
+            .split_offset = to_offset(before.info_0.line),
         };
 
         stack->push_segment_split(definition);
