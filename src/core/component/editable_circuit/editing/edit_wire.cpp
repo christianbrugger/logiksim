@@ -6,6 +6,7 @@
 #include "core/component/editable_circuit/editing/edit_wire_detail.h"
 #include "core/geometry/line.h"
 #include "core/geometry/orientation.h"
+#include "core/geometry/part.h"
 #include "core/geometry/segment_info.h"
 #include "core/index/segment_map.h"
 #include "core/index/spatial_point_index.h"
@@ -256,8 +257,8 @@ auto _wire_change_temporary_to_colliding(CircuitData& circuit,
 
     if (colliding || hint == SegmentInsertionHint::assume_colliding) {
         const auto destination = colliding_wire_id;
+        reset_temporary_endpoints_with_history(circuit, segment_part);
         move_segment_between_trees_with_history(circuit, segment_part, destination);
-        reset_temporary_endpoints_with_history(circuit, segment_part.segment);
         _store_history_segment_colliding_to_temporary(circuit, segment_part);
     } else {
         _insert_uninserted_segment(circuit, segment_part);
@@ -283,14 +284,11 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
         unmark_valid(circuit.layout, segment_part);
     }
 
-    // move to temporary
-    const auto destination_id = temporary_wire_id;
-
     if (was_inserted) {
-        move_segment_between_trees(circuit, segment_part, destination_id);
+        move_segment_between_trees(circuit, segment_part, temporary_wire_id);
         reset_temporary_endpoints(circuit.layout, segment_part.segment);
     } else {
-        move_segment_between_trees_with_history(circuit, segment_part, destination_id);
+        move_segment_between_trees_with_history(circuit, segment_part, temporary_wire_id);
     }
 
     // history
@@ -530,6 +528,22 @@ auto set_temporary_endpoints_with_history(CircuitData& circuit, const segment_t 
     _store_history_segment_set_endpoints(circuit, segment, endpoints);
 
     set_temporary_endpoints(circuit.layout, segment, endpoints);
+}
+
+auto reset_temporary_endpoints_with_history(CircuitData& circuit,
+                                            const segment_part_t segment_part) -> void {
+    const auto info = get_segment_info(circuit.layout, segment_part.segment);
+    const auto part = to_part(info.line);
+    const auto endpoints = get_endpoints(info);
+
+    const auto new_endpoints = endpoints_t {
+        .p0_type = segment_part.part.begin == part.begin ? SegmentPointType::shadow_point
+                                                         : endpoints.p0_type,
+        .p1_type = segment_part.part.end == part.end ? SegmentPointType::shadow_point
+                                                     : endpoints.p1_type,
+    };
+
+    set_temporary_endpoints_with_history(circuit, segment_part.segment, new_endpoints);
 }
 
 auto reset_temporary_endpoints_with_history(CircuitData& circuit,

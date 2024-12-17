@@ -120,6 +120,8 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void;
 auto set_temporary_endpoints_with_history(CircuitData& circuit, segment_t segment,
                                           endpoints_t endpoints) -> void;
 auto reset_temporary_endpoints_with_history(CircuitData& circuit,
+                                            segment_part_t segment_part) -> void;
+auto reset_temporary_endpoints_with_history(CircuitData& circuit,
                                             segment_t segment) -> void;
 auto set_temporary_crosspoint_with_history(CircuitData& circuit, segment_t segment,
                                            point_t point) -> void;
