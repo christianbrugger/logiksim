@@ -362,6 +362,28 @@ auto split_temporary_segments(FuzzStream& stream, Modifier& modifier,
     modifier.split_temporary_segments(selection, split_points);
 }
 
+auto get_inserted_cross_points(FuzzStream& stream, Modifier& modifier) -> void {
+    const auto selection1 = fuzz_select_selection(stream, modifier, 4);
+
+    const auto split_points =
+        editable_circuit::get_inserted_cross_points(modifier, selection1);
+
+    const auto selection2 =
+        fuzz_select_temporary_selection_full_parts(stream, modifier, 4);
+
+    modifier.split_temporary_segments(selection2, split_points);
+}
+
+auto get_temporary_selection_splitpoints(FuzzStream& stream, Modifier& modifier) -> void {
+    const auto selection =
+        fuzz_select_temporary_selection_full_parts(stream, modifier, 4);
+
+    const auto split_points =
+        editable_circuit::get_temporary_selection_splitpoints(modifier, selection);
+
+    modifier.split_temporary_segments(selection, split_points);
+}
+
 auto add_logicitem(FuzzStream& stream, Modifier& modifier,
                    const FuzzLimits& limits) -> void {
     auto definition = LogicItemDefinition {
@@ -391,7 +413,7 @@ auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
 
 auto editing_operation(FuzzStream& stream, Modifier& modifier,
                        const FuzzLimits& limits) -> void {
-    switch (fuzz_small_int(stream, 0, 12)) {
+    switch (fuzz_small_int(stream, 0, 14)) {
         // wires
         case 0:
             add_wire_segment(stream, modifier);
@@ -429,18 +451,22 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
             split_temporary_segments(stream, modifier, limits);
             return;
 
-            // TODO fuzz get_inserted_cross_points
+        case 11:
+            get_inserted_cross_points(stream, modifier);
+            return;
 
-            // TODO fuzz get_temporary_selection_splitpoints
+        case 12:
+            get_temporary_selection_splitpoints(stream, modifier);
+            return;
 
         // logicitems
-        case 11:
+        case 13:
             // TODO different types
             add_logicitem(stream, modifier, limits);
             return;
 
         // selection
-        case 12:
+        case 14:
             // TODO select logicitems & decorations
             set_visible_selection(stream, modifier);
             return;
