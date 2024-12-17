@@ -281,11 +281,11 @@ auto split_uninserted_segment(FuzzStream& stream, Modifier& modifier) -> void {
         };
 
         const auto new_key = [&stream, &modifier]() {
-            if (!fuzz_bool(stream)) {
-                return null_segment_key;
+            if (fuzz_bool(stream)) {
+                return fuzz_select_non_taken_key(
+                    stream, modifier.circuit_data().index.key_index());
             }
-            return fuzz_select_non_taken_key(stream,
-                                             modifier.circuit_data().index.key_index());
+            return null_segment_key;
         }();
 
         modifier.split_uninserted_segment(*segment, offset, new_key);
