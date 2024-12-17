@@ -186,6 +186,7 @@ auto split_inserted_segment(CircuitData& circuit, segment_t segment, offset_t of
  *
  * Returns the internally build list of cross points.  */
 // TODO how to make clear selection needs to be registered ???
+// TODO how to make clear full_parts need to be selected ???
 auto regularize_temporary_selection(CircuitData& circuit, const Selection& selection,
                                     std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t>;
@@ -204,6 +205,7 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
  * Throws, if any segment in the selection is not temporary.
  * Throws, if any segment is partially selected.
  */
+// TODO how to make clear full_parts need to be selected ???
 auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
                               std::span<const point_t> split_points) -> void;
 

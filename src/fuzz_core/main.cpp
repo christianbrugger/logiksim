@@ -123,6 +123,38 @@ auto fuzz_select_part(FuzzStream& stream, Modifier& modifier,
     return part_t {a, b};
 }
 
+auto fuzz_select_selection(FuzzStream& stream, Modifier& modifier,
+                           int max_count) -> Selection {
+    const auto count = fuzz_small_int(stream, 0, max_count);
+
+    auto selection = Selection {};
+    for (const auto _ [[maybe_unused]] : range(count)) {
+        if (const auto segment = fuzz_select_segment(stream, modifier)) {
+            const auto part = fuzz_select_part(stream, modifier, *segment);
+            selection.add_segment(segment_part_t {*segment, part});
+        }
+    }
+
+    Ensures(std::cmp_less_equal(selection.size(), max_count));
+    return selection;
+}
+
+auto fuzz_select_temporary_selection_full_parts(FuzzStream& stream, Modifier& modifier,
+                                                int max_count) -> Selection {
+    const auto count = fuzz_small_int(stream, 0, max_count);
+
+    auto selection = Selection {};
+    for (const auto _ [[maybe_unused]] : range(count)) {
+        if (const auto segment = fuzz_select_temporary_segment(stream, modifier)) {
+            const auto part = get_part(modifier.circuit_data().layout, *segment);
+            selection.add_segment(segment_part_t {*segment, part});
+        }
+    }
+
+    Ensures(std::cmp_less_equal(selection.size(), max_count));
+    return selection;
+}
+
 auto fuzz_select_move_delta(FuzzStream& stream, ordered_line_t line,
                             const FuzzLimits& limits) -> move_delta_t {
     return move_delta_t {
@@ -141,6 +173,19 @@ auto fuzz_select_point(FuzzStream& stream, const FuzzLimits& limits) -> point_t 
         grid_t {fuzz_small_int(stream, int {limits.box.p0.y}, int {limits.box.p1.y})},
     };
 }
+
+auto fuzz_select_points(FuzzStream& stream, const FuzzLimits& limits, int min_count,
+                        int max_count) {
+    const auto count = fuzz_small_int(stream, min_count, max_count);
+    const auto gen_point = [&]() -> point_t { return fuzz_select_point(stream, limits); };
+
+    auto points = std::vector<point_t> {};
+    std::ranges::generate_n(std::back_inserter(points), count, gen_point);
+
+    Ensures(std::cmp_less_equal(min_count, points.size()) &&
+            std::cmp_less_equal(points.size(), max_count));
+    return points;
+};
 
 auto fuzz_select_shadow_or_crosspoint(FuzzStream& stream) -> SegmentPointType {
     return fuzz_bool(stream) ? SegmentPointType::shadow_point
@@ -293,6 +338,25 @@ auto split_uninserted_segment(FuzzStream& stream, Modifier& modifier) -> void {
     }
 }
 
+auto regularize_temporary_selection(FuzzStream& stream, Modifier& modifier,
+                                    const FuzzLimits& limits) -> void {
+    const auto selection =
+        fuzz_select_temporary_selection_full_parts(stream, modifier, 4);
+
+    auto true_cross_points = fuzz_select_points(stream, limits, 0, 4);
+
+    modifier.regularize_temporary_selection(selection, std::move(true_cross_points));
+}
+
+auto split_temporary_segments(FuzzStream& stream, Modifier& modifier,
+                              const FuzzLimits& limits) -> void {
+    const auto split_points = fuzz_select_points(stream, limits, 0, 4);
+    const auto selection =
+        fuzz_select_temporary_selection_full_parts(stream, modifier, 4);
+
+    modifier.split_temporary_segments(selection, split_points);
+}
+
 auto add_logicitem(FuzzStream& stream, Modifier& modifier,
                    const FuzzLimits& limits) -> void {
     auto definition = LogicItemDefinition {
@@ -315,21 +379,14 @@ auto add_logicitem(FuzzStream& stream, Modifier& modifier,
 }
 
 auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
-    auto selection = Selection {};
-
-    for (const auto _ [[maybe_unused]] : range(fuzz_small_int(stream, 0, 4))) {
-        if (const auto segment = fuzz_select_segment(stream, modifier)) {
-            const auto part = fuzz_select_part(stream, modifier, *segment);
-            selection.add_segment(segment_part_t {*segment, part});
-        }
-    }
+    auto selection = fuzz_select_selection(stream, modifier, 4);
 
     modifier.set_visible_selection(std::move(selection));
 }
 
 auto editing_operation(FuzzStream& stream, Modifier& modifier,
                        const FuzzLimits& limits) -> void {
-    switch (fuzz_small_int(stream, 0, 10)) {
+    switch (fuzz_small_int(stream, 0, 12)) {
         // wires
         case 0:
             add_wire_segment(stream, modifier);
@@ -360,15 +417,21 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
         case 8:
             split_uninserted_segment(stream, modifier);
             return;
+        case 9:
+            regularize_temporary_selection(stream, modifier, limits);
+            return;
+        case 10:
+            split_temporary_segments(stream, modifier, limits);
+            return;
 
         // logicitems
-        case 9:
+        case 11:
             // TODO different types
             add_logicitem(stream, modifier, limits);
             return;
 
         // selection
-        case 10:
+        case 12:
             // TODO select logicitems & decorations
             set_visible_selection(stream, modifier);
             return;
@@ -405,7 +468,7 @@ auto validate_undo_redo(Modifier& modifier,
             layout_key_state_t {modifier} == key_state_stack.back());
     Expects(!modifier.has_ungrouped_undo_entries());
 
-    // Do it twice, as redo may generate different stack entries than the initial entries
+    // Run twice, as redo may generate different stack entries
     validate_undo(modifier, key_state_stack);
     validate_redo(modifier, key_state_stack);
     validate_undo(modifier, key_state_stack);
