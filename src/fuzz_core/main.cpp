@@ -317,7 +317,7 @@ auto add_logicitem(FuzzStream& stream, Modifier& modifier,
 auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
     auto selection = Selection {};
 
-    for (const auto _ : range(fuzz_small_int(stream, 0, 4))) {
+    for (const auto _ [[maybe_unused]] : range(fuzz_small_int(stream, 0, 4))) {
         if (const auto segment = fuzz_select_segment(stream, modifier)) {
             const auto part = fuzz_select_part(stream, modifier, *segment);
             selection.add_segment(segment_part_t {*segment, part});

@@ -236,8 +236,8 @@ auto _insert_uninserted_segment(CircuitData& circuit,
     const auto target_wire_id = _find_wire_for_inserting_segment(circuit, segment_part);
 
     reset_temporary_endpoints_with_history(circuit, segment_part.segment);
-    set_wire_inputs_at_logicitem_outputs(circuit, segment_part.segment);
     move_segment_between_trees_with_history(circuit, segment_part, target_wire_id);
+    set_wire_inputs_at_logicitem_outputs(circuit, segment_part.segment);
 
     _store_history_segment_colliding_to_temporary(circuit, segment_part);
 
