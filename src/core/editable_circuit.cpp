@@ -62,6 +62,14 @@ auto EditableCircuit::redo_group() -> void {
     modifier_.redo_group();
 }
 
+auto EditableCircuit::clear_undo_history() -> void {
+    modifier_.clear_undo_history();
+}
+
+auto EditableCircuit::clear_redo_history() -> void {
+    modifier_.clear_redo_history();
+}
+
 auto EditableCircuit::finish_undo_group() -> void {
     modifier_.finish_undo_group();
 }

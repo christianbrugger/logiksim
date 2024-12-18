@@ -22,8 +22,10 @@ auto disable_history(History& history) -> void;
 auto undo_group(CircuitData& circuit) -> void;
 auto redo_group(CircuitData& circuit) -> void;
 
-auto finish_undo_group(History& history) -> void;
+auto clear_undo_history(CircuitData& circuit) -> void;
+auto clear_redo_history(CircuitData& circuit) -> void;
 
+auto finish_undo_group(History& history) -> void;
 auto reopen_undo_group(History& history) -> void;
 
 }  // namespace editing

@@ -416,6 +416,14 @@ auto redo_group(CircuitData& circuit) -> void {
     _replay_stack(circuit, ReplayStack::redo);
 }
 
+auto clear_undo_history(CircuitData& circuit) -> void {
+    circuit.history.undo_stack.clear();
+}
+
+auto clear_redo_history(CircuitData& circuit) -> void {
+    circuit.history.redo_stack.clear();
+}
+
 auto finish_undo_group(History& history) -> void {
     if (history.state != HistoryState::track_undo_new) {
         return;

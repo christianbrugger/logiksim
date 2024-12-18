@@ -19,6 +19,7 @@ auto delete_inserted_segments(EditableCircuit& editable_circuit,
     if (editable_circuit.is_history_enabled()) {
         if (!editable_circuit.selection(selection_id).empty()) {
             editable_circuit.undo_group();
+            editable_circuit.clear_redo_history();
         }
     } else {
         editable_circuit.delete_all(selection_id);
@@ -54,6 +55,7 @@ auto delete_inserted_segments(EditableCircuit& editable_circuit,
         if (mode == InsertionMode::insert_or_discard &&
             editable_circuit.selection(selection_id).empty()) {
             editable_circuit.undo_group();
+            editable_circuit.clear_redo_history();
         }
     }
 

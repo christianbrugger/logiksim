@@ -85,6 +85,9 @@ class Modifier {
     auto undo_group() -> void;
     auto redo_group() -> void;
 
+    auto clear_undo_history() -> void;
+    auto clear_redo_history() -> void;
+
     auto finish_undo_group() -> void;
     auto reopen_undo_group() -> void;
 

@@ -134,6 +134,24 @@ auto Modifier::redo_group() -> void {
     Ensures(debug_class_invariant_holds(*this));
 }
 
+auto Modifier::clear_undo_history() -> void {
+    editing::clear_undo_history(circuit_data_);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
+    Ensures(debug_class_invariant_holds(*this));
+}
+
+auto Modifier::clear_redo_history() -> void {
+    editing::clear_redo_history(circuit_data_);
+
+    if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
+        print(circuit_data_.history);
+    }
+    Ensures(debug_class_invariant_holds(*this));
+}
+
 auto Modifier::finish_undo_group() -> void {
     editing::finish_undo_group(circuit_data_.history);
 
