@@ -365,6 +365,9 @@ auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logic
     if (!logicitem_id) [[unlikely]] {
         throw std::runtime_error("element id is invalid");
     }
+    if (!insertion_hint_valid(new_mode, hint)) [[unlikely]] {
+        throw std::runtime_error("invalid insertion hint provided");
+    }
 
     const auto old_mode =
         to_insertion_mode(circuit.layout.logicitems().display_state(logicitem_id));

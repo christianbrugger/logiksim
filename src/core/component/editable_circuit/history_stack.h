@@ -30,6 +30,7 @@ enum class HistoryEntry : uint8_t {
     logicitem_move_temporary,
     logicitem_to_mode_temporary,
     logicitem_to_mode_colliding,
+    logicitem_to_mode_colliding_assume_colliding,
     logicitem_to_mode_insert,
     logicitem_change_attributes,
     logicitem_add_visible_selection,
@@ -41,6 +42,7 @@ enum class HistoryEntry : uint8_t {
     decoration_move_temporary,
     decoration_to_mode_temporary,
     decoration_to_mode_colliding,
+    decoration_to_mode_colliding_assume_colliding,
     decoration_to_mode_insert,
     decoration_change_attributes,
     decoration_add_visible_selection,
@@ -125,6 +127,8 @@ class HistoryStack {
     auto push_logicitem_delete_temporary(logicitem_key_t logicitem_key) -> void;
     auto push_logicitem_colliding_to_temporary(logicitem_key_t logicitem_key) -> void;
     auto push_logicitem_temporary_to_colliding(logicitem_key_t logicitem_key) -> void;
+    auto push_logicitem_temporary_to_colliding_assume_colliding(
+        logicitem_key_t logicitem_key) -> void;
     auto push_logicitem_colliding_to_insert(logicitem_key_t logicitem_key) -> void;
     auto push_logicitem_insert_to_colliding(logicitem_key_t logicitem_key) -> void;
     auto push_logicitem_move_temporary(logicitem_key_t logicitem_key,
@@ -138,6 +142,7 @@ class HistoryStack {
     auto pop_logicitem_delete_temporary() -> logicitem_key_t;
     auto pop_logicitem_to_mode_temporary() -> logicitem_key_t;
     auto pop_logicitem_to_mode_colliding() -> logicitem_key_t;
+    auto pop_logicitem_to_mode_colliding_assume_colliding() -> logicitem_key_t;
     auto pop_logicitem_to_mode_insert() -> logicitem_key_t;
     auto pop_logicitem_move_temporary() -> std::pair<logicitem_key_t, move_delta_t>;
     auto pop_logicitem_change_attributes()
@@ -154,6 +159,8 @@ class HistoryStack {
     auto push_decoration_delete_temporary(decoration_key_t decoration_key) -> void;
     auto push_decoration_colliding_to_temporary(decoration_key_t decoration_key) -> void;
     auto push_decoration_temporary_to_colliding(decoration_key_t decoration_key) -> void;
+    auto push_decoration_temporary_to_colliding_assume_colliding(
+        decoration_key_t decoration_key) -> void;
     auto push_decoration_colliding_to_insert(decoration_key_t decoration_key) -> void;
     auto push_decoration_insert_to_colliding(decoration_key_t decoration_key) -> void;
     auto push_decoration_move_temporary(decoration_key_t decoration_key,
@@ -169,6 +176,7 @@ class HistoryStack {
     auto pop_decoration_delete_temporary() -> decoration_key_t;
     auto pop_decoration_to_mode_temporary() -> decoration_key_t;
     auto pop_decoration_to_mode_colliding() -> decoration_key_t;
+    auto pop_decoration_to_mode_colliding_assume_colliding() -> decoration_key_t;
     auto pop_decoration_to_mode_insert() -> decoration_key_t;
     auto pop_decoration_move_temporary() -> std::pair<decoration_key_t, move_delta_t>;
     auto pop_decoration_change_attributes()

@@ -124,6 +124,15 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
+        case logicitem_to_mode_colliding_assume_colliding: {
+            auto logicitem_id =
+                to_id(stack.pop_logicitem_to_mode_colliding_assume_colliding(), circuit);
+            editing::change_logicitem_insertion_mode(circuit, logicitem_id,
+                                                     InsertionMode::collisions,
+                                                     InsertionHint::assume_colliding);
+            return;
+        }
+
         case logicitem_to_mode_insert: {
             auto logicitem_id = to_id(stack.pop_logicitem_to_mode_insert(), circuit);
             editing::change_logicitem_insertion_mode(circuit, logicitem_id,
@@ -192,6 +201,15 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             auto decoration_id = to_id(stack.pop_decoration_to_mode_colliding(), circuit);
             editing::change_decoration_insertion_mode(circuit, decoration_id,
                                                       InsertionMode::collisions);
+            return;
+        }
+
+        case decoration_to_mode_colliding_assume_colliding: {
+            auto decoration_id =
+                to_id(stack.pop_decoration_to_mode_colliding_assume_colliding(), circuit);
+            editing::change_decoration_insertion_mode(circuit, decoration_id,
+                                                      InsertionMode::collisions,
+                                                      InsertionHint::assume_colliding);
             return;
         }
 
