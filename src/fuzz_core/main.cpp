@@ -22,7 +22,7 @@ namespace {
 struct FuzzLimits {
     rect_t box {
         point_t {0, 0},
-        point_t {5, 5},
+        point_t {4, 4},
     };
 
     [[nodiscard]] auto operator==(const FuzzLimits&) const -> bool = default;
@@ -213,20 +213,31 @@ auto fuzz_select_non_taken_key(FuzzStream& stream, const KeyIndex& key_index,
     return result;
 }
 
-auto add_wire_segment(FuzzStream& stream, Modifier& modifier) -> void {
+auto add_wire_segment(FuzzStream& stream, Modifier& modifier,
+                      const FuzzLimits& limits) -> void {
+    Expects(limits.box.p0.x < limits.box.p1.x);
+    Expects(limits.box.p0.y < limits.box.p1.y);
+
     const bool horizontal = fuzz_bool(stream);
 
-    const auto a = fuzz_small_int(stream, 0, 4);
-    const auto b = fuzz_small_int(stream, 1, 5 - a);
-    const auto c = fuzz_small_int(stream, 0, 5);
+    const auto line = [&]() {
+        if (horizontal) {
+            const auto x0 =
+                fuzz_small_int(stream, int {limits.box.p0.x}, int {limits.box.p1.x} - 1);
+            const auto x1 = fuzz_small_int(stream, x0 + 1, int {limits.box.p1.x});
+            const auto y =
+                fuzz_small_int(stream, int {limits.box.p0.y}, int {limits.box.p1.y});
 
-    const auto start = a;
-    const auto end = a + b;
-    const auto pos = c;
+            return ordered_line_t {point_t {x0, y}, point_t {x1, y}};
+        }
+        const auto x =
+            fuzz_small_int(stream, int {limits.box.p0.x}, int {limits.box.p1.x});
+        const auto y0 =
+            fuzz_small_int(stream, int {limits.box.p0.y}, int {limits.box.p1.y} - 1);
+        const auto y1 = fuzz_small_int(stream, y0 + 1, int {limits.box.p1.y});
 
-    const auto line = horizontal
-                          ? ordered_line_t {point_t {start, pos}, point_t {end, pos}}
-                          : ordered_line_t {point_t {pos, start}, point_t {pos, end}};
+        return ordered_line_t {point_t {x, y0}, point_t {x, y1}};
+    }();
 
     const auto mode = fuzz_select_insertion_mode(stream);
 
@@ -341,6 +352,7 @@ auto split_uninserted_segment(FuzzStream& stream, Modifier& modifier) -> void {
 auto regularize_temporary_selection(FuzzStream& stream, Modifier& modifier,
                                     const FuzzLimits& limits) -> void {
     const auto guard = ModifierSelectionGuard {
+
         modifier,
         fuzz_select_temporary_selection_full_parts(stream, modifier, 4),
     };
@@ -386,12 +398,22 @@ auto get_temporary_selection_splitpoints(FuzzStream& stream, Modifier& modifier)
 
 auto add_logicitem(FuzzStream& stream, Modifier& modifier,
                    const FuzzLimits& limits) -> void {
-    auto definition = LogicItemDefinition {
-        .logicitem_type = LogicItemType::buffer_element,
-        .input_count = connection_count_t {1},
-        .output_count = connection_count_t {1},
-        .orientation = orientation_t::right,
-    };
+    auto definition = [&]() {
+        if (fuzz_bool(stream)) {
+            return LogicItemDefinition {
+                .logicitem_type = LogicItemType::buffer_element,
+                .input_count = connection_count_t {1},
+                .output_count = connection_count_t {1},
+                .orientation = orientation_t::right,
+            };
+        }
+        return LogicItemDefinition {
+            .logicitem_type = LogicItemType::button,
+            .input_count = connection_count_t {0},
+            .output_count = connection_count_t {1},
+            .orientation = orientation_t::undirected,
+        };
+    }();
 
     const auto size = element_size(to_layout_calculation_data(definition, point_t {}));
     const auto position = point_t {
@@ -416,7 +438,7 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
     switch (fuzz_small_int(stream, 0, 14)) {
         // wires
         case 0:
-            add_wire_segment(stream, modifier);
+            add_wire_segment(stream, modifier, limits);
             return;
         case 1:
             delete_temporary_wire_segment(stream, modifier);
@@ -454,7 +476,6 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
         case 11:
             get_inserted_cross_points(stream, modifier);
             return;
-
         case 12:
             get_temporary_selection_splitpoints(stream, modifier);
             return;
