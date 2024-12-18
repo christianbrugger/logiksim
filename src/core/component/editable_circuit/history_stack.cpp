@@ -27,8 +27,8 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
             return "logicitem_move_temporary";
         case logicitem_to_mode_temporary:
             return "logicitem_to_mode_temporary";
-        case logicitem_to_mode_colliding:
-            return "logicitem_to_mode_colliding";
+        case logicitem_to_mode_colliding_expect_valid:
+            return "logicitem_to_mode_colliding_expect_valid";
         case logicitem_to_mode_colliding_assume_colliding:
             return "logicitem_to_mode_colliding_assume_colliding";
         case logicitem_to_mode_insert:
@@ -48,8 +48,8 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
             return "decoration_move_temporary";
         case decoration_to_mode_temporary:
             return "decoration_to_mode_temporary";
-        case decoration_to_mode_colliding:
-            return "decoration_to_mode_colliding";
+        case decoration_to_mode_colliding_expect_valid:
+            return "decoration_to_mode_colliding_expect_valid";
         case decoration_to_mode_colliding_assume_colliding:
             return "decoration_to_mode_colliding_assume_colliding";
         case decoration_to_mode_insert:
@@ -69,8 +69,8 @@ auto format(editable_circuit::HistoryEntry type) -> std::string {
             return "segment_move_temporary";
         case segment_to_mode_temporary:
             return "segment_to_mode_temporary";
-        case segment_to_mode_colliding:
-            return "segment_to_mode_colliding";
+        case segment_to_mode_colliding_expect_valid:
+            return "segment_to_mode_colliding_expect_valid";
         case segment_to_mode_colliding_assume_colliding:
             return "segment_to_mode_colliding_assume_colliding";
         case segment_to_mode_insert:
@@ -244,7 +244,8 @@ namespace {
     using enum HistoryEntry;
     const auto last = get_back_vector(entries);
 
-    return (last == logicitem_to_mode_temporary || last == logicitem_to_mode_colliding ||
+    return (last == logicitem_to_mode_temporary ||
+            last == logicitem_to_mode_colliding_expect_valid ||
             last == logicitem_to_mode_colliding_assume_colliding ||
             last == logicitem_to_mode_insert) &&
            at_back_vector(logicitem_keys) == current_key;
@@ -254,9 +255,10 @@ namespace {
 
 auto HistoryStack::push_logicitem_colliding_to_temporary(logicitem_key_t logicitem_key)
     -> void {
-    if (get_back_vector(entries_) == HistoryEntry::logicitem_to_mode_colliding &&
+    if (get_back_vector(entries_) ==
+            HistoryEntry::logicitem_to_mode_colliding_expect_valid &&
         at_back_vector(logicitem_keys_) == logicitem_key) {
-        pop_logicitem_to_mode_colliding();
+        pop_logicitem_to_mode_colliding_expect_valid();
         return;
     }
     if (just_changed_insertion_mode(entries_, logicitem_keys_, logicitem_key)) {
@@ -267,8 +269,8 @@ auto HistoryStack::push_logicitem_colliding_to_temporary(logicitem_key_t logicit
     logicitem_keys_.emplace_back(logicitem_key);
 }
 
-auto HistoryStack::push_logicitem_temporary_to_colliding(logicitem_key_t logicitem_key)
-    -> void {
+auto HistoryStack::push_logicitem_temporary_to_colliding_expect_valid(
+    logicitem_key_t logicitem_key) -> void {
     if (get_back_vector(entries_) == HistoryEntry::logicitem_to_mode_temporary &&
         at_back_vector(logicitem_keys_) == logicitem_key) {
         pop_logicitem_to_mode_temporary();
@@ -278,7 +280,7 @@ auto HistoryStack::push_logicitem_temporary_to_colliding(logicitem_key_t logicit
         return;
     }
 
-    entries_.emplace_back(HistoryEntry::logicitem_to_mode_colliding);
+    entries_.emplace_back(HistoryEntry::logicitem_to_mode_colliding_expect_valid);
     logicitem_keys_.emplace_back(logicitem_key);
 }
 
@@ -300,9 +302,10 @@ auto HistoryStack::push_logicitem_temporary_to_colliding_assume_colliding(
 auto HistoryStack::push_logicitem_colliding_to_insert(logicitem_key_t logicitem_key)
     -> void {
     // skip if it was just colliding
-    if (get_back_vector(entries_) == HistoryEntry::logicitem_to_mode_colliding &&
+    if (get_back_vector(entries_) ==
+            HistoryEntry::logicitem_to_mode_colliding_expect_valid &&
         at_back_vector(logicitem_keys_) == logicitem_key) {
-        pop_logicitem_to_mode_colliding();
+        pop_logicitem_to_mode_colliding_expect_valid();
         return;
     }
     if (just_changed_insertion_mode(entries_, logicitem_keys_, logicitem_key)) {
@@ -313,8 +316,8 @@ auto HistoryStack::push_logicitem_colliding_to_insert(logicitem_key_t logicitem_
     logicitem_keys_.emplace_back(logicitem_key);
 }
 
-auto HistoryStack::push_logicitem_insert_to_colliding(logicitem_key_t logicitem_key)
-    -> void {
+auto HistoryStack::push_logicitem_insert_to_colliding_expect_valid(
+    logicitem_key_t logicitem_key) -> void {
     // skip if it was just inserted
     if (get_back_vector(entries_) == HistoryEntry::logicitem_to_mode_insert &&
         at_back_vector(logicitem_keys_) == logicitem_key) {
@@ -325,7 +328,7 @@ auto HistoryStack::push_logicitem_insert_to_colliding(logicitem_key_t logicitem_
         return;
     }
 
-    entries_.emplace_back(HistoryEntry::logicitem_to_mode_colliding);
+    entries_.emplace_back(HistoryEntry::logicitem_to_mode_colliding_expect_valid);
     logicitem_keys_.emplace_back(logicitem_key);
 }
 
@@ -390,8 +393,9 @@ auto HistoryStack::pop_logicitem_to_mode_temporary() -> logicitem_key_t {
     return pop_back_vector(logicitem_keys_);
 }
 
-auto HistoryStack::pop_logicitem_to_mode_colliding() -> logicitem_key_t {
-    Expects(pop_back_vector(entries_) == HistoryEntry::logicitem_to_mode_colliding);
+auto HistoryStack::pop_logicitem_to_mode_colliding_expect_valid() -> logicitem_key_t {
+    Expects(pop_back_vector(entries_) ==
+            HistoryEntry::logicitem_to_mode_colliding_expect_valid);
     return pop_back_vector(logicitem_keys_);
 }
 
@@ -463,7 +467,7 @@ namespace {
     const auto last = get_back_vector(entries);
 
     return (last == decoration_to_mode_temporary ||
-            last == decoration_to_mode_colliding ||
+            last == decoration_to_mode_colliding_expect_valid ||
             last == decoration_to_mode_colliding_assume_colliding ||
             last == decoration_to_mode_insert) &&
            at_back_vector(decoration_keys) == current_key;
@@ -473,9 +477,10 @@ namespace {
 
 auto HistoryStack::push_decoration_colliding_to_temporary(decoration_key_t decoration_key)
     -> void {
-    if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_colliding &&
+    if (get_back_vector(entries_) ==
+            HistoryEntry::decoration_to_mode_colliding_expect_valid &&
         at_back_vector(decoration_keys_) == decoration_key) {
-        pop_decoration_to_mode_colliding();
+        pop_decoration_to_mode_colliding_expect_valid();
         return;
     }
     if (just_changed_insertion_mode(entries_, decoration_keys_, decoration_key)) {
@@ -486,8 +491,8 @@ auto HistoryStack::push_decoration_colliding_to_temporary(decoration_key_t decor
     decoration_keys_.emplace_back(decoration_key);
 }
 
-auto HistoryStack::push_decoration_temporary_to_colliding(decoration_key_t decoration_key)
-    -> void {
+auto HistoryStack::push_decoration_temporary_to_colliding_expect_valid(
+    decoration_key_t decoration_key) -> void {
     if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_temporary &&
         at_back_vector(decoration_keys_) == decoration_key) {
         pop_decoration_to_mode_temporary();
@@ -497,7 +502,7 @@ auto HistoryStack::push_decoration_temporary_to_colliding(decoration_key_t decor
         return;
     }
 
-    entries_.emplace_back(HistoryEntry::decoration_to_mode_colliding);
+    entries_.emplace_back(HistoryEntry::decoration_to_mode_colliding_expect_valid);
     decoration_keys_.emplace_back(decoration_key);
 }
 
@@ -519,9 +524,10 @@ auto HistoryStack::push_decoration_temporary_to_colliding_assume_colliding(
 auto HistoryStack::push_decoration_colliding_to_insert(decoration_key_t decoration_key)
     -> void {
     // skip if it was just colliding
-    if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_colliding &&
+    if (get_back_vector(entries_) ==
+            HistoryEntry::decoration_to_mode_colliding_expect_valid &&
         at_back_vector(decoration_keys_) == decoration_key) {
-        pop_decoration_to_mode_colliding();
+        pop_decoration_to_mode_colliding_expect_valid();
         return;
     }
     if (just_changed_insertion_mode(entries_, decoration_keys_, decoration_key)) {
@@ -532,8 +538,8 @@ auto HistoryStack::push_decoration_colliding_to_insert(decoration_key_t decorati
     decoration_keys_.emplace_back(decoration_key);
 }
 
-auto HistoryStack::push_decoration_insert_to_colliding(decoration_key_t decoration_key)
-    -> void {
+auto HistoryStack::push_decoration_insert_to_colliding_expect_valid(
+    decoration_key_t decoration_key) -> void {
     // skip if it was just inserted
     if (get_back_vector(entries_) == HistoryEntry::decoration_to_mode_insert &&
         at_back_vector(decoration_keys_) == decoration_key) {
@@ -544,7 +550,7 @@ auto HistoryStack::push_decoration_insert_to_colliding(decoration_key_t decorati
         return;
     }
 
-    entries_.emplace_back(HistoryEntry::decoration_to_mode_colliding);
+    entries_.emplace_back(HistoryEntry::decoration_to_mode_colliding_expect_valid);
     decoration_keys_.emplace_back(decoration_key);
 }
 
@@ -609,8 +615,9 @@ auto HistoryStack::pop_decoration_to_mode_temporary() -> decoration_key_t {
     return pop_back_vector(decoration_keys_);
 }
 
-auto HistoryStack::pop_decoration_to_mode_colliding() -> decoration_key_t {
-    Expects(pop_back_vector(entries_) == HistoryEntry::decoration_to_mode_colliding);
+auto HistoryStack::pop_decoration_to_mode_colliding_expect_valid() -> decoration_key_t {
+    Expects(pop_back_vector(entries_) ==
+            HistoryEntry::decoration_to_mode_colliding_expect_valid);
     return pop_back_vector(decoration_keys_);
 }
 
@@ -686,9 +693,9 @@ auto HistoryStack::push_segment_colliding_to_temporary(segment_key_t segment_key
     parts_.emplace_back(part);
 }
 
-auto HistoryStack::push_segment_temporary_to_colliding(segment_key_t segment_key,
-                                                       part_t part) -> void {
-    entries_.emplace_back(HistoryEntry::segment_to_mode_colliding);
+auto HistoryStack::push_segment_temporary_to_colliding_expect_valid(
+    segment_key_t segment_key, part_t part) -> void {
+    entries_.emplace_back(HistoryEntry::segment_to_mode_colliding_expect_valid);
     segment_keys_.emplace_back(segment_key);
     parts_.emplace_back(part);
 }
@@ -707,9 +714,9 @@ auto HistoryStack::push_segment_colliding_to_insert(segment_key_t segment_key,
     parts_.emplace_back(part);
 }
 
-auto HistoryStack::push_segment_insert_to_colliding(segment_key_t segment_key,
-                                                    part_t part) -> void {
-    entries_.emplace_back(HistoryEntry::segment_to_mode_colliding);
+auto HistoryStack::push_segment_insert_to_colliding_expect_valid(
+    segment_key_t segment_key, part_t part) -> void {
+    entries_.emplace_back(HistoryEntry::segment_to_mode_colliding_expect_valid);
     segment_keys_.emplace_back(segment_key);
     parts_.emplace_back(part);
 }
@@ -767,8 +774,10 @@ auto HistoryStack::pop_segment_to_mode_temporary() -> std::pair<segment_key_t, p
     return {pop_back_vector(segment_keys_), pop_back_vector(parts_)};
 }
 
-auto HistoryStack::pop_segment_to_mode_colliding() -> std::pair<segment_key_t, part_t> {
-    Expects(pop_back_vector(entries_) == HistoryEntry::segment_to_mode_colliding);
+auto HistoryStack::pop_segment_to_mode_colliding_expect_valid()
+    -> std::pair<segment_key_t, part_t> {
+    Expects(pop_back_vector(entries_) ==
+            HistoryEntry::segment_to_mode_colliding_expect_valid);
     return {pop_back_vector(segment_keys_), pop_back_vector(parts_)};
 }
 

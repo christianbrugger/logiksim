@@ -66,11 +66,12 @@ auto _store_history_segment_colliding_to_temporary(CircuitData& circuit,
     }
 }
 
-auto _store_history_segment_temporary_to_colliding(CircuitData& circuit,
-                                                   segment_part_t segment_part) -> void {
+auto _store_history_segment_temporary_to_colliding_expect_valid(
+    CircuitData& circuit, segment_part_t segment_part) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto segment_key = circuit.index.key_index().get(segment_part.segment);
-        stack->push_segment_temporary_to_colliding(segment_key, segment_part.part);
+        stack->push_segment_temporary_to_colliding_expect_valid(segment_key,
+                                                                segment_part.part);
     }
 }
 
@@ -253,9 +254,13 @@ auto _wire_change_temporary_to_colliding(CircuitData& circuit,
                                          segment_part_t& segment_part,
                                          InsertionHint hint) -> void {
     const auto line = get_line(circuit.layout, segment_part);
-    bool colliding = is_wire_colliding(circuit, line);
+    bool is_colliding = is_wire_colliding(circuit, line);
 
-    if (colliding || hint == InsertionHint::assume_colliding) {
+    if (is_colliding && hint == InsertionHint::expect_valid) [[unlikely]] {
+        throw std::runtime_error("expect valid insert, but segment_part is colliding");
+    }
+
+    if (is_colliding || hint == InsertionHint::assume_colliding) {
         const auto destination = colliding_wire_id;
         reset_temporary_endpoints_with_history(circuit, segment_part);
         move_segment_between_trees_with_history(circuit, segment_part, destination);
@@ -293,7 +298,7 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
 
     // history
     if (was_inserted) {
-        _store_history_segment_temporary_to_colliding(circuit, segment_part);
+        _store_history_segment_temporary_to_colliding_expect_valid(circuit, segment_part);
     } else {
         _store_history_segment_temporary_to_colliding_assume_colliding(circuit,
                                                                        segment_part);

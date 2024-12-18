@@ -31,6 +31,10 @@ enum class InsertionHint {
      * brief: Assume element is colliding during collision check when inserting
      */
     assume_colliding,
+    /**
+     * brief: Expect the element to not collide during collision check when inserting
+     */
+    expect_valid,
 };
 
 template <>

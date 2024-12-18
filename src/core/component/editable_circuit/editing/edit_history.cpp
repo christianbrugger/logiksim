@@ -117,10 +117,12 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
-        case logicitem_to_mode_colliding: {
-            auto logicitem_id = to_id(stack.pop_logicitem_to_mode_colliding(), circuit);
+        case logicitem_to_mode_colliding_expect_valid: {
+            auto logicitem_id =
+                to_id(stack.pop_logicitem_to_mode_colliding_expect_valid(), circuit);
             editing::change_logicitem_insertion_mode(circuit, logicitem_id,
-                                                     InsertionMode::collisions);
+                                                     InsertionMode::collisions,
+                                                     InsertionHint::expect_valid);
             return;
         }
 
@@ -197,10 +199,12 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
-        case decoration_to_mode_colliding: {
-            auto decoration_id = to_id(stack.pop_decoration_to_mode_colliding(), circuit);
+        case decoration_to_mode_colliding_expect_valid: {
+            auto decoration_id =
+                to_id(stack.pop_decoration_to_mode_colliding_expect_valid(), circuit);
             editing::change_decoration_insertion_mode(circuit, decoration_id,
-                                                      InsertionMode::collisions);
+                                                      InsertionMode::collisions,
+                                                      InsertionHint::expect_valid);
             return;
         }
 
@@ -273,10 +277,12 @@ auto _replay_last_entry(CircuitData& circuit, HistoryStack& stack) -> void {
             return;
         }
 
-        case segment_to_mode_colliding: {
-            auto segment_part = to_part(stack.pop_segment_to_mode_colliding(), circuit);
+        case segment_to_mode_colliding_expect_valid: {
+            auto segment_part =
+                to_part(stack.pop_segment_to_mode_colliding_expect_valid(), circuit);
             editing::change_wire_insertion_mode(circuit, segment_part,
-                                                InsertionMode::collisions);
+                                                InsertionMode::collisions,
+                                                InsertionHint::expect_valid);
             return;
         }
 

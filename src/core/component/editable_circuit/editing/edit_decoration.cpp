@@ -75,19 +75,27 @@ auto _store_history_decoration_colliding_to_temporary(
     }
 }
 
-auto _store_history_decoration_temporary_to_colliding(
+auto _store_history_decoration_temporary_to_colliding_expect_valid(
     CircuitData& circuit, decoration_id_t decoration_id) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
-        stack->push_decoration_temporary_to_colliding(decoration_key);
+        stack->push_decoration_temporary_to_colliding_expect_valid(decoration_key);
     }
 }
 
-auto _store_history_decoration_insert_to_colliding(
+auto _store_history_decoration_temporary_to_colliding_assume_colliding(
     CircuitData& circuit, decoration_id_t decoration_id) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
-        stack->push_decoration_insert_to_colliding(decoration_key);
+        stack->push_decoration_temporary_to_colliding_assume_colliding(decoration_key);
+    }
+}
+
+auto _store_history_decoration_insert_to_colliding_expect_valid(
+    CircuitData& circuit, decoration_id_t decoration_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto decoration_key = circuit.index.key_index().get(decoration_id);
+        stack->push_decoration_insert_to_colliding_expect_valid(decoration_key);
     }
 }
 
@@ -252,9 +260,12 @@ auto _decoration_change_temporary_to_colliding(CircuitData& circuit,
         throw std::runtime_error("element is not in the right state.");
     }
 
-    _store_history_decoration_colliding_to_temporary(circuit, decoration_id);
-
     const auto is_colliding = is_decoration_colliding(circuit, decoration_id);
+    if (is_colliding && hint == InsertionHint::expect_valid) [[unlikely]] {
+        throw std::runtime_error("expect valid insert, but decoration is colliding");
+    }
+
+    _store_history_decoration_colliding_to_temporary(circuit, decoration_id);
 
     if (is_colliding || hint == InsertionHint::assume_colliding) {
         circuit.layout.decorations().set_display_state(decoration_id,
@@ -269,21 +280,23 @@ auto _decoration_change_temporary_to_colliding(CircuitData& circuit,
     });
 };
 
+auto _decoration_change_colliding_to_temporary(CircuitData& circuit,
+                                               decoration_id_t decoration_id) -> void;
+
 auto _decoration_change_colliding_to_insert(CircuitData& circuit,
                                             decoration_id_t& decoration_id) -> void {
     const auto display_state = circuit.layout.decorations().display_state(decoration_id);
 
     if (display_state == display_state_t::valid) {
-        _store_history_decoration_insert_to_colliding(circuit, decoration_id);
+        _store_history_decoration_insert_to_colliding_expect_valid(circuit,
+                                                                   decoration_id);
         circuit.layout.decorations().set_display_state(decoration_id,
                                                        display_state_t::normal);
         return;
     }
 
     if (display_state == display_state_t::colliding) [[likely]] {
-        _store_history_decoration_temporary_to_colliding(circuit, decoration_id);
-        circuit.layout.decorations().set_display_state(decoration_id,
-                                                       display_state_t::temporary);
+        _decoration_change_colliding_to_temporary(circuit, decoration_id);
         delete_temporary_decoration(circuit, decoration_id);
         return;
     }
@@ -307,9 +320,10 @@ auto _decoration_change_colliding_to_temporary(
     CircuitData& circuit, const decoration_id_t decoration_id) -> void {
     const auto display_state = circuit.layout.decorations().display_state(decoration_id);
 
-    _store_history_decoration_temporary_to_colliding(circuit, decoration_id);
-
     if (display_state == display_state_t::valid) {
+        _store_history_decoration_temporary_to_colliding_expect_valid(circuit,
+                                                                      decoration_id);
+
         circuit.submit(info_message::DecorationUninserted {
             .decoration_id = decoration_id,
             .data = to_decoration_layout_data(circuit.layout, decoration_id),
@@ -321,6 +335,9 @@ auto _decoration_change_colliding_to_temporary(
     }
 
     if (display_state == display_state_t::colliding) {
+        _store_history_decoration_temporary_to_colliding_assume_colliding(circuit,
+                                                                          decoration_id);
+
         circuit.layout.decorations().set_display_state(decoration_id,
                                                        display_state_t::temporary);
         return;

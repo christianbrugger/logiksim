@@ -44,14 +44,15 @@ auto format(InsertionHint hint) -> std::string {
             return "no_hint";
         case assume_colliding:
             return "assume_colliding";
+        case expect_valid:
+            return "expect_valid";
     }
     std::terminate();
 }
 
 auto insertion_hint_valid(InsertionMode mode, InsertionHint hint) -> bool {
-    return hint != InsertionHint::assume_colliding ||
-           (mode == InsertionMode::collisions ||
-            mode == InsertionMode::insert_or_discard);
+    return hint == InsertionHint::no_hint || (mode == InsertionMode::collisions ||
+                                              mode == InsertionMode::insert_or_discard);
 }
 
 }  // namespace logicsim

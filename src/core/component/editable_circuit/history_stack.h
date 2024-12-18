@@ -29,7 +29,7 @@ enum class HistoryEntry : uint8_t {
     logicitem_delete_temporary,
     logicitem_move_temporary,
     logicitem_to_mode_temporary,
-    logicitem_to_mode_colliding,
+    logicitem_to_mode_colliding_expect_valid,
     logicitem_to_mode_colliding_assume_colliding,
     logicitem_to_mode_insert,
     logicitem_change_attributes,
@@ -41,7 +41,7 @@ enum class HistoryEntry : uint8_t {
     decoration_delete_temporary,
     decoration_move_temporary,
     decoration_to_mode_temporary,
-    decoration_to_mode_colliding,
+    decoration_to_mode_colliding_expect_valid,
     decoration_to_mode_colliding_assume_colliding,
     decoration_to_mode_insert,
     decoration_change_attributes,
@@ -53,7 +53,7 @@ enum class HistoryEntry : uint8_t {
     segment_delete_temporary,
     segment_move_temporary,
     segment_to_mode_temporary,
-    segment_to_mode_colliding,
+    segment_to_mode_colliding_expect_valid,
     segment_to_mode_colliding_assume_colliding,
     segment_to_mode_insert,
     segment_set_endpoints,
@@ -126,11 +126,13 @@ class HistoryStack {
                                          PlacedLogicItem&& placed_logicitem) -> void;
     auto push_logicitem_delete_temporary(logicitem_key_t logicitem_key) -> void;
     auto push_logicitem_colliding_to_temporary(logicitem_key_t logicitem_key) -> void;
-    auto push_logicitem_temporary_to_colliding(logicitem_key_t logicitem_key) -> void;
+    auto push_logicitem_temporary_to_colliding_expect_valid(logicitem_key_t logicitem_key)
+        -> void;
     auto push_logicitem_temporary_to_colliding_assume_colliding(
         logicitem_key_t logicitem_key) -> void;
     auto push_logicitem_colliding_to_insert(logicitem_key_t logicitem_key) -> void;
-    auto push_logicitem_insert_to_colliding(logicitem_key_t logicitem_key) -> void;
+    auto push_logicitem_insert_to_colliding_expect_valid(logicitem_key_t logicitem_key)
+        -> void;
     auto push_logicitem_move_temporary(logicitem_key_t logicitem_key,
                                        move_delta_t delta) -> void;
     auto push_logicitem_change_attributes(logicitem_key_t logicitem_key,
@@ -141,7 +143,7 @@ class HistoryStack {
     auto pop_logicitem_create_temporary() -> std::pair<logicitem_key_t, PlacedLogicItem>;
     auto pop_logicitem_delete_temporary() -> logicitem_key_t;
     auto pop_logicitem_to_mode_temporary() -> logicitem_key_t;
-    auto pop_logicitem_to_mode_colliding() -> logicitem_key_t;
+    auto pop_logicitem_to_mode_colliding_expect_valid() -> logicitem_key_t;
     auto pop_logicitem_to_mode_colliding_assume_colliding() -> logicitem_key_t;
     auto pop_logicitem_to_mode_insert() -> logicitem_key_t;
     auto pop_logicitem_move_temporary() -> std::pair<logicitem_key_t, move_delta_t>;
@@ -158,11 +160,13 @@ class HistoryStack {
                                           PlacedDecoration&& placed_decoration) -> void;
     auto push_decoration_delete_temporary(decoration_key_t decoration_key) -> void;
     auto push_decoration_colliding_to_temporary(decoration_key_t decoration_key) -> void;
-    auto push_decoration_temporary_to_colliding(decoration_key_t decoration_key) -> void;
+    auto push_decoration_temporary_to_colliding_expect_valid(
+        decoration_key_t decoration_key) -> void;
     auto push_decoration_temporary_to_colliding_assume_colliding(
         decoration_key_t decoration_key) -> void;
     auto push_decoration_colliding_to_insert(decoration_key_t decoration_key) -> void;
-    auto push_decoration_insert_to_colliding(decoration_key_t decoration_key) -> void;
+    auto push_decoration_insert_to_colliding_expect_valid(decoration_key_t decoration_key)
+        -> void;
     auto push_decoration_move_temporary(decoration_key_t decoration_key,
                                         move_delta_t delta) -> void;
     auto push_decoration_change_attributes(decoration_key_t decoration_key,
@@ -175,7 +179,7 @@ class HistoryStack {
         -> std::pair<decoration_key_t, PlacedDecoration>;
     auto pop_decoration_delete_temporary() -> decoration_key_t;
     auto pop_decoration_to_mode_temporary() -> decoration_key_t;
-    auto pop_decoration_to_mode_colliding() -> decoration_key_t;
+    auto pop_decoration_to_mode_colliding_expect_valid() -> decoration_key_t;
     auto pop_decoration_to_mode_colliding_assume_colliding() -> decoration_key_t;
     auto pop_decoration_to_mode_insert() -> decoration_key_t;
     auto pop_decoration_move_temporary() -> std::pair<decoration_key_t, move_delta_t>;
@@ -195,12 +199,13 @@ class HistoryStack {
                                      move_delta_t delta) -> void;
     auto push_segment_colliding_to_temporary(segment_key_t segment_key,
                                              part_t part) -> void;
-    auto push_segment_temporary_to_colliding(segment_key_t segment_key,
-                                             part_t part) -> void;
+    auto push_segment_temporary_to_colliding_expect_valid(segment_key_t segment_key,
+                                                          part_t part) -> void;
     auto push_segment_temporary_to_colliding_assume_colliding(segment_key_t segment_key,
                                                               part_t part) -> void;
     auto push_segment_colliding_to_insert(segment_key_t segment_key, part_t part) -> void;
-    auto push_segment_insert_to_colliding(segment_key_t segment_key, part_t part) -> void;
+    auto push_segment_insert_to_colliding_expect_valid(segment_key_t segment_key,
+                                                       part_t part) -> void;
     auto push_segment_set_endpoints(segment_key_t segment_key,
                                     endpoints_t endpoints) -> void;
     auto push_segment_merge(segment_key_t segment_key_0,
@@ -213,7 +218,7 @@ class HistoryStack {
     auto pop_segment_delete_temporary() -> segment_key_t;
     auto pop_segment_move_temporary() -> std::pair<segment_key_t, move_delta_t>;
     auto pop_segment_to_mode_temporary() -> std::pair<segment_key_t, part_t>;
-    auto pop_segment_to_mode_colliding() -> std::pair<segment_key_t, part_t>;
+    auto pop_segment_to_mode_colliding_expect_valid() -> std::pair<segment_key_t, part_t>;
     auto pop_segment_to_mode_colliding_assume_colliding()
         -> std::pair<segment_key_t, part_t>;
     auto pop_segment_to_mode_insert() -> std::pair<segment_key_t, part_t>;

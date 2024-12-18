@@ -77,19 +77,27 @@ auto _store_history_logicitem_colliding_to_temporary(
     }
 }
 
-auto _store_history_logicitem_temporary_to_colliding(
+auto _store_history_logicitem_temporary_to_colliding_expect_valid(
     CircuitData& circuit, logicitem_id_t logicitem_id) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
-        stack->push_logicitem_temporary_to_colliding(logicitem_key);
+        stack->push_logicitem_temporary_to_colliding_expect_valid(logicitem_key);
     }
 }
 
-auto _store_history_logicitem_insert_to_colliding(CircuitData& circuit,
-                                                  logicitem_id_t logicitem_id) -> void {
+auto _store_history_logicitem_temporary_to_colliding_assume_colliding(
+    CircuitData& circuit, logicitem_id_t logicitem_id) -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
-        stack->push_logicitem_insert_to_colliding(logicitem_key);
+        stack->push_logicitem_temporary_to_colliding_assume_colliding(logicitem_key);
+    }
+}
+
+auto _store_history_logicitem_insert_to_colliding_expect_valid(
+    CircuitData& circuit, logicitem_id_t logicitem_id) -> void {
+    if (const auto stack = circuit.history.get_stack()) {
+        const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
+        stack->push_logicitem_insert_to_colliding_expect_valid(logicitem_key);
     }
 }
 
@@ -131,7 +139,7 @@ auto _store_history_logicitem_loggle_inverter(CircuitData& circuit,
             stack->push_logicitem_colliding_to_insert(logicitem_key);
         }
         if (state != display_state_t::temporary) {
-            stack->push_logicitem_temporary_to_colliding(logicitem_key);
+            stack->push_logicitem_temporary_to_colliding_expect_valid(logicitem_key);
         }
         stack->push_logicitem_create_temporary(
             logicitem_key, to_placed_logicitem(circuit.layout, logicitem_id));
@@ -142,7 +150,7 @@ auto _store_history_logicitem_loggle_inverter(CircuitData& circuit,
             stack->push_logicitem_colliding_to_temporary(logicitem_key);
         }
         if (state == display_state_t::normal) {
-            stack->push_logicitem_insert_to_colliding(logicitem_key);
+            stack->push_logicitem_insert_to_colliding_expect_valid(logicitem_key);
         }
     }
 }
@@ -281,9 +289,12 @@ auto _element_change_temporary_to_colliding(CircuitData& circuit,
         throw std::runtime_error("element is not in the right state.");
     }
 
-    _store_history_logicitem_colliding_to_temporary(circuit, logicitem_id);
-
     const auto is_colliding = is_logicitem_colliding(circuit, logicitem_id);
+    if (is_colliding && hint == InsertionHint::expect_valid) [[unlikely]] {
+        throw std::runtime_error("expect valid insert, but logicitem is colliding");
+    }
+
+    _store_history_logicitem_colliding_to_temporary(circuit, logicitem_id);
 
     if (is_colliding || hint == InsertionHint::assume_colliding) {
         circuit.layout.logicitems().set_display_state(logicitem_id,
@@ -297,21 +308,22 @@ auto _element_change_temporary_to_colliding(CircuitData& circuit,
         logicitem_id, to_layout_calculation_data(circuit.layout, logicitem_id)});
 };
 
+auto _element_change_colliding_to_temporary(CircuitData& circuit,
+                                            logicitem_id_t logicitem_id) -> void;
+
 auto _element_change_colliding_to_insert(CircuitData& circuit,
                                          logicitem_id_t& logicitem_id) -> void {
     const auto display_state = circuit.layout.logicitems().display_state(logicitem_id);
 
     if (display_state == display_state_t::valid) {
-        _store_history_logicitem_insert_to_colliding(circuit, logicitem_id);
+        _store_history_logicitem_insert_to_colliding_expect_valid(circuit, logicitem_id);
         circuit.layout.logicitems().set_display_state(logicitem_id,
                                                       display_state_t::normal);
         return;
     }
 
     if (display_state == display_state_t::colliding) [[likely]] {
-        _store_history_logicitem_temporary_to_colliding(circuit, logicitem_id);
-        circuit.layout.logicitems().set_display_state(logicitem_id,
-                                                      display_state_t::temporary);
+        _element_change_colliding_to_temporary(circuit, logicitem_id);
         delete_temporary_logicitem(circuit, logicitem_id);
         return;
     }
@@ -335,9 +347,10 @@ auto _element_change_colliding_to_temporary(CircuitData& circuit,
                                             const logicitem_id_t logicitem_id) -> void {
     const auto display_state = circuit.layout.logicitems().display_state(logicitem_id);
 
-    _store_history_logicitem_temporary_to_colliding(circuit, logicitem_id);
-
     if (display_state == display_state_t::valid) {
+        _store_history_logicitem_temporary_to_colliding_expect_valid(circuit,
+                                                                     logicitem_id);
+
         circuit.submit(info_message::LogicItemUninserted {
             .logicitem_id = logicitem_id,
             .data = to_layout_calculation_data(circuit.layout, logicitem_id),
@@ -350,6 +363,9 @@ auto _element_change_colliding_to_temporary(CircuitData& circuit,
     }
 
     if (display_state == display_state_t::colliding) {
+        _store_history_logicitem_temporary_to_colliding_assume_colliding(circuit,
+                                                                         logicitem_id);
+
         circuit.layout.logicitems().set_display_state(logicitem_id,
                                                       display_state_t::temporary);
         return;

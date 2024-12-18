@@ -1197,7 +1197,7 @@ auto unmark_valid_with_history(CircuitData& circuit,
                                                                         bool is_valid) {
             if (is_valid) {
                 const auto segment_key = index.get(segment);
-                stack->push_segment_insert_to_colliding(segment_key, part);
+                stack->push_segment_insert_to_colliding_expect_valid(segment_key, part);
             }
         };
 
