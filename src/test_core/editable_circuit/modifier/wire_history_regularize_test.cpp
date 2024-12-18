@@ -265,6 +265,14 @@ TEST(EditableCircuitWireHistory, SplitsTemporaryGetSplitpoints) {
     }
     const auto state_2 = layout_key_state_t {modifier};
 
+    // Validate end state
+    {
+        Expects(get_segment_count(modifier.circuit_data().layout) == 1);
+        const auto segment = segment_t {first_inserted_wire_id, segment_index_t {0}};
+        const auto full_line = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
+        Expects(get_line(modifier.circuit_data().layout, segment) == full_line);
+    }
+
     // after undo
     modifier.undo_group();
     ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
