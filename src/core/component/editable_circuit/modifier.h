@@ -260,10 +260,6 @@ using ModifierSelectionGuard = SelectionGuardTemplate<Modifier>;
 // Selection Based
 //
 
-auto add_wire_segments(Modifier& modifier, point_t p0, point_t p1,
-                       LineInsertionType segment_type, InsertionMode insertion_mode,
-                       selection_id_t selection_id = null_selection_id) -> void;
-
 auto change_insertion_mode_consuming(Modifier& modifier, selection_id_t selection_id,
                                      InsertionMode new_insertion_mode) -> void;
 

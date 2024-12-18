@@ -226,6 +226,58 @@ TEST(EditableCircuitWireHistory, SplitsTemporaryMultiple) {
     ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
 }
 
+TEST(EditableCircuitWireHistory, SplitsTemporaryGetSplitpoints) {
+    auto layout = Layout {};
+    auto modifier = get_modifier_with_history(layout);
+    const auto state_0 = layout_key_state_t {modifier};
+
+    // insert first wire
+    {
+        modifier.add_wire_segment(ordered_line_t {point_t {1, 0}, point_t {2, 0}},
+                                  InsertionMode::insert_or_discard);
+        modifier.finish_undo_group();
+    }
+    const auto state_1 = layout_key_state_t {modifier};
+
+    // insert second wire (overlapping completely)
+    {
+        // insert temporary
+        const auto segment_part = modifier.add_wire_segment(
+            ordered_line_t {point_t {0, 0}, point_t {5, 0}}, InsertionMode::temporary);
+
+        const auto guard = [&]() {
+            auto selection = Selection {};
+            selection.add_segment(segment_part);
+            return ModifierSelectionGuard {modifier, std::move(selection)};
+        }();
+        const auto& selection =
+            modifier.circuit_data().selection_store.at(guard.selection_id());
+
+        // split before insert
+        const auto split_points =
+            get_temporary_selection_splitpoints(modifier, selection);
+        modifier.split_temporary_segments(selection, split_points);
+
+        // insert_or_discard
+        change_insertion_mode_consuming(modifier, guard.selection_id(),
+                                        InsertionMode::insert_or_discard);
+        modifier.finish_undo_group();
+    }
+    const auto state_2 = layout_key_state_t {modifier};
+
+    // after undo
+    modifier.undo_group();
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
+    modifier.undo_group();
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_0);
+
+    // after redo
+    modifier.redo_group();
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_1);
+    modifier.redo_group();
+    ASSERT_TRUE(layout_key_state_t {modifier} == state_2);
+}
+
 //
 // Regularize Temporary Selection
 //

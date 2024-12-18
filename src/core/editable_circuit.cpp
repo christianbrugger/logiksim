@@ -131,7 +131,7 @@ auto EditableCircuit::change_insertion_mode(selection_id_t selection_id,
                                             InsertionMode new_insertion_mode) -> void {
     using namespace editable_circuit;
 
-    const auto guard = ModifierSelectionGuard(modifier_, selection_id);
+    const auto guard = ModifierSelectionGuard {modifier_, selection_id};
     change_insertion_mode_consuming(modifier_, guard.selection_id(), new_insertion_mode);
 }
 
@@ -139,7 +139,7 @@ auto EditableCircuit::change_insertion_mode(Selection selection,
                                             InsertionMode new_insertion_mode) -> void {
     using namespace editable_circuit;
 
-    const auto guard = ModifierSelectionGuard(modifier_, std::move(selection));
+    const auto guard = ModifierSelectionGuard {modifier_, std::move(selection)};
     change_insertion_mode_consuming(modifier_, guard.selection_id(), new_insertion_mode);
 }
 
@@ -147,7 +147,7 @@ auto EditableCircuit::move_or_delete_temporary(selection_id_t selection_id,
                                                move_delta_t delta) -> void {
     using namespace editable_circuit;
 
-    const auto guard = ModifierSelectionGuard(modifier_, selection_id);
+    const auto guard = ModifierSelectionGuard {modifier_, selection_id};
     move_or_delete_temporary_consuming(modifier_, guard.selection_id(), delta);
 }
 
@@ -155,7 +155,7 @@ auto EditableCircuit::move_or_delete_temporary(Selection selection,
                                                move_delta_t delta) -> void {
     using namespace editable_circuit;
 
-    const auto guard = ModifierSelectionGuard(modifier_, std::move(selection));
+    const auto guard = ModifierSelectionGuard {modifier_, std::move(selection)};
     move_or_delete_temporary_consuming(modifier_, guard.selection_id(), delta);
 }
 
@@ -171,7 +171,7 @@ auto EditableCircuit::delete_all(selection_id_t selection_id) -> void {
 auto EditableCircuit::delete_all(Selection selection) -> void {
     using namespace editable_circuit;
 
-    const auto guard = ModifierSelectionGuard(modifier_, std::move(selection));
+    const auto guard = ModifierSelectionGuard {modifier_, std::move(selection)};
     editable_circuit::delete_all(modifier_, guard.selection_id());
 }
 
