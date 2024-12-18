@@ -10,39 +10,50 @@ namespace circuit_widget {
 
 namespace {
 
+auto delete_inserted_segments(EditableCircuit& editable_circuit,
+                              selection_id_t selection_id) -> void {
+    if (!editable_circuit.selection_exists(selection_id)) {
+        return;
+    }
+
+    if (editable_circuit.is_history_enabled()) {
+        if (!editable_circuit.selection(selection_id).empty()) {
+            editable_circuit.undo_group();
+        }
+    } else {
+        editable_circuit.delete_all(selection_id);
+    }
+
+    Expects(editable_circuit.selection(selection_id).empty());
+}
+
 [[nodiscard]] auto remove_and_insert(EditableCircuit& editable_circuit,
                                      selection_id_t selection_id,
                                      std::optional<point_t> first_position,
                                      std::optional<LineInsertionType> direction,
                                      std::optional<point_t> position,
                                      InsertionMode mode) -> selection_id_t {
-    const auto re_enable_history = [was_enabled = editable_circuit.is_history_enabled(),
-                                    &editable_circuit]() {  //
-        if (was_enabled && !editable_circuit.is_history_enabled()) {
-            editable_circuit.enable_history();
-        }
-    };
-    const auto _ = gsl::finally(re_enable_history);
-    editable_circuit.disable_history();
-
-    save_delete_all(editable_circuit, selection_id);
-
-    if (mode == InsertionMode::insert_or_discard) {
-        re_enable_history();
-    }
+    delete_inserted_segments(editable_circuit, selection_id);
 
     if (position && first_position && direction && position != first_position) {
         if (!editable_circuit.selection_exists(selection_id)) {
             selection_id = editable_circuit.create_selection();
         }
 
-        // do insert
+        // no previous entries are required so deletion via undo works
+        Expects(!editable_circuit.has_ungrouped_undo_entries());
         add_wire_segments(editable_circuit, *first_position, *position, *direction,
                           InsertionMode::temporary, selection_id);
 
         if (mode != InsertionMode::temporary) {
             editable_circuit.split_temporary_before_insert(selection_id);
             editable_circuit.change_insertion_mode(selection_id, mode);
+        }
+
+        // don't create a history group when nothing was inserted
+        if (mode == InsertionMode::insert_or_discard &&
+            editable_circuit.selection(selection_id).empty()) {
+            editable_circuit.undo_group();
         }
     }
 
