@@ -1,4 +1,5 @@
 
+#include "core/algorithm/overload.h"
 #include "core/algorithm/range.h"
 #include "core/algorithm/span_operations.h"
 #include "core/component/editable_circuit/key_state.h"
@@ -120,16 +121,98 @@ auto fuzz_select_part(FuzzStream& stream, Modifier& modifier,
     return part_t {a, b};
 }
 
+auto fuzz_select_temporary_logicitem(FuzzStream& stream,
+                                     Modifier& modifier) -> logicitem_id_t {
+    const auto& layout = modifier.circuit_data().layout;
+
+    const auto is_temporary = [&](logicitem_id_t logicitem_id) {
+        return layout.logicitems().display_state(logicitem_id) ==
+               display_state_t::temporary;
+    };
+
+    const auto count =
+        gsl::narrow<int64_t>(std::ranges::count_if(logicitem_ids(layout), is_temporary));
+
+    if (count == 0) {
+        return null_logicitem_id;
+    }
+
+    const auto max_index = clamp_to_fuzz_stream(count - 1);
+    const auto index = fuzz_small_int(stream, 0, max_index);
+
+    auto view = logicitem_ids(layout) |  //
+                std::ranges::views::filter(is_temporary) |
+                std::ranges::views::drop(index);
+
+    Expects(view.begin() != view.end());
+    return *view.begin();
+}
+
+auto fuzz_select_logicitem(FuzzStream& stream, Modifier& modifier) -> logicitem_id_t {
+    const auto& layout = modifier.circuit_data().layout;
+
+    const auto size = layout.logicitems().size();
+
+    if (size == std::size_t {0}) {
+        return null_logicitem_id;
+    }
+
+    const auto max_index = clamp_to_fuzz_stream(size - std::size_t {1});
+    return logicitem_id_t {fuzz_small_int(stream, 0, max_index)};
+}
+
+auto fuzz_select_element(FuzzStream& stream, Modifier& modifier)
+    -> std::variant<std::monostate, logicitem_id_t, segment_part_t, decoration_id_t> {
+    const auto& layout = modifier.circuit_data().layout;
+
+    const auto logicitem_count = layout.logicitems().size();
+    const auto decoration_count = layout.decorations().size();
+    const auto segment_count = get_segment_count(layout);
+
+    const auto total_count = logicitem_count + decoration_count + segment_count;
+
+    if (total_count == 0) {
+        return std::monostate {};
+    }
+
+    const auto max_index = clamp_to_fuzz_stream(total_count - 1);
+    const auto index = fuzz_small_int(stream, 0, max_index);
+
+    if (std::cmp_less(index, logicitem_count)) {
+        return logicitem_id_t {index};
+    }
+    if (std::cmp_less(index, logicitem_count + decoration_count)) {
+        return decoration_id_t {index - logicitem_count};
+    }
+
+    const auto& segments = modifier.circuit_data().index.key_index().segments();
+    const auto segment =
+        checked_at(segments, index - logicitem_count - decoration_count).first;
+    return segment_part_t {
+        segment,
+        fuzz_select_part(stream, modifier, segment),
+    };
+}
+
 auto fuzz_select_selection(FuzzStream& stream, Modifier& modifier,
                            int max_count) -> Selection {
     const auto count = fuzz_small_int(stream, 0, max_count);
 
     auto selection = Selection {};
     for (const auto _ [[maybe_unused]] : range(count)) {
-        if (const auto segment = fuzz_select_segment(stream, modifier)) {
-            const auto part = fuzz_select_part(stream, modifier, segment);
-            selection.add_segment(segment_part_t {segment, part});
-        }
+        const auto element = fuzz_select_element(stream, modifier);
+
+        std::visit(overload([](std::monostate) {},
+                            [&](logicitem_id_t logicitem_id) {
+                                selection.add_logicitem(logicitem_id);
+                            },
+                            [&](decoration_id_t decoration_id) {
+                                selection.add_decoration(decoration_id);
+                            },
+                            [&](segment_part_t segment_part) {
+                                selection.add_segment(segment_part);
+                            }),
+                   element);
     }
 
     Ensures(std::cmp_less_equal(selection.size(), max_count));
@@ -161,6 +244,19 @@ auto fuzz_select_move_delta(FuzzStream& stream, ordered_line_t line,
         .y = fuzz_small_int(stream,  //
                             int {limits.box.p0.y} - int {line.p0.y},
                             int {limits.box.p1.y} - int {line.p1.y}),
+    };
+}
+
+auto fuzz_select_move_delta(FuzzStream& stream, const layout_calculation_data_t& data,
+                            const FuzzLimits& limits) -> move_delta_t {
+    const auto rect = element_bounding_rect(data);
+    return move_delta_t {
+        .x = fuzz_small_int(stream,  //
+                            int {limits.box.p0.x} - int {rect.p0.x},
+                            int {limits.box.p1.x} - int {rect.p1.x}),
+        .y = fuzz_small_int(stream,  //
+                            int {limits.box.p0.y} - int {rect.p0.y},
+                            int {limits.box.p1.y} - int {rect.p1.y}),
     };
 }
 
@@ -392,6 +488,30 @@ auto get_temporary_selection_splitpoints(FuzzStream& stream, Modifier& modifier)
     modifier.split_temporary_segments(selection, split_points);
 }
 
+auto delete_temporary_logicitem(FuzzStream& stream, Modifier& modifier) {
+    if (auto logicitem_id = fuzz_select_temporary_logicitem(stream, modifier)) {
+        modifier.delete_temporary_logicitem(logicitem_id);
+    }
+}
+
+auto move_or_delete_temporary_logicitem(FuzzStream& stream, Modifier& modifier,
+                                        const FuzzLimits& limits) {
+    if (auto logicitem_id = fuzz_select_temporary_logicitem(stream, modifier)) {
+        const auto data =
+            to_layout_calculation_data(modifier.circuit_data().layout, logicitem_id);
+        const auto delta = fuzz_select_move_delta(stream, data, limits);
+
+        modifier.move_or_delete_temporary_logicitem(logicitem_id, delta);
+    }
+}
+
+auto change_logicitem_insertion_mode(FuzzStream& stream, Modifier& modifier) {
+    if (auto logicitem_id = fuzz_select_logicitem(stream, modifier)) {
+        const auto new_mode = fuzz_select_insertion_mode(stream);
+        modifier.change_logicitem_insertion_mode(logicitem_id, new_mode);
+    }
+}
+
 auto add_logicitem(FuzzStream& stream, Modifier& modifier,
                    const FuzzLimits& limits) -> void {
     auto definition = [&]() {
@@ -423,6 +543,18 @@ auto add_logicitem(FuzzStream& stream, Modifier& modifier,
     modifier.add_logicitem(std::move(definition), position, mode);
 }
 
+auto logicitem_toggle_inverter(FuzzStream& stream, Modifier& modifier,
+                               const FuzzLimits& limits) {
+    return;
+    const auto point = fuzz_select_point(stream, limits);
+    modifier.toggle_inverter(point);
+}
+
+auto logicitem_set_attributes(FuzzStream& stream, Modifier& modifier) {
+    static_cast<void>(stream);
+    static_cast<void>(modifier);
+}
+
 auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
     auto selection = fuzz_select_selection(stream, modifier, 4);
 
@@ -431,7 +563,7 @@ auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
 
 auto editing_operation(FuzzStream& stream, Modifier& modifier,
                        const FuzzLimits& limits) -> void {
-    switch (fuzz_small_int(stream, 0, 14)) {
+    switch (fuzz_small_int(stream, 0, 19)) {
         // wires
         case 0:
             add_wire_segment(stream, modifier, limits);
@@ -478,13 +610,29 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
 
         // logicitems
         case 13:
-            // TODO different types
+            delete_temporary_logicitem(stream, modifier);
+            return;
+        case 14:
+            move_or_delete_temporary_logicitem(stream, modifier, limits);
+            return;
+        case 15:
+            change_logicitem_insertion_mode(stream, modifier);
+            return;
+        case 16:
+            // TODO more types
             add_logicitem(stream, modifier, limits);
+            return;
+        case 17:
+            // TODO re-enable
+            logicitem_toggle_inverter(stream, modifier, limits);
+            return;
+        case 18:
+            // TODO add logic
+            logicitem_set_attributes(stream, modifier);
             return;
 
         // selection
-        case 14:
-            // TODO select logicitems & decorations
+        case 19:
             set_visible_selection(stream, modifier);
             return;
     }

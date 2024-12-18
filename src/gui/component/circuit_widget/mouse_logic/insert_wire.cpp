@@ -17,6 +17,7 @@ auto delete_inserted_segments(EditableCircuit& editable_circuit,
     }
 
     if (editable_circuit.is_history_enabled()) {
+        // Use undo instead of delete to not create excessive history entries.
         if (!editable_circuit.selection(selection_id).empty()) {
             editable_circuit.undo_group();
             editable_circuit.clear_redo_history();
