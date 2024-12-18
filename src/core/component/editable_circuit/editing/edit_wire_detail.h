@@ -165,8 +165,6 @@ auto merge_line_segment_with_history(
     CircuitData& circuit, segment_t segment_0, segment_t segment_1,
     segment_part_t* preserve_segment = nullptr) -> segment_t;
 
-auto merge_all_line_segments(CircuitData& circuit,
-                             std::vector<std::pair<segment_t, segment_t>>& pairs) -> void;
 template <std::invocable<CircuitData&, segment_t, segment_t> MergeFunc>
 auto merge_all_line_segments(CircuitData& circuit,
                              std::vector<std::pair<segment_t, segment_t>>& pairs,

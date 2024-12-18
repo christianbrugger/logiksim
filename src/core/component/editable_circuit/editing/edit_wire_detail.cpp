@@ -783,15 +783,6 @@ auto merge_line_segment_with_history(CircuitData& circuit, segment_t segment_0,
     return segment_after;
 }
 
-auto merge_all_line_segments(
-    CircuitData& circuit, std::vector<std::pair<segment_t, segment_t>>& pairs) -> void {
-    merge_all_line_segments(
-        circuit, pairs,
-        [](CircuitData& circuit_, segment_t segment_0, segment_t segment_1) -> void {
-            merge_line_segment(circuit_, segment_0, segment_1, nullptr);
-        });
-}
-
 //
 // Wire Operations
 //
@@ -1029,9 +1020,6 @@ auto update_inserted_segment_endpoints(CircuitData& circuit, wire_id_t wire_id,
                                        const point_t position) -> void {
     if (!is_inserted(wire_id)) [[unlikely]] {
         throw std::runtime_error("only works for inserted segment trees.");
-    }
-    if (data.size() == 0) {
-        return;
     }
 
     const auto run_point_update = [&](bool to_shadow) {
