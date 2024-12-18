@@ -84,9 +84,9 @@ auto move_or_delete_temporary_wire(CircuitData& circuit, segment_part_t& segment
  *
  * Throws, if segment is uninserted that is not sanitized.
  */
-auto change_wire_insertion_mode(
-    CircuitData& circuit, segment_part_t& segment_part, InsertionMode new_mode,
-    SegmentInsertionHint hint = SegmentInsertionHint::no_hint) -> void;
+auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_part,
+                                InsertionMode new_mode,
+                                InsertionHint hint = InsertionHint::no_hint) -> void;
 
 /**
  * @brief: Add a new line to the circuit with the given insertion mode.

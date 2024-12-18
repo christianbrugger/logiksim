@@ -46,7 +46,8 @@ auto move_or_delete_temporary_logicitem(CircuitData& circuit,
                                         move_delta_t delta) -> void;
 
 auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logicitem_id,
-                                     InsertionMode new_mode) -> void;
+                                     InsertionMode new_mode,
+                                     InsertionHint hint = InsertionHint::no_hint) -> void;
 
 auto add_logicitem(CircuitData& circuit, LogicItemDefinition&& definition,
                    point_t position, InsertionMode insertion_mode,

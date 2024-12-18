@@ -109,8 +109,9 @@ class Modifier {
     auto move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id,
                                             move_delta_t delta) -> void;
 
-    auto change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
-                                         InsertionMode new_insertion_mode) -> void;
+    auto change_logicitem_insertion_mode(
+        logicitem_id_t& logicitem_id, InsertionMode new_insertion_mode,
+        InsertionHint hint = InsertionHint::no_hint) -> void;
 
     auto add_logicitem(LogicItemDefinition&& definition, point_t position,
                        InsertionMode insertion_mode) -> logicitem_id_t;
@@ -132,8 +133,9 @@ class Modifier {
     auto move_or_delete_temporary_decoration(decoration_id_t& decoration_id,
                                              move_delta_t delta) -> void;
 
-    auto change_decoration_insertion_mode(decoration_id_t& decoration_id,
-                                          InsertionMode new_insertion_mode) -> void;
+    auto change_decoration_insertion_mode(
+        decoration_id_t& decoration_id, InsertionMode new_insertion_mode,
+        InsertionHint hint = InsertionHint::no_hint) -> void;
 
     auto add_decoration(DecorationDefinition&& definition, point_t position,
                         InsertionMode insertion_mode) -> decoration_id_t;
@@ -150,9 +152,8 @@ class Modifier {
     auto add_wire_segment(ordered_line_t line,
                           InsertionMode insertion_mode) -> segment_part_t;
 
-    auto change_wire_insertion_mode(
-        segment_part_t& segment_part, InsertionMode new_mode,
-        SegmentInsertionHint hint = SegmentInsertionHint::no_hint) -> void;
+    auto change_wire_insertion_mode(segment_part_t& segment_part, InsertionMode new_mode,
+                                    InsertionHint hint = InsertionHint::no_hint) -> void;
 
     auto move_temporary_wire_unchecked(segment_part_t full_segment_part,
                                        move_delta_t delta) -> void;

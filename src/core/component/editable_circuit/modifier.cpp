@@ -244,17 +244,19 @@ auto Modifier::move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id,
 }
 
 auto Modifier::change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
-                                               InsertionMode new_insertion_mode) -> void {
+                                               InsertionMode new_insertion_mode,
+                                               InsertionHint hint) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "change_logicitem_insertion_mode(logicitem_id = {}, new_mode = {});\n"
+            "change_logicitem_insertion_mode(logicitem_id = {}, new_mode = {}, "
+            "hint = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, logicitem_id, new_insertion_mode);
+            circuit_data_.layout, logicitem_id, new_insertion_mode, hint);
     }
 
     editing::change_logicitem_insertion_mode(circuit_data_, logicitem_id,
-                                             new_insertion_mode);
+                                             new_insertion_mode, hint);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
@@ -373,18 +375,20 @@ auto Modifier::move_or_delete_temporary_decoration(decoration_id_t& decoration_i
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::change_decoration_insertion_mode(
-    decoration_id_t& decoration_id, InsertionMode new_insertion_mode) -> void {
+auto Modifier::change_decoration_insertion_mode(decoration_id_t& decoration_id,
+                                                InsertionMode new_insertion_mode,
+                                                InsertionHint hint) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "change_decoration_insertion_mode(decoration_id = {}, new_mode = {});\n"
+            "change_decoration_insertion_mode(decoration_id = {}, new_mode = {}, "
+            "hint = {});\n"
             "==========================================================\n\n",
-            circuit_data_.layout, decoration_id, new_insertion_mode);
+            circuit_data_.layout, decoration_id, new_insertion_mode, hint);
     }
 
     editing::change_decoration_insertion_mode(circuit_data_, decoration_id,
-                                              new_insertion_mode);
+                                              new_insertion_mode, hint);
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
     }
@@ -471,7 +475,7 @@ auto Modifier::add_wire_segment(ordered_line_t line,
 
 auto Modifier::change_wire_insertion_mode(segment_part_t& segment_part,
                                           InsertionMode new_mode,
-                                          SegmentInsertionHint hint) -> void {
+                                          InsertionHint hint) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"

@@ -251,11 +251,11 @@ auto _insert_uninserted_segment(CircuitData& circuit,
 
 auto _wire_change_temporary_to_colliding(CircuitData& circuit,
                                          segment_part_t& segment_part,
-                                         SegmentInsertionHint hint) -> void {
+                                         InsertionHint hint) -> void {
     const auto line = get_line(circuit.layout, segment_part);
     bool colliding = is_wire_colliding(circuit, line);
 
-    if (colliding || hint == SegmentInsertionHint::assume_colliding) {
+    if (colliding || hint == InsertionHint::assume_colliding) {
         const auto destination = colliding_wire_id;
         reset_temporary_endpoints_with_history(circuit, segment_part);
         move_segment_between_trees_with_history(circuit, segment_part, destination);
@@ -340,8 +340,7 @@ auto change_wire_insertion_mode_requires_sanitization(wire_id_t wire_id,
 }
 
 auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_part,
-                                InsertionMode new_mode,
-                                SegmentInsertionHint hint) -> void {
+                                InsertionMode new_mode, InsertionHint hint) -> void {
     if (change_wire_insertion_mode_requires_sanitization(segment_part.segment.wire_id,
                                                          new_mode) &&
         !is_sanitized(segment_part, circuit.layout, circuit.index.collision_index()))
@@ -349,7 +348,7 @@ auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_pa
         throw std::runtime_error("trying to uninsert non-sanitized segment part");
     }
 
-    if (!segment_insertion_hint_valid(new_mode, hint)) [[unlikely]] {
+    if (!insertion_hint_valid(new_mode, hint)) [[unlikely]] {
         throw std::runtime_error("invalid insertion hint provided");
     }
 

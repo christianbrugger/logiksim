@@ -46,16 +46,16 @@ auto fuzz_select_insertion_mode(FuzzStream& stream) -> InsertionMode {
 }
 
 auto fuzz_select_insertion_hint(FuzzStream& stream,
-                                InsertionMode new_mode) -> SegmentInsertionHint {
+                                InsertionMode new_mode) -> InsertionHint {
     if (new_mode == InsertionMode::temporary) {
-        return SegmentInsertionHint::no_hint;
+        return InsertionHint::no_hint;
     }
 
     switch (fuzz_small_int(stream, 0, 1)) {
         case 0:
-            return SegmentInsertionHint::no_hint;
+            return InsertionHint::no_hint;
         case 1:
-            return SegmentInsertionHint::assume_colliding;
+            return InsertionHint::assume_colliding;
     }
     std::terminate();
 }

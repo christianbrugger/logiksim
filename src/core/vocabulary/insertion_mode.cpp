@@ -36,9 +36,9 @@ auto to_insertion_mode(display_state_t display_state) -> InsertionMode {
 };
 
 template <>
-auto format(SegmentInsertionHint hint) -> std::string {
+auto format(InsertionHint hint) -> std::string {
     switch (hint) {
-        using enum SegmentInsertionHint;
+        using enum InsertionHint;
 
         case no_hint:
             return "no_hint";
@@ -48,14 +48,10 @@ auto format(SegmentInsertionHint hint) -> std::string {
     std::terminate();
 }
 
-auto segment_insertion_hint_valid(InsertionMode mode, SegmentInsertionHint hint) -> bool {
-    if (hint == SegmentInsertionHint::assume_colliding &&
-        !(mode == InsertionMode::collisions ||
-          mode == InsertionMode::insert_or_discard)) {
-        return false;
-    }
-
-    return true;
+auto insertion_hint_valid(InsertionMode mode, InsertionHint hint) -> bool {
+    return hint != InsertionHint::assume_colliding ||
+           (mode == InsertionMode::collisions ||
+            mode == InsertionMode::insert_or_discard);
 }
 
 }  // namespace logicsim

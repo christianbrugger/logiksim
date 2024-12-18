@@ -244,8 +244,9 @@ auto move_or_delete_temporary_decoration(CircuitData& circuit,
 
 namespace {
 
-auto _decoration_change_temporary_to_colliding(
-    CircuitData& circuit, const decoration_id_t decoration_id) -> void {
+auto _decoration_change_temporary_to_colliding(CircuitData& circuit,
+                                               const decoration_id_t decoration_id,
+                                               InsertionHint hint) -> void {
     if (circuit.layout.decorations().display_state(decoration_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("element is not in the right state.");
@@ -253,19 +254,19 @@ auto _decoration_change_temporary_to_colliding(
 
     _store_history_decoration_colliding_to_temporary(circuit, decoration_id);
 
-    if (is_decoration_colliding(circuit, decoration_id)) {
+    const auto is_colliding = is_decoration_colliding(circuit, decoration_id);
+
+    if (is_colliding || hint == InsertionHint::assume_colliding) {
         circuit.layout.decorations().set_display_state(decoration_id,
                                                        display_state_t::colliding);
+        return;
     }
 
-    else {
-        circuit.layout.decorations().set_display_state(decoration_id,
-                                                       display_state_t::valid);
-        circuit.submit(info_message::DecorationInserted {
-            .decoration_id = decoration_id,
-            .data = to_decoration_layout_data(circuit.layout, decoration_id),
-        });
-    }
+    circuit.layout.decorations().set_display_state(decoration_id, display_state_t::valid);
+    circuit.submit(info_message::DecorationInserted {
+        .decoration_id = decoration_id,
+        .data = to_decoration_layout_data(circuit.layout, decoration_id),
+    });
 };
 
 auto _decoration_change_colliding_to_insert(CircuitData& circuit,
@@ -332,9 +333,13 @@ auto _decoration_change_colliding_to_temporary(
 
 auto change_decoration_insertion_mode(CircuitData& circuit,
                                       decoration_id_t& decoration_id,
-                                      InsertionMode new_mode) -> void {
+                                      InsertionMode new_mode,
+                                      InsertionHint hint) -> void {
     if (!decoration_id) [[unlikely]] {
         throw std::runtime_error("element id is invalid");
+    }
+    if (!insertion_hint_valid(new_mode, hint)) [[unlikely]] {
+        throw std::runtime_error("invalid insertion hint provided");
     }
 
     const auto old_mode =
@@ -344,7 +349,7 @@ auto change_decoration_insertion_mode(CircuitData& circuit,
     }
 
     if (old_mode == InsertionMode::temporary) {
-        _decoration_change_temporary_to_colliding(circuit, decoration_id);
+        _decoration_change_temporary_to_colliding(circuit, decoration_id, hint);
     }
     if (new_mode == InsertionMode::insert_or_discard) {
         _decoration_change_colliding_to_insert(circuit, decoration_id);

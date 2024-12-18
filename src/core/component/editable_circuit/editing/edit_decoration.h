@@ -46,9 +46,9 @@ auto move_or_delete_temporary_decoration(CircuitData& circuit,
                                          decoration_id_t& decoration_id,
                                          move_delta_t delta) -> void;
 
-auto change_decoration_insertion_mode(CircuitData& circuit,
-                                      decoration_id_t& decoration_id,
-                                      InsertionMode new_mode) -> void;
+auto change_decoration_insertion_mode(
+    CircuitData& circuit, decoration_id_t& decoration_id, InsertionMode new_mode,
+    InsertionHint hint = InsertionHint::no_hint) -> void;
 
 auto add_decoration(CircuitData& circuit, DecorationDefinition&& definition,
                     point_t position, InsertionMode insertion_mode,

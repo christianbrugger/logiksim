@@ -274,7 +274,8 @@ auto move_or_delete_temporary_logicitem(CircuitData& circuit,
 namespace {
 
 auto _element_change_temporary_to_colliding(CircuitData& circuit,
-                                            const logicitem_id_t logicitem_id) -> void {
+                                            const logicitem_id_t logicitem_id,
+                                            InsertionHint hint) -> void {
     if (circuit.layout.logicitems().display_state(logicitem_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("element is not in the right state.");
@@ -282,16 +283,18 @@ auto _element_change_temporary_to_colliding(CircuitData& circuit,
 
     _store_history_logicitem_colliding_to_temporary(circuit, logicitem_id);
 
-    if (is_logicitem_colliding(circuit, logicitem_id)) {
+    const auto is_colliding = is_logicitem_colliding(circuit, logicitem_id);
+
+    if (is_colliding || hint == InsertionHint::assume_colliding) {
         circuit.layout.logicitems().set_display_state(logicitem_id,
                                                       display_state_t::colliding);
-    } else {
-        convert_wires_at_outputs_to_inputs(circuit, logicitem_id);
-        circuit.layout.logicitems().set_display_state(logicitem_id,
-                                                      display_state_t::valid);
-        circuit.submit(info_message::LogicItemInserted {
-            logicitem_id, to_layout_calculation_data(circuit.layout, logicitem_id)});
+        return;
     }
+
+    convert_wires_at_outputs_to_inputs(circuit, logicitem_id);
+    circuit.layout.logicitems().set_display_state(logicitem_id, display_state_t::valid);
+    circuit.submit(info_message::LogicItemInserted {
+        logicitem_id, to_layout_calculation_data(circuit.layout, logicitem_id)});
 };
 
 auto _element_change_colliding_to_insert(CircuitData& circuit,
@@ -358,7 +361,7 @@ auto _element_change_colliding_to_temporary(CircuitData& circuit,
 }  // namespace
 
 auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logicitem_id,
-                                     InsertionMode new_mode) -> void {
+                                     InsertionMode new_mode, InsertionHint hint) -> void {
     if (!logicitem_id) [[unlikely]] {
         throw std::runtime_error("element id is invalid");
     }
@@ -370,7 +373,7 @@ auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logic
     }
 
     if (old_mode == InsertionMode::temporary) {
-        _element_change_temporary_to_colliding(circuit, logicitem_id);
+        _element_change_temporary_to_colliding(circuit, logicitem_id, hint);
     }
     if (new_mode == InsertionMode::insert_or_discard) {
         _element_change_colliding_to_insert(circuit, logicitem_id);
