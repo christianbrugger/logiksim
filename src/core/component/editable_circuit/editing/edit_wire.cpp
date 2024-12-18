@@ -445,7 +445,7 @@ auto _remove_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
         return;
     }
     if (!all_same_wire_id(segments)) [[unlikely]] {
-        throw std::runtime_error("expected query result to of one segment tree");
+        throw std::runtime_error("expected query result to be of one segment tree");
     }
 
     auto lines = std::array {
@@ -474,6 +474,9 @@ auto _add_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
     const auto wire_id_0 = segments.at(0).wire_id;
     const auto wire_id_1 = segments.at(1).wire_id;
 
+    Expects(is_inserted(wire_id_0));
+    Expects(is_inserted(wire_id_1));
+
     if (wire_id_0 == wire_id_1) {
         return;
     }
@@ -481,10 +484,6 @@ auto _add_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
             circuit.layout.wires().segment_tree(wire_id_1).input_count() >
         connection_count_t {1}) {
         return;
-    }
-
-    if (!is_inserted(wire_id_0) || !is_inserted(wire_id_1)) [[unlikely]] {
-        throw std::runtime_error("only works on inserted elements");
     }
 
     const auto line0 = get_line(circuit.layout, segments.at(0));
