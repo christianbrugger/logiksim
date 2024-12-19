@@ -128,13 +128,18 @@ auto _store_history_change_attribute_logicitem(
 
 auto _store_history_logicitem_loggle_inverter(CircuitData& circuit,
                                               logicitem_id_t logicitem_id) -> void {
-    // inverter toggles are rare event, nut performed in bulk
+    // inverter toggles are rare event, not performed in bulk
     // so other history events are re-used to map it
     if (const auto stack = circuit.history.get_stack()) {
         const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
         const auto state = circuit.layout.logicitems().display_state(logicitem_id);
 
-        // create old one
+        // selection
+        if (circuit.visible_selection.initial_selection().is_selected(logicitem_id)) {
+            stack->push_logicitem_add_visible_selection(logicitem_key);
+        }
+
+        // create old
         if (state == display_state_t::normal) {
             stack->push_logicitem_colliding_to_insert(logicitem_key);
         }
@@ -144,7 +149,7 @@ auto _store_history_logicitem_loggle_inverter(CircuitData& circuit,
         stack->push_logicitem_create_temporary(
             logicitem_key, to_placed_logicitem(circuit.layout, logicitem_id));
 
-        // delete new one
+        // delete new
         stack->push_logicitem_delete_temporary(logicitem_key);
         if (state != display_state_t::temporary) {
             stack->push_logicitem_colliding_to_temporary(logicitem_key);

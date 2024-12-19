@@ -545,7 +545,6 @@ auto add_logicitem(FuzzStream& stream, Modifier& modifier,
 
 auto logicitem_toggle_inverter(FuzzStream& stream, Modifier& modifier,
                                const FuzzLimits& limits) {
-    return;
     const auto point = fuzz_select_point(stream, limits);
     modifier.toggle_inverter(point);
 }
