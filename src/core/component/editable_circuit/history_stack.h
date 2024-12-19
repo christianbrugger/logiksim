@@ -97,6 +97,12 @@ struct split_segment_key_t {
  *
  * Class-invariants:
  *  + All substacks have correct size to fit the entries in the main stack.
+ *
+ * Stack-simplifications are implemented so the following GUI events
+ * don't create repeating entries
+ *  + logicitem & decoration insert
+ *  + logicitem & decoration resize
+ *  + logicitem & decoration attribute changes
  */
 class HistoryStack {
    public:
