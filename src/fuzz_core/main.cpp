@@ -2,6 +2,7 @@
 #include "core/algorithm/overload.h"
 #include "core/algorithm/range.h"
 #include "core/algorithm/span_operations.h"
+#include "core/algorithm/text_escape.h"
 #include "core/component/editable_circuit/key_state.h"
 #include "core/component/editable_circuit/modifier.h"
 #include "core/geometry/layout_geometry.h"
@@ -148,6 +149,33 @@ auto fuzz_select_temporary_logicitem(FuzzStream& stream,
     return *view.begin();
 }
 
+auto fuzz_select_temporary_decoration(FuzzStream& stream,
+                                      Modifier& modifier) -> decoration_id_t {
+    const auto& layout = modifier.circuit_data().layout;
+
+    const auto is_temporary = [&](decoration_id_t decoration_id) {
+        return layout.decorations().display_state(decoration_id) ==
+               display_state_t::temporary;
+    };
+
+    const auto count =
+        gsl::narrow<int64_t>(std::ranges::count_if(decoration_ids(layout), is_temporary));
+
+    if (count == 0) {
+        return null_decoration_id;
+    }
+
+    const auto max_index = clamp_to_fuzz_stream(count - 1);
+    const auto index = fuzz_small_int(stream, 0, max_index);
+
+    auto view = decoration_ids(layout) |  //
+                std::ranges::views::filter(is_temporary) |
+                std::ranges::views::drop(index);
+
+    Expects(view.begin() != view.end());
+    return *view.begin();
+}
+
 auto fuzz_select_logicitem(FuzzStream& stream, Modifier& modifier) -> logicitem_id_t {
     const auto& layout = modifier.circuit_data().layout;
 
@@ -159,6 +187,19 @@ auto fuzz_select_logicitem(FuzzStream& stream, Modifier& modifier) -> logicitem_
 
     const auto max_index = clamp_to_fuzz_stream(size - std::size_t {1});
     return logicitem_id_t {fuzz_small_int(stream, 0, max_index)};
+}
+
+auto fuzz_select_decoration(FuzzStream& stream, Modifier& modifier) -> decoration_id_t {
+    const auto& layout = modifier.circuit_data().layout;
+
+    const auto size = layout.decorations().size();
+
+    if (size == std::size_t {0}) {
+        return null_decoration_id;
+    }
+
+    const auto max_index = clamp_to_fuzz_stream(size - std::size_t {1});
+    return decoration_id_t {fuzz_small_int(stream, 0, max_index)};
 }
 
 auto fuzz_select_element(FuzzStream& stream, Modifier& modifier)
@@ -235,21 +276,8 @@ auto fuzz_select_temporary_selection_full_parts(FuzzStream& stream, Modifier& mo
     return selection;
 }
 
-auto fuzz_select_move_delta(FuzzStream& stream, ordered_line_t line,
+auto fuzz_select_move_delta(FuzzStream& stream, rect_t rect,
                             const FuzzLimits& limits) -> move_delta_t {
-    return move_delta_t {
-        .x = fuzz_small_int(stream,  //
-                            int {limits.box.p0.x} - int {line.p0.x},
-                            int {limits.box.p1.x} - int {line.p1.x}),
-        .y = fuzz_small_int(stream,  //
-                            int {limits.box.p0.y} - int {line.p0.y},
-                            int {limits.box.p1.y} - int {line.p1.y}),
-    };
-}
-
-auto fuzz_select_move_delta(FuzzStream& stream, const layout_calculation_data_t& data,
-                            const FuzzLimits& limits) -> move_delta_t {
-    const auto rect = element_bounding_rect(data);
     return move_delta_t {
         .x = fuzz_small_int(stream,  //
                             int {limits.box.p0.x} - int {rect.p0.x},
@@ -258,6 +286,24 @@ auto fuzz_select_move_delta(FuzzStream& stream, const layout_calculation_data_t&
                             int {limits.box.p0.y} - int {rect.p0.y},
                             int {limits.box.p1.y} - int {rect.p1.y}),
     };
+}
+
+auto fuzz_select_move_delta(FuzzStream& stream, ordered_line_t line,
+                            const FuzzLimits& limits) -> move_delta_t {
+    const auto rect = element_bounding_rect(line);
+    return fuzz_select_move_delta(stream, rect, limits);
+}
+
+auto fuzz_select_move_delta(FuzzStream& stream, const layout_calculation_data_t& data,
+                            const FuzzLimits& limits) -> move_delta_t {
+    const auto rect = element_bounding_rect(data);
+    return fuzz_select_move_delta(stream, rect, limits);
+}
+
+auto fuzz_select_move_delta(FuzzStream& stream, const decoration_layout_data_t& data,
+                            const FuzzLimits& limits) -> move_delta_t {
+    const auto rect = element_bounding_rect(data);
+    return fuzz_select_move_delta(stream, rect, limits);
 }
 
 auto fuzz_select_point(FuzzStream& stream, const FuzzLimits& limits) -> point_t {
@@ -488,6 +534,10 @@ auto get_temporary_selection_splitpoints(FuzzStream& stream, Modifier& modifier)
     modifier.split_temporary_segments(selection, split_points);
 }
 
+//
+// Logic Item
+//
+
 auto delete_temporary_logicitem(FuzzStream& stream, Modifier& modifier) {
     if (auto logicitem_id = fuzz_select_temporary_logicitem(stream, modifier)) {
         modifier.delete_temporary_logicitem(logicitem_id);
@@ -554,6 +604,67 @@ auto logicitem_set_attributes(FuzzStream& stream, Modifier& modifier) {
     static_cast<void>(modifier);
 }
 
+//
+// Decorations
+//
+
+auto delete_temporary_decoration(FuzzStream& stream, Modifier& modifier) {
+    if (auto decoration_id = fuzz_select_temporary_decoration(stream, modifier)) {
+        modifier.delete_temporary_decoration(decoration_id);
+    }
+}
+
+auto move_or_delete_temporary_decoration(FuzzStream& stream, Modifier& modifier,
+                                         const FuzzLimits& limits) {
+    if (auto decoration_id = fuzz_select_temporary_decoration(stream, modifier)) {
+        const auto data =
+            to_decoration_layout_data(modifier.circuit_data().layout, decoration_id);
+        const auto delta = fuzz_select_move_delta(stream, data, limits);
+
+        modifier.move_or_delete_temporary_decoration(decoration_id, delta);
+    }
+}
+
+auto change_decoration_insertion_mode(FuzzStream& stream, Modifier& modifier) {
+    if (auto decoration_id = fuzz_select_decoration(stream, modifier)) {
+        const auto new_mode = fuzz_select_insertion_mode(stream);
+        modifier.change_decoration_insertion_mode(decoration_id, new_mode);
+    }
+}
+
+auto add_decoration(FuzzStream& stream, Modifier& modifier,
+                    const FuzzLimits& limits) -> void {
+    auto definition = DecorationDefinition {
+        .decoration_type = DecorationType::text_element,
+        .size = size_2d_t {1, 0},
+        .attrs_text_element = attributes_text_element_t {.text = "initial"},
+    };
+
+    const auto size = definition.size;
+    const auto position = point_t {
+        fuzz_small_int(stream, int {limits.box.p0.x},
+                       int {limits.box.p1.x} - int {size.width}),
+        fuzz_small_int(stream, int {limits.box.p0.y},
+                       int {limits.box.p1.y} - int {size.height}),
+    };
+
+    const auto mode = fuzz_select_insertion_mode(stream);
+    modifier.add_decoration(std::move(definition), position, mode);
+}
+
+auto decoration_set_attributes(FuzzStream& stream, Modifier& modifier) {
+    return;
+    if (auto decoration_id = fuzz_select_decoration(stream, modifier)) {
+        const auto text = escape_as_hex(char8_t {stream.pop_or()});
+        const auto attrs = attributes_text_element_t {.text = text};
+        modifier.set_attributes(decoration_id, attrs);
+    }
+}
+
+//
+// Selections
+//
+
 auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
     auto selection = fuzz_select_selection(stream, modifier, 4);
 
@@ -562,7 +673,7 @@ auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
 
 auto editing_operation(FuzzStream& stream, Modifier& modifier,
                        const FuzzLimits& limits) -> void {
-    switch (fuzz_small_int(stream, 0, 19)) {
+    switch (fuzz_small_int(stream, 0, 24)) {
         // wires
         case 0:
             add_wire_segment(stream, modifier, limits);
@@ -622,7 +733,6 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
             add_logicitem(stream, modifier, limits);
             return;
         case 17:
-            // TODO re-enable
             logicitem_toggle_inverter(stream, modifier, limits);
             return;
         case 18:
@@ -630,8 +740,26 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
             logicitem_set_attributes(stream, modifier);
             return;
 
-        // selection
+        // decorations
         case 19:
+            delete_temporary_decoration(stream, modifier);
+            return;
+        case 20:
+            move_or_delete_temporary_decoration(stream, modifier, limits);
+            return;
+        case 21:
+            change_decoration_insertion_mode(stream, modifier);
+            return;
+        case 22:
+            add_decoration(stream, modifier, limits);
+            return;
+        case 23:
+            // TODO !!! fix & re-enable
+            decoration_set_attributes(stream, modifier);
+            return;
+
+        // selection
+        case 24:
             set_visible_selection(stream, modifier);
             return;
     }
