@@ -317,9 +317,13 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
     }
 }
 
-auto _wire_change_colliding_to_insert(CircuitData& circuit,
-                                      segment_part_t& segment_part) -> void {
+auto _wire_change_colliding_to_insert(CircuitData& circuit, segment_part_t& segment_part,
+                                      InsertionHint hint) -> void {
     const auto wire_id = segment_part.segment.wire_id;
+
+    if (!is_inserted(wire_id) && hint == InsertionHint::expect_valid) [[unlikely]] {
+        throw std::runtime_error("Expected segment to be valid");
+    }
 
     // from valid
     if (is_inserted(wire_id)) {
@@ -372,7 +376,7 @@ auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_pa
         _wire_change_temporary_to_colliding(circuit, segment_part, hint);
     }
     if (new_mode == InsertionMode::insert_or_discard) {
-        _wire_change_colliding_to_insert(circuit, segment_part);
+        _wire_change_colliding_to_insert(circuit, segment_part, hint);
     }
     if (old_modes.first == InsertionMode::insert_or_discard ||
         old_modes.second == InsertionMode::insert_or_discard) {

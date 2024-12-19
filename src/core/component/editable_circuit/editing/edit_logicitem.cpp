@@ -312,8 +312,14 @@ auto _element_change_colliding_to_temporary(CircuitData& circuit,
                                             logicitem_id_t logicitem_id) -> void;
 
 auto _element_change_colliding_to_insert(CircuitData& circuit,
-                                         logicitem_id_t& logicitem_id) -> void {
+                                         logicitem_id_t& logicitem_id,
+                                         InsertionHint hint) -> void {
     const auto display_state = circuit.layout.logicitems().display_state(logicitem_id);
+
+    if (display_state != display_state_t::valid && hint == InsertionHint::expect_valid)
+        [[unlikely]] {
+        throw std::runtime_error("Expected logicitem to be valid on insert");
+    }
 
     if (display_state == display_state_t::valid) {
         _store_history_logicitem_insert_to_colliding_expect_valid(circuit, logicitem_id);
@@ -395,7 +401,7 @@ auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logic
         _element_change_temporary_to_colliding(circuit, logicitem_id, hint);
     }
     if (new_mode == InsertionMode::insert_or_discard) {
-        _element_change_colliding_to_insert(circuit, logicitem_id);
+        _element_change_colliding_to_insert(circuit, logicitem_id, hint);
     }
     if (old_mode == InsertionMode::insert_or_discard) {
         _element_change_insert_to_colliding(circuit, logicitem_id);

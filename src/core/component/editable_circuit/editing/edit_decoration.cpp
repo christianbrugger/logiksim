@@ -284,8 +284,14 @@ auto _decoration_change_colliding_to_temporary(CircuitData& circuit,
                                                decoration_id_t decoration_id) -> void;
 
 auto _decoration_change_colliding_to_insert(CircuitData& circuit,
-                                            decoration_id_t& decoration_id) -> void {
+                                            decoration_id_t& decoration_id,
+                                            InsertionHint hint) -> void {
     const auto display_state = circuit.layout.decorations().display_state(decoration_id);
+
+    if (display_state != display_state_t::valid && hint == InsertionHint::expect_valid)
+        [[unlikely]] {
+        throw std::runtime_error("Expected decoration to be valid on insert");
+    }
 
     if (display_state == display_state_t::valid) {
         _store_history_decoration_insert_to_colliding_expect_valid(circuit,
@@ -369,7 +375,7 @@ auto change_decoration_insertion_mode(CircuitData& circuit,
         _decoration_change_temporary_to_colliding(circuit, decoration_id, hint);
     }
     if (new_mode == InsertionMode::insert_or_discard) {
-        _decoration_change_colliding_to_insert(circuit, decoration_id);
+        _decoration_change_colliding_to_insert(circuit, decoration_id, hint);
     }
     if (old_mode == InsertionMode::insert_or_discard) {
         _decoration_change_insert_to_colliding(circuit, decoration_id);
