@@ -30,7 +30,6 @@ class EditableCircuit {
     [[nodiscard]] auto operator==(const EditableCircuit&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto config() const -> Config;
     [[nodiscard]] auto layout() const -> const Layout&;
     [[nodiscard]] auto extract_layout() -> Layout;
     [[nodiscard]] auto modifier() const -> const editable_circuit::Modifier&;
@@ -208,6 +207,9 @@ using SelectionGuard = editable_circuit::SelectionGuardTemplate<EditableCircuit>
  * enabled with DEBUG_CHECK_CLASS_INVARIANTS on a per method level.
  */
 [[nodiscard]] auto is_valid(const EditableCircuit& editable_circuit) -> bool;
+
+[[nodiscard]] auto get_config(const EditableCircuit& editable_circuit)
+    -> EditableCircuit::Config;
 
 auto add_placed_logicitem(EditableCircuit& editable_circuit,
                           PlacedLogicItem&& placed_logicitem,

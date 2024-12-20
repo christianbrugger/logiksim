@@ -88,13 +88,6 @@ auto Modifier::extract_layout() -> Layout {
     return layout;
 }
 
-auto Modifier::config() const -> ModifierConfig {
-    return ModifierConfig {
-        .store_messages = circuit_data_.messages.has_value(),
-        .validate_messages = circuit_data_.message_validator.has_value(),
-    };
-}
-
 //
 // Undo & Redo
 //
@@ -941,6 +934,13 @@ auto is_valid(const Modifier& modifier) -> bool {
     }
 
     return true;
+}
+
+auto get_config(const Modifier& modifier) -> ModifierConfig {
+    return ModifierConfig {
+        .store_messages = modifier.circuit_data().messages.has_value(),
+        .validate_messages = modifier.circuit_data().message_validator.has_value(),
+    };
 }
 
 auto change_wire_insertion_mode_requires_sanitization(wire_id_t wire_id,

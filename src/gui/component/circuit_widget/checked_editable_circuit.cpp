@@ -38,7 +38,7 @@ auto CheckedEditableCircuit::extract_editable_circuit() -> EditableCircuit {
     Expects(class_invariant_holds());
 
     const auto result = std::move(editable_circuit_);
-    editable_circuit_ = EditableCircuit {Layout {}, result.config()};
+    editable_circuit_ = EditableCircuit {Layout {}, get_config(result)};
 
     Ensures(class_invariant_holds());
     return result;

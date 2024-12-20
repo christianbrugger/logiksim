@@ -72,8 +72,6 @@ class Modifier {
 
     [[nodiscard]] auto circuit_data() const -> const CircuitData&;
     [[nodiscard]] auto extract_layout() -> Layout;
-    // TODO: write test for this one
-    [[nodiscard]] auto config() const -> ModifierConfig;
 
     //
     // Undo & Redo
@@ -234,6 +232,9 @@ using ModifierSelectionGuard = SelectionGuardTemplate<Modifier>;
  * enabled with DEBUG_CHECK_CLASS_INVARIANTS on a per method level.
  */
 [[nodiscard]] auto is_valid(const Modifier& modifier) -> bool;
+
+// TODO: write test for this one
+[[nodiscard]] auto get_config(const Modifier& modifier) -> ModifierConfig;
 
 [[nodiscard]] auto change_wire_insertion_mode_requires_sanitization(
     wire_id_t wire_id, InsertionMode new_mode) -> bool;

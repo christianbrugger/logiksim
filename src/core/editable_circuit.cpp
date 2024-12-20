@@ -26,10 +26,6 @@ auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", modifier_.circuit_data().layout);
 }
 
-auto EditableCircuit::config() const -> Config {
-    return modifier_.config();
-}
-
 auto EditableCircuit::layout() const -> const Layout& {
     return modifier_.circuit_data().layout;
 }
@@ -336,6 +332,10 @@ auto EditableCircuit::visible_selection_empty() const -> bool {
 
 auto is_valid(const EditableCircuit& editable_circuit) -> bool {
     return is_valid(editable_circuit.modifier());
+}
+
+auto get_config(const EditableCircuit& editable_circuit) -> EditableCircuit::Config {
+    return editable_circuit::get_config(editable_circuit.modifier());
 }
 
 auto add_placed_logicitem(EditableCircuit& editable_circuit,
