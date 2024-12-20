@@ -770,30 +770,30 @@ auto validate_undo(Modifier& modifier,
                    const std::vector<layout_key_state_t>& key_state_stack) {
     for (const auto& state : std::ranges::views::reverse(key_state_stack)  //
                                  | std::ranges::views::drop(1)) {
-        Expects(modifier.has_undo());
+        Expects(has_undo(modifier));
         modifier.undo_group();
         Expects(is_valid(modifier));
         Expects(layout_key_state_t {modifier} == state);
     }
-    Expects(!modifier.has_undo());
+    Expects(!has_undo(modifier));
 }
 
 auto validate_redo(Modifier& modifier,
                    const std::vector<layout_key_state_t>& key_state_stack) {
     for (const auto& state : key_state_stack | std::ranges::views::drop(1)) {
-        Expects(modifier.has_redo());
+        Expects(has_redo(modifier));
         modifier.redo_group();
         Expects(is_valid(modifier));
         Expects(layout_key_state_t {modifier} == state);
     }
-    Expects(!modifier.has_redo());
+    Expects(!has_redo(modifier));
 }
 
 auto validate_undo_redo(Modifier& modifier,
                         const std::vector<layout_key_state_t>& key_state_stack) {
     Expects(key_state_stack.empty() ||
             layout_key_state_t {modifier} == key_state_stack.back());
-    Expects(!modifier.has_ungrouped_undo_entries());
+    Expects(!has_ungrouped_undo_entries(modifier));
 
     // Run twice, as redo may generate different stack entries
     validate_undo(modifier, key_state_stack);
@@ -804,7 +804,7 @@ auto validate_undo_redo(Modifier& modifier,
 
 auto history_finish_undo_group(Modifier& modifier,
                                std::vector<layout_key_state_t>& key_state_stack) {
-    if (modifier.has_ungrouped_undo_entries()) {
+    if (has_ungrouped_undo_entries(modifier)) {
         modifier.finish_undo_group();
         key_state_stack.emplace_back(modifier);
     }
