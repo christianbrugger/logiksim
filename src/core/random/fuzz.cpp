@@ -60,4 +60,17 @@ auto fuzz_bool(FuzzStream& stream) -> bool {
     return res == 1;
 }
 
+auto fuzz_double_inclusive(FuzzStream& stream, double lower, double upper) -> double {
+    Expects(upper >= lower);
+    static_assert(FuzzStream::min() == 0);
+
+    if (upper == lower) {
+        return lower;
+    }
+
+    return gsl::narrow_cast<double>(stream.pop_or()) /
+               gsl::narrow_cast<double>(FuzzStream::max()) * (upper - lower) +
+           lower;
+}
+
 }  // namespace logicsim

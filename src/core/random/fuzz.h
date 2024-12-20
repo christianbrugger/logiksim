@@ -39,6 +39,8 @@ class FuzzStream {
 
 [[nodiscard]] auto fuzz_small_int(FuzzStream& stream, int lower, int upper) -> int;
 [[nodiscard]] auto fuzz_bool(FuzzStream& stream) -> bool;
+[[nodiscard]] auto fuzz_double_inclusive(FuzzStream& stream, double lower,
+                                         double upper) -> double;
 
 //
 // Implementation

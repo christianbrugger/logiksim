@@ -260,6 +260,16 @@ auto fuzz_select_selection(FuzzStream& stream, Modifier& modifier,
     return selection;
 }
 
+auto fuzz_select_selection_function(FuzzStream& stream) -> SelectionFunction {
+    switch (fuzz_small_int(stream, 0, 1)) {
+        case 0:
+            return SelectionFunction::add;
+        case 1:
+            return SelectionFunction::substract;
+    };
+    std::terminate();
+}
+
 auto fuzz_select_temporary_selection_full_parts(FuzzStream& stream, Modifier& modifier,
                                                 int max_count) -> Selection {
     const auto count = fuzz_small_int(stream, 0, max_count);
@@ -306,11 +316,45 @@ auto fuzz_select_move_delta(FuzzStream& stream, const decoration_layout_data_t& 
     return fuzz_select_move_delta(stream, rect, limits);
 }
 
-auto fuzz_select_point(FuzzStream& stream, const FuzzLimits& limits) -> point_t {
+auto fuzz_select_point(FuzzStream& stream, const rect_t& limits) -> point_t {
     return point_t {
-        grid_t {fuzz_small_int(stream, int {limits.box.p0.x}, int {limits.box.p1.x})},
-        grid_t {fuzz_small_int(stream, int {limits.box.p0.y}, int {limits.box.p1.y})},
+        grid_t {fuzz_small_int(stream, int {limits.p0.x}, int {limits.p1.x})},
+        grid_t {fuzz_small_int(stream, int {limits.p0.y}, int {limits.p1.y})},
     };
+}
+
+auto fuzz_select_point(FuzzStream& stream, const FuzzLimits& limits) -> point_t {
+    return fuzz_select_point(stream, limits.box);
+}
+
+auto fuzz_select_point_fine(FuzzStream& stream,
+                            const rect_fine_t& limits) -> point_fine_t {
+    return point_fine_t {
+        grid_fine_t {
+            fuzz_double_inclusive(stream, double {limits.p0.x}, double {limits.p1.x})},
+        grid_fine_t {
+            fuzz_double_inclusive(stream, double {limits.p0.y}, double {limits.p1.y})},
+    };
+}
+
+auto fuzz_select_point_fine(FuzzStream& stream,
+                            const FuzzLimits& limits) -> point_fine_t {
+    return fuzz_select_point_fine(stream, rect_fine_t {limits.box});
+}
+
+[[maybe_unused]] auto fuzz_select_rect(FuzzStream& stream,
+                                       const FuzzLimits& limits) -> rect_t {
+    const auto p0 = fuzz_select_point(stream, limits);
+    const auto p1 = fuzz_select_point(stream, rect_t {p0, limits.box.p1});
+
+    return rect_t {p0, p1};
+}
+
+auto fuzz_select_rect_fine(FuzzStream& stream, const FuzzLimits& limits) -> rect_fine_t {
+    const auto p0 = fuzz_select_point_fine(stream, limits);
+    const auto p1 = fuzz_select_point_fine(stream, rect_fine_t {p0, limits.box.p1});
+
+    return rect_fine_t {p0, p1};
 }
 
 auto fuzz_select_points(FuzzStream& stream, const FuzzLimits& limits, int min_count,
@@ -665,15 +709,40 @@ auto decoration_set_attributes(FuzzStream& stream, Modifier& modifier) {
 // Selections
 //
 
+auto clear_visible_selection(Modifier& modifier) -> void {
+    modifier.clear_visible_selection();
+}
+
 auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
-    auto selection = fuzz_select_selection(stream, modifier, 4);
+    auto selection = fuzz_select_selection(stream, modifier, 6);
 
     modifier.set_visible_selection(std::move(selection));
 }
 
+auto add_visible_selection_rect(FuzzStream& stream, Modifier& modifier,
+                                const FuzzLimits& limits) -> void {
+    const auto rect = fuzz_select_rect_fine(stream, limits);
+    const auto function = fuzz_select_selection_function(stream);
+    modifier.add_visible_selection_rect(function, rect);
+}
+
+auto try_pop_last_visible_selection_rect(Modifier& modifier) -> void {
+    modifier.try_pop_last_visible_selection_rect();
+}
+
+auto try_update_last_visible_selection_rect(FuzzStream& stream, Modifier& modifier,
+                                            const FuzzLimits& limits) -> void {
+    const auto rect = fuzz_select_rect_fine(stream, limits);
+    modifier.try_update_last_visible_selection_rect(rect);
+}
+
+auto apply_all_visible_selection_operations(Modifier& modifier) -> void {
+    modifier.apply_all_visible_selection_operations();
+}
+
 auto editing_operation(FuzzStream& stream, Modifier& modifier,
                        const FuzzLimits& limits) -> void {
-    switch (fuzz_small_int(stream, 0, 24)) {
+    switch (fuzz_small_int(stream, 0, 29)) {
         // wires
         case 0:
             add_wire_segment(stream, modifier, limits);
@@ -760,7 +829,22 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
 
         // selection
         case 24:
+            clear_visible_selection(modifier);
+            return;
+        case 25:
             set_visible_selection(stream, modifier);
+            return;
+        case 26:
+            add_visible_selection_rect(stream, modifier, limits);
+            return;
+        case 27:
+            try_pop_last_visible_selection_rect(modifier);
+            return;
+        case 28:
+            try_update_last_visible_selection_rect(stream, modifier, limits);
+            return;
+        case 29:
+            apply_all_visible_selection_operations(modifier);
             return;
     }
     std::terminate();
