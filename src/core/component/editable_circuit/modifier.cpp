@@ -146,6 +146,13 @@ auto Modifier::clear_redo_history() -> void {
 }
 
 auto Modifier::finish_undo_group() -> void {
+    if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
+        print_fmt(
+            "\n==========================================================\n"
+            "finish_undo_group();\n"
+            "==========================================================\n\n");
+    }
+
     editing::finish_undo_group(circuit_data_.history);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {

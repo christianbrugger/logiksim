@@ -760,7 +760,7 @@ auto HistoryStack::push_visible_selection_add_operation(
 }
 
 auto HistoryStack::push_visible_selection_update_last(const rect_fine_t& rect) -> void {
-    if (last_non_group_entry(entries_) == HistoryEntry::visible_selection_update_last) {
+    if (get_back_vector(entries_) == HistoryEntry::visible_selection_update_last) {
         return;
     }
 

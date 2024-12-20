@@ -100,9 +100,10 @@ struct split_segment_key_t {
  *
  * Stack-simplifications are implemented so the following GUI events
  * don't create repeating entries
- *  + logicitem & decoration insert
- *  + logicitem & decoration resize
- *  + logicitem & decoration attribute changes
+ *  + insert logicitem & decoration
+ *  + resize logicitem & decoration
+ *  + change attributes of logicitem & decoration
+ *  + drag area selection
  */
 class HistoryStack {
    public:
