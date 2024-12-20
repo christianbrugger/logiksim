@@ -768,6 +768,8 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
 
 auto validate_undo(Modifier& modifier,
                    const std::vector<layout_key_state_t>& key_state_stack) {
+    Expects(modifier.circuit_data().history.undo_stack.group_count() + std::size_t {1} ==
+            std::size(key_state_stack));
     for (const auto& state : std::ranges::views::reverse(key_state_stack)  //
                                  | std::ranges::views::drop(1)) {
         Expects(has_undo(modifier));
@@ -775,17 +777,21 @@ auto validate_undo(Modifier& modifier,
         Expects(is_valid(modifier));
         Expects(layout_key_state_t {modifier} == state);
     }
+    Expects(modifier.circuit_data().history.undo_stack.group_count() == 0);
     Expects(!has_undo(modifier));
 }
 
 auto validate_redo(Modifier& modifier,
                    const std::vector<layout_key_state_t>& key_state_stack) {
+    Expects(modifier.circuit_data().history.redo_stack.group_count() + std::size_t {1} ==
+            std::size(key_state_stack));
     for (const auto& state : key_state_stack | std::ranges::views::drop(1)) {
         Expects(has_redo(modifier));
         modifier.redo_group();
         Expects(is_valid(modifier));
         Expects(layout_key_state_t {modifier} == state);
     }
+    Expects(modifier.circuit_data().history.redo_stack.group_count() == 0);
     Expects(!has_redo(modifier));
 }
 
@@ -833,9 +839,8 @@ auto process_data(std::span<const uint8_t> data) -> void {
     }
     history_finish_undo_group(modifier, key_state_stack);
 
-    if (true) {
-        validate_undo_redo(modifier, key_state_stack);
-    }
+    // validate undo & redo
+    validate_undo_redo(modifier, key_state_stack);
 }
 
 }  // namespace
