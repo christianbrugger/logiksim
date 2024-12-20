@@ -170,22 +170,6 @@ auto Modifier::reopen_undo_group() -> void {
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::is_history_enabled() const -> bool {
-    return editing::is_history_enabled(circuit_data_.history);
-}
-
-auto Modifier::has_undo() const -> bool {
-    return editing::has_undo_entries(circuit_data_.history);
-}
-
-auto Modifier::has_redo() const -> bool {
-    return editing::has_redo_entries(circuit_data_.history);
-}
-
-auto Modifier::has_ungrouped_undo_entries() const -> bool {
-    return editing::has_ungrouped_undo_entries(circuit_data_.history);
-}
-
 //
 // Logic Items
 //
@@ -1164,6 +1148,30 @@ auto delete_all(Modifier& modifier, selection_id_t selection_id) -> void {
         modifier.change_wire_insertion_mode(segment_part, InsertionMode::temporary);
         modifier.delete_temporary_wire_segment(segment_part);
     }
+}
+
+//
+// History
+//
+
+auto is_history_enabled(const Modifier& modifier) -> bool {
+    return editing::is_history_enabled(modifier.circuit_data().history);
+}
+
+auto has_undo(const Modifier& modifier) -> bool {
+    return editing::has_undo_entries(modifier.circuit_data().history);
+}
+
+auto has_redo(const Modifier& modifier) -> bool {
+    return editing::has_redo_entries(modifier.circuit_data().history);
+}
+
+auto has_ungrouped_undo_entries(const Modifier& modifier) -> bool {
+    return editing::has_ungrouped_undo_entries(modifier.circuit_data().history);
+}
+
+auto undo_groups_count(const Modifier& modifier) -> std::size_t {
+    return modifier.circuit_data().history.undo_stack.group_count();
 }
 
 }  // namespace editable_circuit

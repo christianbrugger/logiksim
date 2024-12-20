@@ -51,12 +51,6 @@ class EditableCircuit {
     auto finish_undo_group() -> void;
     auto reopen_undo_group() -> void;
 
-    [[nodiscard]] auto is_history_enabled() const -> bool;
-    [[nodiscard]] auto has_undo() const -> bool;
-    [[nodiscard]] auto has_redo() const -> bool;
-    [[nodiscard]] auto has_ungrouped_undo_entries() const -> bool;
-    [[nodiscard]] auto undo_groups_count() const -> std::size_t;
-
     //
     // Elements
     //
@@ -261,6 +255,18 @@ auto visible_selection_delete_all(EditableCircuit& editable_circuit) -> void;
                                         selection_id_t selection_id) -> logicitem_id_t;
 [[nodiscard]] auto get_single_decoration(const EditableCircuit& editable_circuit,
                                          selection_id_t selection_id) -> decoration_id_t;
+
+//
+// History
+//
+
+[[nodiscard]] auto is_history_enabled(const EditableCircuit& editable_circuit) -> bool;
+[[nodiscard]] auto has_undo(const EditableCircuit& editable_circuit) -> bool;
+[[nodiscard]] auto has_redo(const EditableCircuit& editable_circuit) -> bool;
+[[nodiscard]] auto has_ungrouped_undo_entries(const EditableCircuit& editable_circuit)
+    -> bool;
+[[nodiscard]] auto undo_groups_count(const EditableCircuit& editable_circuit)
+    -> std::size_t;
 
 }  // namespace logicsim
 

@@ -267,9 +267,9 @@ auto CircuitWidget::history_status() const -> HistoryStatus {
     if (is_editing_state(circuit_state_)) {
         const auto& editable_circuit = circuit_store_.editable_circuit();
         return HistoryStatus {
-            .undo_available = editable_circuit.has_undo() &&
-                              editable_circuit.undo_groups_count() > std::size_t {0},
-            .redo_available = editable_circuit.has_redo(),
+            .undo_available = has_undo(editable_circuit) &&
+                              undo_groups_count(editable_circuit) > std::size_t {0},
+            .redo_available = has_redo(editable_circuit),
         };
     }
     return HistoryStatus {
@@ -965,10 +965,10 @@ auto CircuitWidget::class_invariant_holds() const -> bool {
                 0);
 
         // History Group
-        Expects(!circuit_store_.editable_circuit().has_ungrouped_undo_entries());
+        Expects(!has_ungrouped_undo_entries(circuit_store_.editable_circuit()));
 
         // History Enabled
-        Expects(circuit_store_.editable_circuit().is_history_enabled());
+        Expects(is_history_enabled(circuit_store_.editable_circuit()));
     }
 
     return true;

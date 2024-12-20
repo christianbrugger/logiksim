@@ -16,7 +16,7 @@ auto delete_inserted_segments(EditableCircuit& editable_circuit,
         return;
     }
 
-    if (editable_circuit.is_history_enabled()) {
+    if (is_history_enabled(editable_circuit)) {
         // Use undo instead of delete to not create excessive history entries.
         if (!editable_circuit.selection(selection_id).empty()) {
             editable_circuit.undo_group();
@@ -43,7 +43,7 @@ auto delete_inserted_segments(EditableCircuit& editable_circuit,
         }
 
         // no previous entries are required so deletion via undo works
-        Expects(!editable_circuit.has_ungrouped_undo_entries());
+        Expects(!has_ungrouped_undo_entries(editable_circuit));
         add_wire_segments(editable_circuit, *first_position, *position, *direction,
                           InsertionMode::temporary, selection_id);
 

@@ -91,12 +91,6 @@ class Modifier {
     auto finish_undo_group() -> void;
     auto reopen_undo_group() -> void;
 
-    // TODO remove const methods from modifier
-    [[nodiscard]] auto is_history_enabled() const -> bool;
-    [[nodiscard]] auto has_undo() const -> bool;
-    [[nodiscard]] auto has_redo() const -> bool;
-    [[nodiscard]] auto has_ungrouped_undo_entries() const -> bool;
-
     //
     // Logic Items
     //
@@ -277,6 +271,16 @@ auto move_or_delete_temporary_consuming(Modifier& modifier, selection_id_t selec
                                         move_delta_t delta) -> void;
 
 auto delete_all(Modifier& modifier, selection_id_t selection_id) -> void;
+
+//
+// History
+//
+
+[[nodiscard]] auto is_history_enabled(const Modifier& modifier) -> bool;
+[[nodiscard]] auto has_undo(const Modifier& modifier) -> bool;
+[[nodiscard]] auto has_redo(const Modifier& modifier) -> bool;
+[[nodiscard]] auto has_ungrouped_undo_entries(const Modifier& modifier) -> bool;
+[[nodiscard]] auto undo_groups_count(const Modifier& modifier) -> std::size_t;
 
 }  // namespace editable_circuit
 

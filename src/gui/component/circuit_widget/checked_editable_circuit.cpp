@@ -64,7 +64,7 @@ namespace {
 [[nodiscard]] auto redo_entries_grouped(const EditableCircuit& editable_circuit,
                                         CircuitWidgetState circuit_state) -> bool {
     return is_editing_state(circuit_state) ||
-           !editable_circuit.has_ungrouped_undo_entries();
+           !has_ungrouped_undo_entries(editable_circuit);
 }
 
 }  // namespace

@@ -78,26 +78,6 @@ auto EditableCircuit::reopen_undo_group() -> void {
     modifier_.reopen_undo_group();
 }
 
-auto EditableCircuit::is_history_enabled() const -> bool {
-    return modifier_.is_history_enabled();
-}
-
-auto EditableCircuit::has_undo() const -> bool {
-    return modifier_.has_undo();
-}
-
-auto EditableCircuit::has_redo() const -> bool {
-    return modifier_.has_redo();
-}
-
-auto EditableCircuit::has_ungrouped_undo_entries() const -> bool {
-    return modifier_.has_ungrouped_undo_entries();
-}
-
-auto EditableCircuit::undo_groups_count() const -> std::size_t {
-    return modifier_.circuit_data().history.undo_stack.group_count();
-}
-
 //
 // Elements
 //
@@ -495,6 +475,30 @@ auto get_single_decoration(const EditableCircuit& editable_circuit,
         return get_single_decoration(editable_circuit.selection(selection_id));
     }
     return null_decoration_id;
+}
+
+//
+// History
+//
+
+auto is_history_enabled(const EditableCircuit& editable_circuit) -> bool {
+    return editable_circuit::is_history_enabled(editable_circuit.modifier());
+}
+
+auto has_undo(const EditableCircuit& editable_circuit) -> bool {
+    return editable_circuit::has_undo(editable_circuit.modifier());
+}
+
+auto has_redo(const EditableCircuit& editable_circuit) -> bool {
+    return editable_circuit::has_redo(editable_circuit.modifier());
+}
+
+auto has_ungrouped_undo_entries(const EditableCircuit& editable_circuit) -> bool {
+    return editable_circuit::has_ungrouped_undo_entries(editable_circuit.modifier());
+}
+
+auto undo_groups_count(const EditableCircuit& editable_circuit) -> std::size_t {
+    return editable_circuit::undo_groups_count(editable_circuit.modifier());
 }
 
 }  // namespace logicsim

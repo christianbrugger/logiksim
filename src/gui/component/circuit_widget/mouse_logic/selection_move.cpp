@@ -38,7 +38,7 @@ SelectionMoveLogic::SelectionMoveLogic(const EditableCircuit& editable_circuit, 
                                  : State::waiting_for_first_click},
       insertion_mode_ {args.has_colliding ? InsertionMode::collisions
                                           : InsertionMode::insert_or_discard},
-      initial_history_enabled_ {editable_circuit.is_history_enabled()},
+      initial_history_enabled_ {is_history_enabled(editable_circuit)},
       expected_history_enabled_ {initial_history_enabled_},
       cross_points_ {std::move(args.cross_points)} {
     Expects(args.has_colliding == args.cross_points.has_value());
@@ -48,13 +48,13 @@ SelectionMoveLogic::SelectionMoveLogic(const EditableCircuit& editable_circuit, 
         display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
         insertion_mode_));
 
-    Ensures(expected_history_enabled_ == editable_circuit.is_history_enabled());
+    Ensures(expected_history_enabled_ == is_history_enabled(editable_circuit));
     Ensures(expected_history_enabled_ == initial_history_enabled_);
 }
 
 auto SelectionMoveLogic::mouse_press(EditableCircuit& editable_circuit,
                                      point_fine_t point, bool double_click) -> void {
-    Expects(expected_history_enabled_ == editable_circuit.is_history_enabled());
+    Expects(expected_history_enabled_ == is_history_enabled(editable_circuit));
 
     if (state_ == State::waiting_for_first_click) {
         const auto items = editable_circuit.query_selection(rect_fine_t {point, point});
@@ -84,12 +84,12 @@ auto SelectionMoveLogic::mouse_press(EditableCircuit& editable_circuit,
         state_ = State::move_selection;
         last_position_ = point;
     }
-    Ensures(expected_history_enabled_ == editable_circuit.is_history_enabled());
+    Ensures(expected_history_enabled_ == is_history_enabled(editable_circuit));
 }
 
 auto SelectionMoveLogic::mouse_move(EditableCircuit& editable_circuit,
                                     point_fine_t point) -> void {
-    Expects(expected_history_enabled_ == editable_circuit.is_history_enabled());
+    Expects(expected_history_enabled_ == is_history_enabled(editable_circuit));
 
     if (state_ != State::move_selection) {
         return;
@@ -97,12 +97,12 @@ auto SelectionMoveLogic::mouse_move(EditableCircuit& editable_circuit,
 
     move_selection(editable_circuit, point);
 
-    Ensures(expected_history_enabled_ == editable_circuit.is_history_enabled());
+    Ensures(expected_history_enabled_ == is_history_enabled(editable_circuit));
 }
 
 auto SelectionMoveLogic::mouse_release(EditableCircuit& editable_circuit,
                                        point_fine_t point) -> void {
-    Expects(expected_history_enabled_ == editable_circuit.is_history_enabled());
+    Expects(expected_history_enabled_ == is_history_enabled(editable_circuit));
 
     if (state_ != State::move_selection) {
         return;
@@ -120,7 +120,7 @@ auto SelectionMoveLogic::mouse_release(EditableCircuit& editable_circuit,
         state_ = State::finished;
     }
 
-    Ensures(expected_history_enabled_ == editable_circuit.is_history_enabled());
+    Ensures(expected_history_enabled_ == is_history_enabled(editable_circuit));
 }
 
 auto SelectionMoveLogic::is_finished() const -> bool {
@@ -136,7 +136,7 @@ auto SelectionMoveLogic::confirm() -> void {
 }
 
 auto SelectionMoveLogic::finalize(EditableCircuit& editable_circuit) -> void {
-    Expects(expected_history_enabled_ == editable_circuit.is_history_enabled());
+    Expects(expected_history_enabled_ == is_history_enabled(editable_circuit));
 
     if (!is_finished()) {
         if (delete_on_cancel_) {
@@ -149,7 +149,7 @@ auto SelectionMoveLogic::finalize(EditableCircuit& editable_circuit) -> void {
 
     editable_circuit.finish_undo_group();
 
-    Ensures(expected_history_enabled_ == editable_circuit.is_history_enabled());
+    Ensures(expected_history_enabled_ == is_history_enabled(editable_circuit));
     Ensures(expected_history_enabled_ == initial_history_enabled_);
 }
 
@@ -205,7 +205,7 @@ auto SelectionMoveLogic::convert_selection_to(EditableCircuit& editable_circuit,
     Expects(found_states_matches_insertion_mode(
         display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
         insertion_mode_));
-    Expects(expected_history_enabled_ == editable_circuit.is_history_enabled());
+    Expects(expected_history_enabled_ == is_history_enabled(editable_circuit));
 
     if (insertion_mode_ == new_mode) {
         return;
@@ -245,7 +245,7 @@ auto SelectionMoveLogic::convert_selection_to(EditableCircuit& editable_circuit,
     Ensures(found_states_matches_insertion_mode(
         display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
         insertion_mode_));
-    Ensures(expected_history_enabled_ == editable_circuit.is_history_enabled());
+    Ensures(expected_history_enabled_ == is_history_enabled(editable_circuit));
 }
 
 auto SelectionMoveLogic::restore_original_positions(EditableCircuit& editable_circuit)
