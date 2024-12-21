@@ -49,6 +49,11 @@ function(ls_setup_sanitizers_gnu target_name sanitizer_selection)
             "-fsanitize=undefined"
         )
 
+    elseif(sanitizer_selection STREQUAL "Fuzzer"
+           AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        target_compile_options("${target_name}" INTERFACE "-fsanitize=fuzzer")
+        target_link_options("${target_name}" INTERFACE "-fsanitize=fuzzer")
+
     elseif(sanitizer_selection STREQUAL "Address;Fuzzer"
            AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_compile_options("${target_name}" INTERFACE
@@ -128,6 +133,11 @@ function(ls_setup_sanitizers_msvc target_name sanitizer_selection)
             "/fsanitize=address"
             "/INFERASANLIBS"
         )
+
+    elseif(sanitizer_selection STREQUAL "Fuzzer"
+           AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+        target_compile_options("${target_name}" INTERFACE "/fsanitize=fuzzer")
+        target_link_options("${target_name}" INTERFACE "/fsanitize=fuzzer")
 
     elseif(sanitizer_selection STREQUAL "Address;Fuzzer"
            AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
