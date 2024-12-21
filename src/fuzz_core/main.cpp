@@ -539,7 +539,9 @@ auto regularize_temporary_selection(FuzzStream& stream, Modifier& modifier,
     const auto& selection =
         modifier.circuit_data().selection_store.at(guard.selection_id());
 
-    auto true_cross_points = fuzz_select_points(stream, limits, 0, 4);
+    auto true_cross_points =
+        fuzz_bool(stream) ? std::make_optional(fuzz_select_points(stream, limits, 0, 4))
+                          : std::nullopt;
 
     modifier.regularize_temporary_selection(selection, std::move(true_cross_points));
 }
@@ -606,20 +608,38 @@ auto change_logicitem_insertion_mode(FuzzStream& stream, Modifier& modifier) {
 auto add_logicitem(FuzzStream& stream, Modifier& modifier,
                    const FuzzLimits& limits) -> void {
     auto definition = [&]() {
-        if (fuzz_bool(stream)) {
-            return LogicItemDefinition {
-                .logicitem_type = LogicItemType::buffer_element,
-                .input_count = connection_count_t {1},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::right,
-            };
-        }
-        return LogicItemDefinition {
-            .logicitem_type = LogicItemType::button,
-            .input_count = connection_count_t {0},
-            .output_count = connection_count_t {1},
-            .orientation = orientation_t::undirected,
+        switch (fuzz_small_int(stream, 0, 3)) {
+            case 0:
+                return LogicItemDefinition {
+                    .logicitem_type = LogicItemType::buffer_element,
+                    .input_count = connection_count_t {1},
+                    .output_count = connection_count_t {1},
+                    .orientation = orientation_t::right,
+                };
+            case 1:
+                return LogicItemDefinition {
+                    .logicitem_type = LogicItemType::button,
+                    .input_count = connection_count_t {0},
+                    .output_count = connection_count_t {1},
+                    .orientation = orientation_t::undirected,
+                };
+            case 2:
+                return LogicItemDefinition {
+                    .logicitem_type = LogicItemType::flipflop_jk,
+                    .input_count = connection_count_t {5},
+                    .output_count = connection_count_t {2},
+                    .orientation = orientation_t::right,
+                };
+            case 3:
+                return LogicItemDefinition {
+                    .logicitem_type = LogicItemType::clock_generator,
+                    .input_count = connection_count_t {3},
+                    .output_count = connection_count_t {3},
+                    .orientation = orientation_t::right,
+                    .attrs_clock_generator = attributes_clock_generator_t {},
+                };
         };
+        std::terminate();
     }();
 
     const auto size = element_size(to_layout_calculation_data(definition, point_t {}));
