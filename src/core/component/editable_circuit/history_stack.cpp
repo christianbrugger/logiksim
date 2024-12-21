@@ -189,6 +189,10 @@ auto HistoryStack::top_entry() const -> std::optional<HistoryEntry> {
     return get_back_vector(entries_);
 }
 
+auto HistoryStack::top_non_group_entry() const -> std::optional<HistoryEntry> {
+    return last_non_group_entry(entries_);
+}
+
 //
 // Groups
 //
@@ -297,8 +301,8 @@ auto HistoryStack::push_logicitem_move_temporary(logicitem_key_t logicitem_key,
 
 auto HistoryStack::push_logicitem_change_attributes(
     logicitem_key_t logicitem_key, attributes_clock_generator_t&& attrs) -> void {
-    // ignore even if in separate group, as GUI fires many
-    if (last_non_group_entry(entries_) == HistoryEntry::logicitem_change_attributes &&
+    // optimize so user text-entry does not produce endless entries
+    if (get_back_vector(entries_) == HistoryEntry::logicitem_change_attributes &&
         at_back_vector(logicitem_keys_) == logicitem_key) {
         return;
     }
@@ -475,8 +479,8 @@ auto HistoryStack::push_decoration_move_temporary(decoration_key_t decoration_ke
 
 auto HistoryStack::push_decoration_change_attributes(
     decoration_key_t decoration_key, attributes_text_element_t&& attrs) -> void {
-    // ignore even if in separate group, as GUI fires many
-    if (last_non_group_entry(entries_) == HistoryEntry::decoration_change_attributes &&
+    // optimize so user text-entry does not produce endless entries
+    if (get_back_vector(entries_) == HistoryEntry::decoration_change_attributes &&
         at_back_vector(decoration_keys_) == decoration_key) {
         return;
     }

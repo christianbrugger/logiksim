@@ -250,6 +250,16 @@ auto SettingDialogManager::class_invariant_holds() const -> bool {
 
 namespace {
 
+auto reopen_attr_change_undo_group(EditableCircuit& editable_circuit) -> void {
+    // Contiguous user text-entry for name changes would create
+    // a new undo group for each character.
+    // Here we open the last group again and add to the change to the old one.
+    if (!has_ungrouped_undo_entries(editable_circuit) &&
+        last_non_group_undo_entry_is_attribute_change(editable_circuit)) {
+        editable_circuit.reopen_undo_group();
+    }
+}
+
 auto change_setting_attributes_element(EditableCircuit& editable_circuit,
                                        logicitem_id_t logicitem_id,
                                        const SettingAttributes& attributes) -> void {
@@ -291,6 +301,8 @@ auto change_setting_attributes(EditableCircuit& editable_circuit,
     if (!element) {
         return;
     }
+
+    reopen_attr_change_undo_group(editable_circuit);
 
     std::visit(
         [&](auto element_id) {

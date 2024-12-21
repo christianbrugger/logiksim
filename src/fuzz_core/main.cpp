@@ -119,17 +119,20 @@ auto fuzz_select_part(FuzzStream& stream, Modifier& modifier,
     return part_t {a, b};
 }
 
-auto fuzz_select_temporary_logicitem(FuzzStream& stream,
-                                     Modifier& modifier) -> logicitem_id_t {
+template <class Filter>
+    requires std::invocable<Filter, const Layout&, logicitem_id_t> &&
+                 std::same_as<bool,
+                              std::invoke_result_t<Filter, const Layout&, logicitem_id_t>>
+auto fuzz_select_logicitem_filter(FuzzStream& stream, Modifier& modifier,
+                                  Filter filter) -> logicitem_id_t {
     const auto& layout = modifier.circuit_data().layout;
 
-    const auto is_temporary = [&](logicitem_id_t logicitem_id) {
-        return layout.logicitems().display_state(logicitem_id) ==
-               display_state_t::temporary;
+    const auto is_filtered = [&](logicitem_id_t logicitem_id) -> bool {
+        return std::invoke(filter, layout, logicitem_id);
     };
 
     const auto count =
-        gsl::narrow<int64_t>(std::ranges::count_if(logicitem_ids(layout), is_temporary));
+        gsl::narrow<int64_t>(std::ranges::count_if(logicitem_ids(layout), is_filtered));
 
     if (count == 0) {
         return null_logicitem_id;
@@ -138,12 +141,34 @@ auto fuzz_select_temporary_logicitem(FuzzStream& stream,
     const auto max_index = clamp_to_fuzz_stream(count - 1);
     const auto index = fuzz_small_int(stream, 0, max_index);
 
-    auto view = logicitem_ids(layout) |  //
-                std::ranges::views::filter(is_temporary) |
+    auto view = logicitem_ids(layout) |                    //
+                std::ranges::views::filter(is_filtered) |  //
                 std::ranges::views::drop(index);
 
     Expects(view.begin() != view.end());
     return *view.begin();
+}
+
+auto fuzz_select_temporary_logicitem(FuzzStream& stream,
+                                     Modifier& modifier) -> logicitem_id_t {
+    const auto is_temporary = [](const Layout& layout, logicitem_id_t logicitem_id) {
+        return layout.logicitems().display_state(logicitem_id) ==
+               display_state_t::temporary;
+    };
+
+    return fuzz_select_logicitem_filter(stream, modifier, is_temporary);
+}
+
+auto fuzz_select_logicitem_type(FuzzStream& stream, Modifier& modifier,
+                                LogicItemType type) -> logicitem_id_t {
+    const auto is_type = [=](const Layout& layout, logicitem_id_t logicitem_id) {
+        return layout.logicitems().type(logicitem_id) == type;
+    };
+
+    const auto result = fuzz_select_logicitem_filter(stream, modifier, is_type);
+
+    Ensures(!result || is_type(modifier.circuit_data().layout, result));
+    return result;
 }
 
 auto fuzz_select_temporary_decoration(FuzzStream& stream,
@@ -668,8 +693,14 @@ auto logicitem_toggle_inverter(FuzzStream& stream, Modifier& modifier,
 }
 
 auto logicitem_set_attributes(FuzzStream& stream, Modifier& modifier) {
-    static_cast<void>(stream);
-    static_cast<void>(modifier);
+    if (const auto logicitem_id = fuzz_select_logicitem_type(
+            stream, modifier, LogicItemType::clock_generator)) {
+        auto attrs = attributes_clock_generator_t {
+            .name = escape_as_hex(char8_t {stream.pop_or()}),
+        };
+
+        modifier.set_attributes(logicitem_id, std::move(attrs));
+    }
 }
 
 //
@@ -721,11 +752,12 @@ auto add_decoration(FuzzStream& stream, Modifier& modifier,
 }
 
 auto decoration_set_attributes(FuzzStream& stream, Modifier& modifier) {
-    return;
-    if (auto decoration_id = fuzz_select_decoration(stream, modifier)) {
-        const auto text = escape_as_hex(char8_t {stream.pop_or()});
-        const auto attrs = attributes_text_element_t {.text = text};
-        modifier.set_attributes(decoration_id, attrs);
+    if (const auto decoration_id = fuzz_select_decoration(stream, modifier)) {
+        auto attrs = attributes_text_element_t {
+            .text = escape_as_hex(char8_t {stream.pop_or()}),
+        };
+
+        modifier.set_attributes(decoration_id, std::move(attrs));
     }
 }
 
@@ -822,14 +854,12 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
             change_logicitem_insertion_mode(stream, modifier);
             return;
         case 16:
-            // TODO more types
             add_logicitem(stream, modifier, limits);
             return;
         case 17:
             logicitem_toggle_inverter(stream, modifier, limits);
             return;
         case 18:
-            // TODO add logic
             logicitem_set_attributes(stream, modifier);
             return;
 
@@ -847,7 +877,6 @@ auto editing_operation(FuzzStream& stream, Modifier& modifier,
             add_decoration(stream, modifier, limits);
             return;
         case 23:
-            // TODO !!! fix & re-enable
             decoration_set_attributes(stream, modifier);
             return;
 

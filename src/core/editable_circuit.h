@@ -270,6 +270,9 @@ auto visible_selection_delete_all(EditableCircuit& editable_circuit) -> void;
 [[nodiscard]] auto undo_groups_count(const EditableCircuit& editable_circuit)
     -> std::size_t;
 
+[[nodiscard]] auto last_non_group_undo_entry_is_attribute_change(
+    const EditableCircuit& editable_circuit) -> bool;
+
 }  // namespace logicsim
 
 #endif

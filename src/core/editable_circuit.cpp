@@ -501,4 +501,16 @@ auto undo_groups_count(const EditableCircuit& editable_circuit) -> std::size_t {
     return editable_circuit::undo_groups_count(editable_circuit.modifier());
 }
 
+auto last_non_group_undo_entry_is_attribute_change(
+    const EditableCircuit& editable_circuit) -> bool {
+    using enum editable_circuit::HistoryEntry;
+
+    const auto entry = editable_circuit.modifier()
+                           .circuit_data()
+                           .history.undo_stack.top_non_group_entry();
+
+    return entry == logicitem_change_attributes ||  //
+           entry == decoration_change_attributes;
+}
+
 }  // namespace logicsim

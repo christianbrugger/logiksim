@@ -116,6 +116,7 @@ class HistoryStack {
     auto clear() -> void;
 
     [[nodiscard]] auto top_entry() const -> std::optional<HistoryEntry>;
+    [[nodiscard]] auto top_non_group_entry() const -> std::optional<HistoryEntry>;
 
     //
     // Groups

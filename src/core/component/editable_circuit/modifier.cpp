@@ -285,7 +285,7 @@ auto Modifier::toggle_inverter(point_t point) -> void {
 }
 
 auto Modifier::set_attributes(logicitem_id_t logicitem_id,
-                              attributes_clock_generator_t attrs_) -> void {
+                              attributes_clock_generator_t&& attrs_) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
@@ -400,7 +400,7 @@ auto Modifier::add_decoration(DecorationDefinition&& definition, point_t positio
 }
 
 auto Modifier::set_attributes(decoration_id_t decoration_id,
-                              attributes_text_element_t attrs_) -> void {
+                              attributes_text_element_t&& attrs_) -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"

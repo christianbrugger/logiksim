@@ -111,7 +111,7 @@ class Modifier {
     auto toggle_inverter(point_t point) -> void;
 
     auto set_attributes(logicitem_id_t logicitem_id,
-                        attributes_clock_generator_t attrs) -> void;
+                        attributes_clock_generator_t&& attrs) -> void;
 
     //
     // Decorations
@@ -133,7 +133,7 @@ class Modifier {
                         InsertionMode insertion_mode) -> decoration_id_t;
 
     auto set_attributes(decoration_id_t decoration_id,
-                        attributes_text_element_t attrs) -> void;
+                        attributes_text_element_t&& attrs) -> void;
 
     //
     // Wires
