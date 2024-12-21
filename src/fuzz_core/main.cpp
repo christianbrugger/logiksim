@@ -22,10 +22,7 @@ namespace editable_circuit {
 namespace {
 
 struct FuzzLimits {
-    rect_t box {
-        point_t {0, 0},
-        point_t {4, 4},
-    };
+    rect_t box {};
 
     [[nodiscard]] auto operator==(const FuzzLimits&) const -> bool = default;
 };
@@ -626,6 +623,13 @@ auto add_logicitem(FuzzStream& stream, Modifier& modifier,
     }();
 
     const auto size = element_size(to_layout_calculation_data(definition, point_t {}));
+
+    // TODO abstract this
+    if ((int {size.x} > int {limits.box.p1.x} - int {limits.box.p0.x}) ||
+        (int {size.y} > int {limits.box.p1.y} - int {limits.box.p0.y})) {
+        return;
+    }
+
     const auto position = point_t {
         fuzz_small_int(stream, int {limits.box.p0.x},
                        int {limits.box.p1.x} - int {size.x}),
@@ -902,7 +906,24 @@ auto history_finish_undo_group(Modifier& modifier,
 
 auto process_data(std::span<const uint8_t> data) -> void {
     auto stream = FuzzStream(data);
-    const auto limits = FuzzLimits {};
+
+    const auto limits = [&]() {
+        switch (fuzz_small_int(stream, 0, 1)) {
+            case 0:
+                // very small limits so most line interactions are found quickly
+                return FuzzLimits {.box = rect_t {
+                                       point_t {0, 0},
+                                       point_t {2, 2},
+                                   }};
+            case 1:
+                // fits clock generator for attr test
+                return FuzzLimits {.box = rect_t {
+                                       point_t {0, 0},
+                                       point_t {5, 4},
+                                   }};
+        };
+        std::terminate();
+    }();
 
     auto modifier = Modifier {Layout {}, ModifierConfig {
                                              .enable_history = true,

@@ -143,4 +143,9 @@ auto is_colliding(rect_t a, rect_t b) noexcept -> bool {
     return true;
 }
 
+auto a_inside_b(rect_t a, rect_t b) noexcept -> bool {
+    return (a.p0.x >= b.p0.x && a.p0.y >= b.p0.y) &&
+           (a.p1.x <= b.p1.x && a.p1.y <= b.p1.y);
+}
+
 }  // namespace logicsim

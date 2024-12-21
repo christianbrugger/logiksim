@@ -36,6 +36,8 @@ struct rect_fine_t;
 [[nodiscard]] auto is_colliding(rect_fine_t a, rect_fine_t b) noexcept -> bool;
 [[nodiscard]] auto is_colliding(rect_t a, rect_t b) noexcept -> bool;
 
+[[nodiscard]] auto a_inside_b(rect_t a, rect_t b) noexcept -> bool;
+
 }  // namespace logicsim
 
 #endif
