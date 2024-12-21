@@ -556,9 +556,8 @@ auto split_uninserted_segment(FuzzStream& stream, Modifier& modifier) -> void {
 auto regularize_temporary_selection(FuzzStream& stream, Modifier& modifier,
                                     const FuzzLimits& limits) -> void {
     const auto guard = ModifierSelectionGuard {
-
         modifier,
-        fuzz_select_temporary_selection_full_parts(stream, modifier, 4),
+        fuzz_select_temporary_selection_full_parts(stream, modifier, 6),
     };
 
     const auto& selection =
@@ -770,7 +769,7 @@ auto clear_visible_selection(Modifier& modifier) -> void {
 }
 
 auto set_visible_selection(FuzzStream& stream, Modifier& modifier) -> void {
-    auto selection = fuzz_select_selection(stream, modifier, 6);
+    auto selection = fuzz_select_selection(stream, modifier, 4);
 
     modifier.set_visible_selection(std::move(selection));
 }
