@@ -344,7 +344,22 @@
         {
             "name": "linux-clang-fuzz-debug",
             "displayName": "Clang Fuzz Debug",
-            "description": "Compile libfuzz & address sanitizier and Clang compiler under debug",
+            "description": "Compile libfuzz sanitizier and Clang compiler under Debug",
+            "inherits": "common-linux-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LS_SANITIZE": "Fuzzer",
+                "LS_ENABLE_COVERAGE": "OFF",
+
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "linux-clang-fuzz-addr-debug",
+            "displayName": "Clang Fuzz+Addr Debug",
+            "description": "Compile libfuzz & Address sanitizier and Clang compiler under Debug",
             "inherits": "common-linux-clang",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
@@ -358,12 +373,12 @@
         },
         {
             "name": "linux-clang-fuzz-debug-cov",
-            "displayName": "Clang Fuzz Debug",
-            "description": "Compile libfuzz & address sanitizier and Clang compiler under debug",
+            "displayName": "Clang Fuzz+Cov Debug",
+            "description": "Compile libfuzz sanitizier with Coverage and Clang compiler under Debug",
             "inherits": "common-linux-clang",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "LS_SANITIZE": "Address;Fuzzer",
+                "LS_SANITIZE": "Fuzzer",
                 "LS_ENABLE_COVERAGE": "ON",
 
                 "LS_ENABLE_CCACHE": "ON",
@@ -454,9 +469,9 @@
             }
         },
         {
-            "name": "win-msvc-fuzz-debug",
-            "displayName": "MSVC Fuzz Debug",
-            "description": "Compile debug libfuzz with MSVC compiler",
+            "name": "win-msvc-fuzz-addr-debug",
+            "displayName": "MSVC Fuzz+Addr Debug",
+            "description": "Compile libfuzz & Address sanitizier and MSVC compiler under Debug",
             "inherits": "common-win-msvc",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
@@ -470,11 +485,11 @@
         {
             "name": "win-msvc-fuzz-relwithdeb",
             "displayName": "MSVC Fuzz RelWithDeb",
-            "description": "Compile relwithdeb libfuzz with MSVC compiler",
+            "description": "Compile libfuzz & Address sanitizier and MSVC compiler under RelWithDeb",
             "inherits": "common-win-msvc",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "LS_SANITIZE": "Address;Fuzzer",
+                "LS_SANITIZE": "Fuzzer",
 
                 "LS_ENABLE_CCACHE": "ON",
                 "LS_ENABLE_PCH": "ON",

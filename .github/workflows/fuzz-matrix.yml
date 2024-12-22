@@ -1,0 +1,246 @@
+# Fuzz testing for all supported platforms.
+#
+# 
+# Syntax:
+# https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions
+#
+# Contexts:
+# https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs
+
+
+name: Fuzz Testing
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  LS_CCACHE_VERSION: 4.10.2
+  
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # - { preset: "win-msvc-fuzz-addr-debug"     , os: "windows-2022" }
+          # - { preset: "win-msvc-fuzz-relwithdeb"     , os: "windows-2022" }
+
+          - { preset: "linux-clang-fuzz-addr-debug"  , os: "ubuntu-24.04" }
+          - { preset: "linux-clang-fuzz-relwithdeb"  , os: "ubuntu-24.04" }
+
+
+    env:
+      LS_SUBMODULE_KEY: ${{ matrix.libcpp && '-libcpp' || '' }}
+      LS_SUBMODULE_ARG: ${{ matrix.libcpp && '--libc++' || '' }}
+
+      # ask apt-get to never interact
+      DEBIAN_FRONTEND: noninteractive
+
+      # change cache dir & size of ccache
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPRESS: 'true'
+      CCACHE_COMPRESSLEVEL: '4'
+      CCACHE_MAXSIZE: '1000M'
+
+    steps:
+
+    #
+    # Manual Clone the Repository
+    #
+    # Replacing the standard checkout with a mnaul clone for speed. 
+    # The standard action/checkout sets & unsets credentials for all 
+    # submodules which is very slow on windows runners and its not needed.
+    #
+    # Standard checkout (including post run action)
+    #       uses: actions/checkout@v4
+    #  windows-2022:   17 seconds
+    #  ubuntu-24.04:    2 seconds
+    #
+    # Manual clone:
+    #   windows-2022:   2 seconds    (8.5x speedup)
+    #   ubuntu-24.04:   1 seconds    ( 2x speedup)
+    #
+    - name: Git Clone
+      run: >
+        git clone --depth 1 
+        --branch ${{ github.ref_name }} 
+        https://github.com/${{ github.repository }}.git 
+        ${{ github.workspace }}
+
+
+
+    #
+    # Installing Workflow Dependencies
+    #
+
+    # Make MSVC compiler discoverable by CMake 
+    - uses: ilammy/msvc-dev-cmd@v1
+
+    # Use Ninja for the build system instead of Make
+    - uses: seanmiddleditch/gha-setup-ninja@v5
+
+    # New Python to use project scripts
+    - name: Set up Python
+      if: runner.os == 'Windows'
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+
+        
+    #
+    # Install CCache
+    #
+
+    - name: Install CCache Linux
+      if: runner.os == 'Linux'
+      run: |
+        wget -q \
+          -O 'ccache.tar.xz' \
+          'https://github.com/ccache/ccache/releases/download/v${{ env.LS_CCACHE_VERSION }}/ccache-${{ env.LS_CCACHE_VERSION }}-linux-x86_64.tar.xz'
+        tar -xf 'ccache.tar.xz'
+        mv 'ccache-${{ env.LS_CCACHE_VERSION }}-linux-x86_64/ccache' '/usr/local/bin/'
+        rm -r 'ccache-${{ env.LS_CCACHE_VERSION }}-linux-x86_64'
+        rm -r 'ccache.tar.xz'
+    - name: Install CCache Windows
+      if: runner.os == 'Windows'
+      run: |
+        Invoke-WebRequest `
+          -OutFile 'ccache.zip' `
+          -Uri 'https://github.com/ccache/ccache/releases/download/v${{ env.LS_CCACHE_VERSION }}/ccache-${{ env.LS_CCACHE_VERSION }}-windows-x86_64.zip'
+        Expand-Archive -Path 'ccache.zip' -DestinationPath '.'
+        mv 'ccache-${{ env.LS_CCACHE_VERSION }}-windows-x86_64/ccache.exe' 'C:/Windows/System32/'
+        rm -r 'ccache-${{ env.LS_CCACHE_VERSION }}-windows-x86_64'
+        rm 'ccache.zip'
+    - name: Download CCache Cache
+      uses: actions/cache@v4
+      with:
+        key: ${{ matrix.preset }}-ccache-${{ github.event.repository.updated_at }}
+        path: .ccache
+        restore-keys: |
+          ${{ matrix.preset }}-ccache-
+    - name: Configure CCache
+      id: ccache-configure
+      shell: bash
+      run: |
+        ccache --zero-stats
+        ccache --show-stats --verbose
+        python3 -c "import time; print(f'start-time={time.monotonic()}')" >> "${GITHUB_OUTPUT}"
+
+
+
+    #
+    # Submodule Checkout (cached)
+    #
+    # See 'external/checkout.py' for speedups and documentation.
+    #
+
+    - name: Submodule Hash
+      working-directory: ${{ github.workspace }}
+      shell: pwsh
+      run: |
+        if ($env:RUNNER_OS -eq 'Windows') {
+          $(CertUtil -hashfile external/checkout.py SHA256)[0,1] > submodule_hashes.txt
+        } else {
+          shasum -a 256 external/checkout.py > submodule_hashes.txt
+        }
+        git submodule status >> submodule_hashes.txt
+        cat submodule_hashes.txt
+    - name: Restore Submodule
+      id: cache-submodule-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: external/*/
+        key: ${{ matrix.os }}-submodule-${{ hashFiles('submodule_hashes.txt') }}${{ env.LS_SUBMODULE_KEY }}-2
+    - name: Refresh Submodule
+      if: steps.cache-submodule-restore.outputs.cache-hit != 'true'
+      working-directory: ${{ github.workspace }}
+      run: python3 external/checkout.py ${{ env.LS_SUBMODULE_ARG }}
+    - name: Cache Submodule
+      if: steps.cache-submodule-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: external/*/
+        key: ${{ steps.cache-submodule-restore.outputs.cache-primary-key }}
+
+
+
+    #
+    # Define Variables
+    #
+
+    - name: Variables
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build/${{ matrix.preset }}" >> "$GITHUB_OUTPUT"
+
+    - name: Report randomization
+      if: runner.os == 'Linux'
+      run: |
+        # report address randomization which impacts certain sanitizers
+        sudo sysctl vm.mmap_rnd_bits
+
+
+    #
+    # Configure & Build
+    #
+
+    - name: Configure CMake
+      working-directory: ${{ github.workspace }}
+      run: |
+        cmake --version
+        cmake --preset ${{ matrix.preset }}
+
+    - name: Build
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: |
+        ninja
+
+
+
+    #
+    # Run Executables
+    #
+
+    - name: Run Fuzz Testing
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: |
+        ./ls_fuzz_core -max_len=256 -max_total_time=180
+
+
+
+    #
+    # Stats
+    #
+    - name: CCache Cleanup
+      shell: bash
+      env:
+        ls_TOLERANCE: 10
+        ls_START_TIME: ${{ steps.ccache-configure.outputs.start-time }}
+      run: |
+        echo
+        echo "BEFORE CLEANUP"
+        echo "--------------"
+        ccache --show-stats --verbose
+        
+        echo
+        echo "RUN CLEANUP"
+        echo "-----------"
+        echo "ls_START_TIME=${ls_START_TIME}"
+        ls_PASSED_SECONDS=$(python3 -c "import time; import math; print(math.ceil(time.monotonic() - ${ls_START_TIME} + ${ls_TOLERANCE}))")
+        echo "ls_PASSED_SECONDS=${ls_PASSED_SECONDS}"
+        ccache --evict-older-than ${ls_PASSED_SECONDS}s
+        
+        echo
+        echo "AFTER CLEANUP"
+        echo "--------------"
+        ccache --show-stats --verbose
+
+
