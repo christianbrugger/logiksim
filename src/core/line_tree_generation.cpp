@@ -74,7 +74,7 @@ auto generate_line_trees(const Layout& layout,
 auto has_same_segments(const SegmentTree& segment_tree,
                        const LineTree& line_tree) -> bool {
     // line tree
-    if (line_tree.size() != segment_tree.size()) [[unlikely]] {
+    if (line_tree.size() != segment_tree.size()) {
         return false;
     }
 
