@@ -19,6 +19,7 @@ cmake . --list-presets
 These are at the time of writing this the available configurations:
 
 ```
+"win-msvc-fuzz-debug"           - MSVC Fuzz Debug
 "win-msvc-fuzz-addr-debug"      - MSVC Fuzz+Addr Debug
 "win-msvc-fuzz-relwithdeb"      - MSVC Fuzz RelWithDeb
   
@@ -139,6 +140,30 @@ tar -cJf corpus_modifier_history.tar.xz corpus
 ```
 
 Then commit the new `corpus_modifier_history.tar.xz` file to the corpus repository.
+
+
+
+## Debugging Crash
+
+If the fuzz-testing finds a problem a crash file is generated with that specific input. It can later be run with:
+
+```
+./ls_fuzz_core crash-03021264d962487548d41d7467255f77a2675af8
+```
+
+Its best to minimize it before investigating the issue:
+
+```
+./ls_fuzz_core -detect_leaks=0 -minimize_crash=1 -max_total_time=15 crash-03021264d962487548d41d7467255f77a2675af8
+```
+
+Then one can use normal debugging techniques on the minimized file:
+
+```
+./ls_fuzz_core minimized-from-03021264d962487548d41d7467255f77a2675af8
+```
+
+
 
 
 
