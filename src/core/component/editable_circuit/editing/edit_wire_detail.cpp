@@ -931,43 +931,42 @@ auto temporary_endpoints_valid(endpoints_t endpoints) -> bool {
     return valid_temporary(endpoints.p0_type) && valid_temporary(endpoints.p1_type);
 }
 
-auto set_temporary_endpoints(Layout& layout, segment_t segment,
-                             endpoints_t endpoints) -> void {
-    if (!is_temporary(segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("set_temporary_endpoints requires temporary segment.");
-    }
-    if (!temporary_endpoints_valid(endpoints)) [[unlikely]] {
-        throw std::runtime_error(
-            "New point type needs to be shadow_point or cross_point");
-    }
-
-    if (get_endpoints(get_segment_info(layout, segment)) == endpoints) {
-        return;
-    }
-
-    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
-    const auto new_info = to_segment_info(m_tree.line(segment.segment_index), endpoints);
-    m_tree.update_segment(segment.segment_index, new_info);
-}
-
 namespace {
 
 template <class T>
     requires std::invocable<T, const segment_info_t&> &&
                  std::same_as<segment_info_t,
                               std::invoke_result_t<T, const segment_info_t&>>
-auto _set_inserted_endpoints(CircuitData& circuit, segment_t segment, T func) -> void {
-    if (!is_inserted(segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("set_inserted_endpoints requires inserted segment.");
+auto _set_endpoints(CircuitData& circuit, segment_t segment, T func,
+                    HistoryFlag with_history) -> void {
+    if (is_colliding(segment.wire_id)) [[unlikely]] {
+        throw std::runtime_error("cannot change endpoints for colliding wires");
     }
 
     const auto old_info = get_segment_info(circuit.layout, segment);
     const auto new_info = std::invoke(func, old_info);
 
-    if (old_info != new_info) {
-        auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
-        m_tree.update_segment(segment.segment_index, new_info);
+    if (old_info == new_info) {
+        return;
+    }
 
+    if (is_temporary(segment.wire_id) &&
+        !temporary_endpoints_valid(get_endpoints(new_info))) [[unlikely]] {
+        throw std::runtime_error(
+            "New endpoints needs to be shadow_point or cross_point for temporary wires");
+    }
+
+    if (with_history == HistoryFlag::with_history) {
+        if (const auto stack = circuit.history.get_stack()) {
+            const auto segment_key = circuit.index.key_index().get(segment);
+            stack->push_segment_set_endpoints(segment_key, get_endpoints(old_info));
+        }
+    }
+
+    auto& m_tree = circuit.layout.wires().modifiable_segment_tree(segment.wire_id);
+    m_tree.update_segment(segment.segment_index, new_info);
+
+    if (is_inserted(segment.wire_id)) {
         circuit.submit(info_message::InsertedEndPointsUpdated {
             .segment = segment,
             .new_segment_info = new_info,
@@ -978,42 +977,54 @@ auto _set_inserted_endpoints(CircuitData& circuit, segment_t segment, T func) ->
 
 }  // namespace
 
-auto set_inserted_endpoints(CircuitData& circuit, segment_t segment,
-                            endpoints_t endpoints) -> void {
+auto set_endpoints(CircuitData& circuit, segment_t segment, endpoints_t endpoints,
+                   HistoryFlag with_history) -> void {
     const auto to_new_info = [endpoints](const segment_info_t& old_info) {
         return to_segment_info(old_info.line, endpoints);
     };
-    _set_inserted_endpoints(circuit, segment, to_new_info);
+
+    _set_endpoints(circuit, segment, to_new_info, with_history);
 }
 
-auto set_inserted_endpoints(CircuitData& circuit, segment_t segment, point_t position,
-                            SegmentPointType type) -> void {
+auto set_endpoints(CircuitData& circuit, segment_t segment, point_t position,
+                   SegmentPointType type, HistoryFlag with_history) -> void {
     const auto to_new_info = [position, type](const segment_info_t& old_info) {
         return updated_segment_info(old_info, position, type);
     };
-    _set_inserted_endpoints(circuit, segment, to_new_info);
+
+    _set_endpoints(circuit, segment, to_new_info, with_history);
 }
 
-auto reset_temporary_endpoints(Layout& layout, const segment_t segment) -> void {
-    set_temporary_endpoints(layout, segment,
-                            endpoints_t {
-                                .p0_type = SegmentPointType::shadow_point,
-                                .p1_type = SegmentPointType::shadow_point,
-                            });
+auto reset_endpoints(CircuitData& circuit, const segment_t segment,
+                     HistoryFlag with_history) -> void {
+    set_endpoints(circuit, segment,
+                  endpoints_t {
+                      .p0_type = SegmentPointType::shadow_point,
+                      .p1_type = SegmentPointType::shadow_point,
+                  },
+                  with_history);
 }
 
-auto set_temporary_crosspoint(Layout& layout, const segment_t segment,
-                              point_t point) -> void {
-    if (!is_temporary(segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("can only set endpoints of temporary wire segment");
-    }
-    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
+auto reset_endpoints(CircuitData& circuit, const segment_part_t segment_part,
+                     HistoryFlag with_history) -> void {
+    const auto to_new_info = [part = segment_part.part](const segment_info_t& old_info) {
+        using enum SegmentPointType;
+        const auto full_part = to_part(old_info.line);
 
-    auto info = segment_info_t {m_tree.info(segment.segment_index)};
-    set_segment_point_type(info, point, SegmentPointType::cross_point);
+        const auto new_endpoints = endpoints_t {
+            .p0_type = part.begin == full_part.begin ? shadow_point : old_info.p0_type,
+            .p1_type = part.end == full_part.end ? shadow_point : old_info.p1_type,
+        };
 
-    m_tree.update_segment(segment.segment_index, info);
+        return to_segment_info(old_info.line, new_endpoints);
+    };
+
+    _set_endpoints(circuit, segment_part.segment, to_new_info, with_history);
 }
+
+//
+// Bulk
+//
 
 auto update_inserted_segment_endpoints(CircuitData& circuit, wire_id_t wire_id,
                                        point_update_t data,
@@ -1026,7 +1037,7 @@ auto update_inserted_segment_endpoints(CircuitData& circuit, wire_id_t wire_id,
         for (auto [segment_index, point_type] : data) {
             const auto segment = segment_t {wire_id, segment_index};
             const auto type = to_shadow ? SegmentPointType::shadow_point : point_type;
-            set_inserted_endpoints(circuit, segment, position, type);
+            set_endpoints(circuit, segment, position, type);
         }
     };
 
@@ -1295,10 +1306,10 @@ auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit,
 
     // find LogicItem outputs
     if (const auto entry = circuit.index.logicitem_output_index().find(line.p0)) {
-        set_inserted_endpoints(circuit, segment, line.p0, SegmentPointType::input);
+        set_endpoints(circuit, segment, line.p0, SegmentPointType::input);
     }
     if (const auto entry = circuit.index.logicitem_output_index().find(line.p1)) {
-        set_inserted_endpoints(circuit, segment, line.p1, SegmentPointType::input);
+        set_endpoints(circuit, segment, line.p1, SegmentPointType::input);
     }
 }
 

@@ -194,19 +194,36 @@ auto merge_and_delete_tree(CircuitData& circuit, wire_id_t& tree_destination,
 // Endpoints
 //
 
-[[nodiscard]] auto temporary_endpoints_valid(endpoints_t) -> bool;
+enum class HistoryFlag : uint8_t {
+    no_history,
+    with_history,
+};
 
-auto set_temporary_endpoints(Layout& layout, segment_t segment,
-                             endpoints_t endpoints) -> void;
+[[nodiscard]] auto temporary_endpoints_valid(endpoints_t endpoints) -> bool;
 
-auto set_inserted_endpoints(CircuitData& circuit, segment_t segment,
-                            endpoints_t endpoints) -> void;
-auto set_inserted_endpoints(CircuitData& circuit, segment_t segment, point_t position,
-                            SegmentPointType type) -> void;
+/**
+ * @brief: Set endpoints of a wire segment.
+ *
+ * Allowed inserted  point types: <all>
+ * Allowed temporary point types: shadow_point, cross_point
+ * Allowed colliding point types: shadow_point
+ */
+auto set_endpoints(CircuitData& circuit, segment_t segment, endpoints_t endpoints,
+                   HistoryFlag with_history = HistoryFlag::no_history) -> void;
 
-auto reset_temporary_endpoints(Layout& layout, segment_t segment) -> void;
+auto set_endpoints(CircuitData& circuit, segment_t segment, point_t position,
+                   SegmentPointType type,
+                   HistoryFlag with_history = HistoryFlag::no_history) -> void;
 
-auto set_temporary_crosspoint(Layout& layout, segment_t segment, point_t point) -> void;
+auto reset_endpoints(CircuitData& circuit, segment_t segment,
+                     HistoryFlag with_history = HistoryFlag::no_history) -> void;
+
+auto reset_endpoints(CircuitData& circuit, segment_part_t segment_part,
+                     HistoryFlag with_history = HistoryFlag::no_history) -> void;
+
+//
+// Bulk
+//
 
 using point_update_t =
     std::initializer_list<const std::pair<segment_index_t, SegmentPointType>>;

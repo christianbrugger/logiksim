@@ -13,7 +13,6 @@
 #include "core/layout.h"
 #include "core/selection_sanitization.h"
 #include "core/tree_normalization.h"
-#include "core/vocabulary/endpoints.h"
 
 #include <algorithm>
 
@@ -81,18 +80,6 @@ auto _store_history_segment_temporary_to_colliding_assume_colliding(
         const auto segment_key = circuit.index.key_index().get(segment_part.segment);
         stack->push_segment_temporary_to_colliding_assume_colliding(segment_key,
                                                                     segment_part.part);
-    }
-}
-
-auto _store_history_segment_set_endpoints(CircuitData& circuit, segment_t segment,
-                                          endpoints_t new_endpoints) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto endpoints = get_endpoints(get_segment_info(circuit.layout, segment));
-
-        if (new_endpoints != endpoints) {
-            const auto segment_key = circuit.index.key_index().get(segment);
-            stack->push_segment_set_endpoints(segment_key, endpoints);
-        }
     }
 }
 
@@ -236,7 +223,7 @@ auto _insert_uninserted_segment(CircuitData& circuit,
     }
     const auto target_wire_id = _find_wire_for_inserting_segment(circuit, segment_part);
 
-    reset_temporary_endpoints_with_history(circuit, segment_part.segment);
+    reset_endpoints(circuit, segment_part.segment, HistoryFlag::with_history);
     move_segment_between_trees_with_history(circuit, segment_part, target_wire_id);
     set_wire_inputs_at_logicitem_outputs(circuit, segment_part.segment);
 
@@ -262,7 +249,7 @@ auto _wire_change_temporary_to_colliding(CircuitData& circuit,
 
     if (is_colliding || hint == InsertionHint::assume_colliding) {
         const auto destination = colliding_wire_id;
-        reset_temporary_endpoints_with_history(circuit, segment_part);
+        reset_endpoints(circuit, segment_part, HistoryFlag::with_history);
         move_segment_between_trees_with_history(circuit, segment_part, destination);
         _store_history_segment_colliding_to_temporary(circuit, segment_part);
     } else {
@@ -291,7 +278,7 @@ auto _wire_change_colliding_to_temporary(CircuitData& circuit,
 
     if (was_inserted) {
         move_segment_between_trees(circuit, segment_part, temporary_wire_id);
-        reset_temporary_endpoints(circuit.layout, segment_part.segment);
+        reset_endpoints(circuit, segment_part.segment);
     } else {
         move_segment_between_trees_with_history(circuit, segment_part, temporary_wire_id);
     }
@@ -522,58 +509,13 @@ auto toggle_wire_crosspoint(CircuitData& circuit, point_t point) -> void {
 // Regularization
 //
 
-auto set_temporary_endpoints_with_history(CircuitData& circuit, const segment_t segment,
+auto set_temporary_endpoints_with_history(CircuitData& circuit, segment_t segment,
                                           endpoints_t endpoints) -> void {
     if (!is_temporary(segment.wire_id)) [[unlikely]] {
-        throw std::runtime_error("Segment needs to be temporary to change endpoints.");
-    }
-    if (!temporary_endpoints_valid(endpoints)) [[unlikely]] {
-        throw std::runtime_error(
-            "New point type needs to be shadow_point or cross_point");
+        throw std::runtime_error("wire is expected to be temporary");
     }
 
-    _store_history_segment_set_endpoints(circuit, segment, endpoints);
-
-    set_temporary_endpoints(circuit.layout, segment, endpoints);
-}
-
-auto reset_temporary_endpoints_with_history(CircuitData& circuit,
-                                            const segment_part_t segment_part) -> void {
-    const auto info = get_segment_info(circuit.layout, segment_part.segment);
-    const auto part = to_part(info.line);
-    const auto endpoints = get_endpoints(info);
-
-    const auto new_endpoints = endpoints_t {
-        .p0_type = segment_part.part.begin == part.begin ? SegmentPointType::shadow_point
-                                                         : endpoints.p0_type,
-        .p1_type = segment_part.part.end == part.end ? SegmentPointType::shadow_point
-                                                     : endpoints.p1_type,
-    };
-
-    set_temporary_endpoints_with_history(circuit, segment_part.segment, new_endpoints);
-}
-
-auto reset_temporary_endpoints_with_history(CircuitData& circuit,
-                                            const segment_t segment) -> void {
-    set_temporary_endpoints_with_history(
-        circuit, segment,
-        endpoints_t {.p0_type = SegmentPointType::shadow_point,
-                     .p1_type = SegmentPointType::shadow_point});
-}
-
-// TODO reuse set_temporary_endpoints && use template (see set_inserted_endpoints)
-auto set_temporary_crosspoint_with_history(CircuitData& circuit, segment_t segment,
-                                           point_t point) -> void {
-    if (const auto stack = circuit.history.get_stack()) {
-        const auto info = get_segment_info(circuit.layout, segment);
-
-        if (get_segment_point_type(info, point) != SegmentPointType::cross_point) {
-            const auto segment_key = circuit.index.key_index().get(segment);
-            stack->push_segment_set_endpoints(segment_key, get_endpoints(info));
-        }
-    }
-
-    set_temporary_crosspoint(circuit.layout, segment, point);
+    set_endpoints(circuit, segment, endpoints, HistoryFlag::with_history);
 }
 
 auto are_uninserted_segments_mergeable(const Layout& layout, segment_t segment_0,
@@ -706,7 +648,8 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
                 const auto segment = segments.has(right)  //
                                          ? segments.at(right)
                                          : segments.at(left);
-                set_temporary_crosspoint_with_history(circuit, segment, point);
+                set_endpoints(circuit, segment, point, SegmentPointType::cross_point,
+                              HistoryFlag::with_history);
             } else {
                 // merge wire crossings without true cross points
                 mergeable_segments.emplace_back(segments.at(right), segments.at(left));
