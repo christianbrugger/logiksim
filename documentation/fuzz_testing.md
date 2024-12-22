@@ -56,12 +56,6 @@ Run a specific fuzz-test:
 ./ls_fuzz_core -max_len=256
 ```
 
-Address Sanitizer leak detection can take a long time. It can be disabled with:
-
-```shell
-./ls_fuzz_core -detect_leaks=0 -max_len=256
-```
-
 The max length limits the length of the binary input. Here are the recommended lengths:
 
 * Modifier-History: 256
@@ -72,14 +66,14 @@ This is good to really extensivly test the search space. For this is it necessar
 
 ```shell
 mkdir corpus
-./ls_fuzz_core -detect_leaks=0 -max_len=256 corpus
+./ls_fuzz_core -max_len=256 corpus
 ```
 
 Or using multiple cores:
 
 ```shell
 mkdir corpus
-./ls_fuzz_core -detect_leaks=0 -max_len=256 -jobs=8 -workers=8 corpus
+./ls_fuzz_core -max_len=256 -jobs=8 -workers=8 corpus
 ```
 
 The above runs 8 instances and this can be easily for 12+ hours. The process can be aborted and resumed. Reusing already found inputs.
@@ -113,7 +107,7 @@ ninja
 Then one needs to run this executable on the corpus one wants to check the coverage:
 
 ```shell
-./ls_fuzz_core -detect_leaks=0 -max_len=256 -max_total_time=1 corpus_min
+./ls_fuzz_core -max_len=256 -max_total_time=1 corpus_min
 ```
 
 Then the coverage can be visalized with:
@@ -160,7 +154,7 @@ If the fuzz-testing finds a problem a crash file is generated with that specific
 Its best to minimize it before investigating the issue:
 
 ```
-./ls_fuzz_core -detect_leaks=0 -minimize_crash=1 -max_total_time=15 crash-03021264d962487548d41d7467255f77a2675af8
+./ls_fuzz_core -minimize_crash=1 -max_total_time=15 crash-03021264d962487548d41d7467255f77a2675af8
 ```
 
 Then one can use normal debugging techniques on the minimized file:
