@@ -19,15 +19,19 @@ cmake . --list-presets
 These are at the time of writing this the available configurations:
 
 ```
-"win-msvc-fuzz-debug"           - MSVC Fuzz Debug
-"win-msvc-fuzz-addr-debug"      - MSVC Fuzz+Addr Debug
-"win-msvc-fuzz-relwithdeb"      - MSVC Fuzz RelWithDeb
-  
-"linux-clang-fuzz-debug"        - Clang Fuzz Debug
-"linux-clang-fuzz-addr-debug"   - Clang Fuzz+Addr Debug
-"linux-clang-fuzz-debug-cov"    - Clang Fuzz+Cov Debug
-"linux-clang-fuzz-relwithdeb"   - Clang Fuzz RelWithDeb
+"win-msvc-fuzz-debug"           - MSVC Fuzz Debug             |  15 exec/s -> unusable
+"win-msvc-fuzz-addr-debug"      - MSVC Fuzz+Addr Debug        |   6 exec/s -> unusable
+"win-msvc-fuzz-relwithdeb"      - MSVC Fuzz RelWithDeb        | 170 exec/s -> very slow
+
+"linux-clang-fuzz-debug"        - Clang Fuzz Debug            | 700 exec/s -> great
+"linux-clang-fuzz-addr-debug"   - Clang Fuzz+Addr Debug       | 300 exec/s -> slow
+"linux-clang-fuzz-debug-cov"    - Clang Fuzz+Cov Debug        | 500 exec/s -> good
+"linux-clang-fuzz-relwithdeb"   - Clang Fuzz RelWithDeb       | 900 exec/s -> best
 ```
+
+*Speed for 256 tokens (`./ls_fuzz_core -max_len=256 -len_control=0`)*
+
+
 
 Run for example:
 
@@ -79,6 +83,8 @@ mkdir corpus
 ```
 
 The above runs 8 instances and this can be easily for 12+ hours. The process can be aborted and resumed. Reusing already found inputs.
+
+For long runs it is best to run the fuzz-test on linux, as they are much faster (see table above).
 
 ### 4. Minimize Corpus
 
