@@ -19,6 +19,8 @@ on:
 env:
   LS_CCACHE_VERSION: 4.10.2
   
+  # use corpus to speed up fuzz-testing
+  LS_CORPUS_MODIFIER_HISTORY: https://github.com/christianbrugger/logiksim_fuzzing_corpus/raw/b12627548af36f2941d40bef3e03f225db49d5df/corpus_modifier_history.tar.xz  
 
 jobs:
   build:
@@ -209,10 +211,18 @@ jobs:
     # Run Executables
     #
 
+    - name: Download Corpus
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: |
+        # modifier history
+        wget -q ${{ env.LS_CORPUS_MODIFIER_HISTORY }}
+        tar -xf corpus_modifier_history.tar.xz
+        ls -l1 corpus_modifier_history | wc -l
+
     - name: Run Fuzz Testing
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
-        ./ls_fuzz_core -max_len=256 -max_total_time=180
+        ./ls_fuzz_core -max_len=256 -max_total_time=180 corpus_modifier_history
 
 
 
