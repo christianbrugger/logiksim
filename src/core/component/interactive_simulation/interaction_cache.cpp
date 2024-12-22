@@ -15,6 +15,10 @@ auto interaction_data_t::format() const -> std::string {
 
 InteractionCache::InteractionCache(const Layout& layout) {
     for (auto logicitem_id : logicitem_ids(layout)) {
+        if (!is_inserted(layout, logicitem_id)) {
+            continue;
+        }
+
         if (layout.logicitems().type(logicitem_id) == LogicItemType::button) {
             auto& data = map_[layout.logicitems().position(logicitem_id)];
 
