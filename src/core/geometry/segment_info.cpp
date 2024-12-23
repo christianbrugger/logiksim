@@ -1,5 +1,6 @@
 #include "core/geometry/segment_info.h"
 
+#include "core/geometry/orientation.h"
 #include "core/geometry/part.h"
 #include "core/vocabulary/endpoints.h"
 #include "core/vocabulary/part.h"
@@ -48,11 +49,27 @@ auto merge_touching(const segment_info_t segment_info_0,
     };
 }
 
-auto to_point_and_type(const segment_info_t &segment_info)
+auto to_point_type(const segment_info_t &segment_info)
     -> std::array<std::pair<point_t, SegmentPointType>, 2> {
     return {
         std::pair {segment_info.line.p0, segment_info.p0_type},
         std::pair {segment_info.line.p1, segment_info.p1_type},
+    };
+}
+
+auto to_point_type_orientation(const segment_info_t &segment_info)
+    -> std::array<std::tuple<point_t, SegmentPointType, orientation_t>, 2> {
+    return {
+        std::tuple {
+            segment_info.line.p0,
+            segment_info.p0_type,
+            to_orientation_p0(segment_info.line),
+        },
+        std::tuple {
+            segment_info.line.p1,
+            segment_info.p1_type,
+            to_orientation_p1(segment_info.line),
+        },
     };
 }
 

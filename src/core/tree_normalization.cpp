@@ -190,7 +190,7 @@ namespace {
 auto add_points_of_type(std::vector<point_t>& container, const SegmentTree& tree,
                         SegmentPointType query_type) -> void {
     for (const auto& info : tree.segments()) {
-        for (const auto& [point, type] : to_point_and_type(info)) {
+        for (const auto& [point, type] : to_point_type(info)) {
             if (type == query_type) {
                 container.push_back(point);
             }
@@ -262,7 +262,7 @@ auto has_same_shadow_points(const SegmentTree& tree,
     };
 
     for (const auto& info : tree.segments()) {
-        for (const auto& [point, type] : to_point_and_type(info)) {
+        for (const auto& [point, type] : to_point_type(info)) {
             if (type == SegmentPointType::shadow_point && !shadow_point_allowed(point)) {
                 return false;
             }
@@ -274,7 +274,7 @@ auto has_same_shadow_points(const SegmentTree& tree,
 
 auto has_no_unknown_points(const SegmentTree& tree) -> bool {
     for (const auto& info : tree.segments()) {
-        for (const auto& [point, type] : to_point_and_type(info)) {
+        for (const auto& [point, type] : to_point_type(info)) {
             if (type == SegmentPointType::new_unknown) {
                 return false;
             }

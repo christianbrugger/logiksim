@@ -14,56 +14,23 @@
 
 namespace logicsim {
 
-namespace {
-
-auto is_convertable_output(point_t point, SegmentPointType type,
-                           const LogicItemInputIndex& index) -> bool {
-    return type == SegmentPointType::output && !index.find(point);
-}
-
-auto find_root(const SegmentTree& segment_tree,
-               const LogicItemInputIndex& index) -> point_t {
-    if (segment_tree.has_input()) {
-        return segment_tree.input_position();
+auto generate_line_tree(const SegmentTree& segment_tree) -> LineTree {
+    if (!segment_tree.has_input()) {
+        return LineTree {};
     }
 
-    for (const segment_info_t& info : segment_tree) {
-        for (const auto& [point, type] : to_point_and_type(info)) {
-            if (is_convertable_output(point, type, index)) {
-                return point;
-            }
-        }
-    }
-
-    throw std::runtime_error("tree has no input or convertible outputs");
-}
-
-auto generate_line_tree_impl(const SegmentTree& segment_tree,
-                             const LogicItemInputIndex& index) -> LineTree {
-    const auto root = find_root(segment_tree, index);
+    const auto root = segment_tree.input_position();
     const auto segments = transform_to_vector(all_lines(segment_tree));
-    return to_line_tree(segments, root);
-}
-
-}  // namespace
-
-auto generate_line_tree(const SegmentTree& segment_tree,
-                        const LogicItemInputIndex& index) -> LineTree {
-    // pre-condition
-    assert(is_contiguous_tree_with_correct_endpoints(segment_tree));
-
-    const auto line_tree = generate_line_tree_impl(segment_tree, index);
-
-    // post-condition
+    const auto line_tree = to_line_tree(segments, root);
     assert(is_equivalent(segment_tree, line_tree));
+
     return line_tree;
 }
 
-auto generate_line_trees(const Layout& layout,
-                         const LogicItemInputIndex& index) -> std::vector<LineTree> {
+auto generate_line_trees(const Layout& layout) -> std::vector<LineTree> {
     const auto gen_line_tree = [&](wire_id_t wire_id) {
         if (is_inserted(wire_id)) {
-            return generate_line_tree(layout.wires().segment_tree(wire_id), index);
+            return generate_line_tree(layout.wires().segment_tree(wire_id));
         }
         return LineTree {};
     };

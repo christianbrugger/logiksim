@@ -33,7 +33,7 @@ auto input_position(const segment_vector_t& segments) -> std::optional<point_t> 
     auto result = std::optional<point_t> {};
 
     for (const auto& info : segments) {
-        for (auto&& [point, type] : to_point_and_type(info)) {
+        for (auto&& [point, type] : to_point_type(info)) {
             if (type == SegmentPointType::input) {
                 set_input_checked(result, point);
             }
@@ -160,7 +160,7 @@ auto SegmentTree::get_next_index() const -> segment_index_t {
 }
 
 auto SegmentTree::register_segment(segment_index_t index) -> void {
-    for (auto&& [point, type] : to_point_and_type(info(index))) {
+    for (auto&& [point, type] : to_point_type(info(index))) {
         if (type == SegmentPointType::input) {
             segment_tree::set_input_checked(input_position_, point);
         }
@@ -172,7 +172,7 @@ auto SegmentTree::register_segment(segment_index_t index) -> void {
 }
 
 auto SegmentTree::unregister_segment(segment_index_t index) -> void {
-    for (auto&& [point, type] : to_point_and_type(info(index))) {
+    for (auto&& [point, type] : to_point_type(info(index))) {
         if (type == SegmentPointType::input) {
             Expects(input_position_ == point);
             input_position_.reset();

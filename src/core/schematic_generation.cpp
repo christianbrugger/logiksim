@@ -3,6 +3,7 @@
 #include "core/algorithm/transform_to_container.h"
 #include "core/element/logicitem/schematic_info.h"
 #include "core/geometry/orientation.h"
+#include "core/geometry/segment_info.h"
 #include "core/index/generation_index.h"
 #include "core/layout.h"
 #include "core/line_tree.h"
@@ -104,15 +105,15 @@ auto add_logicitem(Schematic& schematic, const Layout& layout,
     });
 }
 
-auto add_wire(Schematic& schematic, const LineTree& line_tree,
-              delay_t wire_delay_per_distance) -> void {
-    auto ignore_delay = wire_delay_per_distance == delay_t {0ns};
+auto add_wire_with_input(Schematic& schematic, const LineTree& line_tree,
+                         delay_t wire_delay_per_distance) -> void {
+    Expects(!line_tree.empty());
 
+    auto ignore_delay = wire_delay_per_distance == delay_t {0ns};
     auto delays =
         ignore_delay
             ? output_delays_t(line_tree.output_count().count(), delay_t::epsilon())
             : calculate_output_delays(line_tree, wire_delay_per_distance);
-
     const auto tree_max_delay = ignore_delay ? delay_t {0ns} : std::ranges::max(delays);
 
     schematic.add_element(schematic::NewElement {
@@ -124,6 +125,24 @@ auto add_wire(Schematic& schematic, const LineTree& line_tree,
         .input_inverters = {false},
         .output_delays = std::move(delays),
         .history_length = tree_max_delay,
+    });
+}
+
+auto add_wire_without_input(Schematic& schematic,
+                            const SegmentTree& segment_tree) -> void {
+    Expects(!segment_tree.has_input());
+
+    const auto output_count = segment_tree.output_count();
+
+    schematic.add_element(schematic::NewElement {
+        .element_type = ElementType::wire,
+        .input_count = connection_count_t {0},
+        .output_count = output_count,
+
+        .sub_circuit_id = null_circuit,
+        .input_inverters = {},
+        .output_delays = output_delays_t(size_t {output_count}, delay_t {1ns}),
+        .history_length = schematic::defaults::no_history,
     });
 }
 
@@ -140,21 +159,68 @@ auto add_layout_elements(Schematic& schematic, const Layout& layout,
     }
 
     // non-inserted wires
-    for (const auto _ [[maybe_unused]] : range(first_inserted_wire_id)) {
-        add_unused_element(schematic);
+    for (const auto wire_id : range(first_inserted_wire_id)) {
+        if (std::size_t {wire_id} < layout.wires().size()) {
+            add_unused_element(schematic);
+        }
     }
 
     // inserted wires
     for (const auto inserted_wire_id : inserted_wire_ids(layout)) {
         const auto& line_tree = line_trees.at(inserted_wire_id.value);
 
-        add_wire(schematic, line_tree, wire_delay_per_distance);
+        if (!line_tree.empty()) {
+            add_wire_with_input(schematic, line_tree, wire_delay_per_distance);
+        } else {
+            add_wire_without_input(schematic,
+                                   layout.wires().segment_tree(inserted_wire_id));
+        }
     }
 }
 
 //
 // Connections
 //
+
+auto connect_segment_tree_without_inputs(Schematic& schematic, const Layout& layout,
+                                         const GenerationIndex& index,
+                                         element_id_t element_id) -> void {
+    const auto wire_id = to_wire_id(layout, element_id);
+    const auto& segment_tree = layout.wires().segment_tree(wire_id);
+
+    // trees with inputs should use generated line-trees, as its more efficient
+    Expects(!segment_tree.has_input());
+
+    auto wire_output_id = connection_id_t {0};
+
+    // TODO !!! refactor loop
+
+    // connect outputs
+    for (const auto& segment : segment_tree.segments()) {
+        for (auto&& [position, type, orientation] : to_point_type_orientation(segment)) {
+            if (type != SegmentPointType::output) {
+                continue;
+            }
+            const auto entry = index.inputs.find(position);
+            if (!entry) {
+                continue;
+            }
+            if (!orientations_compatible(orientation, entry->orientation)) {
+                throw std::runtime_error("input orientation not compatible");
+            }
+
+            const auto connected_element_id = to_element_id(layout, entry->logicitem_id);
+            const auto output = output_t {element_id, wire_output_id};
+            const auto input = input_t {connected_element_id, entry->connection_id};
+
+            schematic.connect(output, input);
+            ++wire_output_id;
+        }
+    }
+
+    Expects(size_t {wire_output_id} <= size_t {segment_tree.output_count()});
+    Expects(size_t {wire_output_id} <= size_t {schematic.output_count(element_id)});
+}
 
 auto connect_line_tree(Schematic& schematic, const Layout& layout,
                        const GenerationIndex& index, element_id_t element_id,
@@ -206,9 +272,14 @@ auto create_connections(Schematic& schematic, const Layout& layout,
 
         // connect wires to elements
         if (element_type == ElementType::wire) {
-            const auto& line_tree = line_trees.at(to_wire_id(layout, element_id).value);
+            const auto wire_id = to_wire_id(layout, element_id);
 
-            connect_line_tree(schematic, layout, index, element_id, line_tree);
+            if (const auto& line_tree = line_trees.at(wire_id.value);
+                !line_tree.empty()) {
+                connect_line_tree(schematic, layout, index, element_id, line_tree);
+            } else {
+                connect_segment_tree_without_inputs(schematic, layout, index, element_id);
+            }
         }
     }
 }
@@ -268,7 +339,7 @@ auto generate_schematic(const Layout& layout, delay_t wire_delay_per_distance)
     const auto index = GenerationIndex {layout};
 
     auto result = schematic_generation_result_t {
-        .line_trees = generate_line_trees(layout, index.inputs),
+        .line_trees = generate_line_trees(layout),
         .schematic = Schematic {},
         .wire_delay_per_distance = wire_delay_per_distance,
     };
@@ -279,6 +350,7 @@ auto generate_schematic(const Layout& layout, delay_t wire_delay_per_distance)
     add_missing_placeholders(result.schematic);
     set_output_inverters(result.schematic, layout);
 
+    Ensures(result.line_trees.size() == layout.wires().size());
     return result;
 }
 

@@ -15,11 +15,10 @@ class Layout;
  * @brief: Creates a LineTree from a SegmentTree.
  *
  * Pre-condition:
- *  + segment-tree is contiguous tree with correct endpoints (tree_normalization.h).
+ *  + segment-tree is contiguous tree (tree_normalization.h).
  *
  */
-[[nodiscard]] auto generate_line_tree(const SegmentTree& segment_tree,
-                                      const LogicItemInputIndex& index) -> LineTree;
+[[nodiscard]] auto generate_line_tree(const SegmentTree& segment_tree) -> LineTree;
 
 /**
  * @brief: Creates a vector with LineTrees for all wires.
@@ -29,8 +28,7 @@ class Layout;
  *
  * Result contains LineTrees of inserted and empty trees for non-inserted wires.
  */
-[[nodiscard]] auto generate_line_trees(
-    const Layout& layout, const LogicItemInputIndex& index) -> std::vector<LineTree>;
+[[nodiscard]] auto generate_line_trees(const Layout& layout) -> std::vector<LineTree>;
 
 [[nodiscard]] auto has_same_segments(const SegmentTree& segment_tree,
                                      const LineTree& line_tree) -> bool;

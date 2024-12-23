@@ -73,6 +73,7 @@ set(LS_TEST_SOURCES
     line_tree_test.cpp
     load_save_file_test.cpp
     part_selection_test.cpp
+    schematic_generation_test.cpp
     schematic_test.cpp
     segment_tree_test.cpp
     simulation_test.cpp

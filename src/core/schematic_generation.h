@@ -33,7 +33,7 @@ struct schematic_generation_result_t {
  * @brief: Generates a schematic from the given layout and line-trees.
  *
  * Pre-condition:
- *  + segment-trees are contiguous tree with correct endpoints (tree_normalization.h).
+ *  + segment-trees are contiguous tree (tree_normalization.h).
  *
  * Throws an exception if inputs and output connections are not compatible.
  */

@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_GEOMETRY_SEGMENT_INFO_H
 #define LOGICSIM_GEOMETRY_SEGMENT_INFO_H
 
+#include "core/vocabulary/orientation.h"
 #include "core/vocabulary/segment_point_type.h"
 
 #include <array>
@@ -18,12 +19,15 @@ struct ordered_line_t;
 [[nodiscard]] auto order_points(segment_info_t a, segment_info_t b)
     -> std::tuple<segment_info_t, segment_info_t>;
 
+[[nodiscard]] auto to_point_type_orientation(const segment_info_t &segment_info)
+    -> std::array<std::tuple<point_t, SegmentPointType, orientation_t>, 2>;
+
 [[nodiscard]] auto adjust(segment_info_t segment, part_t part) -> segment_info_t;
 
 [[nodiscard]] auto merge_touching(segment_info_t segment_info_0,
                                   segment_info_t segment_info_1) -> segment_info_t;
 
-[[nodiscard]] auto to_point_and_type(const segment_info_t &segment_info)
+[[nodiscard]] auto to_point_type(const segment_info_t &segment_info)
     -> std::array<std::pair<point_t, SegmentPointType>, 2>;
 
 auto set_segment_point_type(segment_info_t &info, point_t position,
