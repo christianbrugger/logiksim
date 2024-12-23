@@ -63,8 +63,59 @@ auto HandleResizeLogic::finalize(EditableCircuit& editable_circuit) -> void {
 
 namespace {
 
+auto store_selection(EditableCircuit& editable_circuit) -> std::vector<selection_id_t> {
+    if (const auto logicitem_id =
+            get_single_logicitem(editable_circuit.visible_selection())) {
+        auto result = std::vector<selection_id_t> {};
+        for (const auto& [selection_id, selection] :
+             editable_circuit.modifier().circuit_data().selection_store) {
+            if (selection.is_selected(logicitem_id)) {
+                result.push_back(selection_id);
+            }
+        }
+        return result;
+    }
+
+    if (const auto decoration_id =
+            get_single_decoration(editable_circuit.visible_selection())) {
+        auto result = std::vector<selection_id_t> {};
+        for (const auto& [selection_id, selection] :
+             editable_circuit.modifier().circuit_data().selection_store) {
+            if (selection.is_selected(decoration_id)) {
+                result.push_back(selection_id);
+            }
+        }
+        return result;
+    }
+
+    throw std::runtime_error("restore - expected single logicitem or decoration");
+}
+
+auto restore_selection(EditableCircuit& editable_circuit,
+                       const std::vector<selection_id_t>& selection_ids) -> void {
+    if (const auto logicitem_id =
+            get_single_logicitem(editable_circuit.visible_selection())) {
+        for (const auto selection_id : selection_ids) {
+            editable_circuit.add_to_selection(selection_id, logicitem_id);
+        }
+        return;
+    }
+
+    if (const auto decoration_id =
+            get_single_decoration(editable_circuit.visible_selection())) {
+        for (const auto selection_id : selection_ids) {
+            editable_circuit.add_to_selection(selection_id, decoration_id);
+        }
+        return;
+    }
+
+    throw std::runtime_error("restore - expected single logicitem or decoration");
+}
+
 auto resize_element(EditableCircuit& editable_circuit, const PlacedElement& original,
                     size_handle_t size_handle, delta_movement_t new_delta) {
+    const auto state = store_selection(editable_circuit);
+
     // delete element
     editable_circuit.delete_all(editable_circuit.visible_selection());
 
@@ -87,6 +138,8 @@ auto resize_element(EditableCircuit& editable_circuit, const PlacedElement& orig
         editable_circuit.change_insertion_mode(editable_circuit.visible_selection(),
                                                InsertionMode::insert_or_discard);
     }
+
+    restore_selection(editable_circuit, state);
 }
 
 }  // namespace
