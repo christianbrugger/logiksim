@@ -11,6 +11,10 @@
 
 namespace logicsim {
 
+auto point_type_orientation_t::format() const -> std::string {
+    return fmt::format("[{}, {}, {}]", position, type, orientation);
+}
+
 auto order_points(segment_info_t a,
                   segment_info_t b) -> std::tuple<segment_info_t, segment_info_t> {
     if (a.line <= b.line) {
@@ -58,14 +62,14 @@ auto to_point_type(const segment_info_t &segment_info)
 }
 
 auto to_point_type_orientation(const segment_info_t &segment_info)
-    -> std::array<std::tuple<point_t, SegmentPointType, orientation_t>, 2> {
+    -> std::array<point_type_orientation_t, 2> {
     return {
-        std::tuple {
+        point_type_orientation_t {
             segment_info.line.p0,
             segment_info.p0_type,
             to_orientation_p0(segment_info.line),
         },
-        std::tuple {
+        point_type_orientation_t {
             segment_info.line.p1,
             segment_info.p1_type,
             to_orientation_p1(segment_info.line),

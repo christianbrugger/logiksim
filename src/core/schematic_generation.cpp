@@ -182,33 +182,39 @@ auto add_layout_elements(Schematic& schematic, const Layout& layout,
 // Connections
 //
 
+namespace {
+
+auto find_logicitem_input(const point_type_orientation_t& endpoint,
+                          const LogicItemInputIndex& index)
+    -> std::optional<logicitem_connection_t> {
+    if (endpoint.type != SegmentPointType::output) {
+        return std::nullopt;
+    }
+    if (const auto entry = index.find(endpoint.position)) {
+        if (!orientations_compatible(endpoint.orientation, entry->orientation)) {
+            throw std::runtime_error("input orientation not compatible");
+        }
+        return entry;
+    }
+    return std::nullopt;
+};
+
+}  // namespace
+
 auto connect_segment_tree_without_inputs(Schematic& schematic, const Layout& layout,
                                          const GenerationIndex& index,
                                          element_id_t element_id) -> void {
     const auto wire_id = to_wire_id(layout, element_id);
     const auto& segment_tree = layout.wires().segment_tree(wire_id);
 
-    // trees with inputs should use generated line-trees, as its more efficient
+    // trees with inputs need to use line-trees, as order of inputs matters
     Expects(!segment_tree.has_input());
 
     auto wire_output_id = connection_id_t {0};
-
-    // TODO !!! refactor loop
-
-    // connect outputs
-    for (const auto& segment : segment_tree.segments()) {
-        for (auto&& [position, type, orientation] : to_point_type_orientation(segment)) {
-            if (type != SegmentPointType::output) {
-                continue;
-            }
-            const auto entry = index.inputs.find(position);
-            if (!entry) {
-                continue;
-            }
-            if (!orientations_compatible(orientation, entry->orientation)) {
-                throw std::runtime_error("input orientation not compatible");
-            }
-
+    for (auto&& endpoint : segment_tree.segments() |
+                               std::ranges::views::transform(to_point_type_orientation) |
+                               std::ranges::views::join) {
+        if (const auto entry = find_logicitem_input(endpoint, index.inputs)) {
             const auto connected_element_id = to_element_id(layout, entry->logicitem_id);
             const auto output = output_t {element_id, wire_output_id};
             const auto input = input_t {connected_element_id, entry->connection_id};
@@ -217,9 +223,6 @@ auto connect_segment_tree_without_inputs(Schematic& schematic, const Layout& lay
             ++wire_output_id;
         }
     }
-
-    Expects(size_t {wire_output_id} <= size_t {segment_tree.output_count()});
-    Expects(size_t {wire_output_id} <= size_t {schematic.output_count(element_id)});
 }
 
 auto connect_line_tree(Schematic& schematic, const Layout& layout,
