@@ -150,7 +150,7 @@ def action_package() -> None:
     output_names = list(LS_TEMP_PATH.glob("LogikSim_*_win_x64.exe"))
     assert len(output_names) == 1
     installer_exe = output_names[0]
-    version = re.match(r"^LogikSim_([0-9.]+)_win_x64.exe", installer_exe.name).group(1)
+    version = re.match(r"^LogikSim_([0-9a-z.-]+)_win_x64.exe", installer_exe.name).group(1)
 
     installer_zip = LS_TEMP_PATH / f"LogikSim_{version}_win_x64_installer.zip"
     portable_zip = LS_TEMP_PATH / f"LogikSim_{version}_win_x64_portable.zip"
