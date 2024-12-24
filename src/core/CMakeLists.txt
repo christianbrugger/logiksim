@@ -192,7 +192,7 @@ set(LS_CORE_DEPENDENCIES
     unordered_dense::unordered_dense
     GSL
     range-v3
-    Blend2D::Blend2D
+    blend2d::blend2d
     glaze::glaze
     ZLIB::ZLIB
     harfbuzz
