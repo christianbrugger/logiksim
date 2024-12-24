@@ -899,7 +899,7 @@ auto TopWidget::default_save_filepath() -> QString {
     }
 
     // Qt uses '/' as a universal separator on all platforms
-    return folder + QString {"/"} + tr("circuit1.ls2");
+    return folder + QString {"/"} + tr("Circuit1.ls2");
 }
 
 auto TopWidget::new_circuit() -> void {
