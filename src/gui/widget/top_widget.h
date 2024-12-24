@@ -120,6 +120,7 @@ class TopWidget : public QMainWindow {
 
     // load & safe
     [[nodiscard]] static auto filename_filter() -> QString;
+    [[nodiscard]] static auto default_save_filepath() -> QString;
     enum class filename_choice_t { ask_new, same_as_last };
     enum class save_result_t { success, canceled };
     auto save_circuit(filename_choice_t filename_choice) -> save_result_t;

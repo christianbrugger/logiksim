@@ -34,6 +34,7 @@
 #include <QRadioButton>
 #include <QSlider>
 #include <QSpinBox>
+#include <QStandardPaths>
 #include <QStatusBar>
 #include <QString>
 #include <QTimer>
@@ -873,6 +874,14 @@ auto TopWidget::filename_filter() -> QString {
     return tr("Circuit Files (*.ls2);;All Files (*)");
 }
 
+auto TopWidget::default_save_filepath() -> QString {
+    // always guaranteed to be available
+    const auto folder =
+        QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    // Qt uses '/' as universal separator
+    return folder + QString {"/"} + tr("untitled.ls2");
+}
+
 auto TopWidget::new_circuit() -> void {
     if (ensure_circuit_saved() == save_result_t::success) {
         circuit_widget_->do_action(circuit_widget::UserAction::clear_circuit);
@@ -892,10 +901,10 @@ auto TopWidget::save_circuit(filename_choice_t filename_choice) -> save_result_t
             filename_choice == filename_choice_t::same_as_last) {
             return last_saved_filename_;
         }
-        return QFileDialog::getSaveFileName(this,              //
-                                            tr("Save As"),     //
-                                            "",                //
-                                            filename_filter()  //
+        return QFileDialog::getSaveFileName(this,                     //
+                                            tr("Save As"),            //
+                                            default_save_filepath(),  //
+                                            filename_filter()         //
         );
     }();
     if (filename.isEmpty()) {
