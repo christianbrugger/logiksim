@@ -74,7 +74,7 @@ set(LS_CORE_SOURCES
     component/editable_circuit/selection_guard.cpp
     component/editable_circuit/selection_store.cpp
     component/editable_circuit/visible_selection.cpp
-    component/interactive_simulation/interaction_cache.cpp
+    component/interactive_simulation/interaction_index.cpp
     component/layout/decoration_store.cpp
     component/layout/logicitem_store.cpp
     component/layout/wire_store.cpp

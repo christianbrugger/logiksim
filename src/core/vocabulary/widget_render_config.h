@@ -15,9 +15,9 @@ struct WidgetRenderConfig {
 
     bool do_benchmark {false};
     bool show_circuit {true};
-    bool show_collision_cache {false};
-    bool show_connection_cache {false};
-    bool show_selection_cache {false};
+    bool show_collision_index {false};
+    bool show_connection_index {false};
+    bool show_selection_index {false};
 
     bool show_render_borders {false};
     bool show_mouse_position {false};

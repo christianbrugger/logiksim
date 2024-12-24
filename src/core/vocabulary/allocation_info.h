@@ -92,7 +92,7 @@ static_assert(std::regular<SpatialSimulationAllocInfo>);
 
 struct InteractiveSimulationAllocInfo {
     SpatialSimulationAllocInfo spatial_simulation {};
-    Byte interaction_cache {};
+    Byte interaction_index {};
     Byte event_counter {};  // TODO ???
 
     [[nodiscard]] auto operator==(const InteractiveSimulationAllocInfo&) const

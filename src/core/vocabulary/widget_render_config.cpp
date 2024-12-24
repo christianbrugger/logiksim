@@ -10,9 +10,9 @@ auto WidgetRenderConfig::format() const -> std::string {
         "  \n"
         "  do_benchmark = {},\n"
         "  show_circuit = {},\n"
-        "  show_collision_cache = {},\n"
-        "  show_connection_cache = {},\n"
-        "  show_selection_cache = {},\n"
+        "  show_collision_index = {},\n"
+        "  show_connection_index = {},\n"
+        "  show_selection_index = {},\n"
         "  \n"
         "  show_render_borders = {},\n"
         "  show_mouse_position = {},\n"
@@ -20,8 +20,8 @@ auto WidgetRenderConfig::format() const -> std::string {
         "  jit_rendering = {},\n"
         "}}",
         thread_count, wire_render_style,  //
-        do_benchmark, show_circuit, show_collision_cache, show_connection_cache,
-        show_selection_cache,  //
+        do_benchmark, show_circuit, show_collision_index, show_connection_index,
+        show_selection_index,  //
         show_render_borders, show_mouse_position, direct_rendering, jit_rendering);
 }
 

@@ -26,7 +26,7 @@ namespace collision_index {
 /**
  * @brief: The type of item when adding a new item at a specific position.
  *
- * Note that some states cannot be inserted into the cache.
+ * Note that some states cannot be inserted into the index.
  */
 enum class ItemType {
     logicitem_body,
@@ -43,7 +43,7 @@ enum class ItemType {
 };
 
 /**
- * @brief: The state of the cache at a specific positions.
+ * @brief: The state of the index at a specific positions.
  *
  * Note, some states are a combination of multiple items inserted at the same positions.
  */
@@ -106,7 +106,7 @@ static_assert(decoration_id_t {wire_cross_point_tag} != null_decoration_id);
 static_assert(wire_cross_point_tag != wire_corner_point_tag);
 
 /**
- * @brief: The stored cache value type.
+ * @brief: The stored index value type.
  *
  * Class Invariants:
  *  - Makes sure collision_data contains one of the states or is empty
@@ -131,7 +131,7 @@ class collision_data_t {
     [[nodiscard]] auto is_logicitem_wire_connection() const -> bool;
 
     /**
-     * @brief: Converts cache state value to enum type.
+     * @brief: Converts index state value to enum type.
      *
      * Precondition: Not to be called on an empty state.
      */

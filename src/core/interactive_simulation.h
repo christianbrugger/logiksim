@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_INTERACTIVE_SIMULATION_H
 #define LOGIKSIM_INTERACTIVE_SIMULATION_H
 
-#include "core/component/interactive_simulation/interaction_cache.h"
+#include "core/component/interactive_simulation/interaction_index.h"
 #include "core/event_counter_multi.h"
 #include "core/spatial_simulation.h"
 #include "core/timer.h"
@@ -62,7 +62,7 @@ class InteractiveSimulation {
 
    private:
     SpatialSimulation spatial_simulation_;
-    interactive_simulation::InteractionCache interaction_cache_;
+    interactive_simulation::InteractionIndex interaction_index_;
 
     time_rate_t simulation_time_rate_;
     realtime_t realtime_reference_;

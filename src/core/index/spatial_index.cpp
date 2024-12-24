@@ -509,7 +509,7 @@ auto to_reverse_index(const tree_t& tree) -> index_map_t {
     for (auto&& item : tree) {
         const bool inserted = index.try_emplace(item.second, item.first).second;
         if (!inserted) [[unlikely]] {
-            throw std::runtime_error("found duplicate item in cache");
+            throw std::runtime_error("found duplicate item in index");
         }
     }
 

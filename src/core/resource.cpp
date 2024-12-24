@@ -86,14 +86,14 @@ auto format(icon_t icon) -> std::string {
         case show_circuit: {
             return "show_circuit";
         }
-        case show_collision_cache: {
-            return "show_collision_cache";
+        case show_collision_index: {
+            return "show_collision_index";
         }
-        case show_connection_cache: {
-            return "show_connection_cache";
+        case show_connection_index: {
+            return "show_connection_index";
         }
-        case show_selection_cache: {
-            return "show_selection_cache";
+        case show_selection_index: {
+            return "show_selection_index";
         }
         // --
         case reload_circuit: {
@@ -292,14 +292,14 @@ namespace {
         case show_circuit: {
             return std::filesystem::path {"icons/lucide/cpu.svg"};
         }
-        case show_collision_cache: {
+        case show_collision_index: {
             return std::filesystem::path {"icons/lucide/shapes.svg"};
         }
-        case show_connection_cache: {
+        case show_connection_index: {
             // share-2
             return std::filesystem::path {"icons/lucide/spline.svg"};
         }
-        case show_selection_cache: {
+        case show_selection_index: {
             // ungroup, group, boxes, ratio
             return std::filesystem::path {"icons/lucide/ungroup.svg"};
         }

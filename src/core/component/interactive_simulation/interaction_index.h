@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_COMPONENT_INTERACTIVE_SIMULATION_INTERACTION_CACHE_H
-#define LOGICSIM_COMPONENT_INTERACTIVE_SIMULATION_INTERACTION_CACHE_H
+#ifndef LOGICSIM_COMPONENT_INTERACTIVE_SIMULATION_INTERACTION_INDEX_H
+#define LOGICSIM_COMPONENT_INTERACTIVE_SIMULATION_INTERACTION_INDEX_H
 
 #include "core/format/struct.h"
 #include "core/vocabulary/element_id.h"
@@ -22,12 +22,12 @@ struct interaction_data_t {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-class InteractionCache {
+class InteractionIndex {
    public:
     using map_type = ankerl::unordered_dense::map<point_t, interaction_data_t>;
 
    public:
-    explicit InteractionCache(const Layout& layout);
+    explicit InteractionIndex(const Layout& layout);
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;

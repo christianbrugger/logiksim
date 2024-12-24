@@ -34,13 +34,13 @@ template <>
  * @brief: Checks if part can be safely uninserted.
  */
 [[nodiscard]] auto is_sanitized(segment_part_t segment_part, const Layout &layout,
-                                const CollisionIndex &cache) -> bool;
+                                const CollisionIndex &index) -> bool;
 
 /**
  * @brief: Returns a part that can be safely uninserted.
  */
 [[nodiscard]] auto sanitize_part(segment_part_t segment_part, const Layout &layout,
-                                 const CollisionIndex &cache,
+                                 const CollisionIndex &index,
                                  SanitizeMode mode) -> segment_part_t;
 [[nodiscard]] auto sanitize_part(segment_part_t segment_part,
                                  const editable_circuit::Modifier &modifier,
@@ -50,7 +50,7 @@ template <>
  * @brief: Returns selection that can be safely uninserted.
  */
 auto sanitize_selection(Selection &selection, const Layout &layout,
-                        const CollisionIndex &cache, SanitizeMode mode) -> void;
+                        const CollisionIndex &index, SanitizeMode mode) -> void;
 
 }  // namespace logicsim
 

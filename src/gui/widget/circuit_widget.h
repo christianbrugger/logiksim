@@ -55,7 +55,7 @@ enum class UserAction {
     clear_circuit,
 
     /**
-     * @brief: Reloads the circuit and frees caches. Mostly for debugging purposes.
+     * @brief: Reloads the circuit and frees memory. Mostly for debugging purposes.
      */
     reload_circuit,
 
@@ -204,9 +204,9 @@ class CircuitWidget : public CircuitWidgetBase {
 
 auto set_do_benchmark(CircuitWidget& circuit_widget, bool value) -> void;
 auto set_show_circuit(CircuitWidget& circuit_widget, bool value) -> void;
-auto set_show_collision_cache(CircuitWidget& circuit_widget, bool value) -> void;
-auto set_show_connection_cache(CircuitWidget& circuit_widget, bool value) -> void;
-auto set_show_selection_cache(CircuitWidget& circuit_widget, bool value) -> void;
+auto set_show_collision_index(CircuitWidget& circuit_widget, bool value) -> void;
+auto set_show_connection_index(CircuitWidget& circuit_widget, bool value) -> void;
+auto set_show_selection_index(CircuitWidget& circuit_widget, bool value) -> void;
 
 auto set_thread_count(CircuitWidget& circuit_widget, ThreadCount new_count) -> void;
 auto set_wire_render_style(CircuitWidget& circuit_widget, WireRenderStyle style) -> void;

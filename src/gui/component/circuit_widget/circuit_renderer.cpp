@@ -244,13 +244,13 @@ auto render_to_context(Context& ctx, ImageSurface& surface,
         // }
     }
 
-    if (render_config.show_collision_cache) {
+    if (render_config.show_collision_index) {
         render_layout_collision_index(ctx, editable_circuit);
     }
-    if (render_config.show_connection_cache) {
+    if (render_config.show_connection_index) {
         render_layout_connection_index(ctx, editable_circuit);
     }
-    if (render_config.show_selection_cache) {
+    if (render_config.show_selection_index) {
         render_layout_selection_index(ctx, editable_circuit);
     }
 

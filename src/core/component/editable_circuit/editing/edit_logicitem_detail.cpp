@@ -181,10 +181,10 @@ auto convert_wires_at_outputs_to_outputs(CircuitData& circuit,
 
 namespace {
 
-auto _any_logicitem_inputs_colliding(const LayoutIndex& cache,
+auto _any_logicitem_inputs_colliding(const LayoutIndex& index,
                                      const layout_calculation_data_t& data) -> bool {
     const auto compatible = [&](simple_input_info_t info) -> bool {
-        const auto entry = cache.wire_output_index().find(info.position);
+        const auto entry = index.wire_output_index().find(info.position);
         return !entry || orientations_compatible(info.orientation, entry->orientation);
     };
 

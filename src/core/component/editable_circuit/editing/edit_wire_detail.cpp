@@ -1041,7 +1041,7 @@ auto update_inserted_segment_endpoints(CircuitData& circuit, wire_id_t wire_id,
         }
     };
 
-    // first empty caches
+    // first empty index
     run_point_update(true);
     // write the new states
     run_point_update(false);

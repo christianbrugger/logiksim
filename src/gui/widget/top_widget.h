@@ -65,9 +65,9 @@ struct MainActions {
     // debug
     QAction* do_benchmark;
     QAction* show_circuit;
-    QAction* show_collision_cache;
-    QAction* show_connection_cache;
-    QAction* show_selection_cache;
+    QAction* show_collision_index;
+    QAction* show_connection_index;
+    QAction* show_selection_index;
 
     QAction* show_render_borders;
     QAction* show_mouse_position;

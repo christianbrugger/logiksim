@@ -119,14 +119,14 @@ auto InteractiveSimulationAllocInfo::format() const -> std::string {
     return fmt::format(
         "InteractiveSimulation ({}):\n"
         "{}\n"
-        "  interaction_cache: {}\n"
+        "  interaction_index: {}\n"
         "  event_counter:     {}",
-        total(), aindent(spatial_simulation), interaction_cache, event_counter);
+        total(), aindent(spatial_simulation), interaction_index, event_counter);
 }
 
 auto InteractiveSimulationAllocInfo::total() const -> Byte {
     return spatial_simulation.total() +  //
-           interaction_cache +           //
+           interaction_index +           //
            event_counter;
 }
 

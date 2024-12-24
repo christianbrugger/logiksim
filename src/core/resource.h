@@ -45,9 +45,9 @@ enum class icon_t {
     benchmark,
     debug_info_dialog,
     show_circuit,
-    show_collision_cache,
-    show_connection_cache,
-    show_selection_cache,
+    show_collision_index,
+    show_connection_index,
+    show_selection_index,
     // --
     reload_circuit,
     load_simple_example,

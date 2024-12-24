@@ -433,23 +433,23 @@ auto TopWidget::create_menu() -> void {
                 menu, tr("Show C&ircuit"),
                 ActionAttributes {.icon = icon_t::show_circuit},
                 [this](bool checked) { set_show_circuit(*circuit_widget_, checked); });
-            actions_.show_collision_cache = add_action_checkable(
-                menu, tr("Show C&ollision Cache"),
-                ActionAttributes {.icon = icon_t::show_collision_cache},
+            actions_.show_collision_index = add_action_checkable(
+                menu, tr("Show C&ollision Index"),
+                ActionAttributes {.icon = icon_t::show_collision_index},
                 [this](bool checked) {
-                    set_show_collision_cache(*circuit_widget_, checked);
+                    set_show_collision_index(*circuit_widget_, checked);
                 });
-            actions_.show_connection_cache = add_action_checkable(
-                menu, tr("Show Co&nnection Cache"),
-                ActionAttributes {.icon = icon_t::show_connection_cache},
+            actions_.show_connection_index = add_action_checkable(
+                menu, tr("Show Co&nnection Index"),
+                ActionAttributes {.icon = icon_t::show_connection_index},
                 [this](bool checked) {
-                    set_show_connection_cache(*circuit_widget_, checked);
+                    set_show_connection_index(*circuit_widget_, checked);
                 });
-            actions_.show_selection_cache = add_action_checkable(
-                menu, tr("Show &Selection Cache"),
-                ActionAttributes {.icon = icon_t::show_selection_cache},
+            actions_.show_selection_index = add_action_checkable(
+                menu, tr("Show &Selection Index"),
+                ActionAttributes {.icon = icon_t::show_selection_index},
                 [this](bool checked) {
-                    set_show_selection_cache(*circuit_widget_, checked);
+                    set_show_selection_index(*circuit_widget_, checked);
                 });
         }
 
@@ -1023,14 +1023,14 @@ Q_SLOT void TopWidget::on_render_config_changed(WidgetRenderConfig new_config) {
     if (actions_.show_circuit != nullptr) {
         actions_.show_circuit->setChecked(new_config.show_circuit);
     }
-    if (actions_.show_collision_cache != nullptr) {
-        actions_.show_collision_cache->setChecked(new_config.show_collision_cache);
+    if (actions_.show_collision_index != nullptr) {
+        actions_.show_collision_index->setChecked(new_config.show_collision_index);
     }
-    if (actions_.show_connection_cache != nullptr) {
-        actions_.show_connection_cache->setChecked(new_config.show_connection_cache);
+    if (actions_.show_connection_index != nullptr) {
+        actions_.show_connection_index->setChecked(new_config.show_connection_index);
     }
-    if (actions_.show_selection_cache != nullptr) {
-        actions_.show_selection_cache->setChecked(new_config.show_selection_cache);
+    if (actions_.show_selection_index != nullptr) {
+        actions_.show_selection_index->setChecked(new_config.show_selection_index);
     }
 
     // wire render style

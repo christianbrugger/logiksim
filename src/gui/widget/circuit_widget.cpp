@@ -1002,21 +1002,21 @@ auto set_show_circuit(CircuitWidget& circuit_widget, bool value) -> void {
     circuit_widget.set_render_config(config);
 }
 
-auto set_show_collision_cache(CircuitWidget& circuit_widget, bool value) -> void {
+auto set_show_collision_index(CircuitWidget& circuit_widget, bool value) -> void {
     auto config = circuit_widget.render_config();
-    config.show_collision_cache = value;
+    config.show_collision_index = value;
     circuit_widget.set_render_config(config);
 }
 
-auto set_show_connection_cache(CircuitWidget& circuit_widget, bool value) -> void {
+auto set_show_connection_index(CircuitWidget& circuit_widget, bool value) -> void {
     auto config = circuit_widget.render_config();
-    config.show_connection_cache = value;
+    config.show_connection_index = value;
     circuit_widget.set_render_config(config);
 }
 
-auto set_show_selection_cache(CircuitWidget& circuit_widget, bool value) -> void {
+auto set_show_selection_index(CircuitWidget& circuit_widget, bool value) -> void {
     auto config = circuit_widget.render_config();
-    config.show_selection_cache = value;
+    config.show_selection_index = value;
     circuit_widget.set_render_config(config);
 }
 

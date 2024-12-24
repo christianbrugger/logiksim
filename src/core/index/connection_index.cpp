@@ -97,22 +97,22 @@ namespace connection_index {
 
 namespace {
 
-auto get_and_verify_cache_entry(map_type<ContentType::LogicItem>& map, point_t position,
+auto get_and_verify_index_entry(map_type<ContentType::LogicItem>& map, point_t position,
                                 logicitem_connection_t value)
     -> map_type<ContentType::LogicItem>::iterator {
     const auto it = map.find(position);
     if (it == map.end() || it->second != value) [[unlikely]] {
-        throw std::runtime_error("unable to find cached data that should be present.");
+        throw std::runtime_error("unable to find index data that should be present.");
     }
     return it;
 }
 
-auto get_and_verify_cache_entry(map_type<ContentType::Wire>& map, point_t position,
+auto get_and_verify_index_entry(map_type<ContentType::Wire>& map, point_t position,
                                 wire_value_t value)
     -> map_type<ContentType::Wire>::iterator {
     const auto it = map.find(position);
     if (it == map.end() || it->second != value) [[unlikely]] {
-        throw std::runtime_error("unable to find cached data that should be present.");
+        throw std::runtime_error("unable to find index data that should be present.");
     }
     return it;
 }
@@ -140,7 +140,7 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
                                             });
 
         if (!inserted) [[unlikely]] {
-            throw std::runtime_error("cache already has an entry at this position");
+            throw std::runtime_error("index already has an entry at this position");
         }
     }
 }
@@ -159,7 +159,7 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
                                                 info.orientation,
                                             });
         if (!inserted) [[unlikely]] {
-            throw std::runtime_error("cache already has an entry at this position");
+            throw std::runtime_error("index already has an entry at this position");
         }
     }
 }
@@ -191,7 +191,7 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
             info.orientation,
         };
 
-        const auto it = get_and_verify_cache_entry(map_, info.position, expected_value);
+        const auto it = get_and_verify_index_entry(map_, info.position, expected_value);
         it->second.logicitem_id = message.new_logicitem_id;
     }
 }
@@ -209,7 +209,7 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
             info.orientation,
         };
 
-        const auto it = get_and_verify_cache_entry(map_, info.position, expected_value);
+        const auto it = get_and_verify_index_entry(map_, info.position, expected_value);
         it->second.logicitem_id = message.new_logicitem_id;
     }
 }
@@ -241,7 +241,7 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
             info.orientation,
         };
 
-        const auto it = get_and_verify_cache_entry(map_, info.position, expected_value);
+        const auto it = get_and_verify_index_entry(map_, info.position, expected_value);
         map_.erase(it);
     }
 }
@@ -259,7 +259,7 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
             info.orientation,
         };
 
-        const auto it = get_and_verify_cache_entry(map_, info.position, expected_value);
+        const auto it = get_and_verify_index_entry(map_, info.position, expected_value);
         map_.erase(it);
     }
 }
@@ -300,7 +300,7 @@ auto handle_wire(wire_map_t& map, SegmentPointType point_type,
             });
 
         if (!inserted) [[unlikely]] {
-            throw std::runtime_error("cache already has an entry at this position");
+            throw std::runtime_error("index already has an entry at this position");
         }
     }
 
@@ -313,7 +313,7 @@ auto handle_wire(wire_map_t& map, SegmentPointType point_type,
             });
 
         if (!inserted) [[unlikely]] {
-            throw std::runtime_error("cache already has an entry at this position");
+            throw std::runtime_error("index already has an entry at this position");
         }
     }
 }
@@ -335,7 +335,7 @@ auto handle_wire(wire_map_t& map, SegmentPointType point_type,
             .orientation = to_orientation_p0(message.segment_info.line),
         };
 
-        const auto it = get_and_verify_cache_entry(map, position, expected_value);
+        const auto it = get_and_verify_index_entry(map, position, expected_value);
         it->second.segment = message.new_segment;
     }
 
@@ -346,7 +346,7 @@ auto handle_wire(wire_map_t& map, SegmentPointType point_type,
             .orientation = to_orientation_p1(message.segment_info.line),
         };
 
-        const auto it = get_and_verify_cache_entry(map, position, expected_value);
+        const auto it = get_and_verify_index_entry(map, position, expected_value);
         it->second.segment = message.new_segment;
     }
 }
@@ -363,7 +363,7 @@ auto handle_wire(wire_map_t& map, SegmentPointType point_type,
             .orientation = to_orientation_p0(message.segment_info.line),
         };
 
-        const auto it = get_and_verify_cache_entry(map, position, expected_value);
+        const auto it = get_and_verify_index_entry(map, position, expected_value);
         map.erase(it);
     }
 
@@ -374,7 +374,7 @@ auto handle_wire(wire_map_t& map, SegmentPointType point_type,
             .orientation = to_orientation_p1(message.segment_info.line),
         };
 
-        const auto it = get_and_verify_cache_entry(map, position, expected_value);
+        const auto it = get_and_verify_index_entry(map, position, expected_value);
         map.erase(it);
     }
 }

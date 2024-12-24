@@ -1,4 +1,4 @@
-#include "core/component/interactive_simulation/interaction_cache.h"
+#include "core/component/interactive_simulation/interaction_index.h"
 
 #include "core/allocated_size/ankerl_unordered_dense.h"
 #include "core/format/std_type.h"
@@ -13,7 +13,7 @@ auto interaction_data_t::format() const -> std::string {
     return fmt::format("{}", element_id);
 }
 
-InteractionCache::InteractionCache(const Layout& layout) {
+InteractionIndex::InteractionIndex(const Layout& layout) {
     for (auto logicitem_id : logicitem_ids(layout)) {
         if (!is_inserted(layout, logicitem_id)) {
             continue;
@@ -31,15 +31,15 @@ InteractionCache::InteractionCache(const Layout& layout) {
     }
 }
 
-auto InteractionCache::format() const -> std::string {
-    return fmt::format("<InteractionCache: {}>", map_);
+auto InteractionIndex::format() const -> std::string {
+    return fmt::format("<InteractionIndex: {}>", map_);
 }
 
-auto InteractionCache::allocated_size() const -> std::size_t {
+auto InteractionIndex::allocated_size() const -> std::size_t {
     return get_allocated_size(map_);
 }
 
-auto InteractionCache::find(point_t position) const -> std::optional<element_id_t> {
+auto InteractionIndex::find(point_t position) const -> std::optional<element_id_t> {
     if (const auto it = map_.find(position); it != map_.end()) {
         return it->second.element_id;
     }

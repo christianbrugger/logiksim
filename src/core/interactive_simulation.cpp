@@ -24,7 +24,7 @@ InteractiveSimulation::InteractiveSimulation()
 InteractiveSimulation::InteractiveSimulation(SpatialSimulation&& spatial_simulation,
                                              time_rate_t simulation_time_rate)
     : spatial_simulation_ {std::move(spatial_simulation)},
-      interaction_cache_ {spatial_simulation_.layout()},
+      interaction_index_ {spatial_simulation_.layout()},
 
       simulation_time_rate_ {simulation_time_rate},
       realtime_reference_ {timer_t::now()},
@@ -55,7 +55,7 @@ InteractiveSimulation::InteractiveSimulation(Layout&& layout,
 auto InteractiveSimulation::allocation_info() const -> InteractiveSimulationAllocInfo {
     return InteractiveSimulationAllocInfo {
         .spatial_simulation = spatial_simulation_.allocation_info(),
-        .interaction_cache = Byte {interaction_cache_.allocated_size()},
+        .interaction_index = Byte {interaction_index_.allocated_size()},
         .event_counter = Byte {},  // ???
     };
 }
@@ -153,7 +153,7 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
     Expects(last_event_count_ <= simulation().processed_event_count());
     Expects(simulation_time_rate_ >= time_rate_t {0us});
 
-    const auto element_id = interaction_cache_.find(position);
+    const auto element_id = interaction_index_.find(position);
 
     if (element_id) {
         const auto state = internal_state_t {*element_id, internal_state_index_t {0}};

@@ -572,7 +572,7 @@ auto _split_inserted_end_part(CircuitData& circuit, segment_part_t& split_end_pa
     const auto result = move_touching_segment_between_trees(
         circuit, split_end_part, split_end_part.segment.wire_id, optional_new_key);
 
-    // This is needed so the segments are registered in the collision cache
+    // This is needed so the segments are registered in the collision index
     {
         using enum SegmentPointType;
         update_inserted_segment_endpoints(
@@ -685,7 +685,7 @@ auto get_inserted_cross_points(const CircuitData& circuit,
 
 auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
                               std::span<const point_t> split_points) -> void {
-    const auto cache = SpatialPointIndex {split_points};
+    const auto index = SpatialPointIndex {split_points};
 
     const auto segments = transform_to_vector(
         selection.selected_segments(), [&](const Selection::segment_pair_t& value) {
@@ -707,7 +707,7 @@ auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
     for (const auto& segment : segments) {
         const auto full_line = get_line(circuit.layout, segment);
 
-        auto query_result = cache.query_intersects(full_line);
+        auto query_result = index.query_intersects(full_line);
         sort_and_make_unique(query_result, std::greater<>());
 
         // splitting puts the second half into a new segment
