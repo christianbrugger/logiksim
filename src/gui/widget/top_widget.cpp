@@ -892,21 +892,11 @@ auto TopWidget::save_circuit(filename_choice_t filename_choice) -> save_result_t
             filename_choice == filename_choice_t::same_as_last) {
             return last_saved_filename_;
         }
-        auto result = QFileDialog::getSaveFileName(this,              //
-                                                   tr("Save As"),     //
-                                                   "",                //
-                                                   filename_filter()  //
+        return QFileDialog::getSaveFileName(this,              //
+                                            tr("Save As"),     //
+                                            "",                //
+                                            filename_filter()  //
         );
-        if (result.isEmpty()) {
-            return result;
-        }
-        if (result.endsWith(".ls2")) {
-            return result;
-        }
-        if (result.endsWith(".")) {
-            return result + "ls2";
-        }
-        return result + ".ls2";
     }();
     if (filename.isEmpty()) {
         return save_result_t::canceled;
