@@ -12,7 +12,7 @@ namespace logicsim {
 
 struct SimulationConfig {
     time_rate_t simulation_time_rate {10us};
-    bool use_wire_delay {true};
+    bool use_wire_delay {false};
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const SimulationConfig &other) const -> bool = default;
