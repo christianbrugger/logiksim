@@ -874,21 +874,32 @@ auto TopWidget::filename_filter() -> QString {
     return tr("Circuit Files (*.ls2);;All Files (*)");
 }
 
-auto TopWidget::default_save_filepath() -> QString {
-    // always guaranteed return a path
-    const auto folder =
-        QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+namespace {
 
-    // path returned may not exist. Use mkpath:
-    //   + create all parent directories necessary to create the directory.
+/**
+ * @brief: Return Document location.
+ *
+ * Always returns a valid path, but the folder itself may not exist.
+ */
+auto default_file_dialog_path() -> QString {
+    return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+}
+
+}  // namespace
+
+auto TopWidget::default_save_filepath() -> QString {
+    const auto folder = default_file_dialog_path();
+
+    // Create folder with mkpath:
+    //   + creates all parent directories necessary to create the directory.
     //   + returns true if successful.
     //   + if the path already exists when this function is called, it will return true.
     if (!QDir {}.mkpath(folder)) {
         print("WARNING: unable to create save location:", folder.toStdString());
     }
 
-    // Qt uses '/' as universal separator
-    return folder + QString {"/"} + tr("untitled.ls2");
+    // Qt uses '/' as a universal separator on all platforms
+    return folder + QString {"/"} + tr("circuit1.ls2");
 }
 
 auto TopWidget::new_circuit() -> void {
@@ -943,10 +954,10 @@ auto TopWidget::open_circuit(std::optional<QString> filename) -> void {
     }
 
     if (!filename) {
-        filename = QFileDialog::getOpenFileName(this,              //
-                                                tr("Open"),        //
-                                                "",                //
-                                                filename_filter()  //
+        filename = QFileDialog::getOpenFileName(this,                        //
+                                                tr("Open"),                  //
+                                                default_file_dialog_path(),  //
+                                                filename_filter()            //
         );
     }
 
