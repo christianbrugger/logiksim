@@ -9,7 +9,7 @@
 namespace logicsim {
 
 constexpr static auto inline LS_APP_NAME = "LogikSim";
-constexpr static auto inline LS_APP_VERSION_STR = "2.3.0";
+constexpr static auto inline LS_APP_VERSION_STR = "2.3.0-beta";
 
 [[nodiscard]] auto get_font_path(FontStyle style) -> std::filesystem::path;
 
