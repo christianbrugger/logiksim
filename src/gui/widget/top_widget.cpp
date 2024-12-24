@@ -875,9 +875,18 @@ auto TopWidget::filename_filter() -> QString {
 }
 
 auto TopWidget::default_save_filepath() -> QString {
-    // always guaranteed to be available
+    // always guaranteed return a path
     const auto folder =
         QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+
+    // path returned may not exist. Use mkpath:
+    //   + create all parent directories necessary to create the directory.
+    //   + returns true if successful.
+    //   + if the path already exists when this function is called, it will return true.
+    if (!QDir {}.mkpath(folder)) {
+        print("WARNING: unable to create save location:", folder.toStdString());
+    }
+
     // Qt uses '/' as universal separator
     return folder + QString {"/"} + tr("untitled.ls2");
 }
