@@ -249,6 +249,10 @@ auto logicitem_height(const PlacedLogicItem& element) -> grid_t {
 
     // inverters
     result.definition.input_inverters.resize(result.definition.input_count.count());
+
+    if (!is_representable(to_layout_calculation_data(result))) {
+        return original;
+    }
     return result;
 }
 
@@ -334,6 +338,9 @@ auto clamp_offset(offset_t width, int delta, offset_t min, offset_t max) -> offs
         return original;
     }
 
+    if (!is_representable(to_decoration_layout_data(result))) {
+        return original;
+    }
     return result;
 }
 
