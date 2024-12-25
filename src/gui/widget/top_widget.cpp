@@ -877,26 +877,24 @@ auto TopWidget::filename_filter() -> QString {
 namespace {
 
 /**
- * @brief: Return Document location.
+ * @brief: Return default save / load file location.
  *
  * Always returns a valid path, but the folder itself may not exist.
  */
 auto default_file_dialog_path() -> QString {
-    return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    using enum QStandardPaths::StandardLocation;
+
+    if (const auto folder = QStandardPaths::writableLocation(DocumentsLocation);
+        QDir {folder}.exists()) {
+        return folder;
+    }
+    return QStandardPaths::writableLocation(HomeLocation);
 }
 
 }  // namespace
 
 auto TopWidget::default_save_filepath() -> QString {
     const auto folder = default_file_dialog_path();
-
-    // Create folder with mkpath:
-    //   + creates all parent directories necessary to create the directory.
-    //   + returns true if successful.
-    //   + if the path already exists when this function is called, it will return true.
-    if (!QDir {}.mkpath(folder)) {
-        print("WARNING: unable to create save location:", folder.toStdString());
-    }
 
     // Qt uses '/' as a universal separator on all platforms
     return folder + QString {"/"} + tr("Circuit1.ls2");
