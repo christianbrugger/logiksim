@@ -206,9 +206,7 @@ parts:
       - libglib2.0-0t64 #
       - libglx0         #
       # - libgtk-3-0t64
-      - libharfbuzz0b   #
       - libice6         #
-      - libicu74        #
       # - liblcms2-2
       - libopengl0      #
       - libpcre2-16-0   #
@@ -285,15 +283,39 @@ parts:
       - -./usr/metatypes
       - -./usr/mkspecs
       - -./usr/modules
-      - -./usr/plugins/sqldrivers
       - -./usr/qml
       - -./usr/sbom
       # unused Qt libraries
-      - -./usr/libQt6Concurrent*
-      - -./usr/libQt6OpenGLWidgets*
-      - -./usr/libQt6Sql*
-      - -./usr/libQt6SvgWidgets*
-      - -./usr/libQt6Test*
-      - -./usr/libQt6Xml*
+      - -./usr/lib/libQt6Concurrent*
+      - -./usr/lib/libQt6OpenGLWidgets*
+      - -./usr/lib/libQt6PrintSupport*
+      - -./usr/lib/libQt6Sql*
+      - -./usr/lib/libQt6SvgWidgets*
+      - -./usr/lib/libQt6Test*
+      - -./usr/lib/libQt6Xml*
+      # unused styles
+      - -./usr/plugins/platformthemes/libqgtk3.so
+      # unused plugins
+      - -./usr/plugins/sqldrivers
+      - -./usr/plugins/printsupport
 
+
+  qt-deps:
+    plugin: nil
+    stage-packages:
+      # - libharfbuzz0b   #
+      # - libicu74        #
+
+      ## 
+      # - libgtk-3-0t64
+      # - liblcms2-2
+      # - libssl3t64
+      # - libvulkan1
+      - libwayland-egl1
+      # - libwayland-server0
+      # - libxcb-util1
+      # - mesa-vulkan-drivers
+      - xkb-data
+    after:
+      - logiksim-meta
 
