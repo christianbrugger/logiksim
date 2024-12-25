@@ -8,14 +8,22 @@ else()
     set(LS_BUILD_GUI FALSE)
 endif()
 
-# libraries
-add_subdirectory(core)
 
+ls_require_bool(LS_USE_LIBCXX)
+if(LS_GUI_SAMPLE)
+    add_subdirectory(sample_gui)
 
-if(LS_SANITIZE MATCHES "Fuzzer")
+elseif(LS_SANITIZE MATCHES "Fuzzer")
+    # libraries
+    add_subdirectory(core)
+
     # fuzz
     add_subdirectory(fuzz_core)
+
 else()
+    # libraries
+    add_subdirectory(core)
+
     # executables & tests
     add_subdirectory(main_benchmark)
     add_subdirectory(main_cli)

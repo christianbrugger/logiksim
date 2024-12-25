@@ -401,6 +401,20 @@
                 "LS_ENABLE_LTO": "OFF"
             }
         },
+        {
+            "name": "linux-clang-gui-release",
+            "displayName": "Clang GUI release",
+            "description": "Compile GUI sample release build with Clang compiler",
+            "inherits": "common-linux-clang",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "LS_ENABLE_CCACHE": "ON",
+                "LS_ENABLE_PCH": "ON",
+                "LS_ENABLE_LTO": "ON",
+
+                "LS_GUI_SAMPLE": "ON"
+            }
+        },
 		
 
 
