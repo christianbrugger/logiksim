@@ -26,72 +26,72 @@ compression: lzo
 apps:
   logiksim:
     command: usr/bin/logiksim
-    desktop: usr/share/applications/logiksim.desktop
-    command-chain:
-      - bin/desktop-launch
+#     # desktop: usr/share/applications/logiksim.desktop
+#     # command-chain:
+#     #   - bin/desktop-launch
     plugs:
-      - alsa
-      - audio-playback
-      - audio-record
-      - camera
+      # - alsa
+      # - audio-playback
+      # - audio-record
+      # - camera
       - desktop
-      - desktop-legacy
+      # - desktop-legacy
       - gsettings
-      - hardware-observe
+      # - hardware-observe
       - home
-      - network
-      - network-bind
-      - network-status
-      - opengl
+      # - network
+      # - network-bind
+      # - network-status
+      # - opengl
       - removable-media
-      - unity7
+      # - unity7
       - wayland
       - x11
-    slots:
-      - mpris
+    # slots:
+    #   - mpris
 
-hooks:
-  configure:
-    command-chain:
-      - bin/hooks-configure-desktop
-    plugs:
-      - desktop
-
-plugs:
-  desktop:
-    mount-host-font-cache: false
-  # Support for common GTK themes
-  # https://forum.snapcraft.io/t/how-to-use-the-system-gtk-theme-via-the-gtk-common-themes-snap/6235
-  gtk-3-themes:
-    interface: content
-    target: $SNAP/data-dir/themes
-    default-provider: gtk-common-themes
-  icon-themes:
-    interface: content
-    target: $SNAP/data-dir/icons
-    default-provider: gtk-common-themes
-  sound-themes:
-    interface: content
-    target: $SNAP/data-dir/sounds
-    default-provider: gtk-common-themes
-
-layout:
-  /usr/share/alsa:
-    bind: $SNAP/usr/share/alsa
-  /usr/share/pipewire:
-    bind: $SNAP/usr/share/pipewire
-  /usr/share/X11:
-    bind: $SNAP/usr/share/X11
-  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-3.0:
-    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-3.0
-  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-4.0:
-    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-4.0
-  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pipewire-0.3:
-    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pipewire-0.3
-  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/spa-0.2:
-    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/spa-0.2
-  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/webkitgtk-6.0:
-    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/webkitgtk-6.0
+# hooks:
+#   configure:
+#     command-chain:
+#       - bin/hooks-configure-desktop
+#     plugs:
+#       - desktop
+#
+# plugs:
+#   desktop:
+#     mount-host-font-cache: false
+#   # Support for common GTK themes
+#   # https://forum.snapcraft.io/t/how-to-use-the-system-gtk-theme-via-the-gtk-common-themes-snap/6235
+#   gtk-3-themes:
+#     interface: content
+#     target: $SNAP/data-dir/themes
+#     default-provider: gtk-common-themes
+#   icon-themes:
+#     interface: content
+#     target: $SNAP/data-dir/icons
+#     default-provider: gtk-common-themes
+#   sound-themes:
+#     interface: content
+#     target: $SNAP/data-dir/sounds
+#     default-provider: gtk-common-themes
+#
+# layout:
+#   /usr/share/alsa:
+#     bind: $SNAP/usr/share/alsa
+#   /usr/share/pipewire:
+#     bind: $SNAP/usr/share/pipewire
+#   /usr/share/X11:
+#     bind: $SNAP/usr/share/X11
+#   /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-3.0:
+#     bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-3.0
+#   /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-4.0:
+#     bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-4.0
+#   /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pipewire-0.3:
+#     bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pipewire-0.3
+#   /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/spa-0.2:
+#     bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/spa-0.2
+#   /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/webkitgtk-6.0:
+#     bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/webkitgtk-6.0
 
 
 parts:
@@ -100,7 +100,7 @@ parts:
     source: https://github.com/christianbrugger/logiksim.git
     source-type: git
     source-submodules: []
-    source-commit: bd7d97724e8703581a6c1becf6081a89b8186aee
+    source-commit: c6e0484ee89c2751c5154a411976a0cdd3ea1739
     build-environment:
       - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib:$CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
       - CC: clang-18
@@ -110,39 +110,77 @@ parts:
       - clang-18
       - llvm-18
       - ninja-build
+      # Required for Qt6::GuiPrivate
+      - libxkbcommon-dev
     build-snaps:
       - cmake
     override-build: |
       echo ${CRAFT_PART_BUILD}
-
-      # submodules
       cd ${CRAFT_PART_BUILD}
-      python3.12 external/checkout.py
 
       # configure
-      cd ${CRAFT_PART_BUILD}
-      # disable LTO as it leads to coredump when running the snap
-      # not sure why
-      cmake --preset linux-clang-release \
+      # disable LTO as it leads to coredump when running the snap, not sure why
+      cmake --preset linux-clang-gui-release \
         -DLS_ENABLE_LTO=OFF
 
       # build
-      cd ${CRAFT_PART_BUILD}/build/linux-clang-release
-      ninja ls_test_core ls_test_gui ls_gui
+      cd ${CRAFT_PART_BUILD}/build/linux-clang-gui-release
+      ninja ls_gui_sample
 
-      # run test
-      ./ls_test_core
-      ./ls_test_gui
-      
       # install
       mkdir -p "${CRAFT_PART_INSTALL}/usr/bin/"
-      cp ls_gui "${CRAFT_PART_INSTALL}/usr/bin/logiksim"
-      # cp ls_test_core "${CRAFT_PART_INSTALL}/usr/bin/ls_test_core"
-      # cp ls_test_gui "${CRAFT_PART_INSTALL}/usr/bin/ls_test_gui"
-      cp -r resources "${CRAFT_PART_INSTALL}/usr/bin/"
+      cp ls_gui_sample "${CRAFT_PART_INSTALL}/usr/bin/logiksim"
     after:
       - qt
-  
+
+  # logiksim:
+  #   plugin: nil
+  #   source: https://github.com/christianbrugger/logiksim.git
+  #   source-type: git
+  #   source-submodules: []
+  #   source-commit: bd7d97724e8703581a6c1becf6081a89b8186aee
+  #   build-environment:
+  #     - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib:$CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+  #     - CC: clang-18
+  #     - CXX: clang++-18
+  #   build-packages:
+  #     - python3.12
+  #     - clang-18
+  #     - llvm-18
+  #     - ninja-build
+  #   build-snaps:
+  #     - cmake
+  #   override-build: |
+  #     echo ${CRAFT_PART_BUILD}
+  #
+  #     # submodules
+  #     cd ${CRAFT_PART_BUILD}
+  #     python3.12 external/checkout.py
+  #
+  #     # configure
+  #     cd ${CRAFT_PART_BUILD}
+  #     # disable LTO as it leads to coredump when running the snap
+  #     # not sure why
+  #     cmake --preset linux-clang-release \
+  #       -DLS_ENABLE_LTO=OFF
+  #
+  #     # build
+  #     cd ${CRAFT_PART_BUILD}/build/linux-clang-release
+  #     ninja ls_test_core ls_test_gui ls_gui
+  #
+  #     # run test
+  #     ./ls_test_core
+  #     ./ls_test_gui
+  #
+  #     # install
+  #     mkdir -p "${CRAFT_PART_INSTALL}/usr/bin/"
+  #     cp ls_gui "${CRAFT_PART_INSTALL}/usr/bin/logiksim"
+  #     # cp ls_test_core "${CRAFT_PART_INSTALL}/usr/bin/ls_test_core"
+  #     # cp ls_test_gui "${CRAFT_PART_INSTALL}/usr/bin/ls_test_gui"
+  #     cp -r resources "${CRAFT_PART_INSTALL}/usr/bin/"
+  #   after:
+  #     - qt
+
   logiksim-meta:
     plugin: nil
     override-build: |
@@ -152,44 +190,47 @@ parts:
       cp "${CRAFT_PROJECT_DIR}/packaging/linux/logiksim.desktop" \
         "${CRAFT_PART_INSTALL}/usr/share/applications/logiksim.desktop"
     after:
-      - desktop-qt
-      
-
-  desktop-qt:
-    source: https://github.com/desktop-app/snapcraft-desktop-helpers.git
-    source-depth: 1
-    source-subdir: qt
-    plugin: make
-    make-parameters: ["FLAVOR=qt5"]
-    build-environment:
-      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-    build-packages:
-      - build-essential
-      - dpkg-dev
-      - gtk-update-icon-cache
-      - libglib2.0-bin
-      - libgtk-3-0t64
-    stage-packages:
-      - libc-bin
-      - libgdk-pixbuf-2.0-0
-      - libnvidia-egl-wayland1
-      - libxkbcommon0
-      - locales-all
-      - shared-mime-info
-      - xdg-user-dirs
-    override-prime: |
-      craftctl default
-      update-mime-database usr/share/mime
-      glib-compile-schemas usr/share/glib-2.0/schemas
-      for theme in usr/share/icons/*; do
-        if [ -f "$theme/index.theme" ] && [ ! -f "$theme/icon-theme.cache" ]; then
-          update-icon-caches "$theme"
-        fi
-      done
-      GTK_PATH=$PWD/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-3.0 /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libgtk-3-0t64/gtk-query-immodules-3.0 > usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-3.0/3.0.0/immodules/immodules.cache
-    after:
+      # - desktop-qt
       - logiksim
+      
+  desktop-qt:
+    plugin: nil
 
+  # desktop-qt:
+  #   source: https://github.com/desktop-app/snapcraft-desktop-helpers.git
+  #   source-depth: 1
+  #   source-subdir: qt
+  #   plugin: make
+  #   make-parameters: ["FLAVOR=qt5"]
+  #   build-environment:
+  #     - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+  #   build-packages:
+  #     - build-essential
+  #     - dpkg-dev
+  #     - gtk-update-icon-cache
+  #     - libglib2.0-bin
+  #     - libgtk-3-0t64
+  #   stage-packages:
+  #     - libc-bin
+  #     - libgdk-pixbuf-2.0-0
+  #     - libnvidia-egl-wayland1
+  #     - libxkbcommon0
+  #     - locales-all
+  #     - shared-mime-info
+  #     - xdg-user-dirs
+  #   override-prime: |
+  #     craftctl default
+  #     update-mime-database usr/share/mime
+  #     glib-compile-schemas usr/share/glib-2.0/schemas
+  #     for theme in usr/share/icons/*; do
+  #       if [ -f "$theme/index.theme" ] && [ ! -f "$theme/icon-theme.cache" ]; then
+  #         update-icon-caches "$theme"
+  #       fi
+  #     done
+  #     GTK_PATH=$PWD/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-3.0 /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libgtk-3-0t64/gtk-query-immodules-3.0 > usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/gtk-3.0/3.0.0/immodules/immodules.cache
+  #   after:
+  #     - logiksim
+  #
 
   qt:
     plugin: nil
@@ -197,14 +238,14 @@ parts:
       - python3.12
       - python3-venv
     stage-packages:
-      - libgl1
+      - libgl1  # !!!
       ## 
       - libdbus-1-3     #
       - libegl1         #
       - libfontconfig1  #
       - libfreetype6    #
       - libglib2.0-0t64 #
-      - libglx0         #
+      - libglx0         #  !!!
       # - libgtk-3-0t64
       - libice6         #
       # - liblcms2-2
@@ -244,7 +285,7 @@ parts:
       - zlib1g
 
       # - mesa-vulkan-drivers
-      # - xkb-data
+      - xkb-data            # !!!!
 
     override-build: |
       QT=6.8.1
@@ -263,6 +304,7 @@ parts:
       aqt install-qt \
         linux desktop ${QT} linux_gcc_64 \
         --archives icu qtbase qtsvg qtwayland
+      # --archives icu qtbase qtsvg qtwayland
 
       # list files
       du -hs ${QT}/gcc_64/*
@@ -299,23 +341,27 @@ parts:
       - -./usr/plugins/sqldrivers
       - -./usr/plugins/printsupport
 
-
-  qt-deps:
-    plugin: nil
-    stage-packages:
-      # - libharfbuzz0b   #
-      # - libicu74        #
-
-      ## 
-      # - libgtk-3-0t64
-      # - liblcms2-2
-      # - libssl3t64
-      # - libvulkan1
-      - libwayland-egl1
-      # - libwayland-server0
-      # - libxcb-util1
-      # - mesa-vulkan-drivers
-      - xkb-data
-    after:
-      - logiksim-meta
-
+  #
+  # qt-deps:
+  #   plugin: nil
+  #   stage-packages:
+  #     # - libharfbuzz0b   #
+  #     # - libicu74        #
+  #
+  #     ## 
+  #     # - libgtk-3-0t64
+  #     # - liblcms2-2
+  #     # - libssl3t64
+  #     # - libvulkan1
+  #     - libwayland-egl1
+  #     # - libwayland-server0
+  #     # - libxcb-util1
+  #     # - mesa-vulkan-drivers
+  #     - xkb-data
+  #   override-build: |
+  #     tree las
+  #     las
+  #     abkjadf
+  #   after:
+  #     - logiksim-meta
+  #
