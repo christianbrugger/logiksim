@@ -49,54 +49,6 @@ apps:
       - x11
     slots:
       - mpris
-  test-core:
-    command: usr/bin/ls_test_core
-    command-chain:
-      - bin/desktop-launch
-    plugs:
-      - alsa
-      - audio-playback
-      - audio-record
-      - camera
-      - desktop
-      - desktop-legacy
-      - gsettings
-      - hardware-observe
-      - home
-      - network
-      - network-bind
-      - network-status
-      - opengl
-      - removable-media
-      - unity7
-      - wayland
-      - x11
-    slots:
-      - mpris
-  test-gui:
-    command: usr/bin/ls_test_gui
-    command-chain:
-      - bin/desktop-launch
-    plugs:
-      - alsa
-      - audio-playback
-      - audio-record
-      - camera
-      - desktop
-      - desktop-legacy
-      - gsettings
-      - hardware-observe
-      - home
-      - network
-      - network-bind
-      - network-status
-      - opengl
-      - removable-media
-      - unity7
-      - wayland
-      - x11
-    slots:
-      - mpris
 
 hooks:
   configure:
@@ -148,9 +100,9 @@ parts:
     source: https://github.com/christianbrugger/logiksim.git
     source-type: git
     source-submodules: []
+    source-commit: bd7d97724e8703581a6c1becf6081a89b8186aee
     build-environment:
-      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-      - LDFLAGS: ${LDFLAGS:+$LDFLAGS} -s
+      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib:$CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
       - CC: clang-18
       - CXX: clang++-18
     build-packages:
@@ -185,8 +137,8 @@ parts:
       # install
       mkdir -p "${CRAFT_PART_INSTALL}/usr/bin/"
       cp ls_gui "${CRAFT_PART_INSTALL}/usr/bin/logiksim"
-      cp ls_test_core "${CRAFT_PART_INSTALL}/usr/bin/ls_test_core"
-      cp ls_test_gui "${CRAFT_PART_INSTALL}/usr/bin/ls_test_gui"
+      # cp ls_test_core "${CRAFT_PART_INSTALL}/usr/bin/ls_test_core"
+      # cp ls_test_gui "${CRAFT_PART_INSTALL}/usr/bin/ls_test_gui"
       cp -r resources "${CRAFT_PART_INSTALL}/usr/bin/"
     after:
       - qt
@@ -241,52 +193,12 @@ parts:
 
   qt:
     plugin: nil
-    build-environment:
-      - LDFLAGS: ${LDFLAGS:+$LDFLAGS} -s
     build-packages:
-      - git
-      - cmake
-      - ninja-build
-      # for Qt
-      - libdbus-1-dev
-      - libegl-dev
-      - libfontconfig1-dev
-      - libfreetype-dev
-      - libglib2.0-dev
-      - libglx-dev
-      - libgtk-3-dev
-      - libharfbuzz-dev
-      - libice-dev
-      - libicu-dev
-      - liblcms2-dev
-      - libopengl-dev
-      - libpcre2-dev
-      - libpng-dev
-      - libsm-dev
-      - libssl-dev
-      - libvulkan-dev
-      - libwayland-dev
-      - libx11-dev
-      - libx11-xcb-dev
-      - libxcb1-dev
-      - libxcb-cursor-dev
-      - libxcb-glx0-dev
-      - libxcb-icccm4-dev
-      - libxcb-image0-dev
-      - libxcb-keysyms1-dev
-      - libxcb-randr0-dev
-      - libxcb-render0-dev
-      - libxcb-render-util0-dev
-      - libxcb-shape0-dev
-      - libxcb-shm0-dev
-      - libxcb-sync-dev
-      - libxcb-util-dev
-      - libxcb-xfixes0-dev
-      - libxcb-xkb-dev
-      - libxkbcommon-dev
-      - libxkbcommon-x11-dev
-      - zlib1g-dev
+      - python3.12
+      - python3-venv
     stage-packages:
+      - libgl1
+      ## 
       - libdbus-1-3
       - libegl1
       - libfontconfig1
@@ -330,42 +242,41 @@ parts:
       - zlib1g
       - mesa-vulkan-drivers
       - xkb-data
-    override-pull: |
-      QT=6.7.3
-
-      git clone -b v${QT} --depth=1 https://github.com/qt/qt5.git .
-      git submodule update --init --recursive --depth=1 qtbase qtwayland qtsvg
 
     override-build: |
-      ./configure \
-        -prefix /usr \
-        -libdir /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR \
-        -opensource \
-        -release \
-        -confirm-license \
-        -openssl-linked \
-        -nomake examples \
-        -nomake tests \
-        -submodules qtsvg,qtwayland \
-        -skip qtdeclarative,qtimageformats,qtlanguageserver,qtshadertools \
-        -- \
-        -DCMAKE_PREFIX_PATH=$CRAFT_STAGE/usr
+      QT=6.8.1
 
-      cmake --build . # -j$CRAFT_PARALLEL_BUILD_COUNT
-      DESTDIR="$CRAFT_PART_INSTALL" cmake --install .
-    prime:
-      - -./usr/bin
-      - -./usr/doc
-      - -./usr/include
-      - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/cmake
-      - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/metatypes
-      - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pkgconfig
-      - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/*.a
-      - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/*.la
-      - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/*.prl
-      - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/*.so
-      - -./usr/libexec
-      - -./usr/mkspecs
-      - -./usr/modules
+      echo ${CRAFT_PART_BUILD}
+      cd ${CRAFT_PART_BUILD}
+
+      # install python package
+      python3 -m venv env
+      . env/bin/activate
+      python3 -m pip install --upgrade pip
+      python3 -m pip install aqtinstall
+
+      # download Qt
+      . env/bin/activate
+      aqt install-qt \
+        linux desktop ${QT} linux_gcc_64 \
+        --archives icu qtbase qtsvg qtwayland
+
+      # copy to target
+      cp -r ${QT}/gcc_64/* ${CRAFT_PART_INSTALL}/usr
+        
+    # prime:
+    #   - -./usr/bin
+    #   - -./usr/doc
+    #   - -./usr/include
+    #   - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/cmake
+    #   - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/metatypes
+    #   - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pkgconfig
+    #   - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/*.a
+    #   - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/*.la
+    #   - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/*.prl
+    #   - -./usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/*.so
+    #   - -./usr/libexec
+    #   - -./usr/mkspecs
+    #   - -./usr/modules
 
 
