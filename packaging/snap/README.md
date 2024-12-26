@@ -20,9 +20,9 @@ snapcraft --verbosity debug --debug
 Test install it
 
 ```bash
-sudo snap install ./logiksim_*_amd64.snap --dangerous
+sudo snap remove logiksim && sudo snap install ./logiksim_*_amd64.snap --dangerous
 
-sudo snap install ./logiksim_*_amd64.snap --dangerous --devmode
+sudo snap remove logiksim && sudo snap install ./logiksim_*_amd64.snap --dangerous --devmode
 ```
 
 Run the new snap
@@ -93,6 +93,45 @@ Re-login user or restart.
 sudo ufw allow in on lxdbr0
 sudo ufw route allow in on lxdbr0
 sudo ufw route allow out on lxdbr0
+```
+
+
+
+
+
+
+
+
+
+# Clean Snap Cache
+
+Storage used
+
+ ```
+ sudo lxc storage info default --bytes
+ ```
+
+More details storage info
+
+```
+sudo apt install zfsutils-linux
+sudo zfs list
+```
+
+
+
+List instances:
+
+```
+lxc list --all-projects
+```
+
+Delete each `snapcraft-*` instance one by one, e.g:
+
+```
+lxc delete --project=snapcraft 
+
+lxc delete --project=snapcraft snapcraft-logiksim-on-amd64-for-amd64-2885195
 ```
 
 
