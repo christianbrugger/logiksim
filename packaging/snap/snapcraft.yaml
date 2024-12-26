@@ -22,48 +22,12 @@ apps:
       - removable-media
 
 parts:
-  logiksim:
-    plugin: nil
-    source: https://github.com/christianbrugger/logiksim.git
-    source-type: git
-    source-submodules: []
-    source-commit: c6e0484ee89c2751c5154a411976a0cdd3ea1739
-    build-environment:
-      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib:$CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-      - CC: clang-18
-      - CXX: clang++-18
-    build-packages:
-      - python3.12
-      - clang-18
-      - llvm-18
-      - ninja-build
-    build-snaps:
-      - cmake
-    override-build: |
-      echo ${CRAFT_PART_BUILD}
-      cd ${CRAFT_PART_BUILD}
-
-      # configure
-      # disable LTO as it leads to coredump when running the snap, not sure why
-      cmake --preset linux-clang-gui-release \
-        -DLS_ENABLE_LTO=OFF
-
-      # build
-      cd ${CRAFT_PART_BUILD}/build/linux-clang-gui-release
-      ninja ls_gui_sample
-
-      # install
-      mkdir -p "${CRAFT_PART_INSTALL}/usr/bin/"
-      cp ls_gui_sample "${CRAFT_PART_INSTALL}/usr/bin/logiksim"
-    after:
-      - qt
-
   # logiksim:
   #   plugin: nil
   #   source: https://github.com/christianbrugger/logiksim.git
   #   source-type: git
   #   source-submodules: []
-  #   source-commit: bd7d97724e8703581a6c1becf6081a89b8186aee
+  #   source-commit: 99ed0f6e40249a2417591a0217289251c22b1090
   #   build-environment:
   #     - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib:$CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
   #     - CC: clang-18
@@ -77,34 +41,72 @@ parts:
   #     - cmake
   #   override-build: |
   #     echo ${CRAFT_PART_BUILD}
-  #
-  #     # submodules
   #     cd ${CRAFT_PART_BUILD}
-  #     python3.12 external/checkout.py
   #
   #     # configure
-  #     cd ${CRAFT_PART_BUILD}
-  #     # disable LTO as it leads to coredump when running the snap
-  #     # not sure why
-  #     cmake --preset linux-clang-release \
+  #     # disable LTO as it leads to coredump when running the snap, not sure why
+  #     cmake --preset linux-clang-gui-release \
   #       -DLS_ENABLE_LTO=OFF
   #
   #     # build
-  #     cd ${CRAFT_PART_BUILD}/build/linux-clang-release
-  #     ninja ls_test_core ls_test_gui ls_gui
-  #
-  #     # run test
-  #     ./ls_test_core
-  #     ./ls_test_gui
+  #     cd ${CRAFT_PART_BUILD}/build/linux-clang-gui-release
+  #     ninja ls_gui_sample
   #
   #     # install
   #     mkdir -p "${CRAFT_PART_INSTALL}/usr/bin/"
-  #     cp ls_gui "${CRAFT_PART_INSTALL}/usr/bin/logiksim"
-  #     # cp ls_test_core "${CRAFT_PART_INSTALL}/usr/bin/ls_test_core"
-  #     # cp ls_test_gui "${CRAFT_PART_INSTALL}/usr/bin/ls_test_gui"
-  #     cp -r resources "${CRAFT_PART_INSTALL}/usr/bin/"
+  #     cp ls_gui_sample "${CRAFT_PART_INSTALL}/usr/bin/logiksim"
   #   after:
   #     - qt
+
+  logiksim:
+    plugin: nil
+    source: https://github.com/christianbrugger/logiksim.git
+    source-type: git
+    source-submodules: []
+    source-commit: 99ed0f6e40249a2417591a0217289251c22b1090
+    build-environment:
+      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib:$CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+      - CC: clang-18
+      - CXX: clang++-18
+    build-packages:
+      - python3.12
+      - clang-18
+      - llvm-18
+      - ninja-build
+    build-snaps:
+      - cmake
+    override-build: |
+      echo ${CRAFT_PART_BUILD}
+
+      # submodules
+      cd ${CRAFT_PART_BUILD}
+      python3.12 external/checkout.py
+
+      # configure
+      cd ${CRAFT_PART_BUILD}
+      # disable LTO as it leads to coredump when running the snap not sure why
+      cmake --preset linux-clang-release \
+        -DLS_ENABLE_LTO=OFF
+
+      # build
+      cd ${CRAFT_PART_BUILD}/build/linux-clang-release
+      ninja ls_test_core ls_test_gui ls_gui
+
+      # run test
+      ./ls_test_core
+      ./ls_test_gui
+
+      # install
+      mkdir -p "${CRAFT_PART_INSTALL}/usr/bin/"
+      cp ls_gui "${CRAFT_PART_INSTALL}/usr/bin/logiksim"
+      # cp ls_test_core "${CRAFT_PART_INSTALL}/usr/bin/ls_test_core"
+      # cp ls_test_gui "${CRAFT_PART_INSTALL}/usr/bin/ls_test_gui"
+      cp -r resources "${CRAFT_PART_INSTALL}/usr/bin/"
+    after:
+      - qt
+    prime:
+      - -./usr/bin/resources/CMakeFiles
+      - -./usr/bin/resources/cmake_install.cmake
 
   logiksim-meta:
     plugin: nil
@@ -182,19 +184,18 @@ parts:
       - -./usr/lib/objects-RelWithDebInfo
 
 
-  qt-deps:
+  qt-runtime-packages:
     plugin: nil
     stage-packages:
-      # packages required by Qt, not provided by Gnome extension
-      # collected based on snap lint warnings at the end of building without them
-      # added at the end, so they can changed easily, without rebuilding logiksim
+      # Packages required by Qt, not provided by Gnome extension.
+      # Collected based on snap lint warnings at the end of building without them.
+      # Added at the end, so they can changed easily, without rebuilding logiksim.
       - libxcb-cursor0
       - libxcb-icccm4
       - libxcb-image0
       - libxcb-keysyms1
       - libxcb-render-util0
       - libxcb-shape0
-
     after:
       - logiksim
 
