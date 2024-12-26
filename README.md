@@ -82,5 +82,4 @@ Build & Package Tools
 * Ninja ([Apache-2.0](https://github.com/ninja-build/ninja?tab=Apache-2.0-1-ov-file))
 * Python ([Python-2.0](https://github.com/python/cpython?tab=License-1-ov-file))
 * Snapcraft ([GPL-3.0](https://github.com/canonical/snapcraft?tab=GPL-3.0-1-ov-file))
-* snapcraft.yaml Qt6 template ([GPL-3.0](https://github.com/telegramdesktop/tdesktop/tree/dev?tab=License-1-ov-file))
 * Visual Studio Community 2022 ([VS-COMMUNITY-2022](https://visualstudio.microsoft.com/license-terms/vs2022-ga-community/))
