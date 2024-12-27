@@ -129,8 +129,6 @@ parts:
       # install
       mkdir -p "${CRAFT_PART_INSTALL}/usr/bin/"
       cp ls_gui "${CRAFT_PART_INSTALL}/usr/bin/logiksim"
-      # cp ls_test_core "${CRAFT_PART_INSTALL}/usr/bin/ls_test_core"
-      # cp ls_test_gui "${CRAFT_PART_INSTALL}/usr/bin/ls_test_gui"
       cp -r resources "${CRAFT_PART_INSTALL}/usr/bin/"
 
     # COMPILE JUST THE SAMPLE APPLICATION
@@ -180,11 +178,13 @@ parts:
 
   logiksim-meta:
     plugin: nil
+    build-environment:
+      - LS_SRC: /root/parts/logiksim/src
     override-build: |
       mkdir -p "${CRAFT_PART_INSTALL}/usr/share/applications"
-      cp "${CRAFT_PROJECT_DIR}/resources/icons/derivative/app_icon.svg" \
+      cp "${LS_SRC}/resources/icons/derivative/app_icon.svg" \
         "${CRAFT_PART_INSTALL}/usr/share/applications/logiksim.svg"
-      cp "${CRAFT_PROJECT_DIR}/packaging/linux/logiksim.desktop" \
+      cp "${LS_SRC}/packaging/linux/logiksim.desktop" \
         "${CRAFT_PART_INSTALL}/usr/share/applications/logiksim.desktop"
     after:
       - logiksim
