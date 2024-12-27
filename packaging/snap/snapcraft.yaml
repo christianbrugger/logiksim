@@ -16,6 +16,7 @@ apps:
   logiksim:
     command: usr/bin/logiksim
     desktop: usr/share/applications/logiksim.desktop
+    # https://snapcraft.io/docs/gnome-extension
     extensions: [gnome]
     plugs:
       - home
@@ -93,18 +94,15 @@ parts:
     source-submodules: []
     source-commit: 99ed0f6e40249a2417591a0217289251c22b1090
     build-environment:
-      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib:$CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
       - CC: clang-18
       - CXX: clang++-18
+      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib:$CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+      - CMAKE_PREFIX_PATH: /snap/gnome-46-2404-sdk/current/usr${CMAKE_PREFIX_PATH:+:$CMAKE_PREFIX_PATH}
     build-packages:
       - python3.12
       - clang-18
       - llvm-18
       - ninja-build
-      # Required for Qt6::Gui
-      - libglx-dev
-      - libopengl-dev
-      - libegl-dev
     build-snaps:
       - cmake
     override-build: |
@@ -135,25 +133,27 @@ parts:
       # cp ls_test_gui "${CRAFT_PART_INSTALL}/usr/bin/ls_test_gui"
       cp -r resources "${CRAFT_PART_INSTALL}/usr/bin/"
 
-  #   # COMPILE SAMPLE APPLICATION
-  #   # THIS IS FOR FAST DEBUGGING
-  #
-  #   override-build: |
-  #     echo ${CRAFT_PART_BUILD}
-  #     cd ${CRAFT_PART_BUILD}
-  #
-  #     # configure
-  #     # disable LTO as it leads to coredump when running the snap, not sure why
-  #     cmake --preset linux-clang-gui-release \
-  #       -DLS_ENABLE_LTO=OFF
-  #
-  #     # build
-  #     cd ${CRAFT_PART_BUILD}/build/linux-clang-gui-release
-  #     ninja ls_gui_sample
-  #
-  #     # install
-  #     mkdir -p "${CRAFT_PART_INSTALL}/usr/bin/"
-  #     cp ls_gui_sample "${CRAFT_PART_INSTALL}/usr/bin/logiksim"
+    # COMPILE JUST THE SAMPLE APPLICATION
+    # THIS IS FOR FAST DEBUGGING -> cooment out above
+
+    # override-build: |
+    #   env
+    #
+    #   echo ${CRAFT_PART_BUILD}
+    #   cd ${CRAFT_PART_BUILD}
+    #
+    #   # configure
+    #   # disable LTO as it leads to coredump when running the snap, not sure why
+    #   cmake --preset linux-clang-gui-release \
+    #     -DLS_ENABLE_LTO=OFF
+    #
+    #   # build
+    #   cd ${CRAFT_PART_BUILD}/build/linux-clang-gui-release
+    #   ninja ls_gui_sample
+    #
+    #   # install
+    #   mkdir -p "${CRAFT_PART_INSTALL}/usr/bin/"
+    #   cp ls_gui_sample "${CRAFT_PART_INSTALL}/usr/bin/logiksim"
     
     after:
       - qt
