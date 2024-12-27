@@ -13,7 +13,9 @@ ln -s packaging/snap snap
 Build new snap (run at repo root)
 
 ```bash
+(clean cache as of below) OR specific step:
 snapcraft clean logiksim
+
 snapcraft --verbosity debug --debug
 ```
 
@@ -129,9 +131,7 @@ lxc list --all-projects
 Delete each `snapcraft-*` instance one by one, e.g:
 
 ```
-lxc delete --project=snapcraft 
-
-lxc delete --project=snapcraft snapcraft-logiksim-on-amd64-for-amd64-2885195
+lxc delete --project=snapcraft snapcraft-logiksim-on-amd64-for-amd64-
 ```
 
 
