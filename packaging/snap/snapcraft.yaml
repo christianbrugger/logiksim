@@ -92,7 +92,7 @@ parts:
     source: https://github.com/christianbrugger/logiksim.git
     source-type: git
     source-submodules: []
-    source-commit: 99ed0f6e40249a2417591a0217289251c22b1090
+    source-commit: 44dd7648ea6738430926b556bcea047f188090ce
     build-environment:
       - CC: clang-18
       - CXX: clang++-18
