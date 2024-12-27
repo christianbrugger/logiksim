@@ -15,6 +15,8 @@ Open a `Developer Powershell for VS 2022`. Make sure all the dependencies are av
 Then run the following in order:
 
 ```powershell
+python3 script_create_installer.py clean
+
 python3 script_create_installer.py all
 ```
 
