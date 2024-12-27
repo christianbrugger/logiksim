@@ -7,6 +7,13 @@
 
 namespace logicsim {
 
+auto get_mono_font(qreal point_size) -> QFont {
+    auto font = QFont {"Monospace"};
+    font.setStyleHint(QFont::TypeWriter);
+    font.setPointSizeF(point_size);
+    return font;
+}
+
 DebugInfoDialog::DebugInfoDialog(QWidget* parent) : QWidget {parent} {
     setWindowFlags(Qt::Dialog);
     setAttribute(Qt::WA_DeleteOnClose);
@@ -16,7 +23,7 @@ DebugInfoDialog::DebugInfoDialog(QWidget* parent) : QWidget {parent} {
     const auto edit = new QTextEdit {this};
     layout->addWidget(edit);
     edit->setReadOnly(true);
-    edit->setFontFamily("monospace");
+    edit->setCurrentFont(get_mono_font(edit->currentFont().pointSizeF()));
     text_edit_ = edit;
 
     resize(400, 650);
