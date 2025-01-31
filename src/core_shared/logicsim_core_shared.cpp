@@ -34,12 +34,9 @@ auto ExportedCircuit_Impl::load_circuit(int number) -> void {
 // C DLL Interface
 //
 
-// extern "C" {
 struct ls_circuit {
     logicsim::ExportedCircuit_Impl data;
 };
-
-// }
 
 template <typename Func>
 auto ls_translate_exception(Func&& func) {

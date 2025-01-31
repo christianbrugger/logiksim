@@ -25,3 +25,17 @@ set_property(TARGET ${LS_CORE_SHARED} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 #     "logicsim_core"
 # )
 
+
+####### Verify header is C
+
+set(LS_CORE_SHARED_VERIFY "ls_core_shared_verify")
+
+set_source_files_properties(main_verify.c PROPERTIES LANGUAGE C)
+
+add_executable(${LS_CORE_SHARED_VERIFY}
+    main_verify.c
+)
+set_property(TARGET ${LS_CORE_SHARED_VERIFY} PROPERTY RUNTIME_OUTPUT_DIRECTORY 
+    ${CMAKE_BINARY_DIR}
+)
+
