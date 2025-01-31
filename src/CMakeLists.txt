@@ -23,7 +23,7 @@ elseif(LS_SANITIZE MATCHES "Fuzzer")
 else()
     # libraries
     add_subdirectory(core)
-    add_subdirectory(core_shared)
+    add_subdirectory(core_export)
 
     # executables & tests
     add_subdirectory(main_benchmark)

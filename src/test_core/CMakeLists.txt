@@ -18,7 +18,7 @@ add_executable(${LS_CORE_TEST_TARGET}
     ${LS_TEST_SOURCES}
 )
 target_link_libraries(${LS_CORE_TEST_TARGET} PRIVATE 
-    ${LS_CORE_LIBRARY} 
+    ${LS_CORE_STATIC} 
     GTest::gtest
     GTest::gmock
     GTest::gtest_main

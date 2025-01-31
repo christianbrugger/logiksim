@@ -1,4 +1,4 @@
-#include "core_shared/logicsim_core_shared.h"
+#include "core_export/logicsim_core_export.h"
 
 #include "core/circuit_example.h"
 #include "core/editable_circuit.h"

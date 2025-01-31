@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_CORE_LOGICSIM_SHARED_H
-#define LOGICSIM_CORE_LOGICSIM_SHARED_H
+#ifndef LOGICSIM_CORE_LOGICSIM_EXPORT_H
+#define LOGICSIM_CORE_LOGICSIM_EXPORT_H
 
 #ifdef __cplusplus
 #include <cstdint>
@@ -8,12 +8,16 @@
 #endif
 
 #ifdef _WIN32
-#ifdef LS_CORE_LIB_BUILD_SHARED
+
+#if defined(LS_CORE_LIB_BUILD_SHARED)
 #define LS_CORE_API __declspec(dllexport)
+#elif defined(LS_CORE_LIB_BUILD_STATIC)
+#define LS_CORE_API
 #else
 #define LS_CORE_API __declspec(dllimport)
 #endif
-#else
+
+#else  // !_Win32
 #define LS_CORE_API
 #endif
 
@@ -39,6 +43,14 @@ void LS_CORE_API ls_circuit_destruct(ls_circuit_t obj);
 void LS_CORE_API ls_circuit_load(ls_circuit_t obj, int32_t example_circuit);
 
 int LS_CORE_API ls_test();
+
+inline int test()  {
+    int a = 1;
+    ++a;
+
+    const int b = a + 1;
+    return b;
+};
 
 #ifdef __cplusplus
 }

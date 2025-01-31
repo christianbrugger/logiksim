@@ -146,7 +146,11 @@ endif()
 
 set(LS_CORE_LIBRARY "ls_core_lib")
 set(LS_CORE_SHARED "ls_core_shared")
+set(LS_CORE_STATIC "ls_core_static")
 set(LS_GUI_LIBRARY "ls_gui_lib")
+
+set(LS_VERIFY_CORE_SHARED_C "ls_verify_core_shared_c")
+set(LS_VERIFY_CORE_SHARED_CPP "ls_verify_core_shared_cpp")
 
 set(LS_BENCHMARK_TARGET "ls_benchmark")
 set(LS_CLI_TARGET "ls_cli")
