@@ -25,6 +25,8 @@ set_property(TARGET ${LS_CORE_SHARED} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 #     "logicsim_core"
 # )
 
+# Check symbols on Windows via:
+#   dumpbin /EXPORTS .\src\core_shared\ls_core_shared.dll
 
 ####### Verify header is C
 

@@ -55,7 +55,7 @@ int LS_CORE_API ls_test();
 namespace logicsim {
 namespace core {
 
-enum class ExampleCircuitType : uint8_t {
+enum class ExampleCircuitType : int8_t {
     example_circuit_1 = 1,
     example_circuit_2 = 2,
     example_circuit_3 = 3,
