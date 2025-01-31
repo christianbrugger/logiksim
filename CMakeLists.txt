@@ -145,6 +145,7 @@ endif()
 #
 
 set(LS_CORE_LIBRARY "ls_core_lib")
+set(LS_CORE_SHARED "ls_core_shared")
 set(LS_GUI_LIBRARY "ls_gui_lib")
 
 set(LS_BENCHMARK_TARGET "ls_benchmark")

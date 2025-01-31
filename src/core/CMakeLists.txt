@@ -263,7 +263,7 @@ endif()
 ###### Core Library
 
 
-add_library(${LS_CORE_LIBRARY} 
+add_library(${LS_CORE_LIBRARY}
     ${LS_CORE_SOURCES}
 )
 target_include_directories(${LS_CORE_LIBRARY} PUBLIC
