@@ -18,7 +18,13 @@
 #endif
 
 #else  // !_Win32
+
+#if defined(LS_CORE_LIB_BUILD_SHARED) && (defined(__GNUC__) || defined(__clang__))
+#define LS_CORE_API __attribute__((visibility("default")))
+#else
 #define LS_CORE_API
+#endif
+
 #endif
 
 //
@@ -44,7 +50,7 @@ void LS_CORE_API ls_circuit_load(ls_circuit_t obj, int32_t example_circuit);
 
 int LS_CORE_API ls_test();
 
-inline int test()  {
+inline int test() {
     int a = 1;
     ++a;
 
