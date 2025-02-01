@@ -25,3 +25,12 @@ function(ls_set_compiler_options_conformant target_name)
     endif()
 endfunction()
 
+
+macro(ls_enabled_shared_library_support)
+    # shared libraries require all code to be position independent 
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+    # on linux symbol visibility is on by default this trashes any shared libraries
+    set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+    set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
+endmacro()

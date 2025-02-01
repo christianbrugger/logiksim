@@ -280,5 +280,4 @@ target_link_libraries(${LS_CORE_LIBRARY} PUBLIC
 target_link_libraries(${LS_CORE_LIBRARY} PRIVATE 
     logiksim_pch
 )
-set_property(TARGET ${LS_CORE_LIBRARY} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 

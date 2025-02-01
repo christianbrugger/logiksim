@@ -12,9 +12,6 @@ target_link_libraries(${LS_CORE_SHARED} PRIVATE
 target_compile_definitions(${LS_CORE_SHARED} PRIVATE
     LS_CORE_LIB_BUILD_SHARED
 )
-set_property(TARGET ${LS_CORE_SHARED} PROPERTY CXX_VISIBILITY_PRESET hidden)
-set_property(TARGET ${LS_CORE_SHARED} PROPERTY VISIBILITY_INLINES_HIDDEN TRUE)
-set_property(TARGET ${LS_CORE_SHARED} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 # https://cmake.org/cmake/help/latest/module/GenerateExportHeader.html
 

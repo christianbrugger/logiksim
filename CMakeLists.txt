@@ -7,12 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
-# enable shared library build
-# TODO move to cmake folder
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
-
 
 #
 # CMake Options
@@ -93,6 +87,7 @@ ls_print_project_options()
 
 
 # global cmake options
+ls_enabled_shared_library_support()
 ls_setup_linker("${LS_SANITIZE}")
 ls_setup_link_time_optimization("${LS_ENABLE_LTO}")
 ls_setup_ccache("${LS_ENABLE_CCACHE}")
