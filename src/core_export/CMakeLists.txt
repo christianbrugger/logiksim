@@ -23,7 +23,7 @@ target_compile_definitions(${LS_CORE_SHARED} PRIVATE
 # )
 
 # Check symbols on Windows via:
-#   dumpbin /EXPORTS .\src\core_shared\ls_core_shared.dll
+#   dumpbin /EXPORTS .\src\core_export\ls_core_shared.dll
 
 ####### Static Export Library
 

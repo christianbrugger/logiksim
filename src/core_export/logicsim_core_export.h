@@ -36,10 +36,10 @@ extern "C" {
 #endif
 
 typedef enum {
-    ls_example_circuit_1 = 1,
-    ls_example_circuit_2 = 2,
-    ls_example_circuit_3 = 3,
-    ls_example_circuit_4 = 4,
+    LS_EXAMPLE_CIRCUIT_1 = 1,
+    LS_EXAMPLE_CIRCUIT_2 = 2,
+    LS_EXAMPLE_CIRCUIT_3 = 3,
+    LS_EXAMPLE_CIRCUIT_4 = 4,
 } ls_example_circuit_t;
 
 typedef struct ls_circuit* ls_circuit_t;
@@ -47,16 +47,9 @@ typedef struct ls_circuit* ls_circuit_t;
 ls_circuit_t LS_CORE_API ls_circuit_construct();
 void LS_CORE_API ls_circuit_destruct(ls_circuit_t obj);
 void LS_CORE_API ls_circuit_load(ls_circuit_t obj, int32_t example_circuit);
-
-int LS_CORE_API ls_test();
-
-inline int test() {
-    int a = 1;
-    ++a;
-
-    const int b = a + 1;
-    return b;
-};
+void LS_CORE_API ls_circuit_render_layout(ls_circuit_t obj, int32_t width, int32_t height,
+                                          double pixel_ratio, void* pixel_data,
+                                          intptr_t stride);
 
 #ifdef __cplusplus
 }
@@ -93,6 +86,8 @@ struct LSCircuitDeleter {
 class CircuitInterface {
    public:
     auto load(ExampleCircuitType type) -> void;
+    auto render_layout(int32_t width, int32_t height, double pixel_ratio,
+                       void* pixel_data, intptr_t stride) -> void;
 
    private:
     std::unique_ptr<ls_circuit, detail::LSCircuitDeleter> obj_ {ls_circuit_construct()};
@@ -112,6 +107,12 @@ auto CircuitInterface::load(ExampleCircuitType type) -> void {
     ls_expects(obj_);
     ls_circuit_load(obj_.get(), static_cast<int32_t>(type));
 };
+
+auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel_ratio,
+                                     void* pixel_data, intptr_t stride) -> void {
+    ls_expects(obj_);
+    ls_circuit_render_layout(obj_.get(), width, height, pixel_ratio, pixel_data, stride);
+}
 
 }  // namespace core
 }  // namespace logicsim
