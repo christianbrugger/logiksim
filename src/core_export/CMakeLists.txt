@@ -44,21 +44,21 @@ target_compile_definitions(${LS_CORE_STATIC} PUBLIC
 
 ####### Verify header is C importable
 
+# add a c++ header to the project, so the c++ linker is used,
+# this is required for ubsan build on linux requiring clang++, not clang linker.
+set_source_files_properties(logicsim_core_export.h PROPERTIES LANGUAGE CXX)
 set_source_files_properties(main_verify.c PROPERTIES LANGUAGE C)
 
 add_executable(${LS_VERIFY_CORE_SHARED_C}
     main_verify.c
+    logicsim_core_export.h
 )
 set_property(TARGET ${LS_VERIFY_CORE_SHARED_C} PROPERTY RUNTIME_OUTPUT_DIRECTORY 
     ${CMAKE_BINARY_DIR}
 )
-
-if(LS_SANITIZE STREQUAL "Undefined" AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    # trying to link shared library with clang-18 leads to missing ubsan
-    # symbols (specifically for v-tables, not added for C). Works fine with mold.
-else()
-    target_link_libraries(${LS_VERIFY_CORE_SHARED_C} PRIVATE ${LS_CORE_SHARED})
-endif()
+target_link_libraries(${LS_VERIFY_CORE_SHARED_C} PRIVATE 
+    ${LS_CORE_SHARED}
+)
 
 # while cmake has no way to limit the maximum standard, at least on linux
 # it passes c99 to clang to make sure our header is C99 compatible.
