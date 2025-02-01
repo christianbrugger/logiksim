@@ -52,9 +52,16 @@ add_executable(${LS_VERIFY_CORE_SHARED_C}
 set_property(TARGET ${LS_VERIFY_CORE_SHARED_C} PROPERTY RUNTIME_OUTPUT_DIRECTORY 
     ${CMAKE_BINARY_DIR}
 )
-target_link_libraries(${LS_VERIFY_CORE_SHARED_C} PRIVATE 
-    ${LS_CORE_SHARED}
-)
+
+if(LS_SANITIZE STREQUAL "Undefined" AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    # trying to link shared library with clang-18 leads to missing ubsan
+    # symbols (specifically for v-tables, not added for C). Works fine with mold.
+else()
+    target_link_libraries(${LS_VERIFY_CORE_SHARED_C} PRIVATE ${LS_CORE_SHARED})
+endif()
+
+# while cmake has no way to limit the maximum standard, at least on linux
+# it passes c99 to clang to make sure our header is C99 compatible.
 set_property(TARGET ${LS_VERIFY_CORE_SHARED_C} PROPERTY C_STANDARD 99)
 set_property(TARGET ${LS_VERIFY_CORE_SHARED_C} PROPERTY C_STANDARD_REQUIRED ON)
 set_property(TARGET ${LS_VERIFY_CORE_SHARED_C} PROPERTY C_EXTENSIONS OFF)
