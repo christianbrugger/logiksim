@@ -27,6 +27,19 @@ endfunction()
 
 
 #
+# Require the value in variable_name to be true
+#
+function(ls_require_true variable_name)
+    ls_require_bool("${variable_name}")
+
+    if ("${${variable_name}}")
+        message(FATAL_ERROR "variable ${variable_name} needs to be true")
+    endif()
+
+endfunction()
+
+
+#
 # Requires the value in to be of a subset of true values considered boolean.
 #
 function(ls_require_bool_value value)
