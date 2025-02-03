@@ -4,14 +4,15 @@
 
 ### Compiler Settings
 
-All Configurations:
-
-| Setting                         | Value | Flag           |
-| ------------------------------- | ----- | -------------- |
-| C++ Standard                    | C++20 | `/std:c++20`   |
-| Conformance Mode                | Yes   | `/permissive-` |
-| Tread Compile Warning as Errors | Yes   | `/WX`          |
-| Tread Link Warning as Errors    | Yes   | `/WX`          |
+| Setting                         | Value | Flag           | Configuration |
+| ------------------------------- | ----- | -------------- | ------------- |
+| C++ Standard                    | C++20 | `/std:c++20`   | All           |
+| Conformance Mode                | Yes   | `/permissive-` | All           |
+| Tread Compile Warning as Errors | Yes   | `/WX`          | All           |
+| Control Flow Guard              | Yes   | `/guard:cf`    | Release       |
+| **Linker Setting**              |       |                | All           |
+| Tread Link Warning as Errors    | Yes   | `/WX`          | All           |
+| CET Shadow Stack Compatible     | Yes   | `/CETCOMPAT`   | All           |
 
 
 

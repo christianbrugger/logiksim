@@ -3,5 +3,6 @@
 *.vcxproj.user
 
 Generated\ Files/
+main_winui3/
 packages/
 x64/
