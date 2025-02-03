@@ -2,15 +2,13 @@
 
 #include "App.xaml.g.h"
 
-namespace winrt::main_winui3::implementation
-{
-    struct App : AppT<App>
-    {
-        App();
+namespace winrt::main_winui3::implementation {
+struct App : AppT<App> {
+    App();
 
-        void OnLaunched(Microsoft::UI::Xaml::LaunchActivatedEventArgs const&);
+    void OnLaunched(Microsoft::UI::Xaml::LaunchActivatedEventArgs const&);
 
-    private:
-        winrt::Microsoft::UI::Xaml::Window window{ nullptr };
-    };
-}
+   private:
+    winrt::Microsoft::UI::Xaml::Window window {nullptr};
+};
+}  // namespace winrt::main_winui3::implementation

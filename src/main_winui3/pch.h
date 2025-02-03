@@ -1,11 +1,13 @@
 #pragma once
+
+// clang-format off
+
 #include <windows.h>
 #include <unknwn.h>
 #include <restrictederrorinfo.h>
 #include <hstring.h>
 
-// Undefine GetCurrentTime macro to prevent
-// conflict with Storyboard::GetCurrentTime
+// Undefine GetCurrentTime macro to prevent conflict with Storyboard::GetCurrentTime
 #undef GetCurrentTime
 
 #include <winrt/Windows.Foundation.h>
@@ -23,3 +25,5 @@
 #include <winrt/Microsoft.UI.Xaml.Shapes.h>
 #include <winrt/Microsoft.UI.Dispatching.h>
 #include <wil/cppwinrt_helpers.h>
+
+// clang-format on
