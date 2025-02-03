@@ -21,6 +21,31 @@ All Configurations:
 
 
 
+### Packaging Adjustments
+
+Right click Solution: Unload Project, then edit project file.
+
+Make the following changes to the `main_winui3.vcxproj`:
+
+```xml
+<Project ...>
+  <PropertyGroup Label="Globals">
+    ...
+    <AppxPackage>false</AppxPackage>
+    <WindowsPackageType>None</WindowsPackageType>
+	<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+	<OutputType>WinExe</OutputType>
+  </PropertyGroup>
+  ...
+</Project>
+```
+
+
+
+
+
+
+
 ### NuGet Packages
 
 Additioal Packages:
@@ -43,3 +68,32 @@ Update all other packages. Result:
 
 ![image-20250203125954137](.images/image-20250203125954137.png)
 
+## Visual Studio Settings
+
+### Disable XAML Hot Reload
+
+Messes up Program shutdown, as a refernece to Application is held.
+
+![image-20250203134513928](.images/image-20250203134513928.png)
+
+
+
+### Extensions
+
+These are optional.
+
+
+
+##### Editor Guidelines
+
+https://marketplace.visualstudio.com/items?itemName=PaulHarrington.EditorGuidelinesPreview
+
+![image-20250203134716425](.images/image-20250203134716425.png)
+
+
+
+##### Format document on Save
+
+https://marketplace.visualstudio.com/items?itemName=mynkow.FormatdocumentonSave
+
+![image-20250203134732153](.images/image-20250203134732153.png)
