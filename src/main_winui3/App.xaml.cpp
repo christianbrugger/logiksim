@@ -11,6 +11,7 @@ using namespace Microsoft::UI::Xaml;
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace winrt::main_winui3::implementation {
+
 /// <summary>
 /// Initializes the singleton application object.  This is the first line of authored code
 /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -37,4 +38,5 @@ void App::OnLaunched([[maybe_unused]] LaunchActivatedEventArgs const& e) {
     window = make<MainWindow>();
     window.Activate();
 }
+
 }  // namespace winrt::main_winui3::implementation

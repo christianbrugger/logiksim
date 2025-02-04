@@ -3,6 +3,7 @@
 #include "MainWindow.g.h"
 
 namespace winrt::main_winui3::implementation {
+
 struct MainWindow : MainWindowT<MainWindow> {
     MainWindow() {
         // Xaml objects should not call InitializeComponent during construction.
@@ -19,4 +20,5 @@ struct MainWindow : MainWindowT<MainWindow> {
 
 namespace winrt::main_winui3::factory_implementation {
 struct MainWindow : MainWindowT<MainWindow, implementation::MainWindow> {};
+
 }  // namespace winrt::main_winui3::factory_implementation

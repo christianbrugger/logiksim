@@ -2,6 +2,10 @@
 
 // clang-format off
 
+//
+// Part of project template
+//
+
 #include <windows.h>
 #include <unknwn.h>
 #include <restrictederrorinfo.h>
@@ -25,5 +29,11 @@
 #include <winrt/Microsoft.UI.Xaml.Shapes.h>
 #include <winrt/Microsoft.UI.Dispatching.h>
 #include <wil/cppwinrt_helpers.h>
+
+//
+// Added for logicsim
+//
+
+#include <gsl/gsl>
 
 // clang-format on

@@ -23,4 +23,5 @@ void MainWindow::MyProperty(int32_t /* value */) {
 void MainWindow::myButton_Click(IInspectable const&, RoutedEventArgs const&) {
     myButton().Content(box_value(L"Clicked"));
 }
+
 }  // namespace winrt::main_winui3::implementation
