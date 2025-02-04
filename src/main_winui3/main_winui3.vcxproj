@@ -99,11 +99,12 @@
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
       <ConformanceMode Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ConformanceMode>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatWarningAsError>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)/../../external/GSL/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)/../../src;$(ProjectDir)/../../external/GSL/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <TreatLinkerWarningAsErrors Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatLinkerWarningAsErrors>
       <CETCompat Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</CETCompat>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)/ls_core_shared.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -113,13 +114,14 @@
       <ConformanceMode Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ConformanceMode>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatWarningAsError>
       <ControlFlowGuard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Guard</ControlFlowGuard>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)/../../external/GSL/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)/../../src;$(ProjectDir)/../../external/GSL/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <TreatLinkerWarningAsErrors Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatLinkerWarningAsErrors>
       <CETCompat Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</CETCompat>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)/ls_core_shared.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup Condition="'$(WindowsPackageType)'!='None' and Exists('Package.appxmanifest')">
@@ -216,5 +218,47 @@
     <Error Condition="!Exists('packages\Microsoft.WindowsAppSDK.1.6.250108002\build\native\Microsoft.WindowsAppSDK.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.WindowsAppSDK.1.6.250108002\build\native\Microsoft.WindowsAppSDK.props'))" />
     <Error Condition="!Exists('packages\Microsoft.WindowsAppSDK.1.6.250108002\build\native\Microsoft.WindowsAppSDK.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.WindowsAppSDK.1.6.250108002\build\native\Microsoft.WindowsAppSDK.targets'))" />
     <Error Condition="!Exists('packages\Microsoft.Graphics.Win2D.1.3.2\build\native\Microsoft.Graphics.Win2D.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Graphics.Win2D.1.3.2\build\native\Microsoft.Graphics.Win2D.targets'))" />
+  </Target>
+  <!-- Copy DLL - Debug -->
+  <Target Name="CopyCoreDllDebug" BeforeTargets="Build" Condition="'$(Configuration)' == 'Debug'" Inputs="$(ProjectDir)/../../build/win-clang-debug/src/core_export/ls_core_shared.dll" Outputs="$(OutDir)/ls_core_shared.dll">
+    <PropertyGroup>
+      <SourceFile>$(ProjectDir)/../../build/win-clang-debug/src/core_export/ls_core_shared.dll</SourceFile>
+      <DestinationFile>$(OutDir)/ls_core_shared.dll</DestinationFile>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SourceFile)')" Text="Required DLL is missing: $(SourceFile)" />
+    <Copy SourceFiles="$(SourceFile)" DestinationFiles="$(DestinationFile)" />
+  </Target>
+  <Target Name="CopyCoreLibDebug" BeforeTargets="Build" Condition="'$(Configuration)' == 'Debug'" Inputs="$(ProjectDir)/../../build/win-clang-debug/src/core_export/ls_core_shared.lib" Outputs="$(OutDir)/ls_core_shared.lib">
+    <PropertyGroup>
+      <SourceFile>$(ProjectDir)/../../build/win-clang-debug/src/core_export/ls_core_shared.lib</SourceFile>
+      <DestinationFile>$(OutDir)/ls_core_shared.lib</DestinationFile>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SourceFile)')" Text="Required LIB is missing: $(SourceFile)" />
+    <Copy SourceFiles="$(SourceFile)" DestinationFiles="$(DestinationFile)" />
+  </Target>
+  <Target Name="CopyCorePdbDebug" BeforeTargets="Build" Condition="'$(Configuration)' == 'Debug'" Inputs="$(ProjectDir)/../../build/win-clang-debug/src/core_export/ls_core_shared.pdb" Outputs="$(OutDir)/ls_core_shared.pdb">
+    <PropertyGroup>
+      <SourceFile>$(ProjectDir)/../../build/win-clang-debug/src/core_export/ls_core_shared.pdb</SourceFile>
+      <DestinationFile>$(OutDir)/ls_core_shared.pdb</DestinationFile>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SourceFile)')" Text="Required PDB is missing: $(SourceFile)" />
+    <Copy SourceFiles="$(SourceFile)" DestinationFiles="$(DestinationFile)" />
+  </Target>
+  <!-- Copy DLL - Release -->
+  <Target Name="CopyCoreDllRelease" BeforeTargets="Build" Condition="'$(Configuration)' == 'Release'" Inputs="$(ProjectDir)/../../build/win-clang-release/src/core_export/ls_core_shared.dll" Outputs="$(OutDir)/ls_core_shared.dll">
+    <PropertyGroup>
+      <SourceFile>$(ProjectDir)/../../build/win-clang-release/src/core_export/ls_core_shared.dll</SourceFile>
+      <DestinationFile>$(OutDir)/ls_core_shared.dll</DestinationFile>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SourceFile)')" Text="Required DLL is missing: $(SourceFile)" />
+    <Copy SourceFiles="$(SourceFile)" DestinationFiles="$(DestinationFile)" />
+  </Target>
+  <Target Name="CopyCoreLibRelease" BeforeTargets="Build" Condition="'$(Configuration)' == 'Release'" Inputs="$(ProjectDir)/../../build/win-clang-release/src/core_export/ls_core_shared.lib" Outputs="$(OutDir)/ls_core_shared.lib">
+    <PropertyGroup>
+      <SourceFile>$(ProjectDir)/../../build/win-clang-release/src/core_export/ls_core_shared.lib</SourceFile>
+      <DestinationFile>$(OutDir)/ls_core_shared.lib</DestinationFile>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SourceFile)')" Text="Required LIB is missing: $(SourceFile)" />
+    <Copy SourceFiles="$(SourceFile)" DestinationFiles="$(DestinationFile)" />
   </Target>
 </Project>

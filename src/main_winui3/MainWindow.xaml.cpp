@@ -5,6 +5,8 @@
 #include "MainWindow.g.cpp"
 #endif
 
+#include "core_export/logicsim_core_export.h"
+
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;
 
@@ -17,10 +19,12 @@ int32_t MainWindow::MyProperty() {
 }
 
 void MainWindow::MyProperty(int32_t /* value */) {
-    throw hresult_not_implemented();
+    throw hresult_not_implemented();  // 14
 }
 
 void MainWindow::myButton_Click(IInspectable const&, RoutedEventArgs const&) {
+    const auto _ = logicsim::core::CircuitInterface {};
+
     myButton().Content(box_value(L"Clicked"));
 }
 
