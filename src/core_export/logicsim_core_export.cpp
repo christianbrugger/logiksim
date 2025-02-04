@@ -52,8 +52,15 @@ auto render_to_context_2(Context& ctx, ImageSurface& surface,
 auto ExportedCircuit_Impl::render_layout(int32_t width, int32_t height,
                                          double pixel_ratio, void* pixel_data,
                                          intptr_t stride) -> void {
+    Expects(width >= 0);
+    Expects(height >= 0);
+
     const auto w = gsl::narrow<int>(width);
     const auto h = gsl::narrow<int>(height);
+
+    if (w == 0 || h == 0) {
+        return;
+    }
 
     context_settings_.view_config.set_size(BLSizeI {w, h});
     context_settings_.view_config.set_device_pixel_ratio(pixel_ratio);
@@ -84,6 +91,10 @@ template <typename Func>
 auto ls_translate_exception(Func&& func) {
     try {
         return std::invoke(func);
+    } catch (const std::exception& exc) {
+        // for now just terminate, later we forward them
+        static_cast<void>(exc);
+        std::terminate();
     } catch (...) {
         // for now just terminate, later we forward them
         std::terminate();

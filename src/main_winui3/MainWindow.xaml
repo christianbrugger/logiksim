@@ -6,9 +6,32 @@
     xmlns:local="using:main_winui3"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
     mc:Ignorable="d">
 
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
-    </StackPanel>
+    <Window.SystemBackdrop>
+        <MicaBackdrop/>
+    </Window.SystemBackdrop>
+
+    <Page x:Name="AppPage">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button x:Name="myButton">Click Me</Button>
+            </StackPanel>
+
+            <Grid Grid.Row="1">
+                <canvas:CanvasSwapChainPanel
+                x:Name="CanvasPanel"
+                SizeChanged="CanvasPanel_SizeChanged"
+                Loaded="CanvasPanel_Loaded"
+                PointerMoved="CanvasPanel_PointerMoved"
+                />
+            </Grid>
+        </Grid>
+    </Page>
 </Window>

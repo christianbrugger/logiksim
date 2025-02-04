@@ -139,6 +139,14 @@
     <Manifest Include="app.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\backend_thread.h" />
+    <ClInclude Include="src\ls_concurrent_blocking_queue.h" />
+    <ClInclude Include="src\ls_concurrent_queue.h" />
+    <ClInclude Include="src\ls_event_counter.h" />
+    <ClInclude Include="src\render_buffer.h" />
+    <ClInclude Include="src\render_thread.h" />
+    <ClInclude Include="src\ls_vocabulary.h" />
+    <ClInclude Include="src\ls_xaml_utils.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
@@ -152,6 +160,14 @@
     <Page Include="MainWindow.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\backend_thread.cpp" />
+    <ClCompile Include="src\ls_concurrent_blocking_queue.cpp" />
+    <ClCompile Include="src\ls_concurrent_queue.cpp" />
+    <ClCompile Include="src\ls_event_counter.cpp" />
+    <ClCompile Include="src\render_buffer.cpp" />
+    <ClCompile Include="src\render_thread.cpp" />
+    <ClCompile Include="src\ls_vocabulary.cpp" />
+    <ClCompile Include="src\ls_xaml_utils.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

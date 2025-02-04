@@ -35,18 +35,17 @@
 extern "C" {
 #endif
 
-typedef enum {
-    LS_EXAMPLE_CIRCUIT_1 = 1,
-    LS_EXAMPLE_CIRCUIT_2 = 2,
-    LS_EXAMPLE_CIRCUIT_3 = 3,
-    LS_EXAMPLE_CIRCUIT_4 = 4,
-} ls_example_circuit_t;
-
 typedef struct ls_circuit* ls_circuit_t;
 
 ls_circuit_t LS_CORE_API ls_circuit_construct();
 void LS_CORE_API ls_circuit_destruct(ls_circuit_t obj);
 void LS_CORE_API ls_circuit_load(ls_circuit_t obj, int32_t example_circuit);
+
+/**
+ * @brief: Render the layout to the given buffer.
+ *
+ * Terminates, if either width or height is negative.
+ */
 void LS_CORE_API ls_circuit_render_layout(ls_circuit_t obj, int32_t width, int32_t height,
                                           double pixel_ratio, void* pixel_data,
                                           intptr_t stride);
@@ -85,9 +84,9 @@ struct LSCircuitDeleter {
 
 class CircuitInterface {
    public:
-    auto load(ExampleCircuitType type) -> void;
-    auto render_layout(int32_t width, int32_t height, double pixel_ratio,
-                       void* pixel_data, intptr_t stride) -> void;
+    inline auto load(ExampleCircuitType type) -> void;
+    inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
+                              void* pixel_data, intptr_t stride) -> void;
 
    private:
     std::unique_ptr<ls_circuit, detail::LSCircuitDeleter> obj_ {ls_circuit_construct()};
@@ -97,7 +96,7 @@ class CircuitInterface {
 // C++ abstraction - Implementation
 //
 
-auto ls_expects(auto&& value) -> void {
+inline auto ls_expects(auto&& value) -> void {
     if (!bool {value}) {
         std::terminate();
     }

@@ -34,6 +34,13 @@
 // Added for logicsim
 //
 
+#include <winrt/Microsoft.Graphics.Canvas.h>
+#include <winrt/Microsoft.UI.Input.h>
+#include <winrt/Microsoft.UI.Windowing.h>
+#include <concurrent_queue.h>
+
 #include <gsl/gsl>
+
+#undef max
 
 // clang-format on

@@ -25,19 +25,21 @@ IncludeCategories:
   Priority: 2
 - Regex:    '^"gui/'
   Priority: 3
-- Regex:    '^"core/'
+- Regex:    '^"core_export/'
   Priority: 4
-- Regex:    '^<(gtest/|gmock/|catch2/)'
+- Regex:    '^"core/'
   Priority: 5
-- Regex:    '^<(boost/|flux/|fmt/|range/|blend2d\.h|blend2d/|benchmark/|folly/|gsl/|ankerl/|glaze/|hb\.h>|hb-|gcem\.hpp|tl/expected|whereami\.h|zlib\.h>)'
+- Regex:    '^<(gtest/|gmock/|catch2/)'
   Priority: 6
-- Regex:    '^<(winrt/|windows\.h|unknwn\.h|restrictederrorinfo\.h|hstring\.h|concurrent_queue\.h|wil/|dwmapi\.h|microsoft\.ui\.)'
+- Regex:    '^<(boost/|flux/|fmt/|range/|blend2d\.h|blend2d/|benchmark/|folly/|gsl/|ankerl/|glaze/|hb\.h>|hb-|gcem\.hpp|tl/expected|whereami\.h|zlib\.h>)'
   Priority: 7
+- Regex:    '^<(winrt/|windows\.h|unknwn\.h|restrictederrorinfo\.h|hstring\.h|concurrent_queue\.h|wil/|dwmapi\.h|microsoft\.ui\.)'
+  Priority: 8
 - Regex:    '^<Q'
   CaseSensitive:   true
-  Priority: 8
-- Regex:    '^<'
   Priority: 9
+- Regex:    '^<'
+  Priority: 10
 - Regex:    '^"'
   Priority: 1
   SortPriority: 0

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "MainWindow.g.h"
+#include "main_winui3/src/backend_thread.h"
+#include "main_winui3/src/render_thread.h"
 
 namespace winrt::main_winui3::implementation {
 
@@ -10,12 +12,36 @@ struct MainWindow : MainWindowT<MainWindow> {
         // See https://github.com/microsoft/cppwinrt/tree/master/nuget#initializecomponent
     }
 
-    int32_t MyProperty();
-    void MyProperty(int32_t value);
+    auto InitializeComponent() -> void;
 
-    void myButton_Click(IInspectable const& sender,
-                        Microsoft::UI::Xaml::RoutedEventArgs const& args);
+    // CanvasPanel
+
+    auto CanvasPanel_SizeChanged(IInspectable const& sender,
+                                 Microsoft::UI::Xaml::SizeChangedEventArgs const& args)
+        -> void;
+    auto CanvasPanel_Loaded(IInspectable const& sender,
+                            Microsoft::UI::Xaml::RoutedEventArgs const& args) -> void;
+    auto CanvasPanel_PointerMoved(
+        IInspectable const& sender,
+        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
+
+    // Public Methods
+
+    auto register_swap_chain(
+        const winrt::Microsoft::Graphics::Canvas::CanvasSwapChain& swap_chain) -> void;
+
+   private:
+    auto update_render_size() -> void;
+
+   private:
+    std::jthread backend_thread_ {};
+    std::jthread render_thread_ {};
+
+    // destroy source and control blocks before threads, so shutdown is initiated
+    logicsim::BackendTaskSource backend_tasks_ {};
+    logicsim::RenderBufferControl render_buffer_control_ {};
 };
+
 }  // namespace winrt::main_winui3::implementation
 
 namespace winrt::main_winui3::factory_implementation {
