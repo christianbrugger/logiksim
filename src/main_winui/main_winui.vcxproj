@@ -8,8 +8,8 @@
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <MinimalCoreWin>true</MinimalCoreWin>
     <ProjectGuid>{080dd84c-d4bb-4bbf-b7a9-225a604ef6be}</ProjectGuid>
-    <ProjectName>main_winui3</ProjectName>
-    <RootNamespace>main_winui3</RootNamespace>
+    <ProjectName>main_winui</ProjectName>
+    <RootNamespace>main_winui</RootNamespace>
     <!--
       $(TargetName) should be same as $(RootNamespace) so that the produced binaries (.exe/.pri/etc.)
       have a name that matches the .winmd

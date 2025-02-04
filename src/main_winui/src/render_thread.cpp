@@ -1,9 +1,9 @@
 #include "pch.h"
 
-#include "main_winui3/src/render_thread.h"
+#include "main_winui/src/render_thread.h"
 
-#include "main_winui3/src/ls_event_counter.h"
-#include "main_winui3/src/ls_xaml_utils.h"
+#include "main_winui/src/ls_event_counter.h"
+#include "main_winui/src/ls_xaml_utils.h"
 
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;

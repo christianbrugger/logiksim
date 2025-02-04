@@ -1,5 +1,5 @@
 ========================================================================
-    main_winui3 Project Overview
+    main_winui Project Overview
 ========================================================================
 
 This project demonstrates how to get started writing WinUI3 apps directly

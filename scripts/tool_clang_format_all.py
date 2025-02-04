@@ -9,8 +9,8 @@ CLANG_FORMAT = "clang-format-18"
 SOURCE_FOLDERS = ("src", "test")
 EXTENSIONS = ("*.h", "*.cpp")
 IGNORE = [
-    "src/main_winui3/Generated Files",
-    "src/main_winui3/packages",
+    "src/main_winui/Generated Files",
+    "src/main_winui/packages",
 ]
 
 

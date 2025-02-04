@@ -27,7 +27,7 @@
 
 Right click Solution: Unload Project, then edit project file.
 
-Make the following changes to the `main_winui3.vcxproj`:
+Make the following changes to the `main_winui.vcxproj`:
 
 ```xml
 <Project ...>
@@ -64,7 +64,7 @@ Update all other packages. Result:
 
 * Template Name: **Blank App, Package (WinUI3 in Desktop)**
 
-* Project Name: **main_winui3**
+* Project Name: **main_winui**
 * Project Folder: **`../logiksim/src`**
 * Enable: Place solution in the same directory.
 

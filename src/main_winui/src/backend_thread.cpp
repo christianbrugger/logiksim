@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "main_winui3/src/backend_thread.h"
+#include "main_winui/src/backend_thread.h"
 
 #include "core_export/logicsim_core_export.h"
 

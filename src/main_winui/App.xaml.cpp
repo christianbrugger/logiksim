@@ -10,7 +10,7 @@ using namespace Microsoft::UI::Xaml;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace winrt::main_winui3::implementation {
+namespace winrt::main_winui::implementation {
 
 /// <summary>
 /// Initializes the singleton application object.  This is the first line of authored code
@@ -39,4 +39,4 @@ void App::OnLaunched([[maybe_unused]] LaunchActivatedEventArgs const& e) {
     window.Activate();
 }
 
-}  // namespace winrt::main_winui3::implementation
+}  // namespace winrt::main_winui::implementation

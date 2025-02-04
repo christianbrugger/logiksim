@@ -1,7 +1,7 @@
-namespace main_winui3 {
+namespace main_winui {
 
 [default_interface] runtimeclass MainWindow : Microsoft.UI.Xaml.Window {
     MainWindow();
 }
 
-}  // namespace main_winui3
+}  // namespace main_winui

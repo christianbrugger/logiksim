@@ -12,8 +12,8 @@ SOURCE = {
 }
 
 DESTINATION = {
-    "debug": Path("x64/Debug/main_winui3"),
-    "release": Path("x64/Release/main_winui3"),
+    "debug": Path("x64/Debug/main_winui"),
+    "release": Path("x64/Release/main_winui"),
 }
 
 FILE_NAMES = {

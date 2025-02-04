@@ -2,7 +2,7 @@
 
 #include "App.xaml.g.h"
 
-namespace winrt::main_winui3::implementation {
+namespace winrt::main_winui::implementation {
 
 struct App : AppT<App> {
     App();
@@ -13,4 +13,4 @@ struct App : AppT<App> {
     winrt::Microsoft::UI::Xaml::Window window {nullptr};
 };
 
-}  // namespace winrt::main_winui3::implementation
+}  // namespace winrt::main_winui::implementation

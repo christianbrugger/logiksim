@@ -1,10 +1,10 @@
 #pragma once
 
 #include "MainWindow.g.h"
-#include "main_winui3/src/backend_thread.h"
-#include "main_winui3/src/render_thread.h"
+#include "main_winui/src/backend_thread.h"
+#include "main_winui/src/render_thread.h"
 
-namespace winrt::main_winui3::implementation {
+namespace winrt::main_winui::implementation {
 
 struct MainWindow : MainWindowT<MainWindow> {
     MainWindow() {
@@ -42,9 +42,12 @@ struct MainWindow : MainWindowT<MainWindow> {
     logicsim::RenderBufferControl render_buffer_control_ {};
 };
 
-}  // namespace winrt::main_winui3::implementation
+}  // namespace winrt::main_winui::implementation
 
-namespace winrt::main_winui3::factory_implementation {
-struct MainWindow : MainWindowT<MainWindow, implementation::MainWindow> {};
+namespace winrt::main_winui::factory_implementation {
 
-}  // namespace winrt::main_winui3::factory_implementation
+struct MainWindow : MainWindowT<MainWindow, implementation::MainWindow> {
+    //
+};
+
+}  // namespace winrt::main_winui::factory_implementation

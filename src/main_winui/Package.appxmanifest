@@ -15,8 +15,8 @@
   <mp:PhoneIdentity PhoneProductId="4dd2d9a0-b22e-416a-b415-e07d2ac89b5c" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>main_winui3</DisplayName>
-    <PublisherDisplayName>brugg</PublisherDisplayName>
+    <DisplayName>main_winui</DisplayName>
+    <PublisherDisplayName>Christian Brugger</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -34,8 +34,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="main_winui3"
-        Description="main_winui3"
+        DisplayName="main_winui"
+        Description="main_winui"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">

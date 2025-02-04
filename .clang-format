@@ -21,7 +21,7 @@ IncludeIsMainRegex: '(_test)?$'
 IncludeCategories:
 - Regex:    '^"pch\.h"$'
   Priority: -1
-- Regex:    '^"(main_winui3/|MainWindow\.|App\.)'
+- Regex:    '^"(main_winui/|MainWindow\.|App\.)'
   Priority: 2
 - Regex:    '^"gui/'
   Priority: 3
