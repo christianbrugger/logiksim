@@ -38,7 +38,10 @@ def main() -> None:
 
     for file in FILE_NAMES[config]:
         print("Copy file:", file)
-        shutil.copy2(SOURCE[config] / file, DESTINATION[config] / file)
+        shutil.copy2(
+            src=PROJECT / SOURCE[config] / file,
+            dst=PROJECT / DESTINATION[config] / file,
+        )
 
 
 if __name__ == "__main__":

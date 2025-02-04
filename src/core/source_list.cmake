@@ -57,6 +57,10 @@ set(LS_CORE_SOURCES
     benchmark/schematic_creation.cpp
     benchmark/simulation_runtime.cpp
 
+    component/circuit_ui_model/mouse_logic/mouse_drag_logic.cpp
+    component/circuit_ui_model/checked_editable_circuit.cpp
+    component/circuit_ui_model/circuit_renderer.cpp
+    component/circuit_ui_model/circuit_store.cpp
     component/editable_circuit/editing/edit_decoration.cpp
     component/editable_circuit/editing/edit_decoration_detail.cpp
     component/editable_circuit/editing/edit_history.cpp
@@ -239,6 +243,7 @@ set(LS_CORE_SOURCES
     vocabulary/alignment.cpp
     vocabulary/allocation_info.cpp
     vocabulary/circuit_id.cpp
+    vocabulary/circuit_ui_config.cpp
     vocabulary/circuit_widget_state.cpp
     vocabulary/color.cpp
     vocabulary/connection.cpp
@@ -339,6 +344,7 @@ set(LS_CORE_SOURCES
     base64.cpp
     circuit_description.cpp
     circuit_example.cpp
+    circuit_ui_model.cpp
     copy_paste_clipboard.cpp
     default_element_definition.cpp
     editable_circuit.cpp

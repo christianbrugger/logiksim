@@ -51,8 +51,8 @@ auto resize_buffer_discarding(const SwapChainParams& params, frame_t& frame) -> 
     return do_create;
 }
 
-auto render_circuit(RenderBufferSource& render_source,
-                    core::CircuitInterface& circuit) -> void {
+auto render_circuit(RenderBufferSource& render_source, core::CircuitInterface& circuit)
+    -> void {
     render_source.render_to_buffer([&](const SwapChainParams& params, frame_t& frame) {
         resize_buffer_discarding(params, frame);
 
@@ -132,8 +132,8 @@ auto backend_thread_main(std::stop_token token,
 }  // namespace
 
 auto create_backend_thread(std::unique_ptr<IBackendGuiActions> actions,
-                           BackendTaskSink sink,
-                           RenderBufferSource render_source) -> std::jthread {
+                           BackendTaskSink sink, RenderBufferSource render_source)
+    -> std::jthread {
     Expects(actions);
 
     return std::jthread(backend_thread_main, std::move(actions), std::move(sink),
