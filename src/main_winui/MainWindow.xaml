@@ -26,11 +26,13 @@
 
             <Grid Grid.Row="1">
                 <canvas:CanvasSwapChainPanel
-                x:Name="CanvasPanel"
-                SizeChanged="CanvasPanel_SizeChanged"
-                Loaded="CanvasPanel_Loaded"
-                PointerMoved="CanvasPanel_PointerMoved"
-                />
+                    x:Name="CanvasPanel"
+                    SizeChanged="CanvasPanel_SizeChanged"
+                    Loaded="CanvasPanel_Loaded"
+                    PointerMoved="CanvasPanel_PointerMoved"
+                    PointerPressed="CanvasPanel_PointerPressed"
+                    PointerReleased="CanvasPanel_PointerReleased"
+                    />
             </Grid>
         </Grid>
     </Page>

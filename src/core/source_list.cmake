@@ -294,6 +294,7 @@ set(LS_CORE_SOURCES
     vocabulary/logicitem_id.cpp
     vocabulary/logicitem_key.cpp
     vocabulary/logicitem_type.cpp
+    vocabulary/mouse_event.cpp
     vocabulary/mouse_postion_info.cpp
     vocabulary/move_delta.cpp
     vocabulary/offset.cpp

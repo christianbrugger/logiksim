@@ -40,6 +40,11 @@ struct PointPixelInt {
     [[nodiscard]] auto operator<=>(const PointPixelInt&) const = default;
 };
 
+struct MouseEvent {
+    PointDevice position;
+    int type;  // TODO use enum
+};
+
 [[nodiscard]] auto to_point_pixel_int(const PointPixel& point) -> PointPixelInt;
 
 }  // namespace logicsim

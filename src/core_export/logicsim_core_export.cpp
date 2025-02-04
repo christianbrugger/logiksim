@@ -5,6 +5,8 @@
 #include <blend2d.h>
 #include <gsl/gsl>
 
+#include <type_traits>
+
 //
 // C Interface
 //
@@ -78,5 +80,43 @@ auto ls_circuit_render_layout(ls_circuit_t obj, int32_t width, int32_t height,
     ls_translate_exception([&]() {
         Expects(obj);
         render_layout_impl(obj->model, width, height, pixel_ratio, pixel_data, stride);
+    });
+}
+
+namespace {
+
+[[nodiscard]] auto to_mouse_event_type(int32_t type) -> logicsim::MouseEventType {
+    using namespace logicsim;
+
+    using T = std::underlying_type_t<exporting::MouseEventType>;
+    const auto type_enum = static_cast<exporting::MouseEventType>(gsl::narrow<T>(type));
+
+    switch (type_enum) {
+        using enum exporting::MouseEventType;
+
+        case Press:
+            return MouseEventType::Press;
+        case Move:
+            return MouseEventType::Move;
+        case Release:
+            return MouseEventType::Release;
+    };
+    std::terminate();
+}
+
+}  // namespace
+
+auto ls_circuit_mouse_event(ls_circuit_t obj, ls_point_device_fine_t position,
+                            int32_t mouse_event_type) -> void {
+    ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+
+        obj->model.mouse_event(MouseEvent {
+            .position = point_device_fine_t {position.x, position.y},
+            .button = MouseButtonType::MiddleButton,
+            .type = to_mouse_event_type(mouse_event_type),
+            .modifier = KeyboardModifierType::NoModifier,
+        });
     });
 }

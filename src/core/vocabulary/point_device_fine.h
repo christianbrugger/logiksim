@@ -1,5 +1,6 @@
 #ifndef LOGICSIM_VOCABULARY_POINT_DEVICE_FINE_H
 #define LOGICSIM_VOCABULARY_POINT_DEVICE_FINE_H
+
 #include "core/format/struct.h"
 #include "core/vocabulary/point_device.h"
 

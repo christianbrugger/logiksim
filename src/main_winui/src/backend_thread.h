@@ -46,7 +46,7 @@ class IBackendGuiActions {
 // Tasks
 //
 
-using BackendTask = std::variant<PointDevice, SwapChainParams>;
+using BackendTask = std::variant<MouseEvent, SwapChainParams>;
 
 using BackendTaskQueue = ::logicsim::ConcurrentBlockingQueue<BackendTask>;
 
@@ -91,12 +91,14 @@ class BackendTaskSource {
 // Thread
 //
 
-[[nodiscard]] auto create_backend_thread(
-    std::unique_ptr<IBackendGuiActions> actions, BackendTaskSink sink,
-    RenderBufferSource render_source) -> std::jthread;
+[[nodiscard]] auto create_backend_thread(std::unique_ptr<IBackendGuiActions> actions,
+                                         BackendTaskSink sink,
+                                         RenderBufferSource render_source)
+    -> std::jthread;
 
-[[nodiscard]] auto create_backend_thread(
-    std::unique_ptr<IBackendGuiActions> actions, const BackendTaskSource& source,
-    RenderBufferSource render_source) -> std::jthread;
+[[nodiscard]] auto create_backend_thread(std::unique_ptr<IBackendGuiActions> actions,
+                                         const BackendTaskSource& source,
+                                         RenderBufferSource render_source)
+    -> std::jthread;
 
 }  // namespace logicsim

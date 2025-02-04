@@ -51,8 +51,8 @@ auto resize_buffer_discarding(const SwapChainParams& params, frame_t& frame) -> 
     return do_create;
 }
 
-auto render_circuit(RenderBufferSource& render_source, core::CircuitInterface& circuit)
-    -> void {
+auto render_circuit(RenderBufferSource& render_source,
+                    exporting::CircuitInterface& circuit) -> void {
     render_source.render_to_buffer([&](const SwapChainParams& params, frame_t& frame) {
         resize_buffer_discarding(params, frame);
 
@@ -67,13 +67,24 @@ auto render_circuit(RenderBufferSource& render_source, core::CircuitInterface& c
 }
 
 auto handle_backend_task(const BackendTask& task, RenderBufferSource& render_source,
-                         PointDevice& position) -> bool {
-    if (const auto* item = std::get_if<PointDevice>(&task)) {
-        if (position != *item) {
-            position = *item;
-            return true;
+                         exporting::CircuitInterface& circuit) -> bool {
+    if (const auto* item = std::get_if<MouseEvent>(&task)) {
+        if (item->type == 0) {
+            circuit.mouse_event(
+                ls_point_device_fine_t {.x = item->position.x, .y = item->position.y},
+                exporting::MouseEventType::Press);
         }
-        return false;
+        if (item->type == 1) {
+            circuit.mouse_event(
+                ls_point_device_fine_t {.x = item->position.x, .y = item->position.y},
+                exporting::MouseEventType::Move);
+        }
+        if (item->type == 2) {
+            circuit.mouse_event(
+                ls_point_device_fine_t {.x = item->position.x, .y = item->position.y},
+                exporting::MouseEventType::Release);
+        }
+        return true;
     }
 
     if (const auto* item = std::get_if<SwapChainParams>(&task)) {
@@ -89,13 +100,11 @@ auto handle_backend_task(const BackendTask& task, RenderBufferSource& render_sou
 
 auto main_forwarded_tasks(std::stop_token& token, BackendTaskSink& tasks,
                           RenderBufferSource& render_source,
-                          core::CircuitInterface& circuit) {
-    auto position = PointDevice {};
-
+                          exporting::CircuitInterface& circuit) {
     while (!token.stop_requested()) {
-        auto redraw = handle_backend_task(tasks.pop(), render_source, position);
+        auto redraw = handle_backend_task(tasks.pop(), render_source, circuit);
         while (const auto task = tasks.try_pop()) {
-            redraw |= handle_backend_task(*task, render_source, position);
+            redraw |= handle_backend_task(*task, render_source, circuit);
         }
 
         if (redraw) {
@@ -111,8 +120,8 @@ auto backend_thread_main(std::stop_token token,
         Expects(actions);
         winrt::init_apartment();
 
-        auto circuit = core::CircuitInterface {};
-        { circuit.load(core::ExampleCircuitType::example_circuit_2); }
+        auto circuit = exporting::CircuitInterface {};
+        circuit.load(exporting::ExampleCircuitType::example_circuit_2);
 
         try {
             main_forwarded_tasks(token, tasks, render_source, circuit);

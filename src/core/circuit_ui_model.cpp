@@ -1,6 +1,7 @@
 #include "core/circuit_ui_model.h"
 
 #include "core/circuit_example.h"
+#include "core/vocabulary/mouse_event.h"
 
 namespace logicsim {
 
@@ -254,6 +255,27 @@ auto CircuitUiModel::render(BLImage& bl_image,
     // update_history_status();
 
     Ensures(class_invariant_holds());
+}
+
+auto CircuitUiModel::mouse_event(const MouseEvent& event) -> void {
+    if (event.button == MouseButtonType::MiddleButton) {
+        if (event.type == MouseEventType::Press) {
+            mouse_drag_logic_.mouse_press(event.position);
+        } else if (event.type == MouseEventType::Move) {
+            set_view_config_offset(circuit_renderer_,
+                                   mouse_drag_logic_.mouse_move(
+                                       event.position, circuit_renderer_.view_config()));
+        } else if (event.type == MouseEventType::Release) {
+            set_view_config_offset(circuit_renderer_,
+                                   mouse_drag_logic_.mouse_release(
+                                       event.position, circuit_renderer_.view_config()));
+        }
+    }
+    // if (event_->button() == Qt::MiddleButton) {
+    //     mouse_drag_logic_.mouse_press(to(position));
+    //     update();
+    // }
+    //
 }
 
 auto CircuitUiModel::set_editable_circuit(

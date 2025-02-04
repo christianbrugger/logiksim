@@ -9,6 +9,7 @@
 #include "core/vocabulary/circuit_ui_config.h"
 #include "core/vocabulary/device_pixel_ratio.h"
 #include "core/vocabulary/history_status.h"
+#include "core/vocabulary/mouse_event.h"
 #include "core/vocabulary/render_mode.h"
 #include "core/vocabulary/thread_count.h"
 #include "core/vocabulary/view_config.h"
@@ -118,6 +119,8 @@ class CircuitUiModel {
     auto save_circuit(const std::filesystem::path&) -> bool;
     // render
     auto render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio) -> void;
+
+    auto mouse_event(const MouseEvent& event) -> void;
 
    protected:
     // Q_SLOT void on_timer_benchmark_render();

@@ -50,6 +50,14 @@ void LS_CORE_API ls_circuit_render_layout(ls_circuit_t obj, int32_t width, int32
                                           double pixel_ratio, void* pixel_data,
                                           intptr_t stride);
 
+typedef struct {
+    double x;
+    double y;
+} ls_point_device_fine_t;
+
+void LS_CORE_API ls_circuit_mouse_event(ls_circuit_t obj, ls_point_device_fine_t position,
+                                        int32_t mouse_event_type);
+
 #ifdef __cplusplus
 }
 #endif
@@ -63,13 +71,19 @@ void LS_CORE_API ls_circuit_render_layout(ls_circuit_t obj, int32_t width, int32
 #include <memory>  // unique_ptr
 
 namespace logicsim {
-namespace core {
+namespace exporting {
 
 enum class ExampleCircuitType : int8_t {
     example_circuit_1 = 1,
     example_circuit_2 = 2,
     example_circuit_3 = 3,
     example_circuit_4 = 4,
+};
+
+enum class MouseEventType : int8_t {
+    Press = 0,
+    Move = 1,
+    Release = 2,
 };
 
 namespace detail {
@@ -87,6 +101,8 @@ class CircuitInterface {
     inline auto load(ExampleCircuitType type) -> void;
     inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
                               void* pixel_data, intptr_t stride) -> void;
+    inline auto mouse_event(ls_point_device_fine_t position,
+                            MouseEventType mouse_event_type) -> void;
 
    private:
     std::unique_ptr<ls_circuit, detail::LSCircuitDeleter> obj_ {ls_circuit_construct()};
@@ -113,7 +129,13 @@ auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel
     ls_circuit_render_layout(obj_.get(), width, height, pixel_ratio, pixel_data, stride);
 }
 
-}  // namespace core
+auto CircuitInterface::mouse_event(ls_point_device_fine_t position,
+                                   MouseEventType mouse_event_type) -> void {
+    ls_expects(obj_);
+    ls_circuit_mouse_event(obj_.get(), position, static_cast<int32_t>(mouse_event_type));
+};
+
+}  // namespace exporting
 }  // namespace logicsim
 
 #endif

@@ -24,6 +24,12 @@ struct MainWindow : MainWindowT<MainWindow> {
     auto CanvasPanel_PointerMoved(
         IInspectable const& sender,
         Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
+    auto CanvasPanel_PointerPressed(
+        IInspectable const& sender,
+        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
+    auto CanvasPanel_PointerReleased(
+        IInspectable const& sender,
+        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
 
     // Public Methods
 

@@ -24,8 +24,9 @@ class RenderGuiActions : public logicsim::IRenderGuiActions {
    public:
     RenderGuiActions(MainWindow& window);
 
-    auto register_swap_chain(winrt::Microsoft::Graphics::Canvas::CanvasSwapChain
-                                 swap_chain) const -> void override;
+    auto register_swap_chain(
+        winrt::Microsoft::Graphics::Canvas::CanvasSwapChain swap_chain) const
+        -> void override;
 
    private:
     weak_ref<MainWindow> window_weak_;
@@ -114,8 +115,8 @@ auto MainWindow::CanvasPanel_SizeChanged(IInspectable const& sender [[maybe_unus
 }
 
 auto MainWindow::CanvasPanel_Loaded(IInspectable const& sender [[maybe_unused]],
-                                    RoutedEventArgs const& args
-                                    [[maybe_unused]]) -> void {
+                                    RoutedEventArgs const& args [[maybe_unused]])
+    -> void {
     update_render_size();
 
     const auto panel = CanvasPanel();
@@ -137,11 +138,38 @@ auto MainWindow::CanvasPanel_Loaded(IInspectable const& sender [[maybe_unused]],
         });
 }
 
+auto MainWindow::CanvasPanel_PointerPressed(IInspectable const& sender [[maybe_unused]],
+                                            Input::PointerRoutedEventArgs const& args) -> void {
+    using namespace logicsim;
+    const auto point = args.GetCurrentPoint(CanvasPanel()).Position();
+
+    backend_tasks_.push(MouseEvent {
+        .position = PointDevice {.x = point.X, .y = point.Y},
+        .type = 0,
+    });
+}
+
 auto MainWindow::CanvasPanel_PointerMoved(IInspectable const& sender [[maybe_unused]],
                                           Input::PointerRoutedEventArgs const& args)
     -> void {
-    const auto p = args.GetCurrentPoint(CanvasPanel()).Position();
-    backend_tasks_.push(logicsim::PointDevice {.x = p.X, .y = p.Y});
+    using namespace logicsim;
+    const auto point = args.GetCurrentPoint(CanvasPanel()).Position();
+
+    backend_tasks_.push(MouseEvent {
+        .position = PointDevice {.x = point.X, .y = point.Y},
+        .type = 1,
+    });
+}
+
+auto MainWindow::CanvasPanel_PointerReleased(IInspectable const& sender [[maybe_unused]],
+                                             Input::PointerRoutedEventArgs const& args) -> void{
+    using namespace logicsim;
+    const auto point = args.GetCurrentPoint(CanvasPanel()).Position();
+
+    backend_tasks_.push(MouseEvent {
+        .position = PointDevice {.x = point.X, .y = point.Y},
+        .type = 2,
+    });
 }
 
 auto MainWindow::register_swap_chain(
