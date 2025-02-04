@@ -4,6 +4,8 @@
 
 #include "MainWindow.xaml.h"
 
+#include <gsl/gsl>
+
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;
 
@@ -30,11 +32,23 @@ App::App() {
 #endif
 }
 
+namespace {
+
+auto attach_console() -> void {
+    Expects(AllocConsole());
+    freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
+    freopen_s((FILE**)stderr, "CONOUT$", "w", stderr);
+}
+
+}  // namespace
+
 /// <summary>
 /// Invoked when the application is launched.
 /// </summary>
 /// <param name="e">Details about the launch request and process.</param>
 void App::OnLaunched([[maybe_unused]] LaunchActivatedEventArgs const& e) {
+    attach_console();
+
     window = make<MainWindow>();
     window.Activate();
 }

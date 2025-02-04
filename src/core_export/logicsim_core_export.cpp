@@ -6,6 +6,7 @@
 #include "core/render/circuit/render_circuit.h"
 #include "core/render/context_cache.h"
 #include "core/render/image_surface.h"
+#include "core/timer.h"
 #include "core/vocabulary/context_render_settings.h"
 #include "core/vocabulary/widget_render_config.h"
 
@@ -37,6 +38,7 @@ class ExportedCircuit_Impl {
 };
 
 auto ExportedCircuit_Impl::load_circuit(int number) -> void {
+    const auto _ = Timer {"Load Circuit:"};
     editable_circuit_ = load_example_with_logging(number);
 }
 
