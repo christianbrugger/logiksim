@@ -28,7 +28,7 @@ template <typename T, class Proj = std::identity>
 
     // TODO refactor in c++23 to use std::views::join_with and std::views::transform
     // use our own transform view, as boost does not work with std::views::transform
-    return boost::join(transform_view(std::forward<T>(obj), format_func), sep);
+    return boost::join(transform_view(obj, format_func), sep);
 }
 
 }  // namespace logicsim

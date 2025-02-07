@@ -5,46 +5,107 @@
 #include "core/format/struct.h"
 #include "core/vocabulary/point_device_fine.h"
 
+#include <array>
+#include <bitset>
 #include <cstdint>
 
 namespace logicsim {
 
-enum class MouseButtonType : int8_t {
-    LeftButton,
-    RightButton,
-    MiddleButton,
+//
+// Mouse Button
+//
+
+enum class MouseButton : uint8_t {
+    Left = 0,
+    Right = 1,
+    Middle = 2,
+};
+
+constexpr inline auto all_mouse_buttons = std::array {
+    MouseButton::Left,
+    MouseButton::Right,
+    MouseButton::Middle,
 };
 
 template <>
-[[nodiscard]] auto format(MouseButtonType type) -> std::string;
+[[nodiscard]] auto format(MouseButton type) -> std::string;
 
-enum class MouseEventType : int8_t {
-    Press,
-    Move,
-    Release,
-    DoubleClick,
+/**
+ * @brief: Bit-set of mouse buttons.
+ */
+class MouseButtons {
+   public:
+    [[nodiscard]] auto operator==(const MouseButtons&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+
+    auto set(MouseButton button, bool value = true) -> MouseButtons&;
+    [[nodiscard]] auto is_set(MouseButton button) const -> bool;
+
+   private:
+    std::bitset<all_mouse_buttons.size()> value_;
+};
+
+//
+// Keyboard Modifier
+//
+
+enum class KeyboardModifier : uint8_t {
+    Shift = 0,
+    Control = 1,
+    Alt = 2,
+};
+
+constexpr inline auto all_keyboard_modifiers = std::array {
+    KeyboardModifier::Shift,
+    KeyboardModifier::Control,
+    KeyboardModifier::Alt,
 };
 
 template <>
-[[nodiscard]] auto format(MouseEventType type) -> std::string;
+[[nodiscard]] auto format(KeyboardModifier type) -> std::string;
 
-enum class KeyboardModifierType : int8_t {
-    NoModifier = 0,
-    ShiftModifier = 1,
-    ControlModifier = 2,
-    AltModifier = 4,
+/**
+ * @brief: Bit-set of keyboard modifiers.
+ */
+class KeyboardModifiers {
+   public:
+    [[nodiscard]] auto operator==(const KeyboardModifiers&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+
+    auto set(KeyboardModifier modifier, bool value = true) -> KeyboardModifiers&;
+    [[nodiscard]] auto is_set(KeyboardModifier modifier) const -> bool;
+
+   private:
+    std::bitset<all_keyboard_modifiers.size()> value_;
 };
 
-template <>
-[[nodiscard]] auto format(KeyboardModifierType type) -> std::string;
+//
+// Mouse Events
+//
 
-struct MouseEvent {
+struct MousePressEvent {
     point_device_fine_t position {};
-    MouseButtonType button {MouseButtonType::LeftButton};
-    MouseEventType type {MouseEventType::Press};
-    KeyboardModifierType modifier {KeyboardModifierType::NoModifier};
+    MouseButton button {MouseButton::Left};
+    KeyboardModifiers modifiers {};
+    bool double_click {false};
 
-    [[nodiscard]] auto operator==(const MouseEvent&) const -> bool = default;
+    [[nodiscard]] auto operator==(const MousePressEvent&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct MouseMoveEvent {
+    point_device_fine_t position {};
+    MouseButtons buttons {};
+
+    [[nodiscard]] auto operator==(const MouseMoveEvent&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct MouseReleaseEvent {
+    point_device_fine_t position {};
+    MouseButton button {MouseButton::Left};
+
+    [[nodiscard]] auto operator==(const MouseReleaseEvent&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 

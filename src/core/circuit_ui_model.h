@@ -120,7 +120,9 @@ class CircuitUiModel {
     // render
     auto render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio) -> void;
 
-    auto mouse_event(const MouseEvent& event) -> void;
+    auto mouse_press(const MousePressEvent& event) -> void;
+    auto mouse_move(const MouseMoveEvent& event) -> void;
+    auto mouse_release(const MouseReleaseEvent& event) -> void;
 
    protected:
     // Q_SLOT void on_timer_benchmark_render();

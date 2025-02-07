@@ -1,17 +1,16 @@
 #include "core_export/logicsim_core_export.h"
 
+#include "core/algorithm/to_enum.h"
 #include "core/circuit_ui_model.h"
 
 #include <blend2d.h>
 #include <gsl/gsl>
 
-#include <type_traits>
-
 //
 // C Interface
 //
 
-struct ls_circuit {
+struct ls_circuit_t {
     logicsim::CircuitUiModel model {};
 };
 
@@ -29,15 +28,15 @@ auto ls_translate_exception(Func&& func) {
     }
 }
 
-auto ls_circuit_construct() -> ls_circuit_t {
-    return ls_translate_exception([]() { return new ls_circuit; });
+auto ls_circuit_construct() -> ls_circuit_p {
+    return ls_translate_exception([]() { return new ls_circuit_t; });
 }
 
-auto ls_circuit_destruct(ls_circuit_t obj) -> void {
+auto ls_circuit_destruct(ls_circuit_p obj) -> void {
     ls_translate_exception([&]() { delete obj; });
 }
 
-auto ls_circuit_load(ls_circuit_t obj, int32_t example_circuit) -> void {
+auto ls_circuit_load(ls_circuit_p obj, int32_t example_circuit) -> void {
     ls_translate_exception([&]() {
         Expects(obj);
         const auto number = gsl::narrow<int>(example_circuit);
@@ -74,7 +73,7 @@ auto render_layout_impl(logicsim::CircuitUiModel& model, int32_t width, int32_t 
 }
 }  // namespace
 
-auto ls_circuit_render_layout(ls_circuit_t obj, int32_t width, int32_t height,
+auto ls_circuit_render_layout(ls_circuit_p obj, int32_t width, int32_t height,
                               double pixel_ratio, void* pixel_data,
                               intptr_t stride) -> void {
     ls_translate_exception([&]() {
@@ -85,38 +84,122 @@ auto ls_circuit_render_layout(ls_circuit_t obj, int32_t width, int32_t height,
 
 namespace {
 
-[[nodiscard]] auto to_mouse_event_type(int32_t type) -> logicsim::MouseEventType {
+[[nodiscard]] auto to_mouse_button(logicsim::exporting::MouseButton button)
+    -> logicsim::MouseButton {
     using namespace logicsim;
 
-    using T = std::underlying_type_t<exporting::MouseEventType>;
-    const auto type_enum = static_cast<exporting::MouseEventType>(gsl::narrow<T>(type));
+    switch (button) {
+        using enum exporting::MouseButton;
 
-    switch (type_enum) {
-        using enum exporting::MouseEventType;
-
-        case Press:
-            return MouseEventType::Press;
-        case Move:
-            return MouseEventType::Move;
-        case Release:
-            return MouseEventType::Release;
+        case Left:
+            return MouseButton::Left;
+        case Right:
+            return MouseButton::Right;
+        case Middle:
+            return MouseButton::Middle;
     };
     std::terminate();
 }
 
+[[nodiscard]] auto to_mouse_button(int32_t button) -> logicsim::MouseButton {
+    using namespace logicsim;
+
+    return to_mouse_button(to_enum<exporting::MouseButton>(button));
+}
+
+[[nodiscard]] auto to_mouse_buttons(uint32_t buttons_value) -> logicsim::MouseButtons {
+    using namespace logicsim;
+
+    const auto buttons_export = exporting::MouseButtons {buttons_value};
+    auto buttons_result = MouseButtons {};
+
+    for (const auto button : exporting::all_mouse_buttons) {
+        if (buttons_export.is_set(button)) {
+            buttons_result.set(to_mouse_button(button));
+        }
+    }
+
+    return buttons_result;
+}
+
+[[nodiscard]] auto to_keyboard_modifier(logicsim::exporting::KeyboardModifier modifier)
+    -> logicsim::KeyboardModifier {
+    using namespace logicsim;
+
+    switch (modifier) {
+        using enum exporting::KeyboardModifier;
+
+        case Shift:
+            return KeyboardModifier::Shift;
+        case Control:
+            return KeyboardModifier::Control;
+        case Alt:
+            return KeyboardModifier::Alt;
+    };
+    std::terminate();
+}
+
+[[nodiscard]] auto to_keyboard_modifiers(uint32_t modifiers_value)
+    -> logicsim::KeyboardModifiers {
+    using namespace logicsim;
+
+    const auto modifiers_export = exporting::KeyboardModifiers {modifiers_value};
+    auto modifiers_result = KeyboardModifiers {};
+
+    for (const auto modifier : exporting::all_keyboard_modifiers) {
+        if (modifiers_export.is_set(modifier)) {
+            modifiers_result.set(to_keyboard_modifier(modifier));
+        }
+    }
+
+    return modifiers_result;
+}
+
+[[nodiscard]] auto to_point_device_fine(const ls_point_device_fine_t& point)
+    -> logicsim::point_device_fine_t {
+    return logicsim::point_device_fine_t {point.x, point.y};
+}
+
 }  // namespace
 
-auto ls_circuit_mouse_event(ls_circuit_t obj, ls_point_device_fine_t position,
-                            int32_t mouse_event_type) -> void {
+auto ls_circuit_mouse_press(ls_circuit_p obj, const ls_mouse_press_event* event) -> void {
     ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
+        Expects(event);
 
-        obj->model.mouse_event(MouseEvent {
-            .position = point_device_fine_t {position.x, position.y},
-            .button = MouseButtonType::MiddleButton,
-            .type = to_mouse_event_type(mouse_event_type),
-            .modifier = KeyboardModifierType::NoModifier,
+        obj->model.mouse_press(MousePressEvent {
+            .position = to_point_device_fine(event->position),
+            .button = to_mouse_button(event->button),
+            .modifiers = to_keyboard_modifiers(event->keyboard_modifiers),
+            .double_click = event->double_click != 0,
+        });
+    });
+}
+
+auto ls_circuit_mouse_move(ls_circuit_p obj, const ls_mouse_move_event* event) -> void {
+    ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+        Expects(event);
+
+        obj->model.mouse_move(MouseMoveEvent {
+            .position = to_point_device_fine(event->position),
+            .buttons = to_mouse_buttons(event->buttons),
+        });
+    });
+}
+
+auto ls_circuit_mouse_release(ls_circuit_p obj,
+                              const ls_mouse_release_event* event) -> void {
+    ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+        Expects(event);
+
+        obj->model.mouse_release(MouseReleaseEvent {
+            .position = to_point_device_fine(event->position),
+            .button = to_mouse_button(event->button),
         });
     });
 }

@@ -12,8 +12,8 @@ namespace logicsim {
  *
  * Note this is backported from C++23
  */
-template <class T>
-using const_iterator_t = decltype(std::ranges::begin(std::declval<const T&>()));
+template <std::ranges::range R>
+using const_iterator_t = decltype(std::ranges::cbegin(std::declval<R&>()));
 
 /**
  * @brief: Resolves to the const sentinel type of the given range

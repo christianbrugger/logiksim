@@ -68,21 +68,32 @@ auto render_circuit(RenderBufferSource& render_source,
 
 auto handle_backend_task(const BackendTask& task, RenderBufferSource& render_source,
                          exporting::CircuitInterface& circuit) -> bool {
+    using namespace exporting;
+
     if (const auto* item = std::get_if<MouseEvent>(&task)) {
         if (item->type == 0) {
-            circuit.mouse_event(
-                ls_point_device_fine_t {.x = item->position.x, .y = item->position.y},
-                exporting::MouseEventType::Press);
+            circuit.mouse_press(MousePressEvent {
+                .position =
+                    ls_point_device_fine_t {.x = item->position.x, .y = item->position.y},
+                .button = MouseButton::Middle,
+            });
         }
         if (item->type == 1) {
-            circuit.mouse_event(
-                ls_point_device_fine_t {.x = item->position.x, .y = item->position.y},
-                exporting::MouseEventType::Move);
+            auto buttons = MouseButtons {};
+            buttons.set(MouseButton::Middle);
+
+            circuit.mouse_move(MouseMoveEvent {
+                .position =
+                    ls_point_device_fine_t {.x = item->position.x, .y = item->position.y},
+                .buttons = buttons,
+            });
         }
         if (item->type == 2) {
-            circuit.mouse_event(
-                ls_point_device_fine_t {.x = item->position.x, .y = item->position.y},
-                exporting::MouseEventType::Release);
+            circuit.mouse_release(MouseReleaseEvent {
+                .position =
+                    ls_point_device_fine_t {.x = item->position.x, .y = item->position.y},
+                .button = MouseButton::Middle,
+            });
         }
         return true;
     }

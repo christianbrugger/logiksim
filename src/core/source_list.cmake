@@ -31,6 +31,7 @@ set(LS_CORE_SOURCES
     algorithm/sort_pair.cpp
     algorithm/span_operations.cpp
     algorithm/text_escape.cpp
+    algorithm/to_enum.cpp
     algorithm/to_underlying.cpp
     algorithm/to_vector.cpp
     algorithm/transform_adjacent.cpp
@@ -95,6 +96,7 @@ set(LS_CORE_SOURCES
     component/simulation/simulation_event_group.cpp
     component/simulation/simulation_queue.cpp
 
+    concept/enum.cpp
     concept/explicitly_convertible.cpp
     concept/input_range.cpp
     concept/integral.cpp
