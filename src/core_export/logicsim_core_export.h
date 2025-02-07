@@ -5,6 +5,7 @@
 #include <array>
 #include <bitset>
 #include <cstdint>
+#include <limits>
 #include <memory>  // unique_ptr
 #include <stdexcept>
 #else
