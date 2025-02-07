@@ -109,6 +109,7 @@ namespace {
     return to_mouse_button(to_enum<exporting::MouseButton>(button));
 }
 
+// compiles to 2 instruction on clang: https://godbolt.org/z/KGKrMMqnM
 [[nodiscard]] auto to_mouse_buttons(uint32_t buttons_value) -> logicsim::MouseButtons {
     using namespace logicsim;
 

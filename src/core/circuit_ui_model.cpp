@@ -258,12 +258,14 @@ auto CircuitUiModel::render(BLImage& bl_image,
 }
 
 auto CircuitUiModel::mouse_press(const MousePressEvent& event) -> void {
+    print(event);
     if (event.button == MouseButton::Middle) {
         mouse_drag_logic_.mouse_press(event.position);
     }
 }
 
 auto CircuitUiModel::mouse_move(const MouseMoveEvent& event) -> void {
+    // print(event);
     if (event.buttons.is_set(MouseButton::Middle)) {
         set_view_config_offset(circuit_renderer_,
                                mouse_drag_logic_.mouse_move(
@@ -272,6 +274,7 @@ auto CircuitUiModel::mouse_move(const MouseMoveEvent& event) -> void {
 }
 
 auto CircuitUiModel::mouse_release(const MouseReleaseEvent& event) -> void {
+    print(event);
     if (event.button == MouseButton::Middle) {
         set_view_config_offset(circuit_renderer_,
                                mouse_drag_logic_.mouse_release(

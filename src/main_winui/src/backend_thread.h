@@ -3,6 +3,8 @@
 #include "main_winui/src/ls_concurrent_blocking_queue.h"
 #include "main_winui/src/render_buffer.h"
 
+#include "core_export/logicsim_core_export.h"
+
 #include <gsl/gsl>
 
 #include <windows.h>
@@ -46,7 +48,12 @@ class IBackendGuiActions {
 // Tasks
 //
 
-using BackendTask = std::variant<MouseEvent, SwapChainParams>;
+using BackendTask = std::variant<           //
+    SwapChainParams,                        //
+    logicsim::exporting::MousePressEvent,   //
+    logicsim::exporting::MouseMoveEvent,    //
+    logicsim::exporting::MouseReleaseEvent  //
+    >;
 
 using BackendTaskQueue = ::logicsim::ConcurrentBlockingQueue<BackendTask>;
 

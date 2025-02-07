@@ -37,6 +37,7 @@ class MouseButtons {
    public:
     [[nodiscard]] auto operator==(const MouseButtons&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] explicit operator bool() const;
 
     auto set(MouseButton button, bool value = true) -> MouseButtons&;
     [[nodiscard]] auto is_set(MouseButton button) const -> bool;
@@ -71,6 +72,7 @@ class KeyboardModifiers {
    public:
     [[nodiscard]] auto operator==(const KeyboardModifiers&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] explicit operator bool() const;
 
     auto set(KeyboardModifier modifier, bool value = true) -> KeyboardModifiers&;
     [[nodiscard]] auto is_set(KeyboardModifier modifier) const -> bool;

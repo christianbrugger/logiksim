@@ -1,6 +1,7 @@
 #include "core/component/circuit_ui_model/mouse_logic/mouse_drag_logic.h"
 
 #include "core/geometry/scene.h"
+#include "core/logging.h"
 
 namespace logicsim {
 

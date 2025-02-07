@@ -161,7 +161,7 @@ constexpr inline auto all_keyboard_modifiers = std::array {
 
 class MouseButtons {
    public:
-    explicit MouseButtons() = default;
+    MouseButtons() = default;
 
     explicit MouseButtons(uint32_t value) : value_ {value} {}
 
@@ -186,13 +186,17 @@ class MouseButtons {
 
     [[nodiscard]] auto operator==(const MouseButtons&) const -> bool = default;
 
+    [[nodiscard]] explicit operator bool() const {
+        return value_.any();
+    }
+
    private:
     std::bitset<all_mouse_buttons.size()> value_;
 };
 
 class KeyboardModifiers {
    public:
-    explicit KeyboardModifiers() = default;
+    KeyboardModifiers() = default;
 
     explicit KeyboardModifiers(uint32_t value) : value_ {value} {}
 
@@ -216,6 +220,10 @@ class KeyboardModifiers {
     }
 
     [[nodiscard]] auto operator==(const KeyboardModifiers&) const -> bool = default;
+
+    [[nodiscard]] explicit operator bool() const {
+        return value_.any();
+    }
 
    private:
     std::bitset<all_keyboard_modifiers.size()> value_;

@@ -32,6 +32,8 @@
                     PointerMoved="CanvasPanel_PointerMoved"
                     PointerPressed="CanvasPanel_PointerPressed"
                     PointerReleased="CanvasPanel_PointerReleased"
+                    PointerCanceled="CanvasPanel_PointerCanceled"
+                    PointerCaptureLost="CanvasPanel_PointerCaptureLost"
                     />
             </Grid>
         </Grid>

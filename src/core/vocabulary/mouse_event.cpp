@@ -24,17 +24,23 @@ auto format(MouseButton type) -> std::string {
     std::terminate();
 }
 
-[[nodiscard]] auto MouseButtons::format() const -> std::string {
+auto MouseButtons::format() const -> std::string {
     const auto is_selected = [this](MouseButton button) { return is_set(button); };
-    return fmt_join(", ", all_mouse_buttons | std::ranges::views::filter(is_selected));
+    const auto inner =
+        fmt_join(", ", all_mouse_buttons | std::ranges::views::filter(is_selected));
+    return "[" + inner + "]";
 }
 
-[[nodiscard]] auto MouseButtons::set(MouseButton button, bool value) -> MouseButtons& {
+MouseButtons::operator bool() const {
+    return value_.any();
+}
+
+auto MouseButtons::set(MouseButton button, bool value) -> MouseButtons& {
     value_.set(to_underlying(button), value);
     return *this;
 }
 
-[[nodiscard]] auto MouseButtons::is_set(MouseButton button) const -> bool {
+auto MouseButtons::is_set(MouseButton button) const -> bool {
     return value_.test(to_underlying(button));
 }
 
@@ -57,18 +63,23 @@ auto format(KeyboardModifier type) -> std::string {
     std::terminate();
 }
 
-[[nodiscard]] auto KeyboardModifiers::format() const -> std::string {
+auto KeyboardModifiers::format() const -> std::string {
     const auto selected = [this](KeyboardModifier button) { return is_set(button); };
-    return fmt_join(", ", all_keyboard_modifiers | std::ranges::views::filter(selected));
+    const auto inner =
+        fmt_join(", ", all_keyboard_modifiers | std::ranges::views::filter(selected));
+    return "[" + inner + "]";
 }
 
-[[nodiscard]] auto KeyboardModifiers::set(KeyboardModifier modifier,
-                                          bool value) -> KeyboardModifiers& {
+KeyboardModifiers::operator bool() const {
+    return value_.any();
+}
+
+auto KeyboardModifiers::set(KeyboardModifier modifier, bool value) -> KeyboardModifiers& {
     value_.set(to_underlying(modifier), value);
     return *this;
 }
 
-[[nodiscard]] auto KeyboardModifiers::is_set(KeyboardModifier modifier) const -> bool {
+auto KeyboardModifiers::is_set(KeyboardModifier modifier) const -> bool {
     return value_.test(to_underlying(modifier));
 }
 
