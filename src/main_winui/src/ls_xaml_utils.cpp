@@ -115,6 +115,17 @@ auto to_device_position(const winrt::Microsoft::UI::Input::PointerPoint& point)
     return ls_point_device_fine_t {.x = position.X, .y = position.Y};
 }
 
+namespace {
+
+[[nodiscard]] auto is_set(winrt::Windows::System::VirtualKeyModifiers modifiers,
+                          winrt::Windows::System::VirtualKeyModifiers query) -> bool {
+    using T = std::underlying_type_t<winrt::Windows::System::VirtualKeyModifiers>;
+
+    return (static_cast<T>(modifiers) & static_cast<T>(query)) != 0;
+}
+
+}  // namespace
+
 auto to_keyboard_modifiers(winrt::Windows::System::VirtualKeyModifiers modifiers)
     -> logicsim::exporting::KeyboardModifiers {
     using namespace logicsim::exporting;
@@ -122,15 +133,15 @@ auto to_keyboard_modifiers(winrt::Windows::System::VirtualKeyModifiers modifiers
 
     auto result = KeyboardModifiers {};
 
-    if (modifiers == VirtualKeyModifiers::Shift) {
+    if (is_set(modifiers, VirtualKeyModifiers::Shift)) {
         result.set(KeyboardModifier::Shift);
     }
-    if (modifiers == VirtualKeyModifiers::Control) {
+    if (is_set(modifiers, VirtualKeyModifiers::Control)) {
         result.set(KeyboardModifier::Control);
     }
-    // if (modifiers == VirtualKeyModifiers::Alt) {
-    //     result.set(KeyboardModifier::Alt);
-    // }
+    if (is_set(modifiers, VirtualKeyModifiers::Menu)) {
+        result.set(KeyboardModifier::Alt);
+    }
 
     return result;
 }

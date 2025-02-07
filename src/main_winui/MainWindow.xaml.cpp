@@ -142,71 +142,50 @@ auto MainWindow::CanvasPanel_Loaded(IInspectable const& sender [[maybe_unused]],
         });
 }
 
-auto MainWindow::CanvasPanel_PointerPressed(IInspectable const& sender [[maybe_unused]],
+auto MainWindow::submit_pointer_event(IInspectable const& sender,
+                                      Input::PointerRoutedEventArgs const& args) -> void {
+    using namespace logicsim;
+    using namespace winrt::Microsoft::UI::Input;
+
+    const auto point = args.GetCurrentPoint(CanvasPanel());
+
+    if (point.PointerDeviceType() != PointerDeviceType::Mouse) {
+        return;
+    }
+
+    key_tracker_.register_event(point, args.KeyModifiers(), backend_tasks_);
+    sender.as<UIElement>().CapturePointer(args.Pointer());
+    args.Handled(true);
+}
+
+auto MainWindow::CanvasPanel_PointerPressed(IInspectable const& sender,
                                             Input::PointerRoutedEventArgs const& args)
     -> void {
-    using namespace logicsim;
-    const auto point = args.GetCurrentPoint(CanvasPanel());
-
-    if (point.PointerDeviceType() ==
-        winrt::Microsoft::UI::Input::PointerDeviceType::Mouse) {
-        key_tracker_.register_event(point, args.KeyModifiers(), backend_tasks_);
-        sender.as<UIElement>().CapturePointer(args.Pointer());
-        args.Handled(true);
-    }
+    submit_pointer_event(sender, args);
 }
 
-auto MainWindow::CanvasPanel_PointerMoved(IInspectable const& sender [[maybe_unused]],
+auto MainWindow::CanvasPanel_PointerMoved(IInspectable const& sender,
                                           Input::PointerRoutedEventArgs const& args)
     -> void {
-    using namespace logicsim;
-    const auto point = args.GetCurrentPoint(CanvasPanel());
-
-    if (point.PointerDeviceType() ==
-        winrt::Microsoft::UI::Input::PointerDeviceType::Mouse) {
-        key_tracker_.register_event(point, args.KeyModifiers(), backend_tasks_);
-        args.Handled(true);
-    }
+    submit_pointer_event(sender, args);
 }
 
-auto MainWindow::CanvasPanel_PointerReleased(IInspectable const& sender [[maybe_unused]],
+auto MainWindow::CanvasPanel_PointerReleased(IInspectable const& sender,
                                              Input::PointerRoutedEventArgs const& args)
     -> void {
-    using namespace logicsim;
-    const auto point = args.GetCurrentPoint(CanvasPanel());
-
-    if (point.PointerDeviceType() ==
-        winrt::Microsoft::UI::Input::PointerDeviceType::Mouse) {
-        key_tracker_.register_event(point, args.KeyModifiers(), backend_tasks_);
-        args.Handled(true);
-    }
+    submit_pointer_event(sender, args);
 }
 
-auto MainWindow::CanvasPanel_PointerCanceled(IInspectable const& sender [[maybe_unused]],
+auto MainWindow::CanvasPanel_PointerCanceled(IInspectable const& sender,
                                              Input::PointerRoutedEventArgs const& args)
     -> void {
-    using namespace logicsim;
-    const auto point = args.GetCurrentPoint(CanvasPanel());
-
-    if (point.PointerDeviceType() ==
-        winrt::Microsoft::UI::Input::PointerDeviceType::Mouse) {
-        key_tracker_.register_event(point, args.KeyModifiers(), backend_tasks_);
-        args.Handled(true);
-    }
+    submit_pointer_event(sender, args);
 }
 
-auto MainWindow::CanvasPanel_PointerCaptureLost(IInspectable const& sender
-                                                [[maybe_unused]],
+auto MainWindow::CanvasPanel_PointerCaptureLost(IInspectable const& sender,
                                                 Input::PointerRoutedEventArgs const& args)
     -> void {
-    using namespace logicsim;
-    const auto point = args.GetCurrentPoint(CanvasPanel());
-
-    if (point.PointerDeviceType() ==
-        winrt::Microsoft::UI::Input::PointerDeviceType::Mouse) {
-        key_tracker_.register_event(point, args.KeyModifiers(), backend_tasks_);
-        args.Handled(true);
-    }
+    submit_pointer_event(sender, args);
 }
 
 auto MainWindow::register_swap_chain(

@@ -33,7 +33,7 @@ IncludeCategories:
   Priority: 6
 - Regex:    '^<(boost/|flux/|fmt/|range/|blend2d\.h|blend2d/|benchmark/|folly/|gsl/|ankerl/|glaze/|hb\.h>|hb-|gcem\.hpp|tl/expected|whereami\.h|zlib\.h>)'
   Priority: 7
-- Regex:    '^<(winrt/|windows\.h|unknwn\.h|restrictederrorinfo\.h|hstring\.h|concurrent_queue\.h|wil/|dwmapi\.h|microsoft\.ui\.)'
+- Regex:    '^<(winrt/|windows\.h|unknwn\.h|restrictederrorinfo\.h|hstring\.h|concurrent_queue\.h|wil/|dwmapi\.h|microsoft\.ui\.|winuser\.h)'
   Priority: 8
 - Regex:    '^<Q'
   CaseSensitive:   true

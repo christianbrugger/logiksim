@@ -23,20 +23,21 @@ struct MainWindow : MainWindowT<MainWindow> {
     auto CanvasPanel_Loaded(IInspectable const& sender [[maybe_unused]],
                             Microsoft::UI::Xaml::RoutedEventArgs const& args
                             [[maybe_unused]]) -> void;
+
     auto CanvasPanel_PointerMoved(
-        IInspectable const& sender [[maybe_unused]],
+        IInspectable const& sender,
         Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
     auto CanvasPanel_PointerPressed(
-        IInspectable const& sender [[maybe_unused]],
+        IInspectable const& sender,
         Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
     auto CanvasPanel_PointerReleased(
-        IInspectable const& sender [[maybe_unused]],
+        IInspectable const& sender,
         Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
     auto CanvasPanel_PointerCanceled(
-        IInspectable const& sender [[maybe_unused]],
+        IInspectable const& sender,
         Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
     auto CanvasPanel_PointerCaptureLost(
-        IInspectable const& sender [[maybe_unused]],
+        IInspectable const& sender,
         Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
 
     // Public Methods
@@ -46,6 +47,9 @@ struct MainWindow : MainWindowT<MainWindow> {
 
    private:
     auto update_render_size() -> void;
+    auto submit_pointer_event(
+        IInspectable const& sender,
+        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
 
    private:
     std::jthread backend_thread_ {};
