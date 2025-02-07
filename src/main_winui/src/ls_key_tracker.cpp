@@ -7,6 +7,8 @@
 
 #include <gsl/gsl>
 
+#include <iostream>
+
 namespace logicsim {
 
 SingleKeyTracker::SingleKeyTracker(MouseButton filter, GenerateDoubleClick double_click)
@@ -14,40 +16,60 @@ SingleKeyTracker::SingleKeyTracker(MouseButton filter, GenerateDoubleClick doubl
 
 namespace {
 
-auto generate_press_event(exporting::MouseButton button,
-                          const winrt::Microsoft::UI::Input::PointerPoint& point,
-                          winrt::Windows::System::VirtualKeyModifiers modifiers,
-                          BackendTaskSource& tasks) -> void {
+/**
+ * @brief: Time relative to the system boot time.
+ */
+[[nodiscard]] auto get_timestamp(const PointerEventData& data)
+    -> std::chrono::microseconds {
+    return std::chrono::microseconds {data.point.Timestamp()};
+}
+
+[[nodiscard]] auto check_double_click(
+    GenerateDoubleClick generate_double_click,
+    const std::optional<std::chrono::microseconds>& last_press_timestamp,
+    const PointerEventData& data) -> bool {
+    if (generate_double_click != GenerateDoubleClick::Yes) {
+        return false;
+    }
+
+    if (!last_press_timestamp.has_value()) {
+        return false;
+    }
+
+    const auto delta = get_timestamp(data) - last_press_timestamp.value();
+    return delta < get_double_click_time_setting();
+}
+
+auto generate_press_event(exporting::MouseButton button, const PointerEventData& data,
+                          bool is_double_click, BackendTaskSource& tasks) -> void {
     using namespace exporting;
 
-    const auto position = point.Position();
+    const auto position = data.point.Position();
 
     tasks.push(MousePressEvent {
         .position = ls_point_device_fine_t {.x = position.X, .y = position.Y},
-        .modifiers = to_keyboard_modifiers(modifiers),
+        .modifiers = to_keyboard_modifiers(data.modifiers),
         .button = button,
-        .double_click = false,
+        .double_click = is_double_click,
     });
 }
 
-auto generate_move_event(const winrt::Microsoft::UI::Input::PointerPoint& point,
-                         BackendTaskSource& tasks) -> void {
+auto generate_move_event(const PointerEventData& data, BackendTaskSource& tasks) -> void {
     using namespace exporting;
 
-    const auto position = point.Position();
+    const auto position = data.point.Position();
 
     tasks.push(MouseMoveEvent {
         .position = ls_point_device_fine_t {.x = position.X, .y = position.Y},
-        .buttons = to_mouse_buttons(point),
+        .buttons = to_mouse_buttons(data.point),
     });
 }
 
-auto generate_release_event(exporting::MouseButton button,
-                            const winrt::Microsoft::UI::Input::PointerPoint& point,
+auto generate_release_event(exporting::MouseButton button, const PointerEventData& data,
                             BackendTaskSource& tasks) -> void {
     using namespace exporting;
 
-    const auto position = point.Position();
+    const auto position = data.point.Position();
 
     tasks.push(MouseReleaseEvent {
         .position = ls_point_device_fine_t {.x = position.X, .y = position.Y},
@@ -57,12 +79,10 @@ auto generate_release_event(exporting::MouseButton button,
 
 }  // namespace
 
-auto SingleKeyTracker::register_event(
-    const winrt::Microsoft::UI::Input::PointerPoint& point,
-    winrt::Windows::System::VirtualKeyModifiers modifiers, BackendTaskSource& tasks)
-    -> bool {
-    const auto is_pressed_now = is_button_pressed(filter_, point);
-    const auto position = to_device_position(point);
+auto SingleKeyTracker::register_event(const PointerEventData& data,
+                                      BackendTaskSource& tasks) -> bool {
+    const auto is_pressed_now = is_button_pressed(filter_, data.point);
+    const auto position = to_device_position(data.point);
     auto gen_move_event = false;
 
     switch (state_) {
@@ -70,7 +90,14 @@ auto SingleKeyTracker::register_event(
 
         case Unpressed: {
             if (is_pressed_now) {
-                generate_press_event(filter_, point, modifiers, tasks);
+                const auto double_click = check_double_click(generate_double_click_,
+                                                             last_press_timestamp_, data);
+
+                generate_press_event(filter_, data, double_click, tasks);
+
+                last_press_timestamp_ = double_click  //
+                                            ? std::nullopt
+                                            : std::make_optional(get_timestamp(data));
                 state_ = Pressed;
                 break;
             }
@@ -79,7 +106,7 @@ auto SingleKeyTracker::register_event(
 
         case Pressed: {
             if (!is_pressed_now) {
-                generate_release_event(filter_, point, tasks);
+                generate_release_event(filter_, data, tasks);
                 state_ = Unpressed;
                 break;
             }
@@ -96,17 +123,16 @@ auto SingleKeyTracker::register_event(
     return gen_move_event;
 }
 
-auto KeyTracker::register_event(const winrt::Microsoft::UI::Input::PointerPoint& point,
-                                winrt::Windows::System::VirtualKeyModifiers modifiers,
-                                BackendTaskSource& tasks) -> void {
+auto KeyTracker::register_event(const PointerEventData& data, BackendTaskSource& tasks)
+    -> void {
     auto gen_move_event = false;
 
-    gen_move_event |= mouse_left_.register_event(point, modifiers, tasks);
-    gen_move_event |= mouse_right_.register_event(point, modifiers, tasks);
-    gen_move_event |= mouse_middle_.register_event(point, modifiers, tasks);
+    gen_move_event |= mouse_left_.register_event(data, tasks);
+    gen_move_event |= mouse_right_.register_event(data, tasks);
+    gen_move_event |= mouse_middle_.register_event(data, tasks);
 
     if (gen_move_event) {
-        generate_move_event(point, tasks);
+        generate_move_event(data, tasks);
     }
 }
 

@@ -18,7 +18,7 @@ constexpr static auto LS_IDENTITY_DPI = 96.0;
 [[nodiscard]] auto is_swap_chain_alive(
     winrt::Microsoft::Graphics::Canvas::CanvasSwapChain const& swap_chain) -> bool;
 
-[[nodiscard]] auto get_double_click_time() -> std::chrono::milliseconds;
+[[nodiscard]] auto get_double_click_time_setting() -> std::chrono::milliseconds;
 
 [[nodiscard]] auto is_button_pressed(
     exporting::MouseButton button, const winrt::Microsoft::UI::Input::PointerPoint& point)

@@ -153,7 +153,9 @@ auto MainWindow::submit_pointer_event(IInspectable const& sender,
         return;
     }
 
-    key_tracker_.register_event(point, args.KeyModifiers(), backend_tasks_);
+    const auto data = PointerEventData {point, args.KeyModifiers()};
+    key_tracker_.register_event(data, backend_tasks_);
+
     sender.as<UIElement>().CapturePointer(args.Pointer());
     args.Handled(true);
 }

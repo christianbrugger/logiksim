@@ -41,7 +41,7 @@ auto is_swap_chain_alive(
     return device && !device.IsDeviceLost();
 }
 
-auto get_double_click_time() -> std::chrono::milliseconds {
+auto get_double_click_time_setting() -> std::chrono::milliseconds {
     return std::chrono::milliseconds {GetDoubleClickTime()};
 }
 
