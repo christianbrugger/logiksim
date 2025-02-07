@@ -85,8 +85,8 @@ class KeyboardModifiers {
 
 struct MousePressEvent {
     point_device_fine_t position {};
-    MouseButton button {MouseButton::Left};
     KeyboardModifiers modifiers {};
+    MouseButton button {MouseButton::Left};
     bool double_click {false};
 
     [[nodiscard]] auto operator==(const MousePressEvent&) const -> bool = default;

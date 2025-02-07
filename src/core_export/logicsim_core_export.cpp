@@ -15,7 +15,7 @@ struct ls_circuit_t {
 };
 
 template <typename Func>
-auto ls_translate_exception(Func&& func) {
+auto ls_translate_exception(Func&& func) noexcept {
     try {
         return std::invoke(func);
     } catch (const std::exception& exc) {
@@ -28,15 +28,17 @@ auto ls_translate_exception(Func&& func) {
     }
 }
 
-auto ls_circuit_construct() -> ls_circuit_p {
-    return ls_translate_exception([]() { return new ls_circuit_t; });
+auto ls_circuit_construct() LS_NOEXCEPT -> ls_circuit_t* {
+    return ls_translate_exception([]() {
+        return new ls_circuit_t;  // NOLINT(bugprone-unhandled-exception-at-new)
+    });
 }
 
-auto ls_circuit_destruct(ls_circuit_p obj) -> void {
+auto ls_circuit_destruct(ls_circuit_t* obj) LS_NOEXCEPT -> void {
     ls_translate_exception([&]() { delete obj; });
 }
 
-auto ls_circuit_load(ls_circuit_p obj, int32_t example_circuit) -> void {
+auto ls_circuit_load(ls_circuit_t* obj, int32_t example_circuit) LS_NOEXCEPT -> void {
     ls_translate_exception([&]() {
         Expects(obj);
         const auto number = gsl::narrow<int>(example_circuit);
@@ -73,9 +75,9 @@ auto render_layout_impl(logicsim::CircuitUiModel& model, int32_t width, int32_t 
 }
 }  // namespace
 
-auto ls_circuit_render_layout(ls_circuit_p obj, int32_t width, int32_t height,
+auto ls_circuit_render_layout(ls_circuit_t* obj, int32_t width, int32_t height,
                               double pixel_ratio, void* pixel_data,
-                              intptr_t stride) -> void {
+                              intptr_t stride) LS_NOEXCEPT -> void {
     ls_translate_exception([&]() {
         Expects(obj);
         render_layout_impl(obj->model, width, height, pixel_ratio, pixel_data, stride);
@@ -162,7 +164,8 @@ namespace {
 
 }  // namespace
 
-auto ls_circuit_mouse_press(ls_circuit_p obj, const ls_mouse_press_event* event) -> void {
+auto ls_circuit_mouse_press(ls_circuit_t* obj,
+                            const ls_mouse_press_event_t* event) LS_NOEXCEPT -> void {
     ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -170,14 +173,15 @@ auto ls_circuit_mouse_press(ls_circuit_p obj, const ls_mouse_press_event* event)
 
         obj->model.mouse_press(MousePressEvent {
             .position = to_point_device_fine(event->position),
-            .button = to_mouse_button(event->button),
             .modifiers = to_keyboard_modifiers(event->keyboard_modifiers),
+            .button = to_mouse_button(event->button),
             .double_click = event->double_click != 0,
         });
     });
 }
 
-auto ls_circuit_mouse_move(ls_circuit_p obj, const ls_mouse_move_event* event) -> void {
+auto ls_circuit_mouse_move(ls_circuit_t* obj,
+                           const ls_mouse_move_event_t* event) LS_NOEXCEPT -> void {
     ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -190,8 +194,8 @@ auto ls_circuit_mouse_move(ls_circuit_p obj, const ls_mouse_move_event* event) -
     });
 }
 
-auto ls_circuit_mouse_release(ls_circuit_p obj,
-                              const ls_mouse_release_event* event) -> void {
+auto ls_circuit_mouse_release(ls_circuit_t* obj,
+                              const ls_mouse_release_event_t* event) LS_NOEXCEPT -> void {
     ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);

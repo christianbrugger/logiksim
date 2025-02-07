@@ -6,6 +6,7 @@
 #include <bitset>
 #include <cstdint>
 #include <memory>  // unique_ptr
+#include <stdexcept>
 #else
 #include <stdint.h>
 #endif
@@ -30,6 +31,12 @@
 
 #endif
 
+#ifdef __cplusplus
+#define LS_NOEXCEPT noexcept
+#else
+#define LS_NOEXCEPT
+#endif
+
 //
 // C DLL interface - hourclass pattern
 //
@@ -37,53 +44,61 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+// NOLINTBEGIN(modernize-use-using)
+// NOLINTBEGIN(modernize-use-trailing-return-type)
 
-typedef struct ls_circuit_t* ls_circuit_p;
+typedef struct ls_circuit_t ls_circuit_t;
 
-ls_circuit_p LS_CORE_API ls_circuit_construct();
-void LS_CORE_API ls_circuit_destruct(ls_circuit_p obj);
-void LS_CORE_API ls_circuit_load(ls_circuit_p obj, int32_t example_circuit);
+LS_CORE_API ls_circuit_t* ls_circuit_construct() LS_NOEXCEPT;
+LS_CORE_API void ls_circuit_destruct(ls_circuit_t* obj) LS_NOEXCEPT;
+LS_CORE_API void ls_circuit_load(ls_circuit_t* obj, int32_t example_circuit) LS_NOEXCEPT;
 
 /**
  * @brief: Render the layout to the given buffer.
  *
  * Terminates, if either width or height is negative.
  */
-void LS_CORE_API ls_circuit_render_layout(ls_circuit_p obj, int32_t width, int32_t height,
-                                          double pixel_ratio, void* pixel_data,
-                                          intptr_t stride);
+LS_CORE_API void ls_circuit_render_layout(ls_circuit_t* obj, int32_t width,
+                                          int32_t height, double pixel_ratio,
+                                          void* pixel_data, intptr_t stride) LS_NOEXCEPT;
 
-typedef struct {
+typedef struct ls_point_device_fine_t {
     double x;
     double y;
+
+#ifdef __cplusplus
+    auto operator==(const ls_point_device_fine_t&) const -> bool = default;
+#endif
 } ls_point_device_fine_t;
 
 typedef struct {
     ls_point_device_fine_t position;
-    int32_t button;
     uint32_t keyboard_modifiers;
+    int32_t button;
     int32_t double_click;
-} ls_mouse_press_event;
+} ls_mouse_press_event_t;
 
-void LS_CORE_API ls_circuit_mouse_press(ls_circuit_p obj,
-                                        const ls_mouse_press_event* event);
+LS_CORE_API void ls_circuit_mouse_press(ls_circuit_t* obj,
+                                        const ls_mouse_press_event_t* event) LS_NOEXCEPT;
 
 typedef struct {
     ls_point_device_fine_t position;
     uint32_t buttons;
-} ls_mouse_move_event;
+} ls_mouse_move_event_t;
 
-void LS_CORE_API ls_circuit_mouse_move(ls_circuit_p obj,
-                                       const ls_mouse_move_event* event);
+LS_CORE_API void ls_circuit_mouse_move(ls_circuit_t* obj,
+                                       const ls_mouse_move_event_t* event) LS_NOEXCEPT;
 
 typedef struct {
     ls_point_device_fine_t position;
     int32_t button;
-} ls_mouse_release_event;
+} ls_mouse_release_event_t;
 
-void LS_CORE_API ls_circuit_mouse_release(ls_circuit_p obj,
-                                          const ls_mouse_release_event* event);
+LS_CORE_API void ls_circuit_mouse_release(
+    ls_circuit_t* obj, const ls_mouse_release_event_t* event) LS_NOEXCEPT;
 
+// NOLINTEND(modernize-use-trailing-return-type)
+// NOLINTEND(modernize-use-using)
 #ifdef __cplusplus
 }
 #endif
@@ -112,12 +127,7 @@ constexpr auto to_underlying(Enum e) noexcept -> std::underlying_type_t<Enum> {
 
 }  // namespace detail
 
-inline auto operator==(const ls_point_device_fine_t& a,
-                       const ls_point_device_fine_t& b) -> bool {
-    return a.x == b.x && a.y == b.y;
-}
-
-enum class ExampleCircuitType : int8_t {
+enum class ExampleCircuitType : uint8_t {
     example_circuit_1 = 1,
     example_circuit_2 = 2,
     example_circuit_3 = 3,
@@ -152,7 +162,7 @@ class MouseButtons {
    public:
     explicit MouseButtons() = default;
 
-    explicit MouseButtons(unsigned long long value) : value_ {value} {}
+    explicit MouseButtons(uint32_t value) : value_ {value} {}
 
     auto set(MouseButton button, bool value = true) -> MouseButtons& {
         value_.set(detail::to_underlying(button), value);
@@ -163,8 +173,14 @@ class MouseButtons {
         return value_.test(detail::to_underlying(button));
     }
 
-    [[nodiscard]] auto value() const -> unsigned long {
-        return value_.to_ulong();
+    [[nodiscard]] auto value() const -> uint32_t {
+        const auto result = value_.to_ulong();
+
+        if (result > std::numeric_limits<uint32_t>::max()) {
+            throw std::overflow_error {"Value out of range"};
+        }
+
+        return static_cast<uint32_t>(result);
     }
 
     [[nodiscard]] auto operator==(const MouseButtons&) const -> bool = default;
@@ -177,7 +193,7 @@ class KeyboardModifiers {
    public:
     explicit KeyboardModifiers() = default;
 
-    explicit KeyboardModifiers(unsigned long long value) : value_ {value} {}
+    explicit KeyboardModifiers(uint32_t value) : value_ {value} {}
 
     auto set(KeyboardModifier modifier, bool value = true) -> KeyboardModifiers& {
         value_.set(detail::to_underlying(modifier), value);
@@ -188,8 +204,14 @@ class KeyboardModifiers {
         return value_.test(detail::to_underlying(modifier));
     }
 
-    [[nodiscard]] auto value() const -> unsigned long {
-        return value_.to_ulong();
+    [[nodiscard]] auto value() const -> uint32_t {
+        const auto result = value_.to_ulong();
+
+        if (result > std::numeric_limits<uint32_t>::max()) {
+            throw std::overflow_error {"Value out of range"};
+        }
+
+        return static_cast<uint32_t>(result);
     }
 
     [[nodiscard]] auto operator==(const KeyboardModifiers&) const -> bool = default;
@@ -200,8 +222,8 @@ class KeyboardModifiers {
 
 struct MousePressEvent {
     ls_point_device_fine_t position {};
-    MouseButton button {MouseButton::Left};
     KeyboardModifiers modifiers {};
+    MouseButton button {MouseButton::Left};
     bool double_click {false};
 
     [[nodiscard]] auto operator==(const MousePressEvent&) const -> bool = default;
@@ -224,7 +246,7 @@ struct MouseReleaseEvent {
 namespace detail {
 
 struct LSCircuitDeleter {
-    auto operator()(ls_circuit_p obj) -> void {
+    auto operator()(ls_circuit_t* obj) noexcept -> void {
         ls_circuit_destruct(obj);
     };
 };
@@ -264,10 +286,10 @@ auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel
 auto CircuitInterface::mouse_press(const MousePressEvent& event) -> void {
     detail::ls_expects(obj_);
 
-    const auto event_c = ls_mouse_press_event {
+    const auto event_c = ls_mouse_press_event_t {
         .position = event.position,
-        .button = detail::to_underlying(event.button),
         .keyboard_modifiers = event.modifiers.value(),
+        .button = detail::to_underlying(event.button),
         .double_click = static_cast<int32_t>(event.double_click),
     };
     ls_circuit_mouse_press(obj_.get(), &event_c);
@@ -276,7 +298,7 @@ auto CircuitInterface::mouse_press(const MousePressEvent& event) -> void {
 auto CircuitInterface::mouse_move(const MouseMoveEvent& event) -> void {
     detail::ls_expects(obj_);
 
-    const auto event_c = ls_mouse_move_event {
+    const auto event_c = ls_mouse_move_event_t {
         .position = event.position,
         .buttons = event.buttons.value(),
     };
@@ -286,7 +308,7 @@ auto CircuitInterface::mouse_move(const MouseMoveEvent& event) -> void {
 auto CircuitInterface::mouse_release(const MouseReleaseEvent& event) -> void {
     detail::ls_expects(obj_);
 
-    const auto event_c = ls_mouse_release_event {
+    const auto event_c = ls_mouse_release_event_t {
         .position = event.position,
         .button = detail::to_underlying(event.button),
     };
