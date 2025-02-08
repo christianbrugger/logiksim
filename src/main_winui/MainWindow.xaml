@@ -30,11 +30,11 @@
                     SizeChanged="CanvasPanel_SizeChanged"
                     Loaded="CanvasPanel_Loaded"
                     
-                    PointerMoved="CanvasPanel_PointerMoved"
-                    PointerPressed="CanvasPanel_PointerPressed"
-                    PointerReleased="CanvasPanel_PointerReleased"
-                    PointerCanceled="CanvasPanel_PointerCanceled"
-                    PointerCaptureLost="CanvasPanel_PointerCaptureLost"
+                    PointerMoved="CanvasPanel_PointerEvent"
+                    PointerPressed="CanvasPanel_PointerEvent"
+                    PointerReleased="CanvasPanel_PointerEvent"
+                    PointerCanceled="CanvasPanel_PointerEvent"
+                    PointerCaptureLost="CanvasPanel_PointerEvent"
                     
                     PointerWheelChanged="CanvasPanel_PointerWheelChanged"
                     />

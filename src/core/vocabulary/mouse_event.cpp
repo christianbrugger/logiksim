@@ -88,8 +88,8 @@ auto KeyboardModifiers::is_set(KeyboardModifier modifier) const -> bool {
 //
 
 auto AngleDelta::format() const -> std::string {
-    return fmt::format("(horizontal_notch = {}, vertical_notch = {})", horizontal_notch,
-                       vertical_notch);
+    return fmt::format("(horizontal_notches = {}, vertical_notches = {})",
+                       horizontal_notches, vertical_notches);
 }
 
 //

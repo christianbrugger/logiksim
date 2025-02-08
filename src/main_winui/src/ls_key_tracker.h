@@ -46,7 +46,7 @@ class SingleKeyTracker {
     SingleKeyTracker() = default;
     explicit SingleKeyTracker(MouseButton filter, GenerateDoubleClick double_click);
 
-    auto register_event(const PointerEventData& data, BackendTaskSource& tasks) -> bool;
+    auto submit_event(const PointerEventData& data, BackendTaskSource& tasks) -> bool;
 
    private:
     MouseButton filter_ {MouseButton::Left};
@@ -61,7 +61,7 @@ class KeyTracker {
     using MouseButton = exporting::MouseButton;
 
    public:
-    auto register_event(const PointerEventData& data, BackendTaskSource& tasks) -> void;
+    auto submit_event(const PointerEventData& data, BackendTaskSource& tasks) -> void;
 
    private:
     std::optional<ls_point_device_fine_t> last_position_ {};

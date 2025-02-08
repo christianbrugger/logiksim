@@ -73,8 +73,8 @@ typedef struct ls_point_device_fine_t {
 } ls_point_device_fine_t;
 
 typedef struct ls_angle_delta_t {
-    float horizontal_notch {};
-    float vertical_notch {};
+    float horizontal_notches {};
+    float vertical_notches {};
 #ifdef __cplusplus
     [[nodiscard]] auto operator==(const ls_angle_delta_t&) const -> bool = default;
 #endif

@@ -23,6 +23,9 @@ struct MainWindow : MainWindowT<MainWindow> {
     auto CanvasPanel_Loaded(IInspectable const&,
                             Microsoft::UI::Xaml::RoutedEventArgs const&) -> void;
 
+    auto CanvasPanel_PointerEvent(
+        IInspectable const& sender,
+        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
     auto CanvasPanel_PointerMoved(
         IInspectable const& sender,
         Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
@@ -50,9 +53,6 @@ struct MainWindow : MainWindowT<MainWindow> {
 
    private:
     auto update_render_size() -> void;
-    auto submit_pointer_event(
-        IInspectable const& sender,
-        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
 
    private:
     std::jthread backend_thread_ {};

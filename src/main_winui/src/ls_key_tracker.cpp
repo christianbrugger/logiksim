@@ -79,8 +79,8 @@ auto generate_release_event(exporting::MouseButton button, const PointerEventDat
 
 }  // namespace
 
-auto SingleKeyTracker::register_event(const PointerEventData& data,
-                                      BackendTaskSource& tasks) -> bool {
+auto SingleKeyTracker::submit_event(const PointerEventData& data,
+                                    BackendTaskSource& tasks) -> bool {
     const auto is_pressed_now = is_button_pressed(filter_, data.point);
     auto gen_move_event = false;
 
@@ -119,14 +119,14 @@ auto SingleKeyTracker::register_event(const PointerEventData& data,
     return gen_move_event;
 }
 
-auto KeyTracker::register_event(const PointerEventData& data, BackendTaskSource& tasks)
+auto KeyTracker::submit_event(const PointerEventData& data, BackendTaskSource& tasks)
     -> void {
     const auto position = to_device_position(data.point);
 
     auto gen_move_event = false;
-    gen_move_event |= mouse_left_.register_event(data, tasks);
-    gen_move_event |= mouse_right_.register_event(data, tasks);
-    gen_move_event |= mouse_middle_.register_event(data, tasks);
+    gen_move_event |= mouse_left_.submit_event(data, tasks);
+    gen_move_event |= mouse_right_.submit_event(data, tasks);
+    gen_move_event |= mouse_middle_.submit_event(data, tasks);
 
     // one move events for all buttons
     if (gen_move_event && position != last_position_) {

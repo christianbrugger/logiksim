@@ -139,8 +139,9 @@ auto MainWindow::CanvasPanel_Loaded(IInspectable const&, RoutedEventArgs const&)
         });
 }
 
-auto MainWindow::submit_pointer_event(IInspectable const& sender,
-                                      Input::PointerRoutedEventArgs const& args) -> void {
+auto MainWindow::CanvasPanel_PointerEvent(IInspectable const& sender,
+                                          Input::PointerRoutedEventArgs const& args)
+    -> void {
     using namespace logicsim;
     using namespace winrt::Microsoft::UI::Input;
 
@@ -151,40 +152,10 @@ auto MainWindow::submit_pointer_event(IInspectable const& sender,
     }
 
     const auto data = PointerEventData {point, args.KeyModifiers()};
-    key_tracker_.register_event(data, backend_tasks_);
+    key_tracker_.submit_event(data, backend_tasks_);
 
     sender.as<UIElement>().CapturePointer(args.Pointer());
     args.Handled(true);
-}
-
-auto MainWindow::CanvasPanel_PointerPressed(IInspectable const& sender,
-                                            Input::PointerRoutedEventArgs const& args)
-    -> void {
-    submit_pointer_event(sender, args);
-}
-
-auto MainWindow::CanvasPanel_PointerMoved(IInspectable const& sender,
-                                          Input::PointerRoutedEventArgs const& args)
-    -> void {
-    submit_pointer_event(sender, args);
-}
-
-auto MainWindow::CanvasPanel_PointerReleased(IInspectable const& sender,
-                                             Input::PointerRoutedEventArgs const& args)
-    -> void {
-    submit_pointer_event(sender, args);
-}
-
-auto MainWindow::CanvasPanel_PointerCanceled(IInspectable const& sender,
-                                             Input::PointerRoutedEventArgs const& args)
-    -> void {
-    submit_pointer_event(sender, args);
-}
-
-auto MainWindow::CanvasPanel_PointerCaptureLost(IInspectable const& sender,
-                                                Input::PointerRoutedEventArgs const& args)
-    -> void {
-    submit_pointer_event(sender, args);
 }
 
 auto MainWindow::CanvasPanel_PointerWheelChanged(

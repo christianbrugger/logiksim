@@ -88,8 +88,8 @@ class KeyboardModifiers {
  * Positive values: up & right scroll.
  */
 struct AngleDelta {
-    float horizontal_notch {};
-    float vertical_notch {};
+    float horizontal_notches {};
+    float vertical_notches {};
 
     [[nodiscard]] auto operator==(const AngleDelta&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
