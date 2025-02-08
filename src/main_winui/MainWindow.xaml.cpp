@@ -154,6 +154,9 @@ auto MainWindow::CanvasPanel_PointerEvent(IInspectable const& sender,
     const auto data = PointerEventData {point, args.KeyModifiers()};
     key_tracker_.submit_event(data, backend_tasks_);
 
+    if (is_pressed_kind(point.Properties().PointerUpdateKind())) {
+        CanvasPanel().Focus(FocusState::Pointer);
+    }
     sender.as<UIElement>().CapturePointer(args.Pointer());
     args.Handled(true);
 }
@@ -176,6 +179,21 @@ auto MainWindow::CanvasPanel_PointerWheelChanged(
     });
 
     args.Handled(true);
+}
+
+void MainWindow::CanvasPanel_KeyDown(IInspectable const&,
+                                     Input::KeyRoutedEventArgs const& args) {
+    using namespace winrt::Windows::System;
+    const auto key = args.Key();
+
+    if (key == VirtualKey::Enter) {
+        std::cout << "enter\n";
+        args.Handled(true);
+    }
+    if (key == VirtualKey::Escape) {
+        std::cout << "escape\n";
+        args.Handled(true);
+    }
 }
 
 auto MainWindow::register_swap_chain(

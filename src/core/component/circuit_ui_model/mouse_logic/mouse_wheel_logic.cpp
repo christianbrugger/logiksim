@@ -2,6 +2,7 @@
 
 #include "core/component/circuit_ui_model/zoom.h"
 #include "core/geometry/scene.h"
+#include "core/vocabulary/mouse_event.h"
 #include "core/vocabulary/view_config.h"
 
 namespace logicsim {

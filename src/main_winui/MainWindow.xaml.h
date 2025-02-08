@@ -26,25 +26,13 @@ struct MainWindow : MainWindowT<MainWindow> {
     auto CanvasPanel_PointerEvent(
         IInspectable const& sender,
         Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
-    auto CanvasPanel_PointerMoved(
-        IInspectable const& sender,
-        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
-    auto CanvasPanel_PointerPressed(
-        IInspectable const& sender,
-        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
-    auto CanvasPanel_PointerReleased(
-        IInspectable const& sender,
-        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
-    auto CanvasPanel_PointerCanceled(
-        IInspectable const& sender,
-        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
-    auto CanvasPanel_PointerCaptureLost(
-        IInspectable const& sender,
-        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
 
     auto CanvasPanel_PointerWheelChanged(
         IInspectable const&,
         Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
+
+    void CanvasPanel_KeyDown(IInspectable const&,
+                             Microsoft::UI::Xaml::Input::KeyRoutedEventArgs const& args);
 
     // Public Methods
 

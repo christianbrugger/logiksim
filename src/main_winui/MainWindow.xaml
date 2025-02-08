@@ -25,8 +25,11 @@
             </StackPanel>
 
             <Grid Grid.Row="1">
+
                 <canvas:CanvasSwapChainPanel
                     x:Name="CanvasPanel"
+                    IsTabStop="True"
+                    
                     SizeChanged="CanvasPanel_SizeChanged"
                     Loaded="CanvasPanel_Loaded"
                     
@@ -37,7 +40,8 @@
                     PointerCaptureLost="CanvasPanel_PointerEvent"
                     
                     PointerWheelChanged="CanvasPanel_PointerWheelChanged"
-                    />
+                    KeyDown="CanvasPanel_KeyDown">
+                </canvas:CanvasSwapChainPanel>
             </Grid>
         </Grid>
     </Page>

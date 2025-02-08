@@ -1,8 +1,6 @@
 #ifndef LOGICSIM_CORE_COMPONENT_CIRCUIT_UI_MODEL_MOUSE_LOGIC_MOUSE_WHEEL_LOGIC_H
 #define LOGICSIM_CORE_COMPONENT_CIRCUIT_UI_MODEL_MOUSE_LOGIC_MOUSE_WHEEL_LOGIC_H
 
-#include "core/vocabulary/mouse_event.h"
-
 #include <optional>
 
 namespace logicsim {
@@ -10,6 +8,9 @@ namespace logicsim {
 struct ViewConfig;
 struct ViewPoint;
 struct point_fine_t;
+struct point_device_fine_t;
+struct angle_delta_t;
+struct MouseWheelEvent;
 
 namespace circuit_ui_model {
 

@@ -41,4 +41,7 @@ constexpr static auto LS_IDENTITY_DPI = 96.0;
 [[nodiscard]] auto to_angle_delta(const winrt::Microsoft::UI::Input::PointerPoint& point)
     -> ls_angle_delta_t;
 
+[[nodiscard]] auto is_pressed_kind(winrt::Microsoft::UI::Input::PointerUpdateKind kind)
+    -> bool;
+
 }  // namespace logicsim

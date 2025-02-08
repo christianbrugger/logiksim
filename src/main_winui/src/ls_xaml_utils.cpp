@@ -157,4 +157,26 @@ auto to_angle_delta(const winrt::Microsoft::UI::Input::PointerPoint& point)
     return ls_angle_delta_t {.horizontal_notches = 0, .vertical_notches = notches};
 }
 
+auto is_pressed_kind(winrt::Microsoft::UI::Input::PointerUpdateKind kind) -> bool {
+    switch (kind) {
+        using enum winrt::Microsoft::UI::Input::PointerUpdateKind;
+
+        case LeftButtonPressed:
+        case RightButtonPressed:
+        case MiddleButtonPressed:
+        case XButton1Pressed:
+        case XButton2Pressed:
+            return true;
+
+        case Other:
+        case LeftButtonReleased:
+        case RightButtonReleased:
+        case MiddleButtonReleased:
+        case XButton1Released:
+        case XButton2Released:
+            return false;
+    }
+    std::terminate();
+}
+
 }  // namespace logicsim
