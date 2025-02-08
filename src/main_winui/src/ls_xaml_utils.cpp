@@ -152,7 +152,7 @@ auto to_angle_delta(const winrt::Microsoft::UI::Input::PointerPoint& point)
                          gsl::narrow<float>(WHEEL_DELTA);
 
     if (point.Properties().IsHorizontalMouseWheel()) {
-        return ls_angle_delta_t {.horizontal_notches = notches, .vertical_notches = 0};
+        return ls_angle_delta_t {.horizontal_notches = -notches, .vertical_notches = 0};
     }
     return ls_angle_delta_t {.horizontal_notches = 0, .vertical_notches = notches};
 }

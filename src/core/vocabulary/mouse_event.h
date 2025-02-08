@@ -91,11 +91,10 @@ class KeyboardModifiers {
  * @brief: Angle delta for mouse wheel events.
  *
  * Each increment of 1 is an increment of the wheel.
- * Positive values: up & right scroll.
  */
 struct angle_delta_t {
-    float horizontal_notches {};
-    float vertical_notches {};
+    float horizontal_notches {};  // +1 scroll left,  -1 scroll right
+    float vertical_notches {};    // +1 scroll up,    -1 scroll down
 
     [[nodiscard]] auto operator==(const angle_delta_t&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;

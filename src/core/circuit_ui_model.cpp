@@ -300,6 +300,7 @@ auto CircuitUiModel::mouse_release(const MouseReleaseEvent& event) -> void {
 
 auto CircuitUiModel::mouse_wheel(const MouseWheelEvent& event) -> void {
     Expects(class_invariant_holds());
+    print(event);
 
     if (const auto view_point =
             circuit_ui_model::wheel_scroll_zoom(event, circuit_renderer_.view_config())) {

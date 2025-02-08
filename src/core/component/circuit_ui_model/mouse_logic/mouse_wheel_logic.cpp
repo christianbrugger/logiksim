@@ -63,12 +63,12 @@ auto wheel_scroll_horizontal_view_point(angle_delta_t angle_delta,
 
 auto wheel_scroll_zoom(const MouseWheelEvent& event,
                        const ViewConfig& view_config) -> std::optional<ViewPoint> {
-    if (event.modifiers == KeyboardModifier::Control) {
-        return wheel_zoom(event.position, event.angle_delta, view_config);
+    if (!event.modifiers) {
+        return wheel_scroll_vertical_view_point(event.angle_delta, view_config);
     }
 
-    if (event.modifiers == KeyboardModifiers {}) {
-        return wheel_scroll_vertical_view_point(event.angle_delta, view_config);
+    if (event.modifiers == KeyboardModifier::Control) {
+        return wheel_zoom(event.position, event.angle_delta, view_config);
     }
 
     if (event.modifiers == KeyboardModifier::Shift) {
