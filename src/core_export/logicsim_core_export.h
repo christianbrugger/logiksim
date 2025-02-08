@@ -47,7 +47,6 @@ extern "C" {
 #endif
 // NOLINTBEGIN(modernize-use-using)
 // NOLINTBEGIN(modernize-use-trailing-return-type)
-// NOLINTBEGIN(cppcoreguidelines-pro-type-member-init)
 
 typedef struct ls_circuit_t ls_circuit_t;
 
@@ -73,8 +72,8 @@ typedef struct ls_point_device_fine_t {
 } ls_point_device_fine_t;
 
 typedef struct ls_angle_delta_t {
-    float horizontal_notches {};
-    float vertical_notches {};
+    float horizontal_notches;
+    float vertical_notches;
 #ifdef __cplusplus
     [[nodiscard]] auto operator==(const ls_angle_delta_t&) const -> bool = default;
 #endif
@@ -115,7 +114,6 @@ typedef struct {
 LS_CORE_API void ls_circuit_mouse_wheel(ls_circuit_t* obj,
                                         const ls_mouse_wheel_event_t* event) LS_NOEXCEPT;
 
-// NOLINTEND(cppcoreguidelines-pro-type-member-init)
 // NOLINTEND(modernize-use-trailing-return-type)
 // NOLINTEND(modernize-use-using)
 #ifdef __cplusplus

@@ -44,6 +44,13 @@ auto MouseButtons::is_set(MouseButton button) const -> bool {
     return value_.test(to_underlying(button));
 }
 
+auto MouseButtons::operator==(MouseButton button) const -> bool {
+    auto single = MouseButtons {};
+    single.set(button);
+
+    return *this == single;
+}
+
 //
 // Keyboard Modifier
 //
@@ -83,11 +90,18 @@ auto KeyboardModifiers::is_set(KeyboardModifier modifier) const -> bool {
     return value_.test(to_underlying(modifier));
 }
 
+auto KeyboardModifiers::operator==(KeyboardModifier modifier) const -> bool {
+    auto single = KeyboardModifiers {};
+    single.set(modifier);
+
+    return *this == single;
+}
+
 //
 // Angle Delta
 //
 
-auto AngleDelta::format() const -> std::string {
+auto angle_delta_t::format() const -> std::string {
     return fmt::format("(horizontal_notches = {}, vertical_notches = {})",
                        horizontal_notches, vertical_notches);
 }

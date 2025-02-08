@@ -164,8 +164,8 @@ namespace {
 }
 
 [[nodiscard]] auto to_angle_delta(const ls_angle_delta_t& angle_delta)
-    -> logicsim::AngleDelta {
-    return logicsim::AngleDelta {
+    -> logicsim::angle_delta_t {
+    return logicsim::angle_delta_t {
         .horizontal_notches = angle_delta.horizontal_notches,
         .vertical_notches = angle_delta.vertical_notches,
     };

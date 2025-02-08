@@ -1,6 +1,7 @@
 #include "core/circuit_ui_model.h"
 
 #include "core/circuit_example.h"
+#include "core/component/circuit_ui_model/mouse_logic/mouse_wheel_logic.h"
 #include "core/vocabulary/mouse_event.h"
 
 namespace logicsim {
@@ -258,32 +259,56 @@ auto CircuitUiModel::render(BLImage& bl_image,
 }
 
 auto CircuitUiModel::mouse_press(const MousePressEvent& event) -> void {
-    print(event);
+    Expects(class_invariant_holds());
+
     if (event.button == MouseButton::Middle) {
         mouse_drag_logic_.mouse_press(event.position);
+        // update();
     }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitUiModel::mouse_move(const MouseMoveEvent& event) -> void {
-    // print(event);
+    Expects(class_invariant_holds());
+
     if (event.buttons.is_set(MouseButton::Middle)) {
         set_view_config_offset(circuit_renderer_,
                                mouse_drag_logic_.mouse_move(
                                    event.position, circuit_renderer_.view_config()));
+        // update();
     }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitUiModel::mouse_release(const MouseReleaseEvent& event) -> void {
-    print(event);
+    Expects(class_invariant_holds());
+
     if (event.button == MouseButton::Middle) {
         set_view_config_offset(circuit_renderer_,
                                mouse_drag_logic_.mouse_release(
                                    event.position, circuit_renderer_.view_config()));
+        // update();
     }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitUiModel::mouse_wheel(const MouseWheelEvent& event) -> void {
-    print(event);
+    Expects(class_invariant_holds());
+
+    if (const auto view_point =
+            circuit_ui_model::wheel_scroll_zoom(event, circuit_renderer_.view_config())) {
+        circuit_renderer_.set_view_point(view_point.value());
+        // update();
+    }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
 }
 
 auto CircuitUiModel::set_editable_circuit(

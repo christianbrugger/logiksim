@@ -59,9 +59,11 @@ set(LS_CORE_SOURCES
     benchmark/simulation_runtime.cpp
 
     component/circuit_ui_model/mouse_logic/mouse_drag_logic.cpp
+    component/circuit_ui_model/mouse_logic/mouse_wheel_logic.cpp
     component/circuit_ui_model/checked_editable_circuit.cpp
     component/circuit_ui_model/circuit_renderer.cpp
     component/circuit_ui_model/circuit_store.cpp
+    component/circuit_ui_model/zoom.cpp
     component/editable_circuit/editing/edit_decoration.cpp
     component/editable_circuit/editing/edit_decoration_detail.cpp
     component/editable_circuit/editing/edit_history.cpp

@@ -42,6 +42,9 @@ class MouseButtons {
     auto set(MouseButton button, bool value = true) -> MouseButtons&;
     [[nodiscard]] auto is_set(MouseButton button) const -> bool;
 
+    // matches a single button
+    [[nodiscard]] auto operator==(MouseButton button) const -> bool;
+
    private:
     std::bitset<all_mouse_buttons.size()> value_;
 };
@@ -77,6 +80,9 @@ class KeyboardModifiers {
     auto set(KeyboardModifier modifier, bool value = true) -> KeyboardModifiers&;
     [[nodiscard]] auto is_set(KeyboardModifier modifier) const -> bool;
 
+    // matches a single modifier
+    [[nodiscard]] auto operator==(KeyboardModifier modifier) const -> bool;
+
    private:
     std::bitset<all_keyboard_modifiers.size()> value_;
 };
@@ -87,11 +93,11 @@ class KeyboardModifiers {
  * Each increment of 1 is an increment of the wheel.
  * Positive values: up & right scroll.
  */
-struct AngleDelta {
+struct angle_delta_t {
     float horizontal_notches {};
     float vertical_notches {};
 
-    [[nodiscard]] auto operator==(const AngleDelta&) const -> bool = default;
+    [[nodiscard]] auto operator==(const angle_delta_t&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -127,7 +133,7 @@ struct MouseReleaseEvent {
 
 struct MouseWheelEvent {
     point_device_fine_t position {};
-    AngleDelta angle_delta {};
+    angle_delta_t angle_delta {};
     KeyboardModifiers modifiers {};
 
     [[nodiscard]] auto operator==(const MouseWheelEvent&) const -> bool = default;
