@@ -48,11 +48,12 @@ class IBackendGuiActions {
 // Tasks
 //
 
-using BackendTask = std::variant<           //
-    SwapChainParams,                        //
-    logicsim::exporting::MousePressEvent,   //
-    logicsim::exporting::MouseMoveEvent,    //
-    logicsim::exporting::MouseReleaseEvent  //
+using BackendTask = std::variant<            //
+    SwapChainParams,                         //
+    logicsim::exporting::MousePressEvent,    //
+    logicsim::exporting::MouseMoveEvent,     //
+    logicsim::exporting::MouseReleaseEvent,  //
+    logicsim::exporting::MouseWheelEvent     //
     >;
 
 using BackendTaskQueue = ::logicsim::ConcurrentBlockingQueue<BackendTask>;

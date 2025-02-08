@@ -145,4 +145,16 @@ auto to_keyboard_modifiers(winrt::Windows::System::VirtualKeyModifiers modifiers
     return result;
 }
 
+auto to_angle_delta(const winrt::Microsoft::UI::Input::PointerPoint& point)
+    -> ls_angle_delta_t {
+    static_assert(WHEEL_DELTA > 0);
+    const auto notch = gsl::narrow<float>(point.Properties().MouseWheelDelta()) /
+                       gsl::narrow<float>(WHEEL_DELTA);
+
+    if (point.Properties().IsHorizontalMouseWheel()) {
+        return ls_angle_delta_t {.horizontal_notch = notch, .vertical_notch = 0};
+    }
+    return ls_angle_delta_t {.horizontal_notch = 0, .vertical_notch = notch};
+}
+
 }  // namespace logicsim

@@ -28,17 +28,17 @@ auto ls_translate_exception(Func&& func) noexcept {
     }
 }
 
-auto ls_circuit_construct() LS_NOEXCEPT -> ls_circuit_t* {
+auto ls_circuit_construct() noexcept -> ls_circuit_t* {
     return ls_translate_exception([]() {
         return new ls_circuit_t;  // NOLINT(bugprone-unhandled-exception-at-new)
     });
 }
 
-auto ls_circuit_destruct(ls_circuit_t* obj) LS_NOEXCEPT -> void {
+auto ls_circuit_destruct(ls_circuit_t* obj) noexcept -> void {
     ls_translate_exception([&]() { delete obj; });
 }
 
-auto ls_circuit_load(ls_circuit_t* obj, int32_t example_circuit) LS_NOEXCEPT -> void {
+auto ls_circuit_load(ls_circuit_t* obj, int32_t example_circuit) noexcept -> void {
     ls_translate_exception([&]() {
         Expects(obj);
         const auto number = gsl::narrow<int>(example_circuit);
@@ -77,7 +77,7 @@ auto render_layout_impl(logicsim::CircuitUiModel& model, int32_t width, int32_t 
 
 auto ls_circuit_render_layout(ls_circuit_t* obj, int32_t width, int32_t height,
                               double pixel_ratio, void* pixel_data,
-                              intptr_t stride) LS_NOEXCEPT -> void {
+                              intptr_t stride) noexcept -> void {
     ls_translate_exception([&]() {
         Expects(obj);
         render_layout_impl(obj->model, width, height, pixel_ratio, pixel_data, stride);
@@ -163,10 +163,18 @@ namespace {
     return logicsim::point_device_fine_t {point.x, point.y};
 }
 
+[[nodiscard]] auto to_angle_delta(const ls_angle_delta_t& angle_delta)
+    -> logicsim::AngleDelta {
+    return logicsim::AngleDelta {
+        .horizontal_notch = angle_delta.horizontal_notch,
+        .vertical_notch = angle_delta.vertical_notch,
+    };
+}
+
 }  // namespace
 
 auto ls_circuit_mouse_press(ls_circuit_t* obj,
-                            const ls_mouse_press_event_t* event) LS_NOEXCEPT -> void {
+                            const ls_mouse_press_event_t* event) noexcept -> void {
     ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -182,7 +190,7 @@ auto ls_circuit_mouse_press(ls_circuit_t* obj,
 }
 
 auto ls_circuit_mouse_move(ls_circuit_t* obj,
-                           const ls_mouse_move_event_t* event) LS_NOEXCEPT -> void {
+                           const ls_mouse_move_event_t* event) noexcept -> void {
     ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -196,7 +204,7 @@ auto ls_circuit_mouse_move(ls_circuit_t* obj,
 }
 
 auto ls_circuit_mouse_release(ls_circuit_t* obj,
-                              const ls_mouse_release_event_t* event) LS_NOEXCEPT -> void {
+                              const ls_mouse_release_event_t* event) noexcept -> void {
     ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -205,6 +213,21 @@ auto ls_circuit_mouse_release(ls_circuit_t* obj,
         obj->model.mouse_release(MouseReleaseEvent {
             .position = to_point_device_fine(event->position),
             .button = to_mouse_button(event->button),
+        });
+    });
+}
+
+auto ls_circuit_mouse_wheel(ls_circuit_t* obj,
+                            const ls_mouse_wheel_event_t* event) noexcept -> void {
+    ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+        Expects(event);
+
+        obj->model.mouse_wheel(MouseWheelEvent {
+            .position = to_point_device_fine(event->position),
+            .angle_delta = to_angle_delta(event->angle_delta),
+            .modifiers = to_keyboard_modifiers(event->keyboard_modifiers),
         });
     });
 }

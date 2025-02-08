@@ -17,12 +17,11 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     // CanvasPanel
 
-    auto CanvasPanel_SizeChanged(IInspectable const& sender [[maybe_unused]],
-                                 Microsoft::UI::Xaml::SizeChangedEventArgs const& args
-                                 [[maybe_unused]]) -> void;
-    auto CanvasPanel_Loaded(IInspectable const& sender [[maybe_unused]],
-                            Microsoft::UI::Xaml::RoutedEventArgs const& args
-                            [[maybe_unused]]) -> void;
+    auto CanvasPanel_SizeChanged(IInspectable const&,
+                                 Microsoft::UI::Xaml::SizeChangedEventArgs const&)
+        -> void;
+    auto CanvasPanel_Loaded(IInspectable const&,
+                            Microsoft::UI::Xaml::RoutedEventArgs const&) -> void;
 
     auto CanvasPanel_PointerMoved(
         IInspectable const& sender,
@@ -38,6 +37,10 @@ struct MainWindow : MainWindowT<MainWindow> {
         Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
     auto CanvasPanel_PointerCaptureLost(
         IInspectable const& sender,
+        Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
+
+    auto CanvasPanel_PointerWheelChanged(
+        IInspectable const&,
         Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& args) -> void;
 
     // Public Methods

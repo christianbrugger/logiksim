@@ -81,6 +81,20 @@ class KeyboardModifiers {
     std::bitset<all_keyboard_modifiers.size()> value_;
 };
 
+/**
+ * @brief: Angle delta for mouse wheel events.
+ *
+ * Each increment of 1 is an increment of the wheel.
+ * Positive values: up & right scroll.
+ */
+struct AngleDelta {
+    float horizontal_notch {};
+    float vertical_notch {};
+
+    [[nodiscard]] auto operator==(const AngleDelta&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
 //
 // Mouse Events
 //
@@ -108,6 +122,15 @@ struct MouseReleaseEvent {
     MouseButton button {MouseButton::Left};
 
     [[nodiscard]] auto operator==(const MouseReleaseEvent&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct MouseWheelEvent {
+    point_device_fine_t position {};
+    AngleDelta angle_delta {};
+    KeyboardModifiers modifiers {};
+
+    [[nodiscard]] auto operator==(const MouseWheelEvent&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 

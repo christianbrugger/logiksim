@@ -47,7 +47,7 @@ auto generate_press_event(exporting::MouseButton button, const PointerEventData&
     const auto position = data.point.Position();
 
     tasks.push(MousePressEvent {
-        .position = ls_point_device_fine_t {.x = position.X, .y = position.Y},
+        .position = to_device_position(data.point),
         .modifiers = to_keyboard_modifiers(data.modifiers),
         .button = button,
         .double_click = is_double_click,
@@ -60,7 +60,7 @@ auto generate_move_event(const PointerEventData& data, BackendTaskSource& tasks)
     const auto position = data.point.Position();
 
     tasks.push(MouseMoveEvent {
-        .position = ls_point_device_fine_t {.x = position.X, .y = position.Y},
+        .position = to_device_position(data.point),
         .buttons = to_mouse_buttons(data.point),
     });
 }
@@ -72,7 +72,7 @@ auto generate_release_event(exporting::MouseButton button, const PointerEventDat
     const auto position = data.point.Position();
 
     tasks.push(MouseReleaseEvent {
-        .position = ls_point_device_fine_t {.x = position.X, .y = position.Y},
+        .position = to_device_position(data.point),
         .button = button,
     });
 }

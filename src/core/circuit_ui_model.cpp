@@ -265,7 +265,7 @@ auto CircuitUiModel::mouse_press(const MousePressEvent& event) -> void {
 }
 
 auto CircuitUiModel::mouse_move(const MouseMoveEvent& event) -> void {
-    print(event);
+    // print(event);
     if (event.buttons.is_set(MouseButton::Middle)) {
         set_view_config_offset(circuit_renderer_,
                                mouse_drag_logic_.mouse_move(
@@ -280,6 +280,10 @@ auto CircuitUiModel::mouse_release(const MouseReleaseEvent& event) -> void {
                                mouse_drag_logic_.mouse_release(
                                    event.position, circuit_renderer_.view_config()));
     }
+}
+
+auto CircuitUiModel::mouse_wheel(const MouseWheelEvent& event) -> void {
+    print(event);
 }
 
 auto CircuitUiModel::set_editable_circuit(

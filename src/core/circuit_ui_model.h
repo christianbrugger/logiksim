@@ -123,6 +123,7 @@ class CircuitUiModel {
     auto mouse_press(const MousePressEvent& event) -> void;
     auto mouse_move(const MouseMoveEvent& event) -> void;
     auto mouse_release(const MouseReleaseEvent& event) -> void;
+    auto mouse_wheel(const MouseWheelEvent& event) -> void;
 
    protected:
     // Q_SLOT void on_timer_benchmark_render();

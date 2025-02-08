@@ -84,6 +84,15 @@ auto KeyboardModifiers::is_set(KeyboardModifier modifier) const -> bool {
 }
 
 //
+// Angle Delta
+//
+
+auto AngleDelta::format() const -> std::string {
+    return fmt::format("(horizontal_notch = {}, vertical_notch = {})", horizontal_notch,
+                       vertical_notch);
+}
+
+//
 // Mouse Events
 //
 
@@ -100,6 +109,11 @@ auto MouseMoveEvent::format() const -> std::string {
 auto MouseReleaseEvent::format() const -> std::string {
     return fmt::format("MouseReleasesEvent(position = {}, button = {})", position,
                        button);
+}
+
+auto MouseWheelEvent::format() const -> std::string {
+    return fmt::format("MouseWheelEvent(position = {}, angle_delta = {}, modifiers = {})",
+                       position, angle_delta, modifiers);
 }
 
 }  // namespace logicsim

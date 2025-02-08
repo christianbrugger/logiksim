@@ -38,4 +38,7 @@ constexpr static auto LS_IDENTITY_DPI = 96.0;
     winrt::Windows::System::VirtualKeyModifiers modifiers)
     -> logicsim::exporting::KeyboardModifiers;
 
+[[nodiscard]] auto to_angle_delta(const winrt::Microsoft::UI::Input::PointerPoint& point)
+    -> ls_angle_delta_t;
+
 }  // namespace logicsim

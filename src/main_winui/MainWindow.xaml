@@ -29,11 +29,14 @@
                     x:Name="CanvasPanel"
                     SizeChanged="CanvasPanel_SizeChanged"
                     Loaded="CanvasPanel_Loaded"
+                    
                     PointerMoved="CanvasPanel_PointerMoved"
                     PointerPressed="CanvasPanel_PointerPressed"
                     PointerReleased="CanvasPanel_PointerReleased"
                     PointerCanceled="CanvasPanel_PointerCanceled"
                     PointerCaptureLost="CanvasPanel_PointerCaptureLost"
+                    
+                    PointerWheelChanged="CanvasPanel_PointerWheelChanged"
                     />
             </Grid>
         </Grid>

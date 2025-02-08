@@ -47,6 +47,7 @@ extern "C" {
 #endif
 // NOLINTBEGIN(modernize-use-using)
 // NOLINTBEGIN(modernize-use-trailing-return-type)
+// NOLINTBEGIN(cppcoreguidelines-pro-type-member-init)
 
 typedef struct ls_circuit_t ls_circuit_t;
 
@@ -66,11 +67,18 @@ LS_CORE_API void ls_circuit_render_layout(ls_circuit_t* obj, int32_t width,
 typedef struct ls_point_device_fine_t {
     double x;
     double y;
-
 #ifdef __cplusplus
-    auto operator==(const ls_point_device_fine_t&) const -> bool = default;
+    [[nodiscard]] auto operator==(const ls_point_device_fine_t&) const -> bool = default;
 #endif
 } ls_point_device_fine_t;
+
+typedef struct ls_angle_delta_t {
+    float horizontal_notch {};
+    float vertical_notch {};
+#ifdef __cplusplus
+    [[nodiscard]] auto operator==(const ls_angle_delta_t&) const -> bool = default;
+#endif
+} ls_angle_delta_t;
 
 typedef struct {
     ls_point_device_fine_t position;
@@ -98,6 +106,16 @@ typedef struct {
 LS_CORE_API void ls_circuit_mouse_release(
     ls_circuit_t* obj, const ls_mouse_release_event_t* event) LS_NOEXCEPT;
 
+typedef struct {
+    ls_point_device_fine_t position;
+    ls_angle_delta_t angle_delta;
+    uint32_t keyboard_modifiers;
+} ls_mouse_wheel_event_t;
+
+LS_CORE_API void ls_circuit_mouse_wheel(ls_circuit_t* obj,
+                                        const ls_mouse_wheel_event_t* event) LS_NOEXCEPT;
+
+// NOLINTEND(cppcoreguidelines-pro-type-member-init)
 // NOLINTEND(modernize-use-trailing-return-type)
 // NOLINTEND(modernize-use-using)
 #ifdef __cplusplus
@@ -252,6 +270,14 @@ struct MouseReleaseEvent {
     [[nodiscard]] auto operator==(const MouseReleaseEvent&) const -> bool = default;
 };
 
+struct MouseWheelEvent {
+    ls_point_device_fine_t position {};
+    ls_angle_delta_t angle_delta {};
+    KeyboardModifiers modifiers {};
+
+    [[nodiscard]] auto operator==(const MouseWheelEvent&) const -> bool = default;
+};
+
 namespace detail {
 
 struct LSCircuitDeleter {
@@ -272,6 +298,7 @@ class CircuitInterface {
     inline auto mouse_press(const MousePressEvent& event) -> void;
     inline auto mouse_move(const MouseMoveEvent& event) -> void;
     inline auto mouse_release(const MouseReleaseEvent& event) -> void;
+    inline auto mouse_wheel(const MouseWheelEvent& event) -> void;
 
    private:
     std::unique_ptr<ls_circuit_t, detail::LSCircuitDeleter> obj_ {ls_circuit_construct()};
@@ -322,6 +349,17 @@ auto CircuitInterface::mouse_release(const MouseReleaseEvent& event) -> void {
         .button = detail::to_underlying(event.button),
     };
     ls_circuit_mouse_release(obj_.get(), &event_c);
+};
+
+auto CircuitInterface::mouse_wheel(const MouseWheelEvent& event) -> void {
+    detail::ls_expects(obj_);
+
+    const auto event_c = ls_mouse_wheel_event_t {
+        .position = event.position,
+        .angle_delta = event.angle_delta,
+        .keyboard_modifiers = event.modifiers.value(),
+    };
+    ls_circuit_mouse_wheel(obj_.get(), &event_c);
 };
 
 }  // namespace logicsim::exporting

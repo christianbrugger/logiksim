@@ -112,15 +112,12 @@ auto MainWindow::InitializeComponent() -> void {
     render_buffer_control_ = std::move(buffer_parts.control);
 }
 
-auto MainWindow::CanvasPanel_SizeChanged(IInspectable const& sender [[maybe_unused]],
-                                         SizeChangedEventArgs const& args
-                                         [[maybe_unused]]) -> void {
+auto MainWindow::CanvasPanel_SizeChanged(IInspectable const&, SizeChangedEventArgs const&)
+    -> void {
     update_render_size();
 }
 
-auto MainWindow::CanvasPanel_Loaded(IInspectable const& sender [[maybe_unused]],
-                                    RoutedEventArgs const& args [[maybe_unused]])
-    -> void {
+auto MainWindow::CanvasPanel_Loaded(IInspectable const&, RoutedEventArgs const&) -> void {
     update_render_size();
 
     const auto panel = CanvasPanel();
@@ -188,6 +185,26 @@ auto MainWindow::CanvasPanel_PointerCaptureLost(IInspectable const& sender,
                                                 Input::PointerRoutedEventArgs const& args)
     -> void {
     submit_pointer_event(sender, args);
+}
+
+auto MainWindow::CanvasPanel_PointerWheelChanged(
+    IInspectable const&, Input::PointerRoutedEventArgs const& args) -> void {
+    using namespace logicsim;
+    using namespace winrt::Microsoft::UI::Input;
+
+    const auto point = args.GetCurrentPoint(CanvasPanel());
+
+    if (point.PointerDeviceType() != PointerDeviceType::Mouse) {
+        return;
+    }
+
+    backend_tasks_.push(exporting::MouseWheelEvent {
+        .position = to_device_position(point),
+        .angle_delta = to_angle_delta(point),
+        .modifiers = to_keyboard_modifiers(args.KeyModifiers()),
+    });
+
+    args.Handled(true);
 }
 
 auto MainWindow::register_swap_chain(
