@@ -120,10 +120,14 @@ auto MainWindow::CanvasPanel_SizeChanged(IInspectable const&, SizeChangedEventAr
 auto MainWindow::CanvasPanel_Loaded(IInspectable const&, RoutedEventArgs const&) -> void {
     update_render_size();
 
+
     const auto panel = CanvasPanel();
     Expects(panel);
     const auto xaml_root = panel.XamlRoot();
     Expects(xaml_root);
+
+    // Set intial focus
+    panel.Focus(FocusState::Programmatic);
 
     //
     // React to DPI changes via the XamlRoot.Changed event.
@@ -151,9 +155,11 @@ auto MainWindow::CanvasPanel_PointerEvent(IInspectable const& sender,
         return;
     }
 
+    // generate events for the backend
     const auto data = PointerEventData {point, args.KeyModifiers()};
     key_tracker_.submit_event(data, backend_tasks_);
 
+    // steal focus
     if (is_pressed_kind(point.Properties().PointerUpdateKind())) {
         CanvasPanel().Focus(FocusState::Pointer);
     }
