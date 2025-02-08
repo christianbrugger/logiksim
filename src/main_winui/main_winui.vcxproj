@@ -144,6 +144,7 @@
     <ClInclude Include="src\ls_concurrent_queue.h" />
     <ClInclude Include="src\ls_event_counter.h" />
     <ClInclude Include="src\ls_key_tracker.h" />
+    <ClInclude Include="src\ls_timer.h" />
     <ClInclude Include="src\render_buffer.h" />
     <ClInclude Include="src\render_thread.h" />
     <ClInclude Include="src\ls_vocabulary.h" />
@@ -166,6 +167,7 @@
     <ClCompile Include="src\ls_concurrent_queue.cpp" />
     <ClCompile Include="src\ls_event_counter.cpp" />
     <ClCompile Include="src\ls_key_tracker.cpp" />
+    <ClCompile Include="src\ls_timer.cpp" />
     <ClCompile Include="src\render_buffer.cpp" />
     <ClCompile Include="src\render_thread.cpp" />
     <ClCompile Include="src\ls_vocabulary.cpp" />

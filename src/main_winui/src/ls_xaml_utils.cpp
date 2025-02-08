@@ -6,8 +6,6 @@
 
 #include <winuser.h>
 
-// #include <dwmapi.h>
-
 namespace logicsim {
 
 auto DeviceLostException_IsDeviceLost(HRESULT hresult) -> bool {
@@ -53,6 +51,7 @@ auto is_button_pressed(exporting::MouseButton filter,
 
         switch (filter) {
             using enum exporting::MouseButton;
+
             case Left:
                 return properties.IsLeftButtonPressed();
             case Right:
@@ -121,7 +120,7 @@ namespace {
                           winrt::Windows::System::VirtualKeyModifiers query) -> bool {
     using T = std::underlying_type_t<winrt::Windows::System::VirtualKeyModifiers>;
 
-    return (static_cast<T>(modifiers) & static_cast<T>(query)) != 0;
+    return (static_cast<T>(modifiers) & static_cast<T>(query)) != T {0};
 }
 
 }  // namespace

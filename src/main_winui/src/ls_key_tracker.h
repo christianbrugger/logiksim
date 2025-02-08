@@ -53,7 +53,6 @@ class SingleKeyTracker {
     GenerateDoubleClick generate_double_click_ {GenerateDoubleClick::No};
 
     std::optional<std::chrono::microseconds> last_press_timestamp_ {};
-    std::optional<ls_point_device_fine_t> last_position_ {};
     ButtonState state_ {ButtonState::Unpressed};
 };
 
@@ -65,6 +64,8 @@ class KeyTracker {
     auto register_event(const PointerEventData& data, BackendTaskSource& tasks) -> void;
 
    private:
+    std::optional<ls_point_device_fine_t> last_position_ {};
+
     SingleKeyTracker mouse_left_ {MouseButton::Left, GenerateDoubleClick::Yes};
     SingleKeyTracker mouse_right_ {MouseButton::Right, GenerateDoubleClick::No};
     SingleKeyTracker mouse_middle_ {MouseButton::Middle, GenerateDoubleClick::No};

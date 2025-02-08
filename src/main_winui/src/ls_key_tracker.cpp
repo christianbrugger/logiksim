@@ -82,7 +82,6 @@ auto generate_release_event(exporting::MouseButton button, const PointerEventDat
 auto SingleKeyTracker::register_event(const PointerEventData& data,
                                       BackendTaskSource& tasks) -> bool {
     const auto is_pressed_now = is_button_pressed(filter_, data.point);
-    const auto position = to_device_position(data.point);
     auto gen_move_event = false;
 
     switch (state_) {
@@ -110,14 +109,11 @@ auto SingleKeyTracker::register_event(const PointerEventData& data,
                 state_ = Unpressed;
                 break;
             }
-            if (position != last_position_) {
-                gen_move_event = true;
-            }
+            gen_move_event = true;
             break;
         }
     };
 
-    last_position_ = position;
     Ensures(is_pressed_now ? state_ == ButtonState::Pressed
                            : state_ == ButtonState::Unpressed);
     return gen_move_event;
@@ -125,15 +121,18 @@ auto SingleKeyTracker::register_event(const PointerEventData& data,
 
 auto KeyTracker::register_event(const PointerEventData& data, BackendTaskSource& tasks)
     -> void {
-    auto gen_move_event = false;
+    const auto position = to_device_position(data.point);
 
+    auto gen_move_event = false;
     gen_move_event |= mouse_left_.register_event(data, tasks);
     gen_move_event |= mouse_right_.register_event(data, tasks);
     gen_move_event |= mouse_middle_.register_event(data, tasks);
 
-    if (gen_move_event) {
+    // one move events for all buttons
+    if (gen_move_event && position != last_position_) {
         generate_move_event(data, tasks);
     }
+    last_position_ = position;
 }
 
 }  // namespace logicsim
