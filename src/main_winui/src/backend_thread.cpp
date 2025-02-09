@@ -129,22 +129,61 @@ auto process_backend_task(const BackendTask& task, RenderBufferSource& render_so
     }
 }
 
+[[nodiscard]] auto combine_wheel_tasks(const exporting::MouseWheelEvent& first,
+                                       const exporting::MouseWheelEvent& second)
+    -> std::optional<exporting::MouseWheelEvent> {
+    using namespace exporting;
+
+    if (first.modifiers == second.modifiers) {
+        // TODO safe add
+        // TODO put in C++ dll interface
+        const auto new_delta = ls_angle_delta_t {
+            .horizontal_notches = first.angle_delta.horizontal_notches +
+                                  second.angle_delta.horizontal_notches,
+            .vertical_notches =
+                first.angle_delta.vertical_notches + second.angle_delta.vertical_notches,
+        };
+
+        return MouseWheelEvent {
+            .position = second.position,
+            .angle_delta = new_delta,
+            .modifiers = second.modifiers,
+        };
+    };
+
+    return std::nullopt;
+}
+
 template <typename T>
 [[nodiscard]] auto hold_two_tasks(const std::optional<BackendTask>& a,
                                   const std::optional<BackendTask>& b) -> bool {
     return a && b && std::holds_alternative<T>(*a) && std::holds_alternative<T>(*b);
 }
 
-[[nodiscard]] auto combinable(const std::optional<BackendTask>& a,
-                              const std::optional<BackendTask>& b) -> bool {
+/**
+ * @brief: TODO
+ *
+ * Given two consecutive events of the same type,
+ * for these it is okay to only process the second one.
+ *   + configuration updates
+ *   + mouse pointer updates
+ */
+[[nodiscard]] auto combine_tasks(const std::optional<BackendTask>& first,
+                                 const std::optional<BackendTask>& second)
+    -> std::optional<BackendTask> {
     using namespace exporting;
 
-    // Given two consecutive events of the same type,
-    // for these it is okay to only process the second one.
-    //   + configuration updates
-    //   + mouse pointer updates
-    return hold_two_tasks<MouseMoveEvent>(a, b) ||  //
-           hold_two_tasks<SwapChainParams>(a, b);
+    if (hold_two_tasks<MouseMoveEvent>(first, second) ||
+        hold_two_tasks<SwapChainParams>(first, second)) {
+        return second;  // keep newes only
+    }
+    if (hold_two_tasks<MouseWheelEvent>(first, second)) {
+        return combine_wheel_tasks(std::get<MouseWheelEvent>(*first),
+                                   std::get<MouseWheelEvent>(*second));
+    }
+
+    // not combinable
+    return std::nullopt;
 }
 
 auto main_forwarded_tasks(std::stop_token& token, BackendTaskSink& tasks,
@@ -158,11 +197,15 @@ auto main_forwarded_tasks(std::stop_token& token, BackendTaskSink& tasks,
         }
         auto second = tasks.try_pop();
 
-        if (!combinable(first, second)) {
+        if (const auto combined = combine_tasks(first, second)) {
+            first = combined;
+            second = std::nullopt;
+        } else {
             process_backend_task(first.value(), render_source, circuit);
+            first = std::exchange(second, std::nullopt);
+            //
             std::this_thread::sleep_for(std::chrono::milliseconds {100});
         }
-        first = std::exchange(second, std::nullopt);
     }
 }
 
