@@ -159,7 +159,7 @@ typedef struct ls_angle_delta_t {
 typedef struct {
     ls_point_device_fine_t position;
     uint32_t keyboard_modifiers_bitset;
-    int32_t button_enum;
+    uint8_t button_enum;
     bool double_click;
 } ls_mouse_press_event_t;
 
@@ -178,7 +178,7 @@ ls_circuit_mouse_move(ls_circuit_t* obj, const ls_mouse_move_event_t* event) LS_
 
 typedef struct {
     ls_point_device_fine_t position;
-    int32_t button_enum;
+    uint8_t button_enum;
 } ls_mouse_release_event_t;
 
 // circuit::mouse_release

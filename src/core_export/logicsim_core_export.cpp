@@ -171,7 +171,7 @@ namespace {
     std::terminate();
 }
 
-[[nodiscard]] auto to_virtual_key(int32_t key) -> logicsim::VirtualKey {
+[[nodiscard]] auto to_virtual_key(uint8_t key) -> logicsim::VirtualKey {
     using namespace logicsim;
 
     return to_virtual_key(to_enum<exporting::VirtualKey>(key));
@@ -194,7 +194,7 @@ namespace {
     std::terminate();
 }
 
-[[nodiscard]] auto to_mouse_button(int32_t button) -> logicsim::MouseButton {
+[[nodiscard]] auto to_mouse_button(uint8_t button) -> logicsim::MouseButton {
     using namespace logicsim;
 
     return to_mouse_button(to_enum<exporting::MouseButton>(button));

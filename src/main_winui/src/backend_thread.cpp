@@ -89,7 +89,7 @@ auto render_circuit(RenderBufferSource& render_source,
 [[nodiscard]] auto submit_backend_task(const BackendTask& task,
                                        RenderBufferSource& render_source,
                                        exporting::CircuitInterface& circuit)
-    -> ls_ui_status {
+    -> ls_ui_status_t {
     using namespace exporting;
 
     if (const auto* item = std::get_if<MousePressEvent>(&task)) {
@@ -114,12 +114,12 @@ auto render_circuit(RenderBufferSource& render_source,
     if (const auto* item = std::get_if<SwapChainParams>(&task)) {
         if (render_source.params() != *item) {
             render_source.update_params(*item);
-            return ls_ui_status {.repaint_required = true};
+            return ls_ui_status_t {.repaint_required = true};
         }
-        return ls_ui_status {};
+        return ls_ui_status_t {};
     }
 
-    return ls_ui_status {};
+    return ls_ui_status_t {};
 }
 
 auto process_backend_task(const BackendTask& task, RenderBufferSource& render_source,
