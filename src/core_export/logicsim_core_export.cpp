@@ -44,6 +44,54 @@ namespace {
     };
 }
 
+[[nodiscard]] auto to_c(const point_device_fine_t& point) -> ls_point_device_fine_t {
+    return ls_point_device_fine_t {
+        .x = point.x,
+        .y = point.y,
+    };
+}
+
+[[nodiscard]] auto to_c(const angle_delta_t& delta) -> ls_angle_delta_t {
+    return ls_angle_delta_t {
+        .horizontal_notches = delta.horizontal_notches,
+        .vertical_notches = delta.vertical_notches,
+    };
+}
+
+[[nodiscard]] auto to_c(KeyboardModifier modifier) -> exporting::KeyboardModifier {
+    switch (modifier) {
+        using enum KeyboardModifier;
+
+        case Shift:
+            return exporting::KeyboardModifier::Shift;
+        case Control:
+            return exporting::KeyboardModifier::Control;
+        case Alt:
+            return exporting::KeyboardModifier::Alt;
+    };
+    std::terminate();
+}
+
+[[nodiscard]] auto to_c(const KeyboardModifiers& modifiers) -> uint32_t {
+    auto modifiers_result = exporting::KeyboardModifiers {};
+
+    for (const auto modifier : all_keyboard_modifiers) {
+        if (modifiers.is_set(modifier)) {
+            modifiers_result.set(to_c(modifier));
+        }
+    }
+
+    return modifiers_result.value();
+}
+
+[[nodiscard]] auto to_c(const MouseWheelEvent& event) -> ls_mouse_wheel_event_t {
+    return ls_mouse_wheel_event_t {
+        .position = to_c(event.position),
+        .angle_delta = to_c(event.angle_delta),
+        .keyboard_modifiers = to_c(event.modifiers),
+    };
+}
+
 }  // namespace
 }  // namespace logicsim
 
@@ -214,6 +262,15 @@ namespace {
     };
 }
 
+[[nodiscard]] auto to_mouse_wheel_event(const ls_mouse_wheel_event_t& event)
+    -> logicsim::MouseWheelEvent {
+    return logicsim::MouseWheelEvent {
+        .position = to_point_device_fine(event.position),
+        .angle_delta = to_angle_delta(event.angle_delta),
+        .modifiers = to_keyboard_modifiers(event.keyboard_modifiers),
+    };
+}
+
 }  // namespace
 
 auto ls_circuit_mouse_press(
@@ -227,7 +284,7 @@ auto ls_circuit_mouse_press(
             .position = to_point_device_fine(event->position),
             .modifiers = to_keyboard_modifiers(event->keyboard_modifiers),
             .button = to_mouse_button(event->button),
-            .double_click = event->double_click != 0,
+            .double_click = event->double_click,
         }));
     });
 }
@@ -267,11 +324,26 @@ auto ls_circuit_mouse_wheel(
         Expects(obj);
         Expects(event);
 
-        return to_c(obj->model.mouse_wheel(MouseWheelEvent {
-            .position = to_point_device_fine(event->position),
-            .angle_delta = to_angle_delta(event->angle_delta),
-            .modifiers = to_keyboard_modifiers(event->keyboard_modifiers),
-        }));
+        return to_c(obj->model.mouse_wheel(to_mouse_wheel_event(*event)));
+    });
+}
+
+auto ls_combine_wheel_event(const ls_mouse_wheel_event_t* first,
+                            const ls_mouse_wheel_event_t* second) noexcept
+    -> ls_combine_wheel_event_result_t {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(first);
+        Expects(second);
+
+        if (const auto result = combine_wheel_event(to_mouse_wheel_event(*first),
+                                                    to_mouse_wheel_event(*second))) {
+            return ls_combine_wheel_event_result_t {
+                .value = to_c(*result),
+                .is_valid = true,
+            };
+        }
+        return ls_combine_wheel_event_result_t {.value = {}, .is_valid = false};
     });
 }
 

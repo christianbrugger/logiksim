@@ -7,8 +7,10 @@
 #include <cstdint>
 #include <limits>
 #include <memory>  // unique_ptr
+#include <optional>
 #include <stdexcept>
 #else
+#include <stdbool.h>
 #include <stdint.h>
 #endif
 
@@ -67,7 +69,9 @@ typedef struct ls_circuit_ui_status {
 typedef struct ls_circuit_t ls_circuit_t;
 
 LS_NODISCARD LS_CORE_API ls_circuit_t* ls_circuit_construct() LS_NOEXCEPT;
+
 LS_CORE_API void ls_circuit_destruct(ls_circuit_t* obj) LS_NOEXCEPT;
+
 LS_NODISCARD LS_CORE_API ls_ui_status
 ls_circuit_load(ls_circuit_t* obj, int32_t example_circuit) LS_NOEXCEPT;
 
@@ -100,7 +104,7 @@ typedef struct {
     ls_point_device_fine_t position;
     uint32_t keyboard_modifiers;
     int32_t button;
-    int32_t double_click;
+    bool double_click;
 } ls_mouse_press_event_t;
 
 LS_NODISCARD LS_CORE_API ls_ui_status ls_circuit_mouse_press(
@@ -130,6 +134,15 @@ typedef struct {
 
 LS_NODISCARD LS_CORE_API ls_ui_status ls_circuit_mouse_wheel(
     ls_circuit_t* obj, const ls_mouse_wheel_event_t* event) LS_NOEXCEPT;
+
+typedef struct {
+    ls_mouse_wheel_event_t value;
+    bool is_valid;
+} ls_combine_wheel_event_result_t;
+
+LS_NODISCARD LS_CORE_API ls_combine_wheel_event_result_t
+ls_combine_wheel_event(const ls_mouse_wheel_event_t* first,
+                       const ls_mouse_wheel_event_t* second) LS_NOEXCEPT;
 
 LS_NODISCARD LS_CORE_API ls_ui_status ls_circuit_key_press(ls_circuit_t* obj,
                                                            int32_t key) LS_NOEXCEPT;
@@ -315,6 +328,10 @@ struct MouseWheelEvent {
     [[nodiscard]] auto operator==(const MouseWheelEvent&) const -> bool = default;
 };
 
+[[nodiscard]] inline auto combine_wheel_event(const MouseWheelEvent& first,
+                                              const MouseWheelEvent& second)
+    -> std::optional<MouseWheelEvent>;
+
 namespace detail {
 
 struct LSCircuitDeleter {
@@ -347,6 +364,38 @@ class CircuitInterface {
 // C++ abstraction - Implementation
 //
 
+namespace detail {
+
+[[nodiscard]] inline auto to_c(const MouseWheelEvent& event) -> ls_mouse_wheel_event_t {
+    return ls_mouse_wheel_event_t {
+        .position = event.position,
+        .angle_delta = event.angle_delta,
+        .keyboard_modifiers = event.modifiers.value(),
+    };
+}
+
+[[nodiscard]] inline auto to_cpp(const ls_mouse_wheel_event_t& event) -> MouseWheelEvent {
+    return MouseWheelEvent {
+        .position = event.position,
+        .angle_delta = event.angle_delta,
+        .modifiers = KeyboardModifiers {event.keyboard_modifiers},
+    };
+}
+
+}  // namespace detail
+
+auto combine_wheel_event(const MouseWheelEvent& first, const MouseWheelEvent& second)
+    -> std::optional<MouseWheelEvent> {
+    const auto first_c = detail::to_c(first);
+    const auto second_c = detail::to_c(second);
+
+    if (const auto result = ls_combine_wheel_event(&first_c, &second_c);
+        result.is_valid) {
+        return detail::to_cpp(result.value);
+    }
+    return std::nullopt;
+}
+
 auto CircuitInterface::load(ExampleCircuitType type) -> ls_ui_status {
     detail::ls_expects(obj_);
     return ls_circuit_load(obj_.get(), static_cast<int32_t>(type));
@@ -365,7 +414,7 @@ auto CircuitInterface::mouse_press(const MousePressEvent& event) -> ls_ui_status
         .position = event.position,
         .keyboard_modifiers = event.modifiers.value(),
         .button = detail::to_underlying(event.button),
-        .double_click = static_cast<int32_t>(event.double_click),
+        .double_click = event.double_click,
     };
     return ls_circuit_mouse_press(obj_.get(), &event_c);
 };
@@ -393,11 +442,7 @@ auto CircuitInterface::mouse_release(const MouseReleaseEvent& event) -> ls_ui_st
 auto CircuitInterface::mouse_wheel(const MouseWheelEvent& event) -> ls_ui_status {
     detail::ls_expects(obj_);
 
-    const auto event_c = ls_mouse_wheel_event_t {
-        .position = event.position,
-        .angle_delta = event.angle_delta,
-        .keyboard_modifiers = event.modifiers.value(),
-    };
+    const auto event_c = detail::to_c(event);
     return ls_circuit_mouse_wheel(obj_.get(), &event_c);
 };
 

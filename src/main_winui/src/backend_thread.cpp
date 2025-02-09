@@ -2,6 +2,8 @@
 
 #include "main_winui/src/backend_thread.h"
 
+#include "main_winui/src/ls_timer.h"
+
 #include <iostream>
 
 namespace logicsim {
@@ -129,56 +131,26 @@ auto process_backend_task(const BackendTask& task, RenderBufferSource& render_so
     }
 }
 
-[[nodiscard]] auto combine_wheel_tasks(const exporting::MouseWheelEvent& first,
-                                       const exporting::MouseWheelEvent& second)
-    -> std::optional<exporting::MouseWheelEvent> {
-    using namespace exporting;
-
-    if (first.modifiers == second.modifiers) {
-        // TODO safe add
-        // TODO put in C++ dll interface
-        const auto new_delta = ls_angle_delta_t {
-            .horizontal_notches = first.angle_delta.horizontal_notches +
-                                  second.angle_delta.horizontal_notches,
-            .vertical_notches =
-                first.angle_delta.vertical_notches + second.angle_delta.vertical_notches,
-        };
-
-        return MouseWheelEvent {
-            .position = second.position,
-            .angle_delta = new_delta,
-            .modifiers = second.modifiers,
-        };
-    };
-
-    return std::nullopt;
-}
-
 template <typename T>
-[[nodiscard]] auto hold_two_tasks(const std::optional<BackendTask>& a,
+[[nodiscard]] auto both_hold_type(const std::optional<BackendTask>& a,
                                   const std::optional<BackendTask>& b) -> bool {
     return a && b && std::holds_alternative<T>(*a) && std::holds_alternative<T>(*b);
 }
 
 /**
- * @brief: TODO
- *
- * Given two consecutive events of the same type,
- * for these it is okay to only process the second one.
- *   + configuration updates
- *   + mouse pointer updates
+ * @brief: Returns combined event for consecutive events.
  */
-[[nodiscard]] auto combine_tasks(const std::optional<BackendTask>& first,
-                                 const std::optional<BackendTask>& second)
+[[nodiscard]] auto combine_consecutive_tasks(const std::optional<BackendTask>& first,
+                                             const std::optional<BackendTask>& second)
     -> std::optional<BackendTask> {
     using namespace exporting;
 
-    if (hold_two_tasks<MouseMoveEvent>(first, second) ||
-        hold_two_tasks<SwapChainParams>(first, second)) {
-        return second;  // keep newes only
+    if (both_hold_type<MouseMoveEvent>(first, second) ||
+        both_hold_type<SwapChainParams>(first, second)) {
+        return second;  // process newest event only
     }
-    if (hold_two_tasks<MouseWheelEvent>(first, second)) {
-        return combine_wheel_tasks(std::get<MouseWheelEvent>(*first),
+    if (both_hold_type<MouseWheelEvent>(first, second)) {
+        return combine_wheel_event(std::get<MouseWheelEvent>(*first),
                                    std::get<MouseWheelEvent>(*second));
     }
 
@@ -197,14 +169,12 @@ auto main_forwarded_tasks(std::stop_token& token, BackendTaskSink& tasks,
         }
         auto second = tasks.try_pop();
 
-        if (const auto combined = combine_tasks(first, second)) {
+        if (const auto combined = combine_consecutive_tasks(first, second)) {
             first = combined;
             second = std::nullopt;
         } else {
             process_backend_task(first.value(), render_source, circuit);
             first = std::exchange(second, std::nullopt);
-            //
-            std::this_thread::sleep_for(std::chrono::milliseconds {100});
         }
     }
 }

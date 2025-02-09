@@ -8,6 +8,7 @@
 #include <array>
 #include <bitset>
 #include <cstdint>
+#include <optional>
 
 namespace logicsim {
 
@@ -115,6 +116,9 @@ struct angle_delta_t {
     [[nodiscard]] auto format() const -> std::string;
 };
 
+[[nodiscard]] constexpr auto operator+(angle_delta_t lhs,
+                                       angle_delta_t rhs) noexcept -> angle_delta_t;
+
 //
 // Mouse Events
 //
@@ -153,6 +157,21 @@ struct MouseWheelEvent {
     [[nodiscard]] auto operator==(const MouseWheelEvent&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
+
+[[nodiscard]] auto combine_wheel_event(const MouseWheelEvent& first,
+                                       const MouseWheelEvent& second)
+    -> std::optional<MouseWheelEvent>;
+
+//
+// Implementation
+//
+
+constexpr auto operator+(angle_delta_t lhs, angle_delta_t rhs) noexcept -> angle_delta_t {
+    return angle_delta_t {
+        .horizontal_notches = lhs.horizontal_notches + rhs.horizontal_notches,
+        .vertical_notches = lhs.vertical_notches + rhs.vertical_notches,
+    };
+}
 
 }  // namespace logicsim
 

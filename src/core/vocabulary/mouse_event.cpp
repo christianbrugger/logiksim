@@ -147,4 +147,18 @@ auto MouseWheelEvent::format() const -> std::string {
                        position, angle_delta, modifiers);
 }
 
+auto combine_wheel_event(const MouseWheelEvent& first, const MouseWheelEvent& second)
+    -> std::optional<MouseWheelEvent> {
+    // zoom & scroll cannot be combined
+    if (first.modifiers != second.modifiers) {
+        return std::nullopt;
+    }
+
+    return MouseWheelEvent {
+        .position = second.position,
+        .angle_delta = first.angle_delta + second.angle_delta,
+        .modifiers = second.modifiers,
+    };
+}
+
 }  // namespace logicsim
