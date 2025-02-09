@@ -288,6 +288,43 @@ namespace {
     };
 };
 
+[[nodiscard]] auto to_user_action(const uint8_t action_enum)
+    -> circuit_ui_model::UserAction {
+    const auto style = to_enum<exporting::UserAction>(action_enum);
+
+    switch (style) {
+        using enum exporting::UserAction;
+
+        case clear_circuit:
+            return circuit_ui_model::UserAction::clear_circuit;
+        case reload_circuit:
+            return circuit_ui_model::UserAction::reload_circuit;
+
+        case undo:
+            return circuit_ui_model::UserAction::undo;
+        case redo:
+            return circuit_ui_model::UserAction::redo;
+        case select_all:
+            return circuit_ui_model::UserAction::select_all;
+        case copy_selected:
+            return circuit_ui_model::UserAction::copy_selected;
+        case paste_from_clipboard:
+            return circuit_ui_model::UserAction::paste_from_clipboard;
+        case cut_selected:
+            return circuit_ui_model::UserAction::cut_selected;
+        case delete_selected:
+            return circuit_ui_model::UserAction::delete_selected;
+
+        case zoom_in:
+            return circuit_ui_model::UserAction::zoom_in;
+        case zoom_out:
+            return circuit_ui_model::UserAction::zoom_out;
+        case reset_view:
+            return circuit_ui_model::UserAction::reset_view;
+    };
+    std::terminate();
+}
+
 [[nodiscard]] auto to_c(const point_device_fine_t& point) -> ls_point_device_fine_t {
     return ls_point_device_fine_t {
         .x = point.x,
@@ -534,6 +571,16 @@ auto ls_circuit_set_config(ls_circuit_t* obj,
         Expects(config);
 
         return to_c(obj->model.set_config(from_c(*config)));
+    });
+}
+
+auto ls_circuit_do_action(ls_circuit_t* obj,
+                          uint8_t action_enum) noexcept -> ls_ui_status_t {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+
+        return to_c(obj->model.do_action(to_user_action(action_enum)));
     });
 }
 

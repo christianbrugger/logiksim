@@ -142,7 +142,7 @@ auto CircuitUIModel::config() const -> CircuitUIConfig {
     return config_;
 }
 
-auto CircuitUIModel::do_action(UserAction action) -> void {
+auto CircuitUIModel::do_action(UserAction action) -> UIStatus {
     Expects(class_invariant_holds());
 
     switch (action) {
@@ -209,6 +209,7 @@ auto CircuitUIModel::do_action(UserAction action) -> void {
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+    return UIStatus {};  // TODO
 }
 
 auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
@@ -218,7 +219,8 @@ auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
     const auto default_simulation_config = SimulationConfig {};
 
     // clear circuit to free memory
-    do_action(UserAction::clear_circuit);
+    auto status = do_action(UserAction::clear_circuit);
+    static_cast<void>(status);  // TODO
     set_editable_circuit(load_example_with_logging(number), default_view_point,
                          default_simulation_config);
 

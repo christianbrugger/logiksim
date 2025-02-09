@@ -189,10 +189,15 @@ auto backend_thread_main(std::stop_token token,
         auto circuit = exporting::CircuitInterface {};
 
         {
+            using namespace exporting;
+
             auto config = circuit.config();
             std::cout << config.render.show_circuit << '\n';  //
-            config.state.type = exporting::CircuitStateType::Editing;
+
+            config.state.type = CircuitStateType::Editing;
+            config.state.editing_default_mouse_action = DefaultMouseAction::selection;
             config.render.show_collision_index = true;
+
             auto status = circuit.set_config(config);
             static_cast<void>(status);
         }

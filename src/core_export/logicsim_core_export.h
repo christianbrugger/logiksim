@@ -126,6 +126,10 @@ LS_NODISCARD LS_CORE_API ls_ui_config_t ls_circuit_config(ls_circuit_t* obj) LS_
 LS_NODISCARD LS_CORE_API ls_ui_status_t
 ls_circuit_set_config(ls_circuit_t* obj, const ls_ui_config_t* config) LS_NOEXCEPT;
 
+// circuit::do_action
+LS_NODISCARD LS_CORE_API ls_ui_status_t
+ls_circuit_do_action(ls_circuit_t* obj, uint8_t action_enum) LS_NOEXCEPT;
+
 // circuit::load
 LS_NODISCARD LS_CORE_API ls_ui_status_t
 ls_circuit_load(ls_circuit_t* obj, uint8_t example_circuit_enum) LS_NOEXCEPT;
@@ -353,6 +357,23 @@ struct CircuitUIConfig {
     [[nodiscard]] auto operator==(const CircuitUIConfig&) const -> bool = default;
 };
 
+enum class UserAction : uint8_t {
+    clear_circuit = 0,
+    reload_circuit = 1,
+
+    undo = 2,
+    redo = 3,
+    select_all = 4,
+    copy_selected = 5,
+    paste_from_clipboard = 6,
+    cut_selected = 7,
+    delete_selected = 8,
+
+    zoom_in = 9,
+    zoom_out = 10,
+    reset_view = 11,
+};
+
 enum class ExampleCircuitType : uint8_t {
     example_circuit_1 = 1,
     example_circuit_2 = 2,
@@ -509,6 +530,7 @@ class CircuitInterface {
     [[nodiscard]] inline auto set_config(const CircuitUIConfig& config) -> ls_ui_status_t;
     [[nodiscard]] inline auto config() -> CircuitUIConfig;
 
+    [[nodiscard]] inline auto do_action(UserAction action) -> ls_ui_status_t;
     [[nodiscard]] inline auto load(ExampleCircuitType type) -> ls_ui_status_t;
 
     inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
@@ -642,9 +664,14 @@ auto CircuitInterface::config() -> CircuitUIConfig {
     return detail::to_exp(ls_circuit_config(obj_.get()));
 }
 
+auto CircuitInterface::do_action(UserAction action) -> ls_ui_status_t {
+    detail::ls_expects(obj_);
+    return ls_circuit_do_action(obj_.get(), detail::to_underlying(action));
+}
+
 auto CircuitInterface::load(ExampleCircuitType type) -> ls_ui_status_t {
     detail::ls_expects(obj_);
-    return ls_circuit_load(obj_.get(), static_cast<int32_t>(type));
+    return ls_circuit_load(obj_.get(), detail::to_underlying(type));
 };
 
 auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel_ratio,

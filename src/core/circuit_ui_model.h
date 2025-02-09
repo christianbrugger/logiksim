@@ -28,6 +28,13 @@
 // TODO: use -Wconversion for clang & gcc
 // TODO: instead of serialize use some history ID to check if circuit needs saving
 
+// TODO: port configs
+//    [ ] UserAction
+//    [ ] HistoryStatus
+//    [ ] Statistics
+//    [ ] LoadError
+//    [ ] CircuitWidgetAllocInfo (simple string for now)
+
 namespace logicsim {
 
 class SettingDialogManager;
@@ -67,7 +74,7 @@ static_assert(std::regular<Statistics>);
 /**
  * @brief: Any outside actions that does not require arguments or return values.
  */
-enum class UserAction {
+enum class UserAction : uint8_t {
     /**
      * @brief: Clears the circuit.
      */
@@ -124,7 +131,7 @@ class CircuitUIModel {
     [[nodiscard]] auto statistics() const -> Statistics;
 
     // actions without arguments
-    auto do_action(UserAction action) -> void;
+    [[nodiscard]] auto do_action(UserAction action) -> UIStatus;
     // load & save
     [[nodiscard]] auto serialized_circuit() -> std::string;
     [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;
