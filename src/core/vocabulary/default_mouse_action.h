@@ -3,9 +3,11 @@
 
 #include "core/format/enum.h"
 
+#include <cstdint>
+
 namespace logicsim {
 
-enum class DefaultMouseAction {
+enum class DefaultMouseAction : uint8_t {
     // other
     selection,
     insert_wire,

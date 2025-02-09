@@ -9,9 +9,9 @@
 namespace logicsim {
 
 struct CircuitUiConfig {
-    WidgetRenderConfig render_config {};
-    SimulationConfig simulation_config {};
-    CircuitWidgetState circuit_state {};
+    SimulationConfig simulation {};
+    WidgetRenderConfig render {};
+    CircuitWidgetState state {};
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const CircuitUiConfig &) const -> bool = default;

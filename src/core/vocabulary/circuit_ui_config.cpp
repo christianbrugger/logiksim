@@ -3,8 +3,7 @@
 namespace logicsim {
 
 [[nodiscard]] auto CircuitUiConfig::format() const -> std::string {
-    return fmt::format("CircuitUiConfig({}, {}, {})", render_config, simulation_config,
-                       circuit_state);
+    return fmt::format("CircuitUiConfig({}, {}, {})", render, simulation, state);
 }
 
 }  // namespace logicsim

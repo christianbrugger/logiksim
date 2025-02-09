@@ -66,9 +66,9 @@ auto format(circuit_ui_model::UserAction action) -> std::string {
 }
 
 CircuitUIModel::CircuitUIModel() {
-    circuit_store_.set_simulation_config(config_.simulation_config);
-    circuit_store_.set_circuit_state(config_.circuit_state);
-    circuit_renderer_.set_render_config(config_.render_config);
+    circuit_store_.set_simulation_config(config_.simulation);
+    circuit_store_.set_circuit_state(config_.state);
+    circuit_renderer_.set_render_config(config_.render);
     // editing_logic_manager_.set_circuit_state(circuit_state_,
     //                                          editable_circuit_pointer(circuit_store_));
 
@@ -79,7 +79,7 @@ CircuitUIModel::CircuitUIModel() {
 auto CircuitUIModel::set_config(const CircuitUiConfig& new_config) -> void {
     Expects(class_invariant_holds());
 
-    if (config_.circuit_state != new_config.circuit_state) {
+    if (config_.state != new_config.state) {
         // close dialogs
         // if (!is_editing_state(new_config.circuit_state)) {
         //     close_all_setting_dialogs();
@@ -90,13 +90,13 @@ auto CircuitUIModel::set_config(const CircuitUiConfig& new_config) -> void {
         //     new_state, editable_circuit_pointer(circuit_store_));
 
         // clear visible selection
-        if (is_selection_state(config_.circuit_state)) {
+        if (is_selection_state(config_.state)) {
             circuit_store_.editable_circuit().clear_visible_selection();
             circuit_store_.editable_circuit().finish_undo_group();
         }
 
         // circuit store
-        circuit_store_.set_circuit_state(new_config.circuit_state);
+        circuit_store_.set_circuit_state(new_config.state);
 
         // simulation
         // if (is_simulation(new_config.circuit_state)) {
@@ -107,12 +107,12 @@ auto CircuitUIModel::set_config(const CircuitUiConfig& new_config) -> void {
         // }
 
         // update & notify
-        config_.circuit_state = new_config.circuit_state;
+        config_.state = new_config.state;
         // TODO: require update()
     }
 
-    if (config_.render_config != new_config.render_config) {
-        circuit_renderer_.set_render_config(new_config.render_config);
+    if (config_.render != new_config.render) {
+        circuit_renderer_.set_render_config(new_config.render);
 
         // if (new_config.do_benchmark) {
         //     timer_benchmark_render_.start();
@@ -120,14 +120,14 @@ auto CircuitUIModel::set_config(const CircuitUiConfig& new_config) -> void {
         //     timer_benchmark_render_.stop();
         // }
 
-        config_.render_config = new_config.render_config;
+        config_.render = new_config.render;
         // TODO: require update()
     }
 
-    if (config_.simulation_config != new_config.simulation_config) {
-        circuit_store_.set_simulation_config(new_config.simulation_config);
+    if (config_.simulation != new_config.simulation) {
+        circuit_store_.set_simulation_config(new_config.simulation);
 
-        config_.simulation_config = new_config.simulation_config;
+        config_.simulation = new_config.simulation;
         // TODO: require update()
     }
 
@@ -232,11 +232,11 @@ auto CircuitUIModel::render(BLImage& bl_image,
     // TODO use more device_pixel_ratio_t
     circuit_renderer_.set_device_pixel_ratio(double {device_pixel_ratio});
 
-    if (std::holds_alternative<NonInteractiveState>(config_.circuit_state)) {
+    if (std::holds_alternative<NonInteractiveState>(config_.state)) {
         circuit_renderer_.render_layout(bl_image, circuit_store_.layout());
     }
 
-    else if (std::holds_alternative<EditingState>(config_.circuit_state)) {
+    else if (std::holds_alternative<EditingState>(config_.state)) {
         // const auto show_size_handles =
         // !editing_logic_manager_.is_area_selection_active();
         const auto show_size_handles = false;
@@ -244,7 +244,7 @@ auto CircuitUIModel::render(BLImage& bl_image,
             bl_image, circuit_store_.editable_circuit(), show_size_handles);
     }
 
-    else if (std::holds_alternative<SimulationState>(config_.circuit_state)) {
+    else if (std::holds_alternative<SimulationState>(config_.state)) {
         circuit_renderer_.render_simulation(
             bl_image, circuit_store_.interactive_simulation().spatial_simulation());
     }
@@ -355,7 +355,7 @@ auto CircuitUIModel::set_editable_circuit(
     circuit_renderer_.reset();
 
     // disable simulation
-    const auto was_simulation = is_simulation(config_.circuit_state);
+    const auto was_simulation = is_simulation(config_.state);
     if (was_simulation) {
         set_circuit_state(*this, NonInteractiveState {});
     }
@@ -383,9 +383,9 @@ auto CircuitUIModel::set_editable_circuit(
 
 auto CircuitUIModel::class_invariant_holds() const -> bool {
     // Configs
-    Expects(circuit_renderer_.render_config() == config_.render_config);
-    Expects(circuit_store_.simulation_config() == config_.simulation_config);
-    Expects(circuit_store_.circuit_state() == config_.circuit_state);
+    Expects(circuit_renderer_.render_config() == config_.render);
+    Expects(circuit_store_.simulation_config() == config_.simulation);
+    Expects(circuit_store_.circuit_state() == config_.state);
     // Expects(editing_logic_manager_.circuit_state() == config_.circuit_state);
     // Expects(circuit_renderer_.render_config().direct_rendering ==
     //         (this->requested_render_mode() == RenderMode::direct));
@@ -417,7 +417,7 @@ auto CircuitUIModel::expensive_invariant_holds() const -> bool {
     //        all_normal_display_state(circuit_store_.layout()));
 
     // editable circuit (expensive so only assert)
-    assert(!is_editing_state(config_.circuit_state) ||
+    assert(!is_editing_state(config_.state) ||
            is_valid(circuit_store_.editable_circuit()));
 
     return true;
@@ -429,19 +429,19 @@ auto CircuitUIModel::expensive_invariant_holds() const -> bool {
 
 auto set_circuit_state(CircuitUIModel& model, CircuitWidgetState value) -> void {
     auto config = model.config();
-    config.circuit_state = value;
+    config.state = value;
     model.set_config(config);
 }
 
 auto set_render_config(CircuitUIModel& model, WidgetRenderConfig value) -> void {
     auto config = model.config();
-    config.render_config = value;
+    config.render = value;
     model.set_config(config);
 }
 
 auto set_simulation_config(CircuitUIModel& model, SimulationConfig value) -> void {
     auto config = model.config();
-    config.simulation_config = value;
+    config.simulation = value;
     model.set_config(config);
 }
 }  // namespace logicsim

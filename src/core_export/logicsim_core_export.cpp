@@ -35,8 +35,8 @@ template <typename Func>
 namespace logicsim {
 namespace {
 
-[[nodiscard]] auto to_c(circuit_ui_model::UIStatus status) -> ls_ui_status {
-    return ls_ui_status {
+[[nodiscard]] auto to_c(circuit_ui_model::UIStatus status) -> ls_ui_status_t {
+    return ls_ui_status_t {
         .repaint_required = status.repaint_required,
         .config_changed = status.config_changed,
         .history_changed = status.history_changed,
@@ -88,7 +88,7 @@ namespace {
     return ls_mouse_wheel_event_t {
         .position = to_c(event.position),
         .angle_delta = to_c(event.angle_delta),
-        .keyboard_modifiers = to_c(event.modifiers),
+        .keyboard_modifiers_bitset = to_c(event.modifiers),
     };
 }
 
@@ -106,7 +106,7 @@ auto ls_circuit_destruct(ls_circuit_t* obj) noexcept -> void {
 }
 
 auto ls_circuit_load(ls_circuit_t* obj,
-                     int32_t example_circuit) noexcept -> ls_ui_status {
+                     int32_t example_circuit) noexcept -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -267,14 +267,14 @@ namespace {
     return logicsim::MouseWheelEvent {
         .position = to_point_device_fine(event.position),
         .angle_delta = to_angle_delta(event.angle_delta),
-        .modifiers = to_keyboard_modifiers(event.keyboard_modifiers),
+        .modifiers = to_keyboard_modifiers(event.keyboard_modifiers_bitset),
     };
 }
 
 }  // namespace
 
 auto ls_circuit_mouse_press(
-    ls_circuit_t* obj, const ls_mouse_press_event_t* event) noexcept -> ls_ui_status {
+    ls_circuit_t* obj, const ls_mouse_press_event_t* event) noexcept -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -282,15 +282,15 @@ auto ls_circuit_mouse_press(
 
         return to_c(obj->model.mouse_press(MousePressEvent {
             .position = to_point_device_fine(event->position),
-            .modifiers = to_keyboard_modifiers(event->keyboard_modifiers),
-            .button = to_mouse_button(event->button),
+            .modifiers = to_keyboard_modifiers(event->keyboard_modifiers_bitset),
+            .button = to_mouse_button(event->button_enum),
             .double_click = event->double_click,
         }));
     });
 }
 
-auto ls_circuit_mouse_move(ls_circuit_t* obj,
-                           const ls_mouse_move_event_t* event) noexcept -> ls_ui_status {
+auto ls_circuit_mouse_move(ls_circuit_t* obj, const ls_mouse_move_event_t* event) noexcept
+    -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -298,13 +298,13 @@ auto ls_circuit_mouse_move(ls_circuit_t* obj,
 
         return to_c(obj->model.mouse_move(MouseMoveEvent {
             .position = to_point_device_fine(event->position),
-            .buttons = to_mouse_buttons(event->buttons),
+            .buttons = to_mouse_buttons(event->buttons_bitset),
         }));
     });
 }
 
 auto ls_circuit_mouse_release(
-    ls_circuit_t* obj, const ls_mouse_release_event_t* event) noexcept -> ls_ui_status {
+    ls_circuit_t* obj, const ls_mouse_release_event_t* event) noexcept -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -312,13 +312,13 @@ auto ls_circuit_mouse_release(
 
         return to_c(obj->model.mouse_release(MouseReleaseEvent {
             .position = to_point_device_fine(event->position),
-            .button = to_mouse_button(event->button),
+            .button = to_mouse_button(event->button_enum),
         }));
     });
 }
 
 auto ls_circuit_mouse_wheel(
-    ls_circuit_t* obj, const ls_mouse_wheel_event_t* event) noexcept -> ls_ui_status {
+    ls_circuit_t* obj, const ls_mouse_wheel_event_t* event) noexcept -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -347,7 +347,7 @@ auto ls_combine_wheel_event(const ls_mouse_wheel_event_t* first,
     });
 }
 
-auto ls_circuit_key_press(ls_circuit_t* obj, int32_t key) noexcept -> ls_ui_status {
+auto ls_circuit_key_press(ls_circuit_t* obj, int32_t key) noexcept -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
