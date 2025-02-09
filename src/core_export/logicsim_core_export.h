@@ -38,6 +38,12 @@
 #define LS_NOEXCEPT
 #endif
 
+#ifdef __cplusplus
+#define LS_NODISCARD [[nodiscard]]
+#else
+#define LS_NODISCARD
+#endif
+
 //
 // C DLL interface - hourclass pattern
 //
@@ -48,11 +54,22 @@ extern "C" {
 // NOLINTBEGIN(modernize-use-using)
 // NOLINTBEGIN(modernize-use-trailing-return-type)
 
+typedef struct ls_circuit_ui_status {
+    bool repaint_required;
+    bool config_changed;
+    bool history_changed;
+    bool dialogs_changed;
+#ifdef __cplusplus
+    [[nodiscard]] auto operator==(const ls_circuit_ui_status&) const -> bool = default;
+#endif
+} ls_ui_status;
+
 typedef struct ls_circuit_t ls_circuit_t;
 
-LS_CORE_API ls_circuit_t* ls_circuit_construct() LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_circuit_t* ls_circuit_construct() LS_NOEXCEPT;
 LS_CORE_API void ls_circuit_destruct(ls_circuit_t* obj) LS_NOEXCEPT;
-LS_CORE_API void ls_circuit_load(ls_circuit_t* obj, int32_t example_circuit) LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_ui_status
+ls_circuit_load(ls_circuit_t* obj, int32_t example_circuit) LS_NOEXCEPT;
 
 /**
  * @brief: Render the layout to the given buffer.
@@ -86,23 +103,23 @@ typedef struct {
     int32_t double_click;
 } ls_mouse_press_event_t;
 
-LS_CORE_API void ls_circuit_mouse_press(ls_circuit_t* obj,
-                                        const ls_mouse_press_event_t* event) LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_ui_status ls_circuit_mouse_press(
+    ls_circuit_t* obj, const ls_mouse_press_event_t* event) LS_NOEXCEPT;
 
 typedef struct {
     ls_point_device_fine_t position;
     uint32_t buttons;
 } ls_mouse_move_event_t;
 
-LS_CORE_API void ls_circuit_mouse_move(ls_circuit_t* obj,
-                                       const ls_mouse_move_event_t* event) LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_ui_status
+ls_circuit_mouse_move(ls_circuit_t* obj, const ls_mouse_move_event_t* event) LS_NOEXCEPT;
 
 typedef struct {
     ls_point_device_fine_t position;
     int32_t button;
 } ls_mouse_release_event_t;
 
-LS_CORE_API void ls_circuit_mouse_release(
+LS_NODISCARD LS_CORE_API ls_ui_status ls_circuit_mouse_release(
     ls_circuit_t* obj, const ls_mouse_release_event_t* event) LS_NOEXCEPT;
 
 typedef struct {
@@ -111,10 +128,11 @@ typedef struct {
     uint32_t keyboard_modifiers;
 } ls_mouse_wheel_event_t;
 
-LS_CORE_API void ls_circuit_mouse_wheel(ls_circuit_t* obj,
-                                        const ls_mouse_wheel_event_t* event) LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_ui_status ls_circuit_mouse_wheel(
+    ls_circuit_t* obj, const ls_mouse_wheel_event_t* event) LS_NOEXCEPT;
 
-LS_CORE_API void ls_circuit_key_press(ls_circuit_t* obj, int32_t key) LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_ui_status ls_circuit_key_press(ls_circuit_t* obj,
+                                                           int32_t key) LS_NOEXCEPT;
 
 // NOLINTEND(modernize-use-trailing-return-type)
 // NOLINTEND(modernize-use-using)
@@ -127,6 +145,20 @@ LS_CORE_API void ls_circuit_key_press(ls_circuit_t* obj, int32_t key) LS_NOEXCEP
 //
 
 #ifdef __cplusplus
+
+[[nodiscard]] inline auto operator|(ls_ui_status a, ls_ui_status b) -> ls_ui_status {
+    return ls_ui_status {
+        .repaint_required = a.repaint_required || b.repaint_required,
+        .config_changed = a.config_changed || b.config_changed,
+        .history_changed = a.history_changed || b.history_changed,
+        .dialogs_changed = a.dialogs_changed || b.dialogs_changed,
+    };
+};
+
+inline auto operator|=(ls_ui_status& a, ls_ui_status b) -> ls_ui_status& {
+    a = a | b;
+    return a;
+};
 
 namespace logicsim::exporting {
 
@@ -295,16 +327,17 @@ struct LSCircuitDeleter {
 
 class CircuitInterface {
    public:
-    inline auto load(ExampleCircuitType type) -> void;
+    [[nodiscard]] inline auto load(ExampleCircuitType type) -> ls_ui_status;
 
     inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
                               void* pixel_data, intptr_t stride) -> void;
 
-    inline auto mouse_press(const MousePressEvent& event) -> void;
-    inline auto mouse_move(const MouseMoveEvent& event) -> void;
-    inline auto mouse_release(const MouseReleaseEvent& event) -> void;
-    inline auto mouse_wheel(const MouseWheelEvent& event) -> void;
-    inline auto key_press(VirtualKey key) -> void;
+    [[nodiscard]] inline auto mouse_press(const MousePressEvent& event) -> ls_ui_status;
+    [[nodiscard]] inline auto mouse_move(const MouseMoveEvent& event) -> ls_ui_status;
+    [[nodiscard]] inline auto mouse_release(const MouseReleaseEvent& event)
+        -> ls_ui_status;
+    [[nodiscard]] inline auto mouse_wheel(const MouseWheelEvent& event) -> ls_ui_status;
+    [[nodiscard]] inline auto key_press(VirtualKey key) -> ls_ui_status;
 
    private:
     std::unique_ptr<ls_circuit_t, detail::LSCircuitDeleter> obj_ {ls_circuit_construct()};
@@ -314,9 +347,9 @@ class CircuitInterface {
 // C++ abstraction - Implementation
 //
 
-auto CircuitInterface::load(ExampleCircuitType type) -> void {
+auto CircuitInterface::load(ExampleCircuitType type) -> ls_ui_status {
     detail::ls_expects(obj_);
-    ls_circuit_load(obj_.get(), static_cast<int32_t>(type));
+    return ls_circuit_load(obj_.get(), static_cast<int32_t>(type));
 };
 
 auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel_ratio,
@@ -325,7 +358,7 @@ auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel
     ls_circuit_render_layout(obj_.get(), width, height, pixel_ratio, pixel_data, stride);
 }
 
-auto CircuitInterface::mouse_press(const MousePressEvent& event) -> void {
+auto CircuitInterface::mouse_press(const MousePressEvent& event) -> ls_ui_status {
     detail::ls_expects(obj_);
 
     const auto event_c = ls_mouse_press_event_t {
@@ -334,30 +367,30 @@ auto CircuitInterface::mouse_press(const MousePressEvent& event) -> void {
         .button = detail::to_underlying(event.button),
         .double_click = static_cast<int32_t>(event.double_click),
     };
-    ls_circuit_mouse_press(obj_.get(), &event_c);
+    return ls_circuit_mouse_press(obj_.get(), &event_c);
 };
 
-auto CircuitInterface::mouse_move(const MouseMoveEvent& event) -> void {
+auto CircuitInterface::mouse_move(const MouseMoveEvent& event) -> ls_ui_status {
     detail::ls_expects(obj_);
 
     const auto event_c = ls_mouse_move_event_t {
         .position = event.position,
         .buttons = event.buttons.value(),
     };
-    ls_circuit_mouse_move(obj_.get(), &event_c);
+    return ls_circuit_mouse_move(obj_.get(), &event_c);
 };
 
-auto CircuitInterface::mouse_release(const MouseReleaseEvent& event) -> void {
+auto CircuitInterface::mouse_release(const MouseReleaseEvent& event) -> ls_ui_status {
     detail::ls_expects(obj_);
 
     const auto event_c = ls_mouse_release_event_t {
         .position = event.position,
         .button = detail::to_underlying(event.button),
     };
-    ls_circuit_mouse_release(obj_.get(), &event_c);
+    return ls_circuit_mouse_release(obj_.get(), &event_c);
 };
 
-auto CircuitInterface::mouse_wheel(const MouseWheelEvent& event) -> void {
+auto CircuitInterface::mouse_wheel(const MouseWheelEvent& event) -> ls_ui_status {
     detail::ls_expects(obj_);
 
     const auto event_c = ls_mouse_wheel_event_t {
@@ -365,12 +398,12 @@ auto CircuitInterface::mouse_wheel(const MouseWheelEvent& event) -> void {
         .angle_delta = event.angle_delta,
         .keyboard_modifiers = event.modifiers.value(),
     };
-    ls_circuit_mouse_wheel(obj_.get(), &event_c);
+    return ls_circuit_mouse_wheel(obj_.get(), &event_c);
 };
 
-auto CircuitInterface::key_press(VirtualKey key) -> void {
+auto CircuitInterface::key_press(VirtualKey key) -> ls_ui_status {
     detail::ls_expects(obj_);
-    ls_circuit_key_press(obj_.get(), detail::to_underlying(key));
+    return ls_circuit_key_press(obj_.get(), detail::to_underlying(key));
 };
 
 }  // namespace logicsim::exporting

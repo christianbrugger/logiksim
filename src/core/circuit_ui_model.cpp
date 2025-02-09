@@ -65,7 +65,7 @@ auto format(circuit_ui_model::UserAction action) -> std::string {
     std::terminate();
 }
 
-CircuitUiModel::CircuitUiModel() {
+CircuitUIModel::CircuitUIModel() {
     circuit_store_.set_simulation_config(config_.simulation_config);
     circuit_store_.set_circuit_state(config_.circuit_state);
     circuit_renderer_.set_render_config(config_.render_config);
@@ -76,7 +76,7 @@ CircuitUiModel::CircuitUiModel() {
     Ensures(expensive_invariant_holds());
 }
 
-auto CircuitUiModel::set_config(const CircuitUiConfig& new_config) -> void {
+auto CircuitUIModel::set_config(const CircuitUiConfig& new_config) -> void {
     Expects(class_invariant_holds());
 
     if (config_.circuit_state != new_config.circuit_state) {
@@ -135,12 +135,12 @@ auto CircuitUiModel::set_config(const CircuitUiConfig& new_config) -> void {
     Ensures(expensive_invariant_holds());
 }
 
-auto CircuitUiModel::config() const -> CircuitUiConfig {
+auto CircuitUIModel::config() const -> CircuitUiConfig {
     Expects(class_invariant_holds());
     return config_;
 }
 
-auto CircuitUiModel::do_action(UserAction action) -> void {
+auto CircuitUIModel::do_action(UserAction action) -> void {
     Expects(class_invariant_holds());
 
     switch (action) {
@@ -209,7 +209,7 @@ auto CircuitUiModel::do_action(UserAction action) -> void {
     Ensures(expensive_invariant_holds());
 }
 
-auto CircuitUiModel::load_circuit_example(int number) -> void {
+auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
     Expects(class_invariant_holds());
 
     const auto default_view_point = ViewConfig {}.view_point();
@@ -222,9 +222,10 @@ auto CircuitUiModel::load_circuit_example(int number) -> void {
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+    return UIStatus {.repaint_required = true};
 }
 
-auto CircuitUiModel::render(BLImage& bl_image,
+auto CircuitUIModel::render(BLImage& bl_image,
                             device_pixel_ratio_t device_pixel_ratio) -> void {
     Expects(class_invariant_holds());
 
@@ -258,7 +259,7 @@ auto CircuitUiModel::render(BLImage& bl_image,
     Ensures(class_invariant_holds());
 }
 
-auto CircuitUiModel::mouse_press(const MousePressEvent& event) -> void {
+auto CircuitUIModel::mouse_press(const MousePressEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
 
     if (event.button == MouseButton::Middle) {
@@ -268,50 +269,57 @@ auto CircuitUiModel::mouse_press(const MousePressEvent& event) -> void {
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+    return UIStatus {};
 }
 
-auto CircuitUiModel::mouse_move(const MouseMoveEvent& event) -> void {
+auto CircuitUIModel::mouse_move(const MouseMoveEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
+    auto status = UIStatus {};
 
     if (event.buttons.is_set(MouseButton::Middle)) {
         set_view_config_offset(circuit_renderer_,
                                mouse_drag_logic_.mouse_move(
                                    event.position, circuit_renderer_.view_config()));
-        // update();
+        status.repaint_required = true;
     }
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+    return status;
 }
 
-auto CircuitUiModel::mouse_release(const MouseReleaseEvent& event) -> void {
+auto CircuitUIModel::mouse_release(const MouseReleaseEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
+    auto status = UIStatus {};
 
     if (event.button == MouseButton::Middle) {
         set_view_config_offset(circuit_renderer_,
                                mouse_drag_logic_.mouse_release(
                                    event.position, circuit_renderer_.view_config()));
-        // update();
+        status.repaint_required = true;
     }
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+    return status;
 }
 
-auto CircuitUiModel::mouse_wheel(const MouseWheelEvent& event) -> void {
+auto CircuitUIModel::mouse_wheel(const MouseWheelEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
+    auto status = UIStatus {};
 
     if (const auto view_point =
             circuit_ui_model::wheel_scroll_zoom(event, circuit_renderer_.view_config())) {
         circuit_renderer_.set_view_point(view_point.value());
-        // update();
+        status.repaint_required = true;
     }
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+    return status;
 }
 
-auto CircuitUiModel::key_press(VirtualKey key) -> void {
+auto CircuitUIModel::key_press(VirtualKey key) -> UIStatus {
     Expects(class_invariant_holds());
 
     print(key);
@@ -334,9 +342,10 @@ auto CircuitUiModel::key_press(VirtualKey key) -> void {
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+    return UIStatus {};
 }
 
-auto CircuitUiModel::set_editable_circuit(
+auto CircuitUIModel::set_editable_circuit(
     EditableCircuit&& editable_circuit, std::optional<ViewPoint> view_point,
     std::optional<SimulationConfig> simulation_config) -> void {
     Expects(class_invariant_holds());
@@ -372,7 +381,7 @@ auto CircuitUiModel::set_editable_circuit(
     Ensures(expensive_invariant_holds());
 }
 
-auto CircuitUiModel::class_invariant_holds() const -> bool {
+auto CircuitUIModel::class_invariant_holds() const -> bool {
     // Configs
     Expects(circuit_renderer_.render_config() == config_.render_config);
     Expects(circuit_store_.simulation_config() == config_.simulation_config);
@@ -402,7 +411,7 @@ auto CircuitUiModel::class_invariant_holds() const -> bool {
     return true;
 }
 
-auto CircuitUiModel::expensive_invariant_holds() const -> bool {
+auto CircuitUIModel::expensive_invariant_holds() const -> bool {
     // insertion state (expensive so only assert)
     // assert(editing_logic_manager_.is_editing_active() ||
     //        all_normal_display_state(circuit_store_.layout()));
@@ -418,19 +427,19 @@ auto CircuitUiModel::expensive_invariant_holds() const -> bool {
 // Free Functions
 //
 
-auto set_circuit_state(CircuitUiModel& model, CircuitWidgetState value) -> void {
+auto set_circuit_state(CircuitUIModel& model, CircuitWidgetState value) -> void {
     auto config = model.config();
     config.circuit_state = value;
     model.set_config(config);
 }
 
-auto set_render_config(CircuitUiModel& model, WidgetRenderConfig value) -> void {
+auto set_render_config(CircuitUIModel& model, WidgetRenderConfig value) -> void {
     auto config = model.config();
     config.render_config = value;
     model.set_config(config);
 }
 
-auto set_simulation_config(CircuitUiModel& model, SimulationConfig value) -> void {
+auto set_simulation_config(CircuitUIModel& model, SimulationConfig value) -> void {
     auto config = model.config();
     config.simulation_config = value;
     model.set_config(config);

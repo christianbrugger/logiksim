@@ -64,52 +64,52 @@ auto render_circuit(RenderBufferSource& render_source,
     });
 }
 
-auto handle_backend_task(const BackendTask& task, RenderBufferSource& render_source,
-                         exporting::CircuitInterface& circuit) -> bool {
+[[nodiscard]] auto handle_backend_task(const BackendTask& task,
+                                       RenderBufferSource& render_source,
+                                       exporting::CircuitInterface& circuit)
+    -> ls_ui_status {
     using namespace exporting;
 
     if (const auto* item = std::get_if<MousePressEvent>(&task)) {
-        circuit.mouse_press(*item);
-        return true;
+        return circuit.mouse_press(*item);
     }
     if (const auto* item = std::get_if<MouseMoveEvent>(&task)) {
-        circuit.mouse_move(*item);
-        return true;
+        return circuit.mouse_move(*item);
     }
     if (const auto* item = std::get_if<MouseReleaseEvent>(&task)) {
-        circuit.mouse_release(*item);
-        return true;
+        return circuit.mouse_release(*item);
     }
     if (const auto* item = std::get_if<MouseWheelEvent>(&task)) {
-        circuit.mouse_wheel(*item);
-        return true;
+        return circuit.mouse_wheel(*item);
     }
     if (const auto* item = std::get_if<VirtualKey>(&task)) {
-        circuit.key_press(*item);
-        return true;
+        return circuit.key_press(*item);
+    }
+    if (const auto* item = std::get_if<ExampleCircuitType>(&task)) {
+        return circuit.load(*item);
     }
 
     if (const auto* item = std::get_if<SwapChainParams>(&task)) {
         if (render_source.params() != *item) {
             render_source.update_params(*item);
-            return true;
+            return ls_ui_status {.repaint_required = true};
         }
-        return false;
+        return ls_ui_status {};
     }
 
-    return false;
+    return ls_ui_status {};
 }
 
 auto main_forwarded_tasks(std::stop_token& token, BackendTaskSink& tasks,
                           RenderBufferSource& render_source,
                           exporting::CircuitInterface& circuit) {
     while (!token.stop_requested()) {
-        auto redraw = handle_backend_task(tasks.pop(), render_source, circuit);
+        auto status = handle_backend_task(tasks.pop(), render_source, circuit);
         while (const auto task = tasks.try_pop()) {
-            redraw |= handle_backend_task(*task, render_source, circuit);
+            status |= handle_backend_task(*task, render_source, circuit);
         }
 
-        if (redraw) {
+        if (status.repaint_required) {
             render_circuit(render_source, circuit);
         }
     }
@@ -123,7 +123,6 @@ auto backend_thread_main(std::stop_token token,
         winrt::init_apartment();
 
         auto circuit = exporting::CircuitInterface {};
-        circuit.load(exporting::ExampleCircuitType::example_circuit_2);
 
         try {
             main_forwarded_tasks(token, tasks, render_source, circuit);

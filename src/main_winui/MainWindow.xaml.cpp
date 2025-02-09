@@ -112,6 +112,10 @@ auto MainWindow::InitializeComponent() -> void {
     render_buffer_control_ = std::move(buffer_parts.control);
 }
 
+auto MainWindow::myButton_Click(IInspectable const&, RoutedEventArgs const&) -> void {
+    backend_tasks_.push(logicsim::exporting::ExampleCircuitType::example_circuit_2);
+}
+
 auto MainWindow::CanvasPanel_SizeChanged(IInspectable const&, SizeChangedEventArgs const&)
     -> void {
     update_render_size();
@@ -188,7 +192,8 @@ auto MainWindow::CanvasPanel_PointerWheelChanged(
 
 void MainWindow::CanvasPanel_KeyDown(IInspectable const&,
                                      Input::KeyRoutedEventArgs const& args) {
-    using namespace winrt::Windows::System;
+    using namespace winrt::Windows;
+    using namespace logicsim;
 
     const auto key = args.Key();
 
@@ -197,12 +202,12 @@ void MainWindow::CanvasPanel_KeyDown(IInspectable const&,
         return;
     }
 
-    if (key == VirtualKey::Enter) {
-        backend_tasks_.push(logicsim::exporting::VirtualKey::Enter);
+    if (key == System::VirtualKey::Enter) {
+        backend_tasks_.push(exporting::VirtualKey::Enter);
         args.Handled(true);
     }
-    if (key == VirtualKey::Escape) {
-        backend_tasks_.push(logicsim::exporting::VirtualKey::Escape);
+    if (key == System::VirtualKey::Escape) {
+        backend_tasks_.push(exporting::VirtualKey::Escape);
         args.Handled(true);
     }
 }

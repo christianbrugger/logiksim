@@ -24,7 +24,7 @@ enum class VirtualKey : uint8_t {
 };
 
 template <>
-[[nodiscard]] auto format(VirtualKey type) -> std::string;
+[[nodiscard]] auto format(VirtualKey key) -> std::string;
 
 //
 // Mouse Button

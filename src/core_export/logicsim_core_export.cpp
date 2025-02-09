@@ -11,11 +11,13 @@
 //
 
 struct ls_circuit_t {
-    logicsim::CircuitUiModel model {};
+    logicsim::CircuitUIModel model {};
 };
 
+namespace {
+
 template <typename Func>
-auto ls_translate_exception(Func&& func) noexcept {
+[[nodiscard]] auto ls_translate_exception(Func&& func) noexcept {
     try {
         return std::invoke(func);
     } catch (const std::exception& exc) {
@@ -28,6 +30,23 @@ auto ls_translate_exception(Func&& func) noexcept {
     }
 }
 
+}  // namespace
+
+namespace logicsim {
+namespace {
+
+[[nodiscard]] auto to_c(circuit_ui_model::UIStatus status) -> ls_ui_status {
+    return ls_ui_status {
+        .repaint_required = status.repaint_required,
+        .config_changed = status.config_changed,
+        .history_changed = status.history_changed,
+        .dialogs_changed = status.dialogs_changed,
+    };
+}
+
+}  // namespace
+}  // namespace logicsim
+
 auto ls_circuit_construct() noexcept -> ls_circuit_t* {
     return ls_translate_exception([]() {
         return new ls_circuit_t;  // NOLINT(bugprone-unhandled-exception-at-new)
@@ -38,11 +57,14 @@ auto ls_circuit_destruct(ls_circuit_t* obj) noexcept -> void {
     ls_translate_exception([&]() { delete obj; });
 }
 
-auto ls_circuit_load(ls_circuit_t* obj, int32_t example_circuit) noexcept -> void {
-    ls_translate_exception([&]() {
+auto ls_circuit_load(ls_circuit_t* obj,
+                     int32_t example_circuit) noexcept -> ls_ui_status {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
         Expects(obj);
+
         const auto number = gsl::narrow<int>(example_circuit);
-        obj->model.load_circuit_example(number);
+        return to_c(obj->model.load_circuit_example(number));
     });
 }
 
@@ -62,7 +84,7 @@ auto create_bl_image(int w, int h, void* pixel_data, intptr_t stride) -> BLImage
     return bl_image;
 }
 
-auto render_layout_impl(logicsim::CircuitUiModel& model, int32_t width, int32_t height,
+auto render_layout_impl(logicsim::CircuitUIModel& model, int32_t width, int32_t height,
                         double pixel_ratio, void* pixel_data, intptr_t stride) -> void {
     Expects(width >= 0);
     Expects(height >= 0);
@@ -194,70 +216,70 @@ namespace {
 
 }  // namespace
 
-auto ls_circuit_mouse_press(ls_circuit_t* obj,
-                            const ls_mouse_press_event_t* event) noexcept -> void {
-    ls_translate_exception([&]() {
+auto ls_circuit_mouse_press(
+    ls_circuit_t* obj, const ls_mouse_press_event_t* event) noexcept -> ls_ui_status {
+    return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
         Expects(event);
 
-        obj->model.mouse_press(MousePressEvent {
+        return to_c(obj->model.mouse_press(MousePressEvent {
             .position = to_point_device_fine(event->position),
             .modifiers = to_keyboard_modifiers(event->keyboard_modifiers),
             .button = to_mouse_button(event->button),
             .double_click = event->double_click != 0,
-        });
+        }));
     });
 }
 
 auto ls_circuit_mouse_move(ls_circuit_t* obj,
-                           const ls_mouse_move_event_t* event) noexcept -> void {
-    ls_translate_exception([&]() {
+                           const ls_mouse_move_event_t* event) noexcept -> ls_ui_status {
+    return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
         Expects(event);
 
-        obj->model.mouse_move(MouseMoveEvent {
+        return to_c(obj->model.mouse_move(MouseMoveEvent {
             .position = to_point_device_fine(event->position),
             .buttons = to_mouse_buttons(event->buttons),
-        });
+        }));
     });
 }
 
-auto ls_circuit_mouse_release(ls_circuit_t* obj,
-                              const ls_mouse_release_event_t* event) noexcept -> void {
-    ls_translate_exception([&]() {
+auto ls_circuit_mouse_release(
+    ls_circuit_t* obj, const ls_mouse_release_event_t* event) noexcept -> ls_ui_status {
+    return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
         Expects(event);
 
-        obj->model.mouse_release(MouseReleaseEvent {
+        return to_c(obj->model.mouse_release(MouseReleaseEvent {
             .position = to_point_device_fine(event->position),
             .button = to_mouse_button(event->button),
-        });
+        }));
     });
 }
 
-auto ls_circuit_mouse_wheel(ls_circuit_t* obj,
-                            const ls_mouse_wheel_event_t* event) noexcept -> void {
-    ls_translate_exception([&]() {
+auto ls_circuit_mouse_wheel(
+    ls_circuit_t* obj, const ls_mouse_wheel_event_t* event) noexcept -> ls_ui_status {
+    return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
         Expects(event);
 
-        obj->model.mouse_wheel(MouseWheelEvent {
+        return to_c(obj->model.mouse_wheel(MouseWheelEvent {
             .position = to_point_device_fine(event->position),
             .angle_delta = to_angle_delta(event->angle_delta),
             .modifiers = to_keyboard_modifiers(event->keyboard_modifiers),
-        });
+        }));
     });
 }
 
-auto ls_circuit_key_press(ls_circuit_t* obj, int32_t key) noexcept -> void {
-    ls_translate_exception([&]() {
+auto ls_circuit_key_press(ls_circuit_t* obj, int32_t key) noexcept -> ls_ui_status {
+    return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
 
-        obj->model.key_press(to_virtual_key(key));
+        return to_c(obj->model.key_press(to_virtual_key(key)));
     });
 }

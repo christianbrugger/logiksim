@@ -15,6 +15,11 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     auto InitializeComponent() -> void;
 
+    // myButton
+
+    auto myButton_Click(IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&)
+        -> void;
+
     // CanvasPanel
 
     auto CanvasPanel_SizeChanged(IInspectable const&,

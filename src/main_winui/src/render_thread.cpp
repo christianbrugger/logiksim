@@ -112,7 +112,7 @@ auto update_bitmap(GraphicsResources& resources, const SwapChainParams& params,
     Expects(resources.bitmap);
     Expects(resources.bitmap.SizeInPixels() == size_pixel);
 
-    resources.fps_counter.reset();
+    // resources.fps_counter.reset();
 
     return BufferDrawStatus::DrawingSucceded;
 }

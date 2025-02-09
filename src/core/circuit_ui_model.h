@@ -26,6 +26,7 @@
 // TODO: pass device pixel ratio directly to render methods
 // TODO: also fix config in circuit-renderer (don't store size & ratio)
 // TODO: use -Wconversion for clang & gcc
+// TODO: instead of serialize use some history ID to check if circuit needs saving
 
 namespace logicsim {
 
@@ -36,6 +37,16 @@ class EditableCircuit;
 class LoadError;
 
 namespace circuit_ui_model {
+
+/**
+ * @brief: Status returned by UI functions.
+ */
+struct UIStatus {
+    bool repaint_required {false};
+    bool config_changed {false};
+    bool history_changed {false};  // ???
+    bool dialogs_changed {false};
+};
 
 /**
  * @brief: Statistics of the Circuit Widget
@@ -96,13 +107,14 @@ template <>
  *     + setting dialog count is zero if not in editing state
  *     + layout contains only normal display state items if no editing is active
  */
-class CircuitUiModel {
+class CircuitUIModel {
    public:
+    using UIStatus = circuit_ui_model::UIStatus;
     using Statistics = circuit_ui_model::Statistics;
     using UserAction = circuit_ui_model::UserAction;
 
    public:
-    [[nodiscard]] explicit CircuitUiModel();
+    [[nodiscard]] explicit CircuitUIModel();
 
     // setter & getters
     auto set_config(const CircuitUiConfig& config) -> void;
@@ -115,17 +127,17 @@ class CircuitUiModel {
     auto do_action(UserAction action) -> void;
     // load & save
     [[nodiscard]] auto serialized_circuit() -> std::string;
-    auto load_circuit_example(int number) -> void;
+    [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;
     auto load_circuit(const std::filesystem::path&) -> std::optional<LoadError>;
     auto save_circuit(const std::filesystem::path&) -> bool;
     // render
     auto render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio) -> void;
 
-    auto mouse_press(const MousePressEvent& event) -> void;
-    auto mouse_move(const MouseMoveEvent& event) -> void;
-    auto mouse_release(const MouseReleaseEvent& event) -> void;
-    auto mouse_wheel(const MouseWheelEvent& event) -> void;
-    auto key_press(VirtualKey key) -> void;
+    [[nodiscard]] auto mouse_press(const MousePressEvent& event) -> UIStatus;
+    [[nodiscard]] auto mouse_move(const MouseMoveEvent& event) -> UIStatus;
+    [[nodiscard]] auto mouse_release(const MouseReleaseEvent& event) -> UIStatus;
+    [[nodiscard]] auto mouse_wheel(const MouseWheelEvent& event) -> UIStatus;
+    [[nodiscard]] auto key_press(VirtualKey key) -> UIStatus;
 
    protected:
     // Q_SLOT void on_timer_benchmark_render();
@@ -192,35 +204,35 @@ class CircuitUiModel {
 // CircuitWidgetState
 //
 
-auto set_circuit_state(CircuitUiModel& model, CircuitWidgetState value) -> void;
-auto stop_simulation(CircuitUiModel& model) -> void;
+auto set_circuit_state(CircuitUIModel& model, CircuitWidgetState value) -> void;
+auto stop_simulation(CircuitUIModel& model) -> void;
 
 //
 // RenderConfig
 //
 
-auto set_render_config(CircuitUiModel& model, WidgetRenderConfig value) -> void;
+auto set_render_config(CircuitUIModel& model, WidgetRenderConfig value) -> void;
 
-auto set_do_benchmark(CircuitUiModel& model, bool value) -> void;
-auto set_show_circuit(CircuitUiModel& model, bool value) -> void;
-auto set_show_collision_index(CircuitUiModel& model, bool value) -> void;
-auto set_show_connection_index(CircuitUiModel& model, bool value) -> void;
-auto set_show_selection_index(CircuitUiModel& model, bool value) -> void;
+auto set_do_benchmark(CircuitUIModel& model, bool value) -> void;
+auto set_show_circuit(CircuitUIModel& model, bool value) -> void;
+auto set_show_collision_index(CircuitUIModel& model, bool value) -> void;
+auto set_show_connection_index(CircuitUIModel& model, bool value) -> void;
+auto set_show_selection_index(CircuitUIModel& model, bool value) -> void;
 
-auto set_thread_count(CircuitUiModel& model, ThreadCount new_count) -> void;
-auto set_wire_render_style(CircuitUiModel& model, WireRenderStyle style) -> void;
-auto set_direct_rendering(CircuitUiModel& model, bool use_store) -> void;
-auto set_jit_rendering(CircuitUiModel& model, bool enable_jit) -> void;
-auto set_show_render_borders(CircuitUiModel& model, bool value) -> void;
-auto set_show_mouse_position(CircuitUiModel& model, bool value) -> void;
+auto set_thread_count(CircuitUIModel& model, ThreadCount new_count) -> void;
+auto set_wire_render_style(CircuitUIModel& model, WireRenderStyle style) -> void;
+auto set_direct_rendering(CircuitUIModel& model, bool use_store) -> void;
+auto set_jit_rendering(CircuitUIModel& model, bool enable_jit) -> void;
+auto set_show_render_borders(CircuitUIModel& model, bool value) -> void;
+auto set_show_mouse_position(CircuitUIModel& model, bool value) -> void;
 
 //
 // SimulationConfig
 //
 
-auto set_simulation_config(CircuitUiModel& model, SimulationConfig value) -> void;
-auto set_simulation_time_rate(CircuitUiModel& model, time_rate_t new_rate) -> void;
-auto set_use_wire_delay(CircuitUiModel& model, bool value) -> void;
+auto set_simulation_config(CircuitUIModel& model, SimulationConfig value) -> void;
+auto set_simulation_time_rate(CircuitUIModel& model, time_rate_t new_rate) -> void;
+auto set_use_wire_delay(CircuitUIModel& model, bool value) -> void;
 
 }  // namespace logicsim
 
