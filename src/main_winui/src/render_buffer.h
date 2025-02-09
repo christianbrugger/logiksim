@@ -90,8 +90,8 @@ class SwapChainParams {
 // Point Definition
 //
 
-[[nodiscard]] auto to_point_pixel(const PointDevice& point,
-                                  const SwapChainParams& params) -> PointPixel;
+[[nodiscard]] auto to_point_pixel(const PointDevice& point, const SwapChainParams& params)
+    -> PointPixel;
 [[nodiscard]] auto to_point_pixel_int(const PointDevice& point,
                                       const SwapChainParams& params) -> PointPixelInt;
 
@@ -207,8 +207,8 @@ class ConcurrentBuffer {
 
     template <std::invocable<const SwapChainParams&, const frame_t&> Func>
         requires std::same_as<
-                     std::invoke_result_t<Func, const SwapChainParams&, frame_t&>,
-                     BufferDrawStatus>
+            std::invoke_result_t<Func, const SwapChainParams&, frame_t&>,
+            BufferDrawStatus>
     auto draw_buffer(Func func) -> BufferDrawStatus;
 
     [[nodiscard]] auto params() const -> SwapChainParams;
@@ -275,8 +275,8 @@ class RenderBufferSink {
      */
     template <std::invocable<const SwapChainParams&, const frame_t&> Func>
         requires std::same_as<
-                     std::invoke_result_t<Func, const SwapChainParams&, frame_t&>,
-                     BufferDrawStatus>
+            std::invoke_result_t<Func, const SwapChainParams&, frame_t&>,
+            BufferDrawStatus>
     auto draw_buffer(Func func) -> BufferDrawStatus;
 
    private:
@@ -290,6 +290,9 @@ class RenderBufferControl {
 
     /**
      * @brief: Destroy the control block and initiate a shutdown.
+     *
+     * Shutdown causes a QueueShutdownException to be raised on all
+     * source and sink operations. Allowing the threads to shut down.
      */
     ~RenderBufferControl();
     RenderBufferControl(RenderBufferControl&&) = default;
@@ -297,15 +300,6 @@ class RenderBufferControl {
     // disallow copy - as only one thread should own thecontrol
     RenderBufferControl(const RenderBufferControl&) = delete;
     auto operator=(const RenderBufferControl&) -> RenderBufferControl& = delete;
-
-   public:
-    /**
-     * @brief: Shut down the render buffer.
-     *
-     * This causes an QueueShutdownException to be raised on all
-     * source and sink operations. Allowing the threads to shut down.
-     */
-    auto shutdown() -> void;
 
    private:
     std::shared_ptr<ConcurrentBuffer> buffer_ {nullptr};
@@ -384,19 +378,16 @@ auto ConcurrentBuffer::draw_buffer(Func func) -> BufferDrawStatus {
 
 template <std::invocable<const SwapChainParams&, frame_t&> Func>
 auto RenderBufferSource::render_to_buffer(Func func) -> void {
-    if (buffer_) {
-        buffer_->render_to_buffer(std::move(func));
-    }
+    Expects(buffer_);
+    buffer_->render_to_buffer(std::move(func));
 }
 
 template <std::invocable<const SwapChainParams&, const frame_t&> Func>
     requires std::same_as<std::invoke_result_t<Func, const SwapChainParams&, frame_t&>,
                           BufferDrawStatus>
 auto RenderBufferSink::draw_buffer(Func func) -> BufferDrawStatus {
-    if (buffer_) {
-        return buffer_->draw_buffer(std::move(func));
-    }
-    return BufferDrawStatus::DrawingFailed;
+    Expects(buffer_);
+    return buffer_->draw_buffer(std::move(func));
 }
 
 }  // namespace logicsim

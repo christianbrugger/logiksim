@@ -12,27 +12,43 @@ BackendTaskSink::BackendTaskSink(SharedBackendTaskQueue task_queue)
     : queue_ {std::move(task_queue)} {}
 
 auto BackendTaskSink::pop() -> BackendTask {
+    Expects(queue_);
     return queue_->pop();
 }
 
 auto BackendTaskSink::try_pop() -> std::optional<BackendTask> {
+    Expects(queue_);
     return queue_->try_pop();
 }
 
-BackendTaskSource::~BackendTaskSource() {
-    queue_->shutdown();
+BackendTaskSource::BackendTaskSource(SharedBackendTaskQueue task_queue)
+    : queue_ {std::move(task_queue)} {
+    Ensures(queue_);
 }
 
-auto BackendTaskSource::get_sink() const -> BackendTaskSink {
-    return BackendTaskSink {queue_};
+BackendTaskSource::~BackendTaskSource() {
+    if (queue_) {
+        queue_->shutdown();
+    }
 }
 
 auto BackendTaskSource::push(const BackendTask& task) -> void {
+    Expects(queue_);
     queue_->push(task);
 }
 
 auto BackendTaskSource::push(BackendTask&& task) -> void {
+    Expects(queue_);
     queue_->push(std::move(task));
+}
+
+auto create_backend_task_queue_parts() -> BackendTaskParts {
+    auto queue = std::make_shared<BackendTaskQueue>();
+
+    return BackendTaskParts {
+        .source = BackendTaskSource {queue},
+        .sink = BackendTaskSink {queue},
+    };
 }
 
 namespace {
@@ -148,13 +164,6 @@ auto create_backend_thread(std::unique_ptr<IBackendGuiActions> actions,
 
     return std::jthread(backend_thread_main, std::move(actions), std::move(sink),
                         std::move(render_source));
-}
-
-auto create_backend_thread(std::unique_ptr<IBackendGuiActions> actions,
-                           const BackendTaskSource& source,
-                           RenderBufferSource render_source) -> std::jthread {
-    return create_backend_thread(std::move(actions), source.get_sink(),
-                                 std::move(render_source));
 }
 
 }  // namespace logicsim

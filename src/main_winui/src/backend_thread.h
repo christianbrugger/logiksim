@@ -60,23 +60,32 @@ using BackendTask = std::variant<            //
 
 using BackendTaskQueue = ::logicsim::ConcurrentBlockingQueue<BackendTask>;
 
-using SharedBackendTaskQueue = gsl::not_null<std::shared_ptr<BackendTaskQueue>>;
+using SharedBackendTaskQueue = std::shared_ptr<BackendTaskQueue>;
 
 class BackendTaskSink {
    public:
     BackendTaskSink() = default;
     explicit BackendTaskSink(SharedBackendTaskQueue task_queue);
 
+    ~BackendTaskSink() = default;
+    BackendTaskSink(BackendTaskSink&&) = default;
+    auto operator=(BackendTaskSink&&) -> BackendTaskSink& = default;
+    // disallow copy - as only one thread should own the sink
+    BackendTaskSink(const BackendTaskSink&) = delete;
+    auto operator=(const BackendTaskSink&) -> BackendTaskSink& = delete;
+
+   public:
     auto pop() -> BackendTask;
     auto try_pop() -> std::optional<BackendTask>;
 
    private:
-    SharedBackendTaskQueue queue_ {std::make_shared<BackendTaskQueue>()};
+    SharedBackendTaskQueue queue_ {nullptr};
 };
 
 class BackendTaskSource {
    public:
     BackendTaskSource() = default;
+    explicit BackendTaskSource(SharedBackendTaskQueue task_queue);
     /**
      * @brief: Destroy the task source and initiate a shutdown.
      */
@@ -88,14 +97,22 @@ class BackendTaskSource {
     auto operator=(const BackendTaskSource&) -> BackendTaskSource& = delete;
 
    public:
-    auto get_sink() const -> BackendTaskSink;
-
     auto push(const BackendTask& task) -> void;
     auto push(BackendTask&& task) -> void;
 
    private:
-    SharedBackendTaskQueue queue_ {std::make_shared<BackendTaskQueue>()};
+    SharedBackendTaskQueue queue_ {nullptr};
 };
+
+/**
+ * @Brief: Thread-safe Backend Task Queue parts that can be shared accross threads.
+ */
+struct BackendTaskParts {
+    BackendTaskSource source;
+    BackendTaskSink sink;
+};
+
+[[nodiscard]] auto create_backend_task_queue_parts() -> BackendTaskParts;
 
 //
 // Thread
@@ -103,11 +120,6 @@ class BackendTaskSource {
 
 [[nodiscard]] auto create_backend_thread(std::unique_ptr<IBackendGuiActions> actions,
                                          BackendTaskSink sink,
-                                         RenderBufferSource render_source)
-    -> std::jthread;
-
-[[nodiscard]] auto create_backend_thread(std::unique_ptr<IBackendGuiActions> actions,
-                                         const BackendTaskSource& source,
                                          RenderBufferSource render_source)
     -> std::jthread;
 

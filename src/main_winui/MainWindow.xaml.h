@@ -52,8 +52,8 @@ struct MainWindow : MainWindowT<MainWindow> {
     std::jthread render_thread_ {};
 
     // destroy source and control blocks before threads, so shutdown is initiated
-    logicsim::BackendTaskSource backend_tasks_ {};
     logicsim::RenderBufferControl render_buffer_control_ {};
+    logicsim::BackendTaskSource backend_tasks_ {};
 
     logicsim::KeyTracker key_tracker_ {};
 };

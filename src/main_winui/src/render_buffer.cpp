@@ -104,8 +104,8 @@ auto frame_buffer_size(const SwapChainParams& params) -> std::size_t {
     return w * h * m;
 }
 
-auto to_point_pixel(const PointDevice& point,
-                    const SwapChainParams& params) -> PointPixel {
+auto to_point_pixel(const PointDevice& point, const SwapChainParams& params)
+    -> PointPixel {
     const auto scale = params.rasterization_scale();
 
     return PointPixel {
@@ -114,8 +114,8 @@ auto to_point_pixel(const PointDevice& point,
     };
 }
 
-auto to_point_pixel_int(const PointDevice& point,
-                        const SwapChainParams& params) -> PointPixelInt {
+auto to_point_pixel_int(const PointDevice& point, const SwapChainParams& params)
+    -> PointPixelInt {
     return to_point_pixel_int(to_point_pixel(point, params));
 }
 
@@ -241,33 +241,32 @@ auto ConcurrentBuffer::shutdown() -> void {
 // Shared Concurrent Buffer
 //
 
-RenderBufferControl::~RenderBufferControl() {
-    shutdown();
+RenderBufferSource::RenderBufferSource(std::shared_ptr<ConcurrentBuffer> buffer)
+    : buffer_ {std::move(buffer)} {
+    Ensures(buffer_);
 }
 
-RenderBufferSource::RenderBufferSource(std::shared_ptr<ConcurrentBuffer> buffer)
-    : buffer_ {std::move(buffer)} {}
-
 auto RenderBufferSource::params() const -> SwapChainParams {
-    if (buffer_) {
-        return buffer_->params();
-    }
-    return SwapChainParams {};
+    Expects(buffer_);
+    return buffer_->params();
 }
 
 auto RenderBufferSource::update_params(const SwapChainParams& new_params) -> void {
-    if (buffer_) {
-        buffer_->update_params(new_params);
-    }
+    Expects(buffer_);
+    buffer_->update_params(new_params);
 }
 
 RenderBufferSink::RenderBufferSink(std::shared_ptr<ConcurrentBuffer> buffer)
-    : buffer_ {std::move(buffer)} {}
+    : buffer_ {std::move(buffer)} {
+    Ensures(buffer_);
+}
 
 RenderBufferControl::RenderBufferControl(std::shared_ptr<ConcurrentBuffer> buffer)
-    : buffer_ {std::move(buffer)} {}
+    : buffer_ {std::move(buffer)} {
+    Ensures(buffer_);
+}
 
-auto RenderBufferControl::shutdown() -> void {
+RenderBufferControl::~RenderBufferControl() {
     if (buffer_) {
         buffer_->shutdown();
     }

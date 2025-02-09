@@ -104,12 +104,16 @@ auto MainWindow::InitializeComponent() -> void {
 
     // create threads
     auto buffer_parts = logicsim::create_render_buffer_parts();
-    backend_thread_ =
-        logicsim::create_backend_thread(std::make_unique<BackendGuiActions>(*this),
-                                        backend_tasks_, std::move(buffer_parts.source));
+    auto task_parts = logicsim::create_backend_task_queue_parts();
+
+    backend_thread_ = logicsim::create_backend_thread(
+        std::make_unique<BackendGuiActions>(*this), std::move(task_parts.sink),
+        std::move(buffer_parts.source));
     render_thread_ = logicsim::create_render_thread(
         std::make_unique<RenderGuiActions>(*this), std::move(buffer_parts.sink));
+
     render_buffer_control_ = std::move(buffer_parts.control);
+    backend_tasks_ = std::move(task_parts.source);
 }
 
 auto MainWindow::myButton_Click(IInspectable const&, RoutedEventArgs const&) -> void {
