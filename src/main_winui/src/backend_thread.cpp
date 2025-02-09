@@ -2,6 +2,8 @@
 
 #include "main_winui/src/backend_thread.h"
 
+#include <iostream>
+
 namespace logicsim {
 
 //
@@ -9,7 +11,9 @@ namespace logicsim {
 //
 
 BackendTaskSink::BackendTaskSink(SharedBackendTaskQueue task_queue)
-    : queue_ {std::move(task_queue)} {}
+    : queue_ {std::move(task_queue)} {
+    Ensures(queue_);
+}
 
 auto BackendTaskSink::pop() -> BackendTask {
     Expects(queue_);
@@ -80,7 +84,7 @@ auto render_circuit(RenderBufferSource& render_source,
     });
 }
 
-[[nodiscard]] auto handle_backend_task(const BackendTask& task,
+[[nodiscard]] auto submit_backend_task(const BackendTask& task,
                                        RenderBufferSource& render_source,
                                        exporting::CircuitInterface& circuit)
     -> ls_ui_status {
@@ -116,18 +120,49 @@ auto render_circuit(RenderBufferSource& render_source,
     return ls_ui_status {};
 }
 
+auto process_backend_task(const BackendTask& task, RenderBufferSource& render_source,
+                          exporting::CircuitInterface& circuit) -> void {
+    const auto status = submit_backend_task(task, render_source, circuit);
+
+    if (status.repaint_required) {
+        render_circuit(render_source, circuit);
+    }
+}
+
+template <typename T>
+[[nodiscard]] auto hold_two_tasks(const std::optional<BackendTask>& a,
+                                  const std::optional<BackendTask>& b) -> bool {
+    return a && b && std::holds_alternative<T>(*a) && std::holds_alternative<T>(*b);
+}
+
+[[nodiscard]] auto combinable(const std::optional<BackendTask>& a,
+                              const std::optional<BackendTask>& b) -> bool {
+    using namespace exporting;
+
+    // Given two consecutive events of the same type,
+    // for these it is okay to only process the second one.
+    //   + configuration updates
+    //   + mouse pointer updates
+    return hold_two_tasks<MouseMoveEvent>(a, b) ||  //
+           hold_two_tasks<SwapChainParams>(a, b);
+}
+
 auto main_forwarded_tasks(std::stop_token& token, BackendTaskSink& tasks,
                           RenderBufferSource& render_source,
                           exporting::CircuitInterface& circuit) {
-    while (!token.stop_requested()) {
-        auto status = handle_backend_task(tasks.pop(), render_source, circuit);
-        while (const auto task = tasks.try_pop()) {
-            status |= handle_backend_task(*task, render_source, circuit);
-        }
+    auto first = std::optional<BackendTask> {};
 
-        if (status.repaint_required) {
-            render_circuit(render_source, circuit);
+    while (!token.stop_requested()) {
+        if (!first) {
+            first = tasks.pop();
         }
+        auto second = tasks.try_pop();
+
+        if (!combinable(first, second)) {
+            process_backend_task(first.value(), render_source, circuit);
+            std::this_thread::sleep_for(std::chrono::milliseconds {100});
+        }
+        first = std::exchange(second, std::nullopt);
     }
 }
 
