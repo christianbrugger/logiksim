@@ -114,6 +114,8 @@ typedef struct {
 LS_CORE_API void ls_circuit_mouse_wheel(ls_circuit_t* obj,
                                         const ls_mouse_wheel_event_t* event) LS_NOEXCEPT;
 
+LS_CORE_API void ls_circuit_key_press(ls_circuit_t* obj, int32_t key) LS_NOEXCEPT;
+
 // NOLINTEND(modernize-use-trailing-return-type)
 // NOLINTEND(modernize-use-using)
 #ifdef __cplusplus
@@ -149,6 +151,11 @@ enum class ExampleCircuitType : uint8_t {
     example_circuit_2 = 2,
     example_circuit_3 = 3,
     example_circuit_4 = 4,
+};
+
+enum class VirtualKey : uint8_t {
+    Enter = 0,
+    Escape = 1,
 };
 
 enum class MouseButton : uint8_t {
@@ -297,6 +304,7 @@ class CircuitInterface {
     inline auto mouse_move(const MouseMoveEvent& event) -> void;
     inline auto mouse_release(const MouseReleaseEvent& event) -> void;
     inline auto mouse_wheel(const MouseWheelEvent& event) -> void;
+    inline auto key_press(VirtualKey key) -> void;
 
    private:
     std::unique_ptr<ls_circuit_t, detail::LSCircuitDeleter> obj_ {ls_circuit_construct()};
@@ -358,6 +366,11 @@ auto CircuitInterface::mouse_wheel(const MouseWheelEvent& event) -> void {
         .keyboard_modifiers = event.modifiers.value(),
     };
     ls_circuit_mouse_wheel(obj_.get(), &event_c);
+};
+
+auto CircuitInterface::key_press(VirtualKey key) -> void {
+    detail::ls_expects(obj_);
+    ls_circuit_key_press(obj_.get(), detail::to_underlying(key));
 };
 
 }  // namespace logicsim::exporting

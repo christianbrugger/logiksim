@@ -120,7 +120,6 @@ auto MainWindow::CanvasPanel_SizeChanged(IInspectable const&, SizeChangedEventAr
 auto MainWindow::CanvasPanel_Loaded(IInspectable const&, RoutedEventArgs const&) -> void {
     update_render_size();
 
-
     const auto panel = CanvasPanel();
     Expects(panel);
     const auto xaml_root = panel.XamlRoot();
@@ -190,14 +189,20 @@ auto MainWindow::CanvasPanel_PointerWheelChanged(
 void MainWindow::CanvasPanel_KeyDown(IInspectable const&,
                                      Input::KeyRoutedEventArgs const& args) {
     using namespace winrt::Windows::System;
+
     const auto key = args.Key();
 
+    // ignore repeat keys
+    if (args.KeyStatus().WasKeyDown) {
+        return;
+    }
+
     if (key == VirtualKey::Enter) {
-        std::cout << "enter\n";
+        backend_tasks_.push(logicsim::exporting::VirtualKey::Enter);
         args.Handled(true);
     }
     if (key == VirtualKey::Escape) {
-        std::cout << "escape\n";
+        backend_tasks_.push(logicsim::exporting::VirtualKey::Escape);
         args.Handled(true);
     }
 }

@@ -12,6 +12,21 @@
 namespace logicsim {
 
 //
+// Virtual Key
+//
+
+/**
+ * @brief: Virtual keys used in the application.
+ */
+enum class VirtualKey : uint8_t {
+    Enter,
+    Escape,
+};
+
+template <>
+[[nodiscard]] auto format(VirtualKey type) -> std::string;
+
+//
 // Mouse Button
 //
 

@@ -53,7 +53,8 @@ using BackendTask = std::variant<            //
     logicsim::exporting::MousePressEvent,    //
     logicsim::exporting::MouseMoveEvent,     //
     logicsim::exporting::MouseReleaseEvent,  //
-    logicsim::exporting::MouseWheelEvent     //
+    logicsim::exporting::MouseWheelEvent,    //
+    logicsim::exporting::VirtualKey          //
     >;
 
 using BackendTaskQueue = ::logicsim::ConcurrentBlockingQueue<BackendTask>;

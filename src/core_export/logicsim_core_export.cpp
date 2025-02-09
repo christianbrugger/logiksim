@@ -86,6 +86,27 @@ auto ls_circuit_render_layout(ls_circuit_t* obj, int32_t width, int32_t height,
 
 namespace {
 
+[[nodiscard]] auto to_virtual_key(logicsim::exporting::VirtualKey key)
+    -> logicsim::VirtualKey {
+    using namespace logicsim;
+
+    switch (key) {
+        using enum exporting::VirtualKey;
+
+        case Enter:
+            return VirtualKey::Enter;
+        case Escape:
+            return VirtualKey::Escape;
+    };
+    std::terminate();
+}
+
+[[nodiscard]] auto to_virtual_key(int32_t key) -> logicsim::VirtualKey {
+    using namespace logicsim;
+
+    return to_virtual_key(to_enum<exporting::VirtualKey>(key));
+}
+
 [[nodiscard]] auto to_mouse_button(logicsim::exporting::MouseButton button)
     -> logicsim::MouseButton {
     using namespace logicsim;
@@ -229,5 +250,14 @@ auto ls_circuit_mouse_wheel(ls_circuit_t* obj,
             .angle_delta = to_angle_delta(event->angle_delta),
             .modifiers = to_keyboard_modifiers(event->keyboard_modifiers),
         });
+    });
+}
+
+auto ls_circuit_key_press(ls_circuit_t* obj, int32_t key) noexcept -> void {
+    ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+
+        obj->model.key_press(to_virtual_key(key));
     });
 }

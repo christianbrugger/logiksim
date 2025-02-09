@@ -84,6 +84,10 @@ auto handle_backend_task(const BackendTask& task, RenderBufferSource& render_sou
         circuit.mouse_wheel(*item);
         return true;
     }
+    if (const auto* item = std::get_if<VirtualKey>(&task)) {
+        circuit.key_press(*item);
+        return true;
+    }
 
     if (const auto* item = std::get_if<SwapChainParams>(&task)) {
         if (render_source.params() != *item) {

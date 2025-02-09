@@ -6,6 +6,23 @@
 namespace logicsim {
 
 //
+// Virtual Key
+//
+
+template <>
+auto format(VirtualKey key) -> std::string {
+    switch (key) {
+        using enum VirtualKey;
+
+        case Enter:
+            return "Enter";
+        case Escape:
+            return "Escape";
+    }
+    std::terminate();
+};
+
+//
 // Mouse Button
 //
 

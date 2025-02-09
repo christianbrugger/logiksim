@@ -311,6 +311,31 @@ auto CircuitUiModel::mouse_wheel(const MouseWheelEvent& event) -> void {
     Ensures(expensive_invariant_holds());
 }
 
+auto CircuitUiModel::key_press(VirtualKey key) -> void {
+    Expects(class_invariant_holds());
+
+    print(key);
+
+    // Escape
+    if (key == VirtualKey::Escape) {
+        // abort_current_action();
+    }
+
+    // Enter
+    if (key == VirtualKey::Enter) {
+        // if (editing_logic_manager_
+        //         .confirm_editing(editable_circuit_pointer(circuit_store_))
+        //         .require_update) {
+        //     update();
+        //     // some elements might have been deleted (e.g. move-selection confirmation)
+        //     on_setting_dialog_cleanup_request();
+        // }
+    }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+}
+
 auto CircuitUiModel::set_editable_circuit(
     EditableCircuit&& editable_circuit, std::optional<ViewPoint> view_point,
     std::optional<SimulationConfig> simulation_config) -> void {

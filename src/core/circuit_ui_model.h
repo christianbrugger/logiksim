@@ -20,11 +20,12 @@
 #include <filesystem>
 #include <optional>
 
-// TODO: remove render mode (direct, buffered)
+// TODO: remove render mode (direct, buffered) (settings, statistics)
 // TODO: use more device_pixel_ratio_t
 // TODO: use enum for example int
 // TODO: pass device pixel ratio directly to render methods
 // TODO: also fix config in circuit-renderer (don't store size & ratio)
+// TODO: use -Wconversion for clang & gcc
 
 namespace logicsim {
 
@@ -124,6 +125,7 @@ class CircuitUiModel {
     auto mouse_move(const MouseMoveEvent& event) -> void;
     auto mouse_release(const MouseReleaseEvent& event) -> void;
     auto mouse_wheel(const MouseWheelEvent& event) -> void;
+    auto key_press(VirtualKey key) -> void;
 
    protected:
     // Q_SLOT void on_timer_benchmark_render();
