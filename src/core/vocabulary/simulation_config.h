@@ -16,7 +16,6 @@ struct SimulationConfig {
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const SimulationConfig &other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const SimulationConfig &other) const = default;
 
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 };

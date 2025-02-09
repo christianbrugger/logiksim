@@ -4,6 +4,7 @@
 #ifdef __cplusplus
 #include <array>
 #include <bitset>
+#include <chrono>
 #include <cstdint>
 #include <limits>
 #include <memory>  // unique_ptr
@@ -85,18 +86,17 @@ typedef struct ls_simulation_config_t {
 typedef struct ls_render_config_t {
     uint8_t thread_count_enum;
     uint8_t wire_render_style_enum;
-
+    //
     bool do_benchmark;
     bool show_circuit;
     bool show_collision_index;
     bool show_connection_index;
     bool show_selection_index;
-
+    //
     bool show_render_borders;
     bool show_mouse_position;
     bool direct_rendering;
     bool jit_rendering;
-
 #ifdef __cplusplus
     [[nodiscard]] auto operator==(const ls_render_config_t&) const -> bool = default;
 #endif
@@ -105,7 +105,6 @@ typedef struct ls_render_config_t {
 typedef struct ls_circuit_state_t {
     uint8_t state_enum;
     uint8_t editing_default_mouse_action_enum;
-    //
 #ifdef __cplusplus
     [[nodiscard]] auto operator==(const ls_circuit_state_t&) const -> bool = default;
 #endif
@@ -129,7 +128,7 @@ ls_circuit_set_config(ls_circuit_t* obj, const ls_ui_config_t* config) LS_NOEXCE
 
 // circuit::load
 LS_NODISCARD LS_CORE_API ls_ui_status_t
-ls_circuit_load(ls_circuit_t* obj, int32_t example_circuit) LS_NOEXCEPT;
+ls_circuit_load(ls_circuit_t* obj, uint8_t example_circuit_enum) LS_NOEXCEPT;
 
 /**
  * @brief: Render the layout to the given buffer.
@@ -254,47 +253,104 @@ constexpr auto to_underlying(Enum e) noexcept -> std::underlying_type_t<Enum> {
 }  // namespace detail
 
 enum class ThreadCount : uint8_t {
-    synchronous,
-    two,
-    four,
-    eight,
+    synchronous = 0,
+    two = 1,
+    four = 2,
+    eight = 3,
 };
 
 enum class WireRenderStyle : uint8_t {
-    red,
-    bold,
-    bold_red,
+    red = 0,
+    bold = 1,
+    bold_red = 2,
+};
+
+enum class CircuitStateType : uint8_t {
+    NonInteractive = 0,
+    Simulation = 1,
+    Editing = 2,
 };
 
 enum class DefaultMouseAction : uint8_t {
     // other
-    selection,
-    insert_wire,
+    selection = 0,
+    insert_wire = 1,
 
     // logic items
-    insert_button,
-    insert_led,
-    insert_display_number,
-    insert_display_ascii,
+    insert_button = 2,
+    insert_led = 3,
+    insert_display_number = 4,
+    insert_display_ascii = 5,
 
-    insert_and_element,
-    insert_or_element,
-    insert_xor_element,
-    insert_nand_element,
-    insert_nor_element,
+    insert_and_element = 6,
+    insert_or_element = 7,
+    insert_xor_element = 8,
+    insert_nand_element = 9,
+    insert_nor_element = 10,
 
-    insert_buffer_element,
-    insert_inverter_element,
-    insert_flipflop_jk,
-    insert_latch_d,
-    insert_flipflop_d,
-    insert_flipflop_ms_d,
+    insert_buffer_element = 11,
+    insert_inverter_element = 12,
+    insert_flipflop_jk = 13,
+    insert_latch_d = 14,
+    insert_flipflop_d = 15,
+    insert_flipflop_ms_d = 16,
 
-    insert_clock_generator,
-    insert_shift_register,
+    insert_clock_generator = 17,
+    insert_shift_register = 18,
 
     // decorations
-    insert_decoration_text_element,
+    insert_decoration_text_element = 19,
+};
+
+struct time_rate_t {
+    using rep = int64_t;
+    using period = std::nano;
+    using value_type = std::chrono::duration<rep, period>;
+
+    value_type rate_per_second;
+
+    [[nodiscard]] auto operator==(const time_rate_t& other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const time_rate_t& other) const = default;
+};
+
+struct SimulationConfig {
+    time_rate_t simulation_time_rate;
+    bool use_wire_delay;
+
+    [[nodiscard]] auto operator==(const SimulationConfig& other) const -> bool = default;
+};
+
+struct WidgetRenderConfig {
+    ThreadCount thread_count;
+    WireRenderStyle wire_render_style;
+
+    bool do_benchmark;
+    bool show_circuit;
+    bool show_collision_index;
+    bool show_connection_index;
+    bool show_selection_index;
+
+    bool show_render_borders;
+    bool show_mouse_position;
+    bool direct_rendering;
+    bool jit_rendering;
+
+    [[nodiscard]] auto operator==(const WidgetRenderConfig&) const -> bool = default;
+};
+
+struct CircuitWidgetState {
+    CircuitStateType state;
+    DefaultMouseAction editing_default_mouse_action;
+
+    [[nodiscard]] auto operator==(const CircuitWidgetState&) const -> bool = default;
+};
+
+struct CircuitUIConfig {
+    SimulationConfig simulation;
+    WidgetRenderConfig render;
+    CircuitWidgetState state;
+
+    [[nodiscard]] auto operator==(const CircuitUIConfig&) const -> bool = default;
 };
 
 enum class ExampleCircuitType : uint8_t {
@@ -450,6 +506,9 @@ struct LSCircuitDeleter {
 
 class CircuitInterface {
    public:
+    [[nodiscard]] inline auto set_config(const CircuitUIConfig& config) -> ls_ui_status_t;
+    [[nodiscard]] inline auto config() -> CircuitUIConfig;
+
     [[nodiscard]] inline auto load(ExampleCircuitType type) -> ls_ui_status_t;
 
     inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
@@ -489,6 +548,73 @@ namespace detail {
     };
 }
 
+[[nodiscard]] inline auto from_exp(const CircuitUIConfig& config) -> ls_ui_config_t {
+    return ls_ui_config_t {
+        .simulation =
+            ls_simulation_config_t {
+                .simulation_time_rate_ns =
+                    config.simulation.simulation_time_rate.rate_per_second.count(),
+                .use_wire_delay = config.simulation.use_wire_delay,
+            },
+        .render =
+            ls_render_config_t {
+                .thread_count_enum = to_underlying(config.render.thread_count),
+                .wire_render_style_enum = to_underlying(config.render.wire_render_style),
+
+                .do_benchmark = config.render.do_benchmark,
+                .show_circuit = config.render.show_circuit,
+                .show_collision_index = config.render.show_collision_index,
+                .show_connection_index = config.render.show_connection_index,
+                .show_selection_index = config.render.show_selection_index,
+
+                .show_render_borders = config.render.show_render_borders,
+                .show_mouse_position = config.render.show_mouse_position,
+                .direct_rendering = config.render.direct_rendering,
+                .jit_rendering = config.render.jit_rendering,
+            },
+        .state =
+            ls_circuit_state_t {
+                .state_enum = to_underlying(config.state.state),
+                .editing_default_mouse_action_enum =
+                    to_underlying(config.state.editing_default_mouse_action),
+            },
+    };
+}
+
+[[nodiscard]] inline auto to_exp(const ls_ui_config_t& config) -> CircuitUIConfig {
+    return CircuitUIConfig {
+        .simulation =
+            SimulationConfig {
+                .simulation_time_rate = time_rate_t {time_rate_t::value_type {
+                    config.simulation.simulation_time_rate_ns}},
+                .use_wire_delay = config.simulation.use_wire_delay,
+            },
+        .render =
+            WidgetRenderConfig {
+                .thread_count = static_cast<ThreadCount>(config.render.thread_count_enum),
+                .wire_render_style =
+                    static_cast<WireRenderStyle>(config.render.wire_render_style_enum),
+
+                .do_benchmark = config.render.do_benchmark,
+                .show_circuit = config.render.show_circuit,
+                .show_collision_index = config.render.show_collision_index,
+                .show_connection_index = config.render.show_connection_index,
+                .show_selection_index = config.render.show_selection_index,
+
+                .show_render_borders = config.render.show_render_borders,
+                .show_mouse_position = config.render.show_mouse_position,
+                .direct_rendering = config.render.direct_rendering,
+                .jit_rendering = config.render.jit_rendering,
+            },
+        .state =
+            CircuitWidgetState {
+                .state = static_cast<CircuitStateType>(config.state.state_enum),
+                .editing_default_mouse_action = static_cast<DefaultMouseAction>(
+                    config.state.editing_default_mouse_action_enum),
+            },
+    };
+}
+
 }  // namespace detail
 
 auto combine_wheel_event(const MouseWheelEvent& first, const MouseWheelEvent& second)
@@ -501,6 +627,19 @@ auto combine_wheel_event(const MouseWheelEvent& first, const MouseWheelEvent& se
         return detail::to_exp(result.value);
     }
     return std::nullopt;
+}
+
+auto CircuitInterface::set_config(const CircuitUIConfig& config) -> ls_ui_status_t {
+    detail::ls_expects(obj_);
+
+    const auto config_c = detail::from_exp(config);
+    return ls_circuit_set_config(obj_.get(), &config_c);
+}
+
+auto CircuitInterface::config() -> CircuitUIConfig {
+    detail::ls_expects(obj_);
+
+    return detail::to_exp(ls_circuit_config(obj_.get()));
 }
 
 auto CircuitInterface::load(ExampleCircuitType type) -> ls_ui_status_t {

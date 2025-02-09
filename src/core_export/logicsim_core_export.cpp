@@ -106,12 +106,12 @@ auto ls_circuit_destruct(ls_circuit_t* obj) noexcept -> void {
 }
 
 auto ls_circuit_load(ls_circuit_t* obj,
-                     int32_t example_circuit) noexcept -> ls_ui_status_t {
+                     uint8_t example_circuit_enum) noexcept -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
 
-        const auto number = gsl::narrow<int>(example_circuit);
+        const auto number = int {example_circuit_enum};
         return to_c(obj->model.load_circuit_example(number));
     });
 }
@@ -272,6 +272,18 @@ namespace {
 }
 
 }  // namespace
+
+auto ls_circuit_config(ls_circuit_t* obj) noexcept -> ls_ui_config_t {
+    static_cast<void>(obj);
+    return ls_ui_config_t {};
+}
+
+auto ls_circuit_set_config(ls_circuit_t* obj,
+                           const ls_ui_config_t* config) noexcept -> ls_ui_status_t {
+    static_cast<void>(obj);
+    static_cast<void>(config);
+    return ls_ui_status_t {};
+}
 
 auto ls_circuit_mouse_press(
     ls_circuit_t* obj, const ls_mouse_press_event_t* event) noexcept -> ls_ui_status_t {

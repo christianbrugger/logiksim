@@ -188,6 +188,9 @@ auto backend_thread_main(std::stop_token token,
 
         auto circuit = exporting::CircuitInterface {};
 
+        const auto config = circuit.config();
+        std::cout << config.render.show_circuit << '\n';
+
         try {
             main_forwarded_tasks(token, tasks, render_source, circuit);
         } catch (const ShutdownException&) {

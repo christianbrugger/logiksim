@@ -8,13 +8,13 @@
 
 namespace logicsim {
 
-struct CircuitUiConfig {
+struct CircuitUIConfig {
     SimulationConfig simulation {};
     WidgetRenderConfig render {};
     CircuitWidgetState state {};
 
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const CircuitUiConfig &) const -> bool = default;
+    [[nodiscard]] auto operator==(const CircuitUIConfig &) const -> bool = default;
 };
 
 }  // namespace logicsim

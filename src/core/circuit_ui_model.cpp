@@ -76,7 +76,7 @@ CircuitUIModel::CircuitUIModel() {
     Ensures(expensive_invariant_holds());
 }
 
-auto CircuitUIModel::set_config(const CircuitUiConfig& new_config) -> void {
+auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> void {
     Expects(class_invariant_holds());
 
     if (config_.state != new_config.state) {
@@ -135,7 +135,7 @@ auto CircuitUIModel::set_config(const CircuitUiConfig& new_config) -> void {
     Ensures(expensive_invariant_holds());
 }
 
-auto CircuitUIModel::config() const -> CircuitUiConfig {
+auto CircuitUIModel::config() const -> CircuitUIConfig {
     Expects(class_invariant_holds());
     return config_;
 }

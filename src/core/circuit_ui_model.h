@@ -117,8 +117,8 @@ class CircuitUIModel {
     [[nodiscard]] explicit CircuitUIModel();
 
     // setter & getters
-    auto set_config(const CircuitUiConfig& config) -> void;
-    [[nodiscard]] auto config() const -> CircuitUiConfig;
+    auto set_config(const CircuitUIConfig& config) -> void;
+    [[nodiscard]] auto config() const -> CircuitUIConfig;
     [[nodiscard]] auto history_status() const -> HistoryStatus;
     [[nodiscard]] auto allocation_info() const -> CircuitWidgetAllocInfo;
     [[nodiscard]] auto statistics() const -> Statistics;
@@ -185,7 +185,7 @@ class CircuitUIModel {
 
    private:
     // never modify the config directly, call set_config so sub-components are updated
-    CircuitUiConfig config_ {};
+    CircuitUIConfig config_ {};
     HistoryStatus last_history_status_ {};
 
     circuit_ui_model::CircuitStore circuit_store_ {};

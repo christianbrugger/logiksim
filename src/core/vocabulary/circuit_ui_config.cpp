@@ -2,7 +2,7 @@
 
 namespace logicsim {
 
-[[nodiscard]] auto CircuitUiConfig::format() const -> std::string {
+[[nodiscard]] auto CircuitUIConfig::format() const -> std::string {
     return fmt::format("CircuitUiConfig({}, {}, {})", render, simulation, state);
 }
 
