@@ -188,8 +188,14 @@ auto backend_thread_main(std::stop_token token,
 
         auto circuit = exporting::CircuitInterface {};
 
-        const auto config = circuit.config();
-        std::cout << config.render.show_circuit << '\n';
+        {
+            auto config = circuit.config();
+            std::cout << config.render.show_circuit << '\n';  //
+            config.state.type = exporting::CircuitStateType::Editing;
+            config.render.show_collision_index = true;
+            auto status = circuit.set_config(config);
+            static_cast<void>(status);
+        }
 
         try {
             main_forwarded_tasks(token, tasks, render_source, circuit);

@@ -44,6 +44,250 @@ namespace {
     };
 }
 
+[[nodiscard]] auto to_c(const DefaultMouseAction action)
+    -> exporting::DefaultMouseAction {
+    switch (action) {
+        using enum DefaultMouseAction;
+
+        case selection:
+            return exporting::DefaultMouseAction::selection;
+        case insert_wire:
+            return exporting::DefaultMouseAction::insert_wire;
+
+        case insert_button:
+            return exporting::DefaultMouseAction::insert_button;
+        case insert_led:
+            return exporting::DefaultMouseAction::insert_led;
+        case insert_display_number:
+            return exporting::DefaultMouseAction::insert_display_number;
+        case insert_display_ascii:
+            return exporting::DefaultMouseAction::insert_display_ascii;
+
+        case insert_and_element:
+            return exporting::DefaultMouseAction::insert_and_element;
+        case insert_or_element:
+            return exporting::DefaultMouseAction::insert_or_element;
+        case insert_xor_element:
+            return exporting::DefaultMouseAction::insert_xor_element;
+        case insert_nand_element:
+            return exporting::DefaultMouseAction::insert_nand_element;
+        case insert_nor_element:
+            return exporting::DefaultMouseAction::insert_nor_element;
+
+        case insert_buffer_element:
+            return exporting::DefaultMouseAction::insert_buffer_element;
+        case insert_inverter_element:
+            return exporting::DefaultMouseAction::insert_inverter_element;
+        case insert_flipflop_jk:
+            return exporting::DefaultMouseAction::insert_flipflop_jk;
+        case insert_latch_d:
+            return exporting::DefaultMouseAction::insert_latch_d;
+        case insert_flipflop_d:
+            return exporting::DefaultMouseAction::insert_flipflop_d;
+        case insert_flipflop_ms_d:
+            return exporting::DefaultMouseAction::insert_flipflop_ms_d;
+
+        case insert_clock_generator:
+            return exporting::DefaultMouseAction::insert_clock_generator;
+        case insert_shift_register:
+            return exporting::DefaultMouseAction::insert_shift_register;
+
+        case insert_decoration_text_element:
+            return exporting::DefaultMouseAction::insert_decoration_text_element;
+    };
+    std::terminate();
+}
+
+[[nodiscard]] auto to_c(const CircuitWidgetState& state) -> ls_circuit_state_t {
+    if (std::holds_alternative<NonInteractiveState>(state)) {
+        return ls_circuit_state_t {
+            .type_enum = to_underlying(exporting::CircuitStateType::NonInteractive),
+            .editing_default_mouse_action_enum = 0,
+        };
+    }
+
+    if (std::holds_alternative<SimulationState>(state)) {
+        return ls_circuit_state_t {
+            .type_enum = to_underlying(exporting::CircuitStateType::Simulation),
+            .editing_default_mouse_action_enum = 0,
+        };
+    }
+
+    if (const auto editing = std::get_if<EditingState>(&state)) {
+        return ls_circuit_state_t {
+            .type_enum = to_underlying(exporting::CircuitStateType::Editing),
+            .editing_default_mouse_action_enum =
+                to_underlying(to_c(editing->default_mouse_action)),
+        };
+    }
+    std::terminate();
+}
+
+[[nodiscard]] auto to_c(const CircuitUIConfig& config) -> ls_ui_config_t {
+    return ls_ui_config_t {
+        .simulation =
+            ls_simulation_config_t {
+                .simulation_time_rate_ns =
+                    config.simulation.simulation_time_rate.rate_per_second.count_ns(),
+                .use_wire_delay = config.simulation.use_wire_delay,
+            },
+        .render =
+            ls_render_config_t {
+                .thread_count_enum = to_underlying(config.render.thread_count),
+                .wire_render_style_enum = to_underlying(config.render.wire_render_style),
+
+                .do_benchmark = config.render.do_benchmark,
+                .show_circuit = config.render.show_circuit,
+                .show_collision_index = config.render.show_collision_index,
+                .show_connection_index = config.render.show_connection_index,
+                .show_selection_index = config.render.show_selection_index,
+
+                .show_render_borders = config.render.show_render_borders,
+                .show_mouse_position = config.render.show_mouse_position,
+                .direct_rendering = config.render.direct_rendering,
+                .jit_rendering = config.render.jit_rendering,
+            },
+        .state = to_c(config.state),
+    };
+};
+
+[[nodiscard]] auto to_thread_count(const uint8_t count_enum) -> ThreadCount {
+    const auto count = to_enum<exporting::ThreadCount>(count_enum);
+
+    switch (count) {
+        using enum exporting::ThreadCount;
+
+        case synchronous:
+            return ThreadCount::synchronous;
+        case two:
+            return ThreadCount::two;
+        case four:
+            return ThreadCount::four;
+        case eight:
+            return ThreadCount::eight;
+    };
+    std::terminate();
+}
+
+[[nodiscard]] auto to_wire_render_style(const uint8_t style_enum) -> WireRenderStyle {
+    const auto style = to_enum<exporting::WireRenderStyle>(style_enum);
+
+    switch (style) {
+        using enum exporting::WireRenderStyle;
+
+        case red:
+            return WireRenderStyle::red;
+        case bold:
+            return WireRenderStyle::bold;
+        case bold_red:
+            return WireRenderStyle::bold_red;
+    };
+    std::terminate();
+}
+
+[[nodiscard]] auto to_default_mouse_action(const uint8_t action_enum)
+    -> DefaultMouseAction {
+    const auto action = to_enum<exporting::DefaultMouseAction>(action_enum);
+
+    switch (action) {
+        using enum exporting::DefaultMouseAction;
+
+        case selection:
+            return DefaultMouseAction::selection;
+        case insert_wire:
+            return DefaultMouseAction::insert_wire;
+
+        case insert_button:
+            return DefaultMouseAction::insert_button;
+        case insert_led:
+            return DefaultMouseAction::insert_led;
+        case insert_display_number:
+            return DefaultMouseAction::insert_display_number;
+        case insert_display_ascii:
+            return DefaultMouseAction::insert_display_ascii;
+
+        case insert_and_element:
+            return DefaultMouseAction::insert_and_element;
+        case insert_or_element:
+            return DefaultMouseAction::insert_or_element;
+        case insert_xor_element:
+            return DefaultMouseAction::insert_xor_element;
+        case insert_nand_element:
+            return DefaultMouseAction::insert_nand_element;
+        case insert_nor_element:
+            return DefaultMouseAction::insert_nor_element;
+
+        case insert_buffer_element:
+            return DefaultMouseAction::insert_buffer_element;
+        case insert_inverter_element:
+            return DefaultMouseAction::insert_inverter_element;
+        case insert_flipflop_jk:
+            return DefaultMouseAction::insert_flipflop_jk;
+        case insert_latch_d:
+            return DefaultMouseAction::insert_latch_d;
+        case insert_flipflop_d:
+            return DefaultMouseAction::insert_flipflop_d;
+        case insert_flipflop_ms_d:
+            return DefaultMouseAction::insert_flipflop_ms_d;
+
+        case insert_clock_generator:
+            return DefaultMouseAction::insert_clock_generator;
+        case insert_shift_register:
+            return DefaultMouseAction::insert_shift_register;
+
+        case insert_decoration_text_element:
+            return DefaultMouseAction::insert_decoration_text_element;
+    };
+    std::terminate();
+}
+
+[[nodiscard]] auto from_c(const ls_circuit_state_t& state) -> CircuitWidgetState {
+    const auto type = to_enum<exporting::CircuitStateType>(state.type_enum);
+
+    switch (type) {
+        using enum exporting::CircuitStateType;
+
+        case NonInteractive:
+            return NonInteractiveState {};
+        case Simulation:
+            return SimulationState {};
+        case Editing:
+            return EditingState {.default_mouse_action = to_default_mouse_action(
+                                     state.editing_default_mouse_action_enum)};
+    };
+    std::terminate();
+}
+
+[[nodiscard]] auto from_c(const ls_ui_config_t& config) -> CircuitUIConfig {
+    return CircuitUIConfig {
+        .simulation =
+            SimulationConfig {
+                .simulation_time_rate =
+                    time_rate_t {std::chrono::duration<int64_t, std::nano> {
+                        config.simulation.simulation_time_rate_ns}},
+                .use_wire_delay = config.simulation.use_wire_delay,
+            },
+        .render =
+            WidgetRenderConfig {
+                .thread_count = to_thread_count(config.render.thread_count_enum),
+                .wire_render_style =
+                    to_wire_render_style(config.render.wire_render_style_enum),
+
+                .do_benchmark = config.render.do_benchmark,
+                .show_circuit = config.render.show_circuit,
+                .show_collision_index = config.render.show_collision_index,
+                .show_connection_index = config.render.show_connection_index,
+                .show_selection_index = config.render.show_selection_index,
+
+                .show_render_borders = config.render.show_render_borders,
+                .show_mouse_position = config.render.show_mouse_position,
+                .direct_rendering = config.render.direct_rendering,
+                .jit_rendering = config.render.jit_rendering,
+            },
+        .state = from_c(config.state),
+    };
+};
+
 [[nodiscard]] auto to_c(const point_device_fine_t& point) -> ls_point_device_fine_t {
     return ls_point_device_fine_t {
         .x = point.x,
@@ -274,15 +518,23 @@ namespace {
 }  // namespace
 
 auto ls_circuit_config(ls_circuit_t* obj) noexcept -> ls_ui_config_t {
-    static_cast<void>(obj);
-    return ls_ui_config_t {};
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+
+        return to_c(obj->model.config());
+    });
 }
 
 auto ls_circuit_set_config(ls_circuit_t* obj,
                            const ls_ui_config_t* config) noexcept -> ls_ui_status_t {
-    static_cast<void>(obj);
-    static_cast<void>(config);
-    return ls_ui_status_t {};
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+        Expects(config);
+
+        return to_c(obj->model.set_config(from_c(*config)));
+    });
 }
 
 auto ls_circuit_mouse_press(

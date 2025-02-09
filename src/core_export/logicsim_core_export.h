@@ -103,7 +103,7 @@ typedef struct ls_render_config_t {
 } ls_render_config_t;
 
 typedef struct ls_circuit_state_t {
-    uint8_t state_enum;
+    uint8_t type_enum;
     uint8_t editing_default_mouse_action_enum;
 #ifdef __cplusplus
     [[nodiscard]] auto operator==(const ls_circuit_state_t&) const -> bool = default;
@@ -339,7 +339,7 @@ struct WidgetRenderConfig {
 };
 
 struct CircuitWidgetState {
-    CircuitStateType state;
+    CircuitStateType type;
     DefaultMouseAction editing_default_mouse_action;
 
     [[nodiscard]] auto operator==(const CircuitWidgetState&) const -> bool = default;
@@ -574,7 +574,7 @@ namespace detail {
             },
         .state =
             ls_circuit_state_t {
-                .state_enum = to_underlying(config.state.state),
+                .type_enum = to_underlying(config.state.type),
                 .editing_default_mouse_action_enum =
                     to_underlying(config.state.editing_default_mouse_action),
             },
@@ -608,7 +608,7 @@ namespace detail {
             },
         .state =
             CircuitWidgetState {
-                .state = static_cast<CircuitStateType>(config.state.state_enum),
+                .type = static_cast<CircuitStateType>(config.state.type_enum),
                 .editing_default_mouse_action = static_cast<DefaultMouseAction>(
                     config.state.editing_default_mouse_action_enum),
             },
