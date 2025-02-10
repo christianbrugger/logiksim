@@ -391,6 +391,13 @@ namespace {
     };
 }
 
+[[nodiscard]] auto to_c(const HistoryStatus& status) -> ls_history_status_t {
+    return ls_history_status_t {
+        .undo_available = status.undo_available,
+        .redo_available = status.redo_available,
+    };
+};
+
 }  // namespace
 }  // namespace logicsim
 
@@ -598,6 +605,15 @@ auto ls_circuit_statistics(const ls_circuit_t* obj) noexcept -> ls_ui_statistics
         Expects(obj);
 
         return to_c(obj->model.statistics());
+    });
+}
+
+auto ls_circuit_history_status(const ls_circuit_t* obj) noexcept -> ls_history_status_t {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+
+        return to_c(obj->model.history_status());
     });
 }
 

@@ -2,6 +2,7 @@
 
 #include "core/circuit_example.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_wheel_logic.h"
+#include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/mouse_event.h"
 
 namespace logicsim {
@@ -142,6 +143,37 @@ auto CircuitUIModel::config() const -> CircuitUIConfig {
     return config_;
 }
 
+auto CircuitUIModel::history_status() const -> HistoryStatus {
+    Expects(class_invariant_holds());
+
+    if (is_editing_state(config_.state)) {
+        const auto& editable_circuit = circuit_store_.editable_circuit();
+        return HistoryStatus {
+            .undo_available = has_undo(editable_circuit) &&
+                              undo_groups_count(editable_circuit) > std::size_t {0},
+            .redo_available = has_redo(editable_circuit),
+        };
+    }
+    return HistoryStatus {
+        .undo_available = false,
+        .redo_available = false,
+    };
+}
+
+auto CircuitUIModel::allocation_info() const -> CircuitWidgetAllocInfo {
+    Expects(class_invariant_holds());
+
+    const auto t = Timer {};
+
+    auto result = CircuitWidgetAllocInfo {
+        .circuit_store = circuit_store_.allocation_info(),
+        .circuit_renderer = circuit_renderer_.allocation_info(),
+    };
+
+    result.collection_time = t.delta();
+    return result;
+}
+
 auto CircuitUIModel::statistics() const -> Statistics {
     Expects(class_invariant_holds());
 
@@ -154,7 +186,6 @@ auto CircuitUIModel::statistics() const -> Statistics {
         .render_mode = last_render_mode_,
     };
 
-    Ensures(class_invariant_holds());
     return result;
 }
 

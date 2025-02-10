@@ -150,6 +150,18 @@ typedef struct ls_ui_statistics_t {
 LS_NODISCARD LS_CORE_API ls_ui_statistics_t ls_circuit_statistic(const ls_circuit_t* obj)
     LS_NOEXCEPT;
 
+typedef struct ls_history_status_t {
+    bool undo_available;
+    bool redo_available;
+#ifdef __cplusplus
+    [[nodiscard]] auto operator==(const ls_history_status_t&) const -> bool = default;
+#endif
+} ls_history_status_t;
+
+// circuit::history_status
+LS_NODISCARD LS_CORE_API ls_history_status_t
+ls_circuit_history_status(const ls_circuit_t* obj) LS_NOEXCEPT;
+
 // circuit::do_action
 LS_NODISCARD LS_CORE_API ls_ui_status_t
 ls_circuit_do_action(ls_circuit_t* obj, uint8_t action_enum) LS_NOEXCEPT;
@@ -554,6 +566,7 @@ class CircuitInterface {
     [[nodiscard]] inline auto set_config(const CircuitUIConfig& config) -> ls_ui_status_t;
     [[nodiscard]] inline auto config() const -> CircuitUIConfig;
     [[nodiscard]] inline auto statistics() const -> ls_ui_statistics_t;
+    [[nodiscard]] inline auto history_status() const -> ls_history_status_t;
 
     [[nodiscard]] inline auto do_action(UserAction action) -> ls_ui_status_t;
     [[nodiscard]] inline auto load(ExampleCircuitType type) -> ls_ui_status_t;
@@ -705,6 +718,12 @@ auto CircuitInterface::statistics() const -> ls_ui_statistics_t {
     detail::ls_expects(obj_);
 
     return ls_circuit_statistic(get());
+}
+
+auto CircuitInterface::history_status() const -> ls_history_status_t {
+    detail::ls_expects(obj_);
+
+    return ls_circuit_history_status(get());
 }
 
 auto CircuitInterface::do_action(UserAction action) -> ls_ui_status_t {
