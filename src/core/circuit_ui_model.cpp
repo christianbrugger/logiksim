@@ -70,8 +70,8 @@ CircuitUIModel::CircuitUIModel() {
     circuit_store_.set_simulation_config(config_.simulation);
     circuit_store_.set_circuit_state(config_.state);
     circuit_renderer_.set_render_config(config_.render);
-    // editing_logic_manager_.set_circuit_state(circuit_state_,
-    //                                          editable_circuit_pointer(circuit_store_));
+    editing_logic_manager_.set_circuit_state(config_.state,
+                                             editable_circuit_pointer(circuit_store_));
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
@@ -87,13 +87,16 @@ auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> UIStatus {
             status |= close_all_setting_dialogs();
         }
 
-        // finalize editing if needed
-        // editing_logic_manager_.set_circuit_state(
-        //     new_state, editable_circuit_pointer(circuit_store_));
+        // finalizes editing if needed
+        // TODO: status
+        editing_logic_manager_.set_circuit_state(
+            new_config.state, editable_circuit_pointer(circuit_store_));
 
         // clear visible selection
         if (is_selection_state(config_.state)) {
+            // TODO: status
             circuit_store_.editable_circuit().clear_visible_selection();
+            // TODO: status
             circuit_store_.editable_circuit().finish_undo_group();
         }
 
@@ -110,7 +113,8 @@ auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> UIStatus {
 
         // update & notify
         config_.state = new_config.state;
-        // TODO: require update()
+        status.config_changed = true;
+        status.repaint_required = true;
     }
 
     if (config_.render != new_config.render) {
@@ -123,14 +127,16 @@ auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> UIStatus {
         // }
 
         config_.render = new_config.render;
-        // TODO: require update()
+        status.config_changed = true;
+        status.repaint_required = true;
     }
 
     if (config_.simulation != new_config.simulation) {
         circuit_store_.set_simulation_config(new_config.simulation);
 
         config_.simulation = new_config.simulation;
-        // TODO: require update()
+        status.config_changed = true;
+        status.repaint_required = true;
     }
 
     Ensures(class_invariant_holds());
@@ -457,35 +463,30 @@ auto CircuitUIModel::class_invariant_holds() const -> bool {
     Expects(circuit_renderer_.render_config() == config_.render);
     Expects(circuit_store_.simulation_config() == config_.simulation);
     Expects(circuit_store_.circuit_state() == config_.state);
-    // Expects(editing_logic_manager_.circuit_state() == config_.circuit_state);
-    // Expects(circuit_renderer_.render_config().direct_rendering ==
-    //         (this->requested_render_mode() == RenderMode::direct));
+    Expects(editing_logic_manager_.circuit_state() == config_.state);
 
     // Setting Dialogs
-    // Expects(is_editing_state(circuit_state_) ||
-    //         setting_dialog_manager_->open_dialog_count() == 0);
+    Expects(is_editing_state(config_.state) || dialog_manager_.empty());
 
-    // if (is_editing_state(config_.circuit_state) &&
-    //     !editing_logic_manager_.is_editing_active()) {
-    //     // Operation count
-    //     Expects(circuit_store_.editable_circuit().visible_selection_operation_count()
-    //     ==
-    //             0);
-    //
-    //     // History Group
-    //     Expects(!has_ungrouped_undo_entries(circuit_store_.editable_circuit()));
-    //
-    //     // History Enabled
-    //     Expects(is_history_enabled(circuit_store_.editable_circuit()));
-    // }
+    if (is_editing_state(config_.state) && !editing_logic_manager_.is_editing_active()) {
+        // Operation count
+        Expects(circuit_store_.editable_circuit().visible_selection_operation_count() ==
+                0);
+
+        // History Group
+        Expects(!has_ungrouped_undo_entries(circuit_store_.editable_circuit()));
+
+        // History Enabled
+        Expects(is_history_enabled(circuit_store_.editable_circuit()));
+    }
 
     return true;
 }
 
 auto CircuitUIModel::expensive_invariant_holds() const -> bool {
     // insertion state (expensive so only assert)
-    // assert(editing_logic_manager_.is_editing_active() ||
-    //        all_normal_display_state(circuit_store_.layout()));
+    assert(editing_logic_manager_.is_editing_active() ||
+           all_normal_display_state(circuit_store_.layout()));
 
     // editable circuit (expensive so only assert)
     assert(!is_editing_state(config_.state) ||

@@ -191,7 +191,7 @@ auto backend_thread_main(std::stop_token token,
             using namespace exporting;
 
             auto config = circuit.config();
-            std::cout << config.render.show_circuit << '\n';  //
+            std::cout << config.render.show_circuit << '\n';
 
             config.state.type = CircuitStateType::Editing;
             config.state.editing_default_mouse_action = DefaultMouseAction::selection;
