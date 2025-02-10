@@ -56,7 +56,7 @@ auto CircuitRenderer::reset() -> void {
     context_cache_.clear();
 
     fps_counter_ = EventCounter {};
-    last_render_size_ = BLSize {};
+    last_render_size_ = BLSizeI {};
 }
 
 auto CircuitRenderer::view_config() const -> const ViewConfig& {

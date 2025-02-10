@@ -142,6 +142,22 @@ auto CircuitUIModel::config() const -> CircuitUIConfig {
     return config_;
 }
 
+auto CircuitUIModel::statistics() const -> Statistics {
+    Expects(class_invariant_holds());
+
+    const auto surface_statistics = circuit_renderer_.statistics();
+    const auto result = Statistics {
+        .simulation_events_per_second = circuit_store_.simulation_events_per_second(),
+        .frames_per_second = surface_statistics.frames_per_second,
+        .pixel_scale = surface_statistics.pixel_scale,
+        .image_size = surface_statistics.image_size,
+        .render_mode = last_render_mode_,
+    };
+
+    Ensures(class_invariant_holds());
+    return result;
+}
+
 auto CircuitUIModel::do_action(UserAction action) -> UIStatus {
     Expects(class_invariant_holds());
 

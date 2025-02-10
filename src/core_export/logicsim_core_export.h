@@ -57,6 +57,14 @@ extern "C" {
 // NOLINTBEGIN(modernize-use-using)
 // NOLINTBEGIN(modernize-use-trailing-return-type)
 
+typedef struct ls_optional_double_t {
+    double value;
+    bool is_valid;
+#ifdef __cplusplus
+    [[nodiscard]] auto operator==(const ls_optional_double_t&) const -> bool = default;
+#endif
+} ls_optional_double_t;
+
 typedef struct ls_ui_status_t {
     bool repaint_required;
     bool config_changed;
@@ -120,11 +128,27 @@ typedef struct ls_ui_config_t {
 } ls_ui_config_t;
 
 // circuit::config
-LS_NODISCARD LS_CORE_API ls_ui_config_t ls_circuit_config(ls_circuit_t* obj) LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_ui_config_t ls_circuit_config(const ls_circuit_t* obj)
+    LS_NOEXCEPT;
 
 // circuit::set_config
 LS_NODISCARD LS_CORE_API ls_ui_status_t
 ls_circuit_set_config(ls_circuit_t* obj, const ls_ui_config_t* config) LS_NOEXCEPT;
+
+typedef struct ls_ui_statistics_t {
+    ls_optional_double_t simulation_events_per_second;
+    double frames_per_second;
+    double pixel_scale;
+    int32_t image_width_px;
+    int32_t image_height_px;
+#ifdef __cplusplus
+    [[nodiscard]] auto operator==(const ls_ui_statistics_t&) const -> bool = default;
+#endif
+} ls_ui_statistics_t;
+
+// circuit::statistic
+LS_NODISCARD LS_CORE_API ls_ui_statistics_t ls_circuit_statistic(const ls_circuit_t* obj)
+    LS_NOEXCEPT;
 
 // circuit::do_action
 LS_NODISCARD LS_CORE_API ls_ui_status_t
@@ -528,7 +552,8 @@ struct LSCircuitDeleter {
 class CircuitInterface {
    public:
     [[nodiscard]] inline auto set_config(const CircuitUIConfig& config) -> ls_ui_status_t;
-    [[nodiscard]] inline auto config() -> CircuitUIConfig;
+    [[nodiscard]] inline auto config() const -> CircuitUIConfig;
+    [[nodiscard]] inline auto statistics() const -> ls_ui_statistics_t;
 
     [[nodiscard]] inline auto do_action(UserAction action) -> ls_ui_status_t;
     [[nodiscard]] inline auto load(ExampleCircuitType type) -> ls_ui_status_t;
@@ -542,6 +567,10 @@ class CircuitInterface {
         -> ls_ui_status_t;
     [[nodiscard]] inline auto mouse_wheel(const MouseWheelEvent& event) -> ls_ui_status_t;
     [[nodiscard]] inline auto key_press(VirtualKey key) -> ls_ui_status_t;
+
+   private:
+    [[nodiscard]] inline auto get() const -> const ls_circuit_t*;
+    [[nodiscard]] inline auto get() -> ls_circuit_t*;
 
    private:
     std::unique_ptr<ls_circuit_t, detail::LSCircuitDeleter> obj_ {ls_circuit_construct()};
@@ -651,33 +680,47 @@ auto combine_wheel_event(const MouseWheelEvent& first, const MouseWheelEvent& se
     return std::nullopt;
 }
 
+auto CircuitInterface::get() const -> const ls_circuit_t* {
+    return obj_.get();
+}
+
+auto CircuitInterface::get() -> ls_circuit_t* {
+    return obj_.get();
+}
+
 auto CircuitInterface::set_config(const CircuitUIConfig& config) -> ls_ui_status_t {
     detail::ls_expects(obj_);
 
     const auto config_c = detail::from_exp(config);
-    return ls_circuit_set_config(obj_.get(), &config_c);
+    return ls_circuit_set_config(get(), &config_c);
 }
 
-auto CircuitInterface::config() -> CircuitUIConfig {
+auto CircuitInterface::config() const -> CircuitUIConfig {
     detail::ls_expects(obj_);
 
-    return detail::to_exp(ls_circuit_config(obj_.get()));
+    return detail::to_exp(ls_circuit_config(get()));
+}
+
+auto CircuitInterface::statistics() const -> ls_ui_statistics_t {
+    detail::ls_expects(obj_);
+
+    return ls_circuit_statistic(get());
 }
 
 auto CircuitInterface::do_action(UserAction action) -> ls_ui_status_t {
     detail::ls_expects(obj_);
-    return ls_circuit_do_action(obj_.get(), detail::to_underlying(action));
+    return ls_circuit_do_action(get(), detail::to_underlying(action));
 }
 
 auto CircuitInterface::load(ExampleCircuitType type) -> ls_ui_status_t {
     detail::ls_expects(obj_);
-    return ls_circuit_load(obj_.get(), detail::to_underlying(type));
+    return ls_circuit_load(get(), detail::to_underlying(type));
 };
 
 auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel_ratio,
                                      void* pixel_data, intptr_t stride) -> void {
     detail::ls_expects(obj_);
-    ls_circuit_render_layout(obj_.get(), width, height, pixel_ratio, pixel_data, stride);
+    ls_circuit_render_layout(get(), width, height, pixel_ratio, pixel_data, stride);
 }
 
 auto CircuitInterface::mouse_press(const MousePressEvent& event) -> ls_ui_status_t {
@@ -689,7 +732,7 @@ auto CircuitInterface::mouse_press(const MousePressEvent& event) -> ls_ui_status
         .button_enum = detail::to_underlying(event.button),
         .double_click = event.double_click,
     };
-    return ls_circuit_mouse_press(obj_.get(), &event_c);
+    return ls_circuit_mouse_press(get(), &event_c);
 };
 
 auto CircuitInterface::mouse_move(const MouseMoveEvent& event) -> ls_ui_status_t {
@@ -699,7 +742,7 @@ auto CircuitInterface::mouse_move(const MouseMoveEvent& event) -> ls_ui_status_t
         .position = event.position,
         .buttons_bitset = event.buttons.value(),
     };
-    return ls_circuit_mouse_move(obj_.get(), &event_c);
+    return ls_circuit_mouse_move(get(), &event_c);
 };
 
 auto CircuitInterface::mouse_release(const MouseReleaseEvent& event) -> ls_ui_status_t {
@@ -709,19 +752,19 @@ auto CircuitInterface::mouse_release(const MouseReleaseEvent& event) -> ls_ui_st
         .position = event.position,
         .button_enum = detail::to_underlying(event.button),
     };
-    return ls_circuit_mouse_release(obj_.get(), &event_c);
+    return ls_circuit_mouse_release(get(), &event_c);
 };
 
 auto CircuitInterface::mouse_wheel(const MouseWheelEvent& event) -> ls_ui_status_t {
     detail::ls_expects(obj_);
 
     const auto event_c = detail::from_exp(event);
-    return ls_circuit_mouse_wheel(obj_.get(), &event_c);
+    return ls_circuit_mouse_wheel(get(), &event_c);
 };
 
 auto CircuitInterface::key_press(VirtualKey key) -> ls_ui_status_t {
     detail::ls_expects(obj_);
-    return ls_circuit_key_press(obj_.get(), detail::to_underlying(key));
+    return ls_circuit_key_press(get(), detail::to_underlying(key));
 };
 
 }  // namespace logicsim::exporting

@@ -373,6 +373,24 @@ namespace {
     };
 }
 
+[[nodiscard]] auto to_c(const std::optional<double>& value) -> ls_optional_double_t {
+    if (value) {
+        return ls_optional_double_t {.value = *value, .is_valid = true};
+    }
+    return ls_optional_double_t {.value = 0, .is_valid = false};
+}
+
+[[nodiscard]] auto to_c(const circuit_ui_model::Statistics& statistics)
+    -> ls_ui_statistics_t {
+    return ls_ui_statistics_t {
+        .simulation_events_per_second = to_c(statistics.simulation_events_per_second),
+        .frames_per_second = statistics.frames_per_second,
+        .pixel_scale = statistics.pixel_scale,
+        .image_width_px = gsl::narrow<int32_t>(statistics.image_size.w),
+        .image_height_px = gsl::narrow<int32_t>(statistics.image_size.h),
+    };
+}
+
 }  // namespace
 }  // namespace logicsim
 
@@ -554,7 +572,7 @@ namespace {
 
 }  // namespace
 
-auto ls_circuit_config(ls_circuit_t* obj) noexcept -> ls_ui_config_t {
+auto ls_circuit_config(const ls_circuit_t* obj) noexcept -> ls_ui_config_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -571,6 +589,15 @@ auto ls_circuit_set_config(ls_circuit_t* obj,
         Expects(config);
 
         return to_c(obj->model.set_config(from_c(*config)));
+    });
+}
+
+auto ls_circuit_statistics(const ls_circuit_t* obj) noexcept -> ls_ui_statistics_t {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+
+        return to_c(obj->model.statistics());
     });
 }
 

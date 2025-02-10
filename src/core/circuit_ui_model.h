@@ -29,9 +29,7 @@
 // TODO: instead of serialize use some history ID to check if circuit needs saving
 
 // TODO: port configs
-//    [ ] UserAction
 //    [ ] HistoryStatus
-//    [ ] Statistics
 //    [ ] LoadError
 //    [ ] CircuitWidgetAllocInfo (simple string for now)
 
@@ -62,7 +60,7 @@ struct Statistics {
     std::optional<double> simulation_events_per_second;
     double frames_per_second;
     double pixel_scale;
-    BLSize image_size;
+    BLSizeI image_size;
     RenderMode render_mode;
 
     [[nodiscard]] auto format() const -> std::string;

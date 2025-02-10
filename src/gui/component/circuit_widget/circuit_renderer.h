@@ -39,7 +39,7 @@ namespace circuit_widget {
 struct SurfaceStatistics {
     double frames_per_second;
     double pixel_scale;
-    BLSize image_size;
+    BLSizeI image_size;
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const SurfaceStatistics&) const -> bool = default;
@@ -103,7 +103,7 @@ class CircuitRenderer {
 
     EventCounter fps_counter_ {};
     // to report render sizes in statistics
-    BLSize last_render_size_ {};
+    BLSizeI last_render_size_ {};
     // to draw mouse position debug information
     std::optional<MousePositionInfo> mouse_position_info_ {};
 };
