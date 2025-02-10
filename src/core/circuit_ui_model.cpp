@@ -79,13 +79,13 @@ CircuitUIModel::CircuitUIModel() {
 
 auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> UIStatus {
     Expects(class_invariant_holds());
-    print(new_config);
+    auto status = UIStatus {};
 
     if (config_.state != new_config.state) {
         // close dialogs
-        // if (!is_editing_state(new_config.circuit_state)) {
-        //     close_all_setting_dialogs();
-        // }
+        if (!is_editing_state(new_config.state)) {
+            status |= close_all_setting_dialogs();
+        }
 
         // finalize editing if needed
         // editing_logic_manager_.set_circuit_state(
@@ -135,7 +135,7 @@ auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> UIStatus {
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return UIStatus {};  // TODO
+    return status;
 }
 
 auto CircuitUIModel::config() const -> CircuitUIConfig {
@@ -438,6 +438,20 @@ auto CircuitUIModel::set_editable_circuit(
     Ensures(expensive_invariant_holds());
 }
 
+auto CircuitUIModel::close_all_setting_dialogs() -> UIStatus {
+    Expects(class_invariant_holds());
+    auto status = UIStatus {};
+
+    if (is_editing_state(config_.state)) {
+        status.dialogs_changed = !dialog_manager_.empty();
+        dialog_manager_.close_all(circuit_store_.editable_circuit());
+    }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return status;
+}
+
 auto CircuitUIModel::class_invariant_holds() const -> bool {
     // Configs
     Expects(circuit_renderer_.render_config() == config_.render);
@@ -484,24 +498,22 @@ auto CircuitUIModel::expensive_invariant_holds() const -> bool {
 // Free Functions
 //
 
-auto set_circuit_state(CircuitUIModel& model,
-                       CircuitWidgetState value) -> circuit_ui_model::UIStatus {
+auto set_circuit_state(CircuitUIModel& model, CircuitWidgetState value) -> UIStatus {
     auto config = model.config();
     config.state = value;
     return model.set_config(config);
 }
 
-auto set_render_config(CircuitUIModel& model,
-                       WidgetRenderConfig value) -> circuit_ui_model::UIStatus {
+auto set_render_config(CircuitUIModel& model, WidgetRenderConfig value) -> UIStatus {
     auto config = model.config();
     config.render = value;
     return model.set_config(config);
 }
 
-auto set_simulation_config(CircuitUIModel& model,
-                           SimulationConfig value) -> circuit_ui_model::UIStatus {
+auto set_simulation_config(CircuitUIModel& model, SimulationConfig value) -> UIStatus {
     auto config = model.config();
     config.simulation = value;
     return model.set_config(config);
 }
+
 }  // namespace logicsim

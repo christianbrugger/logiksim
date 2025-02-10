@@ -63,6 +63,7 @@ set(LS_CORE_SOURCES
     component/circuit_ui_model/checked_editable_circuit.cpp
     component/circuit_ui_model/circuit_renderer.cpp
     component/circuit_ui_model/circuit_store.cpp
+    component/circuit_ui_model/dialog_manager.cpp
     component/circuit_ui_model/zoom.cpp
     component/editable_circuit/editing/edit_decoration.cpp
     component/editable_circuit/editing/edit_decoration_detail.cpp
@@ -341,6 +342,7 @@ set(LS_CORE_SOURCES
     vocabulary/time.cpp
     vocabulary/time_literal.cpp
     vocabulary/time_rate.cpp
+    vocabulary/ui_status.cpp
     vocabulary/view_config.cpp
     vocabulary/widget_render_config.cpp
     vocabulary/wire_id.cpp

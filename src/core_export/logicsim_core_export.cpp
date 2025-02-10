@@ -40,7 +40,7 @@ template <typename Func>
 namespace logicsim {
 namespace {
 
-[[nodiscard]] auto to_c(circuit_ui_model::UIStatus status) -> ls_ui_status_t {
+[[nodiscard]] auto to_c(UIStatus status) -> ls_ui_status_t {
     return ls_ui_status_t {
         .repaint_required = status.repaint_required,
         .config_changed = status.config_changed,

@@ -5,15 +5,15 @@
 
 #include "core/component/circuit_ui_model/circuit_renderer.h"
 #include "core/component/circuit_ui_model/circuit_store.h"
+#include "core/component/circuit_ui_model/dialog_manager.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_drag_logic.h"
 #include "core/vocabulary/circuit_ui_config.h"
 #include "core/vocabulary/device_pixel_ratio.h"
 #include "core/vocabulary/history_status.h"
 #include "core/vocabulary/mouse_event.h"
 #include "core/vocabulary/render_mode.h"
-#include "core/vocabulary/thread_count.h"
+#include "core/vocabulary/ui_status.h"
 #include "core/vocabulary/view_config.h"
-#include "core/vocabulary/wire_render_style.h"
 
 #include <gsl/gsl>
 
@@ -28,11 +28,6 @@
 // TODO: use -Wconversion for clang & gcc
 // TODO: instead of serialize use some history ID to check if circuit needs saving
 
-// TODO: port configs
-//    [ ] HistoryStatus
-//    [ ] LoadError
-//    [ ] CircuitWidgetAllocInfo (simple string for now)
-
 namespace logicsim {
 
 class SettingDialogManager;
@@ -42,16 +37,6 @@ class EditableCircuit;
 class LoadError;
 
 namespace circuit_ui_model {
-
-/**
- * @brief: Status returned by UI functions.
- */
-struct UIStatus {
-    bool repaint_required {false};
-    bool config_changed {false};
-    bool history_changed {false};  // ???
-    bool dialogs_changed {false};
-};
 
 /**
  * @brief: Statistics of the Circuit Widget
@@ -114,7 +99,6 @@ template <>
  */
 class CircuitUIModel {
    public:
-    using UIStatus = circuit_ui_model::UIStatus;
     using Statistics = circuit_ui_model::Statistics;
     using UserAction = circuit_ui_model::UserAction;
 
@@ -170,7 +154,7 @@ class CircuitUIModel {
         std::optional<SimulationConfig> simulation_config = {}) -> void;
     auto abort_current_action() -> void;
     auto finalize_editing() -> void;
-    auto close_all_setting_dialogs() -> void;
+    [[nodiscard]] auto close_all_setting_dialogs() -> UIStatus;
 
     auto undo() -> void;
     auto redo() -> void;
@@ -197,28 +181,27 @@ class CircuitUIModel {
     circuit_ui_model::CircuitRenderer circuit_renderer_ {};
     circuit_ui_model::MouseDragLogic mouse_drag_logic_ {};
     // model::EditingLogicManager editing_logic_manager_;
+    circuit_ui_model::DialogManager dialog_manager_;
 
     bool simulation_image_update_pending_ {false};
 
     RenderMode last_render_mode_ {RenderMode::buffered};
-
-    // gsl::not_null<SettingDialogManager*> setting_dialog_manager_;
 };
 
 //
 // CircuitWidgetState
 //
 
-[[nodiscard]] auto set_circuit_state(CircuitUIModel& model, CircuitWidgetState value)
-    -> circuit_ui_model::UIStatus;
+[[nodiscard]] auto set_circuit_state(CircuitUIModel& model,
+                                     CircuitWidgetState value) -> UIStatus;
 auto stop_simulation(CircuitUIModel& model) -> void;
 
 //
 // RenderConfig
 //
 
-[[nodiscard]] auto set_render_config(CircuitUIModel& model, WidgetRenderConfig value)
-    -> circuit_ui_model::UIStatus;
+[[nodiscard]] auto set_render_config(CircuitUIModel& model,
+                                     WidgetRenderConfig value) -> UIStatus;
 
 // auto set_do_benchmark(CircuitUIModel& model, bool value) -> void;
 // auto set_show_circuit(CircuitUIModel& model, bool value) -> void;
@@ -237,8 +220,8 @@ auto stop_simulation(CircuitUIModel& model) -> void;
 // SimulationConfig
 //
 
-[[nodiscard]] auto set_simulation_config(CircuitUIModel& model, SimulationConfig value)
-    -> circuit_ui_model::UIStatus;
+[[nodiscard]] auto set_simulation_config(CircuitUIModel& model,
+                                         SimulationConfig value) -> UIStatus;
 
 // auto set_simulation_time_rate(CircuitUIModel& model, time_rate_t new_rate) -> void;
 // auto set_use_wire_delay(CircuitUIModel& model, bool value) -> void;

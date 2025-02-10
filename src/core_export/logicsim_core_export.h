@@ -156,7 +156,7 @@ typedef struct ls_ui_statistics_t {
 } ls_ui_statistics_t;
 
 // circuit::statistic
-LS_NODISCARD LS_CORE_API ls_ui_statistics_t ls_circuit_statistic(const ls_circuit_t* obj)
+LS_NODISCARD LS_CORE_API ls_ui_statistics_t ls_circuit_statistics(const ls_circuit_t* obj)
     LS_NOEXCEPT;
 
 typedef struct ls_history_status_t {
@@ -757,7 +757,7 @@ auto CircuitInterface::config() const -> CircuitUIConfig {
 }
 
 auto CircuitInterface::statistics() const -> ls_ui_statistics_t {
-    return ls_circuit_statistic(get());
+    return ls_circuit_statistics(get());
 }
 
 auto CircuitInterface::history_status() const -> ls_history_status_t {
