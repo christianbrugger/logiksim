@@ -10,6 +10,8 @@
 #include <memory>  // unique_ptr
 #include <optional>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #else
 #include <stdbool.h>
 #include <stdint.h>
@@ -64,6 +66,13 @@ typedef struct ls_optional_double_t {
     [[nodiscard]] auto operator==(const ls_optional_double_t&) const -> bool = default;
 #endif
 } ls_optional_double_t;
+
+// wraps std::string on logicsim side
+typedef struct ls_string_t ls_string_t;
+LS_NODISCARD LS_CORE_API ls_string_t* ls_string_construct() LS_NOEXCEPT;
+LS_CORE_API void ls_string_destruct(ls_string_t* obj) LS_NOEXCEPT;
+LS_CORE_API const char* ls_string_data(const ls_string_t* obj) LS_NOEXCEPT;
+LS_CORE_API size_t ls_string_size(const ls_string_t* obj) LS_NOEXCEPT;
 
 typedef struct ls_ui_status_t {
     bool repaint_required;
@@ -161,6 +170,10 @@ typedef struct ls_history_status_t {
 // circuit::history_status
 LS_NODISCARD LS_CORE_API ls_history_status_t
 ls_circuit_history_status(const ls_circuit_t* obj) LS_NOEXCEPT;
+
+// circuit::allocation_info
+LS_CORE_API void ls_circuit_get_allocation_info(const ls_circuit_t* obj,
+                                                ls_string_t* string) LS_NOEXCEPT;
 
 // circuit::do_action
 LS_NODISCARD LS_CORE_API ls_ui_status_t
@@ -290,7 +303,37 @@ constexpr auto to_underlying(Enum e) noexcept -> std::underlying_type_t<Enum> {
     return static_cast<std::underlying_type_t<Enum>>(e);
 }
 
+struct LSStringDeleter {
+    auto operator()(ls_string_t* obj) noexcept -> void {
+        ls_string_destruct(obj);
+    };
+};
+
 }  // namespace detail
+
+class WrappedString {
+   public:
+    [[nodiscard]] auto view() const -> std::string_view {
+        return std::string_view {ls_string_data(get()), ls_string_size(get())};
+    }
+
+    [[nodiscard]] auto string() const -> std::string {
+        return std::string {view()};
+    }
+
+    [[nodiscard]] auto get() -> ls_string_t* {
+        detail::ls_expects(obj_);
+        return obj_.get();
+    }
+
+    [[nodiscard]] auto get() const -> const ls_string_t* {
+        detail::ls_expects(obj_);
+        return obj_.get();
+    }
+
+   private:
+    std::unique_ptr<ls_string_t, detail::LSStringDeleter> obj_ {ls_string_construct()};
+};
 
 enum class ThreadCount : uint8_t {
     synchronous = 0,
@@ -567,6 +610,7 @@ class CircuitInterface {
     [[nodiscard]] inline auto config() const -> CircuitUIConfig;
     [[nodiscard]] inline auto statistics() const -> ls_ui_statistics_t;
     [[nodiscard]] inline auto history_status() const -> ls_history_status_t;
+    [[nodiscard]] inline auto allocation_info() const -> std::string;
 
     [[nodiscard]] inline auto do_action(UserAction action) -> ls_ui_status_t;
     [[nodiscard]] inline auto load(ExampleCircuitType type) -> ls_ui_status_t;
@@ -694,57 +738,52 @@ auto combine_wheel_event(const MouseWheelEvent& first, const MouseWheelEvent& se
 }
 
 auto CircuitInterface::get() const -> const ls_circuit_t* {
+    detail::ls_expects(obj_);
     return obj_.get();
 }
 
 auto CircuitInterface::get() -> ls_circuit_t* {
+    detail::ls_expects(obj_);
     return obj_.get();
 }
 
 auto CircuitInterface::set_config(const CircuitUIConfig& config) -> ls_ui_status_t {
-    detail::ls_expects(obj_);
-
     const auto config_c = detail::from_exp(config);
     return ls_circuit_set_config(get(), &config_c);
 }
 
 auto CircuitInterface::config() const -> CircuitUIConfig {
-    detail::ls_expects(obj_);
-
     return detail::to_exp(ls_circuit_config(get()));
 }
 
 auto CircuitInterface::statistics() const -> ls_ui_statistics_t {
-    detail::ls_expects(obj_);
-
     return ls_circuit_statistic(get());
 }
 
 auto CircuitInterface::history_status() const -> ls_history_status_t {
-    detail::ls_expects(obj_);
-
     return ls_circuit_history_status(get());
 }
 
+auto CircuitInterface::allocation_info() const -> std::string {
+    auto data = WrappedString {};
+    ls_circuit_get_allocation_info(get(), data.get());
+    return data.string();
+}
+
 auto CircuitInterface::do_action(UserAction action) -> ls_ui_status_t {
-    detail::ls_expects(obj_);
     return ls_circuit_do_action(get(), detail::to_underlying(action));
 }
 
 auto CircuitInterface::load(ExampleCircuitType type) -> ls_ui_status_t {
-    detail::ls_expects(obj_);
     return ls_circuit_load(get(), detail::to_underlying(type));
 };
 
 auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel_ratio,
                                      void* pixel_data, intptr_t stride) -> void {
-    detail::ls_expects(obj_);
     ls_circuit_render_layout(get(), width, height, pixel_ratio, pixel_data, stride);
 }
 
 auto CircuitInterface::mouse_press(const MousePressEvent& event) -> ls_ui_status_t {
-    detail::ls_expects(obj_);
-
     const auto event_c = ls_mouse_press_event_t {
         .position = event.position,
         .keyboard_modifiers_bitset = event.modifiers.value(),
@@ -755,8 +794,6 @@ auto CircuitInterface::mouse_press(const MousePressEvent& event) -> ls_ui_status
 };
 
 auto CircuitInterface::mouse_move(const MouseMoveEvent& event) -> ls_ui_status_t {
-    detail::ls_expects(obj_);
-
     const auto event_c = ls_mouse_move_event_t {
         .position = event.position,
         .buttons_bitset = event.buttons.value(),
@@ -765,8 +802,6 @@ auto CircuitInterface::mouse_move(const MouseMoveEvent& event) -> ls_ui_status_t
 };
 
 auto CircuitInterface::mouse_release(const MouseReleaseEvent& event) -> ls_ui_status_t {
-    detail::ls_expects(obj_);
-
     const auto event_c = ls_mouse_release_event_t {
         .position = event.position,
         .button_enum = detail::to_underlying(event.button),
@@ -775,14 +810,11 @@ auto CircuitInterface::mouse_release(const MouseReleaseEvent& event) -> ls_ui_st
 };
 
 auto CircuitInterface::mouse_wheel(const MouseWheelEvent& event) -> ls_ui_status_t {
-    detail::ls_expects(obj_);
-
     const auto event_c = detail::from_exp(event);
     return ls_circuit_mouse_wheel(get(), &event_c);
 };
 
 auto CircuitInterface::key_press(VirtualKey key) -> ls_ui_status_t {
-    detail::ls_expects(obj_);
     return ls_circuit_key_press(get(), detail::to_underlying(key));
 };
 

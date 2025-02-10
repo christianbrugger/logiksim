@@ -2,6 +2,7 @@
 
 #include "core/algorithm/to_enum.h"
 #include "core/circuit_ui_model.h"
+#include "core/vocabulary/allocation_info.h"
 
 #include <blend2d.h>
 #include <gsl/gsl>
@@ -9,6 +10,10 @@
 //
 // C Interface
 //
+
+struct ls_string_t {
+    std::string value {};
+};
 
 struct ls_circuit_t {
     logicsim::CircuitUIModel model {};
@@ -401,6 +406,30 @@ namespace {
 }  // namespace
 }  // namespace logicsim
 
+auto ls_string_construct() noexcept -> ls_string_t* {
+    return ls_translate_exception([]() {
+        return new ls_string_t {};  // NOLINT(bugprone-unhandled-exception-at-new)
+    });
+}
+
+auto ls_string_destruct(ls_string_t* obj) noexcept -> void {
+    delete obj;
+}
+
+auto ls_string_data(const ls_string_t* obj) noexcept -> const char* {
+    return ls_translate_exception([&]() {
+        Expects(obj);
+        return obj->value.data();
+    });
+}
+
+auto ls_string_size(const ls_string_t* obj) noexcept -> size_t {
+    return ls_translate_exception([&]() {
+        Expects(obj);
+        return obj->value.size();
+    });
+}
+
 auto ls_circuit_construct() noexcept -> ls_circuit_t* {
     return ls_translate_exception([]() {
         return new ls_circuit_t;  // NOLINT(bugprone-unhandled-exception-at-new)
@@ -408,7 +437,7 @@ auto ls_circuit_construct() noexcept -> ls_circuit_t* {
 }
 
 auto ls_circuit_destruct(ls_circuit_t* obj) noexcept -> void {
-    ls_translate_exception([&]() { delete obj; });
+    delete obj;
 }
 
 auto ls_circuit_load(ls_circuit_t* obj,
@@ -614,6 +643,17 @@ auto ls_circuit_history_status(const ls_circuit_t* obj) noexcept -> ls_history_s
         Expects(obj);
 
         return to_c(obj->model.history_status());
+    });
+}
+
+auto ls_circuit_get_allocation_info(const ls_circuit_t* obj,
+                                    ls_string_t* string) noexcept -> void {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+        Expects(string);
+
+        string->value = obj->model.allocation_info().format();
     });
 }
 
