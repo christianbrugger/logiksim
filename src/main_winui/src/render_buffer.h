@@ -90,8 +90,8 @@ class SwapChainParams {
 // Point Definition
 //
 
-[[nodiscard]] auto to_point_pixel(const PointDevice& point, const SwapChainParams& params)
-    -> PointPixel;
+[[nodiscard]] auto to_point_pixel(const PointDevice& point,
+                                  const SwapChainParams& params) -> PointPixel;
 [[nodiscard]] auto to_point_pixel_int(const PointDevice& point,
                                       const SwapChainParams& params) -> PointPixelInt;
 
@@ -207,8 +207,8 @@ class ConcurrentBuffer {
 
     template <std::invocable<const SwapChainParams&, const frame_t&> Func>
         requires std::same_as<
-            std::invoke_result_t<Func, const SwapChainParams&, frame_t&>,
-            BufferDrawStatus>
+                     std::invoke_result_t<Func, const SwapChainParams&, frame_t&>,
+                     BufferDrawStatus>
     auto draw_buffer(Func func) -> BufferDrawStatus;
 
     [[nodiscard]] auto params() const -> SwapChainParams;
@@ -275,8 +275,8 @@ class RenderBufferSink {
      */
     template <std::invocable<const SwapChainParams&, const frame_t&> Func>
         requires std::same_as<
-            std::invoke_result_t<Func, const SwapChainParams&, frame_t&>,
-            BufferDrawStatus>
+                     std::invoke_result_t<Func, const SwapChainParams&, frame_t&>,
+                     BufferDrawStatus>
     auto draw_buffer(Func func) -> BufferDrawStatus;
 
    private:

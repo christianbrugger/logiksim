@@ -1,11 +1,10 @@
 #ifndef LOGICSIM_CORE_CIRCUIT_UI_MODEL_H
 #define LOGICSIM_CORE_CIRCUIT_UI_MODEL_H
 
-// #include "gui/component/model/mouse_logic/editing_logic_manager.h"
-
 #include "core/component/circuit_ui_model/circuit_renderer.h"
 #include "core/component/circuit_ui_model/circuit_store.h"
 #include "core/component/circuit_ui_model/dialog_manager.h"
+#include "core/component/circuit_ui_model/mouse_logic/editing_logic_manager.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_drag_logic.h"
 #include "core/vocabulary/circuit_ui_config.h"
 #include "core/vocabulary/device_pixel_ratio.h"
@@ -27,6 +26,7 @@
 // TODO: also fix config in circuit-renderer (don't store size & ratio)
 // TODO: use -Wconversion for clang & gcc
 // TODO: instead of serialize use some history ID to check if circuit needs saving
+// TODO: rename vocabulary circuit widget state (anything else that is widget)
 
 namespace logicsim {
 
@@ -180,7 +180,7 @@ class CircuitUIModel {
     circuit_ui_model::CircuitStore circuit_store_ {};
     circuit_ui_model::CircuitRenderer circuit_renderer_ {};
     circuit_ui_model::MouseDragLogic mouse_drag_logic_ {};
-    // model::EditingLogicManager editing_logic_manager_;
+    circuit_ui_model::EditingLogicManager editing_logic_manager_;
     circuit_ui_model::DialogManager dialog_manager_;
 
     bool simulation_image_update_pending_ {false};

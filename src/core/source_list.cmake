@@ -58,8 +58,20 @@ set(LS_CORE_SOURCES
     benchmark/schematic_creation.cpp
     benchmark/simulation_runtime.cpp
 
+    component/circuit_ui_model/mouse_logic/editing_logic_concept.cpp
+    component/circuit_ui_model/mouse_logic/editing_logic_manager.cpp
+    component/circuit_ui_model/mouse_logic/editing_logic_variant.cpp
+    component/circuit_ui_model/mouse_logic/handle_resize.cpp
+    component/circuit_ui_model/mouse_logic/handle_setting.cpp
+    component/circuit_ui_model/mouse_logic/insert_decoration.cpp
+    component/circuit_ui_model/mouse_logic/insert_logicitem.cpp
+    component/circuit_ui_model/mouse_logic/insert_wire.cpp
     component/circuit_ui_model/mouse_logic/mouse_drag_logic.cpp
+    component/circuit_ui_model/mouse_logic/mouse_logic_result.cpp
     component/circuit_ui_model/mouse_logic/mouse_wheel_logic.cpp
+    component/circuit_ui_model/mouse_logic/selection_area.cpp
+    component/circuit_ui_model/mouse_logic/selection_move.cpp
+    component/circuit_ui_model/mouse_logic/selection_single.cpp
     component/circuit_ui_model/checked_editable_circuit.cpp
     component/circuit_ui_model/circuit_renderer.cpp
     component/circuit_ui_model/circuit_store.cpp

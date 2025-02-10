@@ -26,6 +26,6 @@ auto zoom(ViewConfig view_config, double steps, point_device_fine_t center) -> V
     return view_config.view_point();
 }
 
-}  // namespace circuit_widget
+}  // namespace circuit_ui_model
 
 }  // namespace logicsim

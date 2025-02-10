@@ -104,8 +104,8 @@ auto frame_buffer_size(const SwapChainParams& params) -> std::size_t {
     return w * h * m;
 }
 
-auto to_point_pixel(const PointDevice& point, const SwapChainParams& params)
-    -> PointPixel {
+auto to_point_pixel(const PointDevice& point,
+                    const SwapChainParams& params) -> PointPixel {
     const auto scale = params.rasterization_scale();
 
     return PointPixel {
@@ -114,8 +114,8 @@ auto to_point_pixel(const PointDevice& point, const SwapChainParams& params)
     };
 }
 
-auto to_point_pixel_int(const PointDevice& point, const SwapChainParams& params)
-    -> PointPixelInt {
+auto to_point_pixel_int(const PointDevice& point,
+                        const SwapChainParams& params) -> PointPixelInt {
     return to_point_pixel_int(to_point_pixel(point, params));
 }
 

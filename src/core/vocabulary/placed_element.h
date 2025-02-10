@@ -1,6 +1,9 @@
 #ifndef LOGICSIM_CORE_VOCABULARY_PLACED_ELEMENT_H
 #define LOGICSIM_CORE_VOCABULARY_PLACED_ELEMENT_H
 
+#include "core/vocabulary/placed_decoration.h"
+#include "core/vocabulary/placed_logicitem.h"
+
 #include <fmt/core.h>
 
 #include <variant>
