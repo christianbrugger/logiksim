@@ -273,8 +273,8 @@ LS_NODISCARD LS_CORE_API ls_ui_status_t ls_circuit_key_press(ls_circuit_t* obj,
 
 #ifdef __cplusplus
 
-[[nodiscard]] inline auto operator|(ls_ui_status_t a,
-                                    ls_ui_status_t b) -> ls_ui_status_t {
+[[nodiscard]] inline auto operator|(ls_ui_status_t a, ls_ui_status_t b)
+    -> ls_ui_status_t {
     return ls_ui_status_t {
         .repaint_required = a.repaint_required || b.repaint_required,
         .config_changed = a.config_changed || b.config_changed,
@@ -455,10 +455,10 @@ enum class UserAction : uint8_t {
 };
 
 enum class ExampleCircuitType : uint8_t {
-    example_circuit_1 = 1,
-    example_circuit_2 = 2,
-    example_circuit_3 = 3,
-    example_circuit_4 = 4,
+    simple = 1,
+    elements_wires = 2,
+    elements = 3,
+    wires = 4,
 };
 
 enum class VirtualKey : uint8_t {

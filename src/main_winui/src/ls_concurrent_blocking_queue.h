@@ -21,6 +21,7 @@ template <typename T>
 class ConcurrentBlockingQueue {
    public:
     auto push(const T& value) -> void;
+    auto push(T&& value) -> void;
 
     /**
      * @brief: Returns next queue item.
@@ -59,6 +60,15 @@ auto ConcurrentBlockingQueue<T>::push(const T& value) -> void {
     {
         const auto _ [[maybe_unused]] = std::lock_guard(queue_mutex_);
         queue_.push(value);
+    }
+    queue_cv_.notify_one();
+}
+
+template <typename T>
+auto ConcurrentBlockingQueue<T>::push(T&& value) -> void {
+    {
+        const auto _ [[maybe_unused]] = std::lock_guard(queue_mutex_);
+        queue_.push(std::move(value));
     }
     queue_cv_.notify_one();
 }

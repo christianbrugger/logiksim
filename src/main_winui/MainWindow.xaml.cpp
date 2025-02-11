@@ -117,7 +117,7 @@ auto MainWindow::InitializeComponent() -> void {
 }
 
 auto MainWindow::myButton_Click(IInspectable const&, RoutedEventArgs const&) -> void {
-    backend_tasks_.push(logicsim::exporting::ExampleCircuitType::example_circuit_2);
+    backend_tasks_.push(logicsim::exporting::ExampleCircuitType::elements_wires);
 }
 
 auto MainWindow::CanvasPanel_SizeChanged(IInspectable const&, SizeChangedEventArgs const&)
@@ -269,6 +269,25 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
 
     if (sender == CopyCommand()) {
         std::cout << "copy" << '\n';
+        return;
+    }
+
+    // Debug
+
+    if (sender == ExampleSimpleCommand()) {
+        backend_tasks_.push(logicsim::exporting::ExampleCircuitType::simple);
+        return;
+    }
+    if (sender == ExampleWiresCommand()) {
+        backend_tasks_.push(logicsim::exporting::ExampleCircuitType::wires);
+        return;
+    }
+    if (sender == ExampleElementsCommand()) {
+        backend_tasks_.push(logicsim::exporting::ExampleCircuitType::elements);
+        return;
+    }
+    if (sender == ExampleElementsWiresCommand()) {
+        backend_tasks_.push(logicsim::exporting::ExampleCircuitType::elements_wires);
         return;
     }
 }

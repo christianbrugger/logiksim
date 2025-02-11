@@ -17,8 +17,7 @@
     <Page x:Name="AppPage">
 
         <Page.Resources>
-            <StandardUICommand x:Key="CopyCommand" x:Name="CopyCommand" Kind="Copy" ExecuteRequested="XamlUICommand_ExecuteRequested">
-            </StandardUICommand>
+            <!-- File -->
             <XamlUICommand x:Key="NewCommand" x:Name="NewCommand" Label="New" ExecuteRequested="XamlUICommand_ExecuteRequested">
                 <XamlUICommand.KeyboardAccelerators>
                     <KeyboardAccelerator Modifiers="Control" Key="N"/>
@@ -50,6 +49,21 @@
                     <KeyboardAccelerator Modifiers="Control,Shift" Key="Q"/>
                 </XamlUICommand.KeyboardAccelerators>
             </XamlUICommand>
+
+            <!-- Edit -->
+            <StandardUICommand x:Key="CopyCommand" x:Name="CopyCommand" Kind="Copy" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <!-- View -->
+            <!-- Simulation -->
+            <!-- Debug -->
+            <XamlUICommand x:Key="ExampleSimpleCommand" x:Name="ExampleSimpleCommand" Label='Load "Simple" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
+            </XamlUICommand>
+            <XamlUICommand x:Key="ExampleWiresCommand" x:Name="ExampleWiresCommand" Label='Load "Wires" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
+            </XamlUICommand>
+            <XamlUICommand x:Key="ExampleElementsCommand" x:Name="ExampleElementsCommand" Label='Load "Elements" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
+            </XamlUICommand>
+            <XamlUICommand x:Key="ExampleElementsWiresCommand" x:Name="ExampleElementsWiresCommand" Label='Load "Elements + Wires" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
+            </XamlUICommand>
+            <!-- Help -->
         </Page.Resources>
 
         <Grid>
@@ -92,6 +106,13 @@
                             <KeyboardAccelerator Modifiers="Control" Key="V"/>
                         </MenuFlyoutItem.KeyboardAccelerators>
                     </MenuFlyoutItem>
+                </MenuBarItem>
+
+                <MenuBarItem Title="Debug">
+                    <MenuFlyoutItem Command="{StaticResource ExampleSimpleCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ExampleWiresCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ExampleElementsCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ExampleElementsWiresCommand}"/>
                 </MenuBarItem>
 
                 <MenuBarItem Title="Help">
