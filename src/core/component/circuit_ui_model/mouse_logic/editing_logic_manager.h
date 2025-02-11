@@ -54,17 +54,16 @@ class EditingLogicManager {
 
    public:
     [[nodiscard]] auto mouse_press(
-        point_device_fine_t position, const ViewConfig& view_config,
+        point_fine_t position_fine, const ViewConfig& view_config,
         KeyboardModifiers modifiers, bool double_click,
         EditableCircuit* editable_circuit) -> mouse_logic_status_t;
 
-    [[nodiscard]] auto mouse_move(
-        point_device_fine_t position, const ViewConfig& view_config,
-        EditableCircuit* editable_circuit) -> mouse_logic_status_t;
+    [[nodiscard]] auto mouse_move(point_fine_t position_fine,
+                                  EditableCircuit* editable_circuit)
+        -> mouse_logic_status_t;
 
     [[nodiscard]] auto mouse_release(
-        point_device_fine_t position, const ViewConfig& view_config,
-        EditableCircuit* editable_circuit,
+        point_fine_t position_fine, EditableCircuit* editable_circuit,
         const OpenSettingDialog& show_setting_dialog) -> mouse_logic_status_t;
 
    private:

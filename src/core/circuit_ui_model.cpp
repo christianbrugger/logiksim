@@ -3,6 +3,7 @@
 #include "core/circuit_example.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_logic_status.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_wheel_logic.h"
+#include "core/geometry/scene.h"
 #include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/mouse_event.h"
 
@@ -94,9 +95,7 @@ auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> UIStatus {
 
         // clear visible selection
         if (is_selection_state(config_.state)) {
-            // TODO: status
             circuit_store_.editable_circuit().clear_visible_selection();
-            // TODO: status
             circuit_store_.editable_circuit().finish_undo_group();
         }
 
@@ -207,12 +206,12 @@ auto CircuitUIModel::do_action(UserAction action) -> UIStatus {
             break;
         }
         case reload_circuit: {
-            // finalize_editing();
-            // const auto _ = Timer {"Reload Circuit"};
-            // auto layout = Layout {circuit_store_.layout()};
-            // // clear circuit to free memory
-            // do_action(UserAction::clear_circuit);
-            // set_editable_circuit(EditableCircuit {std::move(layout)});
+            status |= finalize_editing();
+            const auto _ = Timer {"Reload Circuit"};
+            auto layout = Layout {circuit_store_.layout()};
+            // clear circuit to free memory
+            status |= do_action(UserAction::clear_circuit);
+            status |= set_editable_circuit(EditableCircuit {std::move(layout)});
             break;
         }
 
@@ -255,8 +254,8 @@ auto CircuitUIModel::do_action(UserAction action) -> UIStatus {
             break;
         }
         case reset_view: {
-            // circuit_renderer_.set_view_point(ViewConfig {}.view_point());
-            // update();
+            circuit_renderer_.set_view_point(ViewConfig {}.view_point());
+            status.require_repaint = true;
             break;
         }
     }
@@ -319,8 +318,32 @@ auto CircuitUIModel::mouse_press(const MousePressEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
+    // const auto position = get_mouse_position(this, event_);
+    // log_mouse_position("mousePressEvent", position, event_);
+
     if (event.button == MouseButton::Middle) {
         mouse_drag_logic_.mouse_press(event.position);
+    }
+
+    if (event.button == MouseButton::Left) {
+        const auto position_fine =
+            to_grid_fine(event.position, circuit_renderer_.view_config());
+
+        status |= editing_logic_manager_.mouse_press(
+            position_fine, circuit_renderer_.view_config(), event.modifiers,
+            event.double_click, editable_circuit_pointer(circuit_store_));
+    }
+
+    if (event.button == MouseButton::Left && is_simulation(config_.state)) {
+        if (const auto point = to_grid(event.position, circuit_renderer_.view_config())) {
+            // TODO: status
+            circuit_store_.interactive_simulation().mouse_press(*point);
+            status.require_repaint = true;
+        }
+    }
+
+    if (event.button == MouseButton::Right) {
+        status |= abort_current_action();
     }
 
     Ensures(class_invariant_holds());
@@ -332,11 +355,22 @@ auto CircuitUIModel::mouse_move(const MouseMoveEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
+    // const auto position = get_mouse_position(this, event_);
+    // log_mouse_position("mouseMoveEvent", position, event_);
+
     if (event.buttons.is_set(MouseButton::Middle)) {
         set_view_config_offset(circuit_renderer_,
                                mouse_drag_logic_.mouse_move(
                                    event.position, circuit_renderer_.view_config()));
         status.require_repaint = true;
+    }
+
+    if (event.buttons.is_set(MouseButton::Left)) {
+        const auto position_fine =
+            to_grid_fine(event.position, circuit_renderer_.view_config());
+
+        status |= editing_logic_manager_.mouse_move(
+            position_fine, editable_circuit_pointer(circuit_store_));
     }
 
     Ensures(class_invariant_holds());
@@ -348,11 +382,31 @@ auto CircuitUIModel::mouse_release(const MouseReleaseEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
+    // const auto position = get_mouse_position(this, event_);
+    // log_mouse_position("mouseReleaseEvent", position, event_);
+
     if (event.button == MouseButton::Middle) {
         set_view_config_offset(circuit_renderer_,
                                mouse_drag_logic_.mouse_release(
                                    event.position, circuit_renderer_.view_config()));
         status.require_repaint = true;
+    }
+
+    if (event.button == MouseButton::Left) {
+        const auto show_setting_dialog =
+            [&](EditableCircuit& editable_circuit,
+                std::variant<logicitem_id_t, decoration_id_t> element_id) {
+                // TODO:
+                // dialog_manager_.show_setting_dialog(editable_circuit, element_id);
+                static_cast<void>(editable_circuit);
+                static_cast<void>(element_id);
+            };
+
+        const auto position_fine =
+            to_grid_fine(event.position, circuit_renderer_.view_config());
+
+        status |= editing_logic_manager_.mouse_release(
+            position_fine, editable_circuit_pointer(circuit_store_), show_setting_dialog);
     }
 
     Ensures(class_invariant_holds());
@@ -363,6 +417,9 @@ auto CircuitUIModel::mouse_release(const MouseReleaseEvent& event) -> UIStatus {
 auto CircuitUIModel::mouse_wheel(const MouseWheelEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
+
+    // // TODO use actually used value from wheel_scroll_zoom
+    // log_mouse_position("wheelEvent", get_mouse_position(this, event_), event_);
 
     if (const auto view_point =
             circuit_ui_model::wheel_scroll_zoom(event, circuit_renderer_.view_config())) {
@@ -377,28 +434,26 @@ auto CircuitUIModel::mouse_wheel(const MouseWheelEvent& event) -> UIStatus {
 
 auto CircuitUIModel::key_press(VirtualKey key) -> UIStatus {
     Expects(class_invariant_holds());
-
-    print(key);
+    auto status = UIStatus {};
 
     // Escape
     if (key == VirtualKey::Escape) {
-        // abort_current_action();
+        status |= abort_current_action();
     }
 
     // Enter
     if (key == VirtualKey::Enter) {
-        // if (editing_logic_manager_
-        //         .confirm_editing(editable_circuit_pointer(circuit_store_))
-        //         .require_update) {
-        //     update();
-        //     // some elements might have been deleted (e.g. move-selection confirmation)
-        //     on_setting_dialog_cleanup_request();
-        // }
+        status |= editing_logic_manager_.confirm_editing(
+            editable_circuit_pointer(circuit_store_));
+
+        // TODO: use status
+        // some elements might have been deleted (e.g. move-selection confirmation)
+        // status |= on_setting_dialog_cleanup_request();
     }
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return UIStatus {};
+    return status;
 }
 
 auto CircuitUIModel::set_editable_circuit(
@@ -472,7 +527,6 @@ auto CircuitUIModel::finalize_editing() -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
-    // TODO: handle decoration inserted
     status |=
         editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
 

@@ -2,6 +2,7 @@
 
 #include "core/algorithm/round.h"
 #include "core/geometry/grid.h"
+#include "core/geometry/point.h"
 #include "core/geometry/rect.h"
 #include "core/vocabulary/point_device.h"
 #include "core/vocabulary/point_device_fine.h"
@@ -81,16 +82,7 @@ auto to_grid_fine(BLPoint point, const ViewConfig &config) -> point_fine_t {
 
 auto to_grid(point_device_fine_t position,
              const ViewConfig &config) -> std::optional<point_t> {
-    const auto fine = to_grid_fine(position, config);
-
-    const auto x = round(fine.x);
-    const auto y = round(fine.y);
-
-    if (is_representable(x, y)) {
-        return point_t {gsl::narrow_cast<grid_t::value_type>(double {x}),
-                        gsl::narrow_cast<grid_t::value_type>(double {y})};
-    }
-    return std::nullopt;
+    return to_grid(to_grid_fine(position, config));
 }
 
 auto to_grid(point_device_t position,

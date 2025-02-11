@@ -4,6 +4,7 @@
 #include "core/component/circuit_ui_model/mouse_logic/mouse_logic_status.h"
 #include "core/default_element_definition.h"
 #include "core/editable_circuit.h"
+#include "core/geometry/point.h"
 #include "core/geometry/scene.h"
 #include "core/setting_handle.h"
 #include "core/size_handle.h"
@@ -138,11 +139,9 @@ auto EditingLogicManager::setup_colliding_move(
 namespace {
 
 auto create_editing_mouse_logic(
-    point_device_fine_t position, const ViewConfig& view_config,
-    KeyboardModifiers modifiers, const EditableCircuit& editable_circuit,
+    point_fine_t position, const ViewConfig& view_config, KeyboardModifiers modifiers,
+    const EditableCircuit& editable_circuit,
     EditingState editing_state) -> std::optional<EditingMouseLogic> {
-    const auto grid_fine_position = to_grid_fine(position, view_config);
-
     // insert logic items
     if (is_insert_logicitem_state(editing_state)) {
         return InsertLogicItemLogic {
@@ -165,18 +164,18 @@ auto create_editing_mouse_logic(
     // selection
     if (is_selection_state(editing_state)) {
         if (const auto size_handle = get_colliding_size_handle(
-                grid_fine_position, editable_circuit.layout(),
-                editable_circuit.visible_selection(), view_config)) {
+                position, editable_circuit.layout(), editable_circuit.visible_selection(),
+                view_config)) {
             return HandleResizeLogic {editable_circuit, *size_handle};
         }
 
-        if (const auto setting_handle = get_colliding_setting_handle(
-                grid_fine_position, editable_circuit.layout(),
-                editable_circuit.visible_selection())) {
+        if (const auto setting_handle =
+                get_colliding_setting_handle(position, editable_circuit.layout(),
+                                             editable_circuit.visible_selection())) {
             return HandleSettingLogic {*setting_handle};
         }
 
-        if (editable_circuit.has_element(grid_fine_position)) {
+        if (editable_circuit.has_element(position)) {
             if (!modifiers) {
                 return SelectionMoveLogic {editable_circuit};
             }
@@ -191,49 +190,47 @@ auto create_editing_mouse_logic(
 }  // namespace
 
 auto EditingLogicManager::mouse_press(
-    point_device_fine_t position, const ViewConfig& view_config,
+    point_fine_t position_fine, const ViewConfig& view_config,
     KeyboardModifiers modifiers, bool double_click,
     EditableCircuit* editable_circuit_) -> mouse_logic_status_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
     if (editable_circuit_ != nullptr && !mouse_logic_) {
-        mouse_logic_ = create_editing_mouse_logic(position, view_config, modifiers,
+        mouse_logic_ = create_editing_mouse_logic(position_fine, view_config, modifiers,
                                                   *editable_circuit_,
                                                   std::get<EditingState>(circuit_state_));
     }
 
     if (editable_circuit_ != nullptr && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
-        const auto grid_position = to_grid(position, view_config);
-        const auto grid_fine_position = to_grid_fine(position, view_config);
+        const auto position = to_grid(position_fine);
 
         std::visit(
-            overload {
-                [&](InsertLogicItemLogic& arg) {
-                    arg.mouse_press(editable_circuit, grid_position);
-                },
-                [&](InsertWireLogic& arg) {
-                    arg.mouse_press(editable_circuit, grid_position);
-                },
-                [&](InsertDecorationLogic& arg) {
-                    arg.mouse_press(editable_circuit, grid_position);
-                },
-                [&](SelectionAreaLogic& arg) {
-                    arg.mouse_press(editable_circuit, grid_fine_position, modifiers);
-                },
-                [&](SelectionSingleLogic& arg) {
-                    arg.mouse_press(editable_circuit, grid_fine_position, double_click);
-                },
-                [&](SelectionMoveLogic& arg) {
-                    arg.mouse_press(editable_circuit, grid_fine_position, double_click);
-                },
-                [&](HandleResizeLogic& arg) {
-                    arg.mouse_press(editable_circuit, grid_fine_position);
-                },
-                [&](HandleSettingLogic& arg) {
-                    arg.mouse_press(editable_circuit, grid_fine_position);
-                }},
+            overload {[&](InsertLogicItemLogic& arg) {
+                          arg.mouse_press(editable_circuit, position);
+                      },
+                      [&](InsertWireLogic& arg) {
+                          arg.mouse_press(editable_circuit, position);
+                      },
+                      [&](InsertDecorationLogic& arg) {
+                          arg.mouse_press(editable_circuit, position);
+                      },
+                      [&](SelectionAreaLogic& arg) {
+                          arg.mouse_press(editable_circuit, position_fine, modifiers);
+                      },
+                      [&](SelectionSingleLogic& arg) {
+                          arg.mouse_press(editable_circuit, position_fine, double_click);
+                      },
+                      [&](SelectionMoveLogic& arg) {
+                          arg.mouse_press(editable_circuit, position_fine, double_click);
+                      },
+                      [&](HandleResizeLogic& arg) {
+                          arg.mouse_press(editable_circuit, position_fine);
+                      },
+                      [&](HandleSettingLogic& arg) {
+                          arg.mouse_press(editable_circuit, position_fine);
+                      }},
             mouse_logic_.value());
     }
 
@@ -243,35 +240,34 @@ auto EditingLogicManager::mouse_press(
     };
 }
 
-auto EditingLogicManager::mouse_move(
-    point_device_fine_t position, const ViewConfig& view_config,
-    EditableCircuit* editable_circuit_) -> mouse_logic_status_t {
+auto EditingLogicManager::mouse_move(point_fine_t position_fine,
+                                     EditableCircuit* editable_circuit_)
+    -> mouse_logic_status_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
     if (editable_circuit_ != nullptr && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
-        const auto grid_position = to_grid(position, view_config);
-        const auto grid_fine_position = to_grid_fine(position, view_config);
+        const auto position = to_grid(position_fine);
 
         std::visit(overload {[&](InsertLogicItemLogic& arg) {
-                                 arg.mouse_move(editable_circuit, grid_position);
+                                 arg.mouse_move(editable_circuit, position);
                              },
                              [&](InsertWireLogic& arg) {
-                                 arg.mouse_move(editable_circuit, grid_position);
+                                 arg.mouse_move(editable_circuit, position);
                              },
                              [&](InsertDecorationLogic& arg) {
-                                 arg.mouse_move(editable_circuit, grid_position);
+                                 arg.mouse_move(editable_circuit, position);
                              },
                              [&](SelectionAreaLogic& arg) {
-                                 arg.mouse_move(editable_circuit, grid_fine_position);
+                                 arg.mouse_move(editable_circuit, position_fine);
                              },
                              [&](SelectionSingleLogic&) {},
                              [&](SelectionMoveLogic& arg) {
-                                 arg.mouse_move(editable_circuit, grid_fine_position);
+                                 arg.mouse_move(editable_circuit, position_fine);
                              },
                              [&](HandleResizeLogic& arg) {
-                                 arg.mouse_move(editable_circuit, grid_fine_position);
+                                 arg.mouse_move(editable_circuit, position_fine);
                              },
                              [&](HandleSettingLogic&) {}},
                    mouse_logic_.value());
@@ -284,8 +280,7 @@ auto EditingLogicManager::mouse_move(
 }
 
 auto EditingLogicManager::mouse_release(
-    point_device_fine_t position, const ViewConfig& view_config,
-    EditableCircuit* editable_circuit_,
+    point_fine_t position_fine, EditableCircuit* editable_circuit_,
     const OpenSettingDialog& show_setting_dialog) -> mouse_logic_status_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
@@ -297,36 +292,35 @@ auto EditingLogicManager::mouse_release(
 
     if (editable_circuit_ != nullptr && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
-        const auto grid_position = to_grid(position, view_config);
-        const auto grid_fine_position = to_grid_fine(position, view_config);
+        const auto position = to_grid(position_fine);
 
         const auto result = std::visit(
             overload {[&](InsertLogicItemLogic& arg) {
-                          arg.mouse_release(editable_circuit, grid_position);
+                          arg.mouse_release(editable_circuit, position);
                           return mouse_release_status_t {};
                       },
                       [&](InsertWireLogic& arg) {
-                          arg.mouse_release(editable_circuit, grid_position);
+                          arg.mouse_release(editable_circuit, position);
                           return mouse_release_status_t {};
                       },
                       [&](InsertDecorationLogic& arg) {
-                          return arg.mouse_release(editable_circuit, grid_position);
+                          return arg.mouse_release(editable_circuit, position);
                       },
                       [&](SelectionAreaLogic& arg) {
-                          arg.mouse_release(editable_circuit, grid_fine_position);
+                          arg.mouse_release(editable_circuit, position_fine);
                           return mouse_release_status_t {};
                       },
                       [&](SelectionSingleLogic&) { return mouse_release_status_t {}; },
                       [&](SelectionMoveLogic& arg) {
-                          arg.mouse_release(editable_circuit, grid_fine_position);
+                          arg.mouse_release(editable_circuit, position_fine);
                           return mouse_release_status_t {.finished = arg.is_finished()};
                       },
                       [&](HandleResizeLogic& arg) {
-                          arg.mouse_release(editable_circuit, grid_fine_position);
+                          arg.mouse_release(editable_circuit, position_fine);
                           return mouse_release_status_t {};
                       },
                       [&](HandleSettingLogic& arg) {
-                          arg.mouse_release(editable_circuit, grid_fine_position,
+                          arg.mouse_release(editable_circuit, position_fine,
                                             show_setting_dialog);
                           return mouse_release_status_t {};
                       }},

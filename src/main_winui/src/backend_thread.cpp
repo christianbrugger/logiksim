@@ -86,9 +86,10 @@ auto render_circuit(RenderBufferSource& render_source,
     });
 }
 
-[[nodiscard]] auto submit_backend_task(
-    const BackendTask& task, RenderBufferSource& render_source,
-    exporting::CircuitInterface& circuit) -> ls_ui_status_t {
+[[nodiscard]] auto submit_backend_task(const BackendTask& task,
+                                       RenderBufferSource& render_source,
+                                       exporting::CircuitInterface& circuit)
+    -> ls_ui_status_t {
     using namespace exporting;
 
     if (const auto* item = std::get_if<MousePressEvent>(&task)) {
@@ -191,11 +192,12 @@ auto backend_thread_main(std::stop_token token,
             using namespace exporting;
 
             auto config = circuit.config();
-            std::cout << config.render.show_circuit << '\n';
+            // config.state.type = CircuitStateType::Editing;
+            // config.state.editing_default_mouse_action = DefaultMouseAction::selection;
 
             config.state.type = CircuitStateType::Editing;
-            config.state.editing_default_mouse_action = DefaultMouseAction::selection;
-            config.render.show_collision_index = true;
+            config.state.editing_default_mouse_action =
+                DefaultMouseAction::insert_clock_generator;
 
             auto status = circuit.set_config(config);
             static_cast<void>(status);
@@ -219,8 +221,8 @@ auto backend_thread_main(std::stop_token token,
 }  // namespace
 
 auto create_backend_thread(std::unique_ptr<IBackendGuiActions> actions,
-                           BackendTaskSink sink,
-                           RenderBufferSource render_source) -> std::jthread {
+                           BackendTaskSink sink, RenderBufferSource render_source)
+    -> std::jthread {
     Expects(actions);
 
     return std::jthread(backend_thread_main, std::move(actions), std::move(sink),
