@@ -13,18 +13,101 @@
         <MicaBackdrop/>
     </Window.SystemBackdrop>
 
+
     <Page x:Name="AppPage">
+
+        <Page.Resources>
+            <StandardUICommand x:Key="CopyCommand" x:Name="CopyCommand" Kind="Copy" ExecuteRequested="XamlUICommand_ExecuteRequested">
+            </StandardUICommand>
+            <XamlUICommand x:Key="NewCommand" x:Name="NewCommand" Label="New" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                <XamlUICommand.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Control" Key="N"/>
+                </XamlUICommand.KeyboardAccelerators>
+            </XamlUICommand>
+            <XamlUICommand x:Key="OpenCommand" x:Name="OpenCommand" Label="Open..." ExecuteRequested="XamlUICommand_ExecuteRequested">
+                <XamlUICommand.IconSource>
+                    <SymbolIconSource Symbol="OpenFile" />
+                </XamlUICommand.IconSource>
+                <XamlUICommand.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Control" Key="O"/>
+                </XamlUICommand.KeyboardAccelerators>
+            </XamlUICommand>
+            <XamlUICommand x:Key="SaveCommand" x:Name="SaveCommand" Label="Save" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                <XamlUICommand.IconSource>
+                    <SymbolIconSource Symbol="Save" />
+                </XamlUICommand.IconSource>
+                <XamlUICommand.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Control" Key="S"/>
+                </XamlUICommand.KeyboardAccelerators>
+            </XamlUICommand>
+            <XamlUICommand x:Key="SaveAsCommand" x:Name="SaveAsCommand" Label="Save as..." ExecuteRequested="XamlUICommand_ExecuteRequested">
+                <XamlUICommand.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Control,Shift" Key="S"/>
+                </XamlUICommand.KeyboardAccelerators>
+            </XamlUICommand>
+            <XamlUICommand x:Key="ExitCommand" x:Name="ExitCommand" Label="Exit" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                <XamlUICommand.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Control,Shift" Key="Q"/>
+                </XamlUICommand.KeyboardAccelerators>
+            </XamlUICommand>
+        </Page.Resources>
+
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <MenuBar>
+                <MenuBarItem Title="File">
+                    <MenuFlyoutItem Command="{StaticResource NewCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource OpenCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource SaveCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource SaveAsCommand}"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutItem Command="{StaticResource ExitCommand}"/>
+                </MenuBarItem>
+
+                <MenuBarItem Title="Edit">
+                    <MenuFlyoutItem Command="{StaticResource CopyCommand}"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutItem Text="Undo">
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="Z"/>
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Text="Cut">
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="X"/>
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Text="Copy">
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="C"/>
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Text="Paste">
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="V"/>
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                </MenuBarItem>
+
+                <MenuBarItem Title="Help">
+                    <MenuFlyoutItem Text="About">
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="I"/>
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                </MenuBarItem>
+            </MenuBar>
+
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
             </StackPanel>
 
-            <Grid Grid.Row="1">
+            <Grid Grid.Row="2">
 
                 <canvas:CanvasSwapChainPanel
                     x:Name="CanvasPanel"

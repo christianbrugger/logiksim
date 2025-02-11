@@ -17,13 +17,14 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     // myButton
 
-    auto myButton_Click(IInspectable const&,
-                        Microsoft::UI::Xaml::RoutedEventArgs const&) -> void;
+    auto myButton_Click(IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&)
+        -> void;
 
     // CanvasPanel
 
-    auto CanvasPanel_SizeChanged(
-        IInspectable const&, Microsoft::UI::Xaml::SizeChangedEventArgs const&) -> void;
+    auto CanvasPanel_SizeChanged(IInspectable const&,
+                                 Microsoft::UI::Xaml::SizeChangedEventArgs const&)
+        -> void;
     auto CanvasPanel_Loaded(IInspectable const&,
                             Microsoft::UI::Xaml::RoutedEventArgs const&) -> void;
 
@@ -41,7 +42,13 @@ struct MainWindow : MainWindowT<MainWindow> {
     // Public Methods
 
     auto register_swap_chain(
-        const winrt::Microsoft::Graphics::Canvas::CanvasSwapChain& swap_chain) -> void;
+        const Microsoft::Graphics::Canvas::CanvasSwapChain& swap_chain) -> void;
+
+    // UI Command
+
+    void XamlUICommand_ExecuteRequested(
+        Microsoft::UI::Xaml::Input::XamlUICommand const& sender,
+        Microsoft::UI::Xaml::Input::ExecuteRequestedEventArgs const&);
 
    private:
     auto update_render_size() -> void;

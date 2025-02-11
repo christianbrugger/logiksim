@@ -28,8 +28,9 @@ class RenderGuiActions : public logicsim::IRenderGuiActions {
    public:
     RenderGuiActions(MainWindow& window);
 
-    auto register_swap_chain(winrt::Microsoft::Graphics::Canvas::CanvasSwapChain
-                                 swap_chain) const -> void override;
+    auto register_swap_chain(
+        winrt::Microsoft::Graphics::Canvas::CanvasSwapChain swap_chain) const
+        -> void override;
 
    private:
     weak_ref<MainWindow> window_weak_;
@@ -119,8 +120,8 @@ auto MainWindow::myButton_Click(IInspectable const&, RoutedEventArgs const&) -> 
     backend_tasks_.push(logicsim::exporting::ExampleCircuitType::example_circuit_2);
 }
 
-auto MainWindow::CanvasPanel_SizeChanged(IInspectable const&,
-                                         SizeChangedEventArgs const&) -> void {
+auto MainWindow::CanvasPanel_SizeChanged(IInspectable const&, SizeChangedEventArgs const&)
+    -> void {
     update_render_size();
 }
 
@@ -149,8 +150,9 @@ auto MainWindow::CanvasPanel_Loaded(IInspectable const&, RoutedEventArgs const&)
         });
 }
 
-auto MainWindow::CanvasPanel_PointerEvent(
-    IInspectable const& sender, Input::PointerRoutedEventArgs const& args) -> void {
+auto MainWindow::CanvasPanel_PointerEvent(IInspectable const& sender,
+                                          Input::PointerRoutedEventArgs const& args)
+    -> void {
     using namespace logicsim;
     using namespace winrt::Microsoft::UI::Input;
 
@@ -240,6 +242,35 @@ auto MainWindow::update_render_size() -> void {
     const auto params = logicsim::to_swap_chain_params_or_default(canvas_params);
 
     backend_tasks_.push(params);
+}
+
+void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& sender,
+                                                Input::ExecuteRequestedEventArgs const&) {
+    if (sender == NewCommand()) {
+        std::cout << "new" << '\n';
+        return;
+    }
+    if (sender == OpenCommand()) {
+        std::cout << "open" << '\n';
+        return;
+    }
+    if (sender == SaveCommand()) {
+        std::cout << "save" << '\n';
+        return;
+    }
+    if (sender == SaveAsCommand()) {
+        std::cout << "save as" << '\n';
+        return;
+    }
+    if (sender == ExitCommand()) {
+        Close();
+        return;
+    }
+
+    if (sender == CopyCommand()) {
+        std::cout << "copy" << '\n';
+        return;
+    }
 }
 
 }  // namespace winrt::main_winui::implementation
