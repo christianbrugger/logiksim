@@ -149,11 +149,11 @@ class CircuitUIModel {
     // auto keyPressEvent(QKeyEvent* event_) -> void override;
 
    private:
-    auto set_editable_circuit(
+    [[nodiscard]] auto set_editable_circuit(
         EditableCircuit&& editable_circuit, std::optional<ViewPoint> view_point = {},
-        std::optional<SimulationConfig> simulation_config = {}) -> void;
-    auto abort_current_action() -> void;
-    auto finalize_editing() -> void;
+        std::optional<SimulationConfig> simulation_config = {}) -> UIStatus;
+    [[nodiscard]] auto abort_current_action() -> UIStatus;
+    [[nodiscard]] auto finalize_editing() -> UIStatus;
     [[nodiscard]] auto close_all_setting_dialogs() -> UIStatus;
 
     auto undo() -> void;

@@ -42,7 +42,7 @@ namespace {
 
 [[nodiscard]] auto to_c(UIStatus status) -> ls_ui_status_t {
     return ls_ui_status_t {
-        .repaint_required = status.repaint_required,
+        .repaint_required = status.require_repaint,
         .config_changed = status.config_changed,
         .history_changed = status.history_changed,
         .dialogs_changed = status.dialogs_changed,

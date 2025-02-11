@@ -67,7 +67,7 @@ set(LS_CORE_SOURCES
     component/circuit_ui_model/mouse_logic/insert_logicitem.cpp
     component/circuit_ui_model/mouse_logic/insert_wire.cpp
     component/circuit_ui_model/mouse_logic/mouse_drag_logic.cpp
-    component/circuit_ui_model/mouse_logic/mouse_logic_result.cpp
+    component/circuit_ui_model/mouse_logic/mouse_logic_status.cpp
     component/circuit_ui_model/mouse_logic/mouse_wheel_logic.cpp
     component/circuit_ui_model/mouse_logic/selection_area.cpp
     component/circuit_ui_model/mouse_logic/selection_move.cpp

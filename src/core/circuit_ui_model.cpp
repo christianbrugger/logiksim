@@ -1,6 +1,7 @@
 #include "core/circuit_ui_model.h"
 
 #include "core/circuit_example.h"
+#include "core/component/circuit_ui_model/mouse_logic/mouse_logic_status.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_wheel_logic.h"
 #include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/mouse_event.h"
@@ -70,8 +71,8 @@ CircuitUIModel::CircuitUIModel() {
     circuit_store_.set_simulation_config(config_.simulation);
     circuit_store_.set_circuit_state(config_.state);
     circuit_renderer_.set_render_config(config_.render);
-    editing_logic_manager_.set_circuit_state(config_.state,
-                                             editable_circuit_pointer(circuit_store_));
+    static_cast<void>(editing_logic_manager_.set_circuit_state(
+        config_.state, editable_circuit_pointer(circuit_store_)));
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
@@ -88,8 +89,7 @@ auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> UIStatus {
         }
 
         // finalizes editing if needed
-        // TODO: status
-        editing_logic_manager_.set_circuit_state(
+        status |= editing_logic_manager_.set_circuit_state(
             new_config.state, editable_circuit_pointer(circuit_store_));
 
         // clear visible selection
@@ -114,7 +114,7 @@ auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> UIStatus {
         // update & notify
         config_.state = new_config.state;
         status.config_changed = true;
-        status.repaint_required = true;
+        status.require_repaint = true;
     }
 
     if (config_.render != new_config.render) {
@@ -128,7 +128,7 @@ auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> UIStatus {
 
         config_.render = new_config.render;
         status.config_changed = true;
-        status.repaint_required = true;
+        status.require_repaint = true;
     }
 
     if (config_.simulation != new_config.simulation) {
@@ -136,7 +136,7 @@ auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> UIStatus {
 
         config_.simulation = new_config.simulation;
         status.config_changed = true;
-        status.repaint_required = true;
+        status.require_repaint = true;
     }
 
     Ensures(class_invariant_holds());
@@ -197,12 +197,13 @@ auto CircuitUIModel::statistics() const -> Statistics {
 
 auto CircuitUIModel::do_action(UserAction action) -> UIStatus {
     Expects(class_invariant_holds());
+    auto status = UIStatus {};
 
     switch (action) {
         using enum UserAction;
 
         case clear_circuit: {
-            set_editable_circuit(EditableCircuit {});
+            status |= set_editable_circuit(EditableCircuit {});
             break;
         }
         case reload_circuit: {
@@ -262,24 +263,24 @@ auto CircuitUIModel::do_action(UserAction action) -> UIStatus {
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return UIStatus {};  // TODO
+    return status;
 }
 
 auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
     Expects(class_invariant_holds());
+    auto status = UIStatus {};
 
     const auto default_view_point = ViewConfig {}.view_point();
     const auto default_simulation_config = SimulationConfig {};
 
     // clear circuit to free memory
-    auto status = do_action(UserAction::clear_circuit);
-    static_cast<void>(status);  // TODO
-    set_editable_circuit(load_example_with_logging(number), default_view_point,
-                         default_simulation_config);
+    status |= do_action(UserAction::clear_circuit);
+    status |= set_editable_circuit(load_example_with_logging(number), default_view_point,
+                                   default_simulation_config);
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return UIStatus {.repaint_required = true};
+    return status;
 }
 
 auto CircuitUIModel::render(BLImage& bl_image,
@@ -294,9 +295,7 @@ auto CircuitUIModel::render(BLImage& bl_image,
     }
 
     else if (std::holds_alternative<EditingState>(config_.state)) {
-        // const auto show_size_handles =
-        // !editing_logic_manager_.is_area_selection_active();
-        const auto show_size_handles = false;
+        const auto show_size_handles = !editing_logic_manager_.is_area_selection_active();
         circuit_renderer_.render_editable_circuit(
             bl_image, circuit_store_.editable_circuit(), show_size_handles);
     }
@@ -318,15 +317,15 @@ auto CircuitUIModel::render(BLImage& bl_image,
 
 auto CircuitUIModel::mouse_press(const MousePressEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
+    auto status = UIStatus {};
 
     if (event.button == MouseButton::Middle) {
         mouse_drag_logic_.mouse_press(event.position);
-        // update();
     }
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return UIStatus {};
+    return status;
 }
 
 auto CircuitUIModel::mouse_move(const MouseMoveEvent& event) -> UIStatus {
@@ -337,7 +336,7 @@ auto CircuitUIModel::mouse_move(const MouseMoveEvent& event) -> UIStatus {
         set_view_config_offset(circuit_renderer_,
                                mouse_drag_logic_.mouse_move(
                                    event.position, circuit_renderer_.view_config()));
-        status.repaint_required = true;
+        status.require_repaint = true;
     }
 
     Ensures(class_invariant_holds());
@@ -353,7 +352,7 @@ auto CircuitUIModel::mouse_release(const MouseReleaseEvent& event) -> UIStatus {
         set_view_config_offset(circuit_renderer_,
                                mouse_drag_logic_.mouse_release(
                                    event.position, circuit_renderer_.view_config()));
-        status.repaint_required = true;
+        status.require_repaint = true;
     }
 
     Ensures(class_invariant_holds());
@@ -368,7 +367,7 @@ auto CircuitUIModel::mouse_wheel(const MouseWheelEvent& event) -> UIStatus {
     if (const auto view_point =
             circuit_ui_model::wheel_scroll_zoom(event, circuit_renderer_.view_config())) {
         circuit_renderer_.set_view_point(view_point.value());
-        status.repaint_required = true;
+        status.require_repaint = true;
     }
 
     Ensures(class_invariant_holds());
@@ -404,8 +403,9 @@ auto CircuitUIModel::key_press(VirtualKey key) -> UIStatus {
 
 auto CircuitUIModel::set_editable_circuit(
     EditableCircuit&& editable_circuit, std::optional<ViewPoint> view_point,
-    std::optional<SimulationConfig> simulation_config) -> void {
+    std::optional<SimulationConfig> simulation_config) -> UIStatus {
     Expects(class_invariant_holds());
+    auto status = UIStatus {};
 
     // finalize_editing();
     // close_all_setting_dialogs();
@@ -414,9 +414,7 @@ auto CircuitUIModel::set_editable_circuit(
     // disable simulation
     const auto was_simulation = is_simulation(config_.state);
     if (was_simulation) {
-        // TODO
-        auto info = set_circuit_state(*this, NonInteractiveState {});
-        static_cast<void>(info);
+        status |= set_circuit_state(*this, NonInteractiveState {});
     }
 
     // set new circuit
@@ -425,23 +423,62 @@ auto CircuitUIModel::set_editable_circuit(
         circuit_renderer_.set_view_point(view_point.value());
     }
     if (simulation_config) {
-        // TODO
-        auto info = set_simulation_config(*this, simulation_config.value());
-        static_cast<void>(info);
+        status |= set_simulation_config(*this, simulation_config.value());
     }
 
     // re-enable simulation
     if (was_simulation) {
-        // TODO
-        auto info = set_circuit_state(*this, SimulationState {});
-        static_cast<void>(info);
+        status |= set_circuit_state(*this, SimulationState {});
     }
 
-    // update();
-    // TODO update
+    status.require_repaint = true;
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+    return status;
+}
+
+auto CircuitUIModel::abort_current_action() -> UIStatus {
+    Expects(class_invariant_holds());
+    auto status = UIStatus {};
+
+    if (is_editing_state(config_.state)) {
+        // 1) cancel current editing
+        if (editing_logic_manager_.is_editing_active()) {
+            status |= finalize_editing();
+        }
+
+        else {
+            // 2) cancel active selection
+            if (is_selection_state(config_.state)) {
+                circuit_store_.editable_circuit().clear_visible_selection();
+                circuit_store_.editable_circuit().finish_undo_group();
+                status.require_repaint = true;
+            }
+
+            // 3) switch to selection editing mode
+            if (is_inserting_state(config_.state)) {
+                status |= set_circuit_state(*this, defaults::selection_state);
+            }
+        }
+    }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return status;
+}
+
+auto CircuitUIModel::finalize_editing() -> UIStatus {
+    Expects(class_invariant_holds());
+    auto status = UIStatus {};
+
+    // TODO: handle decoration inserted
+    status |=
+        editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return status;
 }
 
 auto CircuitUIModel::close_all_setting_dialogs() -> UIStatus {

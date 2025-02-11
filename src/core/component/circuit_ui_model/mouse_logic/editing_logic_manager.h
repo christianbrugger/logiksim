@@ -15,7 +15,7 @@ class EditableCircuit;
 
 namespace circuit_ui_model {
 
-struct mouse_logic_result_t;
+struct mouse_logic_status_t;
 
 /**
  * @brief: Manages the mouse interactions in the editing state
@@ -28,12 +28,15 @@ struct mouse_logic_result_t;
  */
 class EditingLogicManager {
    public:
-    auto set_circuit_state(CircuitWidgetState new_state,
-                           EditableCircuit* editable_circuit) -> void;
+    [[nodiscard]] auto set_circuit_state(CircuitWidgetState new_state,
+                                         EditableCircuit* editable_circuit)
+        -> mouse_logic_status_t;
     [[nodiscard]] auto circuit_state() const -> CircuitWidgetState;
 
-    auto finalize_editing(EditableCircuit* editable_circuit_) -> mouse_logic_result_t;
-    auto confirm_editing(EditableCircuit* editable_circuit_) -> mouse_logic_result_t;
+    [[nodiscard]] auto finalize_editing(EditableCircuit* editable_circuit_)
+        -> mouse_logic_status_t;
+    [[nodiscard]] auto confirm_editing(EditableCircuit* editable_circuit_)
+        -> mouse_logic_status_t;
 
     [[nodiscard]] auto is_editing_active() const -> bool;
     [[nodiscard]] auto is_area_selection_active() const -> bool;
@@ -53,16 +56,16 @@ class EditingLogicManager {
     [[nodiscard]] auto mouse_press(
         point_device_fine_t position, const ViewConfig& view_config,
         KeyboardModifiers modifiers, bool double_click,
-        EditableCircuit* editable_circuit) -> mouse_logic_result_t;
+        EditableCircuit* editable_circuit) -> mouse_logic_status_t;
 
     [[nodiscard]] auto mouse_move(
         point_device_fine_t position, const ViewConfig& view_config,
-        EditableCircuit* editable_circuit) -> mouse_logic_result_t;
+        EditableCircuit* editable_circuit) -> mouse_logic_status_t;
 
     [[nodiscard]] auto mouse_release(
         point_device_fine_t position, const ViewConfig& view_config,
         EditableCircuit* editable_circuit,
-        const OpenSettingDialog& show_setting_dialog) -> mouse_logic_result_t;
+        const OpenSettingDialog& show_setting_dialog) -> mouse_logic_status_t;
 
    private:
     [[nodiscard]] auto class_invariant_holds() const -> bool;

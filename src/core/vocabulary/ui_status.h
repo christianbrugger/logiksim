@@ -9,7 +9,7 @@ namespace logicsim {
  * @brief: Status returned by UI functions.
  */
 struct UIStatus {
-    bool repaint_required {false};
+    bool require_repaint {false};
     bool config_changed {false};
     bool history_changed {false};  // ???
     bool dialogs_changed {false};
@@ -27,7 +27,7 @@ constexpr auto operator|=(UIStatus& a, UIStatus b) noexcept -> UIStatus&;
 
 constexpr auto operator|(UIStatus a, UIStatus b) noexcept -> UIStatus {
     return UIStatus {
-        .repaint_required = a.repaint_required || b.repaint_required,
+        .require_repaint = a.require_repaint || b.require_repaint,
         .config_changed = a.config_changed || b.config_changed,
         .history_changed = a.history_changed || b.history_changed,
         .dialogs_changed = a.dialogs_changed || b.dialogs_changed,

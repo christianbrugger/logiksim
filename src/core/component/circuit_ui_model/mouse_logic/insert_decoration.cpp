@@ -1,8 +1,7 @@
 #include "core/component/circuit_ui_model/mouse_logic/insert_decoration.h"
 
-#include "core/component/circuit_ui_model/mouse_logic/mouse_logic_result.h"
+#include "core/component/circuit_ui_model/mouse_logic/mouse_logic_status.h"
 #include "core/editable_circuit.h"
-#include "core/selection.h"
 #include "core/vocabulary/insertion_mode.h"
 
 #include <optional>
@@ -52,7 +51,7 @@ auto InsertDecorationLogic::mouse_move(EditableCircuit& editable_circuit,
 
 auto InsertDecorationLogic::mouse_release(EditableCircuit& editable_circuit,
                                           std::optional<point_t> position)
-    -> mouse_release_result_t {
+    -> mouse_release_status_t {
     temp_element_ =
         remove_and_insert(editable_circuit, temp_element_, element_definition_, position,
                           InsertionMode::insert_or_discard);
@@ -62,11 +61,21 @@ auto InsertDecorationLogic::mouse_release(EditableCircuit& editable_circuit,
     save_destroy_selection(editable_circuit, temp_element_);
     temp_element_ = null_selection_id;
 
-    return mouse_release_result_t {
+    // TODO: open dialog
+    static_cast<void>(inserted_decoration);
+    // set_circuit_state(defaults::selection_state);
+    // circuit_store_.editable_circuit().reopen_undo_group();
+    // circuit_store_.editable_circuit().set_visible_selection(
+    //     Selection {{}, std::array {result.inserted_decoration}});
+    // circuit_store_.editable_circuit().finish_undo_group();
+
+    return mouse_release_status_t {
         .finished = true,
-        .mouse_logic_result {
-            .inserted_decoration = inserted_decoration,
-        },
+        .mouse_logic_status =
+            mouse_logic_status_t {
+                .require_repaint = true,
+                .dialogs_changed = true,
+            },
     };
 }
 

@@ -14,7 +14,7 @@ class EditableCircuit;
 
 namespace circuit_ui_model {
 
-struct mouse_release_result_t;
+struct mouse_release_status_t;
 
 class InsertDecorationLogic {
    public:
@@ -25,7 +25,7 @@ class InsertDecorationLogic {
     auto mouse_move(EditableCircuit& editable_circuit,
                     std::optional<point_t> position) -> void;
     auto mouse_release(EditableCircuit& editable_circuit,
-                       std::optional<point_t> position) -> mouse_release_result_t;
+                       std::optional<point_t> position) -> mouse_release_status_t;
 
     auto finalize(EditableCircuit& editable_circuit) -> void;
 
