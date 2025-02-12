@@ -51,19 +51,91 @@
             </XamlUICommand>
 
             <!-- Edit -->
+            <StandardUICommand x:Key="UndoCommand" x:Name="UndoCommand" Kind="Undo" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <StandardUICommand x:Key="RedoCommand" x:Name="RedoCommand" Kind="Redo" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+
+            <StandardUICommand x:Key="CutCommand" x:Name="CutCommand" Kind="Cut" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
             <StandardUICommand x:Key="CopyCommand" x:Name="CopyCommand" Kind="Copy" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <StandardUICommand x:Key="PasteCommand" x:Name="PasteCommand" Kind="Paste" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <StandardUICommand x:Key="DeleteCommand" x:Name="DeleteCommand" Kind="Delete" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <StandardUICommand x:Key="SelectAllCommand" x:Name="SelectAllCommand" Kind="SelectAll" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+
             <!-- View -->
+            <XamlUICommand x:Key="ZoomInCommand" x:Name="ZoomInCommand" Label="Zoom In" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                <XamlUICommand.KeyboardAccelerators>
+                    <!-- <KeyboardAccelerator Modifiers="Control" Key="+"/>-->
+                </XamlUICommand.KeyboardAccelerators>
+            </XamlUICommand>
+            <XamlUICommand x:Key="ZoomOutCommand" x:Name="ZoomOutCommand" Label="Zoom Out" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                <XamlUICommand.KeyboardAccelerators>
+                    <!-- <KeyboardAccelerator Modifiers="Control" Key="+"/>-->
+                </XamlUICommand.KeyboardAccelerators>
+            </XamlUICommand>
+            <XamlUICommand x:Key="ResetZoomCommand" x:Name="ResetZoomCommand" Label="Reset Zoom" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+
+
+            <XamlUICommand x:Key="WireStyleRedCommand" x:Name="WireStyleRedCommand" Label="Red" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="WireStyleBoldCommand" x:Name="WireStyleBoldCommand" Label="Bold" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="WireStyleBoldRedCommand" x:Name="WireStyleBoldRedCommand" Label="Bold Red" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+
+
             <!-- Simulation -->
+            <XamlUICommand x:Key="StartSimulationCommand" x:Name="StartSimulationCommand" Label="Start Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                <XamlUICommand.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="F5"/>
+                </XamlUICommand.KeyboardAccelerators>
+            </XamlUICommand>
+            <XamlUICommand x:Key="StopSimulationCommand" x:Name="StopSimulationCommand" Label="Stop Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                <XamlUICommand.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="F6"/>
+                </XamlUICommand.KeyboardAccelerators>
+            </XamlUICommand>
+
+            <XamlUICommand x:Key="WireDelayCommand" x:Name="WireDelayCommand" Label="Wire Delay" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+
+            <XamlUICommand x:Key="SimulationSpeed0nsCommand" x:Name="SimulationSpeed0nsCommand" Label="0 ns/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="SimulationSpeed1usCommand" x:Name="SimulationSpeed1usCommand" Label="1 us/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="SimulationSpeed10usCommand" x:Name="SimulationSpeed10usCommand" Label="10 us/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="SimulationSpeed100usCommand" x:Name="SimulationSpeed100usCommand" Label="100 us/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="SimulationSpeed1msCommand" x:Name="SimulationSpeed1msCommand" Label="1 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="SimulationSpeed10mnsCommand" x:Name="SimulationSpeed10mnsCommand" Label="10 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="SimulationSpeed100msCommand" x:Name="SimulationSpeed100msCommand" Label="100 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="SimulationSpeed1sCommand" x:Name="SimulationSpeed1sCommand" Label="1 s/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="SimulationSpeed10sCommand" x:Name="SimulationSpeed10sCommand" Label="10 s/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+
             <!-- Debug -->
-            <XamlUICommand x:Key="ExampleSimpleCommand" x:Name="ExampleSimpleCommand" Label='Load "Simple" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
+            <XamlUICommand x:Key="BenchmarkCommand" x:Name="BenchmarkCommand" Label='Benchamrk' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="DebugInfoDialogCommand" x:Name="DebugInfoDialogCommand" Label='Debug Info Dialog' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+
+            <XamlUICommand x:Key="ShowCircuitCommand" x:Name="ShowCircuitCommand" Label='Show Circuit" Example' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="ShowCollisionIndexCommand" x:Name="ShowCollisionIndexCommand" Label='Show Collision Index' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="ShowConnectionIndexCommand" x:Name="ShowConnectionIndexCommand" Label='Show Connection Index' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="ShowSelectionIndexCommand" x:Name="ShowSelectionIndexCommand" Label='Show Selection Index' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+
+            <XamlUICommand x:Key="ReloadCommand" x:Name="ReloadCommand" Label='Reload' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="ExampleSimpleCommand" x:Name="ExampleSimpleCommand" Label='Load "Simple" Example' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="ExampleWiresCommand" x:Name="ExampleWiresCommand" Label='Load "Wires" Example' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="ExampleElementsCommand" x:Name="ExampleElementsCommand" Label='Load "Elements" Example' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="ExampleElementsWiresCommand" x:Name="ExampleElementsWiresCommand" Label='Load "Elements + Wires" Example' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+
+            <XamlUICommand x:Key="ShowRenderBordersCommand" x:Name="ShowRenderBordersCommand" Label='Show Render Borders' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="ShowMousePositionCommand" x:Name="ShowMousePositionCommand" Label='Show Mouse Position' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="EnterNonInteractiveModeCommand" x:Name="EnterNonInteractiveModeCommand" Label='Enter Non-Interactive Mode' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+
+            <XamlUICommand x:Key="JitRenderingCommand" x:Name="JitRenderingCommand" Label='JIT Rendering' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                <XamlUICommand.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Control,Shift"  Key="J"/>
+                </XamlUICommand.KeyboardAccelerators>
             </XamlUICommand>
-            <XamlUICommand x:Key="ExampleWiresCommand" x:Name="ExampleWiresCommand" Label='Load "Wires" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
-            </XamlUICommand>
-            <XamlUICommand x:Key="ExampleElementsCommand" x:Name="ExampleElementsCommand" Label='Load "Elements" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
-            </XamlUICommand>
-            <XamlUICommand x:Key="ExampleElementsWiresCommand" x:Name="ExampleElementsWiresCommand" Label='Load "Elements + Wires" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
-            </XamlUICommand>
+
+            <XamlUICommand x:Key="RenderSynchronousCommand" x:Name="RenderSynchronousCommand" Label='Synchronous Rendering' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="Render2ThreadsCommand" x:Name="Render2ThreadsCommand" Label='2 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="Render4ThreadsCommand" x:Name="Render4ThreadsCommand" Label='4 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="Render8ThreadsCommand" x:Name="Render8ThreadsCommand" Label='8 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+
             <!-- Help -->
+            <XamlUICommand x:Key="AboutCommand" x:Name="AboutCommand" Label="About" ExecuteRequested="XamlUICommand_ExecuteRequested">
+            </XamlUICommand>
         </Page.Resources>
 
         <Grid>
@@ -84,43 +156,76 @@
                 </MenuBarItem>
 
                 <MenuBarItem Title="Edit">
-                    <MenuFlyoutItem Command="{StaticResource CopyCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource UndoCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource RedoCommand}"/>
                     <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Text="Undo">
-                        <MenuFlyoutItem.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="Z"/>
-                        </MenuFlyoutItem.KeyboardAccelerators>
-                    </MenuFlyoutItem>
-                    <MenuFlyoutItem Text="Cut">
-                        <MenuFlyoutItem.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="X"/>
-                        </MenuFlyoutItem.KeyboardAccelerators>
-                    </MenuFlyoutItem>
-                    <MenuFlyoutItem Text="Copy">
-                        <MenuFlyoutItem.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="C"/>
-                        </MenuFlyoutItem.KeyboardAccelerators>
-                    </MenuFlyoutItem>
-                    <MenuFlyoutItem Text="Paste">
-                        <MenuFlyoutItem.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="V"/>
-                        </MenuFlyoutItem.KeyboardAccelerators>
-                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource CutCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource CopyCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource PasteCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource DeleteCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource SelectAllCommand}"/>
+                </MenuBarItem>
+
+                <MenuBarItem Title="View">
+                    <MenuFlyoutItem Command="{StaticResource ZoomInCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ZoomOutCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ResetZoomCommand}"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutSubItem Text="Wire Style">
+                        <MenuFlyoutItem Command="{StaticResource WireStyleRedCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource WireStyleBoldCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource WireStyleBoldRedCommand}"/>
+                    </MenuFlyoutSubItem>
+                </MenuBarItem>
+
+                <MenuBarItem Title="Simulation">
+                    <MenuFlyoutItem Command="{StaticResource StartSimulationCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource StopSimulationCommand}"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutItem Command="{StaticResource WireDelayCommand}"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutSubItem Text="Simulation Speed">
+                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed0nsCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed1usCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed10usCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed100usCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed1msCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed10mnsCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed100msCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed1sCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed10sCommand}"/>
+                    </MenuFlyoutSubItem>
                 </MenuBarItem>
 
                 <MenuBarItem Title="Debug">
+                    <MenuFlyoutItem Command="{StaticResource BenchmarkCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource DebugInfoDialogCommand}"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutItem Command="{StaticResource ShowCircuitCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ShowCollisionIndexCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ShowConnectionIndexCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ShowSelectionIndexCommand}"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutItem Command="{StaticResource ReloadCommand}"/>
                     <MenuFlyoutItem Command="{StaticResource ExampleSimpleCommand}"/>
                     <MenuFlyoutItem Command="{StaticResource ExampleWiresCommand}"/>
                     <MenuFlyoutItem Command="{StaticResource ExampleElementsCommand}"/>
                     <MenuFlyoutItem Command="{StaticResource ExampleElementsWiresCommand}"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutItem Command="{StaticResource ShowRenderBordersCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ShowMousePositionCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource EnterNonInteractiveModeCommand}"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutItem Command="{StaticResource JitRenderingCommand}"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutItem Command="{StaticResource RenderSynchronousCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource Render2ThreadsCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource Render4ThreadsCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource Render8ThreadsCommand}"/>
                 </MenuBarItem>
 
                 <MenuBarItem Title="Help">
-                    <MenuFlyoutItem Text="About">
-                        <MenuFlyoutItem.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="I"/>
-                        </MenuFlyoutItem.KeyboardAccelerators>
-                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource AboutCommand}"/>
                 </MenuBarItem>
             </MenuBar>
 
