@@ -258,8 +258,8 @@ LS_NODISCARD LS_CORE_API ls_combine_wheel_event_result_t
 ls_combine_wheel_event(const ls_mouse_wheel_event_t* first,
                        const ls_mouse_wheel_event_t* second) LS_NOEXCEPT;
 
-LS_NODISCARD LS_CORE_API ls_ui_status_t ls_circuit_key_press(ls_circuit_t* obj,
-                                                             int32_t key) LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_ui_status_t
+ls_circuit_key_press(ls_circuit_t* obj, uint8_t key_enum) LS_NOEXCEPT;
 
 // NOLINTEND(modernize-use-trailing-return-type)
 // NOLINTEND(modernize-use-using)
@@ -273,8 +273,8 @@ LS_NODISCARD LS_CORE_API ls_ui_status_t ls_circuit_key_press(ls_circuit_t* obj,
 
 #ifdef __cplusplus
 
-[[nodiscard]] inline auto operator|(ls_ui_status_t a, ls_ui_status_t b)
-    -> ls_ui_status_t {
+[[nodiscard]] inline auto operator|(ls_ui_status_t a,
+                                    ls_ui_status_t b) -> ls_ui_status_t {
     return ls_ui_status_t {
         .repaint_required = a.repaint_required || b.repaint_required,
         .config_changed = a.config_changed || b.config_changed,

@@ -1,6 +1,7 @@
 #include "core/schematic.h"
 
 #include "core/algorithm/fmt_join.h"
+#include "core/algorithm/to_vector.h"
 #include "core/allocated_size/folly_small_vector.h"
 #include "core/allocated_size/std_vector.h"
 #include "core/element/logicitem/schematic_info.h"
@@ -333,12 +334,22 @@ auto format_element(const Schematic &schematic, element_id_t element_id) -> std:
 
 auto format_element_with_connections(const Schematic &schematic,
                                      element_id_t element_id) -> std::string {
-    const auto input_connections =
-        transform_view(inputs(schematic, element_id),
-                       [&](input_t input) { return schematic.output(input); });
-    const auto output_connections =
-        transform_view(outputs(schematic, element_id),
-                       [&](output_t output) { return schematic.input(output); });
+    // in c++23 should be able to use inputs directly in transform_view
+    // does not work in c++20, because transform view does not have const begin
+    const auto all_inputs = to_vector(inputs(schematic, element_id));
+    const auto all_outputs = to_vector(outputs(schematic, element_id));
+
+    const auto input_connections = transform_view(
+        all_inputs, [&](input_t input) { return schematic.output(input); });
+    const auto output_connections = transform_view(
+        all_outputs, [&](output_t output) { return schematic.input(output); });
+
+    // const auto input_connections =
+    //     transform_view(inputs(schematic, element_id),
+    //                    [&](input_t input) { return schematic.output(input); });
+    // const auto output_connections =
+    //     transform_view(outputs(schematic, element_id),
+    //                    [&](output_t output) { return schematic.input(output); });
 
     return fmt::format(
         "<Element {}: {}x{} {}, inputs = {}, outputs = {}>", element_id,

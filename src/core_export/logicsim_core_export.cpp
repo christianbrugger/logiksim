@@ -741,11 +741,12 @@ auto ls_combine_wheel_event(const ls_mouse_wheel_event_t* first,
     });
 }
 
-auto ls_circuit_key_press(ls_circuit_t* obj, int32_t key) noexcept -> ls_ui_status_t {
+auto ls_circuit_key_press(ls_circuit_t* obj,
+                          uint8_t key_enum) noexcept -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
 
-        return to_c(obj->model.key_press(to_virtual_key(key)));
+        return to_c(obj->model.key_press(to_virtual_key(key_enum)));
     });
 }

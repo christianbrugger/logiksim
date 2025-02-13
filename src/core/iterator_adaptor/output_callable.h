@@ -7,6 +7,17 @@
 
 namespace logicsim {
 
+/**
+ * @brief: Output iterator that calls a function.
+ *
+ * Note, lambdas with capture are not move-assignable and when used
+ * directly with output_callable([..](..){..}) will not fullfill the iterator concept.
+ *
+ * In this case use std::ref and assign the lambda to a variable.
+ *     ... output_callable(std::ref(func)) ...
+ *
+ *  See: https://stackoverflow.com/questions/35392919
+ */
 template <class Func>
 class output_callable {
    public:

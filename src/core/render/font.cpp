@@ -2,13 +2,10 @@
 
 #include "core/file.h"
 #include "core/font_style_property.h"
-#include "core/iterator_adaptor/output_callable.h"
 #include "core/logging.h"
 #include "core/resource.h"
 
 #include <gsl/gsl>
-
-#include <algorithm>
 
 namespace logicsim {
 
@@ -18,7 +15,9 @@ namespace {
     auto array = BLArray<uint8_t> {};
 
     array.reserve(data.size());
-    std::ranges::copy(data, output_callable([&](const char& c) { array.append(c); }));
+    for (const auto c : data) {
+        array.append(c);
+    }
 
     return array;
 }
