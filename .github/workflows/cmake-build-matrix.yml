@@ -30,9 +30,9 @@ jobs:
       matrix:
         include:
           # Debug & Release Builds
-          # - { preset: "win-msvc-debug"               , os: "windows-2022" }
-          # - { preset: "win-msvc-debug-no-pch"        , os: "windows-2022" }
-          # - { preset: "win-msvc-release-no-lto"      , os: "windows-2022" }
+          - { preset: "win-msvc-debug"               , os: "windows-2022" }
+          - { preset: "win-msvc-debug-no-pch"        , os: "windows-2022" }
+          - { preset: "win-msvc-release-no-lto"      , os: "windows-2022" }
 
           - { preset: "win-clang-debug"              , os: "windows-2022" }
           - { preset: "win-clang-debug-no-pch"       , os: "windows-2022" }
@@ -47,7 +47,7 @@ jobs:
           - { preset: "linux-clang-release"          , os: "ubuntu-24.04" }
 
           # Sanitizer Builds
-          # - { preset: "win-msvc-address"             , os: "windows-2022" }
+          - { preset: "win-msvc-address"             , os: "windows-2022" }
           - { preset: "win-clang-address"            , os: "windows-2022" }
           - { preset: "win-clang-undefined"          , os: "windows-2022" }
         # - { preset: "win-clang-undefined-rel"      , os: "windows-2022" }
