@@ -125,6 +125,8 @@ function(ls_set_compiler_warnings target_name)
         # violate optimizer strict aliasing rules
         list(APPEND warnings -Wstrict-aliasing)
 
+        # warn for implicit conversion loses precision
+        list(APPEND warnings -Wconversion)
         # warn the user if a class with virtual functions has a non-virtual destructor.
         list(APPEND warnings -Wnon-virtual-dtor)
         # warn for c-style casts
