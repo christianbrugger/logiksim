@@ -31,15 +31,7 @@ struct decoration_id_t {
     [[nodiscard]] explicit constexpr decoration_id_t() = default;
     [[nodiscard]] explicit constexpr decoration_id_t(integral auto value_);
 
-    /**
-     * @brief: The conversion to std::size_t
-     *
-     * Note When indexing arrays use .at(id.value) instead, due to performance reasons.
-     *
-     * Throws exception for negative / invalid ids.
-     */
     [[nodiscard]] explicit constexpr operator std::size_t() const;
-
     [[nodiscard]] explicit constexpr operator difference_type() const;
 
     /**

@@ -27,15 +27,7 @@ struct segment_index_t {
     [[nodiscard]] explicit constexpr segment_index_t() = default;
     [[nodiscard]] explicit constexpr segment_index_t(integral auto value_);
 
-    /**
-     * @brief: The conversion to std::size_t
-     *
-     * Note When indexing arrays use .at(id.value) instead, due to performance reasons.
-     *
-     * Throws exception for negative / invalid ids.
-     */
     [[nodiscard]] explicit constexpr operator std::size_t() const;
-
     [[nodiscard]] explicit constexpr operator difference_type() const;
     /**
      * @brief: The bool cast tests if this index is valid.

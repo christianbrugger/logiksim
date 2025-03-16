@@ -149,7 +149,7 @@ auto _is_display_enabled(const Layout& layout, logicitem_id_t logicitem_id,
 
     const auto input_id = display::enable_input_id;
     const auto is_inverted = layout.logicitems().input_inverted(logicitem_id, input_id);
-    return input_values->at(input_id.value) ^ is_inverted;
+    return input_values->at(std::size_t {input_id}) ^ is_inverted;
 }
 
 auto _is_display_twos_complement(const Layout& layout, logicitem_id_t logicitem_id,
@@ -161,7 +161,7 @@ auto _is_display_twos_complement(const Layout& layout, logicitem_id_t logicitem_
         return is_inverted;
     }
 
-    return input_values->at(input_id.value) ^ is_inverted;
+    return input_values->at(std::size_t {input_id}) ^ is_inverted;
 }
 
 auto _draw_number_display_input_labels(Context& ctx, const Layout& layout,
