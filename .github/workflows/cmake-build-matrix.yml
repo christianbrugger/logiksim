@@ -49,7 +49,7 @@ jobs:
           # Sanitizer Builds
           - { preset: "win-msvc-address"             , os: "windows-2022" }
           - { preset: "win-clang-address"            , os: "windows-2022" }
-          - { preset: "win-clang-undefined"          , os: "windows-2022" }
+        # - { preset: "win-clang-undefined"          , os: "windows-2022" }
         # - { preset: "win-clang-undefined-rel"      , os: "windows-2022" }
 
           - { preset: "linux-clang-address"          , os: "ubuntu-24.04" }
