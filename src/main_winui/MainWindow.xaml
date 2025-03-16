@@ -30,7 +30,7 @@
             </XamlUICommand>
             <XamlUICommand x:Key="OpenCommand" x:Name="OpenCommand" Label="Open..." ExecuteRequested="XamlUICommand_ExecuteRequested">
                 <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons" Glyph="&#xE838;" />
+                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE838;" />
                 </XamlUICommand.IconSource>
                 <XamlUICommand.KeyboardAccelerators>
                     <KeyboardAccelerator Modifiers="Control" Key="O"/>
@@ -46,7 +46,7 @@
             </XamlUICommand>
             <XamlUICommand x:Key="SaveAsCommand" x:Name="SaveAsCommand" Label="Save as..." ExecuteRequested="XamlUICommand_ExecuteRequested">
                 <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons" Glyph="&#xE792;" />
+                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE792;" />
                 </XamlUICommand.IconSource>
                 <XamlUICommand.KeyboardAccelerators>
                     <KeyboardAccelerator Modifiers="Control,Shift" Key="S"/>
@@ -54,7 +54,7 @@
             </XamlUICommand>
             <XamlUICommand x:Key="ExitCommand" x:Name="ExitCommand" Label="Exit" ExecuteRequested="XamlUICommand_ExecuteRequested">
                 <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons" Glyph="&#xE8BB;" />
+                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE8BB;" />
                 </XamlUICommand.IconSource>
                 <XamlUICommand.KeyboardAccelerators>
                     <KeyboardAccelerator Modifiers="Control,Shift" Key="Q"/>
@@ -99,7 +99,7 @@
             <!-- Simulation -->
             <XamlUICommand x:Key="StartSimulationCommand" x:Name="StartSimulationCommand" Label="Start Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested">
                 <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons" Glyph="&#xE768;"/>
+                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE768;"/>
                 </XamlUICommand.IconSource>
                 <XamlUICommand.KeyboardAccelerators>
                     <KeyboardAccelerator Key="F5"/>
@@ -107,7 +107,7 @@
             </XamlUICommand>
             <XamlUICommand x:Key="StopSimulationCommand" x:Name="StopSimulationCommand" Label="Stop Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested">
                 <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons" Glyph="&#xE71A;" />
+                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE71A;" />
                 </XamlUICommand.IconSource>
                 <XamlUICommand.KeyboardAccelerators>
                     <KeyboardAccelerator Key="F6"/>
@@ -159,7 +159,7 @@
             <!-- Help -->
             <XamlUICommand x:Key="AboutCommand" x:Name="AboutCommand" Label="About" ExecuteRequested="XamlUICommand_ExecuteRequested">
                 <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons" Glyph="&#xE946;" />
+                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE946;" />
                 </XamlUICommand.IconSource>
             </XamlUICommand>
         </Page.Resources>
@@ -213,7 +213,7 @@
                     <MenuFlyoutSeparator/>
                     <MenuFlyoutSubItem Text="Simulation Speed">
                         <MenuFlyoutSubItem.Icon>
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEC4A;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xEC4A;" />
                         </MenuFlyoutSubItem.Icon>
                         <MenuFlyoutItem Command="{StaticResource SimulationSpeed0nsCommand}"/>
                         <MenuFlyoutItem Command="{StaticResource SimulationSpeed1usCommand}"/>
