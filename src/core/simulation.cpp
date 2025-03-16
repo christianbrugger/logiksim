@@ -170,7 +170,7 @@ auto get_changed_outputs(const logic_small_vector_t &old_outputs,
     }
 
     auto result = connection_ids_t {};
-    for (auto index : std::ranges::views::iota(std::size(old_outputs))) {
+    for (auto index : std::ranges::views::iota(std::size_t {0}, std::size(old_outputs))) {
         if (old_outputs[index] != new_outputs[index]) {
             result.push_back(connection_id_t {index});
         }
