@@ -863,7 +863,7 @@ auto split_broken_tree(CircuitData& circuit, point_t p0, point_t p1) -> wire_id_
 
     // move over segments
     for (const auto segment_index : tree_from.indices().reverse()) {
-        if (mask[segment_index.value]) {
+        if (mask.at(size_t {segment_index})) {
             auto segment_part = segment_part_t {segment_t {p0_tree_id, segment_index},
                                                 tree_from.part(segment_index)};
             move_segment_between_trees(circuit, segment_part, new_tree_id);

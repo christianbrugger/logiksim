@@ -41,7 +41,7 @@ auto HistoryBuffer::push_back(time_t transition_time) -> void {
 }
 
 auto HistoryBuffer::at(history_index_t index) const -> const time_t& {
-    return buffer_.at(index.value);
+    return buffer_.at(std::size_t {index});
 }
 
 auto HistoryBuffer::front() const -> const time_t& {

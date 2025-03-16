@@ -143,7 +143,7 @@ TEST(LogicItemLayout, StaticBodyPoints) {
 //
 
 TEST(LogicItemLayout, RandomItems) {
-    for (auto seed : range(1'000)) {
+    for (auto seed : range(uint32_t {1'000})) {
         auto rng = get_random_number_generator(seed);
 
         const auto data = get_random_layout_calculation_data(rng);

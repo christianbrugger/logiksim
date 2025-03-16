@@ -83,7 +83,7 @@ auto WireStore::normalize() -> void {
     }
 
     // sort inserted
-    Expects(segment_trees_.size() >= first_inserted_wire_id.value);
+    Expects(segment_trees_.size() >= std::size_t {first_inserted_wire_id});
     std::ranges::sort(segment_trees_.begin() + first_inserted_wire_id.value,
                       segment_trees_.end());
 }
@@ -124,7 +124,7 @@ auto WireStore::swap_wires(wire_id_t wire_id_1, wire_id_t wire_id_2) -> void {
 
     const auto swap_ids = [&](auto &container) {
         using std::swap;
-        swap(container.at(wire_id_1.value), container.at(wire_id_2.value));
+        swap(container.at(size_t {wire_id_1}), container.at(size_t {wire_id_2}));
     };
 
     swap_ids(segment_trees_);
@@ -132,23 +132,23 @@ auto WireStore::swap_wires(wire_id_t wire_id_1, wire_id_t wire_id_2) -> void {
 }
 
 auto WireStore::segment_tree(wire_id_t wire_id) const -> const SegmentTree & {
-    return segment_trees_.at(wire_id.value);
+    return segment_trees_.at(size_t {wire_id});
 }
 
 auto WireStore::modifiable_segment_tree(wire_id_t wire_id) -> SegmentTree & {
     // reset caches
     if (is_inserted(wire_id)) {
-        bounding_rects_.at(wire_id.value) = invalid_bounding_rect;
+        bounding_rects_.at(size_t {wire_id}) = invalid_bounding_rect;
     }
 
-    return segment_trees_.at(wire_id.value);
+    return segment_trees_.at(size_t {wire_id});
 }
 
 auto WireStore::bounding_rect(wire_id_t wire_id) const -> rect_t {
     if (!is_inserted(wire_id)) [[unlikely]] {
         throw std::runtime_error("only inserted wires have a stable bounding rect");
     }
-    auto &rect = bounding_rects_.at(wire_id.value);
+    auto &rect = bounding_rects_.at(size_t {wire_id});
 
     if (rect == invalid_bounding_rect) {
         // update bounding rect

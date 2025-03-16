@@ -78,8 +78,9 @@ auto depth_first_search_visited(const AdjacencyGraph<index_t>& graph, Visitor&& 
         start, result.visited,
         // discover_connections
         [&](index_t node, std::output_iterator<index_t> auto output) -> void {
-            for (auto neighbor_id : reverse_range(graph.neighbors().at(node).size())) {
-                *output = graph.neighbors()[node][neighbor_id];
+            const auto node_s = gsl::narrow<std::size_t>(node);
+            for (auto neighbor_id : reverse_range(graph.neighbors().at(node_s).size())) {
+                *output = graph.neighbors()[node_s][neighbor_id];
                 ++output;
             }
         },

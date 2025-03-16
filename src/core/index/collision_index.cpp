@@ -466,7 +466,7 @@ auto collision_end_points(segment_info_t segment) -> collision_points_t {
  */
 auto collision_points(segment_info_t segment) -> collision_points_t {
     auto result = collision_points_t {};
-    result.reserve(distance(segment.line) + std::size_t {1});
+    result.reserve(gsl::narrow<std::size_t>(distance(segment.line)) + std::size_t {1});
 
     const auto line = segment.line;
 

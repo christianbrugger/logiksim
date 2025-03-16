@@ -175,7 +175,7 @@ auto all_wires_equivalent(const Layout& layout,
     }
 
     const auto is_wire_equivalent = [&](wire_id_t wire_id) {
-        const auto& line_tree = line_trees.at(wire_id.value);
+        const auto& line_tree = line_trees.at(std::size_t {wire_id});
 
         if (is_inserted(wire_id)) {
             return is_equivalent(layout.wires().segment_tree(wire_id), line_tree);

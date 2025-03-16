@@ -87,7 +87,8 @@ auto DecorationStore::swap_items(decoration_id_t decoration_id_1,
 
     const auto swap_ids = [decoration_id_1, decoration_id_2](auto &container) {
         using std::swap;
-        swap(container.at(decoration_id_1.value), container.at(decoration_id_2.value));
+        swap(container.at(size_t {decoration_id_1}),
+             container.at(size_t {decoration_id_2}));
     };
 
     // TODO put in algorithm
@@ -141,7 +142,7 @@ auto move_to_vector(layout::decoration_attr_t<attributes_text_element_t> &map,
         std::vector<std::optional<attributes_text_element_t>>(size, std::nullopt);
 
     for (auto &&[decoration_id, attr] : map) {
-        result.at(decoration_id.value) = std::move(attr);
+        result.at(size_t {decoration_id}) = std::move(attr);
     }
 
     map.clear();
@@ -152,8 +153,9 @@ auto move_to_vector(layout::decoration_attr_t<attributes_text_element_t> &map,
 auto move_from_vector(std::vector<std::optional<attributes_text_element_t>> &&vector) {
     auto map = layout::decoration_attr_t<attributes_text_element_t> {};
 
-    for (decoration_id_t decoration_id : range_extended<decoration_id_t>(vector.size())) {
-        auto &entry = vector[decoration_id.value];
+    for (decoration_id_t decoration_id :
+         range_extended<decoration_id_t>(std::ssize(vector))) {
+        auto &entry = vector.at(std::size_t {decoration_id});
 
         if (entry.has_value()) {
             map[decoration_id] = std::move(entry.value());
@@ -185,24 +187,24 @@ auto DecorationStore::normalize() -> void {
 }
 
 auto DecorationStore::type(decoration_id_t decoration_id) const -> DecorationType {
-    return decoration_types_.at(decoration_id.value);
+    return decoration_types_.at(size_t {decoration_id});
 }
 
 auto DecorationStore::size(decoration_id_t decoration_id) const -> size_2d_t {
-    return sizes_.at(decoration_id.value);
+    return sizes_.at(size_t {decoration_id});
 }
 
 auto DecorationStore::position(decoration_id_t decoration_id) const -> point_t {
-    return positions_.at(decoration_id.value);
+    return positions_.at(size_t {decoration_id});
 }
 
 auto DecorationStore::display_state(decoration_id_t decoration_id) const
     -> display_state_t {
-    return display_states_.at(decoration_id.value);
+    return display_states_.at(size_t {decoration_id});
 }
 
 auto DecorationStore::bounding_rect(decoration_id_t decoration_id) const -> rect_t {
-    return bounding_rects_.at(decoration_id.value);
+    return bounding_rects_.at(size_t {decoration_id});
 }
 
 auto DecorationStore::attrs_text_element(decoration_id_t decoration_id) const
@@ -223,13 +225,13 @@ auto DecorationStore::set_position(decoration_id_t decoration_id,
         element_bounding_rect(to_decoration_layout_data(*this, decoration_id, position));
 
     // set new position
-    positions_.at(decoration_id.value) = position;
-    bounding_rects_.at(decoration_id.value) = bounding_rect;
+    positions_.at(size_t {decoration_id}) = position;
+    bounding_rects_.at(size_t {decoration_id}) = bounding_rect;
 }
 
 auto DecorationStore::set_display_state(decoration_id_t decoration_id,
                                         display_state_t display_state) -> void {
-    display_states_.at(decoration_id.value) = display_state;
+    display_states_.at(size_t {decoration_id}) = display_state;
 }
 
 auto DecorationStore::set_attributes(decoration_id_t decoration_id,

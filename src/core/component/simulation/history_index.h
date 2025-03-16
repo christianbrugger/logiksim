@@ -27,6 +27,7 @@ struct history_index_t {
 
     using difference_type = std::ptrdiff_t;
 
+    [[nodiscard]] explicit constexpr operator std::size_t() const;
     [[nodiscard]] explicit constexpr operator std::ptrdiff_t() const;
 
     [[nodiscard]] auto format() const -> std::string;
@@ -71,6 +72,10 @@ static_assert(std::is_trivially_copy_assignable_v<history_index_t>);
 
 constexpr history_index_t::operator std::ptrdiff_t() const {
     return value;
+}
+
+constexpr history_index_t::operator std::size_t() const {
+    return gsl::narrow<std::size_t>(value);
 }
 
 constexpr auto history_index_t::min() -> history_index_t {

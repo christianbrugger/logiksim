@@ -3,6 +3,7 @@
 #define LOGIKSIM_CIRCULAR_BUFFER_H
 
 #include <folly/small_vector.h>
+#include <gsl/gsl>
 
 #include <algorithm>
 #include <cassert>
@@ -463,7 +464,7 @@ template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeT
 template <bool Const>
 auto circular_buffer<Value, RequestedMaxInline, InternalSizeType>::Iterator<
     Const>::operator-(const Iterator& right) const -> difference_type {
-    return index_ - right.index_;
+    return gsl::narrow_cast<difference_type>(index_ - right.index_);
 }
 
 template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>
@@ -511,7 +512,8 @@ template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeT
 template <bool Const>
 auto circular_buffer<Value, RequestedMaxInline, InternalSizeType>::Iterator<
     Const>::operator+=(difference_type offset) -> Iterator& {
-    index_ += offset;
+    index_ =
+        gsl::narrow_cast<std::size_t>(gsl::narrow_cast<difference_type>(index_) + offset);
     return *this;
 }
 

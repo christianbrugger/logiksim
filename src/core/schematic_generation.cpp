@@ -167,7 +167,7 @@ auto add_layout_elements(Schematic& schematic, const Layout& layout,
 
     // inserted wires
     for (const auto inserted_wire_id : inserted_wire_ids(layout)) {
-        const auto& line_tree = line_trees.at(inserted_wire_id.value);
+        const auto& line_tree = line_trees.at(std::size_t {inserted_wire_id});
 
         if (!line_tree.empty()) {
             add_wire_with_input(schematic, line_tree, wire_delay_per_distance);
@@ -277,7 +277,7 @@ auto create_connections(Schematic& schematic, const Layout& layout,
         if (element_type == ElementType::wire) {
             const auto wire_id = to_wire_id(layout, element_id);
 
-            if (const auto& line_tree = line_trees.at(wire_id.value);
+            if (const auto& line_tree = line_trees.at(std::size_t {wire_id});
                 !line_tree.empty()) {
                 connect_line_tree(schematic, layout, index, element_id, line_tree);
             } else {

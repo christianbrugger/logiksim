@@ -119,20 +119,21 @@ auto Layout::decorations() const -> const layout::DecorationStore & {
 //
 
 auto logicitem_ids(const Layout &layout) -> range_extended_t<logicitem_id_t> {
-    return range_extended<logicitem_id_t>(layout.logicitems().size());
+    return range_extended<logicitem_id_t>(std::ssize(layout.logicitems()));
 }
 
 auto wire_ids(const Layout &layout) -> range_extended_t<wire_id_t> {
-    return range_extended<wire_id_t>(layout.wires().size());
+    return range_extended<wire_id_t>(std::ssize(layout.wires()));
 }
 
 auto decoration_ids(const Layout &layout) -> range_extended_t<decoration_id_t> {
-    return range_extended<decoration_id_t>(layout.decorations().size());
+    return range_extended<decoration_id_t>(std::ssize(layout.decorations()));
 }
 
 auto inserted_wire_ids(const Layout &layout) -> range_extended_t<wire_id_t> {
-    constexpr static auto first = std::size_t {first_inserted_wire_id};
-    return range_extended<wire_id_t>(first, std::max(first, layout.wires().size()));
+    constexpr static auto first =
+        gsl::narrow<std::ptrdiff_t>(first_inserted_wire_id.value);
+    return range_extended<wire_id_t>(first, std::max(first, std::ssize(layout.wires())));
 }
 
 auto is_id_valid(logicitem_id_t logicitem_id, const Layout &layout) -> bool {

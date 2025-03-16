@@ -454,7 +454,8 @@ auto _get_toggleable_input(const CircuitData& circuit,
         const auto layout_data =
             to_layout_calculation_data(circuit.layout, entry->logicitem_id);
 
-        const auto info = input_locations(layout_data).at(entry->connection_id.value);
+        const auto info =
+            input_locations(layout_data).at(std::size_t {entry->connection_id});
         Expects(info.position == point);
 
         if (is_directed(info.orientation)) {
@@ -471,7 +472,7 @@ auto _get_toggleable_output(const CircuitData& circuit,
         const auto layout_data =
             to_layout_calculation_data(circuit.layout, entry->logicitem_id);
 
-        const auto info = output_locations(layout_data).at(entry->connection_id.value);
+        const auto info = output_locations(layout_data).at(size_t {entry->connection_id});
         Expects(info.position == point);
 
         if (is_directed(info.orientation)) {

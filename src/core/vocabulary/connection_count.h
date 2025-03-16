@@ -44,6 +44,7 @@ struct connection_count_t {
         boost::safe_numerics::safe_base<Stored, Min, Max, P, E> value);
 
     [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
+    [[nodiscard]] explicit constexpr operator std::ptrdiff_t() const noexcept;
     [[nodiscard]] explicit constexpr operator difference_type() const noexcept;
 
     // returns safe_numerics value
@@ -107,6 +108,10 @@ constexpr connection_count_t::connection_count_t(
 
 constexpr connection_count_t::operator std::size_t() const noexcept {
     return std::size_t {value};
+}
+
+constexpr connection_count_t::operator std::ptrdiff_t() const noexcept {
+    return std::ptrdiff_t {value};
 }
 
 constexpr connection_count_t::operator difference_type() const noexcept {

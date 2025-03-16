@@ -4,6 +4,8 @@
 #include "core/iterator_adaptor/transform_if_output_iterator.h"
 #include "core/iterator_adaptor/transform_output_iterator.h"
 
+#include <gsl/gsl>
+
 #include <iterator>
 #include <ranges>
 #include <utility>
@@ -47,7 +49,7 @@ auto depth_first_visitor(IndexType start_node, VisitedStore& visited,
         [=](IndexType second) { return std::make_pair(start_node, second); },
         std::back_inserter(edges_stack));
     discover_connections(start_node, result);
-    visited[start_node] = true;
+    visited.at(gsl::narrow<std::size_t>(start_node)) = true;
 
     while (true) {
         if (edges_stack.empty()) {
@@ -56,11 +58,11 @@ auto depth_first_visitor(IndexType start_node, VisitedStore& visited,
         const auto edge = edges_stack.back();
         edges_stack.pop_back();
 
-        if (visited[edge.second]) {
+        if (visited.at(gsl::narrow<std::size_t>(edge.second))) {
             // we abort on loops
             return true;
         }
-        visited[edge.second] = true;
+        visited.at(gsl::narrow<std::size_t>(edge.second)) = true;
 
         visit_edge(edge.first, edge.second);
         discover_connections(

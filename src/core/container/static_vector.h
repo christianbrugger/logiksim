@@ -3,6 +3,8 @@
 
 #include "core/algorithm/create_array.h"
 
+#include <gsl/gsl>
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -265,7 +267,7 @@ constexpr auto static_vector<Value, Capacity, SizeType>::begin() noexcept -> ite
 
 template <typename Value, std::size_t Capacity, typename SizeType>
 constexpr auto static_vector<Value, Capacity, SizeType>::end() noexcept -> iterator {
-    return std::next(buffer_.begin(), size_);
+    return std::next(buffer_.begin(), gsl::narrow_cast<std::ptrdiff_t>(size_));
 }
 
 template <typename Value, std::size_t Capacity, typename SizeType>
@@ -277,7 +279,7 @@ constexpr auto static_vector<Value, Capacity, SizeType>::begin() const noexcept
 template <typename Value, std::size_t Capacity, typename SizeType>
 constexpr auto static_vector<Value, Capacity, SizeType>::end() const noexcept
     -> const_iterator {
-    return std::next(buffer_.cbegin(), size_);
+    return std::next(buffer_.cbegin(), gsl::narrow_cast<difference_type>(size_));
 }
 
 template <typename Value, std::size_t Capacity, typename SizeType>

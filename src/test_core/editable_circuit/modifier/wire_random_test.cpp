@@ -113,7 +113,7 @@ auto get_expected_lines(std::span<const TestLineData> data, display_state_t stat
 }
 
 auto generate_insertable_line_data(Rng& rng) {
-    const auto tries = uint_distribution(5, 100)(rng);
+    const auto tries = uint_distribution(std::size_t {5}, std::size_t {100})(rng);
 
     const auto lines = get_random_ordered_lines(rng, tries, grid_t {5}, grid_t {10});
     const auto insertion_results = get_insertion_result(lines);

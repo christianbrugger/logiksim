@@ -31,18 +31,17 @@ auto add_random_element(Rng &rng, Schematic &schematic) -> void {
         };
     }();
 
-    constexpr static auto max_connections = 8;
+    constexpr static auto max_connections = std::size_t {8};
 
     const auto input_count = [&] {
         switch (element_type) {
             using enum ElementType;
 
             case xor_element:
-                return uint_distribution(2, max_connections)(rng);
+                return uint_distribution(std::size_t {2}, max_connections)(rng);
             case buffer_element:
-                return 1;
             case wire:
-                return 1;
+                return std::size_t {1};
 
             default:
                 std::terminate();
@@ -54,11 +53,10 @@ auto add_random_element(Rng &rng, Schematic &schematic) -> void {
             using enum ElementType;
 
             case xor_element:
-                return 1;
             case buffer_element:
-                return 1;
+                return std::size_t {1};
             case wire:
-                return uint_distribution(1, max_connections)(rng);
+                return uint_distribution(std::size_t {1}, max_connections)(rng);
 
             default:
                 std::terminate();

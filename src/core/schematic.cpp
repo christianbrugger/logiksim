@@ -168,20 +168,23 @@ auto Schematic::add_element(schematic::NewElement &&data) -> element_id_t {
 }
 
 auto Schematic::output(input_t input) const -> output_t {
-    return input_connections_.at(input.element_id.value).at(input.connection_id.value);
+    return input_connections_.at(std::size_t {input.element_id})
+        .at(std::size_t {input.connection_id});
 }
 
 auto Schematic::input(output_t output) const -> input_t {
-    return output_connections_.at(output.element_id.value).at(output.connection_id.value);
+    return output_connections_.at(std::size_t {output.element_id})
+        .at(std::size_t {output.connection_id});
 }
 
 auto Schematic::connect(input_t input, output_t output) -> void {
     clear(input);
     clear(output);
 
-    output_connections_.at(output.element_id.value).at(output.connection_id.value) =
-        input;
-    input_connections_.at(input.element_id.value).at(input.connection_id.value) = output;
+    output_connections_.at(std::size_t {output.element_id})
+        .at(std::size_t {output.connection_id}) = input;
+    input_connections_.at(std::size_t {input.element_id})
+        .at(std::size_t {input.connection_id}) = output;
 }
 
 auto Schematic::connect(output_t output, input_t input) -> void {
@@ -201,10 +204,10 @@ auto Schematic::clear(output_t output) -> void {
 }
 
 auto Schematic::clear_connection(input_t input, output_t output) -> void {
-    input_connections_.at(input.element_id.value).at(input.connection_id.value) =
-        null_output;
-    output_connections_.at(output.element_id.value).at(output.connection_id.value) =
-        null_input;
+    input_connections_.at(std::size_t {input.element_id})
+        .at(std::size_t {input.connection_id}) = null_output;
+    output_connections_.at(std::size_t {output.element_id})
+        .at(std::size_t {output.connection_id}) = null_input;
 }
 
 auto Schematic::clear_all_connections(element_id_t element_id) -> void {
@@ -232,44 +235,47 @@ auto Schematic::total_output_count() const noexcept -> std::size_t {
 }
 
 auto Schematic::input_count(element_id_t element_id) const -> connection_count_t {
-    return connection_count_t {input_connections_.at(element_id.value).size()};
+    return connection_count_t {input_connections_.at(std::size_t {element_id}).size()};
 }
 
 auto Schematic::output_count(element_id_t element_id) const -> connection_count_t {
-    return connection_count_t {output_connections_.at(element_id.value).size()};
+    return connection_count_t {output_connections_.at(std::size_t {element_id}).size()};
 }
 
 auto Schematic::element_type(element_id_t element_id) const -> ElementType {
-    return element_types_.at(element_id.value);
+    return element_types_.at(std::size_t {element_id});
 }
 
 auto Schematic::sub_circuit_id(element_id_t element_id) const -> circuit_id_t {
-    return sub_circuit_ids_.at(element_id.value);
+    return sub_circuit_ids_.at(std::size_t {element_id});
 }
 
 auto Schematic::input_inverters(element_id_t element_id) const
     -> const logic_small_vector_t & {
-    return input_inverters_.at(element_id.value);
+    return input_inverters_.at(std::size_t {element_id});
 }
 
 auto Schematic::output_delays(element_id_t element_id) const -> const output_delays_t & {
-    return output_delays_.at(element_id.value);
+    return output_delays_.at(std::size_t {element_id});
 }
 
 auto Schematic::history_length(element_id_t element_id) const -> delay_t {
-    return history_lengths_.at(element_id.value);
+    return history_lengths_.at(std::size_t {element_id});
 }
 
 auto Schematic::output_delay(output_t output) const -> delay_t {
-    return output_delays_.at(output.element_id.value).at(output.connection_id.value);
+    return output_delays_.at(std::size_t {output.element_id})
+        .at(std::size_t {output.connection_id});
 }
 
 auto Schematic::input_inverted(input_t input) const -> bool {
-    return input_inverters_.at(input.element_id.value).at(input.connection_id.value);
+    return input_inverters_.at(std::size_t {input.element_id})
+        .at(std::size_t {input.connection_id});
 }
 
 auto Schematic::set_input_inverter(input_t input, bool value) -> void {
-    input_inverters_.at(input.element_id.value).at(input.connection_id.value) = value;
+    input_inverters_.at(std::size_t {input.element_id})
+        .at(std::size_t {input.connection_id}) = value;
 }
 
 //
@@ -307,23 +313,24 @@ auto has_output_connections(const Schematic &schematic, element_id_t element_id)
 }
 
 auto element_ids(const Schematic &schematic) -> range_extended_t<element_id_t> {
-    return range_extended<element_id_t>(schematic.size());
+    return range_extended<element_id_t>(std::ssize(schematic));
 }
 
 auto input_ids(const Schematic &schematic,
                element_id_t element_id) -> range_extended_t<connection_id_t> {
     return range_extended<connection_id_t>(
-        std::size_t {schematic.input_count(element_id)});
+        std::ptrdiff_t {schematic.input_count(element_id)});
 }
 
 auto output_ids(const Schematic &schematic,
                 element_id_t element_id) -> range_extended_t<connection_id_t> {
     return range_extended<connection_id_t>(
-        std::size_t {schematic.output_count(element_id)});
+        std::ptrdiff_t {schematic.output_count(element_id)});
 }
 
 auto input_inverted(const Schematic &schematic, input_t input) -> bool {
-    return schematic.input_inverters(input.element_id).at(input.connection_id.value);
+    return schematic.input_inverters(input.element_id)
+        .at(std::size_t {input.connection_id});
 }
 
 auto format_element(const Schematic &schematic, element_id_t element_id) -> std::string {

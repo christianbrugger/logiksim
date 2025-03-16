@@ -80,7 +80,7 @@ auto LineTree::output_count() const -> connection_count_t {
 
 namespace {
 auto get_leaf(const line_tree::LineStore& store, connection_id_t output) -> line_t {
-    return store.line(store.leaf_indices().at(output.value));
+    return store.line(store.leaf_indices().at(std::size_t {output}));
 }
 }  // namespace
 
@@ -109,11 +109,12 @@ auto to_line_tree(std::span<const ordered_line_t> segments, point_t root) -> Lin
 }
 
 auto indices(const LineTree& line_tree) -> range_extended_t<line_index_t> {
-    return range_extended<line_index_t>(line_tree.size());
+    return range_extended<line_index_t>(std::ssize(line_tree));
 }
 
 auto output_ids(const LineTree& line_tree) -> range_extended_t<connection_id_t> {
-    return range_extended<connection_id_t>(std::size_t {line_tree.output_count()});
+    const auto count = line_tree.output_count();
+    return range_extended<connection_id_t>(gsl::narrow<std::ptrdiff_t>(count));
 }
 
 auto format_entry(const LineTree& line_tree, line_index_t index) -> std::string {

@@ -19,7 +19,7 @@ template <typename R>
     requires input_range_of2<R, line_t, ordered_line_t>
 auto to_points_sorted_unique(const R& segments) -> std::vector<point_t> {
     auto points = std::vector<point_t> {};
-    points.reserve(2 * std::size(segments));
+    points.reserve(std::size_t {2} * std::size(segments));
 
     for (auto segment : segments) {
         points.push_back(segment.p0);

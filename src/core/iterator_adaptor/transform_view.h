@@ -3,6 +3,8 @@
 
 #include "core/type_trait/const_iterator.h"
 
+#include <gsl/gsl>
+
 #include <cassert>
 #include <functional>  // std::invoke
 #include <iterator>
@@ -98,8 +100,8 @@ class TransformView {
         return const_iterator {proj_, end_};
     }
 
-    [[nodiscard]] constexpr auto size() const {
-        return end_ - begin_;
+    [[nodiscard]] constexpr auto size() const -> std::size_t {
+        return gsl::narrow_cast<std::size_t>(end_ - begin_);
     }
 
     [[nodiscard]] constexpr auto empty() const {

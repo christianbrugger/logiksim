@@ -238,7 +238,7 @@ auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) 
 
     // update segment
     unregister_segment(index);
-    segments_.at(index.value) = segment;
+    segments_.at(std::size_t {index}) = segment;
     register_segment(index);
 
     // post-conditions
@@ -251,7 +251,8 @@ auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) 
 auto SegmentTree::copy_segment(const SegmentTree& tree,
                                segment_index_t index) -> segment_index_t {
     const auto new_index = add_segment(tree.info(index));
-    valid_parts_vector_.at(new_index.value) = tree.valid_parts_vector_.at(index.value);
+    valid_parts_vector_.at(std::size_t {new_index}) =
+        tree.valid_parts_vector_.at(std::size_t {index});
 
     // post-conditions
     Ensures(segments_.size() == valid_parts_vector_.size());
@@ -275,8 +276,8 @@ auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index,
         .destination = to_part(new_info.line),
         .source = part,
     };
-    valid_parts_vector_.at(new_index.value) =
-        copy_parts(tree.valid_parts_vector_.at(index.value), copy_definition);
+    valid_parts_vector_.at(std::size_t {new_index}) =
+        copy_parts(tree.valid_parts_vector_.at(std::size_t {index}), copy_definition);
 
     // post-conditions
     Ensures(segments_.size() == valid_parts_vector_.size());
@@ -296,7 +297,7 @@ auto SegmentTree::shrink_segment(segment_index_t index, part_t new_part) -> void
 
     // update segment
     unregister_segment(index);
-    segments_.at(index.value) = new_info;
+    segments_.at(std::size_t {index}) = new_info;
     register_segment(index);
 
     // valid parts
@@ -304,8 +305,8 @@ auto SegmentTree::shrink_segment(segment_index_t index, part_t new_part) -> void
         .destination = to_part(new_info.line),
         .source = new_part,
     };
-    valid_parts_vector_.at(index.value) =
-        copy_parts(valid_parts_vector_.at(index.value), copy_definition);
+    valid_parts_vector_.at(std::size_t {index}) =
+        copy_parts(valid_parts_vector_.at(std::size_t {index}), copy_definition);
 
     // post-conditions
     Ensures(segments_.size() == valid_parts_vector_.size());
@@ -364,10 +365,10 @@ auto SegmentTree::swap_and_merge_segment(merge_definition_t definition) -> void 
 
     // update segment
     unregister_segment(index_keep);
-    segments_.at(index_keep.value) = merged.segment_info;
+    segments_.at(std::size_t {index_keep}) = merged.segment_info;
     register_segment(index_keep);
     // move after deletion, so class invariant is not broken for delete
-    valid_parts_vector_.at(index_keep.value) = std::move(merged.valid_parts);
+    valid_parts_vector_.at(std::size_t {index_keep}) = std::move(merged.valid_parts);
 
     // post-conditions
     Ensures(segments_.size() == valid_parts_vector_.size());
@@ -382,9 +383,9 @@ auto SegmentTree::swap_and_delete_segment(segment_index_t index) -> void {
 
     // move
     if (index != last_index) {
-        segments_.at(index.value) = segments_.at(last_index.value);
-        valid_parts_vector_.at(index.value) =
-            std::move(valid_parts_vector_.at(last_index.value));
+        segments_.at(std::size_t {index}) = segments_.at(std::size_t {last_index});
+        valid_parts_vector_.at(std::size_t {index}) =
+            std::move(valid_parts_vector_.at(std::size_t {last_index}));
     }
 
     // delete
@@ -407,7 +408,7 @@ auto SegmentTree::size() const noexcept -> std::size_t {
 }
 
 auto SegmentTree::info(segment_index_t index) const -> const segment_info_t& {
-    return segments_.at(index.value);
+    return segments_.at(std::size_t {index});
 }
 
 auto SegmentTree::line(segment_index_t index) const -> ordered_line_t {
@@ -423,7 +424,7 @@ auto SegmentTree::mark_valid(segment_index_t segment_index, part_t marked_part) 
         throw std::runtime_error("cannot mark outside of line");
     }
 
-    auto& valid_parts = valid_parts_vector_.at(segment_index.value);
+    auto& valid_parts = valid_parts_vector_.at(std::size_t {segment_index});
     valid_parts.add_part(marked_part);
 
     // post-conditions
@@ -439,7 +440,7 @@ auto SegmentTree::unmark_valid(segment_index_t segment_index,
         throw std::runtime_error("cannot unmark outside of line");
     }
 
-    auto& valid_parts = valid_parts_vector_.at(segment_index.value);
+    auto& valid_parts = valid_parts_vector_.at(std::size_t {segment_index});
     valid_parts.remove_part(unmarked_part);
 
     // post-conditions
@@ -455,7 +456,7 @@ auto SegmentTree::valid_parts() const -> const valid_vector_t& {
 
 auto SegmentTree::valid_parts(segment_index_t segment_index) const
     -> const PartSelection& {
-    return valid_parts_vector_.at(segment_index.value);
+    return valid_parts_vector_.at(std::size_t {segment_index});
 }
 
 auto SegmentTree::first_index() -> segment_index_t {
@@ -537,7 +538,7 @@ auto calculate_connected_segments_mask(const SegmentTree& tree,
         const auto line = tree.line(segment_index);
 
         const auto p0_index = graph.to_index(line.p0).value();
-        mask[segment_index.value] = result.visited[p0_index];
+        mask.at(std::size_t {segment_index}) = result.visited.at(p0_index);
     }
 
     return mask;

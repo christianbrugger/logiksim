@@ -12,6 +12,7 @@
 
 #include <boost/container/static_vector.hpp>
 #include <fmt/core.h>
+#include <gsl/gsl>
 
 #include <algorithm>
 #include <cassert>
@@ -109,7 +110,7 @@ auto AdjacencyGraph<index_t>::format() const -> std::string {
 
 template <typename index_t>
 auto AdjacencyGraph<index_t>::point(index_t vertex_id) const -> point_t {
-    return points_.at(vertex_id);
+    return points_.at(gsl::narrow<std::size_t>(vertex_id));
 }
 
 template <typename index_t>
@@ -152,7 +153,7 @@ template <typename index_t>
 auto AdjacencyGraph<index_t>::to_index_unchecked(point_t _point) const -> std::size_t {
     auto found = std::ranges::lower_bound(points_, _point);
     assert(found != points_.end());
-    return found - points_.begin();
+    return gsl::narrow_cast<std::size_t>(found - points_.begin());
 }
 
 // assumes both endpoints are part of graph
@@ -181,7 +182,9 @@ auto AdjacencyGraph<index_t>::add_edge_unchecked(const line_t& segment) -> void 
 template <typename index_t>
 auto AdjacencyGraph<index_t>::sort_adjacency() -> void {
     for (auto& adjacency : neighbors_) {
-        std::ranges::sort(adjacency, {}, [&](index_t index) { return points_[index]; });
+        std::ranges::sort(adjacency, {}, [&](index_t index) {
+            return points_.at(gsl::narrow<std::size_t>(index));
+        });
     }
 }
 

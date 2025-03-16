@@ -119,7 +119,8 @@ auto LogicItemStore::swap_items(logicitem_id_t logicitem_id_1,
 
     const auto swap_ids = [logicitem_id_1, logicitem_id_2](auto &container) {
         using std::swap;
-        swap(container.at(logicitem_id_1.value), container.at(logicitem_id_2.value));
+        swap(container.at(size_t {logicitem_id_1}),
+             container.at(size_t {logicitem_id_2}));
     };
 
     // TODO put in algorithm
@@ -178,7 +179,7 @@ auto move_to_vector(layout::attr_map_t<attributes_clock_generator_t> &map,
         std::vector<std::optional<attributes_clock_generator_t>>(size, std::nullopt);
 
     for (auto &&[logicitem_id, attr] : map) {
-        result.at(logicitem_id.value) = std::move(attr);
+        result.at(size_t {logicitem_id}) = std::move(attr);
     }
 
     map.clear();
@@ -188,8 +189,9 @@ auto move_to_vector(layout::attr_map_t<attributes_clock_generator_t> &map,
 auto move_from_vector(std::vector<std::optional<attributes_clock_generator_t>> &&vector) {
     auto map = layout::attr_map_t<attributes_clock_generator_t> {};
 
-    for (logicitem_id_t logicitem_id : range_extended<logicitem_id_t>(vector.size())) {
-        auto &entry = vector[logicitem_id.value];
+    for (logicitem_id_t logicitem_id :
+         range_extended<logicitem_id_t>(std::ssize(vector))) {
+        auto &entry = vector.at(std::size_t {logicitem_id});
 
         if (entry.has_value()) {
             map[logicitem_id] = std::move(entry.value());
@@ -226,47 +228,47 @@ auto LogicItemStore::normalize() -> void {
 }
 
 auto LogicItemStore::type(logicitem_id_t logicitem_id) const -> LogicItemType {
-    return logicitem_types_.at(logicitem_id.value);
+    return logicitem_types_.at(size_t {logicitem_id});
 }
 
 auto LogicItemStore::input_count(logicitem_id_t logicitem_id) const
     -> connection_count_t {
-    return input_counts_.at(logicitem_id.value);
+    return input_counts_.at(size_t {logicitem_id});
 }
 
 auto LogicItemStore::output_count(logicitem_id_t logicitem_id) const
     -> connection_count_t {
-    return output_counts_.at(logicitem_id.value);
+    return output_counts_.at(size_t {logicitem_id});
 }
 
 auto LogicItemStore::orientation(logicitem_id_t logicitem_id) const -> orientation_t {
-    return orientations_.at(logicitem_id.value);
+    return orientations_.at(size_t {logicitem_id});
 }
 
 auto LogicItemStore::sub_circuit_id(logicitem_id_t logicitem_id) const -> circuit_id_t {
-    return sub_circuit_ids_.at(logicitem_id.value);
+    return sub_circuit_ids_.at(size_t {logicitem_id});
 }
 
 auto LogicItemStore::input_inverters(logicitem_id_t logicitem_id) const
     -> logic_small_vector_t {
-    return input_inverters_.at(logicitem_id.value);
+    return input_inverters_.at(size_t {logicitem_id});
 }
 
 auto LogicItemStore::output_inverters(logicitem_id_t logicitem_id) const
     -> logic_small_vector_t {
-    return output_inverters_.at(logicitem_id.value);
+    return output_inverters_.at(size_t {logicitem_id});
 }
 
 auto LogicItemStore::position(logicitem_id_t logicitem_id) const -> point_t {
-    return positions_.at(logicitem_id.value);
+    return positions_.at(size_t {logicitem_id});
 }
 
 auto LogicItemStore::display_state(logicitem_id_t logicitem_id) const -> display_state_t {
-    return display_states_.at(logicitem_id.value);
+    return display_states_.at(size_t {logicitem_id});
 }
 
 auto LogicItemStore::bounding_rect(logicitem_id_t logicitem_id) const -> rect_t {
-    return bounding_rects_.at(logicitem_id.value);
+    return bounding_rects_.at(size_t {logicitem_id});
 }
 
 auto LogicItemStore::attrs_clock_generator(logicitem_id_t logicitem_id) const
@@ -282,12 +284,12 @@ auto LogicItemStore::attrs_clock_generator(logicitem_id_t logicitem_id) const
 
 auto LogicItemStore::input_inverted(logicitem_id_t logicitem_id,
                                     connection_id_t input_id) const -> bool {
-    return input_inverters(logicitem_id).at(input_id.value);
+    return input_inverters(logicitem_id).at(size_t {input_id});
 }
 
 auto LogicItemStore::output_inverted(logicitem_id_t logicitem_id,
                                      connection_id_t output_id) const -> bool {
-    return output_inverters(logicitem_id).at(output_id.value);
+    return output_inverters(logicitem_id).at(size_t {output_id});
 }
 
 auto LogicItemStore::set_position(logicitem_id_t logicitem_id, point_t position) -> void {
@@ -296,13 +298,13 @@ auto LogicItemStore::set_position(logicitem_id_t logicitem_id, point_t position)
         element_bounding_rect(to_layout_calculation_data(*this, logicitem_id, position));
 
     // set new position
-    positions_.at(logicitem_id.value) = position;
-    bounding_rects_.at(logicitem_id.value) = bounding_rect;
+    positions_.at(size_t {logicitem_id}) = position;
+    bounding_rects_.at(size_t {logicitem_id}) = bounding_rect;
 }
 
 auto LogicItemStore::set_display_state(logicitem_id_t logicitem_id,
                                        display_state_t display_state) -> void {
-    display_states_.at(logicitem_id.value) = display_state;
+    display_states_.at(size_t {logicitem_id}) = display_state;
 }
 
 auto LogicItemStore::set_attributes(logicitem_id_t logicitem_id,
@@ -327,13 +329,13 @@ auto LogicItemStore::set_attributes(logicitem_id_t logicitem_id,
 auto LogicItemStore::set_input_inverter(logicitem_id_t logicitem_id,
                                         connection_id_t connection_id,
                                         bool value) -> void {
-    input_inverters_.at(logicitem_id.value).at(connection_id.value) = value;
+    input_inverters_.at(size_t {logicitem_id}).at(size_t {connection_id}) = value;
 }
 
 auto LogicItemStore::set_output_inverter(logicitem_id_t logicitem_id,
                                          connection_id_t connection_id,
                                          bool value) -> void {
-    output_inverters_.at(logicitem_id.value).at(connection_id.value) = value;
+    output_inverters_.at(size_t {logicitem_id}).at(size_t {connection_id}) = value;
 }
 
 auto LogicItemStore::delete_last() -> PlacedLogicItem {

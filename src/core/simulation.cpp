@@ -32,7 +32,8 @@ namespace {
 auto set_outputs_to_zero(const Schematic &schematic,
                          std::vector<logic_small_vector_t> &input_values) -> void {
     auto set_input = [&](input_t input, bool value) {
-        input_values.at(input.element_id.value).at(input.connection_id.value) = value;
+        input_values.at(std::size_t {input.element_id})
+            .at(std::size_t {input.connection_id}) = value;
     };
 
     for (const auto element_id : element_ids(schematic)) {
@@ -169,8 +170,7 @@ auto get_changed_outputs(const logic_small_vector_t &old_outputs,
     }
 
     auto result = connection_ids_t {};
-    for (auto index :
-         range(gsl::narrow<connection_id_t::value_type>(std::size(old_outputs)))) {
+    for (auto index : std::ranges::views::iota(std::size(old_outputs))) {
         if (old_outputs[index] != new_outputs[index]) {
             result.push_back(connection_id_t {index});
         }
@@ -185,7 +185,7 @@ void Simulation::submit_event(output_t output,
             .time = queue_.time() + schematic_.output_delay(output),
             .element_id = input.element_id,
             .input_id = input.connection_id,
-            .value = output_values.at(output.connection_id.value),
+            .value = output_values.at(std::size_t {output.connection_id}),
         });
     }
 }
@@ -205,7 +205,7 @@ auto invert_inputs(logic_small_vector_t &values,
     if (std::size(values) != std::size(inverters)) [[unlikely]] {
         throw std::runtime_error("Inputs and inverters need to have same size.");
     }
-    for (auto i : range(std::ssize(values))) {
+    for (auto i : range(std::size(values))) {
         values[i] = values[i] != inverters[i];
     }
 }
@@ -255,7 +255,7 @@ auto Simulation::update_with_internal_state(
     const logic_small_vector_t &new_inputs) -> void {
     const auto element_type = schematic_.element_type(element_id);
     const auto output_count = schematic_.output_count(element_id);
-    auto &internal_state = internal_states_.at(element_id.value);
+    auto &internal_state = internal_states_.at(std::size_t {element_id});
 
     const auto old_outputs = [&] {
         if constexpr (OutputFrom == Outputs::SwitchedOff) {
@@ -474,7 +474,7 @@ auto Simulation::record_input_history(input_t input, const bool new_value) -> vo
     if (new_value == input_value(input)) {
         return;
     }
-    auto &history = first_input_histories_.at(input.element_id.value);
+    auto &history = first_input_histories_.at(std::size_t {input.element_id});
     const auto simulation_time = time();
 
     // remove old values
@@ -488,18 +488,20 @@ auto Simulation::record_input_history(input_t input, const bool new_value) -> vo
 }
 
 auto Simulation::input_value(input_t input) const -> bool {
-    return input_values_.at(input.element_id.value).at(input.connection_id.value);
+    return input_values_.at(std::size_t {input.element_id})
+        .at(std::size_t {input.connection_id});
 }
 
 auto Simulation::input_values(element_id_t element_id) const
     -> const logic_small_vector_t & {
-    return input_values_.at(element_id.value);
+    return input_values_.at(std::size_t {element_id});
 }
 
 auto Simulation::set_input_internal(input_t input, bool value) -> void {
     record_input_history(input, value);
 
-    input_values_.at(input.element_id.value).at(input.connection_id.value) = value;
+    input_values_.at(std::size_t {input.element_id})
+        .at(std::size_t {input.connection_id}) = value;
 }
 
 auto Simulation::output_value(output_t output) const -> OptionalLogicValue {
@@ -546,7 +548,8 @@ auto Simulation::try_set_internal_state(internal_state_t index, bool value) -> b
     // change state and schedule resulting events
     const auto old_outputs = calculate_outputs_from_state(internal_state(element_id),
                                                           output_count, element_type);
-    internal_states_.at(element_id.value).at(index.internal_state_index.value) = value;
+    internal_states_.at(std::size_t {element_id})
+        .at(std::size_t {index.internal_state_index}) = value;
     const auto new_outputs = calculate_outputs_from_state(internal_state(element_id),
                                                           output_count, element_type);
     submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
@@ -576,11 +579,11 @@ auto Simulation::set_unconnected_input(input_t input, bool value) -> void {
 
 auto Simulation::internal_state(element_id_t element_id) const
     -> const logic_small_vector_t & {
-    return internal_states_.at(element_id.value);
+    return internal_states_.at(std::size_t {element_id});
 }
 
 auto Simulation::internal_state(internal_state_t index) const -> bool {
-    return internal_state(index.element_id).at(index.internal_state_index.value);
+    return internal_state(index.element_id).at(std::size_t {index.internal_state_index});
 }
 
 auto Simulation::input_history(element_id_t element_id) const -> simulation::HistoryView {
@@ -594,7 +597,7 @@ auto Simulation::input_history(element_id_t element_id) const -> simulation::His
         input_values.at(0) ^ schematic_.input_inverters(element_id).at(0));
 
     return simulation::HistoryView {
-        first_input_histories_.at(element_id.value),
+        first_input_histories_.at(std::size_t {element_id}),
         this->time(),
         last_value,
         schematic_.history_length(element_id),

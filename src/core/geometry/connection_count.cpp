@@ -19,7 +19,7 @@ auto last_id(connection_count_t count) -> connection_id_t {
 }
 
 auto id_range(connection_count_t count) -> range_extended_t<connection_id_t> {
-    return range_extended<connection_id_t>(std::size_t {count.count()});
+    return range_extended<connection_id_t>(std::ptrdiff_t {count.count()});
 }
 
 }  // namespace logicsim

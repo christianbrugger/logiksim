@@ -72,7 +72,8 @@ auto is_internal_state_user_writable(const ElementType type) -> bool {
 auto initialize_input_values(const Schematic &schematic,
                              std::vector<logic_small_vector_t> &input_values) -> void {
     auto set_input = [&](input_t input, bool value) {
-        input_values.at(input.element_id.value).at(input.connection_id.value) = value;
+        input_values.at(std::size_t {input.element_id})
+            .at(std::size_t {input.connection_id}) = value;
     };
 
     for (const auto element_id : element_ids(schematic)) {

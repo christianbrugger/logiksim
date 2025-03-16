@@ -168,7 +168,7 @@ TEST(LoadSaveFile, Load210FilesCounterDisplay1To4Base64) {
 namespace {
 
 [[maybe_unused]] auto search_seed() -> void {
-    for (const auto seed : std::ranges::views::iota(0)) {
+    for (const auto seed : range(uint32_t {0})) {
         auto rng = get_random_number_generator(seed);
         auto editable_circuit = EditableCircuit {};
         add_example(rng, editable_circuit);

@@ -131,14 +131,14 @@ static void BM_Benchmark_Iter_SmallVector_Private(benchmark::State& state) {
     constexpr static auto N = 1024;
 
     auto data = get_layout_test_data(N);
-    auto index = 0;
+    auto index = std::size_t {0};
     // auto sum = int64_t {0};
 
     auto buffer = std::array<point_t, 100>();
 
     for ([[maybe_unused]] auto _ : state) {
         index = (index + 1) % N;
-        auto p_index = 0;
+        auto p_index = std::size_t {0};
 
         for (const auto point : element_body_points_base(data[index])) {
             buffer.at(p_index++) = point;

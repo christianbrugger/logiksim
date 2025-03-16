@@ -41,7 +41,7 @@ auto SpatialSimulation::simulation() -> Simulation & {
 }
 
 auto SpatialSimulation::line_tree(wire_id_t wire_id) const -> const LineTree & {
-    return line_trees_.at(wire_id.value);
+    return line_trees_.at(std::size_t {wire_id});
 }
 
 auto SpatialSimulation::wire_delay_per_distance() const -> delay_t {

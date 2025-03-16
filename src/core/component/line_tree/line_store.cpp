@@ -107,11 +107,11 @@ auto LineStore::add_line(line_t new_line, line_index_t previous_index) -> line_i
 }
 
 auto LineStore::line(line_index_t index) const -> line_t {
-    return lines_.at(index.value);
+    return lines_.at(std::size_t {index});
 }
 
 auto LineStore::start_length(line_index_t index) const -> length_t {
-    return start_lengths_.at(index.value);
+    return start_lengths_.at(std::size_t {index});
 }
 
 auto LineStore::end_length(line_index_t index) const -> length_t {

@@ -12,7 +12,7 @@ auto context_info(const ContextRenderSettings& settings) -> BLContextCreateInfo 
     // many small entities without compromising speed too much.
     info.commandQueueLimit = 2048;
 
-    info.threadCount = [&] {
+    info.threadCount = [&]() -> uint32_t {
         switch (settings.thread_count) {
             using enum ThreadCount;
             case synchronous:
