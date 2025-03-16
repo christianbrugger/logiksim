@@ -106,7 +106,7 @@ auto fuzz_select_segment(FuzzStream& stream, Modifier& modifier) -> segment_t {
     }
 
     const auto max_index = clamp_to_fuzz_stream(segments.size() - 1);
-    const auto index = fuzz_small_int(stream, 0, max_index);
+    const auto index = gsl::narrow<std::size_t>(fuzz_small_int(stream, 0, max_index));
     return checked_at(segments, index).first;
 }
 
@@ -239,7 +239,7 @@ auto fuzz_select_element(FuzzStream& stream, Modifier& modifier)
     }
 
     const auto max_index = clamp_to_fuzz_stream(total_count - 1);
-    const auto index = fuzz_small_int(stream, 0, max_index);
+    const auto index = gsl::narrow<std::size_t>(fuzz_small_int(stream, 0, max_index));
 
     if (std::cmp_less(index, logicitem_count)) {
         return logicitem_id_t {index};
