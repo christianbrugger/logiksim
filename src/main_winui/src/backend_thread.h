@@ -118,9 +118,8 @@ struct BackendTaskParts {
 // Thread
 //
 
-[[nodiscard]] auto create_backend_thread(std::unique_ptr<IBackendGuiActions> actions,
-                                         BackendTaskSink sink,
-                                         RenderBufferSource render_source)
-    -> std::jthread;
+[[nodiscard]] auto create_backend_thread(
+    std::unique_ptr<IBackendGuiActions> actions, BackendTaskSink sink,
+    RenderBufferSource render_source) -> std::jthread;
 
 }  // namespace logicsim
