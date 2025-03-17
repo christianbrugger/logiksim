@@ -5,6 +5,7 @@
 #include "core/render/circuit/render_background.h"
 #include "core/render/circuit/render_circuit.h"
 #include "core/render/circuit/render_layout_index.h"
+#include "core/render/circuit/render_rubber_band.h"
 #include "core/render/circuit/render_setting_handle.h"
 #include "core/render/circuit/render_size_handle.h"
 #include "core/render/text_cache.h"
@@ -237,11 +238,7 @@ auto render_to_context(Context& ctx, ImageSurface& surface,
             render_size_handles(ctx, target_layout, selection);
         }
 
-        // if (!(mouse_logic_ &&
-        //       std::holds_alternative<MouseAreaSelectionLogic>(mouse_logic_.value())))
-        //       {
-        //     render_size_handles(context_.ctx, layout, selection);
-        // }
+        render_rubber_band(ctx, editable_circuit);
     }
 
     if (render_config.show_collision_index) {

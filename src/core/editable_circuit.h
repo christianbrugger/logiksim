@@ -184,6 +184,7 @@ class EditableCircuit {
 
     [[nodiscard]] auto visible_selection() const -> const Selection&;
     [[nodiscard]] auto visible_selection_empty() const -> bool;
+    [[nodiscard]] auto last_visible_selection_rect() const -> std::optional<rect_fine_t>;
 
    private:
     editable_circuit::Modifier modifier_ {};

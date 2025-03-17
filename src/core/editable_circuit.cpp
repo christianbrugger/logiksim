@@ -1,6 +1,7 @@
 #include "core/editable_circuit.h"
 
 #include "core/algorithm/overload.h"
+#include "core/algorithm/span_operations.h"
 #include "core/random/generator.h"
 #include "core/random/wire.h"
 #include "core/vocabulary/allocation_info.h"
@@ -324,6 +325,13 @@ auto EditableCircuit::visible_selection() const -> const Selection& {
 
 auto EditableCircuit::visible_selection_empty() const -> bool {
     return modifier_.circuit_data().visible_selection.empty();
+}
+
+auto EditableCircuit::last_visible_selection_rect() const -> std::optional<rect_fine_t> {
+    const auto operation =
+        get_back_span(modifier_.circuit_data().visible_selection.operations());
+
+    return operation ? std::make_optional(operation->rect) : std::nullopt;
 }
 
 //

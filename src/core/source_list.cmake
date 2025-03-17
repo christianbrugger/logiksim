@@ -220,6 +220,7 @@ set(LS_CORE_SOURCES
     render/circuit/render_layout_index.cpp
     render/circuit/render_logicitem_base_generic.cpp
     render/circuit/render_overlay.cpp
+    render/circuit/render_rubber_band.cpp
     render/circuit/render_setting_handle.cpp
     render/circuit/render_simulation_layer.cpp
     render/circuit/render_size_handle.cpp
