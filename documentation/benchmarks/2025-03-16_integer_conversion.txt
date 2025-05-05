@@ -1,0 +1,100 @@
+
+===
+Adding integer conversions for element ids when indexing the arrays in layout, simulation
+===
+
+
+
+
+
+
+Running C:\Users\brugg\source\logiksim\build\win-clang-release\ls_benchmark.exe
+Run on (16 X 3194 MHz CPU s)
+CPU Caches:
+  L1 Data 32 KiB (x8)
+  L1 Instruction 32 KiB (x8)
+  L2 Unified 512 KiB (x8)
+  L3 Unified 16384 KiB (x1)
+--------------------------------------------------------------------------------
+Benchmark                                      Time             CPU   Iterations
+--------------------------------------------------------------------------------
+BM_Benchmark_Add_Element_Delete             3476 ns         3488 ns       224000
+BM_Benchmark_Input_Output_Valid            0.255 ns        0.257 ns   2800000000
+BM_Benchmark_Iter_SmallVector_Private       11.8 ns         12.0 ns     64000000
+BM_Benchmark_Graph_v2                        635 ns          642 ns      1120000
+BM_Simulation_0                           523403 ns       500000 ns         1000 Events=20M/s
+BM_Simulation_Inverter_Loop               448797 ns       444356 ns         1723 Events=22.5045M/s
+BM_RenderScene_0                          228059 ns       229492 ns         3200 Events=12.2749M/s
+
+--------------------------------------------------------------------------------
+Benchmark                                      Time             CPU   Iterations
+--------------------------------------------------------------------------------
+BM_Benchmark_Add_Element_Delete             3497 ns         3557 ns       224000
+BM_Benchmark_Input_Output_Valid            0.251 ns        0.246 ns   2800000000
+BM_Benchmark_Iter_SmallVector_Private       11.9 ns         11.7 ns     56000000
+BM_Benchmark_Graph_v2                        635 ns          628 ns      1120000
+BM_Simulation_0                           528091 ns       531250 ns         1000 Events=18.8235M/s
+BM_Simulation_Inverter_Loop               440002 ns       439453 ns         1600 Events=22.7556M/s
+BM_RenderScene_0                          225124 ns       224609 ns         3200 Events=12.5418M/s
+
+
+1.04+e07 EPS
+
+Added 101761 elements and 508805 wire segments in 1462.0ms.
+Generate simulation: 176.182ms
+Generate simulation: 175.782ms
+Generate simulation: 178.170ms
+Added 101761 elements and 508805 wire segments in 1465.3ms.
+uninsert selection: 2105.163ms
+insert moved selection: 2782.966ms
+Added 101761 elements and 508805 wire segments in 1462.6ms.
+Copied 101761 logic items, 508805 segments and 0 decorations in 460.428ms
+Deleted 0 logic items, 0 segments and 0 decorations in 1718.504ms
+Pasted 101761 logic items, 508805 segments and 0 decorations in 3016.334ms
+
+
+
+
+===========================
+
+
+
+Running C:\Users\brugg\source\logiksim\build\win-clang-release\ls_benchmark.exe
+Run on (16 X 3194 MHz CPU s)
+CPU Caches:
+  L1 Data 32 KiB (x8)
+  L1 Instruction 32 KiB (x8)
+  L2 Unified 512 KiB (x8)
+  L3 Unified 16384 KiB (x1)
+--------------------------------------------------------------------------------
+Benchmark                                      Time             CPU   Iterations
+--------------------------------------------------------------------------------
+BM_Benchmark_Add_Element_Delete             3092 ns         3048 ns       235789
+BM_Benchmark_Input_Output_Valid            0.249 ns        0.246 ns   2800000000
+BM_Benchmark_Iter_SmallVector_Private       11.2 ns         11.2 ns     64000000
+BM_Benchmark_Graph_v2                        632 ns          628 ns      1120000
+BM_Simulation_0                           584209 ns       578125 ns         1000 Events=17.2973M/s
+BM_Simulation_Inverter_Loop               497904 ns       508218 ns         1445 Events=19.6766M/s
+BM_RenderScene_0                          234980 ns       230164 ns         2987 Events=12.2391M/s
+--------------------------------------------------------------------------------
+Benchmark                                      Time             CPU   Iterations
+--------------------------------------------------------------------------------
+BM_Benchmark_Add_Element_Delete             3077 ns         3048 ns       235789
+BM_Benchmark_Input_Output_Valid            0.249 ns        0.243 ns   2635294118
+BM_Benchmark_Iter_SmallVector_Private       11.2 ns         11.5 ns     64000000
+BM_Benchmark_Graph_v2                        628 ns          628 ns      1120000
+BM_Simulation_0                           581047 ns       609375 ns         1000 Events=16.4103M/s
+BM_Simulation_Inverter_Loop               498958 ns       500000 ns         1000 Events=20M/s
+BM_RenderScene_0                          240319 ns       240626 ns         2987 Events=11.707M/s
+
+Added 101761 elements and 508805 wire segments in 1386.0ms.
+Added 101761 elements and 508805 wire segments in 1385.6ms.
+Generate simulation: 179.954ms
+Generate simulation: 181.117ms
+Added 101761 elements and 508805 wire segments in 1395.8ms.
+Copied 101761 logic items, 508805 segments and 0 decorations in 455.923ms
+Deleted 0 logic items, 0 segments and 0 decorations in 1628.971ms
+Pasted 101761 logic items, 508805 segments and 0 decorations in 2905.286ms
+Added 101761 elements and 508805 wire segments in 1399.5ms.
+uninsert selection: 2021.357ms
+insert moved selection: 2749.208ms
