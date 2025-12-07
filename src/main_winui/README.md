@@ -17,6 +17,12 @@
 
 
 
+### Visual Studio 2026
+
+![image-20251207185714159](./.images/image-20251207185714159.png)
+
+
+
 ### Libraries:
 
 * Dwmapi.lib
