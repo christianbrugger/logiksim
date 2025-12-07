@@ -8,7 +8,7 @@ External tools needed for building, not included in this repository.
 
 
 
-### Visual Studio Community 2022
+### Visual Studio Community 2026
 
 Download the Installer from here:
 
@@ -16,14 +16,14 @@ Download the Installer from here:
 
 Make sure to install the following components:
 
-* **MSVC v134** - VS 2022 C++ x64/x86 build tools (Latest)
+* **MSVC** - Build Tools for x64/x86 build tools (Latest)
 * **C++ CMake** tools for Windows
 * **C++ Clang** tools for Windows (17.0.3 - x64/x86)
-* **Windows 11 SDK** (10.0.26100.0)
+* **Windows 11 SDK** (10.0.26100.6901)
 
-![image-20240616105203692](.images/image-20240616105203692.png)
+![image-20251207154135599](./.images/image-20251207154135599.png)
 
-*tested with Visual Studio Community 17.10.2*
+*tested with Visual Studio Community 18.0.2*
 
 ### CMake 3.30+
 
