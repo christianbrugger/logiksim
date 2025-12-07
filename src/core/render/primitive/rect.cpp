@@ -3,7 +3,7 @@
 #include "core/render/context.h"
 #include "core/vocabulary/rect_fine.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <exception>
 
@@ -19,8 +19,8 @@ auto _draw_rect_stroke(Context& ctx, rect_fine_t rect,
 
     const auto width = resolve_stroke_width(attributes.stroke_width, ctx);
 
-    ctx.bl_ctx.setStrokeWidth(width);
-    ctx.bl_ctx.strokeRect(x0 + width / 2.0, y0 + width / 2.0, w - width, h - width,
+    ctx.bl_ctx.set_stroke_width(width);
+    ctx.bl_ctx.stroke_rect(x0 + width / 2.0, y0 + width / 2.0, w - width, h - width,
                           attributes.stroke_color);
 }
 
@@ -31,7 +31,7 @@ auto _draw_rect_fill(Context& ctx, rect_fine_t rect, RectAttributes attributes) 
     const auto w = std::max(1., x1 - x0);
     const auto h = std::max(1., y1 - y0);
 
-    ctx.bl_ctx.fillRect(x0, y0, w, h, attributes.fill_color);
+    ctx.bl_ctx.fill_rect(x0, y0, w, h, attributes.fill_color);
 }
 
 auto _draw_rect_fill_and_stroke(Context& ctx, rect_fine_t rect,
@@ -45,7 +45,7 @@ auto _draw_rect_fill_and_stroke(Context& ctx, rect_fine_t rect,
     auto h = std::max(1., y1 - y0);
 
     if (stroke_width > 0) {
-        ctx.bl_ctx.fillRect(x0, y0, w, h, attributes.stroke_color);
+        ctx.bl_ctx.fill_rect(x0, y0, w, h, attributes.stroke_color);
 
         x0 += stroke_width;
         y0 += stroke_width;
@@ -54,7 +54,7 @@ auto _draw_rect_fill_and_stroke(Context& ctx, rect_fine_t rect,
     }
 
     if (w >= 1 && h >= 1) {
-        ctx.bl_ctx.fillRect(x0, y0, w, h, attributes.fill_color);
+        ctx.bl_ctx.fill_rect(x0, y0, w, h, attributes.fill_color);
     }
 }
 

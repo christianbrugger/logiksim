@@ -64,8 +64,8 @@ auto TextCache::clear() const -> void {
     Ensures(glyph_map_.values().capacity() == 0);
 }
 
-auto TextCache::get_scaled_bl_font(float font_size,
-                                   FontStyle style) const -> const BLFont& {
+auto TextCache::get_scaled_bl_font(float font_size, FontStyle style) const
+    -> const BLFont& {
     // reuse font to avoid allocation in every draw call
     auto& font = fonts_.get(style);
     font.set_font_size(font_size);
@@ -78,10 +78,11 @@ auto TextCache::calculate_bounding_box(std::string_view text, float font_size,
     return calculate_bounding_box_user(text, font, font_size);
 }
 
-auto TextCache::get_entry(
-    std::string_view text, float font_size, FontStyle style,
-    HTextAlignment horizontal_alignment, VTextAlignment vertical_alignment,
-    std::optional<double> max_text_width) const -> const cache_entry_t& {
+auto TextCache::get_entry(std::string_view text, float font_size, FontStyle style,
+                          HTextAlignment horizontal_alignment,
+                          VTextAlignment vertical_alignment,
+                          std::optional<double> max_text_width) const
+    -> const cache_entry_t& {
     if (max_text_width && *max_text_width < 0) [[unlikely]] {
         throw std::runtime_error("max_text_width cannot be negative if set.");
     }
@@ -119,19 +120,19 @@ auto draw_bounding_boxes(BLContext& ctx, const HbGlyphRun& hb_glyph_run, BLPoint
         const auto _ = ContextGuard {ctx};
 
         ctx.translate(origin);
-        ctx.setStrokeWidth(1);
+        ctx.set_stroke_width(1);
 
         if (attributes.draw_bounding_rect) {
-            ctx.strokeBox(hb_glyph_run.bounding_box(), defaults::color_lime);
+            ctx.stroke_box(hb_glyph_run.bounding_box(), defaults::color_lime);
         }
         if (attributes.draw_glyph_rects && hb_glyph_run.glyph_bounding_boxes()) {
             for (const auto box : hb_glyph_run.glyph_bounding_boxes().value().span()) {
-                ctx.strokeBox(box, defaults::color_orange);
+                ctx.stroke_box(box, defaults::color_orange);
             }
         }
         if (attributes.draw_cluster_rects && hb_glyph_run.cluster_bounding_boxes()) {
             for (const auto box : hb_glyph_run.cluster_bounding_boxes().value().span()) {
-                ctx.strokeBox(box.box, defaults::color_blue);
+                ctx.stroke_box(box.box, defaults::color_blue);
             }
         }
     }
@@ -140,8 +141,8 @@ auto draw_bounding_boxes(BLContext& ctx, const HbGlyphRun& hb_glyph_run, BLPoint
 }  // namespace
 
 auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_view text,
-                          float font_size,
-                          TextAttributes attributes) const -> draw_text_result_t {
+                          float font_size, TextAttributes attributes) const
+    -> draw_text_result_t {
     if (text.empty()) {
         return draw_text_result_t {
             .truncated = TextTruncated::no,
@@ -156,7 +157,7 @@ auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_v
                                   attributes.max_text_width);
     const auto origin = position - entry.offset;
 
-    ctx.fillGlyphRun(origin, font, entry.hb_glyph_run.glyph_run(), attributes.color);
+    ctx.fill_glyph_run(origin, font, entry.hb_glyph_run.glyph_run(), attributes.color);
     draw_bounding_boxes(ctx, entry.hb_glyph_run, origin, attributes);
 
     return draw_text_result_t {
@@ -167,15 +168,15 @@ auto TextCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_v
 
 namespace {
 
-auto text_width(const TextCache& glyph_cache, std::string_view text,
-                FontStyle style) -> double {
+auto text_width(const TextCache& glyph_cache, std::string_view text, FontStyle style)
+    -> double {
     const auto font_size = float {16};
     const auto box = glyph_cache.calculate_bounding_box(text, font_size, style);
     return (box.x1 - box.x0) / font_size;
 }
 
-auto character_width(const TextCache& glyph_cache, char character,
-                     FontStyle style) -> double {
+auto character_width(const TextCache& glyph_cache, char character, FontStyle style)
+    -> double {
     const auto fill = '0';
 
     return text_width(glyph_cache, std::string {fill, character, fill}, style) -

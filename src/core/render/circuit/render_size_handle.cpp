@@ -25,12 +25,12 @@ auto draw_outlined_rect_px(Context& ctx, BLRect rect, OutlinedRectAttributes att
                                                 ctx.view_config().device_pixel_ratio()));
 
     // draw square
-    ctx.bl_ctx.fillRect(rect, attributes.stroke_color);
+    ctx.bl_ctx.fill_rect(rect, attributes.stroke_color);
     rect.x += stroke_width;
     rect.y += stroke_width;
     rect.w -= stroke_width * 2;
     rect.h -= stroke_width * 2;
-    ctx.bl_ctx.fillRect(rect, attributes.fill_color);
+    ctx.bl_ctx.fill_rect(rect, attributes.fill_color);
 }
 }  // namespace
 
@@ -55,7 +55,7 @@ auto draw_size_handles(Context& ctx,
 
 auto render_size_handles(Context& ctx, const Layout& layout,
                          const Selection& selection) -> void {
-    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_COPY);
     draw_size_handles(ctx, size_handle_positions(layout, selection));
 }
 

@@ -57,16 +57,16 @@ auto render_svg_icon_impl(BLContext &bl_ctx, const svg2b2d::SVGDocument &documen
 
     bl_ctx.translate(position);
     bl_ctx.scale(scale);
-    bl_ctx.setStrokeStyle(color);
+    bl_ctx.set_stroke_style(color);
 
-    bl_ctx.setFillStyle(color);
-    bl_ctx.setStrokeStyle(color);
+    bl_ctx.set_fill_style(color);
+    bl_ctx.set_stroke_style(color);
 
     document.draw(bl_ctx);
 }
 
-auto calculate_offset_x(double width,
-                        HorizontalAlignment horizontal_alignment) -> double {
+auto calculate_offset_x(double width, HorizontalAlignment horizontal_alignment)
+    -> double {
     switch (horizontal_alignment) {
         using enum HorizontalAlignment;
 

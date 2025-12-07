@@ -54,24 +54,24 @@ auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color,
             const auto center = to_context(point, ctx);
             const auto r = to_context(size, ctx);
 
-            ctx.bl_ctx.setStrokeWidth(stroke_width);
-            ctx.bl_ctx.strokeCircle(BLCircle {center.x, center.y, r}, color);
+            ctx.bl_ctx.set_stroke_width(stroke_width);
+            ctx.bl_ctx.stroke_circle(BLCircle {center.x, center.y, r}, color);
             return;
         }
         case full_circle: {
             const auto center = to_context(point, ctx);
             const auto r = to_context(size, ctx);
 
-            ctx.bl_ctx.fillCircle(BLCircle {center.x, center.y, r}, color);
+            ctx.bl_ctx.fill_circle(BLCircle {center.x, center.y, r}, color);
             return;
         }
         case cross: {
             const auto [x, y] = to_context(point, ctx);
             const auto d = to_context(size, ctx);
 
-            ctx.bl_ctx.setStrokeWidth(stroke_width);
-            ctx.bl_ctx.strokeLine(BLLine {x - d, y - d, x + d, y + d}, color);
-            ctx.bl_ctx.strokeLine(BLLine {x - d, y + d, x + d, y - d}, color);
+            ctx.bl_ctx.set_stroke_width(stroke_width);
+            ctx.bl_ctx.stroke_line(BLLine {x - d, y - d, x + d, y + d}, color);
+            ctx.bl_ctx.stroke_line(BLLine {x - d, y + d, x + d, y - d}, color);
             return;
         }
         case plus: {
@@ -118,8 +118,8 @@ auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color,
                                           BLPoint {x, y + d}, BLPoint {x - d, y}};
             const auto view = BLArrayView<BLPoint> {poly.data(), poly.size()};
 
-            ctx.bl_ctx.setStrokeWidth(stroke_width);
-            ctx.bl_ctx.strokePolygon(BLArrayView<BLPoint>(view), color);
+            ctx.bl_ctx.set_stroke_width(stroke_width);
+            ctx.bl_ctx.stroke_polygon(BLArrayView<BLPoint>(view), color);
             return;
         }
         case horizontal: {
@@ -152,8 +152,8 @@ auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color,
             };
             const auto view = BLArrayView<BLPoint> {poly.data(), poly.size()};
 
-            ctx.bl_ctx.setStrokeWidth(stroke_width);
-            ctx.bl_ctx.strokePolygon(BLArrayView<BLPoint>(view), color);
+            ctx.bl_ctx.set_stroke_width(stroke_width);
+            ctx.bl_ctx.stroke_polygon(BLArrayView<BLPoint>(view), color);
             return;
         }
     }

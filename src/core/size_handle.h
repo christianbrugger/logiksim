@@ -5,7 +5,7 @@
 #include "core/vocabulary/placed_element.h"
 #include "core/vocabulary/point_fine.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <optional>
 #include <vector>

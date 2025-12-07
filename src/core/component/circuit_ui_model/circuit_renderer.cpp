@@ -164,7 +164,7 @@ auto draw_target_outline(Context& ctx, int margin, color_t color) {
         throw std::runtime_error("margin needs to be positive");
     }
 
-    const auto size = ctx.bl_ctx.targetSize();
+    const auto size = ctx.bl_ctx.target_size();
 
     // length of marker
     const auto d = double {100};
@@ -177,17 +177,17 @@ auto draw_target_outline(Context& ctx, int margin, color_t color) {
     const auto y2 = gsl::narrow<double>(size.h - 1 - margin);
 
     // upper left
-    ctx.bl_ctx.fillRect(BLRect {x1, y1, 0 + 1, d + 1}, color);
-    ctx.bl_ctx.fillRect(BLRect {x1, y1, d + 1, 0 + 1}, color);
+    ctx.bl_ctx.fill_rect(BLRect {x1, y1, 0 + 1, d + 1}, color);
+    ctx.bl_ctx.fill_rect(BLRect {x1, y1, d + 1, 0 + 1}, color);
     // lower left
-    ctx.bl_ctx.fillRect(BLRect {x1, y2 - d, 0 + 1, d + 1}, color);
-    ctx.bl_ctx.fillRect(BLRect {x1, y2 + 0, d + 1, 0 + 1}, color);
+    ctx.bl_ctx.fill_rect(BLRect {x1, y2 - d, 0 + 1, d + 1}, color);
+    ctx.bl_ctx.fill_rect(BLRect {x1, y2 + 0, d + 1, 0 + 1}, color);
     // upper right
-    ctx.bl_ctx.fillRect(BLRect {x2 - d, y1, d + 1, 0 + 1}, color);
-    ctx.bl_ctx.fillRect(BLRect {x2 + 0, y1, 0 + 1, d + 1}, color);
+    ctx.bl_ctx.fill_rect(BLRect {x2 - d, y1, d + 1, 0 + 1}, color);
+    ctx.bl_ctx.fill_rect(BLRect {x2 + 0, y1, 0 + 1, d + 1}, color);
     // lower right
-    ctx.bl_ctx.fillRect(BLRect {x2 - d, y2 + 0, d + 1, 0 + 1}, color);
-    ctx.bl_ctx.fillRect(BLRect {x2 + 0, y2 - d, 0 + 1, d + 1}, color);
+    ctx.bl_ctx.fill_rect(BLRect {x2 - d, y2 + 0, d + 1, 0 + 1}, color);
+    ctx.bl_ctx.fill_rect(BLRect {x2 + 0, y2 - d, 0 + 1, d + 1}, color);
 }
 
 }  // namespace
@@ -277,8 +277,8 @@ auto render_mouse_info_position(Context& ctx, const MousePositionInfo& info) -> 
     const auto h = gsl::narrow<double>(size.h);
 
     // cross
-    ctx.bl_ctx.fillRect(BLRect {pos.x, 0, 1, h}, line_color);
-    ctx.bl_ctx.fillRect(BLRect {0, pos.y, w, 1}, line_color);
+    ctx.bl_ctx.fill_rect(BLRect {pos.x, 0, 1, h}, line_color);
+    ctx.bl_ctx.fill_rect(BLRect {0, pos.y, w, 1}, line_color);
 }
 
 auto render_mouse_info_labels(Context& ctx, const MousePositionInfo& info) -> void {

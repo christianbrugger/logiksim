@@ -21,9 +21,9 @@ auto draw_grid_space_limit(Context& ctx) {
     const auto p0 = to_context(point_t {grid_t::min(), grid_t::min()}, ctx);
     const auto p1 = to_context(point_t {grid_t::max(), grid_t::max()}, ctx);
 
-    ctx.bl_ctx.setStrokeWidth(stroke_width_px);
-    ctx.bl_ctx.strokeRect(BLRect {p0.x + 0.5, p0.y + 0.5, p1.x - p0.x, p1.y - p0.y},
-                          stroke_color);
+    ctx.bl_ctx.set_stroke_width(stroke_width_px);
+    ctx.bl_ctx.stroke_rect(BLRect {p0.x + 0.5, p0.y + 0.5, p1.x - p0.x, p1.y - p0.y},
+                           stroke_color);
 }
 
 auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int delta,
@@ -92,8 +92,8 @@ auto draw_background_patterns(Context& ctx) {
 }  // namespace
 
 auto render_background(Context& ctx) -> void {
-    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
-    ctx.bl_ctx.fillAll(defaults::color_white);
+    ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_COPY);
+    ctx.bl_ctx.fill_all(defaults::color_white);
 
     draw_background_patterns(ctx);
     draw_grid_space_limit(ctx);

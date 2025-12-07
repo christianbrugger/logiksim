@@ -4,7 +4,7 @@
 #include "core/circuit_ui_model.h"
 #include "core/vocabulary/allocation_info.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 #include <gsl/gsl>
 
 //
@@ -440,8 +440,8 @@ auto ls_circuit_destruct(ls_circuit_t* obj) noexcept -> void {
     delete obj;
 }
 
-auto ls_circuit_load(ls_circuit_t* obj,
-                     uint8_t example_circuit_enum) noexcept -> ls_ui_status_t {
+auto ls_circuit_load(ls_circuit_t* obj, uint8_t example_circuit_enum) noexcept
+    -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -459,7 +459,7 @@ auto create_bl_image(int w, int h, void* pixel_data, intptr_t stride) -> BLImage
     }
 
     auto bl_image = BLImage {};
-    if (bl_image.createFromData(w, h, BL_FORMAT_PRGB32, pixel_data, stride) !=
+    if (bl_image.create_from_data(w, h, BL_FORMAT_PRGB32, pixel_data, stride) !=
         BL_SUCCESS) {
         throw std::runtime_error("Unable to create BLImage");
     }
@@ -617,8 +617,8 @@ auto ls_circuit_config(const ls_circuit_t* obj) noexcept -> ls_ui_config_t {
     });
 }
 
-auto ls_circuit_set_config(ls_circuit_t* obj,
-                           const ls_ui_config_t* config) noexcept -> ls_ui_status_t {
+auto ls_circuit_set_config(ls_circuit_t* obj, const ls_ui_config_t* config) noexcept
+    -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -646,8 +646,8 @@ auto ls_circuit_history_status(const ls_circuit_t* obj) noexcept -> ls_history_s
     });
 }
 
-auto ls_circuit_get_allocation_info(const ls_circuit_t* obj,
-                                    ls_string_t* string) noexcept -> void {
+auto ls_circuit_get_allocation_info(const ls_circuit_t* obj, ls_string_t* string) noexcept
+    -> void {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -657,8 +657,8 @@ auto ls_circuit_get_allocation_info(const ls_circuit_t* obj,
     });
 }
 
-auto ls_circuit_do_action(ls_circuit_t* obj,
-                          uint8_t action_enum) noexcept -> ls_ui_status_t {
+auto ls_circuit_do_action(ls_circuit_t* obj, uint8_t action_enum) noexcept
+    -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -667,8 +667,9 @@ auto ls_circuit_do_action(ls_circuit_t* obj,
     });
 }
 
-auto ls_circuit_mouse_press(
-    ls_circuit_t* obj, const ls_mouse_press_event_t* event) noexcept -> ls_ui_status_t {
+auto ls_circuit_mouse_press(ls_circuit_t* obj,
+                            const ls_mouse_press_event_t* event) noexcept
+    -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -697,8 +698,9 @@ auto ls_circuit_mouse_move(ls_circuit_t* obj, const ls_mouse_move_event_t* event
     });
 }
 
-auto ls_circuit_mouse_release(
-    ls_circuit_t* obj, const ls_mouse_release_event_t* event) noexcept -> ls_ui_status_t {
+auto ls_circuit_mouse_release(ls_circuit_t* obj,
+                              const ls_mouse_release_event_t* event) noexcept
+    -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -711,8 +713,9 @@ auto ls_circuit_mouse_release(
     });
 }
 
-auto ls_circuit_mouse_wheel(
-    ls_circuit_t* obj, const ls_mouse_wheel_event_t* event) noexcept -> ls_ui_status_t {
+auto ls_circuit_mouse_wheel(ls_circuit_t* obj,
+                            const ls_mouse_wheel_event_t* event) noexcept
+    -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
@@ -741,8 +744,8 @@ auto ls_combine_wheel_event(const ls_mouse_wheel_event_t* first,
     });
 }
 
-auto ls_circuit_key_press(ls_circuit_t* obj,
-                          uint8_t key_enum) noexcept -> ls_ui_status_t {
+auto ls_circuit_key_press(ls_circuit_t* obj, uint8_t key_enum) noexcept
+    -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);

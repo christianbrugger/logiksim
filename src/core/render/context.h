@@ -4,7 +4,7 @@
 #include "core/render/context_cache.h"
 #include "core/vocabulary/context_render_settings.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 namespace logicsim {
 

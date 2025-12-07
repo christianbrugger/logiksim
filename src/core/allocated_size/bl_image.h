@@ -4,7 +4,7 @@
 #include "core/algorithm/numeric.h"
 #include "core/allocated_size/trait.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 #include <gsl/gsl>
 
 namespace logicsim {
@@ -13,7 +13,7 @@ template <>
 struct AllocatedSizeTrait<BLImage> {
     [[nodiscard]] static auto allocated_size(const BLImage& bl_image) -> std::size_t {
         auto data = BLImageData {};
-        bl_image.getData(&data);
+        bl_image.get_data(&data);
 
         const auto height = gsl::narrow<std::size_t>(data.size.h);
         const auto stride = gsl::narrow<std::size_t>(data.stride);

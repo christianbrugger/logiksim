@@ -26,9 +26,9 @@ namespace {
     const auto array = to_bl_array(data);
 
     auto font_data = BLFontData {};
-    const auto status = font_data.createFromData(array);
+    const auto status = font_data.create_from_data(array);
 
-    if (!font_data.empty() && status != BL_SUCCESS) [[unlikely]] {
+    if (!font_data.is_empty() && status != BL_SUCCESS) [[unlikely]] {
         throw std::runtime_error("Could not create BLFontData");
     }
 
@@ -39,7 +39,7 @@ namespace {
     const auto font_data = to_bl_font_data(data);
 
     auto face = BLFontFace {};
-    const auto status = face.createFromData(font_data, 0);
+    const auto status = face.create_from_data(font_data, 0);
 
     if (!data.empty() && status != BL_SUCCESS) [[unlikely]] {
         throw std::runtime_error("Could not create BLFontFace");
@@ -56,13 +56,13 @@ namespace {
 
 FontFace::FontFace(const std::string& data)
     : hb_face_ {create_hb_face(data)}, bl_face_ {create_bl_face(data)} {
-    Ensures(hb_face_.empty() == bl_face_.empty());
+    Ensures(hb_face_.empty() == bl_face_.is_empty());
 }
 
 auto FontFace::empty() const -> bool {
-    Expects(hb_face_.empty() == bl_face_.empty());
+    Expects(hb_face_.empty() == bl_face_.is_empty());
 
-    return bl_face_.empty();
+    return bl_face_.is_empty();
 }
 
 auto FontFace::hb_face() const -> const HbFontFace& {
@@ -99,7 +99,7 @@ namespace {
 
 [[nodiscard]] auto create_bl_font(const BLFontFace& face, float font_size) -> BLFont {
     auto font = BLFont {};
-    font.createFromFace(face, font_size);
+    font.create_from_face(face, font_size);
     return font;
 }
 
@@ -107,7 +107,7 @@ namespace {
 
 Font::Font(const FontFace& face, float font_size)
     : hb_font_ {face.hb_face()}, bl_font_ {create_bl_font(face.bl_face(), font_size)} {
-    Ensures(hb_font_.empty() == bl_font_.empty());
+    Ensures(hb_font_.empty() == bl_font_.is_empty());
     Ensures(empty() == face.empty());
     Ensures(empty() || this->font_size() == font_size);
 }
@@ -121,9 +121,9 @@ auto Font::bl_font() const -> const BLFont& {
 }
 
 auto Font::empty() const -> bool {
-    assert(hb_font_.empty() == bl_font_.empty());
+    assert(hb_font_.empty() == bl_font_.is_empty());
 
-    return bl_font_.empty();
+    return bl_font_.is_empty();
 }
 
 auto Font::font_size() const -> float {
@@ -131,7 +131,7 @@ auto Font::font_size() const -> float {
 }
 
 auto Font::set_font_size(float font_size) -> void {
-    bl_font_.setSize(font_size);
+    bl_font_.set_size(font_size);
 
     assert(empty() || this->font_size() == font_size);
 }

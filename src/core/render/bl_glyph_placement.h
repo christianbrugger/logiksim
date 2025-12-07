@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_RENDER_GL_GLYPH_PLACEMENT_H
 #define LOGIKSIM_RENDER_GL_GLYPH_PLACEMENT_H
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <concepts>
 

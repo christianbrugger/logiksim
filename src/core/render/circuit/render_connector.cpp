@@ -63,9 +63,9 @@ auto _draw_connector_inverted(Context& ctx, ConnectorAttributes attributes) {
     const auto stroke_color = wire_color(
         attributes.is_enabled, ctx.settings.wire_render_style, attributes.state);
 
-    ctx.bl_ctx.fillCircle(BLCircle {p_adjusted.x, p_adjusted.y, r + width / 2.0},
+    ctx.bl_ctx.fill_circle(BLCircle {p_adjusted.x, p_adjusted.y, r + width / 2.0},
                           stroke_color);
-    ctx.bl_ctx.fillCircle(BLCircle {p_adjusted.x, p_adjusted.y, r - width / 2.0},
+    ctx.bl_ctx.fill_circle(BLCircle {p_adjusted.x, p_adjusted.y, r - width / 2.0},
                           fill_color);
 }
 

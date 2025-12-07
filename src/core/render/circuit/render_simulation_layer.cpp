@@ -98,7 +98,7 @@ auto build_simulation_layers(const Layout& layout,
 
 auto render_simulation_layers(Context& ctx, const SpatialSimulation& spatial_simulation,
                               const SimulationLayers& layers) -> void {
-    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_COPY);
 
     draw_logicitems_base(ctx, spatial_simulation, layers.items_below);
     draw_wires(ctx, spatial_simulation, layers.wires);

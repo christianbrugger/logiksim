@@ -6,7 +6,7 @@
 #include "core/render/image.h"
 #include "core/render/render_context.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <concepts>
 
@@ -65,7 +65,7 @@ template <std::invocable<Context &> Func>
 auto render_layer(Context &target_ctx, ImageSurface &layer, BLRectI dirty_rect,
                   Func render_func) -> void {
     layer.render(target_ctx.settings, target_ctx.cache, [&](Context &layer_ctx) {
-        layer_ctx.bl_ctx.clearRect(dirty_rect);
+        layer_ctx.bl_ctx.clear_rect(dirty_rect);
         auto _ [[maybe_unused]] = make_context_guard(layer_ctx);
         std::invoke(render_func, layer_ctx);
     });

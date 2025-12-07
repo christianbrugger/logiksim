@@ -5,7 +5,7 @@
 #include "core/render/text_shaping.h"
 #include "core/vocabulary/font_style.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <filesystem>
 

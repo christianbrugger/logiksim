@@ -6,7 +6,7 @@
 #include "core/vocabulary/rect.h"
 #include "core/vocabulary/rect_fine.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <exception>
 

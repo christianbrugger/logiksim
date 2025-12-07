@@ -59,7 +59,7 @@ auto draw_line_cross_point(Context& ctx, point_t point, bool is_enabled,
     const auto [x, y] = to_context(point, ctx);
     const auto color = wire_color(is_enabled, ctx.settings.wire_render_style, state);
 
-    ctx.bl_ctx.fillRect(BLRect {x - offset, y - offset, 1. * size, 1. * size}, color);
+    ctx.bl_ctx.fill_rect(BLRect {x - offset, y - offset, 1. * size, 1. * size}, color);
 }
 
 auto SegmentAttributes::format() const -> std::string {

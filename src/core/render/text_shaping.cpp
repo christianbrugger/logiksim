@@ -9,7 +9,7 @@
 #include "core/format/std_type.h"
 #include "core/render/bl_box.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 #include <fmt/core.h>
 #include <gsl/gsl>
 #include <hb.h>
@@ -208,8 +208,8 @@ namespace {
     return HbBufferPointer {hb_buffer_get_empty()};
 }
 
-[[nodiscard]] auto create_shaped_text(const HbFont &font,
-                                      std::string_view text_utf8) -> HbBufferPointer {
+[[nodiscard]] auto create_shaped_text(const HbFont &font, std::string_view text_utf8)
+    -> HbBufferPointer {
     auto buffer = HbBufferPointer {hb_buffer_create()};
     Expects(buffer != nullptr);
 
@@ -509,8 +509,8 @@ auto calculate_bounding_box_user(const GlyphBoxesUser &glyph_boxes) -> BLBox {
     return get_box_union(glyph_boxes.span());
 }
 
-auto calculate_bounding_box_user(std::string_view text_utf8, HbFont font,
-                                 float font_size) -> BLBox {
+auto calculate_bounding_box_user(std::string_view text_utf8, HbFont font, float font_size)
+    -> BLBox {
     const auto shaped_text = HbShapedText {text_utf8, std::move(font), font_size};
     return calculate_bounding_box_user(
         GlyphBoxesUser {shaped_text, GlyphPositionsDesign {shaped_text}});
@@ -674,9 +674,9 @@ auto HbGlyphRun::glyph_run() const noexcept -> BLGlyphRun {
     auto result = BLGlyphRun {};
 
     result.size = data_.size();
-    result.setGlyphData(data_.codepoints().data());
-    result.setPlacementData(data_.positions().span().data());
-    result.placementType = BL_GLYPH_PLACEMENT_TYPE_DESIGN_UNITS;
+    result.set_glyph_data(data_.codepoints().data());
+    result.set_placement_data(data_.positions().span().data());
+    result.placement_type = BL_GLYPH_PLACEMENT_TYPE_DESIGN_UNITS;
 
     return result;
 }

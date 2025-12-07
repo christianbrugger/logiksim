@@ -19,7 +19,7 @@
 #include "core/vocabulary/placed_logicitem.h"
 #include "core/vocabulary/view_config.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <stdexcept>
 

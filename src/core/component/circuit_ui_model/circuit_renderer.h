@@ -7,7 +7,7 @@
 #include "core/vocabulary/mouse_postion_info.h"
 #include "core/vocabulary/widget_render_config.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <optional>
 

@@ -7,7 +7,7 @@
 #include "core/render/write_file.h"
 #include "core/vocabulary/context_render_settings.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <concepts>
 #include <filesystem>

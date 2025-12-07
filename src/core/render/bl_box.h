@@ -3,7 +3,7 @@
 
 #include "core/concept/input_range.h"
 
-#include <blend2d/geometry.h>
+#include <blend2d/blend2d.h>
 #include <range/v3/numeric/accumulate.hpp>
 
 #include <limits>

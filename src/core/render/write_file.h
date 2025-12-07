@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_CORE_RENDER_WRITE_FILE_H
 #define LOGICSIM_CORE_RENDER_WRITE_FILE_H
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <filesystem>
 

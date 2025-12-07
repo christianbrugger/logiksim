@@ -421,7 +421,7 @@ auto build_interactive_layers(const Layout& layout, const Selection* selection,
 
 auto render_inserted(Context& ctx, const Layout& layout,
                      const InteractiveLayers& layers) -> void {
-    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_COPY);
 
     draw_logicitems_base(ctx, layout, layers.inserted_below);
     draw_wires(ctx, layout, layers.inserted_wires, ElementDrawState::normal);
@@ -435,9 +435,9 @@ auto render_inserted(Context& ctx, const Layout& layout,
 auto render_uninserted(Context& ctx, const Layout& layout,
                        const InteractiveLayers& layers, bool layer_enabled) -> void {
     if (layer_enabled) {
-        ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+        ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_COPY);
     } else {
-        ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
+        ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_OVER);
     }
 
     draw_logicitems_base(ctx, layout, layers.uninserted_below);
@@ -454,9 +454,9 @@ auto render_uninserted(Context& ctx, const Layout& layout,
 auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers& layers,
                     bool layer_enabled) -> void {
     if (layer_enabled) {
-        ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+        ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_COPY);
     } else {
-        ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
+        ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_OVER);
     }
 
     // selected & temporary

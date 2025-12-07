@@ -210,7 +210,7 @@ if (LS_ENABLE_PCH)
 
     target_precompile_headers(logiksim_pch INTERFACE
         <ankerl/unordered_dense.h>
-        <blend2d.h>
+        <blend2d/blend2d.h>
         <boost/algorithm/string/join.hpp>
         <boost/container/small_vector.hpp>
         <boost/container/vector.hpp>

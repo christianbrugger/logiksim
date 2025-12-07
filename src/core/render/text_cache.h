@@ -12,7 +12,7 @@
 #include "core/wyhash.h"
 
 #include <ankerl/unordered_dense.h>
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <cassert>
 #include <string>

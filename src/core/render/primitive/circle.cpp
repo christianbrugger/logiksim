@@ -4,7 +4,7 @@
 #include "core/vocabulary/grid_fine.h"
 #include "core/vocabulary/point_fine.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <exception>
 #include <stdexcept>
@@ -26,9 +26,9 @@ auto _draw_circle_fill_and_stroke(Context& ctx, point_fine_t center, grid_fine_t
 
     const auto stroke_width = resolve_stroke_width(attributes.stroke_width, ctx);
 
-    ctx.bl_ctx.fillEllipse(BLEllipse {x, y, rx, ry}, attributes.stroke_color);
-    ctx.bl_ctx.fillEllipse(BLEllipse {x, y, rx - stroke_width, ry - stroke_width},
-                           attributes.fill_color);
+    ctx.bl_ctx.fill_ellipse(BLEllipse {x, y, rx, ry}, attributes.stroke_color);
+    ctx.bl_ctx.fill_ellipse(BLEllipse {x, y, rx - stroke_width, ry - stroke_width},
+                            attributes.fill_color);
 }
 
 auto _draw_circle_fill(Context& ctx, point_fine_t center, grid_fine_t radius,

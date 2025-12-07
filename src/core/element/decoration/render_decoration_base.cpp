@@ -86,10 +86,10 @@ auto draw_decoration_text_angle_primitive(Context& ctx, point_fine_t origin, dou
     const auto view = BLArrayView<BLPoint> {poly.data(), poly.size()};
 
     const auto _ = ContextGuard {ctx.bl_ctx};
-    ctx.bl_ctx.setStrokeStartCap(BL_STROKE_CAP_ROUND);
-    ctx.bl_ctx.setStrokeEndCap(BL_STROKE_CAP_ROUND);
-    ctx.bl_ctx.setStrokeWidth(stroke_width);
-    ctx.bl_ctx.strokePolyline(BLArrayView<BLPoint>(view), color);
+    ctx.bl_ctx.set_stroke_start_cap(BL_STROKE_CAP_ROUND);
+    ctx.bl_ctx.set_stroke_end_cap(BL_STROKE_CAP_ROUND);
+    ctx.bl_ctx.set_stroke_width(stroke_width);
+    ctx.bl_ctx.stroke_polyline(BLArrayView<BLPoint>(view), color);
 }
 
 /**
@@ -104,8 +104,8 @@ auto text_element_angle_offset(grid_fine_t angle_size) -> point_fine_t {
 
 enum class BracketType { open, close };
 
-[[nodiscard]] auto to_bracked_base_color(TextElementState state,
-                                         BracketType type) -> color_t {
+[[nodiscard]] auto to_bracked_base_color(TextElementState state, BracketType type)
+    -> color_t {
     switch (state) {
         using enum TextElementState;
 
@@ -125,8 +125,8 @@ enum class BracketType { open, close };
     std::terminate();
 }
 
-[[nodiscard]] auto to_angle_size(TextElementState state,
-                                 BracketType type) -> grid_fine_t {
+[[nodiscard]] auto to_angle_size(TextElementState state, BracketType type)
+    -> grid_fine_t {
     switch (state) {
         using enum TextElementState;
 
@@ -198,8 +198,8 @@ auto draw_decoration_text_angle(Context& ctx, point_t position, size_2d_t size,
  * @brief: Draw all angles of the text decoration
  */
 auto draw_decoration_text_angles(Context& ctx, point_t position, size_2d_t size,
-                                 ElementDrawState draw_state,
-                                 TextElementState text_state) -> void {
+                                 ElementDrawState draw_state, TextElementState text_state)
+    -> void {
     if (draw_state == ElementDrawState::simulated &&
         text_state != TextElementState::truncated) {
         return;

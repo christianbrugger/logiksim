@@ -1,6 +1,6 @@
 #include "core/render/context_guard.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 namespace logicsim {
 

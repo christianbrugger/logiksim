@@ -20,7 +20,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 #include <fmt/core.h>
 
 #include <stdexcept>

@@ -5,7 +5,7 @@
 #include "core/vocabulary/line_fine.h"
 #include "core/vocabulary/ordered_line.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <cassert>
 
@@ -30,13 +30,13 @@ auto _draw_orthogonal_line_ordered(Context& ctx, const BLLine line,
     if (line.y0 == line.y1) {
         const auto x = line.x0 - p0_cap;
         const auto w = line.x1 + p1_cap - x;
-        ctx.bl_ctx.fillRect(x, line.y0 - offset, w, stroke_width, attributes.color);
+        ctx.bl_ctx.fill_rect(x, line.y0 - offset, w, stroke_width, attributes.color);
     }
 
     else {
         const auto y = line.y0 - p0_cap;
         const auto h = line.y1 + p1_cap - y;
-        ctx.bl_ctx.fillRect(line.x0 - offset, y, stroke_width, h, attributes.color);
+        ctx.bl_ctx.fill_rect(line.x0 - offset, y, stroke_width, h, attributes.color);
     }
 }
 

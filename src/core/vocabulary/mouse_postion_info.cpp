@@ -4,7 +4,7 @@
 #include "core/vocabulary/point_device_fine.h"
 #include "core/vocabulary/point_fine.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 #include <fmt/core.h>
 
 namespace logicsim {

@@ -5,7 +5,7 @@
 #include "core/vocabulary/font_style.h"
 #include "core/vocabulary/text_alignment.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <concepts>
 #include <string>

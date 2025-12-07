@@ -3,7 +3,7 @@
 #include "core/algorithm/round.h"
 #include "core/algorithm/to_underlying.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 #include <fmt/core.h>
 
 #include <stdexcept>
@@ -11,7 +11,7 @@
 namespace logicsim {
 
 auto check_errors(const BLContext& ctx) -> void {
-    const auto flag = ctx.accumulatedErrorFlags();
+    const auto flag = ctx.accumulated_error_flags();
 
     if (flag != BL_CONTEXT_ERROR_NO_FLAGS) [[unlikely]] {
         const auto msg = fmt::format("Error in BLContext {}", to_underlying(flag));
@@ -20,7 +20,7 @@ auto check_errors(const BLContext& ctx) -> void {
 }
 
 auto ensure_all_saves_restored(const BLContext& ctx) -> void {
-    if (ctx.savedStateCount() != 0) {
+    if (ctx.saved_state_count() != 0) {
         throw std::runtime_error("Context has saved state at sync");
     }
 }

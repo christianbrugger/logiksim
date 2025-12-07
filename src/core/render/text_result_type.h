@@ -4,7 +4,7 @@
 #include "core/format/struct.h"
 #include "core/vocabulary/text_truncated.h"
 
-#include <blend2d/geometry.h>
+#include <blend2d/blend2d.h>
 
 namespace logicsim {
 

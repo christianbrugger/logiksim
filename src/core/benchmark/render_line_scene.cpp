@@ -279,7 +279,7 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     });
 
     if (save_image) {
-        bl_image.writeToFile("benchmark_line_renderer.png");
+        bl_image.write_to_file("benchmark_line_renderer.png");
     }
 
     return scene.total_wire_length_sum;

@@ -7,7 +7,7 @@
 #include "core/vocabulary/device_pixel_ratio.h"
 #include "core/vocabulary/fallback_info.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 #include <gsl/gsl>
 #include <tl/expected.hpp>
 
@@ -106,8 +106,8 @@ auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geom
 
     auto result = tl::expected<BLImage, std::string> {BLImage {}};
 
-    if (result.value().createFromData(rect.width(), rect.height(), BL_FORMAT_PRGB32,
-                                      pixels, image->bytesPerLine()) != BL_SUCCESS) {
+    if (result.value().create_from_data(rect.width(), rect.height(), BL_FORMAT_PRGB32,
+                                        pixels, image->bytesPerLine()) != BL_SUCCESS) {
         return tl::unexpected("Unable to create BLImage, wrong parameters.");
     }
 
@@ -125,9 +125,9 @@ auto resize_qt_image_no_copy(QImage& qt_image, QSize window_size) -> QImage {
 auto bl_image_from_qt_image(QImage& qt_image) -> BLImage {
     auto bl_image = BLImage {};
 
-    Expects(bl_image.createFromData(qt_image.width(), qt_image.height(), BL_FORMAT_PRGB32,
-                                    qt_image.bits(),
-                                    qt_image.bytesPerLine()) == BL_SUCCESS);
+    Expects(bl_image.create_from_data(qt_image.width(), qt_image.height(),
+                                      BL_FORMAT_PRGB32, qt_image.bits(),
+                                      qt_image.bytesPerLine()) == BL_SUCCESS);
 
     return bl_image;
 }
@@ -145,8 +145,8 @@ struct get_bl_image_result_t {
 };
 
 auto _get_bl_image(QBackingStore* backing_store, QImage& qt_image,
-                   GeometryInfo geometry_info,
-                   RenderMode requested_mode) -> get_bl_image_result_t {
+                   GeometryInfo geometry_info, RenderMode requested_mode)
+    -> get_bl_image_result_t {
     // handle zero sizes
     if (const auto size = to_device_rounded(geometry_info);
         size.width() == 0 || size.height() == 0) {
@@ -205,8 +205,8 @@ auto expected_qt_image_size(RenderMode actual_mode, QSize size_device) -> QSize 
 }
 
 auto get_bl_image(QBackingStore* backing_store, QImage& qt_image,
-                  GeometryInfo geometry_info,
-                  RenderMode requested_mode) -> get_bl_image_result_t {
+                  GeometryInfo geometry_info, RenderMode requested_mode)
+    -> get_bl_image_result_t {
     const auto result =
         _get_bl_image(backing_store, qt_image, geometry_info, requested_mode);
 

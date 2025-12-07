@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_FORMAT_BLEND2D_TYPE_H
 #define LOGICSIM_FORMAT_BLEND2D_TYPE_H
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 #include <fmt/core.h>
 
 //

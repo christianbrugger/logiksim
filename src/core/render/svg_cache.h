@@ -7,7 +7,7 @@
 #include "core/vocabulary/color.h"
 
 #include <ankerl/unordered_dense.h>
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 #include <gsl/gsl>
 
 #include <memory>

@@ -29,11 +29,11 @@ auto _draw_rubber_band(Context& ctx, rect_fine_t rect) {
     {
         const auto _ = make_context_guard(ctx);
 
-        ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
-        ctx.bl_ctx.setStrokeWidth(stroke_width);
+        ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_OVER);
+        ctx.bl_ctx.set_stroke_width(stroke_width);
 
-        ctx.bl_ctx.fillRect(x0, y0, w, h, defaults::rubberband_fill_color);
-        ctx.bl_ctx.strokeRect(x0 + offset, y0 + offset, w, h,
+        ctx.bl_ctx.fill_rect(x0, y0, w, h, defaults::rubberband_fill_color);
+        ctx.bl_ctx.stroke_rect(x0 + offset, y0 + offset, w, h,
                               defaults::rubberband_border_color);
     }
 }

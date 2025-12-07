@@ -6,7 +6,7 @@
 #include "core/render/text_cache.h"
 #include "core/vocabulary/point_fine.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 namespace logicsim {
 

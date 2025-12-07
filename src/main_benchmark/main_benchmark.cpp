@@ -23,7 +23,7 @@
 #include "core/vocabulary/logicitem_id.h"
 
 #include <benchmark/benchmark.h>
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 #include <gsl/gsl>
 
 #include <algorithm>
@@ -266,7 +266,7 @@ static void BM_RenderScene_0(benchmark::State& state) {
     }();
 
     render_to_image(bl_image, settings, cache,
-                    [](Context& ctx) { ctx.bl_ctx.fillAll(defaults::color_white); });
+                    [](Context& ctx) { ctx.bl_ctx.fill_all(defaults::color_white); });
 
     int64_t count = 0;
     for ([[maybe_unused]] auto _ : state) {
@@ -280,7 +280,7 @@ static void BM_RenderScene_0(benchmark::State& state) {
         benchmark::ClobberMemory();
 
         if constexpr (save_image) {
-            bl_image.writeToFile("google_benchmark_BM_RenderScene_0.png");
+            bl_image.write_to_file("google_benchmark_BM_RenderScene_0.png");
         }
     }
 

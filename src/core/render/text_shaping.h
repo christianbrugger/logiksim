@@ -5,7 +5,7 @@
 #include "core/render/bl_glyph_placement.h"
 #include "core/vocabulary/text_truncated.h"
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <concepts>
 #include <memory>

@@ -31,18 +31,18 @@ auto _directed_input_marker(Context& ctx, point_t point, color_t color,
 
     const auto pi = std::numbers::pi;
 
-    ctx.bl_ctx.setStrokeWidth(1);
-    ctx.bl_ctx.strokeArc(BLArc {0, 0, d, d, -pi / 2, pi}, color);
-    ctx.bl_ctx.strokeLine(BLLine {-d, -d, 0, -d}, color);
-    ctx.bl_ctx.strokeLine(BLLine {-d, +d, 0, +d}, color);
+    ctx.bl_ctx.set_stroke_width(1);
+    ctx.bl_ctx.stroke_arc(BLArc {0, 0, d, d, -pi / 2, pi}, color);
+    ctx.bl_ctx.stroke_line(BLLine {-d, -d, 0, -d}, color);
+    ctx.bl_ctx.stroke_line(BLLine {-d, +d, 0, +d}, color);
 }
 
 auto _undirected_input_marker(Context& ctx, point_t point, color_t color,
                               grid_fine_t size) -> void {
     auto _ [[maybe_unused]] = make_context_guard(ctx);
 
-    ctx.bl_ctx.setStrokeWidth(1);
-    ctx.bl_ctx.setStrokeStyle(color);
+    ctx.bl_ctx.set_stroke_width(1);
+    ctx.bl_ctx.set_stroke_style(color);
 
     const auto [x, y] = to_context(point, ctx);
     const auto d = to_context(size, ctx);
@@ -50,17 +50,17 @@ auto _undirected_input_marker(Context& ctx, point_t point, color_t color,
 
     ctx.bl_ctx.translate(BLPoint {x + 0.5, y + 0.5});
 
-    ctx.bl_ctx.strokeLine(BLLine {-d, -d, -h, -d});
-    ctx.bl_ctx.strokeLine(BLLine {+h, -d, +d, -d});
+    ctx.bl_ctx.stroke_line(BLLine {-d, -d, -h, -d});
+    ctx.bl_ctx.stroke_line(BLLine {+h, -d, +d, -d});
 
-    ctx.bl_ctx.strokeLine(BLLine {-d, -d, -d, -h});
-    ctx.bl_ctx.strokeLine(BLLine {-d, +h, -d, +d});
+    ctx.bl_ctx.stroke_line(BLLine {-d, -d, -d, -h});
+    ctx.bl_ctx.stroke_line(BLLine {-d, +h, -d, +d});
 
-    ctx.bl_ctx.strokeLine(BLLine {+d, -d, +d, -h});
-    ctx.bl_ctx.strokeLine(BLLine {+d, +h, +d, +d});
+    ctx.bl_ctx.stroke_line(BLLine {+d, -d, +d, -h});
+    ctx.bl_ctx.stroke_line(BLLine {+d, +h, +d, +d});
 
-    ctx.bl_ctx.strokeLine(BLLine {-d, +d, -h, +d});
-    ctx.bl_ctx.strokeLine(BLLine {+h, +d, +d, +d});
+    ctx.bl_ctx.stroke_line(BLLine {-d, +d, -h, +d});
+    ctx.bl_ctx.stroke_line(BLLine {+h, +d, +d, +d});
 }
 
 auto render_input_marker(Context& ctx, point_t point, color_t color,

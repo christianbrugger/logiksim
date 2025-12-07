@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_GEOMETRY_SCENE_H
 #define LOGICSIM_GEOMETRY_SCENE_H
 
-#include <blend2d.h>
+#include <blend2d/blend2d.h>
 
 #include <optional>
 
