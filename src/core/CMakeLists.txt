@@ -5,6 +5,9 @@ include(source_list.cmake)
 
 # Zlib
 set(ZLIB_USE_STATIC_LIBS ON)
+set(ZLIB_BUILD_SHARED OFF)
+set(ZLIB_BUILD_TESTING OFF)
+set(ZLIB_INSTALL OFF)
 find_package(ZLIB REQUIRED)
 
 
