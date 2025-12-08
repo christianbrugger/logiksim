@@ -14,7 +14,7 @@
     </Window.SystemBackdrop>
 
 
-    <Page x:Name="AppPage">
+    <Page>
 
         <!-- Icons: https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-fluent-icons-font -->
 

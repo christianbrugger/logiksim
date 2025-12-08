@@ -74,6 +74,8 @@ Update all other packages. Result:
 * Project Folder: **`../logiksim/src`**
 * Enable: Place solution in the same directory.
 
+![image-20251208144651520](./.images/image-20251208144651520.png)
+
 ![image-20250203125954137](.images/image-20250203125954137.png)
 
 ## Visual Studio Settings
