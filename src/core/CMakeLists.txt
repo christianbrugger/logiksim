@@ -101,6 +101,7 @@ add_library(folly
 )
 target_link_libraries(folly PUBLIC 
     Boost::preprocessor
+    fmt::fmt
 )
 target_include_directories(folly SYSTEM PUBLIC 
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}
