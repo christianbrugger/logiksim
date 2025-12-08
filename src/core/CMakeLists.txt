@@ -88,6 +88,7 @@ set(FOLLY_DIR_NAME my_folly)
 add_library(folly
     # small vector
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/memory/detail/MallocImpl.cpp
+    ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/memory/Malloc.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/memory/SanitizeLeak.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/Exception.cpp
     ${PROJECT_SOURCE_DIR}/external/${FOLLY_DIR_NAME}/folly/lang/SafeAssert.cpp
