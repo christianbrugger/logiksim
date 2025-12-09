@@ -6,6 +6,7 @@ include(source_moc.cmake)
 
 # Qt 6
 set(CMAKE_AUTOMOC FALSE)  # takes too much time, not parallelized
+set(QT_NO_PRIVATE_MODULE_WARNING ON)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Svg)
