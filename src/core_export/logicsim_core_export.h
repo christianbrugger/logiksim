@@ -6,6 +6,7 @@
 #include <bitset>
 #include <chrono>
 #include <cstdint>
+#include <exception>
 #include <limits>
 #include <memory>  // unique_ptr
 #include <optional>

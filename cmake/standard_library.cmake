@@ -55,6 +55,10 @@ function(ls_setup_standard_library_shared target_name use_libcxx sanitizers)
         set(LIBCXXABI_USE_LLVM_UNWINDER OFF)
         set(LLVM_USE_SANITIZER "${sanitizers}")
 
+        set(LIBCXX_INCLUDE_TESTS OFF)
+        set(LLVM_INCLUDE_TESTS OFF)
+        set(LLVM_INCLUDE_DOCS OFF)
+
         add_subdirectory(external/llvm-project/runtimes EXCLUDE_FROM_ALL SYSTEM)
         target_link_libraries(
             "${target_name}"
@@ -71,6 +75,11 @@ function(ls_setup_standard_library_shared target_name use_libcxx sanitizers)
             cxxabi_shared_objects
             libcxx-abi-headers
             cxxabi-headers
+
+            libcxx-libc-shared # runtimes-libc-shared
+            libcxx-abi-shared
+            libcxx-libc-headers # runtimes-libc-headers
+            cxxabi-reexports
         )
 
         # add flags to compiler checks so it is evaulated correctly
