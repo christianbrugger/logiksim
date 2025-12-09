@@ -229,9 +229,8 @@ jobs:
     - name: Install GCC
       if: runner.os == 'Linux'
       run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-        sudo apt update
-        sudo apt install g++-15
+        brew install gcc@15
+        gcc-15 --version
         g++-15 --version
 
     #
