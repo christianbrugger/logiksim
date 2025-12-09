@@ -226,9 +226,12 @@ jobs:
         sudo ./llvm.sh 20
         clang++-20 --version
 
-    - name: Install GCC
+    - name: Install Homebrew
       if: runner.os == 'Linux'
       uses: Homebrew/actions/setup-homebrew@master
+
+    - name: Install GCC
+      if: runner.os == 'Linux'
       run: |
         brew install gcc@15
         gcc-15 --version
