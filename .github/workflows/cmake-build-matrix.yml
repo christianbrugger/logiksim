@@ -219,7 +219,7 @@ jobs:
     #
 
     - name: Install Clang
-      if: runner.os == 'Linux'
+      if: startsWith(matrix.preset, 'linux-clang')
       run: |
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
@@ -227,11 +227,11 @@ jobs:
         clang++-20 --version
 
     - name: Install Homebrew
-      if: runner.os == 'Linux'
+      if: startsWith(matrix.preset, 'linux-gcc')
       uses: Homebrew/actions/setup-homebrew@master
 
     - name: Install GCC
-      if: runner.os == 'Linux'
+      if: startsWith(matrix.preset, 'linux-gcc')
       run: |
         brew install gcc@15
         gcc-15 --version
