@@ -209,6 +209,7 @@ function(ls_set_compiler_warnings_disabled target_name)
         (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
         list(APPEND warnings -Wno-maybe-uninitialized)
         list(APPEND warnings -Wno-array-bounds)
+        list(APPEND warnings -Wno-stringop-overflow)
     endif()
 
     # clang generates those in boost headers for non-pch debug builds on linux
