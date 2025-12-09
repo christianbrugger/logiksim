@@ -235,6 +235,7 @@ jobs:
       if: startsWith(matrix.preset, 'linux-gcc')
       run: |
         brew install gcc@15
+        brew link --force binutils
         gcc-15 --version
         g++-15 --version
 
