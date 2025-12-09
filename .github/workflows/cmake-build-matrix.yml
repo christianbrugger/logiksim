@@ -214,6 +214,17 @@ jobs:
         # report address randomization which impacts certain sanitizers
         sudo sysctl vm.mmap_rnd_bits
 
+    #
+    # Install Clang
+    #
+
+    - name: Install Clang
+      if: runner.os == 'Linux'
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 20
+        clang++-20 --version
 
     #
     # Install Qt
