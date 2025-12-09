@@ -23,8 +23,8 @@
             "hidden": true,
             "inherits": "common-linux",
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "gcc-13",
-                "CMAKE_CXX_COMPILER": "g++-13"
+                "CMAKE_C_COMPILER": "gcc-15",
+                "CMAKE_CXX_COMPILER": "g++-15"
             }
         },
         {
@@ -32,8 +32,8 @@
             "hidden": true,
             "inherits": "common-linux",
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang-18",
-                "CMAKE_CXX_COMPILER": "clang++-18"
+                "CMAKE_C_COMPILER": "clang-20",
+                "CMAKE_CXX_COMPILER": "clang++-20"
             }
         },
         {
