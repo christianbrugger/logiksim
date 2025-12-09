@@ -83,21 +83,21 @@ Recommended for debugging:
 
 Anything else can be disabled
 
-![image-20240616113641673](.images/image-20240616113641673.png)
+![image-20251209090928222](./.images/image-20251209090928222.png)
 
-*tested with Qt 6.7.1*
+*tested with Qt 6.10.1*
 
 Add a system wide environment variable:
 
 ```
 CMAKE_PREFIX_PATH
-C:\Qt\6.7.1\msvc2019_64\lib\cmake\
+C:\Qt\6.10.1\msvc2022_64\lib\cmake
 ```
 
 Add this to `PATH`:
 
 ```
-C:\Qt\6.7.1\msvc2019_64\bin\
+C:\Qt\6.10.1\msvc2022_64\bin
 ```
 
 
@@ -138,17 +138,17 @@ Alternatively for custom builds you can follow the build steps here.
 
 #### Environment Variables
 
-Add Qt to `PATH` and `CMAKE_PREFIX_PATH`. Replace the version as needed, e.g `6.7.1`:
+Add Qt to `PATH` and `CMAKE_PREFIX_PATH`. Replace the version as needed, e.g `6.10.1`:
 
 ```cmd
-set PATH=C:/Qt/6.x.x/msvc2019_64/bin;%PATH%
-set CMAKE_PREFIX_PATH=C:/Qt/6.x.x/msvc2019_64/lib/cmake
+set PATH=C:/Qt/6.x.x/msvc2022_64/bin;%PATH%
+set CMAKE_PREFIX_PATH=C:/Qt/6.x.x/msvc2022_64/lib/cmake
 ```
 
 Activate the MSVC Compiler. This will make `cmake`, `ninja`, `clang-cl` avaiable:
 
 ```cmd
-CALL "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+CALL "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat"
 ```
 
 ### Prepare Build Folder
@@ -162,7 +162,7 @@ cd build
 
 #### Configure
 
-Open `Developer Command Prompt for VS 2022`
+Open `Developer Command Prompt for VS 2026`
 
 For **debug** builds use:
 

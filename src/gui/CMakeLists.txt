@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC FALSE)  # takes too much time, not parallelized
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Svg)
-find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
+find_package(Qt6 COMPONENTS GuiPrivate)
 message(NOTICE "Qt version: ${Qt6_VERSION}")
 
 
