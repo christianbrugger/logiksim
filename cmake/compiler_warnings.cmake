@@ -197,19 +197,29 @@ function(ls_set_compiler_warnings_disabled target_name)
         list(APPEND warnings -Wno-stringop-overread)
     endif()
 
-    # g++ generates those in folly headers for release non-lto builds
+    # g++ generates those in folly & range-v3 headers for release non-lto builds
     # last-check: 2024-09-02
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_BUILD_TYPE STREQUAL "Release")
         list(APPEND warnings -Wno-maybe-uninitialized)
+        list(APPEND warnings -Wno-null-dereference)
     endif()
 
-    # g++ generates those in folly headers for sanitized builds
+    # g++ generates those in folly & range-v3 headers for sanitized builds
     # last-check: 2024-09-02
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND 
         (LS_SANITIZE STREQUAL "Address;Undefined" OR LS_SANITIZE STREQUAL "Address"))
         list(APPEND warnings -Wno-maybe-uninitialized)
         list(APPEND warnings -Wno-array-bounds)
         list(APPEND warnings -Wno-stringop-overflow)
+    endif()
+
+    # g++ generates those in range-v3 headers for sanitized builds
+    # last-check: 2025-12-09
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+        (LS_SANITIZE STREQUAL "Undefined" OR
+         LS_SANITIZE STREQUAL "Address;Undefined" OR
+         LS_SANITIZE STREQUAL "Thread"))
+        list(APPEND warnings -Wno-maybe-uninitialized)
     endif()
 
     # clang generates those in boost headers for non-pch debug builds on linux
