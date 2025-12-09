@@ -387,7 +387,6 @@ set(LS_CORE_SOURCES
     logging.cpp
     part_selection.cpp
     resource.cpp
-    safe_numeric.cpp
     schematic.cpp
     schematic_generation.cpp
     segment_tree.cpp

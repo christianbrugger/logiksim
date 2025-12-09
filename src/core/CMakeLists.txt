@@ -23,7 +23,6 @@ set(BOOST_INCLUDE_LIBRARIES
     geometry
     iostreams
     random 
-    safe_numerics
 )
 add_subdirectory(
     ${PROJECT_SOURCE_DIR}/external/boost
@@ -51,6 +50,13 @@ add_subdirectory(
     ${CMAKE_BINARY_DIR}/external/flux
     EXCLUDE_FROM_ALL
     SYSTEM
+)
+
+
+set(ls_flux_definitions
+    FLUX_UNWIND_ON_ERROR
+    FLUX_ERROR_ON_OVERFLOW
+    FLUX_ERROR_ON_DIVIDE_BY_ZERO
 )
 
 # fmt
@@ -189,7 +195,6 @@ set(LS_CORE_DEPENDENCIES
     Boost::geometry
     Boost::iostreams
     Boost::random
-	Boost::safe_numerics
     
     flux::flux
     fmt::fmt
@@ -222,7 +227,6 @@ if (LS_ENABLE_PCH)
         <boost/geometry.hpp>
         <boost/random/mersenne_twister.hpp>
         <boost/random/uniform_int_distribution.hpp>
-        <boost/safe_numerics/safe_integer.hpp>
         <fmt/core.h>
         <fmt/format.h>
         <folly/small_vector.h>
@@ -284,5 +288,8 @@ target_link_libraries(${LS_CORE_LIBRARY} PUBLIC
 )
 target_link_libraries(${LS_CORE_LIBRARY} PRIVATE 
     logiksim_pch
+)
+target_compile_definitions(${LS_CORE_LIBRARY} PUBLIC
+    ${ls_flux_definitions}
 )
 

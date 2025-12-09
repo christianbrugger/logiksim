@@ -1,5 +1,6 @@
 #include "core/size_handle.h"
 
+#include "core/algorithm/numeric.h"
 #include "core/algorithm/round.h"
 #include "core/editable_circuit.h"
 #include "core/element/logicitem/layout_logicitem_display_number.h"
@@ -11,7 +12,6 @@
 #include "core/geometry/scene.h"
 #include "core/layout.h"
 #include "core/layout_info.h"
-#include "core/safe_numeric.h"
 #include "core/selection.h"
 #include "core/vocabulary/layout_calculation_data.h"
 #include "core/vocabulary/logicitem_id.h"
@@ -200,11 +200,8 @@ namespace {
 
 auto clamp_connection_count(connection_count_t count, int delta, connection_count_t min,
                             connection_count_t max) -> connection_count_t {
-    const auto new_count = count.safe_value() + ls_safe<int> {delta};
-
-    const auto clamped_count =
-        std::clamp<decltype(new_count)>(new_count, min.safe_value(), max.safe_value());
-
+    const auto new_count = checked_add(int {count.count()}, delta);
+    const auto clamped_count = std::clamp(new_count, int {min}, int {max});
     return connection_count_t {clamped_count};
 }
 

@@ -1,10 +1,10 @@
 #ifndef LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 #define LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 
+#include "core/algorithm/numeric.h"
 #include "core/concept/explicitly_convertible.h"
 #include "core/concept/integral.h"
 #include "core/format/struct.h"
-#include "core/safe_numeric.h"
 #include "core/type_trait/safe_difference_type.h"
 #include "core/vocabulary/connection_id.h"
 
@@ -22,35 +22,30 @@ namespace logicsim {
  *     * connection_count is in range [0, connection_id_t::max())
  */
 struct connection_count_t {
-    using value_type_rep = std::make_unsigned_t<connection_id_t::value_type>;
-    constexpr static inline auto value_type_min = value_type_rep {0};
-    constexpr static inline auto value_type_max =
-        value_type_rep {connection_id_t::max().value} + 1;
+   public:
+    using value_type = std::make_unsigned_t<connection_id_t::value_type>;
+    constexpr static inline auto value_min = value_type {0};
+    constexpr static inline auto value_max =
+        value_type {connection_id_t::max().value + 1};
 
-    using value_type = ls_safe_range<value_type_rep, value_type_min, value_type_max>;
     static_assert(sizeof(value_type) == sizeof(connection_id_t));
 
    private:
-    value_type value {value_type_rep {0}};
+    value_type value {0};
 
    public:
-    using difference_type = safe_difference_t<value_type_rep>;
+    using difference_type = safe_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
     [[nodiscard]] explicit constexpr connection_count_t() noexcept = default;
     [[nodiscard]] explicit constexpr connection_count_t(integral auto value_);
-    template <class Stored, Stored Min, Stored Max, class P, class E>
-    [[nodiscard]] explicit constexpr connection_count_t(
-        boost::safe_numerics::safe_base<Stored, Min, Max, P, E> value);
 
     [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
     [[nodiscard]] explicit constexpr operator std::ptrdiff_t() const noexcept;
     [[nodiscard]] explicit constexpr operator difference_type() const noexcept;
 
-    // returns safe_numerics value
-    [[nodiscard]] constexpr auto safe_value() const noexcept -> value_type;
     // returns underlying representation
-    [[nodiscard]] constexpr auto count() const noexcept -> value_type_rep;
+    [[nodiscard]] constexpr auto count() const noexcept -> value_type;
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -99,12 +94,11 @@ static_assert(
 //
 
 constexpr connection_count_t::connection_count_t(integral auto value_)
-    : value {value_} {};
-
-template <class Stored, Stored Min, Stored Max, class P, class E>
-constexpr connection_count_t::connection_count_t(
-    boost::safe_numerics::safe_base<Stored, Min, Max, P, E> value_)
-    : value {value_} {}
+    : value {gsl::narrow<value_type>(value_)} {
+    if (value > value_max) [[unlikely]] {
+        throw std::runtime_error {"connection count overflow"};
+    }
+};
 
 constexpr connection_count_t::operator std::size_t() const noexcept {
     return std::size_t {value};
@@ -118,49 +112,56 @@ constexpr connection_count_t::operator difference_type() const noexcept {
     return difference_type {value};
 }
 
-[[nodiscard]] constexpr auto connection_count_t::safe_value() const noexcept
-    -> value_type {
+constexpr auto connection_count_t::count() const noexcept -> value_type {
     return value;
-}
-
-constexpr auto connection_count_t::count() const noexcept -> value_type_rep {
-    return value_type_rep {value};
 }
 
 constexpr auto connection_count_t::operator<=>(const connection_count_t &other) const
     -> std::strong_ordering {
-    return value_type_rep {value} <=> value_type_rep {other.value};
+    return value <=> other.value;
 }
 
 constexpr auto connection_count_t::min() noexcept -> connection_count_t {
-    constexpr auto value = connection_count_t {std::numeric_limits<value_type>::min()};
+    constexpr static auto value = connection_count_t {value_min};
     return value;
 };
 
 constexpr auto connection_count_t::max() noexcept -> connection_count_t {
-    constexpr auto value = connection_count_t {std::numeric_limits<value_type>::max()};
+    constexpr static auto value = connection_count_t {value_max};
     return value;
 };
 
 constexpr auto connection_count_t::operator+=(const connection_count_t &other)
     -> connection_count_t & {
-    value += other.value;
+    value = checked_add(value, other.value);
+    if (value > value_max) [[unlikely]] {
+        throw std::runtime_error {"connection count overflow"};
+    }
     return *this;
 }
 
 constexpr auto connection_count_t::operator-=(const connection_count_t &other)
     -> connection_count_t & {
-    value -= other.value;
+    static_assert(std::unsigned_integral<value_type>);
+    value = checked_sub(value, other.value);
     return *this;
 }
 
 constexpr auto connection_count_t::operator*=(const int &other) -> connection_count_t & {
-    value *= ls_safe<int>(other);
+    value = gsl::narrow<value_type>(checked_mul(int {value}, other));
+
+    if (value > value_max) [[unlikely]] {
+        throw std::runtime_error {"connection count overflow"};
+    }
+
     return *this;
 }
 
 constexpr auto connection_count_t::operator++() -> connection_count_t & {
-    ++value;
+    value = checked_add(value, value_type {1});
+    if (value > value_max) [[unlikely]] {
+        throw std::runtime_error {"connection count overflow"};
+    }
     return *this;
 }
 
@@ -171,7 +172,7 @@ constexpr auto connection_count_t::operator++(int) -> connection_count_t {
 }
 
 constexpr auto connection_count_t::operator--() -> connection_count_t & {
-    --value;
+    value = checked_sub(value, value_type {1});
     return *this;
 }
 

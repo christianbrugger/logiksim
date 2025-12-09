@@ -1,15 +1,13 @@
 #ifndef LOGICSIM_VOCABULARY_DELAY_H
 #define LOGICSIM_VOCABULARY_DELAY_H
 
-#include "core/concept/integral.h"
+#include "core/algorithm/numeric.h"
 #include "core/format/struct.h"
-#include "core/safe_numeric.h"
 #include "core/vocabulary/time_literal.h"
 
 #include <chrono>
 #include <compare>
 #include <cstdint>
-#include <stdexcept>
 
 namespace logicsim {
 
@@ -20,18 +18,13 @@ struct delay_t {
     using rep = int64_t;
     using period = std::nano;
 
-   private:
-    using rep_safe = ls_safe<rep>;
-    using value_type = std::chrono::duration<rep_safe, period>;
+    using value_type = std::chrono::duration<rep, period>;
     value_type value;
 
    public:
     [[nodiscard]] explicit constexpr delay_t() noexcept;
-    [[nodiscard]] explicit constexpr delay_t(
-        std::chrono::duration<rep, period> delay) noexcept;
+    [[nodiscard]] explicit constexpr delay_t(value_type delay) noexcept;
 
-    // returns safe_numerics time type
-    [[nodiscard]] constexpr auto safe_value() const noexcept -> value_type;
     // returns nanosecond count
     [[nodiscard]] constexpr auto count_ns() const noexcept -> rep;
 
@@ -39,7 +32,7 @@ struct delay_t {
 
     [[nodiscard]] constexpr auto operator==(const delay_t &other) const -> bool = default;
     [[nodiscard]] constexpr auto operator<=>(const delay_t &other) const
-        -> std::strong_ordering;
+        -> std::strong_ordering = default;
 
     [[nodiscard]] static constexpr auto zero() noexcept -> delay_t;
     [[nodiscard]] static constexpr auto epsilon() noexcept -> delay_t;
@@ -74,23 +67,12 @@ static_assert(std::is_trivially_copy_assignable_v<delay_t>);
 // Implementation
 //
 
-constexpr delay_t::delay_t() noexcept : value {rep_safe {0}} {};
+constexpr delay_t::delay_t() noexcept : value {rep {0}} {};
 
-constexpr delay_t::delay_t(std::chrono::duration<rep, period> delay) noexcept
-    : value {rep_safe {delay.count()}} {};
-
-constexpr auto delay_t::safe_value() const noexcept -> value_type {
-    return value;
-}
+constexpr delay_t::delay_t(value_type delay) noexcept : value {delay} {};
 
 constexpr auto delay_t::count_ns() const noexcept -> rep {
     return value.count();
-}
-
-constexpr auto delay_t::operator<=>(const delay_t &other) const -> std::strong_ordering {
-    const auto a = rep {value.count()};
-    const auto b = rep {other.value.count()};
-    return a <=> b;
 }
 
 constexpr auto delay_t::zero() noexcept -> delay_t {
@@ -119,22 +101,22 @@ constexpr auto delay_t::max() noexcept -> delay_t {
 };
 
 constexpr auto delay_t::operator+=(const delay_t &right) -> delay_t & {
-    value = value + right.value;
+    value = value_type {checked_add(value.count(), right.value.count())};
     return *this;
 }
 
 constexpr auto delay_t::operator-=(const delay_t &right) -> delay_t & {
-    value = value - right.value;
+    value = value_type {checked_sub(value.count(), right.value.count())};
     return *this;
 }
 
 constexpr auto delay_t::operator*=(const int &right) -> delay_t & {
-    value = value_type {rep_safe {value.count() * rep_safe {right}}};
+    value = value_type {checked_mul(value.count(), rep {right})};
     return *this;
 }
 
 constexpr auto delay_t::operator/=(const int &right) -> delay_t & {
-    value = value_type {rep_safe {value.count() / rep_safe {right}}};
+    value = value_type {checked_div(value.count(), rep {right})};
     return *this;
 }
 
@@ -144,7 +126,7 @@ constexpr auto delay_t::operator+() const -> delay_t {
 
 constexpr auto delay_t::operator-() const -> delay_t {
     auto result = delay_t {};
-    result.value = -value;
+    result.value = value_type {checked_neg(value.count())};
     return result;
 }
 

@@ -3,6 +3,7 @@
 
 #include "core/component/simulation/history_index.h"
 
+#include <cassert>
 #include <compare>
 
 namespace logicsim {

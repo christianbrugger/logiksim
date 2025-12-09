@@ -84,7 +84,7 @@ namespace {
     return std::nullopt;
 }
 
-[[nodiscard]] auto to_connection_count(connection_count_t::value_type_rep value)
+[[nodiscard]] auto to_connection_count(connection_count_t::value_type value)
     -> std::optional<connection_count_t> {
     if (connection_count_t::min().count() <= value &&
         value <= connection_count_t::max().count()) {

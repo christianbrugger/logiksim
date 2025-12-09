@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_HISTORY_INDEX_H
 #define LOGICSIM_COMPONENT_SIMULATION_HISTORY_INDEX_H
 
+#include "core/algorithm/numeric.h"
 #include "core/concept/integral.h"
 #include "core/format/struct.h"
-#include "core/safe_numeric.h"
 
 #include <gsl/gsl>
 
@@ -87,10 +87,7 @@ constexpr auto history_index_t::max() -> history_index_t {
 }
 
 constexpr auto history_index_t::operator++() -> history_index_t & {
-    if (value == std::numeric_limits<value_type>::max()) [[unlikely]] {
-        throw std::overflow_error("cannot increment, overflow");
-    }
-    ++value;
+    value = checked_add(value, value_type {1});
     return *this;
 }
 
@@ -102,25 +99,17 @@ constexpr auto history_index_t::operator++(int) -> history_index_t {
 
 constexpr auto history_index_t::operator+=(const integral auto &right)
     -> history_index_t & {
-    static_assert(
-        std::is_same_v<history_index_t::value_type, history_index_t::difference_type>);
-    using diff_t = history_index_t::difference_type;
-    using safe_t = ls_safe<diff_t>;
+    static_assert(std::signed_integral<value_type>);
 
-    value = diff_t {safe_t {value} + safe_t {right}};
-
+    value = checked_add(value, gsl::narrow<value_type>(right));
     return *this;
 }
 
 constexpr auto history_index_t::operator-=(const integral auto &right)
     -> history_index_t & {
-    static_assert(
-        std::is_same_v<history_index_t::value_type, history_index_t::difference_type>);
-    using diff_t = history_index_t::difference_type;
-    using safe_t = ls_safe<diff_t>;
+    static_assert(std::signed_integral<value_type>);
 
-    value = diff_t {safe_t {value} - safe_t {right}};
-
+    value = checked_sub(value, gsl::narrow<value_type>(right));
     return *this;
 }
 
@@ -131,10 +120,8 @@ constexpr auto history_index_t::operator-=(const integral auto &right)
 [[nodiscard]] constexpr auto operator-(const history_index_t &left,
                                        const history_index_t &right)
     -> history_index_t::difference_type {
-    using diff_t = history_index_t::difference_type;
-    using safe_t = ls_safe<diff_t>;
-
-    return diff_t {safe_t {left.value} - safe_t {right.value}};
+    return checked_sub(history_index_t::difference_type {left.value},
+                       history_index_t::difference_type {right.value});
 }
 
 //

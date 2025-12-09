@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_TIME_H
 #define LOGICSIM_VOCABULARY_TIME_H
 
+#include "core/algorithm/numeric.h"
 #include "core/format/struct.h"
-#include "core/safe_numeric.h"
 #include "core/vocabulary/delay.h"
 #include "core/vocabulary/time_literal.h"
 
@@ -16,27 +16,22 @@ namespace logicsim {
  * @brief: Specifies the current simulation time point
  */
 struct time_t {
+   public:
     using rep = int64_t;
     using period = std::nano;
 
-   private:
-    using rep_safe = ls_safe<rep>;
-    using value_type = std::chrono::duration<rep_safe, period>;
+    using value_type = std::chrono::duration<int64_t, period>;
     value_type value;
 
    public:
     [[nodiscard]] explicit constexpr time_t() noexcept;
-    [[nodiscard]] explicit constexpr time_t(
-        std::chrono::duration<rep, period> time) noexcept;
-
-    // returns safe_numerics time type
-    [[nodiscard]] constexpr auto safe_value() const noexcept -> value_type;
+    [[nodiscard]] explicit constexpr time_t(value_type time) noexcept;
 
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] constexpr auto operator==(const time_t &other) const -> bool = default;
     [[nodiscard]] constexpr auto operator<=>(const time_t &other) const
-        -> std::strong_ordering;
+        -> std::strong_ordering = default;
 
     [[nodiscard]] static constexpr auto zero() noexcept -> time_t;
     [[nodiscard]] static constexpr auto epsilon() noexcept -> delay_t;
@@ -66,20 +61,9 @@ static_assert(std::is_trivially_copy_assignable_v<time_t>);
 // Implementation
 //
 
-constexpr time_t::time_t() noexcept : value {rep_safe {0}} {};
+constexpr time_t::time_t() noexcept : value {rep {0}} {};
 
-constexpr time_t::time_t(std::chrono::duration<rep, period> time) noexcept
-    : value {rep_safe {time.count()}} {};
-
-constexpr auto time_t::safe_value() const noexcept -> value_type {
-    return value;
-}
-
-constexpr auto time_t::operator<=>(const time_t &other) const -> std::strong_ordering {
-    const auto a = rep {value.count()};
-    const auto b = rep {other.value.count()};
-    return a <=> b;
-}
+constexpr time_t::time_t(value_type time) noexcept : value {time} {};
 
 constexpr auto time_t::zero() noexcept -> time_t {
     auto result = time_t {};
@@ -105,12 +89,18 @@ constexpr auto time_t::max() noexcept -> time_t {
 };
 
 constexpr auto time_t::operator+=(const delay_t &right) -> time_t & {
-    value += right.safe_value();
+    static_assert(std::same_as<rep, delay_t::rep>);
+    static_assert(std::ratio_equal_v<period, delay_t::period>);
+
+    value = value_type {checked_add(value.count(), right.value.count())};
     return *this;
 }
 
 constexpr auto time_t::operator-=(const delay_t &right) -> time_t & {
-    value -= right.safe_value();
+    static_assert(std::same_as<rep, delay_t::rep>);
+    static_assert(std::ratio_equal_v<period, delay_t::period>);
+
+    value = value_type {checked_sub(value.count(), right.value.count())};
     return *this;
 }
 
@@ -120,11 +110,7 @@ constexpr auto time_t::operator-=(const delay_t &right) -> time_t & {
 
 [[nodiscard]] constexpr auto operator-(const time_t &left,
                                        const time_t &right) -> delay_t {
-    using T = std::chrono::duration<time_t::rep, time_t::period>;
-    const auto left_duration = T {time_t::rep {left.safe_value().count()}};
-    const auto right_duration = T {time_t::rep {right.safe_value().count()}};
-
-    return delay_t {left_duration} - delay_t {right_duration};
+    return delay_t {left.value} - delay_t {right.value};
 }
 
 constexpr auto operator+(const time_t &left, const delay_t &right) -> time_t {

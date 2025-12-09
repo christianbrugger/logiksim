@@ -18,8 +18,8 @@ TEST(VocabularyTime, Overflow) {
     EXPECT_EQ(time_t {100ns} - time_t {10ns}, delay_t {90ns});
     EXPECT_EQ(time_t {10ns} - time_t {100ns}, delay_t {-90ns});
 
-    EXPECT_THROW(static_cast<void>(time_t::max() - time_t::min()), std::runtime_error);
-    EXPECT_THROW(static_cast<void>(time_t::min() - time_t::max()), std::runtime_error);
+    EXPECT_THROW(static_cast<void>(time_t::max() - time_t::min()), std::exception);
+    EXPECT_THROW(static_cast<void>(time_t::min() - time_t::max()), std::exception);
 }
 
 TEST(VocabularyTime, OperatorDelay) {
@@ -31,8 +31,7 @@ TEST(VocabularyTime, OperatorDelay) {
         delay += delay_t {10ns};
         EXPECT_EQ(delay, time_t {110ns});
     }
-    EXPECT_THROW(static_cast<void>(time_t::max() + time_t::epsilon()),
-                 std::runtime_error);
+    EXPECT_THROW(static_cast<void>(time_t::max() + time_t::epsilon()), std::exception);
 
     // substract
     EXPECT_EQ(time_t {100ns} - delay_t {10ns}, time_t {90ns});
@@ -41,8 +40,7 @@ TEST(VocabularyTime, OperatorDelay) {
         delay -= delay_t {10ns};
         EXPECT_EQ(delay, time_t {90ns});
     }
-    EXPECT_THROW(static_cast<void>(time_t::min() - time_t::epsilon()),
-                 std::runtime_error);
+    EXPECT_THROW(static_cast<void>(time_t::min() - time_t::epsilon()), std::exception);
 }
 
 }  // namespace logicsim

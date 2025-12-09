@@ -60,8 +60,8 @@ struct SerializedAttributesClockGenerator {
 
 struct SerializedLogicItem {
     LogicItemType logicitem_type;
-    connection_count_t::value_type_rep input_count;
-    connection_count_t::value_type_rep output_count;
+    connection_count_t::value_type input_count;
+    connection_count_t::value_type output_count;
 
     logic_small_vector_t input_inverters;
     logic_small_vector_t output_inverters;
