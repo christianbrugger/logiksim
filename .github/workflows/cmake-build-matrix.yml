@@ -227,7 +227,6 @@ jobs:
     #    sudo apt install gcc-15 g++-15
     #    gcc-15 --version
     #    g++-15 --version
-    
 
     - name: Install GCC PPA
       if: startsWith(matrix.preset, 'linux-gcc') || (startsWith(matrix.preset, 'linux-clang') && matrix.libcpp != 'true')
