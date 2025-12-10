@@ -232,9 +232,11 @@ jobs:
       if: startsWith(matrix.preset, 'linux-gcc') || (startsWith(matrix.preset, 'linux-clang') && matrix.libcpp != 'true')
       uses: awalsh128/cache-apt-pkgs-action@latest
       with:
-        packages: gcc-15 g++-15
-        add-repository: ppa:puni070/gcc-noble
-        version: 1.0
+        packages: wget
+        debug: true
+        # packages: gcc-15 g++-15
+        # add-repository: ppa:puni070/gcc-noble
+        version: 0.5
 
     - name: Install Clang
       if: startsWith(matrix.preset, 'linux-clang')
