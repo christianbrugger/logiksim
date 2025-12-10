@@ -218,26 +218,23 @@ jobs:
     # Install Compiler
     #
 
+    - name: Install GCC
+      if: startsWith(matrix.preset, 'linux-gcc') || (startsWith(matrix.preset, 'linux-clang') && matrix.libcpp != 'true')
+      run: |
+        add-apt-repository ppa:puni070/gcc-noble
+        apt update
+        apt install gcc-15 g++-15
+        gcc-15 --version
+        g++-15 --version
+
     - name: Install Clang
       if: startsWith(matrix.preset, 'linux-clang')
       run: |
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh 20
-        clang-20 --version
-        clang++-20 --version
-
-    - name: Install Homebrew
-      if: startsWith(matrix.preset, 'linux-gcc')
-      uses: Homebrew/actions/setup-homebrew@master
-
-    - name: Install GCC
-      if: startsWith(matrix.preset, 'linux-gcc')
-      run: |
-        brew install gcc@15
-        brew link --force binutils
-        gcc-15 --version
-        g++-15 --version
+        clang-20 -v
+        clang++-20 -v
 
     #
     # Install Qt
