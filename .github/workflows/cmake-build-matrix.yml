@@ -228,19 +228,18 @@ jobs:
     #    gcc-15 --version
     #    g++-15 --version
 
-    - name: Install GCC PPA
-      if: startsWith(matrix.preset, 'linux-gcc') || (startsWith(matrix.preset, 'linux-clang') && matrix.libcpp != 'true')
-      run: |
-        sudo add-apt-repository ppa:puni070/gcc-noble
+    # - name: Install GCC PPA
+    #   if: startsWith(matrix.preset, 'linux-gcc') || (startsWith(matrix.preset, 'linux-clang') && matrix.libcpp != 'true')
+    #   run: |
+    #     sudo add-apt-repository ppa:puni070/gcc-noble
 
     - name: Install GCC
       if: startsWith(matrix.preset, 'linux-gcc') || (startsWith(matrix.preset, 'linux-clang') && matrix.libcpp != 'true')
       uses: awalsh128/cache-apt-pkgs-action@v1.6.0
       with:
         packages: libstdc++6 gcc-15 g++-15
-        debug: true
         add-repository: ppa:puni070/gcc-noble
-        version: 1.0
+        version: v1-${{ matrix.preset }}
 
     - name: Install Clang
       if: startsWith(matrix.preset, 'linux-clang')
