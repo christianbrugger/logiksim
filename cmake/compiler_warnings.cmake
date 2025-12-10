@@ -180,13 +180,11 @@ endfunction()
 function(ls_set_compiler_warnings_disabled target_name)
     set(warnings "")
 
-    # Unreachable code warnings in MSVC release LTO builds. 
+    # Unreachable code warnings in MSVC builds. 
     # While they happen in headers they are not excluded with /extern:W0, as
     # they happen during code generation. Will not be fixed.
-    # last-check: 2024-09-02
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND 
-        (CMAKE_BUILD_TYPE STREQUAL "Release" 
-         OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
+    # last-check: 2025-12-09
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         list(APPEND warnings /wd4702)
     endif()
 
