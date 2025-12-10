@@ -219,14 +219,22 @@ jobs:
     # Install Compiler
     #
 
+    #- name: Install GCC
+    #  if: startsWith(matrix.preset, 'linux-gcc') || (startsWith(matrix.preset, 'linux-clang') && matrix.libcpp != 'true')
+    #  run: |
+    #    sudo add-apt-repository ppa:puni070/gcc-noble
+    #    sudo apt update
+    #    sudo apt install gcc-15 g++-15
+    #    gcc-15 --version
+    #    g++-15 --version
+
     - name: Install GCC
       if: startsWith(matrix.preset, 'linux-gcc') || (startsWith(matrix.preset, 'linux-clang') && matrix.libcpp != 'true')
-      run: |
-        sudo add-apt-repository ppa:puni070/gcc-noble
-        sudo apt update
-        sudo apt install gcc-15 g++-15
-        gcc-15 --version
-        g++-15 --version
+      uses: awalsh128/cache-apt-pkgs-action@v1
+      with:
+        packages: gcc-15 g++-15
+        add-repository: ppa:puni070/gcc-noble
+        version: 1.0
 
     - name: Install Clang
       if: startsWith(matrix.preset, 'linux-clang')
