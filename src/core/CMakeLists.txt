@@ -51,9 +51,10 @@ add_subdirectory(
     EXCLUDE_FROM_ALL
     SYSTEM
 )
-
-
-set(ls_flux_definitions
+target_compile_options(flux INTERFACE
+    $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>
+)
+target_compile_definitions(flux INTERFACE
     FLUX_UNWIND_ON_ERROR
     FLUX_ERROR_ON_OVERFLOW
     FLUX_ERROR_ON_DIVIDE_BY_ZERO
@@ -288,8 +289,5 @@ target_link_libraries(${LS_CORE_LIBRARY} PUBLIC
 )
 target_link_libraries(${LS_CORE_LIBRARY} PRIVATE 
     logiksim_pch
-)
-target_compile_definitions(${LS_CORE_LIBRARY} PUBLIC
-    ${ls_flux_definitions}
 )
 
