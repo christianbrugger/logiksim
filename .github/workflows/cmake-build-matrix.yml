@@ -236,7 +236,7 @@ jobs:
 
     - name: Install GCC
       if: startsWith(matrix.preset, 'linux-gcc') || (startsWith(matrix.preset, 'linux-clang') && matrix.libcpp != 'true')
-      uses: awalsh128/cache-apt-pkgs-action@1.6.0
+      uses: awalsh128/cache-apt-pkgs-action@v1.6.0
       with:
         packages: libstdc++6 gcc-15 g++-15
         debug: true
