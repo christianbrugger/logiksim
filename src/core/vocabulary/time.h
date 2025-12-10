@@ -7,7 +7,6 @@
 #include "core/vocabulary/time_literal.h"
 
 #include <chrono>
-#include <compare>
 #include <type_traits>
 
 namespace logicsim {
@@ -30,8 +29,7 @@ struct time_t {
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] constexpr auto operator==(const time_t &other) const -> bool = default;
-    [[nodiscard]] constexpr auto operator<=>(const time_t &other) const
-        -> std::strong_ordering = default;
+    [[nodiscard]] constexpr auto operator<=>(const time_t &other) const = default;
 
     [[nodiscard]] static constexpr auto zero() noexcept -> time_t;
     [[nodiscard]] static constexpr auto epsilon() noexcept -> delay_t;
@@ -46,16 +44,16 @@ static_assert(std::is_trivially_copyable_v<time_t>);
 static_assert(std::is_trivially_copy_constructible_v<time_t>);
 static_assert(std::is_trivially_copy_assignable_v<time_t>);
 
-[[nodiscard]] constexpr auto operator-(const time_t &left,
-                                       const time_t &right) -> delay_t;
+[[nodiscard]] constexpr auto operator-(const time_t &left, const time_t &right)
+    -> delay_t;
 // int
-[[nodiscard]] constexpr auto operator+(const time_t &left,
-                                       const delay_t &right) -> time_t;
-[[nodiscard]] constexpr auto operator-(const time_t &left,
-                                       const delay_t &right) -> time_t;
+[[nodiscard]] constexpr auto operator+(const time_t &left, const delay_t &right)
+    -> time_t;
+[[nodiscard]] constexpr auto operator-(const time_t &left, const delay_t &right)
+    -> time_t;
 // symmetric
-[[nodiscard]] constexpr auto operator+(const delay_t &left,
-                                       const time_t &right) -> time_t;
+[[nodiscard]] constexpr auto operator+(const delay_t &left, const time_t &right)
+    -> time_t;
 
 //
 // Implementation
@@ -108,8 +106,8 @@ constexpr auto time_t::operator-=(const delay_t &right) -> time_t & {
 // Free functions
 //
 
-[[nodiscard]] constexpr auto operator-(const time_t &left,
-                                       const time_t &right) -> delay_t {
+[[nodiscard]] constexpr auto operator-(const time_t &left, const time_t &right)
+    -> delay_t {
     return delay_t {left.value} - delay_t {right.value};
 }
 

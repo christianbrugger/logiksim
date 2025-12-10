@@ -15,6 +15,7 @@ namespace logicsim {
  * @brief: Specifies a time duration of the simulation time.
  */
 struct delay_t {
+   public:
     using rep = int64_t;
     using period = std::nano;
 
@@ -31,8 +32,7 @@ struct delay_t {
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] constexpr auto operator==(const delay_t &other) const -> bool = default;
-    [[nodiscard]] constexpr auto operator<=>(const delay_t &other) const
-        -> std::strong_ordering = default;
+    [[nodiscard]] constexpr auto operator<=>(const delay_t &other) const = default;
 
     [[nodiscard]] static constexpr auto zero() noexcept -> delay_t;
     [[nodiscard]] static constexpr auto epsilon() noexcept -> delay_t;
@@ -53,10 +53,10 @@ static_assert(std::is_trivially_copyable_v<delay_t>);
 static_assert(std::is_trivially_copy_constructible_v<delay_t>);
 static_assert(std::is_trivially_copy_assignable_v<delay_t>);
 
-[[nodiscard]] constexpr auto operator+(const delay_t &left,
-                                       const delay_t &right) -> delay_t;
-[[nodiscard]] constexpr auto operator-(const delay_t &left,
-                                       const delay_t &right) -> delay_t;
+[[nodiscard]] constexpr auto operator+(const delay_t &left, const delay_t &right)
+    -> delay_t;
+[[nodiscard]] constexpr auto operator-(const delay_t &left, const delay_t &right)
+    -> delay_t;
 // int
 [[nodiscard]] constexpr auto operator*(const delay_t &left, const int &right) -> delay_t;
 [[nodiscard]] constexpr auto operator/(const delay_t &left, const int &right) -> delay_t;
