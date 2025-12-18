@@ -39,8 +39,8 @@ auto enclosing_rect(rect_t rect, ordered_line_t line) -> rect_t {
     };
 }
 
-auto enclosing_rect(const std::optional<rect_t>& a,
-                    const std::optional<rect_t>& b) -> std::optional<rect_t> {
+auto enclosing_rect(const std::optional<rect_t>& a, const std::optional<rect_t>& b)
+    -> std::optional<rect_t> {
     if (!a.has_value() && !b.has_value()) {
         return std::nullopt;
     }

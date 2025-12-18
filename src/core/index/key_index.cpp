@@ -71,8 +71,8 @@ auto create_new_entry(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys,
 }
 
 template <typename Key, typename Id>
-auto set_new_key(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys, Id id,
-                 Key key) -> void {
+auto set_new_key(map_type<Key, Id>& map_ids, map_type<Id, Key>& map_keys, Id id, Key key)
+    -> void {
     Expects(key);
 
     const auto key_it = map_keys.find(id);
@@ -198,8 +198,8 @@ auto KeyIndex::get(decoration_key_t decoration_key) const -> decoration_id_t {
     return res;
 }
 
-auto KeyIndex::set(decoration_id_t decoration_id,
-                   decoration_key_t decoration_key) -> void {
+auto KeyIndex::set(decoration_id_t decoration_id, decoration_key_t decoration_key)
+    -> void {
     assert(class_invariant_holds());
 
     key_index::set_new_key(decoration_ids_, decoration_keys_, decoration_id,
@@ -380,8 +380,9 @@ namespace key_index {
 
 namespace {
 
-[[nodiscard]] auto _has_all_logicitem_ids(
-    const Layout& layout, const map_logicitem_keys_t& logicitem_keys) -> bool {
+[[nodiscard]] auto _has_all_logicitem_ids(const Layout& layout,
+                                          const map_logicitem_keys_t& logicitem_keys)
+    -> bool {
     if (logicitem_keys.empty()) {
         return layout.logicitems().empty();
     }
@@ -390,8 +391,9 @@ namespace {
     return size_t {max_id} + 1 == layout.logicitems().size();
 }
 
-[[nodiscard]] auto _has_all_decoration_ids(
-    const Layout& layout, const map_decoration_keys_t& decoration_keys) -> bool {
+[[nodiscard]] auto _has_all_decoration_ids(const Layout& layout,
+                                           const map_decoration_keys_t& decoration_keys)
+    -> bool {
     if (decoration_keys.empty()) {
         return layout.decorations().empty();
     }
@@ -400,8 +402,9 @@ namespace {
     return size_t {max_id} + 1 == layout.decorations().size();
 }
 
-[[nodiscard]] auto _map_contains_all_segments(
-    const Layout& layout, const map_segment_keys_t& segment_keys) -> bool {
+[[nodiscard]] auto _map_contains_all_segments(const Layout& layout,
+                                              const map_segment_keys_t& segment_keys)
+    -> bool {
     const auto contains_segment = [&](const segment_t segment) {
         return segment_keys.contains(segment);
     };

@@ -42,8 +42,8 @@ namespace serialize {
 
 namespace {
 
-[[nodiscard]] auto to_line(const SerializedLine& obj,
-                           move_delta_t delta = {}) -> std::optional<line_t> {
+[[nodiscard]] auto to_line(const SerializedLine& obj, move_delta_t delta = {})
+    -> std::optional<line_t> {
     if (!is_orthogonal_line(obj.p0, obj.p1)) [[unlikely]] {
         return std::nullopt;
     }
@@ -274,8 +274,8 @@ auto add_element(SerializedLayout& data, const Layout& layout,
     });
 }
 
-auto add_element(SerializedLayout& data, const Layout& layout,
-                 wire_id_t wire_id) -> void {
+auto add_element(SerializedLayout& data, const Layout& layout, wire_id_t wire_id)
+    -> void {
     for (const auto& info : layout.wires().segment_tree(wire_id)) {
         data.wire_segments.push_back(SerializedLine {info.line.p0, info.line.p1});
     }
@@ -326,8 +326,8 @@ auto add_element(SerializedLayout& data, const Layout& layout,
     };
 }
 
-[[nodiscard]] auto serialize_to_format(const SerializedLayout& data,
-                                       SaveFormat format) -> std::string {
+[[nodiscard]] auto serialize_to_format(const SerializedLayout& data, SaveFormat format)
+    -> std::string {
     switch (format) {
         using enum SaveFormat;
 
@@ -374,8 +374,8 @@ auto add_element(SerializedLayout& data, const Layout& layout,
         save_format, view_point, simulation_config, save_position);
 }
 
-[[nodiscard]] auto serialize_all(const Layout& layout,
-                                 const SerializeConfig& config) -> std::string {
+[[nodiscard]] auto serialize_all(const Layout& layout, const SerializeConfig& config)
+    -> std::string {
     if (!all_normal_display_state(layout)) {
         throw std::runtime_error("all items must have display state normal");
     }
@@ -449,8 +449,8 @@ auto unserialize_base64_gzip_json(const std::string& binary)
     };
 }
 
-auto calculate_move_delta(point_t save_position,
-                          std::optional<point_t> load_position) -> move_delta_t {
+auto calculate_move_delta(point_t save_position, std::optional<point_t> load_position)
+    -> move_delta_t {
     if (!load_position) {
         return move_delta_t {0, 0};
     }

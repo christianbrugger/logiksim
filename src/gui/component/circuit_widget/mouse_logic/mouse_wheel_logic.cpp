@@ -29,14 +29,14 @@ constexpr inline auto standard_delta = 120.0;
 
 }  // namespace
 
-auto wheel_zoom(QPointF position, QPoint angle_delta,
-                const ViewConfig& view_config) -> ViewPoint {
+auto wheel_zoom(QPointF position, QPoint angle_delta, const ViewConfig& view_config)
+    -> ViewPoint {
     const auto steps = angle_delta.y() / standard_delta;
     return zoom(view_config, steps, to(position));
 }
 
-auto wheel_scroll_surface(QPoint pixel_delta,
-                          const ViewConfig& view_config) -> point_fine_t {
+auto wheel_scroll_surface(QPoint pixel_delta, const ViewConfig& view_config)
+    -> point_fine_t {
     // TODO test this
     const auto scale = view_config.device_scale();
     const auto moved = point_fine_t {
@@ -46,16 +46,16 @@ auto wheel_scroll_surface(QPoint pixel_delta,
     return view_config.offset() + moved;
 }
 
-auto wheel_scroll_surface_view_point(QPoint pixel_delta,
-                                     const ViewConfig& view_config) -> ViewPoint {
+auto wheel_scroll_surface_view_point(QPoint pixel_delta, const ViewConfig& view_config)
+    -> ViewPoint {
     return ViewPoint {
         .offset = wheel_scroll_surface(pixel_delta, view_config),
         .device_scale = view_config.device_scale(),
     };
 }
 
-auto wheel_scroll_vertical(QPoint angle_delta,
-                           const ViewConfig& view_config) -> point_fine_t {
+auto wheel_scroll_vertical(QPoint angle_delta, const ViewConfig& view_config)
+    -> point_fine_t {
     const auto standard_scroll_grid = get_standard_scroll(view_config);
     const auto moved = point_fine_t {
         standard_scroll_grid * angle_delta.x() / standard_delta,
@@ -64,16 +64,16 @@ auto wheel_scroll_vertical(QPoint angle_delta,
     return view_config.offset() + moved;
 }
 
-auto wheel_scroll_vertical_view_point(QPoint angle_delta,
-                                      const ViewConfig& view_config) -> ViewPoint {
+auto wheel_scroll_vertical_view_point(QPoint angle_delta, const ViewConfig& view_config)
+    -> ViewPoint {
     return ViewPoint {
         .offset = wheel_scroll_vertical(angle_delta, view_config),
         .device_scale = view_config.device_scale(),
     };
 }
 
-auto wheel_scroll_horizontal(QPoint angle_delta,
-                             const ViewConfig& view_config) -> point_fine_t {
+auto wheel_scroll_horizontal(QPoint angle_delta, const ViewConfig& view_config)
+    -> point_fine_t {
     const auto standard_scroll_grid = get_standard_scroll(view_config);
     auto moved = point_fine_t {
         standard_scroll_grid * angle_delta.y() / standard_delta,
@@ -82,8 +82,8 @@ auto wheel_scroll_horizontal(QPoint angle_delta,
     return view_config.offset() + moved;
 }
 
-auto wheel_scroll_horizontal_view_point(QPoint angle_delta,
-                                        const ViewConfig& view_config) -> ViewPoint {
+auto wheel_scroll_horizontal_view_point(QPoint angle_delta, const ViewConfig& view_config)
+    -> ViewPoint {
     return ViewPoint {
         .offset = wheel_scroll_horizontal(angle_delta, view_config),
         .device_scale = view_config.device_scale(),

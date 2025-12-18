@@ -15,16 +15,16 @@
 
 namespace logicsim {
 
-[[nodiscard]] auto get_mouse_position(const QWidget* widget,
-                                      const QMouseEvent* event_) -> QPointF {
+[[nodiscard]] auto get_mouse_position(const QWidget* widget, const QMouseEvent* event_)
+    -> QPointF {
     Expects(widget);
     Expects(event_);
 
     return get_mouse_position(*widget, *event_);
 }
 
-[[nodiscard]] auto get_mouse_position(const QWidget* widget,
-                                      const QWheelEvent* event_) -> QPointF {
+[[nodiscard]] auto get_mouse_position(const QWidget* widget, const QWheelEvent* event_)
+    -> QPointF {
     Expects(widget);
     Expects(event_);
 
@@ -33,8 +33,8 @@ namespace logicsim {
 
 namespace {
 
-auto map_from_top_level_high_dpi(const QWidget& widget,
-                                 QPointF scene_position) -> QPointF {
+auto map_from_top_level_high_dpi(const QWidget& widget, QPointF scene_position)
+    -> QPointF {
     // Simply calling widget.mapFrom(widget.topLevelWidget(), ..) unfortunately doesn't
     // work for 150% display scaling as `mapFrom` works on device independent geometry.
 
@@ -64,15 +64,15 @@ auto map_from_global_high_dpi(const QWidget& widget, QPointF global_position) ->
 
 }  // namespace
 
-[[nodiscard]] auto get_mouse_position(const QWidget& widget,
-                                      const QMouseEvent& event_) -> QPointF {
+[[nodiscard]] auto get_mouse_position(const QWidget& widget, const QMouseEvent& event_)
+    -> QPointF {
     // for MouseEvents scenePosition is the only function of event_ that returns
     // non-rounded positions for display scaling.
     return map_from_top_level_high_dpi(widget, event_.scenePosition());
 }
 
-[[nodiscard]] auto get_mouse_position(const QWidget& widget,
-                                      const QWheelEvent& event_) -> QPointF {
+[[nodiscard]] auto get_mouse_position(const QWidget& widget, const QWheelEvent& event_)
+    -> QPointF {
     // for WheelEvents globalPosition is the only function of event_ that returns
     // non-rounded positions for display scaling.
     return map_from_global_high_dpi(widget, event_.globalPosition());

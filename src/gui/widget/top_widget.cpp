@@ -228,8 +228,8 @@ struct GroupAttributes {
 
 auto add_action_group(QMenu* menu, const QString& text,
                       ActionAttributes action_attributes,
-                      GroupAttributes group_attributes,
-                      std::invocable<> auto callable) -> QAction* {
+                      GroupAttributes group_attributes, std::invocable<> auto callable)
+    -> QAction* {
     auto* action = add_action_impl(menu, text, action_attributes, callable);
     action->setCheckable(true);
 

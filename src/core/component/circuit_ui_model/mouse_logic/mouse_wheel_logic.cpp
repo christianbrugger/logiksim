@@ -26,8 +26,8 @@ auto wheel_zoom(const point_device_fine_t& position, angle_delta_t angle_delta,
     return zoom(view_config, steps, position);
 }
 
-auto wheel_scroll_vertical(angle_delta_t angle_delta,
-                           const ViewConfig& view_config) -> point_fine_t {
+auto wheel_scroll_vertical(angle_delta_t angle_delta, const ViewConfig& view_config)
+    -> point_fine_t {
     const auto standard_scroll_grid = get_standard_scroll(view_config);
     const auto moved = point_fine_t {
         standard_scroll_grid * angle_delta.horizontal_notches,
@@ -44,8 +44,8 @@ auto wheel_scroll_vertical_view_point(angle_delta_t angle_delta,
     };
 }
 
-auto wheel_scroll_horizontal(angle_delta_t angle_delta,
-                             const ViewConfig& view_config) -> point_fine_t {
+auto wheel_scroll_horizontal(angle_delta_t angle_delta, const ViewConfig& view_config)
+    -> point_fine_t {
     const auto standard_scroll_grid = get_standard_scroll(view_config);
     auto moved = point_fine_t {
         standard_scroll_grid * angle_delta.vertical_notches,
@@ -62,8 +62,8 @@ auto wheel_scroll_horizontal_view_point(angle_delta_t angle_delta,
     };
 }
 
-auto wheel_scroll_zoom(const MouseWheelEvent& event,
-                       const ViewConfig& view_config) -> std::optional<ViewPoint> {
+auto wheel_scroll_zoom(const MouseWheelEvent& event, const ViewConfig& view_config)
+    -> std::optional<ViewPoint> {
     if (!event.modifiers) {
         return wheel_scroll_vertical_view_point(event.angle_delta, view_config);
     }

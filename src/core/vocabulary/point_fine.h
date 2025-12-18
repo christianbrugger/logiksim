@@ -43,15 +43,15 @@ static_assert(std::is_trivially_copy_assignable_v<point_fine_t>);
                                        const point_fine_t &right) -> point_fine_t;
 
 // point_t
-[[nodiscard]] constexpr auto operator+(const point_fine_t &left,
-                                       const point_t &right) -> point_fine_t;
-[[nodiscard]] constexpr auto operator-(const point_fine_t &left,
-                                       const point_t &right) -> point_fine_t;
+[[nodiscard]] constexpr auto operator+(const point_fine_t &left, const point_t &right)
+    -> point_fine_t;
+[[nodiscard]] constexpr auto operator-(const point_fine_t &left, const point_t &right)
+    -> point_fine_t;
 // symmetric
-[[nodiscard]] constexpr auto operator+(const point_t &left,
-                                       const point_fine_t &right) -> point_fine_t;
-[[nodiscard]] constexpr auto operator-(const point_t &left,
-                                       const point_fine_t &right) -> point_fine_t;
+[[nodiscard]] constexpr auto operator+(const point_t &left, const point_fine_t &right)
+    -> point_fine_t;
+[[nodiscard]] constexpr auto operator-(const point_t &left, const point_fine_t &right)
+    -> point_fine_t;
 
 /**
  * @brief: Returns if the line from p0 to p1 is horizontal or vertical.
@@ -93,15 +93,15 @@ constexpr auto point_fine_t::operator-=(const point_fine_t &other) -> point_fine
     return *this;
 }
 
-constexpr auto operator+(const point_fine_t &left,
-                         const point_fine_t &right) -> point_fine_t {
+constexpr auto operator+(const point_fine_t &left, const point_fine_t &right)
+    -> point_fine_t {
     auto result = left;
     result += right;
     return result;
 }
 
-constexpr auto operator-(const point_fine_t &left,
-                         const point_fine_t &right) -> point_fine_t {
+constexpr auto operator-(const point_fine_t &left, const point_fine_t &right)
+    -> point_fine_t {
     auto result = left;
     result -= right;
     return result;

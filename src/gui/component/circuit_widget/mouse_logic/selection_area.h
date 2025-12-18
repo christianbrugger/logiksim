@@ -20,8 +20,8 @@ namespace circuit_widget {
 class SelectionAreaLogic {
    public:
     auto mouse_press(EditableCircuit& editable_circuit, QPointF position,
-                     const ViewConfig& view_config,
-                     Qt::KeyboardModifiers modifiers) -> void;
+                     const ViewConfig& view_config, Qt::KeyboardModifiers modifiers)
+        -> void;
     auto mouse_move(EditableCircuit& editable_circuit, QPointF position,
                     const ViewConfig& view_config, QRubberBand& rubber_band) -> void;
     auto mouse_release(EditableCircuit& editable_circuit, QPointF position,
@@ -31,8 +31,8 @@ class SelectionAreaLogic {
 
    private:
     auto update_mouse_position(EditableCircuit& editable_circuit, QPointF position,
-                               const ViewConfig& view_config,
-                               QRubberBand& rubber_band) -> void;
+                               const ViewConfig& view_config, QRubberBand& rubber_band)
+        -> void;
 
    private:
     std::optional<point_fine_t> first_position_ {};

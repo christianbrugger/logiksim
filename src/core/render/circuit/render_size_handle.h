@@ -8,8 +8,8 @@ class Selection;
 
 struct Context;
 
-auto render_size_handles(Context& ctx, const Layout& layout,
-                         const Selection& selection) -> void;
+auto render_size_handles(Context& ctx, const Layout& layout, const Selection& selection)
+    -> void;
 
 }  // namespace logicsim
 

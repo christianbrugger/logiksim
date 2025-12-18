@@ -20,8 +20,8 @@ auto ImageSurface::bl_image() const -> const BLImage & {
 // Free Functions
 //
 
-auto blit_layer(Context &target_ctx, const ImageSurface &source_layer,
-                BLRectI dirty_rect) -> void {
+auto blit_layer(Context &target_ctx, const ImageSurface &source_layer, BLRectI dirty_rect)
+    -> void {
     blit_layer(target_ctx, source_layer.bl_image(), dirty_rect);
 }
 

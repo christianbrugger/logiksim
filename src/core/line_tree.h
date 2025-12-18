@@ -68,16 +68,16 @@ class LineTree {
  *
  * Pre-condition: segments are expected to form a contiguous tree.
  */
-[[nodiscard]] auto to_line_tree(std::span<const ordered_line_t> segments,
-                                point_t root) -> LineTree;
+[[nodiscard]] auto to_line_tree(std::span<const ordered_line_t> segments, point_t root)
+    -> LineTree;
 
 [[nodiscard]] auto indices(const LineTree &line_tree) -> range_extended_t<line_index_t>;
 
 [[nodiscard]] auto output_ids(const LineTree &line_tree)
     -> range_extended_t<connection_id_t>;
 
-[[nodiscard]] auto format_entry(const LineTree &line_tree,
-                                line_index_t index) -> std::string;
+[[nodiscard]] auto format_entry(const LineTree &line_tree, line_index_t index)
+    -> std::string;
 
 }  // namespace logicsim
 

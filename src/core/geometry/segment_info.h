@@ -23,8 +23,8 @@ struct point_type_orientation_t {
     SegmentPointType type {SegmentPointType::new_unknown};
     orientation_t orientation {orientation_t::undirected};
 
-    [[nodiscard]] auto operator==(const point_type_orientation_t &) const -> bool =
-                                                                                 default;
+    [[nodiscard]] auto operator==(const point_type_orientation_t &) const
+        -> bool = default;
     [[nodiscard]] auto operator<=>(const point_type_orientation_t &) const = default;
     [[nodiscard]] auto format() const -> std::string;
 };
@@ -45,18 +45,18 @@ static_assert(std::regular<point_type_orientation_t>);
 [[nodiscard]] auto to_point_type_orientation(const segment_info_t &segment_info)
     -> std::array<point_type_orientation_t, 2>;
 
-auto set_segment_point_type(segment_info_t &info, point_t position,
-                            SegmentPointType type) -> void;
+auto set_segment_point_type(segment_info_t &info, point_t position, SegmentPointType type)
+    -> void;
 
 [[nodiscard]] auto updated_segment_info(segment_info_t segment_info, point_t position,
                                         SegmentPointType type) -> segment_info_t;
 
-[[nodiscard]] auto get_segment_point_type(const segment_info_t &info,
-                                          point_t position) -> SegmentPointType;
+[[nodiscard]] auto get_segment_point_type(const segment_info_t &info, point_t position)
+    -> SegmentPointType;
 
 [[nodiscard]] auto get_endpoints(const segment_info_t &info) -> endpoints_t;
-[[nodiscard]] auto to_segment_info(ordered_line_t line,
-                                   endpoints_t endpoints) -> segment_info_t;
+[[nodiscard]] auto to_segment_info(ordered_line_t line, endpoints_t endpoints)
+    -> segment_info_t;
 
 }  // namespace logicsim
 

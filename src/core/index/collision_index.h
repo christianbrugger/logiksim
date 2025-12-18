@@ -146,8 +146,8 @@ class collision_data_t {
                              logicitem_id_t set_new_id) -> void;
     auto set_decoration_state(ItemType item_type, decoration_id_t verify_old_id,
                               decoration_id_t set_new_id) -> void;
-    auto set_wire_state(ItemType item_type, wire_id_t verify_old_id,
-                        wire_id_t set_new_id) -> void;
+    auto set_wire_state(ItemType item_type, wire_id_t verify_old_id, wire_id_t set_new_id)
+        -> void;
 
    private:
     auto set_connection_tag() -> void;

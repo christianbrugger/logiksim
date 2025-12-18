@@ -220,8 +220,9 @@ auto HistoryStack::group_count() const -> std::size_t {
 // Logic Items
 //
 
-auto HistoryStack::push_logicitem_create_temporary(
-    logicitem_key_t logicitem_key, PlacedLogicItem&& placed_logicitem) -> void {
+auto HistoryStack::push_logicitem_create_temporary(logicitem_key_t logicitem_key,
+                                                   PlacedLogicItem&& placed_logicitem)
+    -> void {
     // optimize so mouse insertion does not produce endless entries
     if (get_back_vector(entries_) == HistoryEntry::logicitem_delete_temporary &&
         at_back_vector(logicitem_keys_) == logicitem_key) {
@@ -299,8 +300,9 @@ auto HistoryStack::push_logicitem_move_temporary(logicitem_key_t logicitem_key,
     move_deltas_.emplace_back(delta);
 }
 
-auto HistoryStack::push_logicitem_change_attributes(
-    logicitem_key_t logicitem_key, attributes_clock_generator_t&& attrs) -> void {
+auto HistoryStack::push_logicitem_change_attributes(logicitem_key_t logicitem_key,
+                                                    attributes_clock_generator_t&& attrs)
+    -> void {
     // optimize so user text-entry does not produce endless entries
     if (get_back_vector(entries_) == HistoryEntry::logicitem_change_attributes &&
         at_back_vector(logicitem_keys_) == logicitem_key) {
@@ -398,8 +400,9 @@ auto HistoryStack::pop_logicitem_remove_visible_selection() -> logicitem_key_t {
 // Decoration
 //
 
-auto HistoryStack::push_decoration_create_temporary(
-    decoration_key_t decoration_key, PlacedDecoration&& placed_decoration) -> void {
+auto HistoryStack::push_decoration_create_temporary(decoration_key_t decoration_key,
+                                                    PlacedDecoration&& placed_decoration)
+    -> void {
     // optimize so mouse insertion does not produce endless entries
     if (get_back_vector(entries_) == HistoryEntry::decoration_delete_temporary &&
         at_back_vector(decoration_keys_) == decoration_key) {
@@ -477,8 +480,9 @@ auto HistoryStack::push_decoration_move_temporary(decoration_key_t decoration_ke
     move_deltas_.emplace_back(delta);
 }
 
-auto HistoryStack::push_decoration_change_attributes(
-    decoration_key_t decoration_key, attributes_text_element_t&& attrs) -> void {
+auto HistoryStack::push_decoration_change_attributes(decoration_key_t decoration_key,
+                                                     attributes_text_element_t&& attrs)
+    -> void {
     // optimize so user text-entry does not produce endless entries
     if (get_back_vector(entries_) == HistoryEntry::decoration_change_attributes &&
         at_back_vector(decoration_keys_) == decoration_key) {

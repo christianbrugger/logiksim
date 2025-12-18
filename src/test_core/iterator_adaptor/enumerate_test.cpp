@@ -21,8 +21,8 @@ auto pair_equal(const std::pair<C, int&>& a, const std::pair<C, int>& b) -> bool
 }
 
 template <typename C>
-auto const_pair_equal(const std::pair<C, const int&>& a,
-                      const std::pair<C, int>& b) -> bool {
+auto const_pair_equal(const std::pair<C, const int&>& a, const std::pair<C, int>& b)
+    -> bool {
     return a.first == b.first && a.second == b.second;
 }
 }  // namespace

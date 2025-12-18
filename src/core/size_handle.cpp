@@ -33,8 +33,8 @@ auto delta_movement_t::format() const -> std::string {
                        vertical);
 }
 
-auto size_handle_positions(const Layout& layout,
-                           logicitem_id_t logicitem_id) -> std::vector<size_handle_t> {
+auto size_handle_positions(const Layout& layout, logicitem_id_t logicitem_id)
+    -> std::vector<size_handle_t> {
     switch (layout.logicitems().type(logicitem_id)) {
         using enum LogicItemType;
 
@@ -100,8 +100,8 @@ auto size_handle_positions(const Layout& layout,
     std::terminate();
 }
 
-auto size_handle_positions(const Layout& layout,
-                           decoration_id_t decoration_id) -> std::vector<size_handle_t> {
+auto size_handle_positions(const Layout& layout, decoration_id_t decoration_id)
+    -> std::vector<size_handle_t> {
     switch (layout.decorations().type(decoration_id)) {
         using enum DecorationType;
 
@@ -126,8 +126,8 @@ auto size_handle_positions(const Layout& layout,
     std::terminate();
 }
 
-auto size_handle_positions(const Layout& layout,
-                           const Selection& selection) -> std::vector<size_handle_t> {
+auto size_handle_positions(const Layout& layout, const Selection& selection)
+    -> std::vector<size_handle_t> {
     if (const auto logicitem_id = get_single_logicitem(selection);
         logicitem_id &&
         layout.logicitems().display_state(logicitem_id) == display_state_t::normal) {
@@ -156,8 +156,8 @@ auto size_handle_rect_px(size_handle_t handle, const ViewConfig& config) -> BLRe
     return BLRect {x0, y0, s, s};
 }
 
-auto size_handle_rect_grid(size_handle_t handle,
-                           const ViewConfig& config) -> rect_fine_t {
+auto size_handle_rect_grid(size_handle_t handle, const ViewConfig& config)
+    -> rect_fine_t {
     const auto rect = size_handle_rect_px(handle, config);
     return rect_fine_t {
         to_grid_fine(BLPoint {rect.x, rect.y}, config),
@@ -186,8 +186,8 @@ auto get_colliding_size_handle(point_fine_t position,
 }
 
 auto get_colliding_size_handle(point_fine_t position, const Layout& layout,
-                               const Selection& selection,
-                               const ViewConfig& config) -> std::optional<size_handle_t> {
+                               const Selection& selection, const ViewConfig& config)
+    -> std::optional<size_handle_t> {
     const auto handles = size_handle_positions(layout, selection);
     return get_colliding_size_handle(position, handles, config);
 }
@@ -211,8 +211,8 @@ auto logicitem_height(const PlacedLogicItem& element) -> grid_t {
 }
 
 [[nodiscard]] auto adjust_logicitem_height(const PlacedLogicItem& original,
-                                           size_handle_t handle,
-                                           delta_movement_t delta) -> PlacedLogicItem {
+                                           size_handle_t handle, delta_movement_t delta)
+    -> PlacedLogicItem {
     if (handle.index != 0 && handle.index != 1) {
         throw std::runtime_error("unknown handle index");
     }
@@ -300,8 +300,8 @@ auto clamp_offset(offset_t width, int delta, offset_t min, offset_t max) -> offs
 }
 
 [[nodiscard]] auto adjust_decoration_size(const PlacedDecoration& original,
-                                          size_handle_t handle,
-                                          delta_movement_t delta) -> PlacedDecoration {
+                                          size_handle_t handle, delta_movement_t delta)
+    -> PlacedDecoration {
     if (handle.index != 0 && handle.index != 1) {
         throw std::runtime_error("unknown handle index");
     }

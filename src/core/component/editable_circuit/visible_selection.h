@@ -52,8 +52,9 @@ class VisibleSelection {
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> operation_t;
 
-    [[nodiscard]] auto selection(
-        const Layout &layout, const LayoutIndex &layout_index) const -> const Selection &;
+    [[nodiscard]] auto selection(const Layout &layout,
+                                 const LayoutIndex &layout_index) const
+        -> const Selection &;
     [[nodiscard]] auto operations() const -> std::span<const operation_t>;
     [[nodiscard]] auto initial_selection() const -> const Selection &;
 

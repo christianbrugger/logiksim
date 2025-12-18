@@ -26,8 +26,8 @@ struct ConnectorAttributes {
 auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void;
 
 auto draw_logicitem_connectors(Context& ctx, const Layout& layout,
-                               logicitem_id_t logicitem_id,
-                               ElementDrawState state) -> void;
+                               logicitem_id_t logicitem_id, ElementDrawState state)
+    -> void;
 
 auto draw_logicitem_connectors(Context& ctx, const SpatialSimulation& spatial_simulation,
                                logicitem_id_t logicitem_id) -> void;

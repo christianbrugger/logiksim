@@ -67,8 +67,8 @@ class SegmentMap {
 // Free Functions
 //
 
-[[nodiscard]] auto build_endpoint_map(const Layout& layout,
-                                      const Selection& selection) -> SegmentMap;
+[[nodiscard]] auto build_endpoint_map(const Layout& layout, const Selection& selection)
+    -> SegmentMap;
 
 [[nodiscard]] auto adjacent_segments(const SegmentMap& segment_map)
     -> std::vector<segment_map::mergable_t>;

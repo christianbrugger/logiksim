@@ -67,8 +67,8 @@ struct inserted_segment_value_t {
     uint64_t unique_id;
     segment_info_t segment_info;
 
-    [[nodiscard]] auto operator==(const inserted_segment_value_t &) const -> bool =
-                                                                                 default;
+    [[nodiscard]] auto operator==(const inserted_segment_value_t &) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 

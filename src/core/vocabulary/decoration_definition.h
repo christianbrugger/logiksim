@@ -45,8 +45,8 @@ struct DecorationDefinition {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
-    [[nodiscard]] auto operator==(const DecorationDefinition& other) const -> bool =
-                                                                                  default;
+    [[nodiscard]] auto operator==(const DecorationDefinition& other) const
+        -> bool = default;
     [[nodiscard]] auto operator<=>(const DecorationDefinition& other) const = default;
 };
 

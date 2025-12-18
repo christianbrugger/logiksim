@@ -75,8 +75,8 @@ class SelectionMoveLogic {
 
    private:
     auto move_selection(EditableCircuit& editable_circuit, point_fine_t point) -> void;
-    auto convert_selection_to(EditableCircuit& editable_circuit,
-                              InsertionMode new_mode) -> void;
+    auto convert_selection_to(EditableCircuit& editable_circuit, InsertionMode new_mode)
+        -> void;
     auto restore_original_positions(EditableCircuit& editable_circuit) -> void;
 
    private:

@@ -36,8 +36,8 @@ struct DrawableDecoration {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const DrawableDecoration& other) const -> bool =
-                                                                                default;
+    [[nodiscard]] auto operator==(const DrawableDecoration& other) const
+        -> bool = default;
     [[nodiscard]] auto operator<=>(const DrawableDecoration& other) const = default;
 };
 

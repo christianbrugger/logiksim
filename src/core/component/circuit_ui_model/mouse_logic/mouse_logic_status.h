@@ -27,10 +27,10 @@ struct mouse_logic_status_t {
 
 static_assert(std::regular<mouse_logic_status_t>);
 
-[[nodiscard]] auto operator|(mouse_logic_status_t lhs,
-                             mouse_logic_status_t rhs) -> mouse_logic_status_t;
-auto operator|=(mouse_logic_status_t &lhs,
-                mouse_logic_status_t rhs) -> mouse_logic_status_t &;
+[[nodiscard]] auto operator|(mouse_logic_status_t lhs, mouse_logic_status_t rhs)
+    -> mouse_logic_status_t;
+auto operator|=(mouse_logic_status_t &lhs, mouse_logic_status_t rhs)
+    -> mouse_logic_status_t &;
 
 auto operator|=(UIStatus &lhs, const mouse_logic_status_t &rhs) -> UIStatus &;
 

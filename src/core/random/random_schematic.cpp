@@ -84,8 +84,8 @@ auto create_random_elements(Rng &rng, Schematic &schematic, int n_elements) -> v
     }
 }
 
-auto create_random_connections(Rng &rng, Schematic &schematic,
-                               double connection_ratio) -> void {
+auto create_random_connections(Rng &rng, Schematic &schematic, double connection_ratio)
+    -> void {
     if (connection_ratio == 0) {
         return;
     }
@@ -121,8 +121,8 @@ auto create_random_connections(Rng &rng, Schematic &schematic,
 }
 }  // namespace details
 
-auto create_random_schematic(Rng &rng, int n_elements,
-                             double connection_ratio) -> Schematic {
+auto create_random_schematic(Rng &rng, int n_elements, double connection_ratio)
+    -> Schematic {
     Schematic schematic;
     details::create_random_elements(rng, schematic, n_elements);
     details::create_random_connections(rng, schematic, connection_ratio);

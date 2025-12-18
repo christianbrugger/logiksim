@@ -274,8 +274,8 @@ ls_circuit_key_press(ls_circuit_t* obj, uint8_t key_enum) LS_NOEXCEPT;
 
 #ifdef __cplusplus
 
-[[nodiscard]] inline auto operator|(ls_ui_status_t a,
-                                    ls_ui_status_t b) -> ls_ui_status_t {
+[[nodiscard]] inline auto operator|(ls_ui_status_t a, ls_ui_status_t b)
+    -> ls_ui_status_t {
     return ls_ui_status_t {
         .repaint_required = a.repaint_required || b.repaint_required,
         .config_changed = a.config_changed || b.config_changed,

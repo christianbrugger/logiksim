@@ -19,8 +19,8 @@ struct ViewPoint;
 struct SimulationConfig;
 
 // TODO remove once we have history
-auto serialize_circuit(const Layout &layout,
-                       SimulationConfig simulation_config) -> std::string;
+auto serialize_circuit(const Layout &layout, SimulationConfig simulation_config)
+    -> std::string;
 
 auto save_circuit_to_file(const Layout &layout, const std::filesystem::path &filename,
                           std::optional<ViewPoint> view_point,

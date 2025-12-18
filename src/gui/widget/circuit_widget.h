@@ -142,8 +142,8 @@ class CircuitWidget : public CircuitWidgetBase {
 
     auto resizeEvent(QResizeEvent* event_) -> void override;
     auto renderEvent(BLImage bl_image, device_pixel_ratio_t device_pixel_ratio,
-                     RenderMode render_mode,
-                     fallback_info_t fallback_info) -> void override;
+                     RenderMode render_mode, fallback_info_t fallback_info)
+        -> void override;
 
     auto mousePressEvent(QMouseEvent* event_) -> void override;
     auto mouseMoveEvent(QMouseEvent* event_) -> void override;
@@ -153,9 +153,10 @@ class CircuitWidget : public CircuitWidgetBase {
     auto keyPressEvent(QKeyEvent* event_) -> void override;
 
    private:
-    auto set_editable_circuit(
-        EditableCircuit&& editable_circuit, std::optional<ViewPoint> view_point = {},
-        std::optional<SimulationConfig> simulation_config = {}) -> void;
+    auto set_editable_circuit(EditableCircuit&& editable_circuit,
+                              std::optional<ViewPoint> view_point = {},
+                              std::optional<SimulationConfig> simulation_config = {})
+        -> void;
     auto abort_current_action() -> void;
     auto finalize_editing() -> void;
     auto close_all_setting_dialogs() -> void;
@@ -219,8 +220,8 @@ auto set_show_mouse_position(CircuitWidget& circuit_widget, bool value) -> void;
 // SimulationConfig
 //
 
-auto set_simulation_time_rate(CircuitWidget& circuit_widget,
-                              time_rate_t new_rate) -> void;
+auto set_simulation_time_rate(CircuitWidget& circuit_widget, time_rate_t new_rate)
+    -> void;
 auto set_use_wire_delay(CircuitWidget& circuit_widget, bool value) -> void;
 
 //

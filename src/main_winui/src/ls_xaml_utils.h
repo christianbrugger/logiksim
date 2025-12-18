@@ -21,14 +21,15 @@ constexpr static auto LS_IDENTITY_DPI = 96.0;
 [[nodiscard]] auto get_double_click_time_setting() -> std::chrono::milliseconds;
 
 [[nodiscard]] auto is_button_pressed(
-    exporting::MouseButton button,
-    const winrt::Microsoft::UI::Input::PointerPoint& point) -> bool;
+    exporting::MouseButton button, const winrt::Microsoft::UI::Input::PointerPoint& point)
+    -> bool;
 
 [[nodiscard]] auto to_mouse_button(const winrt::Microsoft::UI::Input::PointerPoint& point)
     -> std::optional<logicsim::exporting::MouseButton>;
 
-[[nodiscard]] auto to_mouse_buttons(const winrt::Microsoft::UI::Input::PointerPoint&
-                                        point) -> logicsim::exporting::MouseButtons;
+[[nodiscard]] auto to_mouse_buttons(
+    const winrt::Microsoft::UI::Input::PointerPoint& point)
+    -> logicsim::exporting::MouseButtons;
 
 [[nodiscard]] auto to_device_position(
     const winrt::Microsoft::UI::Input::PointerPoint& point) -> ls_point_device_fine_t;

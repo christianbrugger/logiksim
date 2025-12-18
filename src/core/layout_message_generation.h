@@ -25,8 +25,8 @@ auto generate_inserted_decoration_message(auto &&obj, const Layout &layout,
     obj.submit(info_message::DecorationInserted {decoration_id, data});
 }
 
-auto generate_inserted_wire_message(auto &&obj, const Layout &layout,
-                                    wire_id_t wire_id) -> void {
+auto generate_inserted_wire_message(auto &&obj, const Layout &layout, wire_id_t wire_id)
+    -> void {
     const auto &segment_tree = layout.wires().segment_tree(wire_id);
 
     for (const auto segment_index : segment_tree.indices()) {
@@ -72,13 +72,13 @@ auto generate_created_logicitem_message(auto &&obj, logicitem_id_t logicitem_id)
     obj.submit(info_message::LogicItemCreated {logicitem_id});
 }
 
-auto generate_created_decoration_message(auto &&obj,
-                                         decoration_id_t decoration_id) -> void {
+auto generate_created_decoration_message(auto &&obj, decoration_id_t decoration_id)
+    -> void {
     obj.submit(info_message::DecorationCreated {decoration_id});
 }
 
-auto generate_created_wire_message(auto &&obj, const Layout &layout,
-                                   wire_id_t wire_id) -> void {
+auto generate_created_wire_message(auto &&obj, const Layout &layout, wire_id_t wire_id)
+    -> void {
     const auto &segment_tree = layout.wires().segment_tree(wire_id);
 
     for (const auto segment_index : segment_tree.indices()) {

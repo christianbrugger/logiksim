@@ -101,17 +101,18 @@ class Modifier {
     auto move_or_delete_temporary_logicitem(logicitem_id_t& logicitem_id,
                                             move_delta_t delta) -> void;
 
-    auto change_logicitem_insertion_mode(
-        logicitem_id_t& logicitem_id, InsertionMode new_insertion_mode,
-        InsertionHint hint = InsertionHint::no_hint) -> void;
+    auto change_logicitem_insertion_mode(logicitem_id_t& logicitem_id,
+                                         InsertionMode new_insertion_mode,
+                                         InsertionHint hint = InsertionHint::no_hint)
+        -> void;
 
     auto add_logicitem(LogicItemDefinition&& definition, point_t position,
                        InsertionMode insertion_mode) -> logicitem_id_t;
 
     auto toggle_inverter(point_t point) -> void;
 
-    auto set_attributes(logicitem_id_t logicitem_id,
-                        attributes_clock_generator_t&& attrs) -> void;
+    auto set_attributes(logicitem_id_t logicitem_id, attributes_clock_generator_t&& attrs)
+        -> void;
 
     //
     // Decorations
@@ -125,15 +126,16 @@ class Modifier {
     auto move_or_delete_temporary_decoration(decoration_id_t& decoration_id,
                                              move_delta_t delta) -> void;
 
-    auto change_decoration_insertion_mode(
-        decoration_id_t& decoration_id, InsertionMode new_insertion_mode,
-        InsertionHint hint = InsertionHint::no_hint) -> void;
+    auto change_decoration_insertion_mode(decoration_id_t& decoration_id,
+                                          InsertionMode new_insertion_mode,
+                                          InsertionHint hint = InsertionHint::no_hint)
+        -> void;
 
     auto add_decoration(DecorationDefinition&& definition, point_t position,
                         InsertionMode insertion_mode) -> decoration_id_t;
 
-    auto set_attributes(decoration_id_t decoration_id,
-                        attributes_text_element_t&& attrs) -> void;
+    auto set_attributes(decoration_id_t decoration_id, attributes_text_element_t&& attrs)
+        -> void;
 
     //
     // Wires
@@ -141,8 +143,8 @@ class Modifier {
 
     auto delete_temporary_wire_segment(segment_part_t& segment_part) -> void;
 
-    auto add_wire_segment(ordered_line_t line,
-                          InsertionMode insertion_mode) -> segment_part_t;
+    auto add_wire_segment(ordered_line_t line, InsertionMode insertion_mode)
+        -> segment_part_t;
 
     auto change_wire_insertion_mode(segment_part_t& segment_part, InsertionMode new_mode,
                                     InsertionHint hint = InsertionHint::no_hint) -> void;
@@ -150,8 +152,8 @@ class Modifier {
     auto move_temporary_wire_unchecked(segment_part_t full_segment_part,
                                        move_delta_t delta) -> void;
 
-    auto move_or_delete_temporary_wire(segment_part_t& segment_part,
-                                       move_delta_t delta) -> void;
+    auto move_or_delete_temporary_wire(segment_part_t& segment_part, move_delta_t delta)
+        -> void;
 
     auto toggle_wire_crosspoint(point_t point) -> void;
 
@@ -168,8 +170,8 @@ class Modifier {
         -> std::pair<segment_t, segment_t>;
 
     auto regularize_temporary_selection(
-        const Selection& selection,
-        std::optional<std::vector<point_t>> true_cross_points) -> std::vector<point_t>;
+        const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
+        -> std::vector<point_t>;
 
     auto split_temporary_segments(const Selection& selection,
                                   std::span<const point_t> split_points) -> void;
@@ -184,18 +186,18 @@ class Modifier {
     auto destroy_selection(selection_id_t selection_id) -> void;
     auto set_selection(selection_id_t selection_id, Selection selection) -> void;
 
-    auto add_to_selection(selection_id_t selection_id,
-                          logicitem_id_t logicitem_id) -> void;
-    auto add_to_selection(selection_id_t selection_id,
-                          decoration_id_t decoration_id) -> void;
-    auto add_to_selection(selection_id_t selection_id,
-                          segment_part_t segment_part) -> void;
-    auto remove_from_selection(selection_id_t selection_id,
-                               logicitem_id_t logicitem_id) -> void;
-    auto remove_from_selection(selection_id_t selection_id,
-                               decoration_id_t decoration_id) -> void;
-    auto remove_from_selection(selection_id_t selection_id,
-                               segment_part_t segment_part) -> void;
+    auto add_to_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
+        -> void;
+    auto add_to_selection(selection_id_t selection_id, decoration_id_t decoration_id)
+        -> void;
+    auto add_to_selection(selection_id_t selection_id, segment_part_t segment_part)
+        -> void;
+    auto remove_from_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
+        -> void;
+    auto remove_from_selection(selection_id_t selection_id, decoration_id_t decoration_id)
+        -> void;
+    auto remove_from_selection(selection_id_t selection_id, segment_part_t segment_part)
+        -> void;
 
     //
     // Visible Selection
@@ -249,11 +251,13 @@ using ModifierSelectionGuard = SelectionGuardTemplate<Modifier>;
                                                      segment_t segment_0,
                                                      segment_t segment_1) -> bool;
 
-[[nodiscard]] auto get_inserted_cross_points(
-    const Modifier& modifier, const Selection& selection) -> std::vector<point_t>;
+[[nodiscard]] auto get_inserted_cross_points(const Modifier& modifier,
+                                             const Selection& selection)
+    -> std::vector<point_t>;
 
-[[nodiscard]] auto get_temporary_selection_splitpoints(
-    const Modifier& modifier, const Selection& selection) -> std::vector<point_t>;
+[[nodiscard]] auto get_temporary_selection_splitpoints(const Modifier& modifier,
+                                                       const Selection& selection)
+    -> std::vector<point_t>;
 
 //
 // Selection Based

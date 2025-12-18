@@ -12,8 +12,8 @@ namespace circuit_ui_model {
 /**
  * @brief: Calculate the zoomed view point at given position.
  */
-[[nodiscard]] auto zoom(ViewConfig view_config, double steps,
-                        point_device_fine_t center) -> ViewPoint;
+[[nodiscard]] auto zoom(ViewConfig view_config, double steps, point_device_fine_t center)
+    -> ViewPoint;
 
 }  // namespace circuit_ui_model
 

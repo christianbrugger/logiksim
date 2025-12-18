@@ -12,8 +12,8 @@ namespace logicsim {
  * brief: Sort two given values in-place.
  */
 template <class T, class Comp = std::ranges::less>
-constexpr auto sort_inplace(T& a, T& b,
-                            Comp comp = {}) noexcept(noexcept(comp(a, b))) -> void {
+constexpr auto sort_inplace(T& a, T& b, Comp comp = {}) noexcept(noexcept(comp(a, b)))
+    -> void {
     if (!std::invoke(comp, a, b)) {
         using std::swap;
         swap(a, b);
@@ -24,8 +24,9 @@ constexpr auto sort_inplace(T& a, T& b,
  * brief: Get sorted references.
  */
 template <class T, class Comp = std::ranges::less>
-[[nodiscard]] constexpr auto sorted_ref(T& a, T& b, Comp comp = {}) noexcept(
-    noexcept(comp(a, b))) -> std::tuple<T&, T&> {
+[[nodiscard]] constexpr auto sorted_ref(T& a, T& b,
+                                        Comp comp = {}) noexcept(noexcept(comp(a, b)))
+    -> std::tuple<T&, T&> {
     if (std::invoke(comp, a, b)) {
         return std::tie(a, b);
     }

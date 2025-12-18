@@ -24,8 +24,8 @@ struct size_2d_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] constexpr auto operator==(const size_2d_t &other) const -> bool =
-                                                                                 default;
+    [[nodiscard]] constexpr auto operator==(const size_2d_t &other) const
+        -> bool = default;
     [[nodiscard]] constexpr auto operator<=>(const size_2d_t &other) const = default;
 };
 

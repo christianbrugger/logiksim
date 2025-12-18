@@ -39,8 +39,8 @@ struct LogicItemIdUpdated {
     logicitem_id_t new_logicitem_id;
     logicitem_id_t old_logicitem_id;
 
-    [[nodiscard]] auto operator==(const LogicItemIdUpdated &other) const -> bool =
-                                                                                default;
+    [[nodiscard]] auto operator==(const LogicItemIdUpdated &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -75,8 +75,8 @@ struct LogicItemUninserted {
     logicitem_id_t logicitem_id;
     layout_calculation_data_t data;
 
-    [[nodiscard]] auto operator==(const LogicItemUninserted &other) const -> bool =
-                                                                                 default;
+    [[nodiscard]] auto operator==(const LogicItemUninserted &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -93,8 +93,8 @@ struct DecorationIdUpdated {
     decoration_id_t new_decoration_id;
     decoration_id_t old_decoration_id;
 
-    [[nodiscard]] auto operator==(const DecorationIdUpdated &other) const -> bool =
-                                                                                 default;
+    [[nodiscard]] auto operator==(const DecorationIdUpdated &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -111,8 +111,8 @@ struct DecorationInserted {
     decoration_id_t decoration_id;
     decoration_layout_data_t data;
 
-    [[nodiscard]] auto operator==(const DecorationInserted &other) const -> bool =
-                                                                                default;
+    [[nodiscard]] auto operator==(const DecorationInserted &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -130,8 +130,8 @@ struct DecorationUninserted {
     decoration_id_t decoration_id;
     decoration_layout_data_t data;
 
-    [[nodiscard]] auto operator==(const DecorationUninserted &other) const -> bool =
-                                                                                  default;
+    [[nodiscard]] auto operator==(const DecorationUninserted &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -167,8 +167,8 @@ struct SegmentPartDeleted {
     segment_part_t segment_part;
     bool delete_segment;
 
-    [[nodiscard]] auto operator==(const SegmentPartDeleted &other) const -> bool =
-                                                                                default;
+    [[nodiscard]] auto operator==(const SegmentPartDeleted &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 

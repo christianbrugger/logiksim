@@ -33,13 +33,13 @@ auto render_layout(Context& ctx, ImageSurface& surface, const Layout& layout,
  *       const thread_local auto cache = cache_with_default_fonts();
  */
 auto render_layout_to_file(const Layout& layout, const std::filesystem::path& filename,
-                           const ContextRenderSettings& settings,
-                           ContextCache cache) -> void;
+                           const ContextRenderSettings& settings, ContextCache cache)
+    -> void;
 
 auto render_layout_to_file(const Layout& layout, const Selection& selection,
                            const std::filesystem::path& filename,
-                           const ContextRenderSettings& settings,
-                           ContextCache cache) -> void;
+                           const ContextRenderSettings& settings, ContextCache cache)
+    -> void;
 
 //
 // Simulation
@@ -49,8 +49,8 @@ auto render_simulation(Context& ctx, const SpatialSimulation& spatial_simulation
 
 auto render_simulation_to_file(const SpatialSimulation& spatial_simulation,
                                const std::filesystem::path& filename,
-                               const ContextRenderSettings& settings,
-                               ContextCache cache) -> void;
+                               const ContextRenderSettings& settings, ContextCache cache)
+    -> void;
 
 }  // namespace logicsim
 

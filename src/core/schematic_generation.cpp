@@ -28,8 +28,8 @@ auto schematic_generation_result_t::format() const -> std::string {
 
 namespace {
 
-auto calculate_output_delays(const LineTree& line_tree,
-                             delay_t wire_delay_per_distance) -> output_delays_t {
+auto calculate_output_delays(const LineTree& line_tree, delay_t wire_delay_per_distance)
+    -> output_delays_t {
     const auto lengths = line_tree.calculate_output_lengths();
 
     return transform_to_container<output_delays_t>(
@@ -68,8 +68,8 @@ auto add_unused_element(Schematic& schematic) -> void {
     });
 }
 
-auto logicitem_output_delays(const Layout& layout,
-                             logicitem_id_t logicitem_id) -> output_delays_t {
+auto logicitem_output_delays(const Layout& layout, logicitem_id_t logicitem_id)
+    -> output_delays_t {
     const auto logicitem_type = layout.logicitems().type(logicitem_id);
     const auto delay = element_output_delay(logicitem_type);
 
@@ -128,8 +128,8 @@ auto add_wire_with_input(Schematic& schematic, const LineTree& line_tree,
     });
 }
 
-auto add_wire_without_input(Schematic& schematic,
-                            const SegmentTree& segment_tree) -> void {
+auto add_wire_without_input(Schematic& schematic, const SegmentTree& segment_tree)
+    -> void {
     Expects(!segment_tree.has_input());
 
     const auto output_count = segment_tree.output_count();
@@ -357,8 +357,8 @@ auto generate_schematic(const Layout& layout, delay_t wire_delay_per_distance)
     return result;
 }
 
-auto to_element_id(const Layout& layout [[maybe_unused]],
-                   logicitem_id_t logicitem_id) -> element_id_t {
+auto to_element_id(const Layout& layout [[maybe_unused]], logicitem_id_t logicitem_id)
+    -> element_id_t {
     static_assert(std::is_same_v<element_id_t::value_type, logicitem_id_t::value_type>);
 
     return element_id_t {logicitem_id.value};

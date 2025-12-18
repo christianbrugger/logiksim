@@ -77,8 +77,8 @@ class CircuitRenderer {
     auto render_editable_circuit(BLImage& bl_image,
                                  const EditableCircuit& editable_circuit,
                                  bool show_size_handles) -> void;
-    auto render_simulation(BLImage& bl_image,
-                           const SpatialSimulation& spatial_simulation) -> void;
+    auto render_simulation(BLImage& bl_image, const SpatialSimulation& spatial_simulation)
+        -> void;
 
    private:
     auto count_frame(BLSizeI image_size) -> void;
@@ -107,16 +107,16 @@ class CircuitRenderer {
 
 auto set_view_config_offset(CircuitRenderer& render_surface, point_fine_t offset) -> void;
 
-auto set_view_config_device_scale(CircuitRenderer& render_surface,
-                                  double device_scale) -> void;
+auto set_view_config_device_scale(CircuitRenderer& render_surface, double device_scale)
+    -> void;
 
 /**
  * @brief: Renders the given layout.
  */
 // TODO move to renderer folder
 auto render_to_context(Context& ctx, ImageSurface& surface,
-                       const WidgetRenderConfig& render_config,
-                       const Layout& layout) -> void;
+                       const WidgetRenderConfig& render_config, const Layout& layout)
+    -> void;
 
 /**
  * @brief: Renders the editable circuit.
@@ -124,8 +124,8 @@ auto render_to_context(Context& ctx, ImageSurface& surface,
 // TODO move to renderer folder
 auto render_to_context(Context& ctx, ImageSurface& surface,
                        const WidgetRenderConfig& render_config,
-                       const EditableCircuit& editable_circuit,
-                       bool show_size_handles) -> void;
+                       const EditableCircuit& editable_circuit, bool show_size_handles)
+    -> void;
 
 /**
  * @brief: Renders the spatial simulation.

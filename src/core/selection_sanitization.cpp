@@ -78,8 +78,8 @@ auto find_lower(offset_t offset, const CrossingIndex &index, offset_t limit) -> 
     return offset;
 }
 
-auto find_higher(offset_t offset, const CrossingIndex &index,
-                 offset_t limit) -> offset_t {
+auto find_higher(offset_t offset, const CrossingIndex &index, offset_t limit)
+    -> offset_t {
     while (offset < limit) {
         if (!index.is_colliding(++offset)) {
             return offset;
@@ -156,8 +156,8 @@ auto sanitize_part(segment_part_t segment_part, const Layout &layout,
 }
 
 auto sanitize_part(segment_part_t segment_part,
-                   const editable_circuit::Modifier &modifier,
-                   SanitizeMode mode) -> segment_part_t {
+                   const editable_circuit::Modifier &modifier, SanitizeMode mode)
+    -> segment_part_t {
     return sanitize_part(segment_part, modifier.circuit_data().layout,
                          modifier.circuit_data().index.collision_index(), mode);
 }

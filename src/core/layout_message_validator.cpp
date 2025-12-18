@@ -76,8 +76,8 @@ auto all_logicitems_match(const all_logicitem_map_t &map, const Layout &layout) 
            std::ranges::all_of(logicitem_ids(layout), entry_matches);
 }
 
-auto inserted_logicitems_match(const inserted_logicitem_map_t &map,
-                               const Layout &layout) -> bool {
+auto inserted_logicitems_match(const inserted_logicitem_map_t &map, const Layout &layout)
+    -> bool {
     const auto data_matches = [&](const auto &logicitem_id) {
         return map.at(logicitem_id).data ==
                to_layout_calculation_data(layout, logicitem_id);
@@ -113,8 +113,8 @@ auto all_segments_match(const all_segment_map_t &map, const Layout &layout) -> b
     return std::ranges::all_of(wire_ids(layout), wire_matches);
 }
 
-auto inserted_segments_match(const inserted_segment_map_t &map,
-                             const Layout &layout) -> bool {
+auto inserted_segments_match(const inserted_segment_map_t &map, const Layout &layout)
+    -> bool {
     const auto segment_matches = [&](const segment_t &segment) {
         return map.at(segment).segment_info == get_segment_info(layout, segment);
     };

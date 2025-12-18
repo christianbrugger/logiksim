@@ -13,16 +13,16 @@ auto mouse_logic_status_t::format() const -> std::string {
                        require_repaint, dialogs_changed);
 }
 
-auto operator|(mouse_logic_status_t lhs,
-               mouse_logic_status_t rhs) -> mouse_logic_status_t {
+auto operator|(mouse_logic_status_t lhs, mouse_logic_status_t rhs)
+    -> mouse_logic_status_t {
     return mouse_logic_status_t {
         .require_repaint = lhs.require_repaint || rhs.require_repaint,
         .dialogs_changed = lhs.dialogs_changed || rhs.dialogs_changed,
     };
 }
 
-auto operator|=(mouse_logic_status_t &lhs,
-                mouse_logic_status_t rhs) -> mouse_logic_status_t & {
+auto operator|=(mouse_logic_status_t &lhs, mouse_logic_status_t rhs)
+    -> mouse_logic_status_t & {
     lhs = lhs | rhs;
     return lhs;
 };

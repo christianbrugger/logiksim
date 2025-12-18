@@ -20,8 +20,8 @@ struct CircuitData;
 
 namespace editing {
 
-auto delete_temporary_logicitem(CircuitData& circuit,
-                                logicitem_id_t& logicitem_id) -> void;
+auto delete_temporary_logicitem(CircuitData& circuit, logicitem_id_t& logicitem_id)
+    -> void;
 
 [[nodiscard]] auto is_logicitem_position_representable(const Layout& layout,
                                                        logicitem_id_t logicitem_id,
@@ -42,8 +42,8 @@ auto move_temporary_logicitem_unchecked(CircuitData& circuit, logicitem_id_t log
                                         move_delta_t delta) -> void;
 
 auto move_or_delete_temporary_logicitem(CircuitData& circuit,
-                                        logicitem_id_t& logicitem_id,
-                                        move_delta_t delta) -> void;
+                                        logicitem_id_t& logicitem_id, move_delta_t delta)
+    -> void;
 
 auto change_logicitem_insertion_mode(CircuitData& circuit, logicitem_id_t& logicitem_id,
                                      InsertionMode new_mode,
@@ -58,10 +58,10 @@ auto set_attributes_logicitem(CircuitData& circuit, logicitem_id_t logicitem_id,
 
 auto toggle_inverter(CircuitData& circuit, point_t point) -> void;
 
-auto add_to_visible_selection(CircuitData& circuit_data,
-                              logicitem_id_t logicitem_id) -> void;
-auto remove_from_visible_selection(CircuitData& circuit_data,
-                                   logicitem_id_t logicitem_id) -> void;
+auto add_to_visible_selection(CircuitData& circuit_data, logicitem_id_t logicitem_id)
+    -> void;
+auto remove_from_visible_selection(CircuitData& circuit_data, logicitem_id_t logicitem_id)
+    -> void;
 }  // namespace editing
 
 }  // namespace editable_circuit

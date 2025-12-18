@@ -192,16 +192,16 @@ class CircuitUIModel {
 // CircuitWidgetState
 //
 
-[[nodiscard]] auto set_circuit_state(CircuitUIModel& model,
-                                     CircuitWidgetState value) -> UIStatus;
+[[nodiscard]] auto set_circuit_state(CircuitUIModel& model, CircuitWidgetState value)
+    -> UIStatus;
 auto stop_simulation(CircuitUIModel& model) -> void;
 
 //
 // RenderConfig
 //
 
-[[nodiscard]] auto set_render_config(CircuitUIModel& model,
-                                     WidgetRenderConfig value) -> UIStatus;
+[[nodiscard]] auto set_render_config(CircuitUIModel& model, WidgetRenderConfig value)
+    -> UIStatus;
 
 // auto set_do_benchmark(CircuitUIModel& model, bool value) -> void;
 // auto set_show_circuit(CircuitUIModel& model, bool value) -> void;
@@ -220,8 +220,8 @@ auto stop_simulation(CircuitUIModel& model) -> void;
 // SimulationConfig
 //
 
-[[nodiscard]] auto set_simulation_config(CircuitUIModel& model,
-                                         SimulationConfig value) -> UIStatus;
+[[nodiscard]] auto set_simulation_config(CircuitUIModel& model, SimulationConfig value)
+    -> UIStatus;
 
 // auto set_simulation_time_rate(CircuitUIModel& model, time_rate_t new_rate) -> void;
 // auto set_use_wire_delay(CircuitUIModel& model, bool value) -> void;

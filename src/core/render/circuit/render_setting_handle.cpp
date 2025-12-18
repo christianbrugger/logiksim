@@ -40,8 +40,8 @@ auto draw_setting_handle(Context& ctx, setting_handle_t handle) -> void {
               });
 }
 
-auto render_setting_handle(Context& ctx, const Layout& layout,
-                           const Selection& selection) -> void {
+auto render_setting_handle(Context& ctx, const Layout& layout, const Selection& selection)
+    -> void {
     ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_COPY);
 
     if (const auto handle = setting_handle_position(layout, selection)) {

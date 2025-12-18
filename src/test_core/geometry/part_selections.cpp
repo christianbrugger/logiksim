@@ -297,8 +297,8 @@ namespace {
 
 using IterPartsResult = std::vector<std::pair<part_t, bool>>;
 
-auto iter_parts_result(part_t full_part,
-                       std::initializer_list<part_t> list) -> IterPartsResult {
+auto iter_parts_result(part_t full_part, std::initializer_list<part_t> list)
+    -> IterPartsResult {
     auto result = IterPartsResult {};
 
     iter_parts(full_part, to_selection(list),
@@ -307,8 +307,8 @@ auto iter_parts_result(part_t full_part,
     return result;
 }
 
-auto iter_parts_partial_result(part_t iterated_part,
-                               std::initializer_list<part_t> list) -> IterPartsResult {
+auto iter_parts_partial_result(part_t iterated_part, std::initializer_list<part_t> list)
+    -> IterPartsResult {
     auto result = IterPartsResult {};
 
     iter_parts_partial(

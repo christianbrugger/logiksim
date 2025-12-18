@@ -132,8 +132,8 @@ struct range_step_t {
         return range_step_size(start_, stop_, step_);
     }
 
-    [[nodiscard]] constexpr auto empty() const
-        noexcept(noexcept(begin() == end())) -> bool {
+    [[nodiscard]] constexpr auto empty() const noexcept(noexcept(begin() == end()))
+        -> bool {
         return begin() == end();
     }
 

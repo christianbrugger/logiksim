@@ -17,13 +17,14 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     // myButton
 
-    auto myButton_Click(IInspectable const&,
-                        Microsoft::UI::Xaml::RoutedEventArgs const&) -> void;
+    auto myButton_Click(IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&)
+        -> void;
 
     // CanvasPanel
 
-    auto CanvasPanel_SizeChanged(
-        IInspectable const&, Microsoft::UI::Xaml::SizeChangedEventArgs const&) -> void;
+    auto CanvasPanel_SizeChanged(IInspectable const&,
+                                 Microsoft::UI::Xaml::SizeChangedEventArgs const&)
+        -> void;
     auto CanvasPanel_Loaded(IInspectable const&,
                             Microsoft::UI::Xaml::RoutedEventArgs const&) -> void;
 

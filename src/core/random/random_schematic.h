@@ -26,8 +26,8 @@ constexpr inline auto schematic_connectivity = 0.75;
     Rng &rng, int n_elements = random::defaults::schematic_element_count,
     double connection_ratio = random::defaults::schematic_connectivity) -> Schematic;
 
-[[nodiscard]] auto with_custom_delays(Rng &rng,
-                                      const Schematic &schematic_orig) -> Schematic;
+[[nodiscard]] auto with_custom_delays(Rng &rng, const Schematic &schematic_orig)
+    -> Schematic;
 
 }  // namespace logicsim
 

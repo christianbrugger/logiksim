@@ -316,14 +316,14 @@ auto element_ids(const Schematic &schematic) -> range_extended_t<element_id_t> {
     return range_extended<element_id_t>(std::ssize(schematic));
 }
 
-auto input_ids(const Schematic &schematic,
-               element_id_t element_id) -> range_extended_t<connection_id_t> {
+auto input_ids(const Schematic &schematic, element_id_t element_id)
+    -> range_extended_t<connection_id_t> {
     return range_extended<connection_id_t>(
         std::ptrdiff_t {schematic.input_count(element_id)});
 }
 
-auto output_ids(const Schematic &schematic,
-                element_id_t element_id) -> range_extended_t<connection_id_t> {
+auto output_ids(const Schematic &schematic, element_id_t element_id)
+    -> range_extended_t<connection_id_t> {
     return range_extended<connection_id_t>(
         std::ptrdiff_t {schematic.output_count(element_id)});
 }
@@ -339,8 +339,8 @@ auto format_element(const Schematic &schematic, element_id_t element_id) -> std:
         schematic.output_count(element_id), schematic.element_type(element_id));
 }
 
-auto format_element_with_connections(const Schematic &schematic,
-                                     element_id_t element_id) -> std::string {
+auto format_element_with_connections(const Schematic &schematic, element_id_t element_id)
+    -> std::string {
     // in c++23 should be able to use inputs directly in transform_view
     // does not work in c++20, because transform view does not have const begin
     const auto all_inputs = to_vector(inputs(schematic, element_id));

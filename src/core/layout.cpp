@@ -243,8 +243,8 @@ auto format_wire(const Layout &layout, wire_id_t wire_id) -> std::string {
     return fmt::format("<Wire {}: {}>", wire_id, layout.wires().segment_tree(wire_id));
 }
 
-auto format_decoration(const Layout &layout,
-                       decoration_id_t decoration_id) -> std::string {
+auto format_decoration(const Layout &layout, decoration_id_t decoration_id)
+    -> std::string {
     const auto type = layout.decorations().type(decoration_id);
     const auto size = layout.decorations().size(decoration_id);
 
@@ -274,21 +274,21 @@ auto get_segment_info(const Layout &layout, segment_t segment) -> segment_info_t
     return layout.wires().segment_tree(segment.wire_id).info(segment.segment_index);
 }
 
-auto get_segment_point_type(const Layout &layout, segment_t segment,
-                            point_t position) -> SegmentPointType {
+auto get_segment_point_type(const Layout &layout, segment_t segment, point_t position)
+    -> SegmentPointType {
     const auto info = get_segment_info(layout, segment);
     return get_segment_point_type(info, position);
 }
 
-auto get_segment_valid_parts(const Layout &layout,
-                             segment_t segment) -> const PartSelection & {
+auto get_segment_valid_parts(const Layout &layout, segment_t segment)
+    -> const PartSelection & {
     return layout.wires()
         .segment_tree(segment.wire_id)
         .valid_parts(segment.segment_index);
 }
 
-auto is_segment_all_marked_valid(const Layout &layout,
-                                 segment_part_t segment_part) -> bool {
+auto is_segment_all_marked_valid(const Layout &layout, segment_part_t segment_part)
+    -> bool {
     return a_inside_b(segment_part.part,
                       get_segment_valid_parts(layout, segment_part.segment));
 }
@@ -374,26 +374,26 @@ auto to_decoration_layout_data(const Layout &layout, decoration_id_t decoration_
     return layout::to_decoration_layout_data(layout.decorations(), decoration_id);
 }
 
-auto to_logicitem_definition(const Layout &layout,
-                             logicitem_id_t logicitem_id) -> LogicItemDefinition {
+auto to_logicitem_definition(const Layout &layout, logicitem_id_t logicitem_id)
+    -> LogicItemDefinition {
     return layout::to_logicitem_definition(layout.logicitems(), logicitem_id);
 }
 
-auto to_decoration_definition(const Layout &layout,
-                              decoration_id_t decoration_id) -> DecorationDefinition {
+auto to_decoration_definition(const Layout &layout, decoration_id_t decoration_id)
+    -> DecorationDefinition {
     return layout::to_decoration_definition(layout.decorations(), decoration_id);
 }
 
-auto to_placed_logicitem(const Layout &layout,
-                         logicitem_id_t logicitem_id) -> PlacedLogicItem {
+auto to_placed_logicitem(const Layout &layout, logicitem_id_t logicitem_id)
+    -> PlacedLogicItem {
     return PlacedLogicItem {
         .definition = to_logicitem_definition(layout, logicitem_id),
         .position = layout.logicitems().position(logicitem_id),
     };
 }
 
-auto to_placed_decoration(const Layout &layout,
-                          decoration_id_t decoration_id) -> PlacedDecoration {
+auto to_placed_decoration(const Layout &layout, decoration_id_t decoration_id)
+    -> PlacedDecoration {
     return layout::to_placed_decoration(layout.decorations(), decoration_id);
 }
 

@@ -136,8 +136,8 @@ auto EditableCircuit::move_or_delete_temporary(selection_id_t selection_id,
     move_or_delete_temporary_consuming(modifier_, guard.selection_id(), delta);
 }
 
-auto EditableCircuit::move_or_delete_temporary(Selection selection,
-                                               move_delta_t delta) -> void {
+auto EditableCircuit::move_or_delete_temporary(Selection selection, move_delta_t delta)
+    -> void {
     using namespace editable_circuit;
 
     const auto guard = ModifierSelectionGuard {modifier_, std::move(selection)};
@@ -187,8 +187,8 @@ auto EditableCircuit::set_attributes(decoration_id_t decoration_id,
 //
 
 auto EditableCircuit::regularize_temporary_selection(
-    const Selection& selection,
-    std::optional<std::vector<point_t>> true_cross_points) -> std::vector<point_t> {
+    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
+    -> std::vector<point_t> {
     return modifier_.regularize_temporary_selection(selection,
                                                     std::move(true_cross_points));
 }
@@ -249,8 +249,8 @@ auto EditableCircuit::selection(selection_id_t selection_id) const -> const Sele
     return modifier_.circuit_data().selection_store.at(selection_id);
 }
 
-auto EditableCircuit::set_selection(selection_id_t selection_id,
-                                    Selection selection) -> void {
+auto EditableCircuit::set_selection(selection_id_t selection_id, Selection selection)
+    -> void {
     modifier_.set_selection(selection_id, std::move(selection));
 }
 
@@ -348,8 +348,8 @@ auto get_config(const EditableCircuit& editable_circuit) -> EditableCircuit::Con
 
 auto add_placed_logicitem(EditableCircuit& editable_circuit,
                           PlacedLogicItem&& placed_logicitem,
-                          InsertionMode insertion_mode,
-                          selection_id_t selection_id) -> void {
+                          InsertionMode insertion_mode, selection_id_t selection_id)
+    -> void {
     editable_circuit.add_logicitem(std::move(placed_logicitem.definition),
                                    placed_logicitem.position, insertion_mode,
                                    selection_id);
@@ -357,16 +357,16 @@ auto add_placed_logicitem(EditableCircuit& editable_circuit,
 
 auto add_placed_decoration(EditableCircuit& editable_circuit,
                            PlacedDecoration&& placed_decoration,
-                           InsertionMode insertion_mode,
-                           selection_id_t selection_id) -> void {
+                           InsertionMode insertion_mode, selection_id_t selection_id)
+    -> void {
     editable_circuit.add_decoration(std::move(placed_decoration.definition),
                                     placed_decoration.position, insertion_mode,
                                     selection_id);
 }
 
 auto add_placed_element(EditableCircuit& editable_circuit, PlacedElement&& placed_element,
-                        InsertionMode insertion_mode,
-                        selection_id_t selection_id) -> void {
+                        InsertionMode insertion_mode, selection_id_t selection_id)
+    -> void {
     std::visit(overload(
                    [&](PlacedLogicItem&& placed_logicitem) {
                        add_placed_logicitem(editable_circuit, std::move(placed_logicitem),
@@ -436,8 +436,8 @@ auto get_inserted_cross_points(const EditableCircuit& editable_circuit,
                                                        selection);
 }
 
-auto save_delete_all(EditableCircuit& editable_circuit,
-                     selection_id_t selection_id) -> void {
+auto save_delete_all(EditableCircuit& editable_circuit, selection_id_t selection_id)
+    -> void {
     if (editable_circuit.selection_exists(selection_id)) {
         editable_circuit.delete_all(selection_id);
     }

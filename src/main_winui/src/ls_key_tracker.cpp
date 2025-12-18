@@ -119,8 +119,8 @@ auto SingleKeyTracker::submit_event(const PointerEventData& data,
     return gen_move_event;
 }
 
-auto KeyTracker::submit_event(const PointerEventData& data,
-                              BackendTaskSource& tasks) -> void {
+auto KeyTracker::submit_event(const PointerEventData& data, BackendTaskSource& tasks)
+    -> void {
     const auto position = to_device_position(data.point);
 
     auto gen_move_event = false;

@@ -40,8 +40,8 @@ template <>
  * @brief: Returns a part that can be safely uninserted.
  */
 [[nodiscard]] auto sanitize_part(segment_part_t segment_part, const Layout &layout,
-                                 const CollisionIndex &index,
-                                 SanitizeMode mode) -> segment_part_t;
+                                 const CollisionIndex &index, SanitizeMode mode)
+    -> segment_part_t;
 [[nodiscard]] auto sanitize_part(segment_part_t segment_part,
                                  const editable_circuit::Modifier &modifier,
                                  SanitizeMode mode) -> segment_part_t;

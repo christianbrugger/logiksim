@@ -159,8 +159,8 @@ auto generate_insertable_line_data(Rng& rng) {
     return data;
 }
 
-auto get_all_lines(const Layout& layout,
-                   display_state_t state) -> std::vector<ordered_line_t> {
+auto get_all_lines(const Layout& layout, display_state_t state)
+    -> std::vector<ordered_line_t> {
     auto result = std::vector<ordered_line_t> {};
 
     for (const auto wire_id : wire_ids(layout)) {

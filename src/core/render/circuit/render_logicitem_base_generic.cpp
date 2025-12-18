@@ -64,8 +64,8 @@ auto get_logicitem_label_color(ElementDrawState state) -> color_t {
     return with_alpha_runtime(defaults::font::logicitem_label_color, state);
 }
 
-auto get_logicitem_center(const Layout& layout,
-                          logicitem_id_t logicitem_id) -> point_fine_t {
+auto get_logicitem_center(const Layout& layout, logicitem_id_t logicitem_id)
+    -> point_fine_t {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
     const auto rect = element_body_draw_rect(layout_data);
     return get_center(rect);
@@ -98,16 +98,16 @@ auto draw_logicitem_rect(Context& ctx, rect_fine_t rect, ElementDrawState state,
 }
 
 auto draw_logicitem_rect(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-                         ElementDrawState state,
-                         LogicItemRectAttributes attributes) -> void {
+                         ElementDrawState state, LogicItemRectAttributes attributes)
+    -> void {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
     const auto rect = element_body_draw_rect(layout_data);
     draw_logicitem_rect(ctx, rect, state, attributes);
 }
 
 auto draw_logicitem_label(Context& ctx, point_fine_t center, std::string_view text,
-                          ElementDrawState state,
-                          LogicItemTextAttributes attributes) -> void {
+                          ElementDrawState state, LogicItemTextAttributes attributes)
+    -> void {
     if (text.empty()) {
         return;
     }

@@ -66,8 +66,8 @@ struct zlib_progress {
     return zlib_progress {stream.total_in, stream.total_out};
 }
 
-[[nodiscard]] auto made_progress(const z_stream& stream,
-                                 zlib_progress last_progress) -> bool {
+[[nodiscard]] auto made_progress(const z_stream& stream, zlib_progress last_progress)
+    -> bool {
     return stream.total_in > last_progress.total_in ||
            stream.total_out > last_progress.total_out;
 }

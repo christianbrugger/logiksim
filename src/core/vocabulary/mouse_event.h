@@ -116,8 +116,8 @@ struct angle_delta_t {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-[[nodiscard]] constexpr auto operator+(angle_delta_t lhs,
-                                       angle_delta_t rhs) noexcept -> angle_delta_t;
+[[nodiscard]] constexpr auto operator+(angle_delta_t lhs, angle_delta_t rhs) noexcept
+    -> angle_delta_t;
 
 //
 // Mouse Events

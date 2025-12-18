@@ -62,8 +62,8 @@ auto to_part(segment_key_t segment_key, CircuitData& circuit) -> segment_part_t 
     return get_segment_part(circuit.layout, to_id(segment_key, circuit));
 }
 
-auto to_part(std::pair<segment_key_t, part_t> value,
-             CircuitData& circuit) -> segment_part_t {
+auto to_part(std::pair<segment_key_t, part_t> value, CircuitData& circuit)
+    -> segment_part_t {
     return segment_part_t {to_id(value.first, circuit), value.second};
 }
 

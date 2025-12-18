@@ -510,8 +510,8 @@ auto CircuitWidget::resizeEvent(QResizeEvent* event_ [[maybe_unused]]) -> void {
 }
 
 auto CircuitWidget::renderEvent(BLImage bl_image, device_pixel_ratio_t device_pixel_ratio,
-                                RenderMode render_mode,
-                                fallback_info_t fallback_info) -> void {
+                                RenderMode render_mode, fallback_info_t fallback_info)
+    -> void {
     Expects(class_invariant_holds());
 
     fallback_printer_.print_if_set("WARNING: Cannot use direct rendering:",
@@ -1056,8 +1056,8 @@ auto set_show_mouse_position(CircuitWidget& circuit_widget, bool value) -> void 
     circuit_widget.set_render_config(config);
 }
 
-auto set_simulation_time_rate(CircuitWidget& circuit_widget,
-                              time_rate_t new_rate) -> void {
+auto set_simulation_time_rate(CircuitWidget& circuit_widget, time_rate_t new_rate)
+    -> void {
     auto config = circuit_widget.simulation_config();
     config.simulation_time_rate = new_rate;
     circuit_widget.set_simulation_config(config);

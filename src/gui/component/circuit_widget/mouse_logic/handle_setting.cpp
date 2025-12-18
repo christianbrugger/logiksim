@@ -15,9 +15,10 @@ auto HandleSettingLogic::mouse_press(EditableCircuit& editable_circuit [[maybe_u
     first_position_ = position;
 }
 
-auto HandleSettingLogic::mouse_release(
-    EditableCircuit& editable_circuit, point_fine_t position,
-    const OpenSettingDialog& show_setting_dialog) -> void {
+auto HandleSettingLogic::mouse_release(EditableCircuit& editable_circuit,
+                                       point_fine_t position,
+                                       const OpenSettingDialog& show_setting_dialog)
+    -> void {
     if (first_position_ &&  //
         is_colliding(setting_handle_, first_position_.value()) &&
         is_colliding(setting_handle_, position)) {
@@ -25,8 +26,8 @@ auto HandleSettingLogic::mouse_release(
     }
 }
 
-auto HandleSettingLogic::finalize(EditableCircuit& editable_circuit
-                                  [[maybe_unused]]) -> void {}
+auto HandleSettingLogic::finalize(EditableCircuit& editable_circuit [[maybe_unused]])
+    -> void {}
 
 }  // namespace circuit_widget
 

@@ -30,8 +30,8 @@ class HistoryBuffer;
  * brief: Returns extrapolated value time.
  */
 [[nodiscard]] auto get_value_extrapolated(const HistoryBuffer *history,
-                                          history_index_t history_index,
-                                          bool last_value) -> bool;
+                                          history_index_t history_index, bool last_value)
+    -> bool;
 
 /**
  * brief: Returns history index of given time.
@@ -44,8 +44,8 @@ class HistoryBuffer;
  * brief: Calculates the minimum valid index for given history length.
  */
 [[nodiscard]] auto calculate_min_index(const HistoryBuffer *history,
-                                       time_t simulation_time,
-                                       delay_t history_length) -> history_min_index_t;
+                                       time_t simulation_time, delay_t history_length)
+    -> history_min_index_t;
 
 //
 // History Calculation Data

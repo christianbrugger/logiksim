@@ -33,23 +33,26 @@ struct setting_handle_t {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-[[nodiscard]] auto setting_handle_position(
-    const Layout& layout, logicitem_id_t logicitem_id) -> std::optional<setting_handle_t>;
+[[nodiscard]] auto setting_handle_position(const Layout& layout,
+                                           logicitem_id_t logicitem_id)
+    -> std::optional<setting_handle_t>;
 
 [[nodiscard]] auto setting_handle_position(const Layout& layout,
                                            decoration_id_t decoration_id)
     -> std::optional<setting_handle_t>;
 
-[[nodiscard]] auto setting_handle_position(
-    const Layout& layout, const Selection& selection) -> std::optional<setting_handle_t>;
+[[nodiscard]] auto setting_handle_position(const Layout& layout,
+                                           const Selection& selection)
+    -> std::optional<setting_handle_t>;
 
 [[nodiscard]] auto setting_handle_rect(setting_handle_t handle) -> rect_fine_t;
 
 [[nodiscard]] auto is_colliding(setting_handle_t handle, point_fine_t position) -> bool;
 
-[[nodiscard]] auto get_colliding_setting_handle(
-    point_fine_t position, const Layout& layout,
-    const Selection& selection) -> std::optional<setting_handle_t>;
+[[nodiscard]] auto get_colliding_setting_handle(point_fine_t position,
+                                                const Layout& layout,
+                                                const Selection& selection)
+    -> std::optional<setting_handle_t>;
 
 }  // namespace logicsim
 

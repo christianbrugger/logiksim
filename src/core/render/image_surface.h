@@ -39,8 +39,8 @@ class ImageSurface {
  *
  * Throws if source and target don't have the same size.
  */
-auto blit_layer(Context &target_ctx, const ImageSurface &source_layer,
-                BLRectI dirty_rect) -> void;
+auto blit_layer(Context &target_ctx, const ImageSurface &source_layer, BLRectI dirty_rect)
+    -> void;
 
 /**
  * @brief: Renders the function first to the layer and then to the target within

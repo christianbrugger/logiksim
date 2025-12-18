@@ -46,15 +46,15 @@ auto draw_size_handle(Context& ctx, const size_handle_t& position) -> void {
         });
 }
 
-auto draw_size_handles(Context& ctx,
-                       std::span<const size_handle_t> handle_positions) -> void {
+auto draw_size_handles(Context& ctx, std::span<const size_handle_t> handle_positions)
+    -> void {
     for (const auto& position : handle_positions) {
         draw_size_handle(ctx, position);
     }
 }
 
-auto render_size_handles(Context& ctx, const Layout& layout,
-                         const Selection& selection) -> void {
+auto render_size_handles(Context& ctx, const Layout& layout, const Selection& selection)
+    -> void {
     ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_COPY);
     draw_size_handles(ctx, size_handle_positions(layout, selection));
 }

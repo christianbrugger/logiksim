@@ -11,18 +11,18 @@ class EditableCircuit;
 struct Context;
 
 auto render_layout_connection_index(Context& ctx, const LayoutIndex& index) -> void;
-auto render_layout_connection_index(Context& ctx,
-                                    const EditableCircuit& editable_circuit) -> void;
+auto render_layout_connection_index(Context& ctx, const EditableCircuit& editable_circuit)
+    -> void;
 
-auto render_layout_collision_index(Context& ctx,
-                                   const CollisionIndex& collision_index) -> void;
-auto render_layout_collision_index(Context& ctx,
-                                   const EditableCircuit& editable_circuit) -> void;
+auto render_layout_collision_index(Context& ctx, const CollisionIndex& collision_index)
+    -> void;
+auto render_layout_collision_index(Context& ctx, const EditableCircuit& editable_circuit)
+    -> void;
 
-auto render_layout_selection_index(Context& ctx,
-                                   const SpatialIndex& selection_index) -> void;
-auto render_layout_selection_index(Context& ctx,
-                                   const EditableCircuit& editable_circuit) -> void;
+auto render_layout_selection_index(Context& ctx, const SpatialIndex& selection_index)
+    -> void;
+auto render_layout_selection_index(Context& ctx, const EditableCircuit& editable_circuit)
+    -> void;
 
 }  // namespace logicsim
 

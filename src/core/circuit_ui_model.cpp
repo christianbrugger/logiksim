@@ -282,8 +282,8 @@ auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
     return status;
 }
 
-auto CircuitUIModel::render(BLImage& bl_image,
-                            device_pixel_ratio_t device_pixel_ratio) -> void {
+auto CircuitUIModel::render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio)
+    -> void {
     Expects(class_invariant_holds());
 
     // TODO use more device_pixel_ratio_t

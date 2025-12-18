@@ -106,19 +106,20 @@ class TextCache {
     };
 
     auto draw_text(BLContext &ctx, const BLPoint &position, std::string_view text,
-                   float font_size,
-                   TextAttributes attributes) const -> draw_text_result_t;
+                   float font_size, TextAttributes attributes) const
+        -> draw_text_result_t;
 
     [[nodiscard]] auto calculate_bounding_box(std::string_view text, float font_size,
                                               FontStyle style) const -> BLBox;
 
    private:
-    [[nodiscard]] auto get_scaled_bl_font(float font_size,
-                                          FontStyle style) const -> const BLFont &;
-    [[nodiscard]] auto get_entry(
-        std::string_view text, float font_size, FontStyle style,
-        HTextAlignment horizontal_alignment, VTextAlignment vertical_alignment,
-        std::optional<double> max_text_width) const -> const cache_entry_t &;
+    [[nodiscard]] auto get_scaled_bl_font(float font_size, FontStyle style) const
+        -> const BLFont &;
+    [[nodiscard]] auto get_entry(std::string_view text, float font_size, FontStyle style,
+                                 HTextAlignment horizontal_alignment,
+                                 VTextAlignment vertical_alignment,
+                                 std::optional<double> max_text_width) const
+        -> const cache_entry_t &;
 
    private:
     using glyph_map_t = ankerl::unordered_dense::map<cache_key_t, cache_entry_t>;

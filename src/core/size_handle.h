@@ -43,38 +43,41 @@ struct delta_movement_t {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-[[nodiscard]] auto size_handle_positions(
-    const Layout& layout, logicitem_id_t logicitem_id) -> std::vector<size_handle_t>;
+[[nodiscard]] auto size_handle_positions(const Layout& layout,
+                                         logicitem_id_t logicitem_id)
+    -> std::vector<size_handle_t>;
 
-[[nodiscard]] auto size_handle_positions(
-    const Layout& layout, decoration_id_t decoration_id) -> std::vector<size_handle_t>;
+[[nodiscard]] auto size_handle_positions(const Layout& layout,
+                                         decoration_id_t decoration_id)
+    -> std::vector<size_handle_t>;
 
 [[nodiscard]] auto size_handle_positions(const Layout& layout, const Selection& selection)
     -> std::vector<size_handle_t>;
 
-[[nodiscard]] auto size_handle_rect_px(size_handle_t handle,
-                                       const ViewConfig& config) -> BLRect;
+[[nodiscard]] auto size_handle_rect_px(size_handle_t handle, const ViewConfig& config)
+    -> BLRect;
 
-[[nodiscard]] auto size_handle_rect_grid(size_handle_t handle,
-                                         const ViewConfig& config) -> rect_fine_t;
+[[nodiscard]] auto size_handle_rect_grid(size_handle_t handle, const ViewConfig& config)
+    -> rect_fine_t;
 
 [[nodiscard]] auto get_colliding_size_handle(
     point_fine_t position, const std::vector<size_handle_t>& handle_positions,
     const ViewConfig& config) -> std::optional<size_handle_t>;
 
-[[nodiscard]] auto get_colliding_size_handle(
-    point_fine_t position, const Layout& layout, const Selection& selection,
-    const ViewConfig& config) -> std::optional<size_handle_t>;
+[[nodiscard]] auto get_colliding_size_handle(point_fine_t position, const Layout& layout,
+                                             const Selection& selection,
+                                             const ViewConfig& config)
+    -> std::optional<size_handle_t>;
 
 [[nodiscard]] auto get_resized_element(const PlacedLogicItem& original,
-                                       size_handle_t handle,
-                                       delta_movement_t delta) -> PlacedLogicItem;
+                                       size_handle_t handle, delta_movement_t delta)
+    -> PlacedLogicItem;
 [[nodiscard]] auto get_resized_element(const PlacedDecoration& original,
-                                       size_handle_t handle,
-                                       delta_movement_t delta) -> PlacedDecoration;
+                                       size_handle_t handle, delta_movement_t delta)
+    -> PlacedDecoration;
 [[nodiscard]] auto get_resized_element(const PlacedElement& original,
-                                       size_handle_t handle,
-                                       delta_movement_t delta) -> PlacedElement;
+                                       size_handle_t handle, delta_movement_t delta)
+    -> PlacedElement;
 
 [[nodiscard]] auto get_single_placed_element(const EditableCircuit& editable_circuit)
     -> std::optional<PlacedElement>;

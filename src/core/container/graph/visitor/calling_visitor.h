@@ -20,8 +20,8 @@ class CallingVisitor {
     explicit CallingVisitor(Func func) : func_ {std::move(func)} {}
 
     template <typename index_t>
-    auto tree_edge(index_t a, index_t b,
-                   const AdjacencyGraph<index_t>& graph) const -> void;
+    auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) const
+        -> void;
 
    private:
     Func func_;

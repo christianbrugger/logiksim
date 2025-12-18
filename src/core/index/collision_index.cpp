@@ -440,8 +440,8 @@ auto collision_item_type(SegmentPointType type) -> std::optional<ItemType> {
 /**
  * @brief: Adds collision points of the segment endpoints to the buffer.
  */
-auto add_collision_end_points(collision_points_t& buffer,
-                              segment_info_t segment) -> void {
+auto add_collision_end_points(collision_points_t& buffer, segment_info_t segment)
+    -> void {
     if (const auto p0_type = collision_item_type(segment.p0_type)) {
         buffer.push_back({segment.line.p0, *p0_type});
     }
@@ -487,8 +487,8 @@ auto collision_points(segment_info_t segment) -> collision_points_t {
 
 auto set_logicitem_state(CollisionIndex::map_type& map, point_t position,
                          collision_index::ItemType item_type,
-                         logicitem_id_t verify_old_id,
-                         logicitem_id_t set_new_id) -> void {
+                         logicitem_id_t verify_old_id, logicitem_id_t set_new_id)
+    -> void {
     // creates new entry, if it doesn't exist
     auto& data = map[position];
     data.set_logicitem_state(item_type, verify_old_id, set_new_id);
@@ -500,8 +500,8 @@ auto set_logicitem_state(CollisionIndex::map_type& map, point_t position,
 
 auto set_decoration_state(CollisionIndex::map_type& map, point_t position,
                           collision_index::ItemType item_type,
-                          decoration_id_t verify_old_id,
-                          decoration_id_t set_new_id) -> void {
+                          decoration_id_t verify_old_id, decoration_id_t set_new_id)
+    -> void {
     // creates new entry, if it doesn't exist
     auto& data = map[position];
     data.set_decoration_state(item_type, verify_old_id, set_new_id);

@@ -36,8 +36,8 @@ auto render_layout(Context& ctx, ImageSurface& surface, const Layout& layout,
 }
 
 auto render_layout_to_file(const Layout& layout, const std::filesystem::path& filename,
-                           const ContextRenderSettings& settings,
-                           ContextCache cache) -> void {
+                           const ContextRenderSettings& settings, ContextCache cache)
+    -> void {
     // allocation time is small compared to encoding time, so we allocate it here
     auto surface = ImageSurface {};
 
@@ -49,8 +49,8 @@ auto render_layout_to_file(const Layout& layout, const std::filesystem::path& fi
 
 auto render_layout_to_file(const Layout& layout, const Selection& selection,
                            const std::filesystem::path& filename,
-                           const ContextRenderSettings& settings,
-                           ContextCache cache) -> void {
+                           const ContextRenderSettings& settings, ContextCache cache)
+    -> void {
     // allocation time is small compared to encoding time, so we allocate it here
     auto surface = ImageSurface {};
 
@@ -64,8 +64,8 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection,
 // Simulation
 //
 
-auto render_simulation(Context& ctx,
-                       const SpatialSimulation& spatial_simulation) -> void {
+auto render_simulation(Context& ctx, const SpatialSimulation& spatial_simulation)
+    -> void {
     const auto scene_rect = get_scene_rect(ctx.view_config());
     const auto layers = build_simulation_layers(spatial_simulation.layout(), scene_rect);
 
@@ -74,8 +74,8 @@ auto render_simulation(Context& ctx,
 
 auto render_simulation_to_file(const SpatialSimulation& spatial_simulation,
                                const std::filesystem::path& filename,
-                               const ContextRenderSettings& settings,
-                               ContextCache cache) -> void {
+                               const ContextRenderSettings& settings, ContextCache cache)
+    -> void {
     render_to_file(filename, settings, std::move(cache), [&](Context& ctx) {
         render_background(ctx);
         render_simulation(ctx, spatial_simulation);

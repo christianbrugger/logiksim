@@ -14,8 +14,8 @@ namespace {
 
 auto remove_and_insert(EditableCircuit& editable_circuit, selection_id_t selection_id,
                        const DecorationDefinition& element_definition,
-                       std::optional<point_t> position,
-                       InsertionMode mode) -> selection_id_t {
+                       std::optional<point_t> position, InsertionMode mode)
+    -> selection_id_t {
     save_delete_all(editable_circuit, selection_id);
 
     if (!editable_circuit.selection_exists(selection_id)) {

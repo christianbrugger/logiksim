@@ -45,8 +45,8 @@ class DecorationStore {
              display_state_t display_state) -> decoration_id_t;
     auto swap_and_delete(decoration_id_t decoration_id)
         -> std::pair<decoration_id_t, PlacedDecoration>;
-    auto swap_items(decoration_id_t decoration_id_1,
-                    decoration_id_t decoration_id_2) -> void;
+    auto swap_items(decoration_id_t decoration_id_1, decoration_id_t decoration_id_2)
+        -> void;
 
     /**
      * @brief: brings the store in canonical form,
@@ -67,10 +67,10 @@ class DecorationStore {
 
     // setters
     auto set_position(decoration_id_t decoration_id, point_t position) -> void;
-    auto set_display_state(decoration_id_t decoration_id,
-                           display_state_t display_state) -> void;
-    auto set_attributes(decoration_id_t decoration_id,
-                        attributes_text_element_t &&attrs) -> attributes_text_element_t;
+    auto set_display_state(decoration_id_t decoration_id, display_state_t display_state)
+        -> void;
+    auto set_attributes(decoration_id_t decoration_id, attributes_text_element_t &&attrs)
+        -> attributes_text_element_t;
 
    private:
     auto delete_last() -> PlacedDecoration;
@@ -95,15 +95,18 @@ class DecorationStore {
                                              decoration_id_t decoration_id)
     -> decoration_layout_data_t;
 
-[[nodiscard]] auto to_decoration_layout_data(
-    const DecorationStore &store, decoration_id_t decoration_id,
-    point_t position) -> decoration_layout_data_t;
+[[nodiscard]] auto to_decoration_layout_data(const DecorationStore &store,
+                                             decoration_id_t decoration_id,
+                                             point_t position)
+    -> decoration_layout_data_t;
 
-[[nodiscard]] auto to_decoration_definition(
-    const DecorationStore &store, decoration_id_t decoration_id) -> DecorationDefinition;
+[[nodiscard]] auto to_decoration_definition(const DecorationStore &store,
+                                            decoration_id_t decoration_id)
+    -> DecorationDefinition;
 
-[[nodiscard]] auto to_placed_decoration(
-    const DecorationStore &store, decoration_id_t decoration_id) -> PlacedDecoration;
+[[nodiscard]] auto to_placed_decoration(const DecorationStore &store,
+                                        decoration_id_t decoration_id)
+    -> PlacedDecoration;
 
 }  // namespace layout
 

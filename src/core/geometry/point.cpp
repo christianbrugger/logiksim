@@ -17,8 +17,8 @@ auto add_unchecked(point_t point, int dx, int dy) -> point_t {
     };
 }
 
-auto move_or_delete_points(std::span<const point_t> points, int delta_x,
-                           int delta_y) -> std::vector<point_t> {
+auto move_or_delete_points(std::span<const point_t> points, int delta_x, int delta_y)
+    -> std::vector<point_t> {
     auto result = std::vector<point_t> {};
     result.reserve(points.size());
 

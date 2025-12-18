@@ -19,8 +19,9 @@ namespace logicsim {
  *
  * Throws an exception if the given image is not the size of the render settings.
  */
-[[nodiscard]] auto create_context(
-    BLImage &bl_image, const ContextRenderSettings &render_settings) -> BLContext;
+[[nodiscard]] auto create_context(BLImage &bl_image,
+                                  const ContextRenderSettings &render_settings)
+    -> BLContext;
 
 /**
  * @brief: Create a context and calls render_function.
@@ -47,8 +48,8 @@ inline auto render_to_file(const std::filesystem::path &filename,
  *
  * Throws if source and target don't have the same size.
  */
-auto blit_layer(Context &target_ctx, const BLImage &source_image,
-                BLRectI dirty_rect) -> void;
+auto blit_layer(Context &target_ctx, const BLImage &source_image, BLRectI dirty_rect)
+    -> void;
 
 //
 // Implementation

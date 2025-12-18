@@ -514,8 +514,8 @@ auto has_decorations(const Selection &selection) -> bool {
     return !selection.selected_decorations().empty();
 }
 
-auto get_lines(const Selection &selection,
-               const Layout &layout) -> std::vector<ordered_line_t> {
+auto get_lines(const Selection &selection, const Layout &layout)
+    -> std::vector<ordered_line_t> {
     auto result = std::vector<ordered_line_t> {};
 
     for (const auto &entry : selection.selected_segments()) {
@@ -667,13 +667,13 @@ auto is_full_segment(const segment_t segment, const PartSelection &parts,
     return parts.size() == 1 && parts.front() == to_part(get_line(layout, segment));
 }
 
-auto is_full_segment(const selection::segment_pair_t &pair,
-                     const Layout &layout) -> bool {
+auto is_full_segment(const selection::segment_pair_t &pair, const Layout &layout)
+    -> bool {
     return is_full_segment(pair.first, pair.second, layout);
 }
 
-auto is_full_segment(const Selection &selection, segment_t segment,
-                     const Layout &layout) -> bool {
+auto is_full_segment(const Selection &selection, segment_t segment, const Layout &layout)
+    -> bool {
     return is_full_segment(segment, selection.selected_segments(segment), layout);
 }
 
@@ -686,8 +686,8 @@ auto add_segment(Selection &selection, segment_t segment, const Layout &layout) 
     selection.add_segment(segment_part_t {segment, part});
 }
 
-auto add_segment_tree(Selection &selection, wire_id_t wire_id,
-                      const Layout &layout) -> void {
+auto add_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)
+    -> void {
     const auto &tree = layout.wires().segment_tree(wire_id);
     for (const auto &segment_index : tree.indices()) {
         selection.add_segment(segment_part_t {segment_t {wire_id, segment_index},
@@ -695,14 +695,14 @@ auto add_segment_tree(Selection &selection, wire_id_t wire_id,
     }
 }
 
-auto remove_segment(Selection &selection, segment_t segment,
-                    const Layout &layout) -> void {
+auto remove_segment(Selection &selection, segment_t segment, const Layout &layout)
+    -> void {
     const auto part = to_part(get_line(layout, segment));
     selection.remove_segment(segment_part_t {segment, part});
 }
 
-auto remove_segment_tree(Selection &selection, wire_id_t wire_id,
-                         const Layout &layout) -> void {
+auto remove_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)
+    -> void {
     const auto &tree = layout.wires().segment_tree(wire_id);
     for (const auto &segment_index : tree.indices()) {
         selection.remove_segment(segment_part_t {segment_t {wire_id, segment_index},

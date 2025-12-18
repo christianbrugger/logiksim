@@ -128,8 +128,8 @@ auto render_layout_connection_index(Context& ctx, const LayoutIndex& index) -> v
     }
 }
 
-auto render_layout_collision_index(Context& ctx,
-                                   const CollisionIndex& collision_index) -> void {
+auto render_layout_collision_index(Context& ctx, const CollisionIndex& collision_index)
+    -> void {
     constexpr static auto color = defaults::color_orange;
     constexpr static auto size = grid_fine_t {0.25};
 
@@ -187,8 +187,8 @@ auto render_layout_collision_index(Context& ctx,
     }
 }
 
-auto render_layout_selection_index(Context& ctx,
-                                   const SpatialIndex& selection_index) -> void {
+auto render_layout_selection_index(Context& ctx, const SpatialIndex& selection_index)
+    -> void {
     const auto scene_rect = get_scene_rect_fine(ctx.settings.view_config);
 
     for (const rect_fine_t& rect : selection_index.rects()) {
@@ -205,19 +205,19 @@ auto render_layout_selection_index(Context& ctx,
     }
 }
 
-auto render_layout_connection_index(Context& ctx,
-                                    const EditableCircuit& editable_circuit) -> void {
+auto render_layout_connection_index(Context& ctx, const EditableCircuit& editable_circuit)
+    -> void {
     render_layout_connection_index(ctx, editable_circuit.modifier().circuit_data().index);
 }
 
-auto render_layout_collision_index(Context& ctx,
-                                   const EditableCircuit& editable_circuit) -> void {
+auto render_layout_collision_index(Context& ctx, const EditableCircuit& editable_circuit)
+    -> void {
     render_layout_collision_index(
         ctx, editable_circuit.modifier().circuit_data().index.collision_index());
 }
 
-auto render_layout_selection_index(Context& ctx,
-                                   const EditableCircuit& editable_circuit) -> void {
+auto render_layout_selection_index(Context& ctx, const EditableCircuit& editable_circuit)
+    -> void {
     render_layout_selection_index(
         ctx, editable_circuit.modifier().circuit_data().index.selection_index());
 }

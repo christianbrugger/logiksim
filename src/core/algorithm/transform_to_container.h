@@ -16,8 +16,8 @@ namespace logicsim {
  */
 template <class Container, std::input_iterator InputIt,
           std::sized_sentinel_for<InputIt> Sentinel, class Function>
-constexpr auto transform_to_container(InputIt first, Sentinel last,
-                                      Function func) -> Container {
+constexpr auto transform_to_container(InputIt first, Sentinel last, Function func)
+    -> Container {
     Container result {};
     result.reserve(static_cast<std::size_t>(distance_fast(first, last)));
 

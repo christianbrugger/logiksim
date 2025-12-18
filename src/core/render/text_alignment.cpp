@@ -84,8 +84,8 @@ auto calculate_offset(const BLBox& bounding_box,
     };
 }
 
-auto calculate_baseline_offset(FontStyle style [[maybe_unused]],
-                               const FontFace& face) -> BaselineOffset {
+auto calculate_baseline_offset(FontStyle style [[maybe_unused]], const FontFace& face)
+    -> BaselineOffset {
     const auto font_size = float {16};
     const auto font = HbFont {face.hb_face()};
 
@@ -122,8 +122,8 @@ auto BaselineOffsets::format() const -> std::string {
     return fmt::format("BaselineOffsets(\n  {})\n", joined);
 }
 
-auto BaselineOffsets::get(FontStyle style,
-                          float font_size) const -> ScaledBaselineOffset {
+auto BaselineOffsets::get(FontStyle style, float font_size) const
+    -> ScaledBaselineOffset {
     return get(style) * font_size;
 }
 

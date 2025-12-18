@@ -22,14 +22,14 @@ class MouseDragLogic {
     /**
      * @brief: Updates the drag position and returns the updated view-config offset.
      */
-    auto mouse_move(point_device_fine_t position,
-                    const ViewConfig& config) -> point_fine_t;
+    auto mouse_move(point_device_fine_t position, const ViewConfig& config)
+        -> point_fine_t;
 
     /**
      * @brief: Finalizes the drag position and returns the updated view-config offset.
      */
-    auto mouse_release(point_device_fine_t position,
-                       const ViewConfig& config) -> point_fine_t;
+    auto mouse_release(point_device_fine_t position, const ViewConfig& config)
+        -> point_fine_t;
 
    private:
     std::optional<point_device_fine_t> last_position_ {};

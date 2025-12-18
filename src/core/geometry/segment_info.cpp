@@ -15,8 +15,8 @@ auto point_type_orientation_t::format() const -> std::string {
     return fmt::format("[{}, {}, {}]", position, type, orientation);
 }
 
-auto order_points(segment_info_t a,
-                  segment_info_t b) -> std::tuple<segment_info_t, segment_info_t> {
+auto order_points(segment_info_t a, segment_info_t b)
+    -> std::tuple<segment_info_t, segment_info_t> {
     if (a.line <= b.line) {
         return std::make_tuple(a, b);
     }
@@ -77,8 +77,8 @@ auto to_point_type_orientation(const segment_info_t &segment_info)
     };
 }
 
-auto set_segment_point_type(segment_info_t &info, point_t position,
-                            SegmentPointType type) -> void {
+auto set_segment_point_type(segment_info_t &info, point_t position, SegmentPointType type)
+    -> void {
     if (info.line.p0 == position) {
         info.p0_type = type;
     } else if (info.line.p1 == position) {
@@ -94,8 +94,8 @@ auto updated_segment_info(segment_info_t segment_info, point_t position,
     return segment_info;
 }
 
-auto get_segment_point_type(const segment_info_t &info,
-                            point_t position) -> SegmentPointType {
+auto get_segment_point_type(const segment_info_t &info, point_t position)
+    -> SegmentPointType {
     if (info.line.p0 == position) {
         return info.p0_type;
     }

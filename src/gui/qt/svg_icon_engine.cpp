@@ -25,8 +25,8 @@ auto SvgIconEngine::clone() const -> QIconEngine * {
     return new SvgIconEngine(*this);
 }
 
-auto SvgIconEngine::pixmap(const QSize &size, QIcon::Mode mode,
-                           QIcon::State state) -> QPixmap {
+auto SvgIconEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state)
+    -> QPixmap {
     // create empty pixmap with alpha channel
     // default implementation does not create alpha channel
 

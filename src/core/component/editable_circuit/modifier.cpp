@@ -438,8 +438,8 @@ auto Modifier::delete_temporary_wire_segment(segment_part_t& segment_part) -> vo
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::add_wire_segment(ordered_line_t line,
-                                InsertionMode insertion_mode) -> segment_part_t {
+auto Modifier::add_wire_segment(ordered_line_t line, InsertionMode insertion_mode)
+    -> segment_part_t {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
@@ -458,8 +458,8 @@ auto Modifier::add_wire_segment(ordered_line_t line,
 }
 
 auto Modifier::change_wire_insertion_mode(segment_part_t& segment_part,
-                                          InsertionMode new_mode,
-                                          InsertionHint hint) -> void {
+                                          InsertionMode new_mode, InsertionHint hint)
+    -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
@@ -550,8 +550,8 @@ auto Modifier::set_temporary_endpoints(segment_t segment, endpoints_t endpoints)
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::merge_uninserted_segment(segment_t segment_0,
-                                        segment_t segment_1) -> segment_t {
+auto Modifier::merge_uninserted_segment(segment_t segment_0, segment_t segment_1)
+    -> segment_t {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
@@ -593,8 +593,8 @@ auto Modifier::split_uninserted_segment(segment_t segment, offset_t offset,
 }
 
 auto Modifier::regularize_temporary_selection(
-    const Selection& selection,
-    std::optional<std::vector<point_t>> true_cross_points_) -> std::vector<point_t> {
+    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points_)
+    -> std::vector<point_t> {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
@@ -682,8 +682,8 @@ auto Modifier::set_selection(selection_id_t selection_id, Selection selection_) 
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::add_to_selection(selection_id_t selection_id,
-                                logicitem_id_t logicitem_id) -> void {
+auto Modifier::add_to_selection(selection_id_t selection_id, logicitem_id_t logicitem_id)
+    -> void {
     if (!is_id_valid(logicitem_id, circuit_data_.layout)) {
         throw std::runtime_error("Logicitem id is not part of layout");
     }
@@ -704,8 +704,8 @@ auto Modifier::add_to_selection(selection_id_t selection_id,
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::add_to_selection(selection_id_t selection_id,
-                                segment_part_t segment_part) -> void {
+auto Modifier::add_to_selection(selection_id_t selection_id, segment_part_t segment_part)
+    -> void {
     if (!is_segment_part_valid(segment_part, circuit_data_.layout)) {
         throw std::runtime_error("Segment part is not part of layout");
     }
@@ -774,8 +774,8 @@ auto Modifier::set_visible_selection(Selection selection_) -> void {
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::add_visible_selection_rect(SelectionFunction function,
-                                          rect_fine_t rect) -> void {
+auto Modifier::add_visible_selection_rect(SelectionFunction function, rect_fine_t rect)
+    -> void {
     if constexpr (DEBUG_PRINT_MODIFIER_METHODS) {
         print_fmt(
             "\n==========================================================\n{}\n"
@@ -973,13 +973,14 @@ auto are_uninserted_segments_mergeable(const Modifier& modifier, segment_t segme
                                                       segment_0, segment_1);
 }
 
-auto get_inserted_cross_points(const Modifier& modifier,
-                               const Selection& selection) -> std::vector<point_t> {
+auto get_inserted_cross_points(const Modifier& modifier, const Selection& selection)
+    -> std::vector<point_t> {
     return editing::get_inserted_cross_points(modifier.circuit_data(), selection);
 }
 
-auto get_temporary_selection_splitpoints(
-    const Modifier& modifier, const Selection& selection) -> std::vector<point_t> {
+auto get_temporary_selection_splitpoints(const Modifier& modifier,
+                                         const Selection& selection)
+    -> std::vector<point_t> {
     return editing::get_temporary_selection_splitpoints(modifier.circuit_data(),
                                                         selection);
 }
@@ -990,16 +991,16 @@ auto get_temporary_selection_splitpoints(
 
 namespace {
 
-[[nodiscard]] auto has_logicitem(const Modifier& modifier,
-                                 selection_id_t selection_id) -> bool {
+[[nodiscard]] auto has_logicitem(const Modifier& modifier, selection_id_t selection_id)
+    -> bool {
     return !modifier.circuit_data()
                 .selection_store.at(selection_id)
                 .selected_logicitems()
                 .empty();
 }
 
-[[nodiscard]] auto has_decoration(const Modifier& modifier,
-                                  selection_id_t selection_id) -> bool {
+[[nodiscard]] auto has_decoration(const Modifier& modifier, selection_id_t selection_id)
+    -> bool {
     return !modifier.circuit_data()
                 .selection_store.at(selection_id)
                 .selected_decorations()
@@ -1026,8 +1027,8 @@ namespace {
     return get_first_decoration(modifier.circuit_data().selection_store.at(selection_id));
 }
 
-[[nodiscard]] auto has_segment(const Modifier& modifier,
-                               selection_id_t selection_id) -> bool {
+[[nodiscard]] auto has_segment(const Modifier& modifier, selection_id_t selection_id)
+    -> bool {
     return !modifier.circuit_data()
                 .selection_store.at(selection_id)
                 .selected_segments()

@@ -122,8 +122,8 @@ auto pop_last_visible_selection_rect(CircuitData& circuit_data) -> void {
     circuit_data.visible_selection.pop_last();
 }
 
-auto update_last_visible_selection_rect(CircuitData& circuit_data,
-                                        rect_fine_t rect) -> void {
+auto update_last_visible_selection_rect(CircuitData& circuit_data, rect_fine_t rect)
+    -> void {
     _store_history_visible_selection_update_last(circuit_data);
     circuit_data.visible_selection.update_last(rect);
 }

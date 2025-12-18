@@ -121,8 +121,9 @@ auto EditingLogicManager::is_area_selection_active() const -> bool {
            std::holds_alternative<SelectionAreaLogic>(*mouse_logic_);
 }
 
-auto EditingLogicManager::setup_colliding_move(
-    const EditableCircuit& editable_circuit, std::vector<point_t> cross_points_) -> void {
+auto EditingLogicManager::setup_colliding_move(const EditableCircuit& editable_circuit,
+                                               std::vector<point_t> cross_points_)
+    -> void {
     Expects(class_invariant_holds());
 
     Expects(is_selection_state(circuit_state_));
@@ -142,10 +143,11 @@ auto EditingLogicManager::setup_colliding_move(
 
 namespace {
 
-auto create_editing_mouse_logic(
-    QPointF position, const ViewConfig& view_config, Qt::KeyboardModifiers modifiers,
-    const EditableCircuit& editable_circuit,
-    EditingState editing_state) -> std::optional<EditingMouseLogic> {
+auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
+                                Qt::KeyboardModifiers modifiers,
+                                const EditableCircuit& editable_circuit,
+                                EditingState editing_state)
+    -> std::optional<EditingMouseLogic> {
     const auto grid_fine_position = to_grid_fine(to(position), view_config);
 
     // insert logic items
@@ -195,9 +197,10 @@ auto create_editing_mouse_logic(
 
 }  // namespace
 
-auto EditingLogicManager::mouse_press(
-    QPointF position, const ViewConfig& view_config, Qt::KeyboardModifiers modifiers,
-    bool double_click, EditableCircuit* editable_circuit_) -> mouse_logic_result_t {
+auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_config,
+                                      Qt::KeyboardModifiers modifiers, bool double_click,
+                                      EditableCircuit* editable_circuit_)
+    -> mouse_logic_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
@@ -288,9 +291,10 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
     };
 }
 
-auto EditingLogicManager::mouse_release(
-    QPointF position, const ViewConfig& view_config, EditableCircuit* editable_circuit_,
-    const OpenSettingDialog& show_setting_dialog) -> mouse_logic_result_t {
+auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view_config,
+                                        EditableCircuit* editable_circuit_,
+                                        const OpenSettingDialog& show_setting_dialog)
+    -> mouse_logic_result_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 

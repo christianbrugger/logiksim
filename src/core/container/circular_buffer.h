@@ -94,10 +94,10 @@ class circular_buffer {
      * Compute the size after growth.
      */
     [[nodiscard]] auto computeNewSize() const -> size_type;
-    [[nodiscard]] auto wrap_plus(InternalSizeType a,
-                                 InternalSizeType b) const noexcept -> InternalSizeType;
-    [[nodiscard]] auto wrap_minus(InternalSizeType a,
-                                  InternalSizeType b) const noexcept -> InternalSizeType;
+    [[nodiscard]] auto wrap_plus(InternalSizeType a, InternalSizeType b) const noexcept
+        -> InternalSizeType;
+    [[nodiscard]] auto wrap_minus(InternalSizeType a, InternalSizeType b) const noexcept
+        -> InternalSizeType;
     [[nodiscard]] auto get_end() const noexcept -> InternalSizeType;
 
     static_assert(std::random_access_iterator<iterator>);
@@ -143,8 +143,8 @@ class circular_buffer<Value, RequestedMaxInline, InternalSizeType>::Iterator {
     [[nodiscard]] auto operator+(difference_type offset) const -> Iterator;
     [[nodiscard]] auto operator-(difference_type offset) const -> Iterator;
 
-    [[nodiscard]] friend auto operator+(difference_type offset,
-                                        const Iterator& right) -> Iterator {
+    [[nodiscard]] friend auto operator+(difference_type offset, const Iterator& right)
+        -> Iterator {
         auto result = right;
         result += offset;
         return result;

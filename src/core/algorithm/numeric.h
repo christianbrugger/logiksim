@@ -22,8 +22,9 @@ inline constexpr auto checked_shr = flux::num::checked_shr;
 
 struct try_add_fn {
     template <flux::num::integral T>
-    [[nodiscard]] FLUX_ALWAYS_INLINE constexpr auto operator()(
-        T lhs, T rhs) const noexcept -> std::optional<T> {
+    [[nodiscard]] FLUX_ALWAYS_INLINE constexpr auto operator()(T lhs,
+                                                               T rhs) const noexcept
+        -> std::optional<T> {
         if (const auto result = flux::num::overflowing_add(lhs, rhs);
             !result.overflowed) {
             return result.value;

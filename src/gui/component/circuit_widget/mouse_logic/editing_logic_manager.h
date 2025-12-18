@@ -55,9 +55,10 @@ class EditingLogicManager {
                               std::vector<point_t> cross_points) -> void;
 
    public:
-    [[nodiscard]] auto mouse_press(
-        QPointF position, const ViewConfig& view_config, Qt::KeyboardModifiers modifiers,
-        bool double_click, EditableCircuit* editable_circuit) -> mouse_logic_result_t;
+    [[nodiscard]] auto mouse_press(QPointF position, const ViewConfig& view_config,
+                                   Qt::KeyboardModifiers modifiers, bool double_click,
+                                   EditableCircuit* editable_circuit)
+        -> mouse_logic_result_t;
 
     [[nodiscard]] auto mouse_move(QPointF position, const ViewConfig& view_config,
                                   EditableCircuit* editable_circuit)

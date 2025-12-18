@@ -41,8 +41,8 @@ TEST_CASE("back and forth utf-8 high path", "[qt/path_conversion]") {
 
 namespace {
 
-auto write_file_qt(const std::filesystem::path& orig_path,
-                   const std::string& content) -> void {
+auto write_file_qt(const std::filesystem::path& orig_path, const std::string& content)
+    -> void {
     const auto qt_path = to_qt(orig_path);
 
     QDir {}.remove(qt_path);

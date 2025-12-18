@@ -206,8 +206,9 @@ struct glyph_count_result_t {
 
 static_assert(std::regular<glyph_count_result_t>);
 
-[[nodiscard]] auto calculate_max_glyph_count(
-    const ClusterBoxesUser &cluster_boxes, double max_text_width) -> glyph_count_result_t;
+[[nodiscard]] auto calculate_max_glyph_count(const ClusterBoxesUser &cluster_boxes,
+                                             double max_text_width)
+    -> glyph_count_result_t;
 
 struct GlyphGeometryData {
    public:

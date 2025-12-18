@@ -10,8 +10,8 @@ namespace logicsim {
 struct grid_t;
 struct ordered_line_t;
 
-[[nodiscard]] auto get_random_ordered_line(Rng& rng, grid_t min,
-                                           grid_t max) -> ordered_line_t;
+[[nodiscard]] auto get_random_ordered_line(Rng& rng, grid_t min, grid_t max)
+    -> ordered_line_t;
 [[nodiscard]] auto get_random_ordered_line(Rng& rng, grid_t min, grid_t max,
                                            grid_t max_length) -> ordered_line_t;
 

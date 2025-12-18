@@ -66,8 +66,8 @@ namespace segment_map {
 
 namespace {
 
-auto add_point(map_t& map, point_t point, segment_t segment,
-               orientation_t orientation) -> void {
+auto add_point(map_t& map, point_t point, segment_t segment, orientation_t orientation)
+    -> void {
     if (const auto it = map.find(point); it != map.end()) {
         // allow overwriting of segments, as temporary wires can be of any arrangement
         // throws for orientation_t::undirected

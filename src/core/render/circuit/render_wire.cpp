@@ -25,8 +25,8 @@ auto wire_color(bool is_enabled, WireRenderStyle style) -> color_t {
     std::terminate();
 }
 
-auto wire_color(bool is_enabled, WireRenderStyle style,
-                ElementDrawState state) -> color_t {
+auto wire_color(bool is_enabled, WireRenderStyle style, ElementDrawState state)
+    -> color_t {
     return with_alpha_runtime(wire_color(is_enabled, style), state);
 }
 

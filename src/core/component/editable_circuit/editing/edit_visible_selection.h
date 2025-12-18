@@ -24,8 +24,8 @@ auto add_visible_selection_rect(CircuitData& circuit_data, SelectionFunction fun
 
 auto pop_last_visible_selection_rect(CircuitData& circuit_data) -> void;
 
-auto update_last_visible_selection_rect(CircuitData& circuit_data,
-                                        rect_fine_t rect) -> void;
+auto update_last_visible_selection_rect(CircuitData& circuit_data, rect_fine_t rect)
+    -> void;
 
 auto apply_all_visible_selection_operations(CircuitData& circuit_data) -> void;
 

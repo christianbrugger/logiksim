@@ -17,8 +17,8 @@ auto decoration_layout_data_t::format() const -> std::string {
 // Conversion
 //
 
-auto to_decoration_layout_data(const DecorationDefinition& definition,
-                               point_t position) -> decoration_layout_data_t {
+auto to_decoration_layout_data(const DecorationDefinition& definition, point_t position)
+    -> decoration_layout_data_t {
     return decoration_layout_data_t {
         .position = position,
         .size = definition.size,

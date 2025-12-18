@@ -11,8 +11,8 @@ namespace logicsim {
 
 [[nodiscard]] auto get_random_directed_orientation(Rng &rng) -> orientation_t;
 
-[[nodiscard]] auto get_random_orientation(Rng &rng,
-                                          LogicItemType logicitem_type) -> orientation_t;
+[[nodiscard]] auto get_random_orientation(Rng &rng, LogicItemType logicitem_type)
+    -> orientation_t;
 
 }  // namespace logicsim
 

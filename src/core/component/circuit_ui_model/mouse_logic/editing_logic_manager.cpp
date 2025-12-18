@@ -117,8 +117,9 @@ auto EditingLogicManager::is_area_selection_active() const -> bool {
            std::holds_alternative<SelectionAreaLogic>(*mouse_logic_);
 }
 
-auto EditingLogicManager::setup_colliding_move(
-    const EditableCircuit& editable_circuit, std::vector<point_t> cross_points_) -> void {
+auto EditingLogicManager::setup_colliding_move(const EditableCircuit& editable_circuit,
+                                               std::vector<point_t> cross_points_)
+    -> void {
     Expects(class_invariant_holds());
 
     Expects(is_selection_state(circuit_state_));
@@ -138,10 +139,11 @@ auto EditingLogicManager::setup_colliding_move(
 
 namespace {
 
-auto create_editing_mouse_logic(
-    point_fine_t position, const ViewConfig& view_config, KeyboardModifiers modifiers,
-    const EditableCircuit& editable_circuit,
-    EditingState editing_state) -> std::optional<EditingMouseLogic> {
+auto create_editing_mouse_logic(point_fine_t position, const ViewConfig& view_config,
+                                KeyboardModifiers modifiers,
+                                const EditableCircuit& editable_circuit,
+                                EditingState editing_state)
+    -> std::optional<EditingMouseLogic> {
     // insert logic items
     if (is_insert_logicitem_state(editing_state)) {
         return InsertLogicItemLogic {
@@ -189,10 +191,11 @@ auto create_editing_mouse_logic(
 
 }  // namespace
 
-auto EditingLogicManager::mouse_press(
-    point_fine_t position_fine, const ViewConfig& view_config,
-    KeyboardModifiers modifiers, bool double_click,
-    EditableCircuit* editable_circuit_) -> mouse_logic_status_t {
+auto EditingLogicManager::mouse_press(point_fine_t position_fine,
+                                      const ViewConfig& view_config,
+                                      KeyboardModifiers modifiers, bool double_click,
+                                      EditableCircuit* editable_circuit_)
+    -> mouse_logic_status_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
 
@@ -279,9 +282,10 @@ auto EditingLogicManager::mouse_move(point_fine_t position_fine,
     };
 }
 
-auto EditingLogicManager::mouse_release(
-    point_fine_t position_fine, EditableCircuit* editable_circuit_,
-    const OpenSettingDialog& show_setting_dialog) -> mouse_logic_status_t {
+auto EditingLogicManager::mouse_release(point_fine_t position_fine,
+                                        EditableCircuit* editable_circuit_,
+                                        const OpenSettingDialog& show_setting_dialog)
+    -> mouse_logic_status_t {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(class_invariant_holds());
     auto status = mouse_logic_status_t {};

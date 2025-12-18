@@ -35,8 +35,8 @@ namespace editing {
  *
  * Throws, if segment is not temporary.
  */
-auto delete_temporary_wire_segment(CircuitData& circuit,
-                                   segment_part_t& segment_part) -> void;
+auto delete_temporary_wire_segment(CircuitData& circuit, segment_part_t& segment_part)
+    -> void;
 
 /**
  * @brief: Check if moved wire segment is representable.
@@ -100,8 +100,8 @@ auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
 /**
  * @brief: Add segment part to visible selection.
  */
-auto add_to_visible_selection(CircuitData& circuit_data,
-                              segment_part_t segment_part) -> void;
+auto add_to_visible_selection(CircuitData& circuit_data, segment_part_t segment_part)
+    -> void;
 
 /**
  * @brief: Toggle the wire crosspoint on two crossing inserted wire segments.
@@ -185,8 +185,9 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
  *
  * Note, wires need to be inserted as the Index is used.
  */
-[[nodiscard]] auto get_inserted_cross_points(
-    const CircuitData& circuit, const Selection& selection) -> std::vector<point_t>;
+[[nodiscard]] auto get_inserted_cross_points(const CircuitData& circuit,
+                                             const Selection& selection)
+    -> std::vector<point_t>;
 
 /**
  * @brief: Split temporary segments at the given points.
@@ -205,8 +206,9 @@ auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
  *
  * Throws, if any segment in the selection is not temporary.
  */
-[[nodiscard]] auto get_temporary_selection_splitpoints(
-    const CircuitData& circuit, const Selection& selection) -> std::vector<point_t>;
+[[nodiscard]] auto get_temporary_selection_splitpoints(const CircuitData& circuit,
+                                                       const Selection& selection)
+    -> std::vector<point_t>;
 
 }  // namespace editing
 

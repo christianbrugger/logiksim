@@ -71,8 +71,9 @@ template <>
 namespace editable_circuit {
 namespace editing {
 
-[[nodiscard]] auto get_move_segment_type(
-    const Layout& layout, segment_part_t segment_part) -> move_segment_type;
+[[nodiscard]] auto get_move_segment_type(const Layout& layout,
+                                         segment_part_t segment_part)
+    -> move_segment_type;
 
 auto move_full_segment_between_trees(CircuitData& circuit, segment_t& source_segment,
                                      wire_id_t destination_id) -> void;
@@ -117,9 +118,11 @@ struct move_splitting_result_t {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-auto move_splitting_segment_between_trees(
-    CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
-    move_splitting_keys_t optional_keys = {}) -> move_splitting_result_t;
+auto move_splitting_segment_between_trees(CircuitData& circuit,
+                                          segment_part_t& source_segment_part,
+                                          wire_id_t destination_id,
+                                          move_splitting_keys_t optional_keys = {})
+    -> move_splitting_result_t;
 
 auto move_splitting_segment_between_trees_with_history(
     CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
@@ -139,8 +142,8 @@ auto remove_full_segment_from_uninserted_tree(CircuitData& circuit,
  *
  * Note, the segment with the smallest line preserves the initial key.
  */
-auto split_line_segment(CircuitData& circuit, segment_t segment,
-                        point_t position) -> segment_part_t;
+auto split_line_segment(CircuitData& circuit, segment_t segment, point_t position)
+    -> segment_part_t;
 
 [[nodiscard]] auto are_segments_mergeable(const Layout& layout, segment_t segment_0,
                                           segment_t segment_1) -> bool;
@@ -161,9 +164,10 @@ auto merge_line_segment(CircuitData& circuit, segment_t segment_0, segment_t seg
  *
  * Note, the resulting segment has the key of first segment when ordered by lines.
  */
-auto merge_line_segment_with_history(
-    CircuitData& circuit, segment_t segment_0, segment_t segment_1,
-    segment_part_t* preserve_segment = nullptr) -> segment_t;
+auto merge_line_segment_with_history(CircuitData& circuit, segment_t segment_0,
+                                     segment_t segment_1,
+                                     segment_part_t* preserve_segment = nullptr)
+    -> segment_t;
 
 template <std::invocable<CircuitData&, segment_t, segment_t> MergeFunc>
 auto merge_all_line_segments(CircuitData& circuit,
@@ -250,15 +254,15 @@ auto unmark_valid_with_history(CircuitData& circuit, segment_part_t segment_part
 // Collisions
 //
 
-[[nodiscard]] auto is_wire_colliding(const CircuitData& circuit,
-                                     ordered_line_t line) -> bool;
+[[nodiscard]] auto is_wire_colliding(const CircuitData& circuit, ordered_line_t line)
+    -> bool;
 
 //
 // Connections
 //
 
-auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit,
-                                          segment_t segment) -> void;
+auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit, segment_t segment)
+    -> void;
 
 //
 // Implementation

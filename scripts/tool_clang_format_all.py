@@ -4,8 +4,7 @@ import asyncio
 import os
 from pathlib import Path
 
-
-CLANG_FORMAT = "clang-format-18"
+CLANG_FORMAT = "clang-format-20"
 SOURCE_FOLDERS = ("src", "test")
 EXTENSIONS = ("*.h", "*.cpp")
 IGNORE = [

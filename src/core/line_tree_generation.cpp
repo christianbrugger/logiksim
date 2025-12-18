@@ -38,8 +38,8 @@ auto generate_line_trees(const Layout& layout) -> std::vector<LineTree> {
     return transform_to_vector(wire_ids(layout), gen_line_tree);
 }
 
-auto has_same_segments(const SegmentTree& segment_tree,
-                       const LineTree& line_tree) -> bool {
+auto has_same_segments(const SegmentTree& segment_tree, const LineTree& line_tree)
+    -> bool {
     // line tree
     if (line_tree.size() != segment_tree.size()) {
         return false;
@@ -65,8 +65,8 @@ auto get_cross_points(const LineTree& line_tree) -> std::vector<point_t> {
     return cross_points;
 }
 
-auto has_same_cross_points(const SegmentTree& segment_tree,
-                           const LineTree& line_tree) -> bool {
+auto has_same_cross_points(const SegmentTree& segment_tree, const LineTree& line_tree)
+    -> bool {
     // line tree
     auto cross_points_1 = get_cross_points(line_tree);
 
@@ -85,8 +85,8 @@ auto has_same_cross_points(const SegmentTree& segment_tree,
     return cross_points_1 == cross_points_2;
 }
 
-auto has_same_corner_points(const SegmentTree& segment_tree,
-                            const LineTree& line_tree) -> bool {
+auto has_same_corner_points(const SegmentTree& segment_tree, const LineTree& line_tree)
+    -> bool {
     // line tree
     auto corners_1 = std::vector<point_t> {};
 
@@ -124,14 +124,14 @@ auto has_same_corner_points(const SegmentTree& segment_tree,
     return corners_1_filtered == corners_2;
 }
 
-auto has_same_input_position(const SegmentTree& segment_tree,
-                             const LineTree& line_tree) -> bool {
+auto has_same_input_position(const SegmentTree& segment_tree, const LineTree& line_tree)
+    -> bool {
     return !segment_tree.has_input() ||
            segment_tree.input_position() == line_tree.input_position();
 }
 
-auto has_same_output_positions(const SegmentTree& segment_tree,
-                               const LineTree& line_tree) -> bool {
+auto has_same_output_positions(const SegmentTree& segment_tree, const LineTree& line_tree)
+    -> bool {
     // line tree
     auto positions_1 = transform_to_vector(
         output_ids(line_tree),
@@ -168,8 +168,8 @@ auto has_same_output_positions(const SegmentTree& segment_tree,
            has_same_output_positions(segment_tree, line_tree);
 }
 
-auto all_wires_equivalent(const Layout& layout,
-                          const std::vector<LineTree>& line_trees) -> bool {
+auto all_wires_equivalent(const Layout& layout, const std::vector<LineTree>& line_trees)
+    -> bool {
     if (layout.wires().size() != line_trees.size()) {
         return false;
     }

@@ -34,7 +34,7 @@ auto _draw_rubber_band(Context& ctx, rect_fine_t rect) {
 
         ctx.bl_ctx.fill_rect(x0, y0, w, h, defaults::rubberband_fill_color);
         ctx.bl_ctx.stroke_rect(x0 + offset, y0 + offset, w, h,
-                              defaults::rubberband_border_color);
+                               defaults::rubberband_border_color);
     }
 }
 

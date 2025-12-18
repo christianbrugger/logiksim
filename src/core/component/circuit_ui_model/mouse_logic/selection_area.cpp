@@ -11,8 +11,8 @@ namespace circuit_ui_model {
 
 namespace {
 
-auto calculate_rect(std::optional<point_fine_t> first_position,
-                    point_fine_t position) -> rect_fine_t {
+auto calculate_rect(std::optional<point_fine_t> first_position, point_fine_t position)
+    -> rect_fine_t {
     if (!first_position) {
         return rect_fine_t {position, position};
     }
@@ -32,8 +32,8 @@ auto calculate_rect(std::optional<point_fine_t> first_position,
 }  // namespace
 
 auto SelectionAreaLogic::mouse_press(EditableCircuit& editable_circuit,
-                                     point_fine_t position,
-                                     KeyboardModifiers modifiers) -> void {
+                                     point_fine_t position, KeyboardModifiers modifiers)
+    -> void {
     const auto function = [modifiers] {
         if (modifiers == KeyboardModifier::Alt) {
             return SelectionFunction::substract;

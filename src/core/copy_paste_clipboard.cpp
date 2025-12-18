@@ -10,8 +10,8 @@
 
 namespace logicsim {
 
-auto layout_to_clipboard_text(const Layout& layout,
-                              point_t copy_position) -> std::string {
+auto layout_to_clipboard_text(const Layout& layout, point_t copy_position)
+    -> std::string {
     if (!layout.empty()) {
         return serialize_all(layout, SerializeConfig {
                                          .save_format = SaveFormat::base64_gzip,

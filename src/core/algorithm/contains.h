@@ -25,8 +25,7 @@ constexpr auto contains(I first, S last, const T& value, Proj proj = {}) -> bool
  */
 template <std::ranges::input_range R, class T, class Proj = std::identity>
     requires std::indirect_binary_predicate<
-                 std::ranges::equal_to, std::projected<std::ranges::iterator_t<R>, Proj>,
-                 const T*>
+        std::ranges::equal_to, std::projected<std::ranges::iterator_t<R>, Proj>, const T*>
 constexpr auto contains(const R& r, const T& value, Proj proj = {}) -> bool {
     return contains(std::ranges::begin(r), std::ranges::end(r), value, std::move(proj));
 }

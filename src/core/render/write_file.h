@@ -14,8 +14,8 @@ namespace logicsim {
  *
  * Note, only works for valid utf8 paths on Windows.
  */
-auto write_to_file(const BLImage &bl_image,
-                   const std::filesystem::path &filename) -> void;
+auto write_to_file(const BLImage &bl_image, const std::filesystem::path &filename)
+    -> void;
 
 }  // namespace logicsim
 

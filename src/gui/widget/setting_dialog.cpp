@@ -361,8 +361,8 @@ namespace {
 }
 
 // TODO move somewhere else
-auto set_buttons_size(input_range_of<QAbstractButton*> auto&& buttons,
-                      QSize size) -> void {
+auto set_buttons_size(input_range_of<QAbstractButton*> auto&& buttons, QSize size)
+    -> void {
     for (QAbstractButton* button : buttons) {
         Expects(button != nullptr);
         button->setFixedSize(size);

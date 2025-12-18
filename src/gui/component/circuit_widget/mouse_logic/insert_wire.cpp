@@ -33,8 +33,8 @@ auto delete_inserted_segments(EditableCircuit& editable_circuit,
                                      selection_id_t selection_id,
                                      std::optional<point_t> first_position,
                                      std::optional<LineInsertionType> direction,
-                                     std::optional<point_t> position,
-                                     InsertionMode mode) -> selection_id_t {
+                                     std::optional<point_t> position, InsertionMode mode)
+    -> selection_id_t {
     delete_inserted_segments(editable_circuit, selection_id);
 
     if (position && first_position && direction && position != first_position) {

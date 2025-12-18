@@ -43,8 +43,8 @@ auto fuzz_select_insertion_mode(FuzzStream& stream) -> InsertionMode {
     std::terminate();
 }
 
-auto fuzz_select_insertion_hint(FuzzStream& stream,
-                                InsertionMode new_mode) -> InsertionHint {
+auto fuzz_select_insertion_hint(FuzzStream& stream, InsertionMode new_mode)
+    -> InsertionHint {
     if (new_mode == InsertionMode::temporary) {
         return InsertionHint::no_hint;
     }
@@ -110,8 +110,8 @@ auto fuzz_select_segment(FuzzStream& stream, Modifier& modifier) -> segment_t {
     return checked_at(segments, index).first;
 }
 
-auto fuzz_select_part(FuzzStream& stream, Modifier& modifier,
-                      segment_t segment) -> part_t {
+auto fuzz_select_part(FuzzStream& stream, Modifier& modifier, segment_t segment)
+    -> part_t {
     const auto part_full = get_part(modifier.circuit_data().layout, segment);
     const auto max_offset = clamp_to_fuzz_stream(part_full.end.value);
     const auto a = fuzz_small_int(stream, 0, max_offset - 1);
@@ -121,10 +121,10 @@ auto fuzz_select_part(FuzzStream& stream, Modifier& modifier,
 
 template <class Filter>
     requires std::invocable<Filter, const Layout&, logicitem_id_t> &&
-                 std::same_as<bool,
-                              std::invoke_result_t<Filter, const Layout&, logicitem_id_t>>
-auto fuzz_select_logicitem_filter(FuzzStream& stream, Modifier& modifier,
-                                  Filter filter) -> logicitem_id_t {
+             std::same_as<bool,
+                          std::invoke_result_t<Filter, const Layout&, logicitem_id_t>>
+auto fuzz_select_logicitem_filter(FuzzStream& stream, Modifier& modifier, Filter filter)
+    -> logicitem_id_t {
     const auto& layout = modifier.circuit_data().layout;
 
     const auto is_filtered = [&](logicitem_id_t logicitem_id) -> bool {
@@ -149,8 +149,8 @@ auto fuzz_select_logicitem_filter(FuzzStream& stream, Modifier& modifier,
     return *view.begin();
 }
 
-auto fuzz_select_temporary_logicitem(FuzzStream& stream,
-                                     Modifier& modifier) -> logicitem_id_t {
+auto fuzz_select_temporary_logicitem(FuzzStream& stream, Modifier& modifier)
+    -> logicitem_id_t {
     const auto is_temporary = [](const Layout& layout, logicitem_id_t logicitem_id) {
         return layout.logicitems().display_state(logicitem_id) ==
                display_state_t::temporary;
@@ -171,8 +171,8 @@ auto fuzz_select_logicitem_type(FuzzStream& stream, Modifier& modifier,
     return result;
 }
 
-auto fuzz_select_temporary_decoration(FuzzStream& stream,
-                                      Modifier& modifier) -> decoration_id_t {
+auto fuzz_select_temporary_decoration(FuzzStream& stream, Modifier& modifier)
+    -> decoration_id_t {
     const auto& layout = modifier.circuit_data().layout;
 
     const auto is_temporary = [&](decoration_id_t decoration_id) {
@@ -257,8 +257,8 @@ auto fuzz_select_element(FuzzStream& stream, Modifier& modifier)
     };
 }
 
-auto fuzz_select_selection(FuzzStream& stream, Modifier& modifier,
-                           int max_count) -> Selection {
+auto fuzz_select_selection(FuzzStream& stream, Modifier& modifier, int max_count)
+    -> Selection {
     const auto count = fuzz_small_int(stream, 0, max_count);
 
     auto selection = Selection {};
@@ -308,8 +308,8 @@ auto fuzz_select_temporary_selection_full_parts(FuzzStream& stream, Modifier& mo
     return selection;
 }
 
-auto fuzz_select_move_delta(FuzzStream& stream, rect_t rect,
-                            const FuzzLimits& limits) -> move_delta_t {
+auto fuzz_select_move_delta(FuzzStream& stream, rect_t rect, const FuzzLimits& limits)
+    -> move_delta_t {
     return move_delta_t {
         .x = fuzz_small_int(stream,  //
                             int {limits.box.p0.x} - int {rect.p0.x},
@@ -349,8 +349,8 @@ auto fuzz_select_point(FuzzStream& stream, const FuzzLimits& limits) -> point_t 
     return fuzz_select_point(stream, limits.box);
 }
 
-auto fuzz_select_point_fine(FuzzStream& stream,
-                            const rect_fine_t& limits) -> point_fine_t {
+auto fuzz_select_point_fine(FuzzStream& stream, const rect_fine_t& limits)
+    -> point_fine_t {
     return point_fine_t {
         grid_fine_t {
             fuzz_double_inclusive(stream, double {limits.p0.x}, double {limits.p1.x})},
@@ -359,13 +359,13 @@ auto fuzz_select_point_fine(FuzzStream& stream,
     };
 }
 
-auto fuzz_select_point_fine(FuzzStream& stream,
-                            const FuzzLimits& limits) -> point_fine_t {
+auto fuzz_select_point_fine(FuzzStream& stream, const FuzzLimits& limits)
+    -> point_fine_t {
     return fuzz_select_point_fine(stream, rect_fine_t {limits.box});
 }
 
-[[maybe_unused]] auto fuzz_select_rect(FuzzStream& stream,
-                                       const FuzzLimits& limits) -> rect_t {
+[[maybe_unused]] auto fuzz_select_rect(FuzzStream& stream, const FuzzLimits& limits)
+    -> rect_t {
     const auto p0 = fuzz_select_point(stream, limits);
     const auto p1 = fuzz_select_point(stream, rect_t {p0, limits.box.p1});
 
@@ -418,8 +418,8 @@ auto fuzz_select_non_taken_key(FuzzStream& stream, const KeyIndex& key_index,
     return result;
 }
 
-auto add_wire_segment(FuzzStream& stream, Modifier& modifier,
-                      const FuzzLimits& limits) -> void {
+auto add_wire_segment(FuzzStream& stream, Modifier& modifier, const FuzzLimits& limits)
+    -> void {
     Expects(limits.box.p0.x < limits.box.p1.x);
     Expects(limits.box.p0.y < limits.box.p1.y);
 
@@ -629,8 +629,8 @@ auto change_logicitem_insertion_mode(FuzzStream& stream, Modifier& modifier) {
     }
 }
 
-auto add_logicitem(FuzzStream& stream, Modifier& modifier,
-                   const FuzzLimits& limits) -> void {
+auto add_logicitem(FuzzStream& stream, Modifier& modifier, const FuzzLimits& limits)
+    -> void {
     auto definition = [&]() {
         switch (fuzz_small_int(stream, 0, 3)) {
             case 0:
@@ -730,8 +730,8 @@ auto change_decoration_insertion_mode(FuzzStream& stream, Modifier& modifier) {
     }
 }
 
-auto add_decoration(FuzzStream& stream, Modifier& modifier,
-                    const FuzzLimits& limits) -> void {
+auto add_decoration(FuzzStream& stream, Modifier& modifier, const FuzzLimits& limits)
+    -> void {
     auto definition = DecorationDefinition {
         .decoration_type = DecorationType::text_element,
         .size = size_2d_t {1, 0},
@@ -795,8 +795,8 @@ auto apply_all_visible_selection_operations(Modifier& modifier) -> void {
     modifier.apply_all_visible_selection_operations();
 }
 
-auto editing_operation(FuzzStream& stream, Modifier& modifier,
-                       const FuzzLimits& limits) -> void {
+auto editing_operation(FuzzStream& stream, Modifier& modifier, const FuzzLimits& limits)
+    -> void {
     switch (fuzz_small_int(stream, 0, 29)) {
         // wires
         case 0:

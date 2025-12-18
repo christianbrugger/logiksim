@@ -53,18 +53,20 @@ class EditingLogicManager {
                               std::vector<point_t> cross_points) -> void;
 
    public:
-    [[nodiscard]] auto mouse_press(
-        point_fine_t position_fine, const ViewConfig& view_config,
-        KeyboardModifiers modifiers, bool double_click,
-        EditableCircuit* editable_circuit) -> mouse_logic_status_t;
+    [[nodiscard]] auto mouse_press(point_fine_t position_fine,
+                                   const ViewConfig& view_config,
+                                   KeyboardModifiers modifiers, bool double_click,
+                                   EditableCircuit* editable_circuit)
+        -> mouse_logic_status_t;
 
     [[nodiscard]] auto mouse_move(point_fine_t position_fine,
                                   EditableCircuit* editable_circuit)
         -> mouse_logic_status_t;
 
-    [[nodiscard]] auto mouse_release(
-        point_fine_t position_fine, EditableCircuit* editable_circuit,
-        const OpenSettingDialog& show_setting_dialog) -> mouse_logic_status_t;
+    [[nodiscard]] auto mouse_release(point_fine_t position_fine,
+                                     EditableCircuit* editable_circuit,
+                                     const OpenSettingDialog& show_setting_dialog)
+        -> mouse_logic_status_t;
 
    private:
     [[nodiscard]] auto class_invariant_holds() const -> bool;

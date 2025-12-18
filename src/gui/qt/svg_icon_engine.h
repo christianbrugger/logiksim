@@ -17,13 +17,13 @@ class SvgIconEngine : public QIconEngine {
     explicit SvgIconEngine() = default;
     explicit SvgIconEngine(const std::string &svg_text);
 
-    auto paint(QPainter *painter, const QRect &rect, QIcon::Mode mode,
-               QIcon::State state) -> void override;
+    auto paint(QPainter *painter, const QRect &rect, QIcon::Mode mode, QIcon::State state)
+        -> void override;
 
     [[nodiscard]] auto clone() const -> QIconEngine * override;
 
-    auto pixmap(const QSize &size, QIcon::Mode mode,
-                QIcon::State state) -> QPixmap override;
+    auto pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state)
+        -> QPixmap override;
 
    private:
     QByteArray svg_data_ {};

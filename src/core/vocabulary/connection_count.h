@@ -84,8 +84,8 @@ static_assert(
                                        const connection_count_t &right)
     -> connection_count_t;
 
-[[nodiscard]] constexpr auto operator*(const connection_count_t &left,
-                                       const int &right) -> connection_count_t;
+[[nodiscard]] constexpr auto operator*(const connection_count_t &left, const int &right)
+    -> connection_count_t;
 [[nodiscard]] constexpr auto operator*(const int &left, const connection_count_t &right)
     -> connection_count_t;
 
@@ -182,29 +182,29 @@ constexpr auto connection_count_t::operator--(int) -> connection_count_t {
     return tmp;
 }
 
-constexpr auto operator+(const connection_count_t &left,
-                         const connection_count_t &right) -> connection_count_t {
+constexpr auto operator+(const connection_count_t &left, const connection_count_t &right)
+    -> connection_count_t {
     auto result = left;
     result += right;
     return result;
 }
 
-constexpr auto operator-(const connection_count_t &left,
-                         const connection_count_t &right) -> connection_count_t {
+constexpr auto operator-(const connection_count_t &left, const connection_count_t &right)
+    -> connection_count_t {
     auto result = left;
     result -= right;
     return result;
 }
 
-constexpr auto operator*(const connection_count_t &left,
-                         const int &right) -> connection_count_t {
+constexpr auto operator*(const connection_count_t &left, const int &right)
+    -> connection_count_t {
     auto result = left;
     result *= right;
     return result;
 }
 
-constexpr auto operator*(const int &left,
-                         const connection_count_t &right) -> connection_count_t {
+constexpr auto operator*(const int &left, const connection_count_t &right)
+    -> connection_count_t {
     return operator*(right, left);
 }
 

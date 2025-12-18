@@ -99,8 +99,8 @@ auto _store_history_segment_delete_temporary(CircuitData& circuit,
 // Delete Wires
 //
 
-auto delete_temporary_wire_segment(CircuitData& circuit,
-                                   segment_part_t& segment_part) -> void {
+auto delete_temporary_wire_segment(CircuitData& circuit, segment_part_t& segment_part)
+    -> void {
     if (!is_temporary(segment_part.segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("can only delete temporary segments");
     }
@@ -116,8 +116,8 @@ auto delete_temporary_wire_segment(CircuitData& circuit,
 //
 
 auto is_wire_position_representable(const Layout& layout,
-                                    const segment_part_t segment_part,
-                                    move_delta_t delta) -> bool {
+                                    const segment_part_t segment_part, move_delta_t delta)
+    -> bool {
     const auto line = get_line(layout, segment_part);
     return is_representable(line, delta.x, delta.y);
 }
@@ -216,8 +216,8 @@ auto _find_wire_for_inserting_segment(CircuitData& circuit,
     return circuit.layout.wires().add_wire();
 }
 
-auto _insert_uninserted_segment(CircuitData& circuit,
-                                segment_part_t& segment_part) -> void {
+auto _insert_uninserted_segment(CircuitData& circuit, segment_part_t& segment_part)
+    -> void {
     if (is_inserted(segment_part.segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("segment is already inserted");
     }
@@ -238,8 +238,8 @@ auto _insert_uninserted_segment(CircuitData& circuit,
 }
 
 auto _wire_change_temporary_to_colliding(CircuitData& circuit,
-                                         segment_part_t& segment_part,
-                                         InsertionHint hint) -> void {
+                                         segment_part_t& segment_part, InsertionHint hint)
+    -> void {
     const auto line = get_line(circuit.layout, segment_part);
     bool is_colliding = is_wire_colliding(circuit, line);
 
@@ -379,8 +379,8 @@ auto change_wire_insertion_mode(CircuitData& circuit, segment_part_t& segment_pa
 //
 
 auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
-                      InsertionMode insertion_mode,
-                      segment_key_t segment_key) -> segment_part_t {
+                      InsertionMode insertion_mode, segment_key_t segment_key)
+    -> segment_part_t {
     auto segment_part = add_temporary_segment(circuit, line);
 
     if (segment_key) {
@@ -397,8 +397,8 @@ auto add_wire_segment(CircuitData& circuit, ordered_line_t line,
 // Selection
 //
 
-auto add_to_visible_selection(CircuitData& circuit_data,
-                              segment_part_t segment_part) -> void {
+auto add_to_visible_selection(CircuitData& circuit_data, segment_part_t segment_part)
+    -> void {
     // _store_history_logicitem_remove_visible_selection(circuit_data, logicitem_id);
 
     circuit_data.visible_selection.modify_initial_selection(
@@ -543,9 +543,10 @@ auto merge_all_line_segments_with_history(
 
 namespace {
 
-auto _split_uninserted_end_part_with_history(
-    CircuitData& circuit, segment_part_t& split_end_part,
-    segment_key_t optional_new_key) -> std::pair<segment_t, segment_t> {
+auto _split_uninserted_end_part_with_history(CircuitData& circuit,
+                                             segment_part_t& split_end_part,
+                                             segment_key_t optional_new_key)
+    -> std::pair<segment_t, segment_t> {
     if (is_inserted(split_end_part.segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("can only split uninserted wires");
     }
@@ -589,9 +590,10 @@ auto _split_inserted_end_part(CircuitData& circuit, segment_part_t& split_end_pa
 
 }  // namespace
 
-auto split_uninserted_segment_with_history(
-    CircuitData& circuit, const segment_t segment, offset_t offset,
-    segment_key_t optional_new_key) -> std::pair<segment_t, segment_t> {
+auto split_uninserted_segment_with_history(CircuitData& circuit, const segment_t segment,
+                                           offset_t offset,
+                                           segment_key_t optional_new_key)
+    -> std::pair<segment_t, segment_t> {
     const auto part = get_part(circuit.layout, segment);
 
     if (offset <= part.begin || offset >= part.end) [[unlikely]] {
@@ -603,9 +605,10 @@ auto split_uninserted_segment_with_history(
                                                    optional_new_key);
 }
 
-auto split_uninserted_segment_with_history(
-    CircuitData& circuit, const segment_t segment, point_t position,
-    segment_key_t optional_new_key) -> std::pair<segment_t, segment_t> {
+auto split_uninserted_segment_with_history(CircuitData& circuit, const segment_t segment,
+                                           point_t position,
+                                           segment_key_t optional_new_key)
+    -> std::pair<segment_t, segment_t> {
     // less work to move end part, as no copy is required within the segment
     const auto full_line = get_line(circuit.layout, segment);
     const auto line_moved = ordered_line_t {position, full_line.p1};
@@ -662,8 +665,8 @@ auto regularize_temporary_selection(CircuitData& circuit, const Selection& selec
     return cross_points;
 }
 
-auto get_inserted_cross_points(const CircuitData& circuit,
-                               const Selection& selection) -> std::vector<point_t> {
+auto get_inserted_cross_points(const CircuitData& circuit, const Selection& selection)
+    -> std::vector<point_t> {
     auto cross_points = std::vector<point_t> {};
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
@@ -721,8 +724,9 @@ auto split_temporary_segments(CircuitData& circuit, const Selection& selection,
     }
 }
 
-auto get_temporary_selection_splitpoints(
-    const CircuitData& circuit, const Selection& selection) -> std::vector<point_t> {
+auto get_temporary_selection_splitpoints(const CircuitData& circuit,
+                                         const Selection& selection)
+    -> std::vector<point_t> {
     auto result = std::vector<point_t> {};
 
     const auto add_candidate = [&](point_t point) {

@@ -171,9 +171,10 @@ class Simulation {
     auto process_event_group(const simulation::SimulationEventGroup &events) -> void;
 
     // submit events
-    auto submit_events_for_changed_outputs(
-        element_id_t element_id, const logic_small_vector_t &old_outputs,
-        const logic_small_vector_t &new_outputs) -> void;
+    auto submit_events_for_changed_outputs(element_id_t element_id,
+                                           const logic_small_vector_t &old_outputs,
+                                           const logic_small_vector_t &new_outputs)
+        -> void;
     auto submit_event(output_t output, const logic_small_vector_t &output_values) -> void;
 
     // set inputs
@@ -185,8 +186,8 @@ class Simulation {
     // update logic
     enum class Outputs { SwitchedOff, Current };
     template <Outputs OutputFrom>
-    auto update_element_logic(element_id_t element_id,
-                              logic_small_vector_t &&old_inputs) -> void;
+    auto update_element_logic(element_id_t element_id, logic_small_vector_t &&old_inputs)
+        -> void;
     template <Outputs OutputFrom>
     auto update_with_internal_state(element_id_t element_id,
                                     const logic_small_vector_t &old_inputs,

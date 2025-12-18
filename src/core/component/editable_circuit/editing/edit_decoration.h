@@ -20,8 +20,8 @@ struct CircuitData;
 
 namespace editing {
 
-auto delete_temporary_decoration(CircuitData& circuit,
-                                 decoration_id_t& decoration_id) -> void;
+auto delete_temporary_decoration(CircuitData& circuit, decoration_id_t& decoration_id)
+    -> void;
 
 [[nodiscard]] auto is_decoration_position_representable(const Layout& layout,
                                                         decoration_id_t decoration_id,
@@ -46,9 +46,11 @@ auto move_or_delete_temporary_decoration(CircuitData& circuit,
                                          decoration_id_t& decoration_id,
                                          move_delta_t delta) -> void;
 
-auto change_decoration_insertion_mode(
-    CircuitData& circuit, decoration_id_t& decoration_id, InsertionMode new_mode,
-    InsertionHint hint = InsertionHint::no_hint) -> void;
+auto change_decoration_insertion_mode(CircuitData& circuit,
+                                      decoration_id_t& decoration_id,
+                                      InsertionMode new_mode,
+                                      InsertionHint hint = InsertionHint::no_hint)
+    -> void;
 
 auto add_decoration(CircuitData& circuit, DecorationDefinition&& definition,
                     point_t position, InsertionMode insertion_mode,
@@ -58,8 +60,8 @@ auto add_decoration(CircuitData& circuit, DecorationDefinition&& definition,
 auto set_attributes_decoration(CircuitData& circuit, decoration_id_t decoration_id,
                                attributes_text_element_t&& attrs) -> void;
 
-auto add_to_visible_selection(CircuitData& circuit_data,
-                              decoration_id_t decoration_id) -> void;
+auto add_to_visible_selection(CircuitData& circuit_data, decoration_id_t decoration_id)
+    -> void;
 auto remove_from_visible_selection(CircuitData& circuit_data,
                                    decoration_id_t decoration_id) -> void;
 

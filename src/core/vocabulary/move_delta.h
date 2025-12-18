@@ -58,8 +58,8 @@ constexpr auto move_delta_t::operator+=(const move_delta_t &right) -> move_delta
     return *this;
 }
 
-constexpr auto operator+(const move_delta_t &left,
-                         const move_delta_t &right) -> move_delta_t {
+constexpr auto operator+(const move_delta_t &left, const move_delta_t &right)
+    -> move_delta_t {
     auto result = left;
     result += right;
     return result;

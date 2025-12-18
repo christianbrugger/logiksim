@@ -82,8 +82,8 @@ struct SpatialSimulationAllocInfo {
     Byte line_trees {};
     SimulationAllocInfo simulation {};
 
-    [[nodiscard]] auto operator==(const SpatialSimulationAllocInfo&) const -> bool =
-                                                                                  default;
+    [[nodiscard]] auto operator==(const SpatialSimulationAllocInfo&) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto total() const -> Byte;
 };
@@ -141,8 +141,8 @@ struct CircuitRendererAllocInfo {
     Byte image_surface {};
     ContextCacheAllocInfo context_cache {};
 
-    [[nodiscard]] auto operator==(const CircuitRendererAllocInfo&) const -> bool =
-                                                                                default;
+    [[nodiscard]] auto operator==(const CircuitRendererAllocInfo&) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto total() const -> Byte;
 };

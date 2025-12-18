@@ -64,9 +64,9 @@ auto _draw_connector_inverted(Context& ctx, ConnectorAttributes attributes) {
         attributes.is_enabled, ctx.settings.wire_render_style, attributes.state);
 
     ctx.bl_ctx.fill_circle(BLCircle {p_adjusted.x, p_adjusted.y, r + width / 2.0},
-                          stroke_color);
+                           stroke_color);
     ctx.bl_ctx.fill_circle(BLCircle {p_adjusted.x, p_adjusted.y, r - width / 2.0},
-                          fill_color);
+                           fill_color);
 }
 
 auto _draw_connector_normal(Context& ctx, ConnectorAttributes attributes) -> void {
@@ -96,8 +96,8 @@ auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void {
 }
 
 auto draw_logicitem_connectors(Context& ctx, const Layout& layout,
-                               logicitem_id_t logicitem_id,
-                               ElementDrawState state) -> void {
+                               logicitem_id_t logicitem_id, ElementDrawState state)
+    -> void {
     const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
 
     for (auto info : input_locations_and_id(layout_data)) {

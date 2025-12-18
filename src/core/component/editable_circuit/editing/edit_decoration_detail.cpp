@@ -17,8 +17,8 @@ auto is_decoration_colliding(const CircuitData& circuit,
     return circuit.index.collision_index().is_colliding(data);
 }
 
-auto is_decoration_colliding(const CircuitData& circuit,
-                             decoration_id_t decoration_id) -> bool {
+auto is_decoration_colliding(const CircuitData& circuit, decoration_id_t decoration_id)
+    -> bool {
     const auto data = to_decoration_layout_data(circuit.layout, decoration_id);
     return is_decoration_colliding(circuit, data);
 }

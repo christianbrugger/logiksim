@@ -36,8 +36,9 @@ auto _store_history_logicitem_add_visible_selection(CircuitData& circuit,
     }
 }
 
-auto _store_history_logicitem_remove_visible_selection(
-    CircuitData& circuit, logicitem_id_t logicitem_id) -> void {
+auto _store_history_logicitem_remove_visible_selection(CircuitData& circuit,
+                                                       logicitem_id_t logicitem_id)
+    -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
 
@@ -69,8 +70,9 @@ auto _store_history_move_temporary_logicitem(CircuitData& circuit,
     }
 }
 
-auto _store_history_logicitem_colliding_to_temporary(
-    CircuitData& circuit, logicitem_id_t logicitem_id) -> void {
+auto _store_history_logicitem_colliding_to_temporary(CircuitData& circuit,
+                                                     logicitem_id_t logicitem_id)
+    -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
         stack->push_logicitem_colliding_to_temporary(logicitem_key);
@@ -117,9 +119,10 @@ auto _store_history_delete_temporary_logicitem(CircuitData& circuit,
     }
 }
 
-auto _store_history_change_attribute_logicitem(
-    CircuitData& circuit, logicitem_id_t logicitem_id,
-    attributes_clock_generator_t&& attrs) -> void {
+auto _store_history_change_attribute_logicitem(CircuitData& circuit,
+                                               logicitem_id_t logicitem_id,
+                                               attributes_clock_generator_t&& attrs)
+    -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto logicitem_key = circuit.index.key_index().get(logicitem_id);
         stack->push_logicitem_change_attributes(logicitem_key, std::move(attrs));
@@ -189,8 +192,8 @@ auto _notify_logicitem_id_change(CircuitData& circuit,
 
 }  // namespace
 
-auto delete_temporary_logicitem(CircuitData& circuit,
-                                logicitem_id_t& logicitem_id) -> void {
+auto delete_temporary_logicitem(CircuitData& circuit, logicitem_id_t& logicitem_id)
+    -> void {
     if (!logicitem_id) [[unlikely]] {
         throw std::runtime_error("logicitem id is invalid");
     }
@@ -238,8 +241,8 @@ auto is_logicitem_position_representable(const Layout& layout,
 }
 
 auto are_logicitem_positions_representable(const Layout& layout,
-                                           const Selection& selection,
-                                           move_delta_t delta) -> bool {
+                                           const Selection& selection, move_delta_t delta)
+    -> bool {
     const auto logicitem_valid = [&](logicitem_id_t logicitem_id) {
         return is_logicitem_position_representable(layout, logicitem_id, delta);
     };
@@ -262,8 +265,8 @@ auto move_temporary_logicitem_unchecked(CircuitData& circuit,
 }
 
 auto move_or_delete_temporary_logicitem(CircuitData& circuit,
-                                        logicitem_id_t& logicitem_id,
-                                        move_delta_t delta) -> void {
+                                        logicitem_id_t& logicitem_id, move_delta_t delta)
+    -> void {
     if (circuit.layout.logicitems().display_state(logicitem_id) !=
         display_state_t::temporary) [[unlikely]] {
         throw std::runtime_error("Only temporary items can be freely moved.");
@@ -317,8 +320,8 @@ auto _element_change_colliding_to_temporary(CircuitData& circuit,
                                             logicitem_id_t logicitem_id) -> void;
 
 auto _element_change_colliding_to_insert(CircuitData& circuit,
-                                         logicitem_id_t& logicitem_id,
-                                         InsertionHint hint) -> void {
+                                         logicitem_id_t& logicitem_id, InsertionHint hint)
+    -> void {
     const auto display_state = circuit.layout.logicitems().display_state(logicitem_id);
 
     if (display_state != display_state_t::valid && hint == InsertionHint::expect_valid)
@@ -448,8 +451,8 @@ auto add_logicitem(CircuitData& circuit, LogicItemDefinition&& definition,
 
 namespace {
 
-auto _get_toggleable_input(const CircuitData& circuit,
-                           point_t point) -> std::optional<logicitem_connection_t> {
+auto _get_toggleable_input(const CircuitData& circuit, point_t point)
+    -> std::optional<logicitem_connection_t> {
     if (const auto entry = circuit.index.logicitem_input_index().find(point)) {
         const auto layout_data =
             to_layout_calculation_data(circuit.layout, entry->logicitem_id);
@@ -466,8 +469,8 @@ auto _get_toggleable_input(const CircuitData& circuit,
     return std::nullopt;
 }
 
-auto _get_toggleable_output(const CircuitData& circuit,
-                            point_t point) -> std::optional<logicitem_connection_t> {
+auto _get_toggleable_output(const CircuitData& circuit, point_t point)
+    -> std::optional<logicitem_connection_t> {
     if (const auto entry = circuit.index.logicitem_output_index().find(point)) {
         const auto layout_data =
             to_layout_calculation_data(circuit.layout, entry->logicitem_id);
@@ -525,8 +528,8 @@ auto set_attributes_logicitem(CircuitData& circuit, logicitem_id_t logicitem_id,
 // Visible Selection
 //
 
-auto add_to_visible_selection(CircuitData& circuit_data,
-                              logicitem_id_t logicitem_id) -> void {
+auto add_to_visible_selection(CircuitData& circuit_data, logicitem_id_t logicitem_id)
+    -> void {
     _store_history_logicitem_remove_visible_selection(circuit_data, logicitem_id);
 
     circuit_data.visible_selection.modify_initial_selection(
@@ -535,8 +538,8 @@ auto add_to_visible_selection(CircuitData& circuit_data,
         });
 }
 
-auto remove_from_visible_selection(CircuitData& circuit_data,
-                                   logicitem_id_t logicitem_id) -> void {
+auto remove_from_visible_selection(CircuitData& circuit_data, logicitem_id_t logicitem_id)
+    -> void {
     _store_history_logicitem_add_visible_selection(circuit_data, logicitem_id);
 
     circuit_data.visible_selection.modify_initial_selection(

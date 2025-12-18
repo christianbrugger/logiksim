@@ -29,8 +29,8 @@ auto get_random_ordered_line(Rng& rng, grid_t min, grid_t max) -> ordered_line_t
     return ordered_line_t {line_t {p0, p1}};
 }
 
-auto get_random_ordered_line(Rng& rng, grid_t min, grid_t max,
-                             grid_t max_length) -> ordered_line_t {
+auto get_random_ordered_line(Rng& rng, grid_t min, grid_t max, grid_t max_length)
+    -> ordered_line_t {
     auto p0 = get_random_point(rng, min, max);
 
     if (max_length <= grid_t {0}) [[unlikely]] {
@@ -63,8 +63,8 @@ auto get_random_ordered_line(Rng& rng, grid_t min, grid_t max,
     return ordered_line_t {line_t {p0, p1}};
 }
 
-auto get_random_ordered_lines(Rng& rng, std::size_t count, grid_t min,
-                              grid_t max) -> std::vector<ordered_line_t> {
+auto get_random_ordered_lines(Rng& rng, std::size_t count, grid_t min, grid_t max)
+    -> std::vector<ordered_line_t> {
     auto result = std::vector<ordered_line_t> {};
 
     for (const auto _ [[maybe_unused]] : range(count)) {

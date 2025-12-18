@@ -23,8 +23,9 @@ namespace editing {
 
 namespace {
 
-auto _store_history_decoration_add_visible_selection(
-    CircuitData& circuit, decoration_id_t decoration_id) -> void {
+auto _store_history_decoration_add_visible_selection(CircuitData& circuit,
+                                                     decoration_id_t decoration_id)
+    -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
 
@@ -34,8 +35,9 @@ auto _store_history_decoration_add_visible_selection(
     }
 }
 
-auto _store_history_decoration_remove_visible_selection(
-    CircuitData& circuit, decoration_id_t decoration_id) -> void {
+auto _store_history_decoration_remove_visible_selection(CircuitData& circuit,
+                                                        decoration_id_t decoration_id)
+    -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
 
@@ -67,8 +69,9 @@ auto _store_history_move_temporary_decoration(CircuitData& circuit,
     }
 }
 
-auto _store_history_decoration_colliding_to_temporary(
-    CircuitData& circuit, decoration_id_t decoration_id) -> void {
+auto _store_history_decoration_colliding_to_temporary(CircuitData& circuit,
+                                                      decoration_id_t decoration_id)
+    -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
         stack->push_decoration_colliding_to_temporary(decoration_key);
@@ -99,8 +102,9 @@ auto _store_history_decoration_insert_to_colliding_expect_valid(
     }
 }
 
-auto _store_history_decoration_colliding_to_insert(
-    CircuitData& circuit, decoration_id_t decoration_id) -> void {
+auto _store_history_decoration_colliding_to_insert(CircuitData& circuit,
+                                                   decoration_id_t decoration_id)
+    -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
         stack->push_decoration_colliding_to_insert(decoration_key);
@@ -115,9 +119,10 @@ auto _store_history_delete_temporary_decoration(CircuitData& circuit,
     }
 }
 
-auto _store_history_change_attribute_decoration(
-    CircuitData& circuit, decoration_id_t decoration_id,
-    attributes_text_element_t&& attrs) -> void {
+auto _store_history_change_attribute_decoration(CircuitData& circuit,
+                                                decoration_id_t decoration_id,
+                                                attributes_text_element_t&& attrs)
+    -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto decoration_key = circuit.index.key_index().get(decoration_id);
         stack->push_decoration_change_attributes(decoration_key, std::move(attrs));
@@ -153,8 +158,8 @@ auto _notify_decoration_id_change(CircuitData& circuit,
 
 }  // namespace
 
-auto delete_temporary_decoration(CircuitData& circuit,
-                                 decoration_id_t& decoration_id) -> void {
+auto delete_temporary_decoration(CircuitData& circuit, decoration_id_t& decoration_id)
+    -> void {
     if (!decoration_id) [[unlikely]] {
         throw std::runtime_error("decoration id is invalid");
     }
@@ -322,8 +327,9 @@ auto _decoration_change_insert_to_colliding(CircuitData& circuit,
     circuit.layout.decorations().set_display_state(decoration_id, display_state_t::valid);
 };
 
-auto _decoration_change_colliding_to_temporary(
-    CircuitData& circuit, const decoration_id_t decoration_id) -> void {
+auto _decoration_change_colliding_to_temporary(CircuitData& circuit,
+                                               const decoration_id_t decoration_id)
+    -> void {
     const auto display_state = circuit.layout.decorations().display_state(decoration_id);
 
     if (display_state == display_state_t::valid) {
@@ -356,8 +362,8 @@ auto _decoration_change_colliding_to_temporary(
 
 auto change_decoration_insertion_mode(CircuitData& circuit,
                                       decoration_id_t& decoration_id,
-                                      InsertionMode new_mode,
-                                      InsertionHint hint) -> void {
+                                      InsertionMode new_mode, InsertionHint hint)
+    -> void {
     if (!decoration_id) [[unlikely]] {
         throw std::runtime_error("element id is invalid");
     }
@@ -428,8 +434,8 @@ auto set_attributes_decoration(CircuitData& circuit, decoration_id_t decoration_
 // Visible Selection
 //
 
-auto add_to_visible_selection(CircuitData& circuit_data,
-                              decoration_id_t decoration_id) -> void {
+auto add_to_visible_selection(CircuitData& circuit_data, decoration_id_t decoration_id)
+    -> void {
     _store_history_decoration_remove_visible_selection(circuit_data, decoration_id);
 
     circuit_data.visible_selection.modify_initial_selection(

@@ -117,8 +117,9 @@ auto CircuitRenderer::render_editable_circuit(BLImage& bl_image,
     count_frame(bl_image.size());
 }
 
-auto CircuitRenderer::render_simulation(
-    BLImage& bl_image, const SpatialSimulation& spatial_simulation) -> void {
+auto CircuitRenderer::render_simulation(BLImage& bl_image,
+                                        const SpatialSimulation& spatial_simulation)
+    -> void {
     // TODO not the right place, generate ContextRenderSettings
     context_settings_.view_config.set_size(bl_image.size());
 
@@ -134,15 +135,15 @@ auto CircuitRenderer::render_simulation(
 // Free Functions
 //
 
-auto set_view_config_offset(CircuitRenderer& render_surface,
-                            point_fine_t offset) -> void {
+auto set_view_config_offset(CircuitRenderer& render_surface, point_fine_t offset)
+    -> void {
     auto view_point = render_surface.view_config().view_point();
     view_point.offset = offset;
     render_surface.set_view_point(view_point);
 }
 
-auto set_view_config_device_scale(CircuitRenderer& render_surface,
-                                  double device_scale) -> void {
+auto set_view_config_device_scale(CircuitRenderer& render_surface, double device_scale)
+    -> void {
     auto view_point = render_surface.view_config().view_point();
     view_point.device_scale = device_scale;
     render_surface.set_view_point(view_point);
@@ -202,8 +203,8 @@ auto render_circuit_overlay(Context& ctx, const WidgetRenderConfig& render_confi
 }  // namespace
 
 auto render_to_context(Context& ctx, ImageSurface& surface,
-                       const WidgetRenderConfig& render_config,
-                       const Layout& layout) -> void {
+                       const WidgetRenderConfig& render_config, const Layout& layout)
+    -> void {
     render_circuit_background(ctx);
 
     if (render_config.show_circuit) {
@@ -216,8 +217,8 @@ auto render_to_context(Context& ctx, ImageSurface& surface,
 
 auto render_to_context(Context& ctx, ImageSurface& surface,
                        const WidgetRenderConfig& render_config,
-                       const EditableCircuit& editable_circuit,
-                       bool show_size_handles) -> void {
+                       const EditableCircuit& editable_circuit, bool show_size_handles)
+    -> void {
     render_circuit_background(ctx);
 
     // print_fmt("Layout: {:.3f} MB\n",

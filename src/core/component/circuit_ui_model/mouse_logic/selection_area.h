@@ -25,8 +25,8 @@ class SelectionAreaLogic {
     auto finalize(EditableCircuit& editable_circuit) -> void;
 
    private:
-    auto update_mouse_position(EditableCircuit& editable_circuit,
-                               point_fine_t position) -> void;
+    auto update_mouse_position(EditableCircuit& editable_circuit, point_fine_t position)
+        -> void;
 
    private:
     std::optional<point_fine_t> first_position_ {};

@@ -21,12 +21,12 @@ class InsertDecorationLogic {
    public:
     explicit InsertDecorationLogic(DecorationDefinition element_definition_);
 
-    auto mouse_press(EditableCircuit& editable_circuit,
-                     std::optional<point_t> position) -> void;
-    auto mouse_move(EditableCircuit& editable_circuit,
-                    std::optional<point_t> position) -> void;
-    auto mouse_release(EditableCircuit& editable_circuit,
-                       std::optional<point_t> position) -> mouse_release_result_t;
+    auto mouse_press(EditableCircuit& editable_circuit, std::optional<point_t> position)
+        -> void;
+    auto mouse_move(EditableCircuit& editable_circuit, std::optional<point_t> position)
+        -> void;
+    auto mouse_release(EditableCircuit& editable_circuit, std::optional<point_t> position)
+        -> mouse_release_result_t;
 
     auto finalize(EditableCircuit& editable_circuit) -> void;
 

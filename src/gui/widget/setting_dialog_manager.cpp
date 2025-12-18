@@ -46,8 +46,8 @@ auto get_selected_element(const EditableCircuit& editable_circuit,
 }
 
 auto create_setting_dialog_element(const Layout& layout, logicitem_id_t logicitem_id,
-                                   selection_id_t selection_id,
-                                   QWidget* parent) -> SettingDialog* {
+                                   selection_id_t selection_id, QWidget* parent)
+    -> SettingDialog* {
     switch (layout.logicitems().type(logicitem_id)) {
         case LogicItemType::clock_generator: {
             return new ClockGeneratorDialog {
@@ -62,8 +62,8 @@ auto create_setting_dialog_element(const Layout& layout, logicitem_id_t logicite
 }
 
 auto create_setting_dialog_element(const Layout& layout, decoration_id_t decoration_id,
-                                   selection_id_t selection_id,
-                                   QWidget* parent) -> SettingDialog* {
+                                   selection_id_t selection_id, QWidget* parent)
+    -> SettingDialog* {
     switch (layout.decorations().type(decoration_id)) {
         case DecorationType::text_element: {
             return new TextElementDialog {
@@ -78,8 +78,8 @@ auto create_setting_dialog_element(const Layout& layout, decoration_id_t decorat
 }
 
 auto create_setting_dialog(const EditableCircuit& editable_circuit,
-                           selection_id_t selection_id,
-                           QWidget* parent) -> SettingDialog* {
+                           selection_id_t selection_id, QWidget* parent)
+    -> SettingDialog* {
     const auto element = get_selected_element(editable_circuit, selection_id);
     if (!element) {
         throw std::runtime_error("Selection must hold exactly one element");

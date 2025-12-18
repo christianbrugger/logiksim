@@ -40,8 +40,8 @@ struct SerializeConfig {
  *
  * Throws an exception if any element is not display state normal.
  */
-[[nodiscard]] auto serialize_all(const Layout& layout,
-                                 const SerializeConfig& config) -> std::string;
+[[nodiscard]] auto serialize_all(const Layout& layout, const SerializeConfig& config)
+    -> std::string;
 
 /**
  * @brief: Serialize the selected elements.
@@ -66,8 +66,8 @@ class LoadLayoutResult {
     explicit LoadLayoutResult(SerializedLayout&& layout);
 
    public:
-    auto add_to(EditableCircuit& editable_circuit,
-                AddParameters parameters) const -> void;
+    auto add_to(EditableCircuit& editable_circuit, AddParameters parameters) const
+        -> void;
     [[nodiscard]] auto view_point() const -> ViewPoint;
     [[nodiscard]] auto simulation_config() const -> SimulationConfig;
     [[nodiscard]] auto save_position() const -> point_t;

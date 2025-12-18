@@ -36,8 +36,8 @@ consteval auto with_alpha(color_t color, ElementDrawState state) noexcept -> col
     return color_t {color.r(), color.g(), color.b(), state_alpha(state)};
 }
 
-constexpr auto with_alpha_runtime(color_t color,
-                                  ElementDrawState state) noexcept -> color_t {
+constexpr auto with_alpha_runtime(color_t color, ElementDrawState state) noexcept
+    -> color_t {
     return color_t {color.r(), color.g(), color.b(), state_alpha(state)};
 }
 

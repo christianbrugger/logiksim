@@ -217,10 +217,11 @@ auto _shrink_segment_end(CircuitData& circuit, const segment_t segment,
 
 }  // namespace
 
-auto move_touching_segment_between_trees(
-    CircuitData& circuit, segment_part_t& source_segment_part,
-    const wire_id_t destination_id,
-    segment_key_t optional_end_key) -> move_touching_result_t {
+auto move_touching_segment_between_trees(CircuitData& circuit,
+                                         segment_part_t& source_segment_part,
+                                         const wire_id_t destination_id,
+                                         segment_key_t optional_end_key)
+    -> move_touching_result_t {
     const auto full_part = to_part(get_line(circuit.layout, source_segment_part.segment));
     const auto part_kept =
         difference_touching_one_side(full_part, source_segment_part.part);
@@ -288,10 +289,11 @@ auto move_touching_segment_between_trees(
     return result;
 }
 
-auto move_splitting_segment_between_trees(
-    CircuitData& circuit, segment_part_t& source_segment_part,
-    const wire_id_t destination_id,
-    move_splitting_keys_t optional_keys) -> move_splitting_result_t {
+auto move_splitting_segment_between_trees(CircuitData& circuit,
+                                          segment_part_t& source_segment_part,
+                                          const wire_id_t destination_id,
+                                          move_splitting_keys_t optional_keys)
+    -> move_splitting_result_t {
     const auto full_part = to_part(get_line(circuit.layout, source_segment_part.segment));
     const auto [part0, part1] =
         difference_not_touching(full_part, source_segment_part.part);
@@ -412,8 +414,8 @@ auto format(editable_circuit::editing::move_segment_type type) -> std::string {
 namespace editable_circuit {
 namespace editing {
 
-auto get_move_segment_type(const Layout& layout,
-                           segment_part_t segment_part) -> move_segment_type {
+auto get_move_segment_type(const Layout& layout, segment_part_t segment_part)
+    -> move_segment_type {
     const auto moving_part = segment_part.part;
     const auto full_part = get_part(layout, segment_part.segment);
 
@@ -456,9 +458,11 @@ auto move_segment_between_trees(CircuitData& circuit, segment_part_t& segment_pa
     }
 }
 
-auto move_touching_segment_between_trees_with_history(
-    CircuitData& circuit, segment_part_t& source_segment_part, wire_id_t destination_id,
-    segment_key_t optional_end_key) -> move_touching_result_t {
+auto move_touching_segment_between_trees_with_history(CircuitData& circuit,
+                                                      segment_part_t& source_segment_part,
+                                                      wire_id_t destination_id,
+                                                      segment_key_t optional_end_key)
+    -> move_touching_result_t {
     const auto result = move_touching_segment_between_trees(
         circuit, source_segment_part, destination_id, optional_end_key);
 
@@ -935,8 +939,7 @@ namespace {
 
 template <class T>
     requires std::invocable<T, const segment_info_t&> &&
-                 std::same_as<segment_info_t,
-                              std::invoke_result_t<T, const segment_info_t&>>
+             std::same_as<segment_info_t, std::invoke_result_t<T, const segment_info_t&>>
 auto _set_endpoints(CircuitData& circuit, segment_t segment, T func,
                     HistoryFlag with_history) -> void {
     if (is_colliding(segment.wire_id)) [[unlikely]] {
@@ -1027,8 +1030,8 @@ auto reset_endpoints(CircuitData& circuit, const segment_part_t segment_part,
 //
 
 auto update_inserted_segment_endpoints(CircuitData& circuit, wire_id_t wire_id,
-                                       point_update_t data,
-                                       const point_t position) -> void {
+                                       point_update_t data, const point_t position)
+    -> void {
     if (!is_inserted(wire_id)) [[unlikely]] {
         throw std::runtime_error("only works for inserted segment trees.");
     }
@@ -1050,8 +1053,8 @@ auto update_inserted_segment_endpoints(CircuitData& circuit, wire_id_t wire_id,
 namespace {
 
 auto _sort_through_lines_first(
-    std::span<std::pair<ordered_line_t, segment_index_t>> lines,
-    const point_t point) -> void {
+    std::span<std::pair<ordered_line_t, segment_index_t>> lines, const point_t point)
+    -> void {
     std::ranges::sort(lines, {},
                       [point](std::pair<ordered_line_t, segment_index_t> item) {
                           return is_endpoint(point, item.first);
@@ -1176,8 +1179,8 @@ auto unmark_valid(Layout& layout, const segment_part_t segment_part) -> void {
     m_tree.unmark_valid(segment_part.segment.segment_index, segment_part.part);
 }
 
-auto mark_valid_with_history(CircuitData& circuit,
-                             const segment_part_t segment_part) -> void {
+auto mark_valid_with_history(CircuitData& circuit, const segment_part_t segment_part)
+    -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto& valid_parts = get_segment_valid_parts(circuit.layout,  //
                                                           segment_part.segment);
@@ -1197,8 +1200,8 @@ auto mark_valid_with_history(CircuitData& circuit,
     mark_valid(circuit.layout, segment_part);
 }
 
-auto unmark_valid_with_history(CircuitData& circuit,
-                               const segment_part_t segment_part) -> void {
+auto unmark_valid_with_history(CircuitData& circuit, const segment_part_t segment_part)
+    -> void {
     if (const auto stack = circuit.history.get_stack()) {
         const auto& valid_parts = get_segment_valid_parts(circuit.layout,  //
                                                           segment_part.segment);
@@ -1296,8 +1299,8 @@ auto is_wire_colliding(const CircuitData& circuit, const ordered_line_t line) ->
 // Connections
 //
 
-auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit,
-                                          segment_t segment) -> void {
+auto set_wire_inputs_at_logicitem_outputs(CircuitData& circuit, segment_t segment)
+    -> void {
     if (!is_inserted(segment.wire_id)) [[unlikely]] {
         throw std::runtime_error("wire needs to be inserted");
     }

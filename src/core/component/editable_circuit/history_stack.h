@@ -141,8 +141,8 @@ class HistoryStack {
     auto push_logicitem_colliding_to_insert(logicitem_key_t logicitem_key) -> void;
     auto push_logicitem_insert_to_colliding_expect_valid(logicitem_key_t logicitem_key)
         -> void;
-    auto push_logicitem_move_temporary(logicitem_key_t logicitem_key,
-                                       move_delta_t delta) -> void;
+    auto push_logicitem_move_temporary(logicitem_key_t logicitem_key, move_delta_t delta)
+        -> void;
     auto push_logicitem_change_attributes(logicitem_key_t logicitem_key,
                                           attributes_clock_generator_t&& attrs) -> void;
     auto push_logicitem_add_visible_selection(logicitem_key_t logicitem_key) -> void;
@@ -200,13 +200,13 @@ class HistoryStack {
     // Segment
     //
 
-    auto push_segment_create_temporary(segment_key_t segment_key,
-                                       ordered_line_t line) -> void;
+    auto push_segment_create_temporary(segment_key_t segment_key, ordered_line_t line)
+        -> void;
     auto push_segment_delete_temporary(segment_key_t segment_key) -> void;
-    auto push_segment_move_temporary(segment_key_t segment_key,
-                                     move_delta_t delta) -> void;
-    auto push_segment_colliding_to_temporary(segment_key_t segment_key,
-                                             part_t part) -> void;
+    auto push_segment_move_temporary(segment_key_t segment_key, move_delta_t delta)
+        -> void;
+    auto push_segment_colliding_to_temporary(segment_key_t segment_key, part_t part)
+        -> void;
     auto push_segment_temporary_to_colliding_expect_valid(segment_key_t segment_key,
                                                           part_t part) -> void;
     auto push_segment_temporary_to_colliding_assume_colliding(segment_key_t segment_key,
@@ -214,13 +214,13 @@ class HistoryStack {
     auto push_segment_colliding_to_insert(segment_key_t segment_key, part_t part) -> void;
     auto push_segment_insert_to_colliding_expect_valid(segment_key_t segment_key,
                                                        part_t part) -> void;
-    auto push_segment_set_endpoints(segment_key_t segment_key,
-                                    endpoints_t endpoints) -> void;
-    auto push_segment_merge(segment_key_t segment_key_0,
-                            segment_key_t segment_key_1) -> void;
+    auto push_segment_set_endpoints(segment_key_t segment_key, endpoints_t endpoints)
+        -> void;
+    auto push_segment_merge(segment_key_t segment_key_0, segment_key_t segment_key_1)
+        -> void;
     auto push_segment_split(split_segment_key_t definition) -> void;
-    auto push_segment_add_visible_selection(segment_key_t segment_key,
-                                            part_t part) -> void;
+    auto push_segment_add_visible_selection(segment_key_t segment_key, part_t part)
+        -> void;
 
     auto pop_segment_create_temporary() -> std::pair<segment_key_t, ordered_line_t>;
     auto pop_segment_delete_temporary() -> segment_key_t;

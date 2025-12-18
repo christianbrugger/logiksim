@@ -15,8 +15,8 @@ namespace simulation {
 //
 
 auto get_time_extrapolated(const HistoryBuffer* history, history_index_t history_index,
-                           history_min_index_t min_index,
-                           time_t simulation_time) -> time_t {
+                           history_min_index_t min_index, time_t simulation_time)
+    -> time_t {
     if (history == nullptr) {
         return history_index < history_index_t {0} ? time_t::min() : simulation_time;
     }
@@ -106,8 +106,8 @@ auto get_value_extrapolated(const HistoryCalculationData& data,
     return get_value_extrapolated(data.history, history_index, data.last_value);
 }
 
-auto find_index_extrapolated(const HistoryCalculationData& data,
-                             time_t value) -> history_index_t {
+auto find_index_extrapolated(const HistoryCalculationData& data, time_t value)
+    -> history_index_t {
     return find_index_extrapolated(data.history, value, data.min_index);
 }
 

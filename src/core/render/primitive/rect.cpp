@@ -9,8 +9,8 @@
 
 namespace logicsim {
 
-auto _draw_rect_stroke(Context& ctx, rect_fine_t rect,
-                       RectAttributes attributes) -> void {
+auto _draw_rect_stroke(Context& ctx, rect_fine_t rect, RectAttributes attributes)
+    -> void {
     const auto [x0, y0] = to_context(rect.p0, ctx);
     const auto [x1, y1] = to_context(rect.p1, ctx);
 
@@ -21,7 +21,7 @@ auto _draw_rect_stroke(Context& ctx, rect_fine_t rect,
 
     ctx.bl_ctx.set_stroke_width(width);
     ctx.bl_ctx.stroke_rect(x0 + width / 2.0, y0 + width / 2.0, w - width, h - width,
-                          attributes.stroke_color);
+                           attributes.stroke_color);
 }
 
 auto _draw_rect_fill(Context& ctx, rect_fine_t rect, RectAttributes attributes) -> void {
