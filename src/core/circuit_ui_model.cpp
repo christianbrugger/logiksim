@@ -246,11 +246,11 @@ auto CircuitUIModel::do_action(UserAction action) -> UIStatus {
         }
 
         case zoom_in: {
-            // this->zoom(+1);
+            // status |= this->zoom(+1);
             break;
         }
         case zoom_out: {
-            // this->zoom(-1);
+            // status |= this->zoom(-1);
             break;
         }
         case reset_view: {

@@ -246,8 +246,11 @@ auto MainWindow::update_render_size() -> void {
 
 void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& sender,
                                                 Input::ExecuteRequestedEventArgs const&) {
+    // File
+
     if (sender == NewCommand()) {
-        std::cout << "new" << '\n';
+        backend_tasks_.push(logicsim::exporting::UserAction::clear_circuit);
+        backend_tasks_.push(logicsim::exporting::UserAction::reset_view);
         return;
     }
     if (sender == OpenCommand()) {
@@ -267,8 +270,49 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
 
+    // Edit
+
+    if (sender == UndoCommand()) {
+        backend_tasks_.push(logicsim::exporting::UserAction::undo);
+        return;
+    }
+    if (sender == RedoCommand()) {
+        backend_tasks_.push(logicsim::exporting::UserAction::redo);
+        return;
+    }
+    if (sender == CutCommand()) {
+        backend_tasks_.push(logicsim::exporting::UserAction::cut_selected);
+        return;
+    }
     if (sender == CopyCommand()) {
-        std::cout << "copy" << '\n';
+        backend_tasks_.push(logicsim::exporting::UserAction::copy_selected);
+        return;
+    }
+    if (sender == PasteCommand()) {
+        backend_tasks_.push(logicsim::exporting::UserAction::paste_from_clipboard);
+        return;
+    }
+    if (sender == DeleteCommand()) {
+        backend_tasks_.push(logicsim::exporting::UserAction::delete_selected);
+        return;
+    }
+    if (sender == SelectAllCommand()) {
+        backend_tasks_.push(logicsim::exporting::UserAction::select_all);
+        return;
+    }
+
+    // View
+
+    if (sender == ZoomInCommand()) {
+        backend_tasks_.push(logicsim::exporting::UserAction::zoom_in);
+        return;
+    }
+    if (sender == ZoomOutCommand()) {
+        backend_tasks_.push(logicsim::exporting::UserAction::zoom_out);
+        return;
+    }
+    if (sender == ResetZoomCommand()) {
+        backend_tasks_.push(logicsim::exporting::UserAction::reset_view);
         return;
     }
 

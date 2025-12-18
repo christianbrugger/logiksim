@@ -10,10 +10,11 @@
 | Conformance Mode                | Yes   | `/permissive-` | All           |
 | Tread Compile Warning as Errors | Yes   | `/WX`          | All           |
 | Control Flow Guard              | Yes   | `/guard:cf`    | Release       |
-| Additional Options              |       | `/utf-8`       | All           |
+| Command Line Additional Options |       | `/utf-8`       | All           |
 | **Linker Setting**              |       |                | All           |
 | Tread Link Warning as Errors    | Yes   | `/WX`          | All           |
 | CET Shadow Stack Compatible     | Yes   | `/CETCOMPAT`   | All           |
+| Command Line Additional Options |       | `/IGNORE:4042` | All           |
 
 
 

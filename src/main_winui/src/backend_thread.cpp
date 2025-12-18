@@ -4,7 +4,8 @@
 
 #include "main_winui/src/ls_timer.h"
 
-#include <iostream>
+#include <memory>
+#include <variant>
 
 namespace logicsim {
 
@@ -106,6 +107,9 @@ auto render_circuit(RenderBufferSource& render_source,
     }
     if (const auto* item = std::get_if<VirtualKey>(&task)) {
         return circuit.key_press(*item);
+    }
+    if (const auto* item = std::get_if<UserAction>(&task)) {
+        return circuit.do_action(*item);
     }
     if (const auto* item = std::get_if<ExampleCircuitType>(&task)) {
         return circuit.load(*item);

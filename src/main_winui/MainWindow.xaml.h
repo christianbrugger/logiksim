@@ -3,7 +3,10 @@
 #include "MainWindow.g.h"
 #include "main_winui/src/backend_thread.h"
 #include "main_winui/src/ls_key_tracker.h"
+#include "main_winui/src/render_buffer.h"
 #include "main_winui/src/render_thread.h"
+
+#include <thread>
 
 namespace winrt::main_winui::implementation {
 
