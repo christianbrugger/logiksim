@@ -4,6 +4,8 @@
 #if __has_include("MainWindow.g.cpp")
 #include "MainWindow.g.cpp"
 #endif
+
+#include "main_winui/src/ls_key_tracker.h"
 #include "main_winui/src/ls_xaml_utils.h"
 
 #include <Windows.UI.ViewManagement.h>
@@ -166,6 +168,8 @@ auto MainWindow::CanvasPanel_PointerEvent(IInspectable const& sender,
     const auto data = PointerEventData {point, args.KeyModifiers()};
     key_tracker_.submit_event(data, backend_tasks_);
 
+    std::cout << "P " << point.Position().X << " " << point.Position().Y << '\n';
+
     // steal focus
     if (is_pressed_kind(point.Properties().PointerUpdateKind())) {
         CanvasPanel().Focus(FocusState::Pointer);
@@ -246,6 +250,11 @@ auto MainWindow::update_render_size() -> void {
 
 void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& sender,
                                                 Input::ExecuteRequestedEventArgs const&) {
+    auto res = logicsim::get_cursor_position(CanvasPanel());
+    if (res) {
+        std::cout << "! " << res->X << " " << res->Y << '\n';
+    }
+
     // File
 
     if (sender == NewCommand()) {

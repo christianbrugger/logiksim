@@ -44,4 +44,8 @@ constexpr static auto LS_IDENTITY_DPI = 96.0;
 [[nodiscard]] auto is_pressed_kind(winrt::Microsoft::UI::Input::PointerUpdateKind kind)
     -> bool;
 
+[[nodiscard]] auto get_cursor_position(
+    const winrt::Microsoft::UI::Xaml::FrameworkElement& element)
+    -> std::optional<winrt::Windows::Foundation::Point>;
+
 }  // namespace logicsim

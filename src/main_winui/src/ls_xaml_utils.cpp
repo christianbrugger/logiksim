@@ -4,6 +4,8 @@
 
 #include "core_export/logicsim_core_export.h"
 
+#include <winrt/Microsoft.UI.Content.h>
+#include <winrt/Microsoft.UI.Interop.h>
 #include <winuser.h>
 
 namespace logicsim {
@@ -177,6 +179,55 @@ auto is_pressed_kind(winrt::Microsoft::UI::Input::PointerUpdateKind kind) -> boo
             return false;
     }
     std::terminate();
+}
+
+auto get_cursor_position(const winrt::Microsoft::UI::Xaml::FrameworkElement& element)
+    -> std::optional<winrt::Windows::Foundation::Point> {
+    if (!element) {
+        return std::nullopt;
+    }
+    if (!element.IsLoaded()) {
+        return std::nullopt;
+    }
+
+    const auto xaml_root = element.XamlRoot();
+    if (!xaml_root) {
+        return std::nullopt;
+    }
+
+    const auto island_env = xaml_root.ContentIslandEnvironment();
+    if (!island_env) {
+        return std::nullopt;
+    }
+
+    const auto window_id = island_env.AppWindowId();
+    const auto hwnd = winrt::Microsoft::UI::GetWindowFromWindowId(window_id);
+    if (!hwnd) {
+        return std::nullopt;
+    }
+
+    auto point_screen = POINT {};
+    if (!GetCursorPos(&point_screen)) {
+        return std::nullopt;
+    }
+    auto point_client = point_screen;
+    if (!ScreenToClient(hwnd, &point_client)) {
+        return std::nullopt;
+    }
+
+    const auto dpi_scale = static_cast<float>(xaml_root.RasterizationScale());
+    if (dpi_scale <= 0) {
+        return std::nullopt;
+    }
+
+    const auto point_root = winrt::Windows::Foundation::Point {
+        static_cast<float>(point_client.x) / dpi_scale,
+        static_cast<float>(point_client.y) / dpi_scale,
+    };
+
+    // nullptr = transform from root of the XAML tree
+    auto transform = element.TransformToVisual(nullptr);
+    return transform.Inverse().TransformPoint(point_root);
 }
 
 }  // namespace logicsim
