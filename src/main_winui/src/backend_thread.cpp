@@ -202,6 +202,7 @@ auto backend_thread_main(std::stop_token token,
             config.state.type = CircuitStateType::Editing;
             config.state.editing_default_mouse_action =
                 DefaultMouseAction::insert_clock_generator;
+            config.render.show_mouse_position = true;
 
             auto status = circuit.set_config(config);
             static_cast<void>(status);

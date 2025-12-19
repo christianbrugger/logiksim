@@ -76,7 +76,6 @@ set(LS_CORE_SOURCES
     component/circuit_ui_model/circuit_renderer.cpp
     component/circuit_ui_model/circuit_store.cpp
     component/circuit_ui_model/dialog_manager.cpp
-    component/circuit_ui_model/zoom.cpp
     component/editable_circuit/editing/edit_decoration.cpp
     component/editable_circuit/editing/edit_decoration_detail.cpp
     component/editable_circuit/editing/edit_history.cpp

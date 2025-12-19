@@ -320,8 +320,7 @@ auto CircuitUIModel::mouse_press(const MousePressEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
-    // const auto position = get_mouse_position(this, event_);
-    // log_mouse_position("mousePressEvent", position, event_);
+    log_mouse_position("mousePressEvent", event.position);
 
     if (event.button == MouseButton::Middle) {
         mouse_drag_logic_.mouse_press(event.position);
@@ -357,8 +356,7 @@ auto CircuitUIModel::mouse_move(const MouseMoveEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
-    // const auto position = get_mouse_position(this, event_);
-    // log_mouse_position("mouseMoveEvent", position, event_);
+    log_mouse_position("mouseMoveEvent", event.position);
 
     if (event.buttons.is_set(MouseButton::Middle)) {
         set_view_config_offset(circuit_renderer_,
@@ -384,8 +382,7 @@ auto CircuitUIModel::mouse_release(const MouseReleaseEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
-    // const auto position = get_mouse_position(this, event_);
-    // log_mouse_position("mouseReleaseEvent", position, event_);
+    log_mouse_position("mouseReleaseEvent", event.position);
 
     if (event.button == MouseButton::Middle) {
         set_view_config_offset(circuit_renderer_,
@@ -420,8 +417,7 @@ auto CircuitUIModel::mouse_wheel(const MouseWheelEvent& event) -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
-    // // TODO use actually used value from wheel_scroll_zoom
-    // log_mouse_position("wheelEvent", get_mouse_position(this, event_), event_);
+    log_mouse_position("wheelEvent", event.position);
 
     if (const auto view_point =
             circuit_ui_model::wheel_scroll_zoom(event, circuit_renderer_.view_config())) {
@@ -582,7 +578,7 @@ auto CircuitUIModel::zoom(double steps, std::optional<point_device_fine_t> posit
 
     if (steps != 0) {
         const auto center = to_position_inside_renderer(circuit_renderer_, position);
-        // log_mouse_position("zoom", center);
+        log_mouse_position("zoom", center);
 
         circuit_renderer_.set_view_point(
             zoomed_config(circuit_renderer_.view_config(), steps, center));
@@ -592,6 +588,19 @@ auto CircuitUIModel::zoom(double steps, std::optional<point_device_fine_t> posit
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
     return status;
+}
+
+auto CircuitUIModel::log_mouse_position(std::string_view source,
+                                        point_device_fine_t position) -> void {
+    if (circuit_renderer_.render_config().show_mouse_position) {
+        circuit_renderer_.set_mouse_position_info(MousePositionInfo {
+            .position = position,
+            .labels = {std::string(source),
+                       mouse_position_label("device", "point_device_fine_t", position)},
+        });
+    } else {
+        circuit_renderer_.set_mouse_position_info(std::nullopt);
+    }
 }
 
 auto CircuitUIModel::class_invariant_holds() const -> bool {

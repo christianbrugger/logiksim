@@ -165,8 +165,8 @@ class CircuitUIModel {
     auto copy_selected() -> void;
     auto paste_clipboard() -> void;
     auto zoom(double steps, std::optional<point_device_fine_t> position) -> UIStatus;
-    // auto log_mouse_position(std::string_view source, QPointF position,
-    //                         QSinglePointEvent* event_ = nullptr) -> void;
+    auto log_mouse_position(std::string_view source, point_device_fine_t position)
+        -> void;
 
     [[nodiscard]] auto class_invariant_holds() const -> bool;
     /* only at the end of mutable methods, except paintEvent */

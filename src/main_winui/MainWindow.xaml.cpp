@@ -168,8 +168,6 @@ auto MainWindow::CanvasPanel_PointerEvent(IInspectable const& sender,
     const auto data = PointerEventData {point, args.KeyModifiers()};
     key_tracker_.submit_event(data, backend_tasks_);
 
-    std::cout << "P " << point.Position().X << " " << point.Position().Y << '\n';
-
     // steal focus
     if (is_pressed_kind(point.Properties().PointerUpdateKind())) {
         CanvasPanel().Focus(FocusState::Pointer);

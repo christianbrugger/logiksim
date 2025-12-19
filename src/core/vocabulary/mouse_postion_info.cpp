@@ -15,17 +15,17 @@ auto MousePositionInfo::format() const -> std::string {
 
 auto mouse_position_label(std::string_view label, std::string_view type,
                           point_device_fine_t position) -> std::string {
-    return fmt::format("{:.2f}, {:.2f}  {}{{}} {}", position.x, position.y, type, label);
+    return fmt::format("{:.2f}, {:.2f}  {} - {}", position.x, position.y, type, label);
 }
 
 auto mouse_position_label(std::string_view label, std::string_view type, BLPoint position)
     -> std::string {
-    return fmt::format("{:.2f}, {:.2f}  {}{{}} {}", position.x, position.y, type, label);
+    return fmt::format("{:.2f}, {:.2f}  {} - {}", position.x, position.y, type, label);
 }
 
 auto mouse_position_label(std::string_view label, std::string_view type,
                           point_fine_t position) -> std::string {
-    return fmt::format("{:.3f}, {:.3f}  {}{{}} {}", double {position.x},
+    return fmt::format("{:.3f}, {:.3f}  {} - {}", double {position.x},
                        double {position.y}, type, label);
 }
 
