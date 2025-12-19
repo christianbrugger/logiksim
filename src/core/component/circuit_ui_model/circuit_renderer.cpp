@@ -72,6 +72,10 @@ auto CircuitRenderer::set_device_pixel_ratio(double device_pixel_ratio) -> void 
     context_settings_.view_config.set_device_pixel_ratio(device_pixel_ratio);
 }
 
+auto CircuitRenderer::has_mouse_position_info() const -> bool {
+    return mouse_position_info_.has_value();
+}
+
 auto CircuitRenderer::set_mouse_position_info(std::optional<MousePositionInfo> info)
     -> void {
     mouse_position_info_ = std::move(info);

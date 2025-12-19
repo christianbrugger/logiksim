@@ -196,12 +196,16 @@ auto backend_thread_main(std::stop_token token,
             using namespace exporting;
 
             auto config = circuit.config();
+
             // config.state.type = CircuitStateType::Editing;
             // config.state.editing_default_mouse_action = DefaultMouseAction::selection;
 
-            config.state.type = CircuitStateType::Editing;
-            config.state.editing_default_mouse_action =
-                DefaultMouseAction::insert_clock_generator;
+            // config.state.type = CircuitStateType::Editing;
+            //  config.state.editing_default_mouse_action =
+            //      DefaultMouseAction::insert_clock_generator;
+
+            config.state.type = CircuitStateType::NonInteractive;
+
             config.render.show_mouse_position = true;
 
             auto status = circuit.set_config(config);

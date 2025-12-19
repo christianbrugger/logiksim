@@ -69,6 +69,7 @@ class CircuitRenderer {
     auto set_view_point(const ViewPoint& view_point) -> void;
     auto set_device_pixel_ratio(double device_pixel_ratio) -> void;
 
+    [[nodiscard]] auto has_mouse_position_info() const -> bool;
     auto set_mouse_position_info(std::optional<MousePositionInfo> info) -> void;
     [[nodiscard]] auto statistics() const -> SurfaceStatistics;
 

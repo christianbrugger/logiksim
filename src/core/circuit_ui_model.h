@@ -164,9 +164,10 @@ class CircuitUIModel {
     [[nodiscard]] auto copy_paste_position() -> point_t;
     auto copy_selected() -> void;
     auto paste_clipboard() -> void;
-    auto zoom(double steps, std::optional<point_device_fine_t> position) -> UIStatus;
-    auto log_mouse_position(std::string_view source, point_device_fine_t position)
-        -> void;
+    [[nodiscard]] auto zoom(double steps, std::optional<point_device_fine_t> position)
+        -> UIStatus;
+    [[nodiscard]] auto log_mouse_position(std::string_view source,
+                                          point_device_fine_t position) -> UIStatus;
 
     [[nodiscard]] auto class_invariant_holds() const -> bool;
     /* only at the end of mutable methods, except paintEvent */
