@@ -55,7 +55,7 @@ using BackendTask = std::variant<            //
     logicsim::exporting::MouseReleaseEvent,  //
     logicsim::exporting::MouseWheelEvent,    //
     logicsim::exporting::VirtualKey,         //
-    logicsim::exporting::UserAction,         //
+    logicsim::exporting::UserActionEvent,    //
     logicsim::exporting::ExampleCircuitType  //
     >;
 

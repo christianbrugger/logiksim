@@ -657,13 +657,19 @@ auto ls_circuit_get_allocation_info(const ls_circuit_t* obj, ls_string_t* string
     });
 }
 
-auto ls_circuit_do_action(ls_circuit_t* obj, uint8_t action_enum) noexcept
+auto ls_circuit_do_action(ls_circuit_t* obj, uint8_t action_enum,
+                          const ls_point_device_fine_t* optional_position) noexcept
     -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
 
-        return to_c(obj->model.do_action(to_user_action(action_enum)));
+        const auto position =
+            optional_position != nullptr
+                ? std::make_optional(to_point_device_fine(*optional_position))
+                : std::nullopt;
+
+        return to_c(obj->model.do_action(to_user_action(action_enum), position));
     });
 }
 

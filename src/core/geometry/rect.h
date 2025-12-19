@@ -11,6 +11,7 @@ struct point_fine_t;
 struct ordered_line_t;
 struct rect_t;
 struct rect_fine_t;
+struct ViewConfig;
 
 [[nodiscard]] auto enclosing_rect(rect_fine_t rect) -> rect_t;
 [[nodiscard]] auto enclosing_rect(rect_t a, rect_t b) -> rect_t;

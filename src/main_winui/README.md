@@ -4,17 +4,17 @@
 
 ### Compiler Settings
 
-| Setting                         | Value | Flag           | Configuration |
-| ------------------------------- | ----- | -------------- | ------------- |
-| C++ Standard                    | C++20 | `/std:c++20`   | All           |
-| Conformance Mode                | Yes   | `/permissive-` | All           |
-| Tread Compile Warning as Errors | Yes   | `/WX`          | All           |
-| Control Flow Guard              | Yes   | `/guard:cf`    | Release       |
-| Command Line Additional Options |       | `/utf-8`       | All           |
-| **Linker Setting**              |       |                | All           |
-| Tread Link Warning as Errors    | Yes   | `/WX`          | All           |
-| CET Shadow Stack Compatible     | Yes   | `/CETCOMPAT`   | All           |
-| Command Line Additional Options |       | `/IGNORE:4042` | All           |
+| Setting                         | Value | Flag                | Configuration |
+| ------------------------------- | ----- | ------------------- | ------------- |
+| C++ Standard                    | C++23 | `/std:c++23preview` | All           |
+| Conformance Mode                | Yes   | `/permissive-`      | All           |
+| Tread Compile Warning as Errors | Yes   | `/WX`               | All           |
+| Control Flow Guard              | Yes   | `/guard:cf`         | Release       |
+| Command Line Additional Options |       | `/utf-8`            | All           |
+| **Linker Setting**              |       |                     | All           |
+| Tread Link Warning as Errors    | Yes   | `/WX`               | All           |
+| CET Shadow Stack Compatible     | Yes   | `/CETCOMPAT`        | All           |
+| Command Line Additional Options |       | `/IGNORE:4042`      | All           |
 
 
 

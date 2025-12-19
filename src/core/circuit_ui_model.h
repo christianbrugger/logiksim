@@ -112,8 +112,8 @@ class CircuitUIModel {
     [[nodiscard]] auto allocation_info() const -> CircuitWidgetAllocInfo;
     [[nodiscard]] auto statistics() const -> Statistics;
 
-    // actions without arguments
-    [[nodiscard]] auto do_action(UserAction action) -> UIStatus;
+    [[nodiscard]] auto do_action(UserAction action,
+                                 std::optional<point_device_fine_t> position) -> UIStatus;
     // load & save
     [[nodiscard]] auto serialized_circuit() -> std::string;
     [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;
@@ -164,7 +164,7 @@ class CircuitUIModel {
     [[nodiscard]] auto copy_paste_position() -> point_t;
     auto copy_selected() -> void;
     auto paste_clipboard() -> void;
-    auto zoom(double steps) -> void;
+    auto zoom(double steps, std::optional<point_device_fine_t> position) -> UIStatus;
     // auto log_mouse_position(std::string_view source, QPointF position,
     //                         QSinglePointEvent* event_ = nullptr) -> void;
 

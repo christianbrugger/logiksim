@@ -3,6 +3,7 @@
 #include "core/circuit_example.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_logic_status.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_wheel_logic.h"
+#include "core/geometry/rect.h"
 #include "core/geometry/scene.h"
 #include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/mouse_event.h"
@@ -194,7 +195,8 @@ auto CircuitUIModel::statistics() const -> Statistics {
     return result;
 }
 
-auto CircuitUIModel::do_action(UserAction action) -> UIStatus {
+auto CircuitUIModel::do_action(UserAction action,
+                               std::optional<point_device_fine_t> position) -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
@@ -210,7 +212,7 @@ auto CircuitUIModel::do_action(UserAction action) -> UIStatus {
             const auto _ = Timer {"Reload Circuit"};
             auto layout = Layout {circuit_store_.layout()};
             // clear circuit to free memory
-            status |= do_action(UserAction::clear_circuit);
+            status |= do_action(UserAction::clear_circuit, position);
             status |= set_editable_circuit(EditableCircuit {std::move(layout)});
             break;
         }
@@ -246,11 +248,11 @@ auto CircuitUIModel::do_action(UserAction action) -> UIStatus {
         }
 
         case zoom_in: {
-            // status |= this->zoom(+1);
+            status |= this->zoom(+1, position);
             break;
         }
         case zoom_out: {
-            // status |= this->zoom(-1);
+            status |= this->zoom(-1, position);
             break;
         }
         case reset_view: {
@@ -273,7 +275,7 @@ auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
     const auto default_simulation_config = SimulationConfig {};
 
     // clear circuit to free memory
-    status |= do_action(UserAction::clear_circuit);
+    status |= do_action(UserAction::clear_circuit, std::nullopt);
     status |= set_editable_circuit(load_example_with_logging(number), default_view_point,
                                    default_simulation_config);
 
@@ -542,6 +544,49 @@ auto CircuitUIModel::close_all_setting_dialogs() -> UIStatus {
     if (is_editing_state(config_.state)) {
         status.dialogs_changed = !dialog_manager_.empty();
         dialog_manager_.close_all(circuit_store_.editable_circuit());
+    }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return status;
+}
+
+namespace {
+
+auto to_position_inside_renderer(const circuit_ui_model::CircuitRenderer& renderer,
+                                 std::optional<point_device_fine_t> point_device)
+    -> point_device_fine_t {
+    const auto& config = renderer.view_config();
+
+    if (point_device) {
+        const auto rect = get_scene_rect_fine(config);
+        const auto point = to_grid_fine(point_device.value(), config);
+
+        if (is_colliding(point, rect)) {
+            return point_device.value();
+        }
+    }
+
+    const auto rect = get_scene_rect_fine(config);
+    const auto center = get_center(rect);
+
+    return to_device_fine(center, config);
+}
+
+}  // namespace
+
+auto CircuitUIModel::zoom(double steps, std::optional<point_device_fine_t> position)
+    -> UIStatus {
+    Expects(class_invariant_holds());
+    auto status = UIStatus {};
+
+    if (steps != 0) {
+        const auto center = to_position_inside_renderer(circuit_renderer_, position);
+        // log_mouse_position("zoom", center);
+
+        circuit_renderer_.set_view_point(
+            zoomed_config(circuit_renderer_.view_config(), steps, center));
+        status.require_repaint = true;
     }
 
     Ensures(class_invariant_holds());

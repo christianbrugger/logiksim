@@ -7,6 +7,7 @@
 
 namespace logicsim {
 
+struct ViewPoint;
 struct ViewConfig;
 
 struct grid_fine_t;
@@ -50,6 +51,10 @@ struct size_device_t;
     -> point_device_t;
 [[nodiscard]] auto to_device(point_t position, const ViewConfig& config)
     -> point_device_t;
+[[nodiscard]] auto to_device_fine(point_fine_t position, const ViewConfig& config)
+    -> point_device_fine_t;
+[[nodiscard]] auto to_device_fine(point_t position, const ViewConfig& config)
+    -> point_device_fine_t;
 
 // to blend2d / pixel coordinates
 [[nodiscard]] auto to_context(point_fine_t position, const ViewConfig& config) -> BLPoint;
@@ -65,6 +70,11 @@ struct size_device_t;
 
 [[nodiscard]] auto to_context_unrounded(grid_fine_t length, const ViewConfig& config)
     -> double;
+
+// zoom
+[[nodiscard]]
+auto zoomed_config(ViewConfig view_config, double steps, point_device_fine_t center)
+    -> ViewPoint;
 
 }  // namespace logicsim
 

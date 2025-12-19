@@ -112,8 +112,12 @@ auto to_mouse_buttons(const winrt::Microsoft::UI::Input::PointerPoint& point)
 
 auto to_device_position(const winrt::Microsoft::UI::Input::PointerPoint& point)
     -> ls_point_device_fine_t {
-    const auto position = point.Position();
-    return ls_point_device_fine_t {.x = position.X, .y = position.Y};
+    return to_device_position(point.Position());
+}
+
+auto to_device_position(winrt::Windows::Foundation::Point point)
+    -> ls_point_device_fine_t {
+    return ls_point_device_fine_t {.x = point.X, .y = point.Y};
 }
 
 namespace {
@@ -225,7 +229,7 @@ auto get_cursor_position(const winrt::Microsoft::UI::Xaml::FrameworkElement& ele
         static_cast<float>(point_client.y) / dpi_scale,
     };
 
-    // nullptr = transform from root of the XAML tree
+    // nullptr = transform to root of the XAML tree
     auto transform = element.TransformToVisual(nullptr);
     return transform.Inverse().TransformPoint(point_root);
 }

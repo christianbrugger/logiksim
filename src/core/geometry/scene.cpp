@@ -15,6 +15,13 @@
 
 namespace logicsim {
 
+namespace {
+
+// factor the scale is multiplied or divided per zoom step
+constexpr inline auto standard_zoom_factor = 1.1;
+
+}  // namespace
+
 // scene rect
 
 auto get_scene_rect_fine(const ViewConfig &view_config) -> rect_fine_t {
@@ -128,6 +135,21 @@ auto to_device(point_t position, const ViewConfig &config) -> point_device_t {
     return to_device(point_fine_t {position}, config);
 }
 
+auto to_device_fine(point_fine_t position, const ViewConfig &config)
+    -> point_device_fine_t {
+    const auto scale = config.device_scale();
+    const auto offset = config.offset();
+
+    return point_device_fine_t {
+        double {(offset.x + position.x) * scale},
+        double {(offset.y + position.y) * scale},
+    };
+}
+
+auto to_device_fine(point_t position, const ViewConfig &config) -> point_device_fine_t {
+    return to_device_fine(point_fine_t {position}, config);
+}
+
 // to blend2d / pixel coordinates
 
 auto to_context(point_fine_t position, const ViewConfig &config) -> BLPoint {
@@ -164,6 +186,18 @@ auto to_context(grid_t length, const ViewConfig &config) -> double {
 auto to_context_unrounded(grid_fine_t length, const ViewConfig &config) -> double {
     const auto scale = config.pixel_scale();
     return double {length} * scale;
+}
+
+auto zoomed_config(ViewConfig view_config, double steps, point_device_fine_t center)
+    -> ViewPoint {
+    const auto factor = std::exp(steps * std::log(standard_zoom_factor));
+
+    const auto old_grid_point = to_grid_fine(center, view_config);
+    view_config.set_device_scale(view_config.device_scale() * factor);
+    const auto new_grid_point = to_grid_fine(center, view_config);
+    view_config.set_offset(view_config.offset() + new_grid_point - old_grid_point);
+
+    return view_config.view_point();
 }
 
 }  // namespace logicsim

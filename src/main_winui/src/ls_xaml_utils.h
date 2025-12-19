@@ -34,6 +34,9 @@ constexpr static auto LS_IDENTITY_DPI = 96.0;
 [[nodiscard]] auto to_device_position(
     const winrt::Microsoft::UI::Input::PointerPoint& point) -> ls_point_device_fine_t;
 
+[[nodiscard]] auto to_device_position(winrt::Windows::Foundation::Point point)
+    -> ls_point_device_fine_t;
+
 [[nodiscard]] auto to_keyboard_modifiers(
     winrt::Windows::System::VirtualKeyModifiers modifiers)
     -> logicsim::exporting::KeyboardModifiers;

@@ -177,9 +177,18 @@ ls_circuit_history_status(const ls_circuit_t* obj) LS_NOEXCEPT;
 LS_CORE_API void ls_circuit_get_allocation_info(const ls_circuit_t* obj,
                                                 ls_string_t* string) LS_NOEXCEPT;
 
+typedef struct ls_point_device_fine_t {
+    double x;
+    double y;
+#ifdef __cplusplus
+    [[nodiscard]] auto operator==(const ls_point_device_fine_t&) const -> bool = default;
+#endif
+} ls_point_device_fine_t;
+
 // circuit::do_action
 LS_NODISCARD LS_CORE_API ls_ui_status_t
-ls_circuit_do_action(ls_circuit_t* obj, uint8_t action_enum) LS_NOEXCEPT;
+ls_circuit_do_action(ls_circuit_t* obj, uint8_t action_enum,
+                     const ls_point_device_fine_t* optional_position) LS_NOEXCEPT;
 
 // circuit::load
 LS_NODISCARD LS_CORE_API ls_ui_status_t
@@ -193,14 +202,6 @@ ls_circuit_load(ls_circuit_t* obj, uint8_t example_circuit_enum) LS_NOEXCEPT;
 LS_CORE_API void ls_circuit_render_layout(ls_circuit_t* obj, int32_t width,
                                           int32_t height, double pixel_ratio,
                                           void* pixel_data, intptr_t stride) LS_NOEXCEPT;
-
-typedef struct ls_point_device_fine_t {
-    double x;
-    double y;
-#ifdef __cplusplus
-    [[nodiscard]] auto operator==(const ls_point_device_fine_t&) const -> bool = default;
-#endif
-} ls_point_device_fine_t;
 
 typedef struct ls_angle_delta_t {
     float horizontal_notches;
@@ -592,6 +593,13 @@ struct MouseWheelEvent {
     [[nodiscard]] auto operator==(const MouseWheelEvent&) const -> bool = default;
 };
 
+struct UserActionEvent {
+    UserAction action {UserAction::clear_circuit};
+    std::optional<ls_point_device_fine_t> position {};
+
+    [[nodiscard]] auto operator==(const UserActionEvent&) const -> bool = default;
+};
+
 [[nodiscard]] inline auto combine_wheel_event(const MouseWheelEvent& first,
                                               const MouseWheelEvent& second)
     -> std::optional<MouseWheelEvent>;
@@ -614,7 +622,7 @@ class CircuitInterface {
     [[nodiscard]] inline auto history_status() const -> ls_history_status_t;
     [[nodiscard]] inline auto allocation_info() const -> std::string;
 
-    [[nodiscard]] inline auto do_action(UserAction action) -> ls_ui_status_t;
+    [[nodiscard]] inline auto do_action(const UserActionEvent& event) -> ls_ui_status_t;
     [[nodiscard]] inline auto load(ExampleCircuitType type) -> ls_ui_status_t;
 
     inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
@@ -772,8 +780,9 @@ auto CircuitInterface::allocation_info() const -> std::string {
     return data.string();
 }
 
-auto CircuitInterface::do_action(UserAction action) -> ls_ui_status_t {
-    return ls_circuit_do_action(get(), detail::to_underlying(action));
+auto CircuitInterface::do_action(const UserActionEvent& event) -> ls_ui_status_t {
+    return ls_circuit_do_action(get(), detail::to_underlying(event.action),
+                                event.position ? &event.position.value() : nullptr);
 }
 
 auto CircuitInterface::load(ExampleCircuitType type) -> ls_ui_status_t {

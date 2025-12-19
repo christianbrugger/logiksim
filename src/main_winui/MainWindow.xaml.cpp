@@ -250,16 +250,18 @@ auto MainWindow::update_render_size() -> void {
 
 void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& sender,
                                                 Input::ExecuteRequestedEventArgs const&) {
-    auto res = logicsim::get_cursor_position(CanvasPanel());
-    if (res) {
-        std::cout << "! " << res->X << " " << res->Y << '\n';
-    }
+    using namespace logicsim::exporting;
+    const auto get_position = [&] -> std::optional<ls_point_device_fine_t> {
+        return logicsim::get_cursor_position(CanvasPanel()).transform([](auto val) {
+            return logicsim::to_device_position(val);
+        });
+    };
 
     // File
 
     if (sender == NewCommand()) {
-        backend_tasks_.push(logicsim::exporting::UserAction::clear_circuit);
-        backend_tasks_.push(logicsim::exporting::UserAction::reset_view);
+        backend_tasks_.push(UserActionEvent {.action = UserAction::clear_circuit});
+        backend_tasks_.push(UserActionEvent {.action = UserAction::reset_view});
         return;
     }
     if (sender == OpenCommand()) {
@@ -282,46 +284,69 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     // Edit
 
     if (sender == UndoCommand()) {
-        backend_tasks_.push(logicsim::exporting::UserAction::undo);
+        backend_tasks_.push(UserActionEvent {
+            .action = UserAction::undo,
+        });
         return;
     }
     if (sender == RedoCommand()) {
-        backend_tasks_.push(logicsim::exporting::UserAction::redo);
+        backend_tasks_.push(UserActionEvent {
+            .action = UserAction::redo,
+        });
         return;
     }
     if (sender == CutCommand()) {
-        backend_tasks_.push(logicsim::exporting::UserAction::cut_selected);
+        backend_tasks_.push(UserActionEvent {
+            .action = UserAction::cut_selected,
+            .position = get_position(),
+        });
         return;
     }
     if (sender == CopyCommand()) {
-        backend_tasks_.push(logicsim::exporting::UserAction::copy_selected);
+        backend_tasks_.push(UserActionEvent {
+            .action = UserAction::copy_selected,
+            .position = get_position(),
+        });
         return;
     }
     if (sender == PasteCommand()) {
-        backend_tasks_.push(logicsim::exporting::UserAction::paste_from_clipboard);
+        backend_tasks_.push(UserActionEvent {
+            .action = UserAction::paste_from_clipboard,
+            .position = get_position(),
+        });
         return;
     }
     if (sender == DeleteCommand()) {
-        backend_tasks_.push(logicsim::exporting::UserAction::delete_selected);
+        backend_tasks_.push(UserActionEvent {
+            .action = UserAction::delete_selected,
+        });
         return;
     }
     if (sender == SelectAllCommand()) {
-        backend_tasks_.push(logicsim::exporting::UserAction::select_all);
+        backend_tasks_.push(UserActionEvent {
+            .action = UserAction::select_all,
+        });
         return;
     }
 
     // View
 
     if (sender == ZoomInCommand()) {
-        backend_tasks_.push(logicsim::exporting::UserAction::zoom_in);
+        backend_tasks_.push(UserActionEvent {
+            .action = UserAction::zoom_in,
+            .position = get_position(),
+        });
         return;
     }
     if (sender == ZoomOutCommand()) {
-        backend_tasks_.push(logicsim::exporting::UserAction::zoom_out);
+        backend_tasks_.push(UserActionEvent {
+            .action = UserAction::zoom_out,
+            .position = get_position(),
+        });
         return;
     }
     if (sender == ResetZoomCommand()) {
-        backend_tasks_.push(logicsim::exporting::UserAction::reset_view);
+        backend_tasks_.push(UserActionEvent {.action = UserAction::reset_view});
         return;
     }
 
