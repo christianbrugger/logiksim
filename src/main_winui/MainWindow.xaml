@@ -228,25 +228,85 @@
                 </MenuBarItem>
 
                 <MenuBarItem Title="Debug">
-                    <MenuFlyoutItem Command="{StaticResource BenchmarkCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource DebugInfoDialogCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource BenchmarkCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/infinity.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource DebugInfoDialogCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/message-circle-question.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
                     <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource ShowCircuitCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ShowCollisionIndexCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ShowConnectionIndexCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ShowSelectionIndexCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ShowCircuitCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/cpu.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource ShowCollisionIndexCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/shapes.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource ShowConnectionIndexCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/spline.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource ShowSelectionIndexCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/ungroup.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
                     <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource ReloadCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ExampleSimpleCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ExampleWiresCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ExampleElementsCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ExampleElementsWiresCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ReloadCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/refresh-ccw.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource ExampleSimpleCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/cable.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource ExampleWiresCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/share-2.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource ExampleElementsCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/workflow.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource ExampleElementsWiresCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/network.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
                     <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource ShowRenderBordersCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ShowMousePositionCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource EnterNonInteractiveModeCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource ShowRenderBordersCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/scan.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource ShowMousePositionCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/mouse-pointer-click.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Command="{StaticResource EnterNonInteractiveModeCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/circle-slash.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
                     <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource JitRenderingCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource JitRenderingCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/lucide/circle-gauge.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
                     <MenuFlyoutSeparator/>
                     <MenuFlyoutItem Command="{StaticResource RenderSynchronousCommand}"/>
                     <MenuFlyoutItem Command="{StaticResource Render2ThreadsCommand}"/>
@@ -264,7 +324,6 @@
             </StackPanel>
 
             <Grid Grid.Row="2">
-
                 <canvas:CanvasSwapChainPanel
                     x:Name="CanvasPanel"
                     IsTabStop="True"
