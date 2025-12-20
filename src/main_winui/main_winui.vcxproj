@@ -153,6 +153,7 @@
     <Manifest Include="app.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LayeredFontIcon.h" />
     <ClInclude Include="src\backend_thread.h" />
     <ClInclude Include="src\ls_concurrent_blocking_queue.h" />
     <ClInclude Include="src\ls_concurrent_queue.h" />
@@ -176,6 +177,7 @@
     <Page Include="MainWindow.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="LayeredFontIcon.cpp" />
     <ClCompile Include="src\backend_thread.cpp" />
     <ClCompile Include="src\ls_concurrent_blocking_queue.cpp" />
     <ClCompile Include="src\ls_concurrent_queue.cpp" />
@@ -198,6 +200,7 @@
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="LayeredFontIcons.idl" />
     <Midl Include="MainWindow.idl">
       <SubType>Code</SubType>
       <DependentUpon>MainWindow.xaml</DependentUpon>

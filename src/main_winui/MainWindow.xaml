@@ -88,7 +88,11 @@
                     <KeyboardAccelerator Modifiers="Control" Key="PageDown"/>
                 </XamlUICommand.KeyboardAccelerators>
             </XamlUICommand>
-            <XamlUICommand x:Key="ResetZoomCommand" x:Name="ResetZoomCommand" Label="Reset Zoom" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="ResetZoomCommand" x:Name="ResetZoomCommand" Label="Reset Zoom" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                <XamlUICommand.IconSource>
+                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE777;" />
+                </XamlUICommand.IconSource>
+            </XamlUICommand>
 
 
             <XamlUICommand x:Key="WireStyleRedCommand" x:Name="WireStyleRedCommand" Label="Red" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
@@ -206,8 +210,20 @@
 
                 <MenuBarItem Title="Simulation">
                     <MenuFlyoutItem Command="{StaticResource StartSimulationCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <local:LayeredFontIcon>
+                                <local:LayeredFontIcon.FontIcons>
+                                    <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE768;" Foreground="#C72335"/>
+                                    <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE71A;" />
+                                </local:LayeredFontIcon.FontIcons>
+                            </local:LayeredFontIcon>
+                        </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
-                    <MenuFlyoutItem Command="{StaticResource StopSimulationCommand}"/>
+                    <MenuFlyoutItem Command="{StaticResource StopSimulationCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <ImageIcon Source="ms-appx:///resources/icons/derivative/stop_15x15_r0_r.svg"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
                     <MenuFlyoutSeparator/>
                     <MenuFlyoutItem Command="{StaticResource WireDelayCommand}"/>
                     <MenuFlyoutSeparator/>
