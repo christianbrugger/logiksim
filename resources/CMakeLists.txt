@@ -6,13 +6,14 @@ file(GLOB_RECURSE
     RELATIVE ${PROJECT_SOURCE_DIR} 
     CONFIGURE_DEPENDS
 
-    ${PROJECT_SOURCE_DIR}/resources/fonts/**.ttf
-    ${PROJECT_SOURCE_DIR}/resources/fonts/LICENSE
+    ${PROJECT_SOURCE_DIR}/resources/fonts/lucide_*_300.ttf
+    ${PROJECT_SOURCE_DIR}/resources/fonts/NotoSans*.ttf
+    ${PROJECT_SOURCE_DIR}/resources/fonts/LICENSE*
     
-    ${PROJECT_SOURCE_DIR}/resources/icons/lucide/**.svg
+    ${PROJECT_SOURCE_DIR}/resources/icons/lucide/*.svg
     ${PROJECT_SOURCE_DIR}/resources/icons/lucide/LICENSE
-    ${PROJECT_SOURCE_DIR}/resources/icons/derivative/**.svg
-    ${PROJECT_SOURCE_DIR}/resources/icons/derivative/**.ico
+    ${PROJECT_SOURCE_DIR}/resources/icons/derivative/*.svg
+    ${PROJECT_SOURCE_DIR}/resources/icons/derivative/*.ico
     ${PROJECT_SOURCE_DIR}/resources/icons/derivative/LICENSE
 )
 FOREACH(LS_RESOURCE_FILE ${LS_RESOURCE_FILES})

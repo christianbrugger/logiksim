@@ -11,6 +11,10 @@
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
             <!-- Other app resources here -->
+
+            <FontFamily x:Key="Lucide">
+                ms-appx:///resources/fonts/lucide_0.562.0_300.ttf#Lucide
+            </FontFamily>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
