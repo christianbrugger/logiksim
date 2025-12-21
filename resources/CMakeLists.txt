@@ -6,7 +6,7 @@ file(GLOB_RECURSE
     RELATIVE ${PROJECT_SOURCE_DIR} 
     CONFIGURE_DEPENDS
 
-    ${PROJECT_SOURCE_DIR}/resources/fonts/lucide_*_300.ttf
+    ${PROJECT_SOURCE_DIR}/resources/fonts/lucide_*_300_nogap.ttf
     ${PROJECT_SOURCE_DIR}/resources/fonts/NotoSans*.ttf
     ${PROJECT_SOURCE_DIR}/resources/fonts/LICENSE*
     
