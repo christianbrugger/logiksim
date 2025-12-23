@@ -30,6 +30,11 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     auto InitializeComponent() -> void;
 
+    // Page
+
+    auto Page_ActualThemeChanged(Microsoft::UI::Xaml::FrameworkElement const& sender,
+                                 Windows::Foundation::IInspectable const& args) -> void;
+
     // CanvasPanel
 
     auto CanvasPanel_SizeChanged(IInspectable const&,

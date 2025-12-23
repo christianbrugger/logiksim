@@ -116,12 +116,42 @@ auto BackendGuiActions::config_update(logicsim::exporting::CircuitUIConfig confi
     };
 }
 
+// Notes:
+// 1) It is not enough to change the brush or color of the FontIconSource,
+//    as other components create icons from the IconSource and the link is
+//    lost.
+// 2) Strangely the ressource directory does not hold references to the font
+// icon
+//    sources and are destroyed when assigning a different icon. Thats why we
+//    need to store references to the icon sources in the window class.
+auto set_simulation_icons(
+    MainWindow& w, const IconSources& icons,
+    const std::optional<logicsim::exporting::CircuitUIConfig>& config) -> void {
+    using namespace logicsim::exporting;
+
+    if (!config.has_value()) {
+        w.StartSimulationCommand().IconSource(icons.simulation_start_disabled);
+        w.StopSimulationCommand().IconSource(icons.simulation_end_disabled);
+    } else if (config.value().state.type == CircuitStateType::Simulation) {
+        w.StartSimulationCommand().IconSource(icons.simulation_start_disabled);
+        w.StopSimulationCommand().IconSource(icons.simulation_end_enabled);
+    } else {
+        w.StartSimulationCommand().IconSource(icons.simulation_start_enabled);
+        w.StopSimulationCommand().IconSource(icons.simulation_end_disabled);
+    }
+}
+
+auto clear_simulation_icons(MainWindow& w) -> void {
+    set_simulation_icons(w, IconSources {}, std::nullopt);
+}
+
 }  // namespace
 
 auto MainWindow::InitializeComponent() -> void {
     MainWindowT<MainWindow>::InitializeComponent();
 
     icon_sources_ = lookup_icons();
+    set_simulation_icons(*this, icon_sources_, last_config_);
 
     // title
     Title(L"LogikSim");
@@ -146,6 +176,14 @@ auto MainWindow::InitializeComponent() -> void {
 
     render_buffer_control_ = std::move(buffer_parts.control);
     backend_tasks_ = std::move(task_parts.source);
+}
+
+auto MainWindow::Page_ActualThemeChanged(FrameworkElement const&, IInspectable const&)
+    -> void {
+    // Icons need to be cleared first as otherwise they are not updated, if the same
+    // icon source is set, although now with a different theme color.
+    clear_simulation_icons(*this);
+    set_simulation_icons(*this, icon_sources_, last_config_);
 }
 
 auto MainWindow::CanvasPanel_SizeChanged(IInspectable const&, SizeChangedEventArgs const&)
@@ -260,21 +298,7 @@ auto MainWindow::config_update(logicsim::exporting::CircuitUIConfig config__) ->
     if (!last_config.has_value() ||
         ((last_config->state.type == CircuitStateType::Simulation) !=
          (new_config.state.type == CircuitStateType::Simulation))) {
-        // Notes:
-        // 1) It is not enough to change the brush or color of the FontIconSource,
-        //    as other components create icons from the IconSource and the link is
-        //    lost.
-        // 2) Strangely the ressource directory does not hold references to the font
-        // icon
-        //    sources and are destroyed when assigning a different icon. Thats why we
-        //    need to store references to the icon sources in the window class.
-        if (new_config.state.type == CircuitStateType::Simulation) {
-            StartSimulationCommand().IconSource(icon_sources_.simulation_start_disabled);
-            StopSimulationCommand().IconSource(icon_sources_.simulation_end_enabled);
-        } else {
-            StartSimulationCommand().IconSource(icon_sources_.simulation_start_enabled);
-            StopSimulationCommand().IconSource(icon_sources_.simulation_end_disabled);
-        }
+        set_simulation_icons(*this, icon_sources_, last_config_);
 
         StartSimulationCommand().NotifyCanExecuteChanged();
         StopSimulationCommand().NotifyCanExecuteChanged();
