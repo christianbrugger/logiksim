@@ -42,21 +42,65 @@ class IBackendGuiActions {
 
    public:
     virtual auto change_title(winrt::hstring title) const -> void = 0;
+    virtual auto config_update(logicsim::exporting::CircuitUIConfig config) const
+        -> void = 0;
 };
 
 //
 // Tasks
 //
 
-using BackendTask = std::variant<            //
-    SwapChainParams,                         //
-    logicsim::exporting::MousePressEvent,    //
-    logicsim::exporting::MouseMoveEvent,     //
-    logicsim::exporting::MouseReleaseEvent,  //
-    logicsim::exporting::MouseWheelEvent,    //
-    logicsim::exporting::VirtualKey,         //
-    logicsim::exporting::UserActionEvent,    //
-    logicsim::exporting::ExampleCircuitType  //
+struct SimulationConfigEvent {
+    std::optional<exporting::time_rate_t> simulation_time_rate {};
+    std::optional<bool> use_wire_delay {};
+
+    [[nodiscard]] auto operator==(const SimulationConfigEvent& other) const
+        -> bool = default;
+};
+
+struct WidgetRenderConfigEvent {
+    std::optional<exporting::ThreadCount> thread_count {};
+    std::optional<exporting::WireRenderStyle> wire_render_style {};
+
+    std::optional<bool> do_benchmark {};
+    std::optional<bool> show_circuit {};
+    std::optional<bool> show_collision_index {};
+    std::optional<bool> show_connection_index {};
+    std::optional<bool> show_selection_index {};
+
+    std::optional<bool> show_render_borders {};
+    std::optional<bool> show_mouse_position {};
+    std::optional<bool> direct_rendering {};
+    std::optional<bool> jit_rendering {};
+
+    [[nodiscard]] auto operator==(const WidgetRenderConfigEvent&) const -> bool = default;
+};
+
+struct CircuitWidgetStateEvent {
+    std::optional<exporting::CircuitStateType> type {};
+    std::optional<exporting::DefaultMouseAction> editing_default_mouse_action {};
+
+    [[nodiscard]] auto operator==(const CircuitWidgetStateEvent&) const -> bool = default;
+};
+
+struct CircuitUIConfigEvent {
+    SimulationConfigEvent simulation {};
+    WidgetRenderConfigEvent render {};
+    CircuitWidgetStateEvent state {};
+
+    [[nodiscard]] auto operator==(const CircuitUIConfigEvent&) const -> bool = default;
+};
+
+using BackendTask = std::variant<   //
+    SwapChainParams,                //
+    exporting::MousePressEvent,     //
+    exporting::MouseMoveEvent,      //
+    exporting::MouseReleaseEvent,   //
+    exporting::MouseWheelEvent,     //
+    exporting::VirtualKey,          //
+    exporting::UserActionEvent,     //
+    exporting::ExampleCircuitType,  //
+    CircuitUIConfigEvent            //
     >;
 
 using BackendTaskQueue = ::logicsim::ConcurrentBlockingQueue<BackendTask>;

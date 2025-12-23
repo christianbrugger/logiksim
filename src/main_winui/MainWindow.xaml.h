@@ -11,6 +11,17 @@
 
 namespace winrt::main_winui::implementation {
 
+// Window needs to hold references to the IconSources assigned to XamlUICommand otherwise
+// they will be deleted.
+struct IconSources {
+    using IconSource = Microsoft::UI::Xaml::Controls::IconSource;
+
+    IconSource simulation_start_enabled {nullptr};
+    IconSource simulation_start_disabled {nullptr};
+    IconSource simulation_end_enabled {nullptr};
+    IconSource simulation_end_disabled {nullptr};
+};
+
 struct MainWindow : MainWindowT<MainWindow> {
     MainWindow() {
         // Xaml objects should not call InitializeComponent during construction.
@@ -18,11 +29,6 @@ struct MainWindow : MainWindowT<MainWindow> {
     }
 
     auto InitializeComponent() -> void;
-
-    // myButton
-
-    auto myButton_Click(IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&)
-        -> void;
 
     // CanvasPanel
 
@@ -48,16 +54,23 @@ struct MainWindow : MainWindowT<MainWindow> {
     auto register_swap_chain(
         const Microsoft::Graphics::Canvas::CanvasSwapChain& swap_chain) -> void;
 
+    auto config_update(logicsim::exporting::CircuitUIConfig config) -> void;
+
     // UI Command
 
     void XamlUICommand_ExecuteRequested(
         Microsoft::UI::Xaml::Input::XamlUICommand const& sender,
         Microsoft::UI::Xaml::Input::ExecuteRequestedEventArgs const&);
 
+    void XamlUICommand_CanExecuteRequest(
+        Microsoft::UI::Xaml::Input::XamlUICommand const& sender,
+        Microsoft::UI::Xaml::Input::CanExecuteRequestedEventArgs const& args);
+
    private:
     auto update_render_size() -> void;
 
    private:
+    IconSources icon_sources_ {};
     std::jthread backend_thread_ {};
     std::jthread render_thread_ {};
 
@@ -66,6 +79,7 @@ struct MainWindow : MainWindowT<MainWindow> {
     logicsim::BackendTaskSource backend_tasks_ {};
 
     logicsim::KeyTracker key_tracker_ {};
+    std::optional<logicsim::exporting::CircuitUIConfig> last_config_ {};
 };
 
 }  // namespace winrt::main_winui::implementation

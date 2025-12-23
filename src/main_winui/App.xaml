@@ -10,11 +10,24 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
 
+            <!-- Other app resources here -->
             <FontFamily x:Key="Lucide">
                 ms-appx:///resources/fonts/lucide_0.562.0_300_nogap.ttf#Lucide
             </FontFamily>
+
+            <SolidColorBrush x:Key="BushStartSimulation" Color="#11920D"/>
+            <SolidColorBrush x:Key="BushStopSimulation" Color="#C70F21"/>
+
+            <FontIconSource x:Key="FontSimulationStartEnabled" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" 
+                            Glyph="&#xEDDA;" Foreground="{StaticResource BushStartSimulation}" />
+            <FontIconSource x:Key="FontSimulationStartDisabled" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" 
+                            Glyph="&#xEDDA;" Foreground="{ThemeResource TextFillColorDisabled}" />
+            <FontIconSource x:Key="FontSimulationStopEnabled" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" 
+                            Glyph="&#xE978;" Foreground="{StaticResource BushStopSimulation}" />
+            <FontIconSource x:Key="FontSimulationStopDisabled" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" 
+                            Glyph="&#xE978;" Foreground="{ThemeResource TextFillColorDisabled}" />
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

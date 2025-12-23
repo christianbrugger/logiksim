@@ -5,6 +5,7 @@
 #include "main_winui/src/ls_timer.h"
 
 #include <memory>
+#include <print>
 #include <variant>
 
 namespace logicsim {
@@ -87,6 +88,60 @@ auto render_circuit(RenderBufferSource& render_source,
     });
 }
 
+[[nodiscard]] auto handle_circuit_ui_config_event(const CircuitUIConfigEvent& event,
+                                                  exporting::CircuitInterface& circuit)
+    -> ls_ui_status_t {
+    const auto config = circuit.config();
+    const auto new_config = exporting::CircuitUIConfig {
+        .simulation =
+            {
+                .simulation_time_rate = event.simulation.simulation_time_rate.value_or(
+                    config.simulation.simulation_time_rate),
+                .use_wire_delay = event.simulation.use_wire_delay.value_or(
+                    config.simulation.use_wire_delay),
+            },
+        .render =
+            {
+                .thread_count =
+                    event.render.thread_count.value_or(config.render.thread_count),
+                .wire_render_style = event.render.wire_render_style.value_or(
+                    config.render.wire_render_style),
+                //
+                .do_benchmark =
+                    event.render.do_benchmark.value_or(config.render.do_benchmark),
+                .show_circuit =
+                    event.render.show_circuit.value_or(config.render.show_circuit),
+                .show_collision_index = event.render.show_collision_index.value_or(
+                    config.render.show_collision_index),
+                .show_connection_index = event.render.show_connection_index.value_or(
+                    config.render.show_connection_index),
+                .show_selection_index = event.render.show_selection_index.value_or(
+                    config.render.show_selection_index),
+                //
+                .show_render_borders = event.render.show_render_borders.value_or(
+                    config.render.show_render_borders),
+                .show_mouse_position = event.render.show_mouse_position.value_or(
+                    config.render.show_mouse_position),
+                .direct_rendering = event.render.direct_rendering.value_or(
+                    config.render.direct_rendering),
+                .jit_rendering =
+                    event.render.jit_rendering.value_or(config.render.jit_rendering),
+            },
+        .state =
+            exporting::CircuitWidgetState {
+                .type = event.state.type.value_or(config.state.type),
+                .editing_default_mouse_action =
+                    event.state.editing_default_mouse_action.value_or(
+                        config.state.editing_default_mouse_action),
+            },
+    };
+
+    if (new_config != config) {
+        return circuit.set_config(new_config);
+    }
+    return ls_ui_status_t {};
+}
+
 [[nodiscard]] auto submit_backend_task(const BackendTask& task,
                                        RenderBufferSource& render_source,
                                        exporting::CircuitInterface& circuit)
@@ -114,6 +169,9 @@ auto render_circuit(RenderBufferSource& render_source,
     if (const auto* item = std::get_if<ExampleCircuitType>(&task)) {
         return circuit.load(*item);
     }
+    if (const auto* item = std::get_if<CircuitUIConfigEvent>(&task)) {
+        return handle_circuit_ui_config_event(*item, circuit);
+    }
 
     if (const auto* item = std::get_if<SwapChainParams>(&task)) {
         if (render_source.params() != *item) {
@@ -127,9 +185,13 @@ auto render_circuit(RenderBufferSource& render_source,
 }
 
 auto process_backend_task(const BackendTask& task, RenderBufferSource& render_source,
-                          exporting::CircuitInterface& circuit) -> void {
+                          exporting::CircuitInterface& circuit,
+                          IBackendGuiActions& actions) -> void {
     const auto status = submit_backend_task(task, render_source, circuit);
 
+    if (status.config_changed) {
+        actions.config_update(circuit.config());
+    }
     if (status.repaint_required) {
         render_circuit(render_source, circuit);
     }
@@ -164,7 +226,8 @@ template <typename T>
 
 auto main_forwarded_tasks(std::stop_token& token, BackendTaskSink& tasks,
                           RenderBufferSource& render_source,
-                          exporting::CircuitInterface& circuit) {
+                          exporting::CircuitInterface& circuit,
+                          IBackendGuiActions& actions) {
     auto first = std::optional<BackendTask> {};
 
     while (!token.stop_requested()) {
@@ -177,7 +240,7 @@ auto main_forwarded_tasks(std::stop_token& token, BackendTaskSink& tasks,
             first = combined;
             second = std::nullopt;
         } else {
-            process_backend_task(first.value(), render_source, circuit);
+            process_backend_task(first.value(), render_source, circuit, actions);
             first = std::exchange(second, std::nullopt);
         }
     }
@@ -211,9 +274,10 @@ auto backend_thread_main(std::stop_token token,
             auto status = circuit.set_config(config);
             static_cast<void>(status);
         }
+        actions->config_update(circuit.config());
 
         try {
-            main_forwarded_tasks(token, tasks, render_source, circuit);
+            main_forwarded_tasks(token, tasks, render_source, circuit, *actions);
         } catch (const ShutdownException&) {
             // normal shutdown behavior.
         }

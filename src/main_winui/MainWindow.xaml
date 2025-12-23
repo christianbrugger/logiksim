@@ -99,20 +99,15 @@
             <XamlUICommand x:Key="WireStyleBoldCommand" x:Name="WireStyleBoldCommand" Label="Bold" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
             <XamlUICommand x:Key="WireStyleBoldRedCommand" x:Name="WireStyleBoldRedCommand" Label="Bold Red" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
 
-
             <!-- Simulation -->
-            <XamlUICommand x:Key="StartSimulationCommand" x:Name="StartSimulationCommand" Label="Start Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xEDDA;" Foreground="#11920D" />
-                </XamlUICommand.IconSource>
+            <XamlUICommand x:Key="StartSimulationCommand" x:Name="StartSimulationCommand" Label="Start Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested"
+                           CanExecuteRequested="XamlUICommand_CanExecuteRequest">
                 <XamlUICommand.KeyboardAccelerators>
                     <KeyboardAccelerator Key="F5"/>
                 </XamlUICommand.KeyboardAccelerators>
             </XamlUICommand>
-            <XamlUICommand x:Key="StopSimulationCommand" x:Name="StopSimulationCommand" Label="Stop Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE978;" Foreground="#C70F21" />
-                </XamlUICommand.IconSource>
+            <XamlUICommand x:Key="StopSimulationCommand" x:Name="StopSimulationCommand" Label="Stop Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested"
+                           CanExecuteRequested="XamlUICommand_CanExecuteRequest">
                 <XamlUICommand.KeyboardAccelerators>
                     <KeyboardAccelerator Key="F6"/>
                 </XamlUICommand.KeyboardAccelerators>
@@ -322,7 +317,10 @@
             </MenuBar>
 
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
+                <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right">
+                    <AppBarButton Command="{StaticResource StartSimulationCommand}"/>
+                    <AppBarButton Command="{StaticResource StopSimulationCommand}"/>
+                </CommandBar>
             </StackPanel>
 
             <Grid Grid.Row="2">

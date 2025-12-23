@@ -10,6 +10,7 @@
 
 #include <Windows.UI.ViewManagement.h>
 #include <iostream>
+#include <print>
 
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;
@@ -67,6 +68,8 @@ class BackendGuiActions : public logicsim::IBackendGuiActions {
     BackendGuiActions(MainWindow& window);
 
     auto change_title(hstring title) const -> void override;
+    auto config_update(logicsim::exporting::CircuitUIConfig config) const
+        -> void override;
 
    private:
     weak_ref<MainWindow> window_weak_;
@@ -75,7 +78,7 @@ class BackendGuiActions : public logicsim::IBackendGuiActions {
 
 BackendGuiActions::BackendGuiActions(MainWindow& window)
     : window_weak_ {window.get_weak()}, queue_ {window.DispatcherQueue()} {
-    // Make sure this method is called from the UI thread.
+    // Makes sure this method is called from the UI thread.
     Expects(queue_);
     Expects(queue_.HasThreadAccess());
 }
@@ -88,10 +91,37 @@ auto BackendGuiActions::change_title(hstring title) const -> void {
     });
 }
 
+auto BackendGuiActions::config_update(logicsim::exporting::CircuitUIConfig config) const
+    -> void {
+    queue_.TryEnqueue([window_weak = window_weak_, config_value = std::move(config)]() {
+        if (const auto window = window_weak.get()) {
+            window->config_update(std::move(config_value));
+        }
+    });
+}
+
+[[nodiscard]] auto lookup_icons() -> IconSources {
+    const auto get_icon = [](std::wstring_view name) {
+        return Application::Current()
+            .Resources()
+            .Lookup(box_value(name))
+            .as<Controls::IconSource>();
+    };
+
+    return IconSources {
+        .simulation_start_enabled = get_icon(L"FontSimulationStartEnabled"),
+        .simulation_start_disabled = get_icon(L"FontSimulationStartDisabled"),
+        .simulation_end_enabled = get_icon(L"FontSimulationStopEnabled"),
+        .simulation_end_disabled = get_icon(L"FontSimulationStopDisabled"),
+    };
+}
+
 }  // namespace
 
 auto MainWindow::InitializeComponent() -> void {
     MainWindowT<MainWindow>::InitializeComponent();
+
+    icon_sources_ = lookup_icons();
 
     // title
     Title(L"LogikSim");
@@ -116,10 +146,6 @@ auto MainWindow::InitializeComponent() -> void {
 
     render_buffer_control_ = std::move(buffer_parts.control);
     backend_tasks_ = std::move(task_parts.source);
-}
-
-auto MainWindow::myButton_Click(IInspectable const&, RoutedEventArgs const&) -> void {
-    backend_tasks_.push(logicsim::exporting::ExampleCircuitType::elements_wires);
 }
 
 auto MainWindow::CanvasPanel_SizeChanged(IInspectable const&, SizeChangedEventArgs const&)
@@ -223,6 +249,38 @@ auto MainWindow::register_swap_chain(
     CanvasPanel().SwapChain(swap_chain);
 }
 
+auto MainWindow::config_update(logicsim::exporting::CircuitUIConfig config__) -> void {
+    using namespace logicsim::exporting;
+
+    // last_config_ needs to be set first, as notify handlers fire immediately.
+    const auto last_config = std::exchange(last_config_, std::move(config__));
+    const auto& new_config = last_config_.value();
+
+    // simulation state
+    if (!last_config.has_value() ||
+        ((last_config->state.type == CircuitStateType::Simulation) !=
+         (new_config.state.type == CircuitStateType::Simulation))) {
+        // Notes:
+        // 1) It is not enough to change the brush or color of the FontIconSource,
+        //    as other components create icons from the IconSource and the link is
+        //    lost.
+        // 2) Strangely the ressource directory does not hold references to the font
+        // icon
+        //    sources and are destroyed when assigning a different icon. Thats why we
+        //    need to store references to the icon sources in the window class.
+        if (new_config.state.type == CircuitStateType::Simulation) {
+            StartSimulationCommand().IconSource(icon_sources_.simulation_start_disabled);
+            StopSimulationCommand().IconSource(icon_sources_.simulation_end_enabled);
+        } else {
+            StartSimulationCommand().IconSource(icon_sources_.simulation_start_enabled);
+            StopSimulationCommand().IconSource(icon_sources_.simulation_end_disabled);
+        }
+
+        StartSimulationCommand().NotifyCanExecuteChanged();
+        StopSimulationCommand().NotifyCanExecuteChanged();
+    }
+}
+
 auto MainWindow::update_render_size() -> void {
     const auto panel = CanvasPanel();
     if (!panel) {
@@ -248,7 +306,9 @@ auto MainWindow::update_render_size() -> void {
 
 void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& sender,
                                                 Input::ExecuteRequestedEventArgs const&) {
+    using namespace logicsim;
     using namespace logicsim::exporting;
+
     const auto get_position = [&] -> std::optional<ls_point_device_fine_t> {
         return logicsim::get_cursor_position(CanvasPanel()).transform([](auto val) {
             return logicsim::to_device_position(val);
@@ -348,6 +408,29 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
 
+    // Simulation
+
+    if (sender == StartSimulationCommand()) {
+        backend_tasks_.push(CircuitUIConfigEvent {
+            .state =
+                CircuitWidgetStateEvent {
+                    .type = CircuitStateType::Simulation,
+                },
+        });
+        return;
+    }
+
+    if (sender == StopSimulationCommand()) {
+        backend_tasks_.push(CircuitUIConfigEvent {
+            .state =
+                CircuitWidgetStateEvent {
+                    .type = CircuitStateType::Editing,
+                    .editing_default_mouse_action = DefaultMouseAction::selection,
+                },
+        });
+        return;
+    }
+
     // Debug
 
     if (sender == ExampleSimpleCommand()) {
@@ -364,6 +447,22 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     }
     if (sender == ExampleElementsWiresCommand()) {
         backend_tasks_.push(logicsim::exporting::ExampleCircuitType::elements_wires);
+        return;
+    }
+}
+
+void MainWindow::XamlUICommand_CanExecuteRequest(
+    Input::XamlUICommand const& sender, Input::CanExecuteRequestedEventArgs const& args) {
+    if (sender == StartSimulationCommand()) {
+        args.CanExecute(last_config_.has_value() &&
+                        last_config_->state.type !=
+                            logicsim::exporting::CircuitStateType::Simulation);
+        return;
+    }
+    if (sender == StopSimulationCommand()) {
+        args.CanExecute(last_config_.has_value() &&
+                        last_config_->state.type ==
+                            logicsim::exporting::CircuitStateType::Simulation);
         return;
     }
 }
