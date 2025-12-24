@@ -10,6 +10,7 @@
 #include "main_winui/src/ls_xaml_utils.h"
 
 #include <Windows.UI.ViewManagement.h>
+#include <chrono>
 #include <exception>
 #include <iostream>
 #include <print>
@@ -388,7 +389,9 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         });
     };
 
+    //
     // File
+    //
 
     if (sender == NewCommand()) {
         backend_tasks_.push(UserActionEvent {.action = UserAction::clear_circuit});
@@ -396,15 +399,15 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
     if (sender == OpenCommand()) {
-        std::cout << "open" << '\n';
+        std::cout << "TODO: open" << '\n';
         return;
     }
     if (sender == SaveCommand()) {
-        std::cout << "save" << '\n';
+        std::cout << "TODO: save" << '\n';
         return;
     }
     if (sender == SaveAsCommand()) {
-        std::cout << "save as" << '\n';
+        std::cout << "TODO: save as" << '\n';
         return;
     }
     if (sender == ExitCommand()) {
@@ -412,7 +415,9 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
 
+    //
     // Edit
+    //
 
     if (sender == UndoCommand()) {
         backend_tasks_.push(UserActionEvent {
@@ -460,7 +465,9 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
 
+    //
     // View
+    //
 
     if (sender == ZoomInCommand()) {
         backend_tasks_.push(UserActionEvent {
@@ -480,32 +487,219 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         backend_tasks_.push(UserActionEvent {.action = UserAction::reset_view});
         return;
     }
+    {
+        if (sender == WireStyleRedCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .render =
+                    {
+                        .wire_render_style = WireRenderStyle::red,
+                    },
+            });
+            return;
+        }
+        if (sender == WireStyleBoldCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .render =
+                    {
+                        .wire_render_style = WireRenderStyle::bold,
+                    },
+            });
+            return;
+        }
+        if (sender == WireStyleBoldRedCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .render =
+                    {
+                        .wire_render_style = WireRenderStyle::bold_red,
+                    },
+            });
+            return;
+        }
+    }
 
+    //
     // Simulation
+    //
 
     if (sender == StartSimulationCommand()) {
         backend_tasks_.push(CircuitUIConfigEvent {
             .state =
-                CircuitWidgetStateEvent {
+                {
                     .type = CircuitStateType::Simulation,
                 },
         });
         return;
     }
-
     if (sender == StopSimulationCommand()) {
         backend_tasks_.push(CircuitUIConfigEvent {
             .state =
-                CircuitWidgetStateEvent {
+                {
                     .type = CircuitStateType::Editing,
                     .editing_default_mouse_action = DefaultMouseAction::selection,
                 },
         });
         return;
     }
+    if (sender == WireDelayCommand()) {
+        backend_tasks_.push(CircuitUIConfigEvent {
+            .simulation =
+                {
+                    .use_wire_delay =
+                        !last_config_.value_or({}).simulation.use_wire_delay,
+                },
+        });
+        return;
+    }
+    {
+        using namespace std::chrono_literals;
 
+        if (sender == SimulationSpeed0nsCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .simulation =
+                    {
+                        .simulation_time_rate = time_rate_t {0us},
+                    },
+            });
+            return;
+        }
+        if (sender == SimulationSpeed1usCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .simulation =
+                    {
+                        .simulation_time_rate = time_rate_t {1us},
+                    },
+            });
+            return;
+        }
+        if (sender == SimulationSpeed10usCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .simulation =
+                    {
+                        .simulation_time_rate = time_rate_t {10us},
+                    },
+            });
+            return;
+        }
+        if (sender == SimulationSpeed100usCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .simulation =
+                    {
+                        .simulation_time_rate = time_rate_t {100us},
+                    },
+            });
+            return;
+        }
+        if (sender == SimulationSpeed1msCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .simulation =
+                    {
+                        .simulation_time_rate = time_rate_t {1ms},
+                    },
+            });
+            return;
+        }
+        if (sender == SimulationSpeed10msCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .simulation =
+                    {
+                        .simulation_time_rate = time_rate_t {10ms},
+                    },
+            });
+            return;
+        }
+        if (sender == SimulationSpeed100msCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .simulation =
+                    {
+                        .simulation_time_rate = time_rate_t {100ms},
+                    },
+            });
+            return;
+        }
+        if (sender == SimulationSpeed1sCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .simulation =
+                    {
+                        .simulation_time_rate = time_rate_t {1s},
+                    },
+            });
+            return;
+        }
+        if (sender == SimulationSpeed10sCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .simulation =
+                    {
+                        .simulation_time_rate = time_rate_t {10s},
+                    },
+            });
+            return;
+        }
+    }
+
+    //
     // Debug
+    //
 
+    if (sender == BenchmarkCommand()) {
+        backend_tasks_.push(CircuitUIConfigEvent {
+            .render =
+                {
+                    .do_benchmark = !last_config_.value_or({}).render.do_benchmark,
+                },
+        });
+        return;
+    }
+    if (sender == DebugInfoDialogCommand()) {
+        std::cout << "TODO: debug info dialog" << '\n';
+        return;
+    }
+
+    if (sender == ShowCircuitCommand()) {
+        backend_tasks_.push(CircuitUIConfigEvent {
+            .render =
+                {
+                    .show_circuit = !last_config_.value_or({}).render.show_circuit,
+                },
+        });
+        return;
+    }
+    if (sender == ShowCollisionIndexCommand()) {
+        backend_tasks_.push(CircuitUIConfigEvent {
+            .render =
+                {
+                    .show_collision_index =
+                        !last_config_.value_or({}).render.show_collision_index,
+                },
+        });
+        return;
+    }
+    if (sender == ShowConnectionIndexCommand()) {
+        backend_tasks_.push(CircuitUIConfigEvent {
+            .render =
+                {
+                    .show_connection_index =
+                        !last_config_.value_or({}).render.show_connection_index,
+                },
+        });
+        return;
+    }
+    if (sender == ShowSelectionIndexCommand()) {
+        backend_tasks_.push(CircuitUIConfigEvent {
+            .render =
+                {
+                    .show_selection_index =
+                        !last_config_.value_or({}).render.show_selection_index,
+                },
+        });
+        return;
+    }
+
+    if (sender == ReloadCommand()) {
+        backend_tasks_.push(UserActionEvent {
+            .action = UserAction::reload_circuit,
+        });
+        return;
+    }
     if (sender == ExampleSimpleCommand()) {
         backend_tasks_.push(logicsim::exporting::ExampleCircuitType::simple);
         return;
@@ -521,6 +715,95 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     if (sender == ExampleElementsWiresCommand()) {
         backend_tasks_.push(logicsim::exporting::ExampleCircuitType::elements_wires);
         return;
+    }
+
+    if (sender == ShowRenderBordersCommand()) {
+        backend_tasks_.push(CircuitUIConfigEvent {
+            .render =
+                {
+                    .show_render_borders =
+                        !last_config_.value_or({}).render.show_render_borders,
+                },
+        });
+        return;
+    }
+    if (sender == ShowMousePositionCommand()) {
+        backend_tasks_.push(CircuitUIConfigEvent {
+            .render =
+                {
+                    .show_mouse_position =
+                        !last_config_.value_or({}).render.show_mouse_position,
+                },
+        });
+        return;
+    }
+    if (sender == EnterNonInteractiveModeCommand()) {
+        if (last_config_.value_or({}).state.type != CircuitStateType::NonInteractive) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .state =
+                    {
+                        .type = CircuitStateType::NonInteractive,
+                    },
+            });
+        } else {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .state =
+                    {
+                        .type = CircuitStateType::Editing,
+                        .editing_default_mouse_action = DefaultMouseAction::selection,
+                    },
+            });
+        }
+        return;
+    }
+
+    if (sender == JitRenderingCommand()) {
+        backend_tasks_.push(CircuitUIConfigEvent {
+            .render =
+                {
+                    .jit_rendering = !last_config_.value_or({}).render.jit_rendering,
+                },
+        });
+        return;
+    }
+
+    {
+        if (sender == RenderSynchronousCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .render =
+                    {
+                        .thread_count = ThreadCount::synchronous,
+                    },
+            });
+            return;
+        }
+        if (sender == Render2ThreadsCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .render =
+                    {
+                        .thread_count = ThreadCount::two,
+                    },
+            });
+            return;
+        }
+        if (sender == Render4ThreadsCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .render =
+                    {
+                        .thread_count = ThreadCount::four,
+                    },
+            });
+            return;
+        }
+        if (sender == Render8ThreadsCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .render =
+                    {
+                        .thread_count = ThreadCount::eight,
+                    },
+            });
+            return;
+        }
     }
 }
 

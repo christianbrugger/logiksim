@@ -120,7 +120,7 @@
             <XamlUICommand x:Key="SimulationSpeed10usCommand" x:Name="SimulationSpeed10usCommand" Label="10 us/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
             <XamlUICommand x:Key="SimulationSpeed100usCommand" x:Name="SimulationSpeed100usCommand" Label="100 us/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
             <XamlUICommand x:Key="SimulationSpeed1msCommand" x:Name="SimulationSpeed1msCommand" Label="1 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="SimulationSpeed10mnsCommand" x:Name="SimulationSpeed10mnsCommand" Label="10 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+            <XamlUICommand x:Key="SimulationSpeed10msCommand" x:Name="SimulationSpeed10msCommand" Label="10 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
             <XamlUICommand x:Key="SimulationSpeed100msCommand" x:Name="SimulationSpeed100msCommand" Label="100 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
             <XamlUICommand x:Key="SimulationSpeed1sCommand" x:Name="SimulationSpeed1sCommand" Label="1 s/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
             <XamlUICommand x:Key="SimulationSpeed10sCommand" x:Name="SimulationSpeed10sCommand" Label="10 s/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
@@ -277,7 +277,7 @@
                         <MenuFlyoutItem Command="{StaticResource SimulationSpeed10usCommand}"/>
                         <MenuFlyoutItem Command="{StaticResource SimulationSpeed100usCommand}"/>
                         <MenuFlyoutItem Command="{StaticResource SimulationSpeed1msCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed10mnsCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed10msCommand}"/>
                         <MenuFlyoutItem Command="{StaticResource SimulationSpeed100msCommand}"/>
                         <MenuFlyoutItem Command="{StaticResource SimulationSpeed1sCommand}"/>
                         <MenuFlyoutItem Command="{StaticResource SimulationSpeed10sCommand}"/>
