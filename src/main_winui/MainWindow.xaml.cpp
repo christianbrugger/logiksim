@@ -6,9 +6,11 @@
 #endif
 
 #include "main_winui/src/ls_key_tracker.h"
+#include "main_winui/src/ls_timer.h"
 #include "main_winui/src/ls_xaml_utils.h"
 
 #include <Windows.UI.ViewManagement.h>
+#include <exception>
 #include <iostream>
 #include <print>
 
@@ -303,6 +305,53 @@ auto MainWindow::config_update(logicsim::exporting::CircuitUIConfig config__) ->
         StartSimulationCommand().NotifyCanExecuteChanged();
         StopSimulationCommand().NotifyCanExecuteChanged();
     }
+
+    // Toggles
+    WireDelayFlyout().IsChecked(new_config.simulation.use_wire_delay);
+    BenchmarkFlyout().IsChecked(new_config.render.do_benchmark);
+    DebugInfoDialogFlyout().IsChecked(false);
+    ShowCircuitFlyout().IsChecked(new_config.render.show_circuit);
+    ShowCollisionIndexFlyout().IsChecked(new_config.render.show_collision_index);
+    ShowConnectionIndexFlyout().IsChecked(new_config.render.show_connection_index);
+    ShowSelectionIndexFlyout().IsChecked(new_config.render.show_selection_index);
+    ShowRenderBordersFlyout().IsChecked(new_config.render.show_render_borders);
+    ShowMousePositionFlyout().IsChecked(new_config.render.show_mouse_position);
+    EnterNonInteractiveModeFlyout().IsChecked(new_config.state.type ==
+                                              CircuitStateType::NonInteractive);
+    JitRenderingFlyout().IsChecked(new_config.render.jit_rendering);
+
+    // Radios
+    [&] {
+        switch (new_config.render.wire_render_style) {
+            case WireRenderStyle::red:
+                WireStyleRedFlyout().IsChecked(true);
+                return;
+            case WireRenderStyle::bold:
+                WireStyleBoldFlyout().IsChecked(true);
+                return;
+            case WireRenderStyle::bold_red:
+                WireStyleBoldRedFlyout().IsChecked(true);
+                return;
+        };
+        std::terminate();
+    }();
+    [&] {
+        switch (new_config.render.thread_count) {
+            case ThreadCount::synchronous:
+                ThreadSyncFlyout().IsChecked(true);
+                return;
+            case ThreadCount::two:
+                Thread2Flyout().IsChecked(true);
+                return;
+            case ThreadCount::four:
+                Thread4Flyout().IsChecked(true);
+                return;
+            case ThreadCount::eight:
+                Thread8Flyout().IsChecked(true);
+                return;
+        };
+        std::terminate();
+    }();
 }
 
 auto MainWindow::update_render_size() -> void {

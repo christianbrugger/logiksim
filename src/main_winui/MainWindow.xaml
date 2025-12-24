@@ -256,9 +256,9 @@
                     <MenuFlyoutItem Command="{StaticResource ResetZoomCommand}"/>
                     <MenuFlyoutSeparator/>
                     <MenuFlyoutSubItem Text="Wire Style">
-                        <MenuFlyoutItem Command="{StaticResource WireStyleRedCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource WireStyleBoldCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource WireStyleBoldRedCommand}"/>
+                        <RadioMenuFlyoutItem x:Name="WireStyleRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleRedCommand}"/>
+                        <RadioMenuFlyoutItem x:Name="WireStyleBoldFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldCommand}"/>
+                        <RadioMenuFlyoutItem x:Name="WireStyleBoldRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldRedCommand}"/>
                     </MenuFlyoutSubItem>
                 </MenuBarItem>
 
@@ -266,7 +266,7 @@
                     <MenuFlyoutItem Command="{StaticResource StartSimulationCommand}"/>
                     <MenuFlyoutItem Command="{StaticResource StopSimulationCommand}"/>
                     <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource WireDelayCommand}"/>
+                    <ToggleMenuFlyoutItem x:Name="WireDelayFlyout" Command="{StaticResource WireDelayCommand}"/>
                     <MenuFlyoutSeparator/>
                     <MenuFlyoutSubItem Text="Simulation Speed">
                         <MenuFlyoutSubItem.Icon>
@@ -285,13 +285,13 @@
                 </MenuBarItem>
 
                 <MenuBarItem Title="Debug">
-                    <MenuFlyoutItem Command="{StaticResource BenchmarkCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource DebugInfoDialogCommand}"/>
+                    <ToggleMenuFlyoutItem x:Name="BenchmarkFlyout" Command="{StaticResource BenchmarkCommand}"/>
+                    <ToggleMenuFlyoutItem x:Name="DebugInfoDialogFlyout" Command="{StaticResource DebugInfoDialogCommand}"/>
                     <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource ShowCircuitCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ShowCollisionIndexCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ShowConnectionIndexCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ShowSelectionIndexCommand}"/>
+                    <ToggleMenuFlyoutItem x:Name="ShowCircuitFlyout" Command="{StaticResource ShowCircuitCommand}"/>
+                    <ToggleMenuFlyoutItem x:Name="ShowCollisionIndexFlyout" Command="{StaticResource ShowCollisionIndexCommand}"/>
+                    <ToggleMenuFlyoutItem x:Name="ShowConnectionIndexFlyout" Command="{StaticResource ShowConnectionIndexCommand}"/>
+                    <ToggleMenuFlyoutItem x:Name="ShowSelectionIndexFlyout" Command="{StaticResource ShowSelectionIndexCommand}"/>
                     <MenuFlyoutSeparator/>
                     <MenuFlyoutItem Command="{StaticResource ReloadCommand}"/>
                     <MenuFlyoutItem Command="{StaticResource ExampleSimpleCommand}"/>
@@ -299,16 +299,16 @@
                     <MenuFlyoutItem Command="{StaticResource ExampleElementsCommand}"/>
                     <MenuFlyoutItem Command="{StaticResource ExampleElementsWiresCommand}"/>
                     <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource ShowRenderBordersCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ShowMousePositionCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource EnterNonInteractiveModeCommand}"/>
+                    <ToggleMenuFlyoutItem x:Name="ShowRenderBordersFlyout" Command="{StaticResource ShowRenderBordersCommand}"/>
+                    <ToggleMenuFlyoutItem x:Name="ShowMousePositionFlyout" Command="{StaticResource ShowMousePositionCommand}"/>
+                    <ToggleMenuFlyoutItem x:Name="EnterNonInteractiveModeFlyout" Command="{StaticResource EnterNonInteractiveModeCommand}"/>
                     <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource JitRenderingCommand}"/>
+                    <ToggleMenuFlyoutItem x:Name="JitRenderingFlyout" Command="{StaticResource JitRenderingCommand}"/>
                     <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource RenderSynchronousCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource Render2ThreadsCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource Render4ThreadsCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource Render8ThreadsCommand}"/>
+                    <RadioMenuFlyoutItem x:Name="ThreadSyncFlyout" GroupName="RenderThreads" Command="{StaticResource RenderSynchronousCommand}"/>
+                    <RadioMenuFlyoutItem x:Name="Thread2Flyout" GroupName="RenderThreads" Command="{StaticResource Render2ThreadsCommand}"/>
+                    <RadioMenuFlyoutItem x:Name="Thread4Flyout" GroupName="RenderThreads" Command="{StaticResource Render4ThreadsCommand}"/>
+                    <RadioMenuFlyoutItem x:Name="Thread8Flyout" GroupName="RenderThreads" Command="{StaticResource Render8ThreadsCommand}"/>
                 </MenuBarItem>
 
                 <MenuBarItem Title="Help">
