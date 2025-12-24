@@ -617,6 +617,15 @@ auto ls_circuit_config(const ls_circuit_t* obj) noexcept -> ls_ui_config_t {
     });
 }
 
+auto ls_circuit_is_render_do_benchmark(const ls_circuit_t* obj) noexcept -> bool {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+
+        return obj->model.config().render.do_benchmark;
+    });
+}
+
 auto ls_circuit_set_config(ls_circuit_t* obj, const ls_ui_config_t* config) noexcept
     -> ls_ui_status_t {
     return ls_translate_exception([&]() {

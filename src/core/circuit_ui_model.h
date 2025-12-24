@@ -107,7 +107,7 @@ class CircuitUIModel {
 
     // setter & getters
     [[nodiscard]] auto set_config(const CircuitUIConfig& config) -> UIStatus;
-    [[nodiscard]] auto config() const -> CircuitUIConfig;
+    [[nodiscard]] auto config() const -> const CircuitUIConfig&;
     [[nodiscard]] auto history_status() const -> HistoryStatus;
     [[nodiscard]] auto allocation_info() const -> CircuitWidgetAllocInfo;
     [[nodiscard]] auto statistics() const -> Statistics;

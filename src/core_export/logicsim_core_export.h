@@ -142,6 +142,9 @@ typedef struct ls_ui_config_t {
 LS_NODISCARD LS_CORE_API ls_ui_config_t ls_circuit_config(const ls_circuit_t* obj)
     LS_NOEXCEPT;
 
+LS_NODISCARD LS_CORE_API bool ls_circuit_is_render_do_benchmark(const ls_circuit_t* obj)
+    LS_NOEXCEPT;
+
 // circuit::set_config
 LS_NODISCARD LS_CORE_API ls_ui_status_t
 ls_circuit_set_config(ls_circuit_t* obj, const ls_ui_config_t* config) LS_NOEXCEPT;
@@ -618,6 +621,7 @@ class CircuitInterface {
    public:
     [[nodiscard]] inline auto set_config(const CircuitUIConfig& config) -> ls_ui_status_t;
     [[nodiscard]] inline auto config() const -> CircuitUIConfig;
+    [[nodiscard]] inline auto is_render_do_benchmark() const -> bool;
     [[nodiscard]] inline auto statistics() const -> ls_ui_statistics_t;
     [[nodiscard]] inline auto history_status() const -> ls_history_status_t;
     [[nodiscard]] inline auto allocation_info() const -> std::string;
@@ -764,6 +768,10 @@ auto CircuitInterface::set_config(const CircuitUIConfig& config) -> ls_ui_status
 
 auto CircuitInterface::config() const -> CircuitUIConfig {
     return detail::to_exp(ls_circuit_config(get()));
+}
+
+auto CircuitInterface::is_render_do_benchmark() const -> bool {
+    return ls_circuit_is_render_do_benchmark(get());
 }
 
 auto CircuitInterface::statistics() const -> ls_ui_statistics_t {

@@ -231,18 +231,33 @@ auto main_forwarded_tasks(std::stop_token& token, BackendTaskSink& tasks,
     auto first = std::optional<BackendTask> {};
 
     while (!token.stop_requested()) {
+        const auto is_benchmark = circuit.is_render_do_benchmark();
+
         if (!first) {
-            first = tasks.pop();
+            if (is_benchmark) {
+                first = tasks.try_pop();
+            } else {
+                first = tasks.pop();
+            }
         }
+
+        if (is_benchmark && !first) {
+            render_circuit(render_source, circuit);
+            continue;
+        }
+
+        Expects(first);
         auto second = tasks.try_pop();
 
+        // try to combine
         if (const auto combined = combine_consecutive_tasks(first, second)) {
             first = combined;
             second = std::nullopt;
-        } else {
-            process_backend_task(first.value(), render_source, circuit, actions);
-            first = std::exchange(second, std::nullopt);
+            continue;
         }
+
+        process_backend_task(first.value(), render_source, circuit, actions);
+        first = std::exchange(second, std::nullopt);
     }
 }
 

@@ -144,7 +144,7 @@ auto CircuitUIModel::set_config(const CircuitUIConfig& new_config) -> UIStatus {
     return status;
 }
 
-auto CircuitUIModel::config() const -> CircuitUIConfig {
+auto CircuitUIModel::config() const -> const CircuitUIConfig& {
     Expects(class_invariant_holds());
     return config_;
 }
