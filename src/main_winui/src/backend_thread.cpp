@@ -142,6 +142,18 @@ auto render_circuit(RenderBufferSource& render_source,
     return ls_ui_status_t {};
 }
 
+[[nodiscard]] auto handle_file_request(FileRequestEvent request,
+                                       exporting::CircuitInterface& circuit)
+    -> ls_ui_status_t {
+    const auto [status, is_dirty] = circuit.finalize_and_is_dirty();
+
+    static_cast<void>(request);
+
+    std::print("Is dirty = {}\n", is_dirty);
+
+    return status;
+}
+
 [[nodiscard]] auto submit_backend_task(const BackendTask& task,
                                        RenderBufferSource& render_source,
                                        exporting::CircuitInterface& circuit)
@@ -171,6 +183,9 @@ auto render_circuit(RenderBufferSource& render_source,
     }
     if (const auto* item = std::get_if<CircuitUIConfigEvent>(&task)) {
         return handle_circuit_ui_config_event(*item, circuit);
+    }
+    if (const auto* item = std::get_if<FileRequestEvent>(&task)) {
+        return handle_file_request(*item, circuit);
     }
 
     if (const auto* item = std::get_if<SwapChainParams>(&task)) {

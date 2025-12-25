@@ -81,6 +81,7 @@ typedef struct ls_ui_status_t {
     bool config_changed;
     bool history_changed;
     bool dialogs_changed;
+    bool filename_changed;
 #ifdef __cplusplus
     [[nodiscard]] auto operator==(const ls_ui_status_t&) const -> bool = default;
 #endif
@@ -193,6 +194,18 @@ LS_NODISCARD LS_CORE_API ls_ui_status_t
 ls_circuit_do_action(ls_circuit_t* obj, uint8_t action_enum,
                      const ls_point_device_fine_t* optional_position) LS_NOEXCEPT;
 
+typedef struct ls_finalize_is_dirty_t {
+    ls_ui_status_t status;
+    bool is_dirty;
+#ifdef __cplusplus
+    [[nodiscard]] auto operator==(const ls_finalize_is_dirty_t&) const -> bool = default;
+#endif
+} ls_finalize_is_dirty_t;
+
+// circuit::finalize_and_is_dirty
+LS_NODISCARD LS_CORE_API ls_finalize_is_dirty_t
+ls_circuit_finalize_and_is_dirty(ls_circuit_t* obj) LS_NOEXCEPT;
+
 // circuit::load
 LS_NODISCARD LS_CORE_API ls_ui_status_t
 ls_circuit_load(ls_circuit_t* obj, uint8_t example_circuit_enum) LS_NOEXCEPT;
@@ -285,6 +298,7 @@ ls_circuit_key_press(ls_circuit_t* obj, uint8_t key_enum) LS_NOEXCEPT;
         .config_changed = a.config_changed || b.config_changed,
         .history_changed = a.history_changed || b.history_changed,
         .dialogs_changed = a.dialogs_changed || b.dialogs_changed,
+        .filename_changed = a.filename_changed || b.filename_changed,
     };
 };
 
@@ -627,6 +641,7 @@ class CircuitInterface {
     [[nodiscard]] inline auto allocation_info() const -> std::string;
 
     [[nodiscard]] inline auto do_action(const UserActionEvent& event) -> ls_ui_status_t;
+    [[nodiscard]] inline auto finalize_and_is_dirty() -> std::pair<ls_ui_status_t, bool>;
     [[nodiscard]] inline auto load(ExampleCircuitType type) -> ls_ui_status_t;
 
     inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
@@ -791,6 +806,11 @@ auto CircuitInterface::allocation_info() const -> std::string {
 auto CircuitInterface::do_action(const UserActionEvent& event) -> ls_ui_status_t {
     return ls_circuit_do_action(get(), detail::to_underlying(event.action),
                                 event.position ? &event.position.value() : nullptr);
+}
+
+auto CircuitInterface::finalize_and_is_dirty() -> std::pair<ls_ui_status_t, bool> {
+    const auto res = ls_circuit_finalize_and_is_dirty(get());
+    return {res.status, res.is_dirty};
 }
 
 auto CircuitInterface::load(ExampleCircuitType type) -> ls_ui_status_t {

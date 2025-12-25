@@ -14,317 +14,318 @@
     </Window.SystemBackdrop>
 
 
-    <Page ActualThemeChanged="Page_ActualThemeChanged">
+    <ContentControl x:Name="ContentControl" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <Page ActualThemeChanged="Page_ActualThemeChanged" >
 
-        <!-- Icons: https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-fluent-icons-font -->
+            <!-- Icons: https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-fluent-icons-font -->
 
-        <Page.Resources>
-            <!-- File -->
-            <XamlUICommand x:Key="NewCommand" x:Name="NewCommand" Label="New" ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <SymbolIconSource Symbol="Document" />
-                </XamlUICommand.IconSource>
-                <XamlUICommand.KeyboardAccelerators>
-                    <KeyboardAccelerator Modifiers="Control" Key="N"/>
-                </XamlUICommand.KeyboardAccelerators>
-            </XamlUICommand>
-            <XamlUICommand x:Key="OpenCommand" x:Name="OpenCommand" Label="Open..." ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE838;" />
-                </XamlUICommand.IconSource>
-                <XamlUICommand.KeyboardAccelerators>
-                    <KeyboardAccelerator Modifiers="Control" Key="O"/>
-                </XamlUICommand.KeyboardAccelerators>
-            </XamlUICommand>
-            <XamlUICommand x:Key="SaveCommand" x:Name="SaveCommand" Label="Save" ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <SymbolIconSource Symbol="Save" />
-                </XamlUICommand.IconSource>
-                <XamlUICommand.KeyboardAccelerators>
-                    <KeyboardAccelerator Modifiers="Control" Key="S"/>
-                </XamlUICommand.KeyboardAccelerators>
-            </XamlUICommand>
-            <XamlUICommand x:Key="SaveAsCommand" x:Name="SaveAsCommand" Label="Save as..." ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE792;" />
-                </XamlUICommand.IconSource>
-                <XamlUICommand.KeyboardAccelerators>
-                    <KeyboardAccelerator Modifiers="Control,Shift" Key="S"/>
-                </XamlUICommand.KeyboardAccelerators>
-            </XamlUICommand>
-            <XamlUICommand x:Key="ExitCommand" x:Name="ExitCommand" Label="Exit" ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE8BB;" />
-                </XamlUICommand.IconSource>
-                <XamlUICommand.KeyboardAccelerators>
-                    <KeyboardAccelerator Modifiers="Control,Shift" Key="Q"/>
-                </XamlUICommand.KeyboardAccelerators>
-            </XamlUICommand>
+            <Page.Resources>
+                <!-- File -->
+                <XamlUICommand x:Key="NewCommand" x:Name="NewCommand" Label="New" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <SymbolIconSource Symbol="Document" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="N"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </XamlUICommand>
+                <XamlUICommand x:Key="OpenCommand" x:Name="OpenCommand" Label="Open..." ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE838;" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="O"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </XamlUICommand>
+                <XamlUICommand x:Key="SaveCommand" x:Name="SaveCommand" Label="Save" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <SymbolIconSource Symbol="Save" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="S"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </XamlUICommand>
+                <XamlUICommand x:Key="SaveAsCommand" x:Name="SaveAsCommand" Label="Save as..." ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE792;" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="S"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </XamlUICommand>
+                <XamlUICommand x:Key="ExitCommand" x:Name="ExitCommand" Label="Exit" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE8BB;" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="Q"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </XamlUICommand>
 
-            <!-- Edit -->
-            <StandardUICommand x:Key="UndoCommand" x:Name="UndoCommand" Kind="Undo" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <StandardUICommand x:Key="RedoCommand" x:Name="RedoCommand" Kind="Redo" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <!-- Edit -->
+                <StandardUICommand x:Key="UndoCommand" x:Name="UndoCommand" Kind="Undo" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <StandardUICommand x:Key="RedoCommand" x:Name="RedoCommand" Kind="Redo" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
 
-            <StandardUICommand x:Key="CutCommand" x:Name="CutCommand" Kind="Cut" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <StandardUICommand x:Key="CopyCommand" x:Name="CopyCommand" Kind="Copy" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <StandardUICommand x:Key="PasteCommand" x:Name="PasteCommand" Kind="Paste" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <StandardUICommand x:Key="DeleteCommand" x:Name="DeleteCommand" Kind="Delete" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <StandardUICommand x:Key="SelectAllCommand" x:Name="SelectAllCommand" Kind="SelectAll" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <StandardUICommand x:Key="CutCommand" x:Name="CutCommand" Kind="Cut" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <StandardUICommand x:Key="CopyCommand" x:Name="CopyCommand" Kind="Copy" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <StandardUICommand x:Key="PasteCommand" x:Name="PasteCommand" Kind="Paste" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <StandardUICommand x:Key="DeleteCommand" x:Name="DeleteCommand" Kind="Delete" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <StandardUICommand x:Key="SelectAllCommand" x:Name="SelectAllCommand" Kind="SelectAll" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
 
-            <!-- View -->
-            <XamlUICommand x:Key="ZoomInCommand" x:Name="ZoomInCommand" Label="Zoom In" ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <SymbolIconSource Symbol="ZoomIn" />
-                </XamlUICommand.IconSource>
-                <XamlUICommand.KeyboardAccelerators>
-                    <KeyboardAccelerator Modifiers="Control" Key="PageUp"/>
-                </XamlUICommand.KeyboardAccelerators>
-            </XamlUICommand>
-            <XamlUICommand x:Key="ZoomOutCommand" x:Name="ZoomOutCommand" Label="Zoom Out" ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <SymbolIconSource Symbol="ZoomOut" />
-                </XamlUICommand.IconSource>
-                <XamlUICommand.KeyboardAccelerators>
-                    <KeyboardAccelerator Modifiers="Control" Key="PageDown"/>
-                </XamlUICommand.KeyboardAccelerators>
-            </XamlUICommand>
-            <XamlUICommand x:Key="ResetZoomCommand" x:Name="ResetZoomCommand" Label="Reset Zoom" ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE777;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
+                <!-- View -->
+                <XamlUICommand x:Key="ZoomInCommand" x:Name="ZoomInCommand" Label="Zoom In" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <SymbolIconSource Symbol="ZoomIn" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="PageUp"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </XamlUICommand>
+                <XamlUICommand x:Key="ZoomOutCommand" x:Name="ZoomOutCommand" Label="Zoom Out" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <SymbolIconSource Symbol="ZoomOut" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="PageDown"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </XamlUICommand>
+                <XamlUICommand x:Key="ResetZoomCommand" x:Name="ResetZoomCommand" Label="Reset Zoom" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE777;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
 
 
-            <XamlUICommand x:Key="WireStyleRedCommand" x:Name="WireStyleRedCommand" Label="Red" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="WireStyleBoldCommand" x:Name="WireStyleBoldCommand" Label="Bold" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="WireStyleBoldRedCommand" x:Name="WireStyleBoldRedCommand" Label="Bold Red" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="WireStyleRedCommand" x:Name="WireStyleRedCommand" Label="Red" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="WireStyleBoldCommand" x:Name="WireStyleBoldCommand" Label="Bold" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="WireStyleBoldRedCommand" x:Name="WireStyleBoldRedCommand" Label="Bold Red" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
 
-            <!-- Simulation -->
-            <XamlUICommand x:Key="StartSimulationCommand" x:Name="StartSimulationCommand" Label="Start Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested"
+                <!-- Simulation -->
+                <XamlUICommand x:Key="StartSimulationCommand" x:Name="StartSimulationCommand" Label="Start Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested"
                            CanExecuteRequested="XamlUICommand_CanExecuteRequest">
-                <XamlUICommand.KeyboardAccelerators>
-                    <KeyboardAccelerator Key="F5"/>
-                </XamlUICommand.KeyboardAccelerators>
-            </XamlUICommand>
-            <XamlUICommand x:Key="StopSimulationCommand" x:Name="StopSimulationCommand" Label="Stop Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested"
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F5"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </XamlUICommand>
+                <XamlUICommand x:Key="StopSimulationCommand" x:Name="StopSimulationCommand" Label="Stop Simulation" ExecuteRequested="XamlUICommand_ExecuteRequested"
                            CanExecuteRequested="XamlUICommand_CanExecuteRequest">
-                <XamlUICommand.KeyboardAccelerators>
-                    <KeyboardAccelerator Key="F6"/>
-                </XamlUICommand.KeyboardAccelerators>
-            </XamlUICommand>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F6"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </XamlUICommand>
 
-            <XamlUICommand x:Key="WireDelayCommand" x:Name="WireDelayCommand" Label="Wire Delay" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="WireDelayCommand" x:Name="WireDelayCommand" Label="Wire Delay" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
 
-            <XamlUICommand x:Key="SimulationSpeed0nsCommand" x:Name="SimulationSpeed0nsCommand" Label="0 ns/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="SimulationSpeed1usCommand" x:Name="SimulationSpeed1usCommand" Label="1 us/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="SimulationSpeed10usCommand" x:Name="SimulationSpeed10usCommand" Label="10 us/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="SimulationSpeed100usCommand" x:Name="SimulationSpeed100usCommand" Label="100 us/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="SimulationSpeed1msCommand" x:Name="SimulationSpeed1msCommand" Label="1 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="SimulationSpeed10msCommand" x:Name="SimulationSpeed10msCommand" Label="10 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="SimulationSpeed100msCommand" x:Name="SimulationSpeed100msCommand" Label="100 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="SimulationSpeed1sCommand" x:Name="SimulationSpeed1sCommand" Label="1 s/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="SimulationSpeed10sCommand" x:Name="SimulationSpeed10sCommand" Label="10 s/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="SimulationSpeed0nsCommand" x:Name="SimulationSpeed0nsCommand" Label="0 ns/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="SimulationSpeed1usCommand" x:Name="SimulationSpeed1usCommand" Label="1 us/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="SimulationSpeed10usCommand" x:Name="SimulationSpeed10usCommand" Label="10 us/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="SimulationSpeed100usCommand" x:Name="SimulationSpeed100usCommand" Label="100 us/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="SimulationSpeed1msCommand" x:Name="SimulationSpeed1msCommand" Label="1 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="SimulationSpeed10msCommand" x:Name="SimulationSpeed10msCommand" Label="10 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="SimulationSpeed100msCommand" x:Name="SimulationSpeed100msCommand" Label="100 ms/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="SimulationSpeed1sCommand" x:Name="SimulationSpeed1sCommand" Label="1 s/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="SimulationSpeed10sCommand" x:Name="SimulationSpeed10sCommand" Label="10 s/s" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
 
-            <!-- Debug -->
-            <XamlUICommand x:Key="BenchmarkCommand" x:Name="BenchmarkCommand" Label='Benchamrk' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE1E7;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
-            <XamlUICommand x:Key="DebugInfoDialogCommand" x:Name="DebugInfoDialogCommand" Label='Debug Info Dialog' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE568;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
+                <!-- Debug -->
+                <XamlUICommand x:Key="BenchmarkCommand" x:Name="BenchmarkCommand" Label='Benchamrk' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE1E7;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+                <XamlUICommand x:Key="DebugInfoDialogCommand" x:Name="DebugInfoDialogCommand" Label='Debug Info Dialog' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE568;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
 
-            <XamlUICommand x:Key="ShowCircuitCommand" x:Name="ShowCircuitCommand" Label='Show Circuit" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE0A9;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
-            <XamlUICommand x:Key="ShowCollisionIndexCommand" x:Name="ShowCollisionIndexCommand" Label='Show Collision Index' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE4B3;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
-            <XamlUICommand x:Key="ShowConnectionIndexCommand" x:Name="ShowConnectionIndexCommand" Label='Show Connection Index' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE38B;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
-            <XamlUICommand x:Key="ShowSelectionIndexCommand" x:Name="ShowSelectionIndexCommand" Label='Show Selection Index' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE467;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
+                <XamlUICommand x:Key="ShowCircuitCommand" x:Name="ShowCircuitCommand" Label='Show Circuit" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE0A9;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+                <XamlUICommand x:Key="ShowCollisionIndexCommand" x:Name="ShowCollisionIndexCommand" Label='Show Collision Index' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE4B3;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+                <XamlUICommand x:Key="ShowConnectionIndexCommand" x:Name="ShowConnectionIndexCommand" Label='Show Connection Index' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE38B;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+                <XamlUICommand x:Key="ShowSelectionIndexCommand" x:Name="ShowSelectionIndexCommand" Label='Show Selection Index' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE467;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
 
-            <XamlUICommand x:Key="ReloadCommand" x:Name="ReloadCommand" Label='Reload' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE144;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
-            <XamlUICommand x:Key="ExampleSimpleCommand" x:Name="ExampleSimpleCommand" Label='Load "Simple" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE4E3;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
-            <XamlUICommand x:Key="ExampleWiresCommand" x:Name="ExampleWiresCommand" Label='Load "Wires" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE156;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
-            <XamlUICommand x:Key="ExampleElementsCommand" x:Name="ExampleElementsCommand" Label='Load "Elements" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE425;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
-            <XamlUICommand x:Key="ExampleElementsWiresCommand" x:Name="ExampleElementsWiresCommand" Label='Load "Elements + Wires" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE125;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
+                <XamlUICommand x:Key="ReloadCommand" x:Name="ReloadCommand" Label='Reload' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE144;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+                <XamlUICommand x:Key="ExampleSimpleCommand" x:Name="ExampleSimpleCommand" Label='Load "Simple" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE4E3;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+                <XamlUICommand x:Key="ExampleWiresCommand" x:Name="ExampleWiresCommand" Label='Load "Wires" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE156;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+                <XamlUICommand x:Key="ExampleElementsCommand" x:Name="ExampleElementsCommand" Label='Load "Elements" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE425;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+                <XamlUICommand x:Key="ExampleElementsWiresCommand" x:Name="ExampleElementsWiresCommand" Label='Load "Elements + Wires" Example' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE125;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
 
-            <XamlUICommand x:Key="ShowRenderBordersCommand" x:Name="ShowRenderBordersCommand" Label='Show Render Borders' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE257;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
-            <XamlUICommand x:Key="ShowMousePositionCommand" x:Name="ShowMousePositionCommand" Label='Show Mouse Position' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE120;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
-            <XamlUICommand x:Key="EnterNonInteractiveModeCommand" x:Name="EnterNonInteractiveModeCommand" Label='Enter Non-Interactive Mode' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE402;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
+                <XamlUICommand x:Key="ShowRenderBordersCommand" x:Name="ShowRenderBordersCommand" Label='Show Render Borders' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE257;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+                <XamlUICommand x:Key="ShowMousePositionCommand" x:Name="ShowMousePositionCommand" Label='Show Mouse Position' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE120;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+                <XamlUICommand x:Key="EnterNonInteractiveModeCommand" x:Name="EnterNonInteractiveModeCommand" Label='Enter Non-Interactive Mode' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE402;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
 
-            <XamlUICommand x:Key="JitRenderingCommand" x:Name="JitRenderingCommand" Label='JIT Rendering' ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE4E1;" />
-                </XamlUICommand.IconSource>
-                <XamlUICommand.KeyboardAccelerators>
-                    <KeyboardAccelerator Modifiers="Control,Shift"  Key="J"/>
-                </XamlUICommand.KeyboardAccelerators>
-            </XamlUICommand>
+                <XamlUICommand x:Key="JitRenderingCommand" x:Name="JitRenderingCommand" Label='JIT Rendering' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="{StaticResource Lucide}" Glyph="&#xE4E1;" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift"  Key="J"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </XamlUICommand>
 
-            <XamlUICommand x:Key="RenderSynchronousCommand" x:Name="RenderSynchronousCommand" Label='Synchronous Rendering' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="Render2ThreadsCommand" x:Name="Render2ThreadsCommand" Label='2 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="Render4ThreadsCommand" x:Name="Render4ThreadsCommand" Label='4 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-            <XamlUICommand x:Key="Render8ThreadsCommand" x:Name="Render8ThreadsCommand" Label='8 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="RenderSynchronousCommand" x:Name="RenderSynchronousCommand" Label='Synchronous Rendering' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="Render2ThreadsCommand" x:Name="Render2ThreadsCommand" Label='2 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="Render4ThreadsCommand" x:Name="Render4ThreadsCommand" Label='4 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="Render8ThreadsCommand" x:Name="Render8ThreadsCommand" Label='8 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
 
-            <!-- Help -->
-            <XamlUICommand x:Key="AboutCommand" x:Name="AboutCommand" Label="About" ExecuteRequested="XamlUICommand_ExecuteRequested">
-                <XamlUICommand.IconSource>
-                    <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE946;" />
-                </XamlUICommand.IconSource>
-            </XamlUICommand>
-        </Page.Resources>
+                <!-- Help -->
+                <XamlUICommand x:Key="AboutCommand" x:Name="AboutCommand" Label="About" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE946;" />
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+            </Page.Resources>
 
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-            <MenuBar>
-                <MenuBarItem Title="File">
-                    <MenuFlyoutItem Command="{StaticResource NewCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource OpenCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource SaveCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource SaveAsCommand}"/>
-                    <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource ExitCommand}"/>
-                </MenuBarItem>
+                <MenuBar>
+                    <MenuBarItem Title="File">
+                        <MenuFlyoutItem Command="{StaticResource NewCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource OpenCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SaveCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SaveAsCommand}"/>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutItem Command="{StaticResource ExitCommand}"/>
+                    </MenuBarItem>
 
-                <MenuBarItem Title="Edit">
-                    <MenuFlyoutItem Command="{StaticResource UndoCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource RedoCommand}"/>
-                    <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource CutCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource CopyCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource PasteCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource DeleteCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource SelectAllCommand}"/>
-                </MenuBarItem>
+                    <MenuBarItem Title="Edit">
+                        <MenuFlyoutItem Command="{StaticResource UndoCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource RedoCommand}"/>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutItem Command="{StaticResource CutCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource CopyCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource PasteCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource DeleteCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource SelectAllCommand}"/>
+                    </MenuBarItem>
 
-                <MenuBarItem Title="View">
-                    <MenuFlyoutItem Command="{StaticResource ZoomInCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ZoomOutCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ResetZoomCommand}"/>
-                    <MenuFlyoutSeparator/>
-                    <MenuFlyoutSubItem Text="Wire Style">
-                        <RadioMenuFlyoutItem x:Name="WireStyleRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleRedCommand}"/>
-                        <RadioMenuFlyoutItem x:Name="WireStyleBoldFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldCommand}"/>
-                        <RadioMenuFlyoutItem x:Name="WireStyleBoldRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldRedCommand}"/>
-                    </MenuFlyoutSubItem>
-                </MenuBarItem>
+                    <MenuBarItem Title="View">
+                        <MenuFlyoutItem Command="{StaticResource ZoomInCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource ZoomOutCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource ResetZoomCommand}"/>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutSubItem Text="Wire Style">
+                            <RadioMenuFlyoutItem x:Name="WireStyleRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleRedCommand}"/>
+                            <RadioMenuFlyoutItem x:Name="WireStyleBoldFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldCommand}"/>
+                            <RadioMenuFlyoutItem x:Name="WireStyleBoldRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldRedCommand}"/>
+                        </MenuFlyoutSubItem>
+                    </MenuBarItem>
 
-                <MenuBarItem Title="Simulation">
-                    <MenuFlyoutItem Command="{StaticResource StartSimulationCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource StopSimulationCommand}"/>
-                    <MenuFlyoutSeparator/>
-                    <ToggleMenuFlyoutItem x:Name="WireDelayFlyout" Command="{StaticResource WireDelayCommand}"/>
-                    <MenuFlyoutSeparator/>
-                    <MenuFlyoutSubItem Text="Simulation Speed">
-                        <MenuFlyoutSubItem.Icon>
-                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xEC4A;" />
-                        </MenuFlyoutSubItem.Icon>
-                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed0nsCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed1usCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed10usCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed100usCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed1msCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed10msCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed100msCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed1sCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SimulationSpeed10sCommand}"/>
-                    </MenuFlyoutSubItem>
-                </MenuBarItem>
+                    <MenuBarItem Title="Simulation">
+                        <MenuFlyoutItem Command="{StaticResource StartSimulationCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource StopSimulationCommand}"/>
+                        <MenuFlyoutSeparator/>
+                        <ToggleMenuFlyoutItem x:Name="WireDelayFlyout" Command="{StaticResource WireDelayCommand}"/>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutSubItem Text="Simulation Speed">
+                            <MenuFlyoutSubItem.Icon>
+                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xEC4A;" />
+                            </MenuFlyoutSubItem.Icon>
+                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed0nsCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed1usCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed10usCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed100usCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed1msCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed10msCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed100msCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed1sCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed10sCommand}"/>
+                        </MenuFlyoutSubItem>
+                    </MenuBarItem>
 
-                <MenuBarItem Title="Debug">
-                    <ToggleMenuFlyoutItem x:Name="BenchmarkFlyout" Command="{StaticResource BenchmarkCommand}"/>
-                    <ToggleMenuFlyoutItem x:Name="DebugInfoDialogFlyout" Command="{StaticResource DebugInfoDialogCommand}"/>
-                    <MenuFlyoutSeparator/>
-                    <ToggleMenuFlyoutItem x:Name="ShowCircuitFlyout" Command="{StaticResource ShowCircuitCommand}"/>
-                    <ToggleMenuFlyoutItem x:Name="ShowCollisionIndexFlyout" Command="{StaticResource ShowCollisionIndexCommand}"/>
-                    <ToggleMenuFlyoutItem x:Name="ShowConnectionIndexFlyout" Command="{StaticResource ShowConnectionIndexCommand}"/>
-                    <ToggleMenuFlyoutItem x:Name="ShowSelectionIndexFlyout" Command="{StaticResource ShowSelectionIndexCommand}"/>
-                    <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Command="{StaticResource ReloadCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ExampleSimpleCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ExampleWiresCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ExampleElementsCommand}"/>
-                    <MenuFlyoutItem Command="{StaticResource ExampleElementsWiresCommand}"/>
-                    <MenuFlyoutSeparator/>
-                    <ToggleMenuFlyoutItem x:Name="ShowRenderBordersFlyout" Command="{StaticResource ShowRenderBordersCommand}"/>
-                    <ToggleMenuFlyoutItem x:Name="ShowMousePositionFlyout" Command="{StaticResource ShowMousePositionCommand}"/>
-                    <ToggleMenuFlyoutItem x:Name="EnterNonInteractiveModeFlyout" Command="{StaticResource EnterNonInteractiveModeCommand}"/>
-                    <MenuFlyoutSeparator/>
-                    <ToggleMenuFlyoutItem x:Name="JitRenderingFlyout" Command="{StaticResource JitRenderingCommand}"/>
-                    <MenuFlyoutSeparator/>
-                    <RadioMenuFlyoutItem x:Name="ThreadSyncFlyout" GroupName="RenderThreads" Command="{StaticResource RenderSynchronousCommand}"/>
-                    <RadioMenuFlyoutItem x:Name="Thread2Flyout" GroupName="RenderThreads" Command="{StaticResource Render2ThreadsCommand}"/>
-                    <RadioMenuFlyoutItem x:Name="Thread4Flyout" GroupName="RenderThreads" Command="{StaticResource Render4ThreadsCommand}"/>
-                    <RadioMenuFlyoutItem x:Name="Thread8Flyout" GroupName="RenderThreads" Command="{StaticResource Render8ThreadsCommand}"/>
-                </MenuBarItem>
+                    <MenuBarItem Title="Debug">
+                        <ToggleMenuFlyoutItem x:Name="BenchmarkFlyout" Command="{StaticResource BenchmarkCommand}"/>
+                        <ToggleMenuFlyoutItem x:Name="DebugInfoDialogFlyout" Command="{StaticResource DebugInfoDialogCommand}"/>
+                        <MenuFlyoutSeparator/>
+                        <ToggleMenuFlyoutItem x:Name="ShowCircuitFlyout" Command="{StaticResource ShowCircuitCommand}"/>
+                        <ToggleMenuFlyoutItem x:Name="ShowCollisionIndexFlyout" Command="{StaticResource ShowCollisionIndexCommand}"/>
+                        <ToggleMenuFlyoutItem x:Name="ShowConnectionIndexFlyout" Command="{StaticResource ShowConnectionIndexCommand}"/>
+                        <ToggleMenuFlyoutItem x:Name="ShowSelectionIndexFlyout" Command="{StaticResource ShowSelectionIndexCommand}"/>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutItem Command="{StaticResource ReloadCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource ExampleSimpleCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource ExampleWiresCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource ExampleElementsCommand}"/>
+                        <MenuFlyoutItem Command="{StaticResource ExampleElementsWiresCommand}"/>
+                        <MenuFlyoutSeparator/>
+                        <ToggleMenuFlyoutItem x:Name="ShowRenderBordersFlyout" Command="{StaticResource ShowRenderBordersCommand}"/>
+                        <ToggleMenuFlyoutItem x:Name="ShowMousePositionFlyout" Command="{StaticResource ShowMousePositionCommand}"/>
+                        <ToggleMenuFlyoutItem x:Name="EnterNonInteractiveModeFlyout" Command="{StaticResource EnterNonInteractiveModeCommand}"/>
+                        <MenuFlyoutSeparator/>
+                        <ToggleMenuFlyoutItem x:Name="JitRenderingFlyout" Command="{StaticResource JitRenderingCommand}"/>
+                        <MenuFlyoutSeparator/>
+                        <RadioMenuFlyoutItem x:Name="ThreadSyncFlyout" GroupName="RenderThreads" Command="{StaticResource RenderSynchronousCommand}"/>
+                        <RadioMenuFlyoutItem x:Name="Thread2Flyout" GroupName="RenderThreads" Command="{StaticResource Render2ThreadsCommand}"/>
+                        <RadioMenuFlyoutItem x:Name="Thread4Flyout" GroupName="RenderThreads" Command="{StaticResource Render4ThreadsCommand}"/>
+                        <RadioMenuFlyoutItem x:Name="Thread8Flyout" GroupName="RenderThreads" Command="{StaticResource Render8ThreadsCommand}"/>
+                    </MenuBarItem>
 
-                <MenuBarItem Title="Help">
-                    <MenuFlyoutItem Command="{StaticResource AboutCommand}"/>
-                </MenuBarItem>
-            </MenuBar>
+                    <MenuBarItem Title="Help">
+                        <MenuFlyoutItem Command="{StaticResource AboutCommand}"/>
+                    </MenuBarItem>
+                </MenuBar>
 
-            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right">
-                    <AppBarButton Command="{StaticResource StartSimulationCommand}"/>
-                    <AppBarButton Command="{StaticResource StopSimulationCommand}"/>
-                </CommandBar>
-            </StackPanel>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right">
+                        <AppBarButton Command="{StaticResource StartSimulationCommand}"/>
+                        <AppBarButton Command="{StaticResource StopSimulationCommand}"/>
+                    </CommandBar>
+                </StackPanel>
 
-            <Grid Grid.Row="2">
-                <canvas:CanvasSwapChainPanel
+                <Grid Grid.Row="2">
+                    <canvas:CanvasSwapChainPanel
                     x:Name="CanvasPanel"
                     IsTabStop="True"
                     
@@ -339,8 +340,9 @@
                     
                     PointerWheelChanged="CanvasPanel_PointerWheelChanged"
                     KeyDown="CanvasPanel_KeyDown">
-                </canvas:CanvasSwapChainPanel>
+                    </canvas:CanvasSwapChainPanel>
+                </Grid>
             </Grid>
-        </Grid>
-    </Page>
+        </Page>
+    </ContentControl>
 </Window>

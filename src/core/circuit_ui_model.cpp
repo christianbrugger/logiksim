@@ -5,6 +5,7 @@
 #include "core/component/circuit_ui_model/mouse_logic/mouse_wheel_logic.h"
 #include "core/geometry/rect.h"
 #include "core/geometry/scene.h"
+#include "core/load_save_file.h"
 #include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/mouse_event.h"
 
@@ -25,10 +26,17 @@ auto Statistics::format() const -> std::string {
         "  frames_per_second = {},\n"
         "  pixel_scale = {},\n"
         "  image_size = {}x{}px\n"
-        "  render_mode = {},\n"
         "}}",
         simulation_events_per_second, frames_per_second, pixel_scale, image_size.w,
-        image_size.h, render_mode);
+        image_size.h);
+}
+
+auto SaveInformation::format() const -> std::string {
+    return fmt::format(
+        "SaveInformation{{\n"
+        "  filename = {},\n"
+        "}}",
+        filename);
 }
 
 }  // namespace circuit_ui_model
@@ -75,6 +83,11 @@ CircuitUIModel::CircuitUIModel() {
     circuit_renderer_.set_render_config(config_.render);
     static_cast<void>(editing_logic_manager_.set_circuit_state(
         config_.state, editable_circuit_pointer(circuit_store_)));
+    save_information_ = SaveInformation {
+        .filename = std::nullopt,
+        .serialized_circuit =
+            serialize_circuit(circuit_store_.layout(), config_.simulation),
+    };
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
@@ -189,7 +202,6 @@ auto CircuitUIModel::statistics() const -> Statistics {
         .frames_per_second = surface_statistics.frames_per_second,
         .pixel_scale = surface_statistics.pixel_scale,
         .image_size = surface_statistics.image_size,
-        .render_mode = last_render_mode_,
     };
 
     return result;
@@ -205,6 +217,11 @@ auto CircuitUIModel::do_action(UserAction action,
 
         case clear_circuit: {
             status |= set_editable_circuit(EditableCircuit {});
+            status |= set_save_information(SaveInformation {
+                .filename = std::nullopt,
+                .serialized_circuit =
+                    serialize_circuit(circuit_store_.layout(), config_.simulation),
+            });
             break;
         }
         case reload_circuit: {
@@ -267,6 +284,19 @@ auto CircuitUIModel::do_action(UserAction action,
     return status;
 }
 
+auto CircuitUIModel::finalize_and_is_dirty() -> std::pair<UIStatus, bool> {
+    Expects(class_invariant_holds());
+    const auto status = finalize_editing();
+
+    const auto is_dirty =
+        serialize_circuit(circuit_store_.layout(), config_.simulation) !=
+        save_information_.serialized_circuit;
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return {status, is_dirty};
+}
+
 auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
@@ -278,6 +308,11 @@ auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
     status |= do_action(UserAction::clear_circuit, std::nullopt);
     status |= set_editable_circuit(load_example_with_logging(number), default_view_point,
                                    default_simulation_config);
+    status |= set_save_information(SaveInformation {
+        .filename = std::nullopt,
+        .serialized_circuit =
+            serialize_circuit(circuit_store_.layout(), config_.simulation),
+    });
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
@@ -460,8 +495,8 @@ auto CircuitUIModel::set_editable_circuit(
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
-    // finalize_editing();
-    // close_all_setting_dialogs();
+    status |= finalize_editing();
+    status |= close_all_setting_dialogs();
     circuit_renderer_.reset();
 
     // disable simulation
@@ -485,6 +520,21 @@ auto CircuitUIModel::set_editable_circuit(
     }
 
     status.require_repaint = true;
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return status;
+}
+
+auto CircuitUIModel::set_save_information(SaveInformation&& save_information)
+    -> UIStatus {
+    Expects(class_invariant_holds());
+    auto status = UIStatus {};
+
+    if (save_information_.filename != save_information.filename) {
+        status.filename_changed = true;
+    }
+    save_information_ = std::move(save_information);
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
@@ -602,11 +652,9 @@ auto CircuitUIModel::log_mouse_position(std::string_view source,
                        mouse_position_label("device", "point_device_fine_t", position)},
         });
         status.require_repaint = true;
-    } else {
-        if (circuit_renderer_.has_mouse_position_info()) {
-            circuit_renderer_.set_mouse_position_info(std::nullopt);
-            status.require_repaint = true;
-        }
+    } else if (circuit_renderer_.has_mouse_position_info()) {
+        circuit_renderer_.set_mouse_position_info(std::nullopt);
+        status.require_repaint = true;
     }
 
     Ensures(class_invariant_holds());

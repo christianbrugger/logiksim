@@ -46,6 +46,7 @@ namespace {
         .config_changed = status.config_changed,
         .history_changed = status.history_changed,
         .dialogs_changed = status.dialogs_changed,
+        .filename_changed = status.filename_changed,
     };
 }
 
@@ -155,6 +156,13 @@ namespace {
         .state = to_c(config.state),
     };
 };
+
+[[nodiscard]] auto to_c(const std::pair<UIStatus, bool>& pair) -> ls_finalize_is_dirty_t {
+    return ls_finalize_is_dirty_t {
+        .status = to_c(pair.first),
+        .is_dirty = pair.second,
+    };
+}
 
 [[nodiscard]] auto to_thread_count(const uint8_t count_enum) -> ThreadCount {
     const auto count = to_enum<exporting::ThreadCount>(count_enum);
@@ -438,6 +446,16 @@ auto ls_circuit_construct() noexcept -> ls_circuit_t* {
 
 auto ls_circuit_destruct(ls_circuit_t* obj) noexcept -> void {
     delete obj;
+}
+
+auto ls_circuit_finalize_and_is_dirty(ls_circuit_t* obj) noexcept
+    -> ls_finalize_is_dirty_t {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+
+        return to_c(obj->model.finalize_and_is_dirty());
+    });
 }
 
 auto ls_circuit_load(ls_circuit_t* obj, uint8_t example_circuit_enum) noexcept

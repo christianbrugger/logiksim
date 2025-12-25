@@ -181,6 +181,22 @@ auto MainWindow::InitializeComponent() -> void {
     backend_tasks_ = std::move(task_parts.source);
 }
 
+auto MainWindow::is_model() const -> bool {
+    return is_modal_;
+}
+
+auto MainWindow::set_modal(bool value) -> void {
+    if (is_modal_ == value) {
+        return;
+    }
+    is_modal_ = value;
+
+    ContentControl().IsEnabled(!value);
+    if (value) {
+        set_simulation_icons(*this, icon_sources_, std::nullopt);
+    }
+}
+
 auto MainWindow::Page_ActualThemeChanged(FrameworkElement const&, IInspectable const&)
     -> void {
     // Icons need to be cleared first as otherwise they are not updated, if the same
@@ -394,24 +410,26 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     //
 
     if (sender == NewCommand()) {
-        backend_tasks_.push(UserActionEvent {.action = UserAction::clear_circuit});
-        backend_tasks_.push(UserActionEvent {.action = UserAction::reset_view});
+        set_modal(true);
+        backend_tasks_.push(FileRequestEvent::new_file);
+        // backend_tasks_.push(UserActionEvent {.action = UserAction::clear_circuit});
+        // backend_tasks_.push(UserActionEvent {.action = UserAction::reset_view});
         return;
     }
     if (sender == OpenCommand()) {
-        std::cout << "TODO: open" << '\n';
+        backend_tasks_.push(FileRequestEvent::open_file);
         return;
     }
     if (sender == SaveCommand()) {
-        std::cout << "TODO: save" << '\n';
+        backend_tasks_.push(FileRequestEvent::save_file);
         return;
     }
     if (sender == SaveAsCommand()) {
-        std::cout << "TODO: save as" << '\n';
+        backend_tasks_.push(FileRequestEvent::save_as_file);
         return;
     }
     if (sender == ExitCommand()) {
-        Close();
+        backend_tasks_.push(FileRequestEvent::exit_application);
         return;
     }
 

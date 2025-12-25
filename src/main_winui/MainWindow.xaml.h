@@ -30,6 +30,9 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     auto InitializeComponent() -> void;
 
+    [[nodiscard]] auto is_model() const -> bool;
+    auto set_modal(bool value) -> void;
+
     // Page
 
     auto Page_ActualThemeChanged(Microsoft::UI::Xaml::FrameworkElement const& sender,
@@ -75,6 +78,7 @@ struct MainWindow : MainWindowT<MainWindow> {
     auto update_render_size() -> void;
 
    private:
+    bool is_modal_ {};
     IconSources icon_sources_ {};
     std::jthread backend_thread_ {};
     std::jthread render_thread_ {};

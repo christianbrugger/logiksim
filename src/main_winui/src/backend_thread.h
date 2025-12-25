@@ -91,6 +91,14 @@ struct CircuitUIConfigEvent {
     [[nodiscard]] auto operator==(const CircuitUIConfigEvent&) const -> bool = default;
 };
 
+enum class FileRequestEvent {
+    new_file,
+    open_file,
+    save_file,
+    save_as_file,
+    exit_application,
+};
+
 using BackendTask = std::variant<   //
     SwapChainParams,                //
     exporting::MousePressEvent,     //
@@ -100,7 +108,8 @@ using BackendTask = std::variant<   //
     exporting::VirtualKey,          //
     exporting::UserActionEvent,     //
     exporting::ExampleCircuitType,  //
-    CircuitUIConfigEvent            //
+    CircuitUIConfigEvent,           //
+    FileRequestEvent                    //
     >;
 
 using BackendTaskQueue = ::logicsim::ConcurrentBlockingQueue<BackendTask>;

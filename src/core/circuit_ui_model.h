@@ -19,7 +19,6 @@
 #include <filesystem>
 #include <optional>
 
-// TODO: remove render mode (direct, buffered) (settings, statistics)
 // TODO: use more device_pixel_ratio_t
 // TODO: use enum for example int
 // TODO: pass device pixel ratio directly to render methods
@@ -46,7 +45,6 @@ struct Statistics {
     double frames_per_second;
     double pixel_scale;
     BLSizeI image_size;
-    RenderMode render_mode;
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const Statistics&) const -> bool = default;
@@ -81,6 +79,14 @@ enum class UserAction : uint8_t {
     reset_view,
 };
 
+struct SaveInformation {
+    std::optional<std::filesystem::path> filename {};
+    std::optional<std::string> serialized_circuit {};
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SaveInformation&) const -> bool = default;
+};
+
 }  // namespace circuit_ui_model
 
 template <>
@@ -101,6 +107,7 @@ class CircuitUIModel {
    public:
     using Statistics = circuit_ui_model::Statistics;
     using UserAction = circuit_ui_model::UserAction;
+    using SaveInformation = circuit_ui_model::SaveInformation;
 
    public:
     [[nodiscard]] explicit CircuitUIModel();
@@ -115,6 +122,7 @@ class CircuitUIModel {
     [[nodiscard]] auto do_action(UserAction action,
                                  std::optional<point_device_fine_t> position) -> UIStatus;
     // load & save
+    [[nodiscard]] auto finalize_and_is_dirty() -> std::pair<UIStatus, bool>;
     [[nodiscard]] auto serialized_circuit() -> std::string;
     [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;
     auto load_circuit(const std::filesystem::path&) -> std::optional<LoadError>;
@@ -152,6 +160,8 @@ class CircuitUIModel {
     [[nodiscard]] auto set_editable_circuit(
         EditableCircuit&& editable_circuit, std::optional<ViewPoint> view_point = {},
         std::optional<SimulationConfig> simulation_config = {}) -> UIStatus;
+    [[nodiscard]] auto set_save_information(SaveInformation&& save_information)
+        -> UIStatus;
     [[nodiscard]] auto abort_current_action() -> UIStatus;
     [[nodiscard]] auto finalize_editing() -> UIStatus;
     [[nodiscard]] auto close_all_setting_dialogs() -> UIStatus;
@@ -176,7 +186,8 @@ class CircuitUIModel {
    private:
     // never modify the config directly, call set_config so sub-components are updated
     CircuitUIConfig config_ {};
-    HistoryStatus last_history_status_ {};
+    // call set_save_information
+    SaveInformation save_information_ {};
 
     circuit_ui_model::CircuitStore circuit_store_ {};
     circuit_ui_model::CircuitRenderer circuit_renderer_ {};
@@ -185,8 +196,6 @@ class CircuitUIModel {
     circuit_ui_model::DialogManager dialog_manager_;
 
     bool simulation_image_update_pending_ {false};
-
-    RenderMode last_render_mode_ {RenderMode::buffered};
 };
 
 //
