@@ -59,7 +59,7 @@ enum class UserAction : uint8_t {
     /**
      * @brief: Clears the circuit.
      */
-    clear_circuit,
+    clear_circuit,  // TODO: remove
 
     /**
      * @brief: Reloads the circuit and frees memory. Mostly for debugging purposes.
@@ -79,18 +79,100 @@ enum class UserAction : uint8_t {
     reset_view,
 };
 
+struct UnsavedName {
+    std::filesystem::path name;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const UnsavedName&) const -> bool = default;
+};
+
+struct SavedPath {
+    std::filesystem::path path;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SavedPath&) const -> bool = default;
+};
+
+using NameOrPath = std::variant<UnsavedName, SavedPath>;
+
+[[nodiscard]] auto get_filename(const NameOrPath& name_or_path) -> std::filesystem::path;
+
 struct SaveInformation {
-    std::optional<std::filesystem::path> filename {};
+    NameOrPath name_or_path {};
     std::optional<std::string> serialized_circuit {};
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const SaveInformation&) const -> bool = default;
 };
 
+enum class FileRequest : uint8_t {
+    new_file,
+    open_file,
+    save_file,
+    save_as_file,
+
+    load_example_0,
+    load_example_1,
+    load_example_2,
+    load_example_3,
+};
+
+struct SaveCurrentModal {
+    std::filesystem::path filename;
+};
+
+struct OpenFileModal {};
+
+struct SaveFileModal {};
+
+using ModalRequest = std::variant<SaveCurrentModal, OpenFileModal, SaveFileModal>;
+
+struct SaveCurrentYes {};
+
+struct SaveCurrentNo {};
+
+struct SaveCurrentCancel {};
+
+struct OpenCircuitOpen {
+    std::filesystem::path filename;
+};
+
+struct OpenCircuitCancel {};
+
+struct SaveCircuitSave {
+    std::filesystem::path filename;
+};
+
+struct SaveCircuitCancel {};
+
+using ModalResult = std::variant<SaveCurrentYes, SaveCurrentNo, SaveCurrentCancel,  //
+                                 OpenCircuitOpen, OpenCircuitCancel,                //
+                                 SaveCircuitSave, SaveCircuitCancel>;
+
 }  // namespace circuit_ui_model
 
 template <>
 [[nodiscard]] auto format(circuit_ui_model::UserAction action) -> std::string;
+
+template <>
+[[nodiscard]] auto format(circuit_ui_model::FileRequest request) -> std::string;
+
+}  // namespace logicsim
+
+template <>
+struct fmt::formatter<logicsim::circuit_ui_model::NameOrPath> {
+    constexpr static auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::circuit_ui_model::NameOrPath& obj,
+                       fmt::format_context& ctx) {
+        const auto str = std::visit([](auto&& v) { return v.format(); }, obj);
+        return fmt::format_to(ctx.out(), "{}", str);
+    }
+};
+
+namespace logicsim {
 
 /**
  * @brief: Circuit UI model that hold the circuit and coordinates
@@ -107,7 +189,14 @@ class CircuitUIModel {
    public:
     using Statistics = circuit_ui_model::Statistics;
     using UserAction = circuit_ui_model::UserAction;
+
+    using UnsavedName = circuit_ui_model::UnsavedName;
+    using SavedPath = circuit_ui_model::SavedPath;
     using SaveInformation = circuit_ui_model::SaveInformation;
+
+    using FileRequest = circuit_ui_model::FileRequest;
+    using ModalRequest = circuit_ui_model::ModalRequest;
+    using ModalResult = circuit_ui_model::ModalResult;
 
    public:
     [[nodiscard]] explicit CircuitUIModel();
@@ -122,11 +211,13 @@ class CircuitUIModel {
     [[nodiscard]] auto do_action(UserAction action,
                                  std::optional<point_device_fine_t> position) -> UIStatus;
     // load & save
-    [[nodiscard]] auto finalize_and_is_dirty() -> std::pair<UIStatus, bool>;
-    [[nodiscard]] auto serialized_circuit() -> std::string;
-    [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;
-    auto load_circuit(const std::filesystem::path&) -> std::optional<LoadError>;
-    auto save_circuit(const std::filesystem::path&) -> bool;
+    [[nodiscard]] auto file_request(FileRequest request)
+        -> std::pair<UIStatus, std::optional<ModalRequest>>;
+    [[nodiscard]] auto submit_modal_result(const ModalResult& result)
+        -> std::pair<UIStatus, std::optional<ModalRequest>>;
+    [[nodiscard]] auto finalize_and_is_dirty()
+        -> std::pair<UIStatus, bool>;                                 // TODO: private
+    [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;  // TODO: remove
     // render
     auto render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio) -> void;
 

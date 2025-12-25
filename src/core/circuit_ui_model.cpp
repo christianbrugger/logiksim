@@ -1,5 +1,6 @@
 #include "core/circuit_ui_model.h"
 
+#include "core/algorithm/overload.h"
 #include "core/circuit_example.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_logic_status.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_wheel_logic.h"
@@ -31,12 +32,28 @@ auto Statistics::format() const -> std::string {
         image_size.h);
 }
 
+auto UnsavedName::format() const -> std::string {
+    return fmt::format("UnsavedName{{{}}}", name);
+}
+
+auto SavedPath::format() const -> std::string {
+    return fmt::format("SavedPath{{{}}}", path);
+}
+
+auto get_filename(const NameOrPath& name_or_path) -> std::filesystem::path {
+    return std::visit(overload([&](const UnsavedName& arg) { return arg.name; },
+                               [&](const SavedPath& arg) { return arg.path.filename(); }),
+                      name_or_path);
+}
+
 auto SaveInformation::format() const -> std::string {
     return fmt::format(
         "SaveInformation{{\n"
-        "  filename = {},\n"
+        "  name_or_path = {},\n"
+        "  serialized_circuit = {},\n"
         "}}",
-        filename);
+        name_or_path,
+        serialized_circuit.transform([](const std::string& v) { return v.size(); }));
 }
 
 }  // namespace circuit_ui_model
@@ -77,6 +94,31 @@ auto format(circuit_ui_model::UserAction action) -> std::string {
     std::terminate();
 }
 
+template <>
+auto format(circuit_ui_model::FileRequest request) -> std::string {
+    switch (request) {
+        using enum circuit_ui_model::FileRequest;
+
+        case new_file:
+            return "new_file";
+        case open_file:
+            return "open_file";
+        case save_file:
+            return "save_file";
+        case save_as_file:
+            return "save_as_file";
+        case load_example_0:
+            return "load_example_0";
+        case load_example_1:
+            return "load_example_1";
+        case load_example_2:
+            return "load_example_2";
+        case load_example_3:
+            return "load_example_3";
+    };
+    std::terminate();
+}
+
 CircuitUIModel::CircuitUIModel() {
     circuit_store_.set_simulation_config(config_.simulation);
     circuit_store_.set_circuit_state(config_.state);
@@ -84,7 +126,7 @@ CircuitUIModel::CircuitUIModel() {
     static_cast<void>(editing_logic_manager_.set_circuit_state(
         config_.state, editable_circuit_pointer(circuit_store_)));
     save_information_ = SaveInformation {
-        .filename = std::nullopt,
+        .name_or_path = UnsavedName {"Circuit"},
         .serialized_circuit =
             serialize_circuit(circuit_store_.layout(), config_.simulation),
     };
@@ -218,7 +260,7 @@ auto CircuitUIModel::do_action(UserAction action,
         case clear_circuit: {
             status |= set_editable_circuit(EditableCircuit {});
             status |= set_save_information(SaveInformation {
-                .filename = std::nullopt,
+                .name_or_path = UnsavedName {"Circuit"},
                 .serialized_circuit =
                     serialize_circuit(circuit_store_.layout(), config_.simulation),
             });
@@ -284,10 +326,75 @@ auto CircuitUIModel::do_action(UserAction action,
     return status;
 }
 
+namespace {
+
+[[nodiscard]] auto requires_save_current_prompt(circuit_ui_model::FileRequest request)
+    -> bool {
+    switch (request) {
+        using enum circuit_ui_model::FileRequest;
+
+        case new_file:
+        case open_file:
+            return true;
+        case save_file:
+        case save_as_file:
+            return false;
+        case load_example_0:
+        case load_example_1:
+        case load_example_2:
+        case load_example_3:
+            return true;
+    };
+    std::terminate();
+}
+
+}  // namespace
+
+auto CircuitUIModel::file_request(FileRequest request)
+    -> std::pair<UIStatus, std::optional<ModalRequest>> {
+    Expects(class_invariant_holds());
+    using namespace circuit_ui_model;
+    auto status = UIStatus {};
+
+    status |= finalize_editing();
+
+    auto steps = std::vector<ModalRequest> {};
+
+    if (requires_save_current_prompt(request)) {
+        const auto is_dirty =
+            serialize_circuit(circuit_store_.layout(), config_.simulation) !=
+            save_information_.serialized_circuit;
+
+        if (is_dirty) {
+            steps.emplace_back(SaveCurrentModal {
+                .filename = get_filename(save_information_.name_or_path),
+            });
+        }
+    }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return {status, std::nullopt};
+}
+
+auto CircuitUIModel::submit_modal_result(const ModalResult& result)
+    -> std::pair<UIStatus, std::optional<ModalRequest>> {
+    Expects(class_invariant_holds());
+    using namespace circuit_ui_model;
+    auto status = UIStatus {};
+
+    static_cast<void>(result);  // TODO implement
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return {status, std::nullopt};
+}
+
 auto CircuitUIModel::finalize_and_is_dirty() -> std::pair<UIStatus, bool> {
     Expects(class_invariant_holds());
     const auto status = finalize_editing();
 
+    // TODO: remove this / move logic to file_request
     const auto is_dirty =
         serialize_circuit(circuit_store_.layout(), config_.simulation) !=
         save_information_.serialized_circuit;
@@ -309,7 +416,7 @@ auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
     status |= set_editable_circuit(load_example_with_logging(number), default_view_point,
                                    default_simulation_config);
     status |= set_save_information(SaveInformation {
-        .filename = std::nullopt,
+        .name_or_path = UnsavedName {std::format("Example {}", number)},
         .serialized_circuit =
             serialize_circuit(circuit_store_.layout(), config_.simulation),
     });
@@ -531,7 +638,7 @@ auto CircuitUIModel::set_save_information(SaveInformation&& save_information)
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
-    if (save_information_.filename != save_information.filename) {
+    if (save_information_.name_or_path != save_information.name_or_path) {
         status.filename_changed = true;
     }
     save_information_ = std::move(save_information);
