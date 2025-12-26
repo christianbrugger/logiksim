@@ -97,6 +97,23 @@ auto SaveFileCancel::format() const -> std::string {
     return "SaveFileCancel{}";
 }
 
+auto SaveFileError::format() const -> std::string {
+    return "SaveFileError{}";
+}
+
+auto OpenFileError::format() const -> std::string {
+    return "OpenFileError{}";
+}
+
+auto FileActionResult::format() const -> std::string {
+    return fmt::format(
+        "FileActionResult{{\n"
+        "  request = {},\n"
+        "  next_step = {},\n"
+        "}}",
+        status, next_step);
+}
+
 auto ModalState::format() const -> std::string {
     return fmt::format(
         "ModalState{{\n"
@@ -399,12 +416,21 @@ namespace {
     std::terminate();
 }
 
+[[nodiscard]] auto get_if_modal_request(const std::optional<NextActionStep>& step)
+    -> const ModalRequest* {
+    if (step.has_value()) {
+        if (const auto* request = std::get_if<ModalRequest>(&step.value())) {
+            return request;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 }  // namespace circuit_ui_model
 
-auto CircuitUIModel::file_action(FileAction action)
-    -> std::pair<UIStatus, std::optional<ModalRequest>> {
+auto CircuitUIModel::file_action(FileAction action) -> FileActionResult {
     Expects(class_invariant_holds());
     using namespace circuit_ui_model;
     auto status = UIStatus {};
@@ -415,47 +441,54 @@ auto CircuitUIModel::file_action(FileAction action)
 
     status |= finalize_editing();
 
-    auto request = std::optional<ModalRequest> {};
+    auto next_step = std::optional<NextActionStep> {};
 
     if (requires_save_current_prompt(action)) {
-        const auto is_dirty =
+        const auto is_modifed =
             serialize_circuit(circuit_store_.layout(), config_.simulation) !=
             save_information_.serialized_circuit;
 
-        if (is_dirty) {
-            request = SaveCurrentModal {
+        if (is_modifed) {
+            next_step = SaveCurrentModal {
                 .filename = get_filename(save_information_.name_or_path),
             };
         }
     }
 
-    if (!request) {
+    if (!next_step) {
         if (action == FileAction::open_file) {
-            request = OpenFileModal {};
+            next_step = OpenFileModal {};
         }
-        if (action == FileAction::save_file &&
-            !std::holds_alternative<SavedPath>(save_information_.name_or_path)) {
-            request = SaveFileModal {};
+        if (action == FileAction::save_file) {
+            if (const auto p = std::get_if<SavedPath>(&save_information_.name_or_path)) {
+                auto success = bool {};
+                status |= this->save_file(p->path, success);
+                if (!success) {
+                    next_step = SaveFileError {.filename = p->path};
+                }
+            } else {
+                next_step = SaveFileModal {};
+            }
         }
         if (action == FileAction::save_as_file) {
-            request = SaveFileModal {};
+            next_step = SaveFileModal {};
         }
     }
 
-    if (!request) {
+    if (!next_step) {
         status |= non_modal_action(action);
     }
 
-    if (request) {
+    if (const auto request = get_if_modal_request(next_step)) {
         modal_ = ModalState {
-            .request = request.value(),
+            .request = *request,
             .action = action,
         };
     }
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return {status, request};
+    return {status, next_step};
 }
 
 auto CircuitUIModel::non_modal_action(FileAction action) -> UIStatus {
@@ -468,20 +501,9 @@ auto CircuitUIModel::non_modal_action(FileAction action) -> UIStatus {
     switch (action) {
         using enum FileAction;
 
-        case new_file: {
-            const auto default_view_point = ViewConfig {}.view_point();
-            const auto default_simulation_config = SimulationConfig {};
-
-            status |= set_circuit_state(*this, defaults::selection_state);
-            status |= set_editable_circuit(EditableCircuit {}, default_view_point,
-                                           default_simulation_config);
-            status |= set_save_information(SaveInformation {
-                .name_or_path = UnsavedName {"Circuit"},
-                .serialized_circuit =
-                    serialize_circuit(circuit_store_.layout(), config_.simulation),
-            });
+        case new_file:
+            status |= load_new_circuit();
             break;
-        }
         case load_example_0:
             status |= load_circuit_example(0);
             break;
@@ -505,8 +527,7 @@ auto CircuitUIModel::non_modal_action(FileAction action) -> UIStatus {
     return status;
 }
 
-auto CircuitUIModel::submit_modal_result(const ModalResult& result)
-    -> std::pair<UIStatus, std::optional<ModalRequest>> {
+auto CircuitUIModel::submit_modal_result(const ModalResult& result) -> FileActionResult {
     Expects(class_invariant_holds());
     using namespace circuit_ui_model;
     auto status = UIStatus {};
@@ -514,23 +535,29 @@ auto CircuitUIModel::submit_modal_result(const ModalResult& result)
     if (!modal_) {
         throw std::runtime_error {"Cannot submit result without request"};
     }
+
     const auto action = modal_.value().action;
     const auto& last_request = modal_.value().request;
-    auto next_request = std::optional<ModalRequest> {};
+    auto next_step = std::optional<NextActionStep> {};
 
     if (std::holds_alternative<SaveCurrentModal>(last_request)) {
         if (std::holds_alternative<SaveCurrentYes>(result)) {
-            if (std::holds_alternative<SavedPath>(save_information_.name_or_path)) {
-                // TODO save circuit
-                if (action == FileAction::open_file) {
-                    next_request = OpenFileModal {};
+            if (const auto saved_path =
+                    std::get_if<SavedPath>(&save_information_.name_or_path)) {
+                auto success = bool {};
+                status |= this->save_file(saved_path->path, success);
+
+                if (!success) {
+                    next_step = SaveFileError {.filename = saved_path->path};
+                } else if (action == FileAction::open_file) {
+                    next_step = OpenFileModal {};
                 }
             } else {
-                next_request = SaveFileModal {};
+                next_step = SaveFileModal {};
             }
         } else if (std::holds_alternative<SaveCurrentNo>(result)) {
             if (action == FileAction::open_file) {
-                next_request = OpenFileModal {};
+                next_step = OpenFileModal {};
             }
         } else if (std::holds_alternative<SaveCurrentCancel>(result)) {
             // nothing
@@ -538,33 +565,42 @@ auto CircuitUIModel::submit_modal_result(const ModalResult& result)
             throw UnexpectedModalResultException {last_request, result};
         }
     } else if (std::holds_alternative<OpenFileModal>(last_request)) {
-        if (std::holds_alternative<OpenFileOpen>(result)) {
-            // TODO: open circuit
+        if (const auto data = std::get_if<OpenFileOpen>(&result)) {
+            auto success = bool {};
+            status |= this->open_file(data->filename, success);
+
+            if (!success) {
+                next_step = OpenFileError {.filename = data->filename};
+            }
         } else if (std::holds_alternative<OpenFileCancel>(result)) {
             // nothing
         } else {
             throw UnexpectedModalResultException {last_request, result};
         }
     } else if (std::holds_alternative<SaveFileModal>(last_request)) {
-        if (std::holds_alternative<SaveFileSave>(result)) {
-            // TODO: save circuit
-            if (action == FileAction::open_file) {
-                next_request = OpenFileModal {};
+        if (const auto data = std::get_if<SaveFileSave>(&result)) {
+            auto success = bool {};
+            status |= this->save_file(data->filename, success);
+
+            if (!success) {
+                next_step = SaveFileError {.filename = data->filename};
+            } else if (action == FileAction::open_file) {
+                next_step = OpenFileModal {};
             }
-        } else if (std::holds_alternative<SaveFileSave>(result)) {
+        } else if (std::holds_alternative<SaveFileCancel>(result)) {
             // nothing
         } else {
             throw UnexpectedModalResultException {last_request, result};
         }
     }
 
-    if (!next_request) {
+    if (!next_step) {
         status |= non_modal_action(action);
     }
 
-    if (next_request) {
+    if (const auto request = get_if_modal_request(next_step)) {
         modal_ = ModalState {
-            .request = next_request.value(),
+            .request = *request,
             .action = action,
         };
     } else {
@@ -573,7 +609,96 @@ auto CircuitUIModel::submit_modal_result(const ModalResult& result)
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return {status, next_request};
+    return {status, next_step};
+}
+
+auto CircuitUIModel::load_new_circuit() -> UIStatus {
+    Expects(class_invariant_holds());
+    auto status = UIStatus {};
+
+    const auto default_view_point = ViewConfig {}.view_point();
+    const auto default_simulation_config = SimulationConfig {};
+
+    status |= set_circuit_state(*this, defaults::selection_state);
+    status |= set_editable_circuit(EditableCircuit {}, default_view_point,
+                                   default_simulation_config);
+    status |= set_save_information(SaveInformation {
+        .name_or_path = UnsavedName {"Circuit"},
+        .serialized_circuit =
+            serialize_circuit(circuit_store_.layout(), config_.simulation),
+    });
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return status;
+}
+
+auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
+    Expects(class_invariant_holds());
+    auto status = UIStatus {};
+
+    const auto default_view_point = ViewConfig {}.view_point();
+    const auto default_simulation_config = SimulationConfig {};
+
+    // clear circuit to free memory first
+    status |= set_editable_circuit(EditableCircuit {});
+    status |= set_editable_circuit(load_example_with_logging(number), default_view_point,
+                                   default_simulation_config);
+    status |= set_save_information(SaveInformation {
+        .name_or_path = UnsavedName {std::format("Example {}", number)},
+        .serialized_circuit =
+            serialize_circuit(circuit_store_.layout(), config_.simulation),
+    });
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return status;
+}
+
+auto CircuitUIModel::save_file(const std::filesystem::path& filename, bool& success)
+    -> UIStatus {
+    Expects(class_invariant_holds());
+    auto status = UIStatus {};
+
+    status |= finalize_editing();
+    success = save_circuit_to_file(circuit_store_.layout(), filename,
+                                   circuit_renderer_.view_config().view_point(),
+                                   config_.simulation);
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return status;
+}
+
+auto CircuitUIModel::open_file(const std::filesystem::path& filename, bool& success)
+    -> UIStatus {
+    Expects(class_invariant_holds());
+    auto status = UIStatus {};
+
+    // store original circuit in case load fails
+    status |= finalize_editing();
+    auto orig_layout = Layout {circuit_store_.layout()};
+    // clear circuit to free memory
+    status |= set_editable_circuit(EditableCircuit {});
+
+    auto load_result = load_circuit_from_file(filename);
+    if (load_result.has_value()) {
+        status |=
+            set_editable_circuit(std::move(load_result->editable_circuit),
+                                 load_result->view_point, load_result->simulation_config);
+        status |= set_save_information(SaveInformation {
+            .name_or_path = SavedPath {filename},
+            .serialized_circuit =
+                serialize_circuit(circuit_store_.layout(), config_.simulation),
+        });
+    } else {
+        status |= set_editable_circuit(EditableCircuit {std::move(orig_layout)});
+    }
+    success = load_result.has_value();
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return status;
 }
 
 auto CircuitUIModel::finalize_and_is_dirty() -> std::pair<UIStatus, bool> {
@@ -588,28 +713,6 @@ auto CircuitUIModel::finalize_and_is_dirty() -> std::pair<UIStatus, bool> {
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
     return {status, is_dirty};
-}
-
-auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
-    Expects(class_invariant_holds());
-    auto status = UIStatus {};
-
-    const auto default_view_point = ViewConfig {}.view_point();
-    const auto default_simulation_config = SimulationConfig {};
-
-    // clear circuit to free memory
-    status |= do_action(UserAction::clear_circuit, std::nullopt);
-    status |= set_editable_circuit(load_example_with_logging(number), default_view_point,
-                                   default_simulation_config);
-    status |= set_save_information(SaveInformation {
-        .name_or_path = UnsavedName {std::format("Example {}", number)},
-        .serialized_circuit =
-            serialize_circuit(circuit_store_.layout(), config_.simulation),
-    });
-
-    Ensures(class_invariant_holds());
-    Ensures(expensive_invariant_holds());
-    return status;
 }
 
 auto CircuitUIModel::render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio)

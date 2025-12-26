@@ -185,6 +185,34 @@ using ModalResult = std::variant<SaveCurrentYes, SaveCurrentNo, SaveCurrentCance
 
 static_assert(std::regular<ModalResult>);
 
+struct SaveFileError {
+    std::filesystem::path filename;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SaveFileError&) const -> bool = default;
+};
+
+struct OpenFileError {
+    std::filesystem::path filename;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const OpenFileError&) const -> bool = default;
+};
+
+using ErrorMessage = std::variant<SaveFileError, OpenFileError>;
+
+using NextActionStep = std::variant<ErrorMessage, ModalRequest>;
+
+struct FileActionResult {
+    UIStatus status;
+    std::optional<NextActionStep> next_step;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const FileActionResult&) const -> bool = default;
+};
+
+static_assert(std::regular<FileActionResult>);
+
 struct ModalState {
     ModalRequest request;
     FileAction action;
@@ -244,6 +272,32 @@ struct fmt::formatter<logicsim::circuit_ui_model::ModalResult> {
     }
 };
 
+template <>
+struct fmt::formatter<logicsim::circuit_ui_model::ErrorMessage> {
+    constexpr static auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::circuit_ui_model::ErrorMessage& obj,
+                       fmt::format_context& ctx) {
+        const auto str = std::visit([](auto&& v) { return v.format(); }, obj);
+        return fmt::format_to(ctx.out(), "{}", str);
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::circuit_ui_model::NextActionStep> {
+    constexpr static auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::circuit_ui_model::NextActionStep& obj,
+                       fmt::format_context& ctx) {
+        const auto str = std::visit([](auto&& v) { return fmt::format("{}", v); }, obj);
+        return fmt::format_to(ctx.out(), "{}", str);
+    }
+};
+
 namespace logicsim {
 
 struct UnexpectedModalResultException : std::runtime_error {
@@ -277,6 +331,7 @@ class CircuitUIModel {
     using FileAction = circuit_ui_model::FileAction;
     using ModalRequest = circuit_ui_model::ModalRequest;
     using ModalResult = circuit_ui_model::ModalResult;
+    using FileActionResult = circuit_ui_model::FileActionResult;
 
    public:
     [[nodiscard]] explicit CircuitUIModel();
@@ -291,15 +346,14 @@ class CircuitUIModel {
     [[nodiscard]] auto do_action(UserAction action,
                                  std::optional<point_device_fine_t> position) -> UIStatus;
     // load & save
-    [[nodiscard]] auto file_action(FileAction action)
-        -> std::pair<UIStatus, std::optional<ModalRequest>>;
-    [[nodiscard]] auto submit_modal_result(const ModalResult& result)
-        -> std::pair<UIStatus, std::optional<ModalRequest>>;
+    [[nodiscard]] auto file_action(FileAction action) -> FileActionResult;
+    [[nodiscard]] auto submit_modal_result(const ModalResult& result) -> FileActionResult;
 
     [[nodiscard]] auto non_modal_action(FileAction action) -> UIStatus;  // TODO: private
     [[nodiscard]] auto finalize_and_is_dirty()
-        -> std::pair<UIStatus, bool>;                                 // TODO: private
-    [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;  // TODO: remove
+        -> std::pair<UIStatus, bool>;                                 // TODO: remove
+    [[nodiscard]] auto load_new_circuit() -> UIStatus;                // TODO: private
+    [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;  // TODO: private
     // render
     auto render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio) -> void;
 
@@ -338,6 +392,11 @@ class CircuitUIModel {
     [[nodiscard]] auto abort_current_action() -> UIStatus;
     [[nodiscard]] auto finalize_editing() -> UIStatus;
     [[nodiscard]] auto close_all_setting_dialogs() -> UIStatus;
+
+    [[nodiscard]] auto save_file(const std::filesystem::path& filename, bool& success)
+        -> UIStatus;
+    [[nodiscard]] auto open_file(const std::filesystem::path& filename, bool& success)
+        -> UIStatus;
 
     auto undo() -> void;
     auto redo() -> void;
