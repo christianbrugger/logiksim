@@ -236,7 +236,7 @@ typedef struct ls_modal_result_t {
 
 // circuit::submit_modal_result(const ModalResult& result) -> FileActionResult;
 LS_NODISCARD LS_CORE_API ls_ui_status_t
-ls_circuit_submit_modal_result(ls_circuit_t* obj, const ls_modal_result_t* result,
+ls_circuit_submit_modal_result(ls_circuit_t* obj, const ls_modal_result_t* modal_result,
                                uint8_t* next_step_enum, ls_path_t* path_out) LS_NOEXCEPT;
 
 // TODO: remove
@@ -551,10 +551,10 @@ enum class FileAction : uint8_t {
     save_file = 2,
     save_as_file = 3,
 
-    load_example_0 = 4,
-    load_example_1 = 5,
-    load_example_2 = 6,
-    load_example_3 = 7,
+    load_example_simple = 4,
+    load_example_elements_wires = 5,
+    load_example_elements = 6,
+    load_example_wires = 7,
 };
 
 namespace detail {

@@ -113,10 +113,10 @@ enum class FileAction : uint8_t {
     save_file,
     save_as_file,
 
-    load_example_0,
-    load_example_1,
-    load_example_2,
-    load_example_3,
+    load_example_simple,
+    load_example_elements_and_wires,
+    load_example_elements,
+    load_example_wires,
 };
 
 struct SaveCurrentModal {

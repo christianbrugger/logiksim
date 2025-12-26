@@ -148,9 +148,11 @@ auto render_circuit(RenderBufferSource& render_source,
     static_cast<void>(request);
     static_cast<void>(circuit);
 
-    std::print("handle_file_reques\n");
+    const auto res = circuit.file_action(exporting::FileAction::load_example_simple);
 
-    return ls_ui_status_t {};
+    std::print("handle_file_reques = {}\n", res.next_step.has_value());
+
+    return res.status;
 }
 
 [[nodiscard]] auto submit_backend_task(const BackendTask& task,

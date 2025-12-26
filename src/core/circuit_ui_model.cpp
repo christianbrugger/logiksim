@@ -174,14 +174,14 @@ auto format(circuit_ui_model::FileAction action) -> std::string {
             return "save_file";
         case save_as_file:
             return "save_as_file";
-        case load_example_0:
-            return "load_example_0";
-        case load_example_1:
-            return "load_example_1";
-        case load_example_2:
-            return "load_example_2";
-        case load_example_3:
-            return "load_example_3";
+        case load_example_simple:
+            return "load_example_simple";
+        case load_example_elements_and_wires:
+            return "load_example_elements_and_wires";
+        case load_example_elements:
+            return "load_example_elements";
+        case load_example_wires:
+            return "load_example_wires";
     };
     std::terminate();
 }
@@ -407,10 +407,10 @@ namespace {
         case save_file:
         case save_as_file:
             return false;
-        case load_example_0:
-        case load_example_1:
-        case load_example_2:
-        case load_example_3:
+        case load_example_simple:
+        case load_example_elements_and_wires:
+        case load_example_elements:
+        case load_example_wires:
             return true;
     };
     std::terminate();
@@ -504,17 +504,17 @@ auto CircuitUIModel::non_modal_action(FileAction action) -> UIStatus {
         case new_file:
             status |= load_new_circuit();
             break;
-        case load_example_0:
-            status |= load_circuit_example(0);
-            break;
-        case load_example_1:
+        case load_example_simple:
             status |= load_circuit_example(1);
             break;
-        case load_example_2:
+        case load_example_elements_and_wires:
             status |= load_circuit_example(2);
             break;
-        case load_example_3:
+        case load_example_elements:
             status |= load_circuit_example(3);
+            break;
+        case load_example_wires:
+            status |= load_circuit_example(4);
             break;
 
         // modal actions do nothing here

@@ -46,6 +46,13 @@ template <typename Func>
 namespace logicsim {
 namespace {
 
+[[nodiscard]] auto from_c(ls_path_view_t view) -> std::filesystem::path {
+    Expects(view.data != nullptr);
+
+    const auto sv = std::basic_string_view<ls_path_char_t> {view.data, view.size};
+    return std::filesystem::path {sv};
+}
+
 [[nodiscard]] auto to_c(UIStatus status) -> ls_ui_status_t {
     return ls_ui_status_t {
         .repaint_required = status.require_repaint,
@@ -500,14 +507,14 @@ namespace {
         case save_as_file:
             return FileAction::save_as_file;
 
-        case load_example_0:
-            return FileAction::load_example_0;
-        case load_example_1:
-            return FileAction::load_example_1;
-        case load_example_2:
-            return FileAction::load_example_2;
-        case load_example_3:
-            return FileAction::load_example_3;
+        case load_example_simple:
+            return FileAction::load_example_simple;
+        case load_example_elements_wires:
+            return FileAction::load_example_elements_and_wires;
+        case load_example_elements:
+            return FileAction::load_example_elements;
+        case load_example_wires:
+            return FileAction::load_example_wires;
     };
     std::terminate();
 }
@@ -519,6 +526,69 @@ namespace {
     return to_file_action(to_enum<exporting::FileAction>(action));
 }
 
+[[nodiscard]] auto to_c(
+    const std::optional<logicsim::circuit_ui_model::NextActionStep>& next_step)
+    -> std::pair<logicsim::exporting::detail::NextStepEnum, std::filesystem::path> {
+    using namespace logicsim::circuit_ui_model;
+    using enum logicsim::exporting::detail::NextStepEnum;
+
+    if (!next_step.has_value()) {
+        return {no_next_step, {}};
+    }
+
+    if (const auto request = std::get_if<ModalRequest>(&next_step.value())) {
+        if (const auto data = std::get_if<SaveCurrentModal>(request)) {
+            return {save_current_modal, data->filename};
+        }
+        if (std::holds_alternative<OpenFileModal>(*request)) {
+            return {open_file_modal, {}};
+        }
+        if (std::holds_alternative<SaveFileModal>(*request)) {
+            return {save_file_modal, {}};
+        }
+    }
+
+    if (const auto error = std::get_if<ErrorMessage>(&next_step.value())) {
+        if (const auto data = std::get_if<SaveFileError>(error)) {
+            return {save_file_error, data->filename};
+        }
+        if (const auto data = std::get_if<OpenFileError>(error)) {
+            return {open_file_error, data->filename};
+        }
+    }
+
+    std::terminate();
+}
+
+[[nodiscard]] auto to_modal_result(const ls_modal_result_t& result)
+    -> logicsim::circuit_ui_model::ModalResult {
+    using namespace logicsim;
+    using namespace logicsim::circuit_ui_model;
+
+    switch (to_enum<exporting::detail::ModalResultEnum>(result.modal_result_enum)) {
+        using enum exporting::detail::ModalResultEnum;
+
+        case save_current_yes:
+            return SaveCurrentYes {};
+        case save_current_no:
+            return SaveCurrentNo {};
+        case save_current_cancel:
+            return SaveCurrentCancel {};
+
+        case open_file_open:
+            return OpenFileOpen {.filename = from_c(result.path)};
+        case open_file_cancel:
+            return OpenFileCancel {};
+
+        case save_file_save:
+            return SaveFileSave {.filename = from_c(result.path)};
+        case save_file_cancel:
+            return SaveFileCancel {};
+    }
+
+    std::terminate();
+}
+
 }  // namespace
 
 auto ls_circuit_file_action(ls_circuit_t* obj, uint8_t file_action_enum,
@@ -527,26 +597,41 @@ auto ls_circuit_file_action(ls_circuit_t* obj, uint8_t file_action_enum,
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
+        Expects(next_step_enum);
+        Expects(path_out);
 
         const auto result = obj->model.file_action(to_file_action(file_action_enum));
 
-        static_cast<void>(next_step_enum);
-        static_cast<void>(path_out);
-        // return to_c(obj->model.file_action(to_file_action(file_action_enum)));
+        // next step
+        const auto [ns_enum, path] = to_c(result.next_step);
+        *next_step_enum = std::to_underlying(ns_enum);
+        path_out->value = path;
 
         return to_c(result.status);
     });
 }
 
-auto ls_circuit_submit_modal_result(ls_circuit_t* obj, const ls_modal_result_t* result,
+auto ls_circuit_submit_modal_result(ls_circuit_t* obj,
+                                    const ls_modal_result_t* modal_result,
                                     uint8_t* next_step_enum, ls_path_t* path_out) noexcept
     -> ls_ui_status_t {
-    static_cast<void>(obj);
-    static_cast<void>(result);
-    static_cast<void>(next_step_enum);
-    static_cast<void>(path_out);
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+        Expects(modal_result);
+        Expects(next_step_enum);
+        Expects(path_out);
 
-    return {};
+        const auto result =
+            obj->model.submit_modal_result(to_modal_result(*modal_result));
+
+        // next step
+        const auto [ns_enum, path] = to_c(result.next_step);
+        *next_step_enum = std::to_underlying(ns_enum);
+        path_out->value = path;
+
+        return to_c(result.status);
+    });
 }
 
 auto ls_circuit_load(ls_circuit_t* obj, uint8_t example_circuit_enum) noexcept
