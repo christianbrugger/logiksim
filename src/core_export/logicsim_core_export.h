@@ -5,14 +5,17 @@
 #include <array>
 #include <bitset>
 #include <chrono>
+#include <concepts>
 #include <cstdint>
 #include <exception>
+#include <filesystem>
 #include <limits>
 #include <memory>  // unique_ptr
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <variant>
 #else
 #include <stdbool.h>
 #include <stddef.h>
@@ -70,11 +73,35 @@ typedef struct ls_optional_double_t {
 } ls_optional_double_t;
 
 // wraps std::string on logicsim side
+// this is required so ownership can be transferred from logicsim to export
 typedef struct ls_string_t ls_string_t;
 LS_NODISCARD LS_CORE_API ls_string_t* ls_string_construct() LS_NOEXCEPT;
 LS_CORE_API void ls_string_destruct(ls_string_t* obj) LS_NOEXCEPT;
 LS_CORE_API const char* ls_string_data(const ls_string_t* obj) LS_NOEXCEPT;
 LS_CORE_API size_t ls_string_size(const ls_string_t* obj) LS_NOEXCEPT;
+
+// wraps std::filesystem::path on logicsim side
+// this is required so ownership can be transferred from logicsim to export
+#ifdef _WIN32
+typedef wchar_t ls_path_char_t;
+#else
+typedef char ls_path_char_t;
+#endif
+typedef struct ls_path_t ls_path_t;
+LS_NODISCARD LS_CORE_API ls_path_t* ls_path_construct() LS_NOEXCEPT;
+LS_CORE_API void ls_path_destruct(ls_path_t* obj) LS_NOEXCEPT;
+LS_CORE_API const ls_path_char_t* ls_path_data(const ls_path_t* obj) LS_NOEXCEPT;
+LS_CORE_API size_t ls_path_size(const ls_path_t* obj) LS_NOEXCEPT;
+
+// pass std::filesystem::path to logicsim side
+// non owning view that does not transfer ownership
+typedef struct ls_path_view_t {
+    const ls_path_char_t* data;
+    size_t size;
+#ifdef __cplusplus
+    [[nodiscard]] auto operator==(const ls_path_view_t&) const -> bool = default;
+#endif
+} ls_path_view_t;
 
 typedef struct ls_ui_status_t {
     bool repaint_required;
@@ -194,6 +221,25 @@ LS_NODISCARD LS_CORE_API ls_ui_status_t
 ls_circuit_do_action(ls_circuit_t* obj, uint8_t action_enum,
                      const ls_point_device_fine_t* optional_position) LS_NOEXCEPT;
 
+// circuit::file_action(FileAction action) -> FileActionResult;
+LS_NODISCARD LS_CORE_API ls_ui_status_t
+ls_circuit_file_action(ls_circuit_t* obj, uint8_t file_action_enum,
+                       uint8_t* next_step_enum, ls_path_t* path_out) LS_NOEXCEPT;
+
+typedef struct ls_modal_result_t {
+    uint8_t modal_result_enum;
+    ls_path_view_t path;
+#ifdef __cplusplus
+    [[nodiscard]] auto operator==(const ls_modal_result_t&) const -> bool = default;
+#endif
+} ls_modal_result_t;
+
+// circuit::submit_modal_result(const ModalResult& result) -> FileActionResult;
+LS_NODISCARD LS_CORE_API ls_ui_status_t
+ls_circuit_submit_modal_result(ls_circuit_t* obj, const ls_modal_result_t* result,
+                               uint8_t* next_step_enum, ls_path_t* path_out) LS_NOEXCEPT;
+
+// TODO: remove
 // circuit::load
 LS_NODISCARD LS_CORE_API ls_ui_status_t
 ls_circuit_load(ls_circuit_t* obj, uint8_t example_circuit_enum) LS_NOEXCEPT;
@@ -317,6 +363,12 @@ struct LSStringDeleter {
     };
 };
 
+struct LSPathDeleter {
+    auto operator()(ls_path_t* obj) noexcept -> void {
+        ls_path_destruct(obj);
+    };
+};
+
 }  // namespace detail
 
 class WrappedString {
@@ -341,6 +393,38 @@ class WrappedString {
 
    private:
     std::unique_ptr<ls_string_t, detail::LSStringDeleter> obj_ {ls_string_construct()};
+};
+
+class WrappedPath {
+   public:
+    using value_type = ls_path_char_t;
+    using string_type = std::basic_string<value_type>;
+    using string_view_type = std::basic_string_view<value_type>;
+
+    [[nodiscard]] auto view() const -> string_view_type {
+        return string_view_type {ls_path_data(get()), ls_path_size(get())};
+    }
+
+    [[nodiscard]] auto string() const -> string_type {
+        return string_type {view()};
+    }
+
+    [[nodiscard]] auto path() const -> std::filesystem::path {
+        return std::filesystem::path {string()};
+    }
+
+    [[nodiscard]] auto get() -> ls_path_t* {
+        detail::ls_expects(obj_);
+        return obj_.get();
+    }
+
+    [[nodiscard]] auto get() const -> const ls_path_t* {
+        detail::ls_expects(obj_);
+        return obj_.get();
+    }
+
+   private:
+    std::unique_ptr<ls_path_t, detail::LSPathDeleter> obj_ {ls_path_construct()};
 };
 
 enum class ThreadCount : uint8_t {
@@ -461,6 +545,130 @@ enum class UserAction : uint8_t {
     reset_view = 11,
 };
 
+enum class FileAction : uint8_t {
+    new_file = 0,
+    open_file = 1,
+    save_file = 2,
+    save_as_file = 3,
+
+    load_example_0 = 4,
+    load_example_1 = 5,
+    load_example_2 = 6,
+    load_example_3 = 7,
+};
+
+namespace detail {
+
+// std::optional<NextActionStep> - variant
+enum class NextStepEnum : uint8_t {
+    // nullopt
+    no_next_step = 0,
+
+    // ModalRequest - variant
+    save_current_modal = 1,
+    open_file_modal = 2,
+    save_file_modal = 3,
+
+    // ErrorMessage - variant
+    save_file_error = 4,
+    open_file_error = 5,
+};
+
+// ModalResult - variant
+enum class ModalResultEnum : uint8_t {
+    save_current_yes = 0,
+    save_current_no = 1,
+    save_current_cancel = 3,
+
+    open_file_open = 4,
+    open_file_cancel = 5,
+
+    save_file_save = 6,
+    save_file_cancel = 7
+};
+
+}  // namespace detail
+
+///////////////////////////////////////////
+
+struct SaveCurrentModal {
+    std::filesystem::path filename;
+    [[nodiscard]] auto operator==(const SaveCurrentModal&) const -> bool = default;
+};
+
+struct OpenFileModal {
+    [[nodiscard]] auto operator==(const OpenFileModal&) const -> bool = default;
+};
+
+struct SaveFileModal {
+    [[nodiscard]] auto operator==(const SaveFileModal&) const -> bool = default;
+};
+
+using ModalRequest = std::variant<SaveCurrentModal, OpenFileModal, SaveFileModal>;
+
+static_assert(std::regular<ModalRequest>);
+
+struct SaveCurrentYes {
+    [[nodiscard]] auto operator==(const SaveCurrentYes&) const -> bool = default;
+};
+
+struct SaveCurrentNo {
+    [[nodiscard]] auto operator==(const SaveCurrentNo&) const -> bool = default;
+};
+
+struct SaveCurrentCancel {
+    [[nodiscard]] auto operator==(const SaveCurrentCancel&) const -> bool = default;
+};
+
+struct OpenFileOpen {
+    std::filesystem::path filename;
+    [[nodiscard]] auto operator==(const OpenFileOpen&) const -> bool = default;
+};
+
+struct OpenFileCancel {
+    [[nodiscard]] auto operator==(const OpenFileCancel&) const -> bool = default;
+};
+
+struct SaveFileSave {
+    std::filesystem::path filename;
+    [[nodiscard]] auto operator==(const SaveFileSave&) const -> bool = default;
+};
+
+struct SaveFileCancel {
+    [[nodiscard]] auto operator==(const SaveFileCancel&) const -> bool = default;
+};
+
+using ModalResult = std::variant<SaveCurrentYes, SaveCurrentNo, SaveCurrentCancel,  //
+                                 OpenFileOpen, OpenFileCancel,                      //
+                                 SaveFileSave, SaveFileCancel>;
+
+static_assert(std::regular<ModalResult>);
+
+struct SaveFileError {
+    std::filesystem::path filename;
+    [[nodiscard]] auto operator==(const SaveFileError&) const -> bool = default;
+};
+
+struct OpenFileError {
+    std::filesystem::path filename;
+    [[nodiscard]] auto operator==(const OpenFileError&) const -> bool = default;
+};
+
+using ErrorMessage = std::variant<SaveFileError, OpenFileError>;
+
+using NextActionStep = std::variant<ErrorMessage, ModalRequest>;
+
+struct FileActionResult {
+    ls_ui_status_t status;
+    std::optional<NextActionStep> next_step;
+    [[nodiscard]] auto operator==(const FileActionResult&) const -> bool = default;
+};
+
+static_assert(std::regular<FileActionResult>);
+
+///////////////////////////////////////////
+
+// TODO: delete
 enum class ExampleCircuitType : uint8_t {
     simple = 1,
     elements_wires = 2,
@@ -629,7 +837,11 @@ class CircuitInterface {
     [[nodiscard]] inline auto allocation_info() const -> std::string;
 
     [[nodiscard]] inline auto do_action(const UserActionEvent& event) -> ls_ui_status_t;
-    [[nodiscard]] inline auto load(ExampleCircuitType type) -> ls_ui_status_t;
+    [[nodiscard]] inline auto load(ExampleCircuitType type)
+        -> ls_ui_status_t;  // TODO remove
+    [[nodiscard]] inline auto file_action(FileAction action) -> FileActionResult;
+    [[nodiscard]] inline auto submit_modal_result(const ModalResult& result)
+        -> FileActionResult;
 
     inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
                               void* pixel_data, intptr_t stride) -> void;
@@ -739,6 +951,78 @@ namespace detail {
     };
 }
 
+[[nodiscard]] inline auto to_exp_next_step(uint8_t next_step_enum,
+                                           const WrappedPath& path_out)
+    -> std::optional<NextActionStep> {
+    //
+    switch (static_cast<NextStepEnum>(next_step_enum)) {
+        using enum NextStepEnum;
+
+        case no_next_step:
+            ls_expects(path_out.view().empty());
+            return std::nullopt;
+
+        case save_current_modal:
+            return SaveCurrentModal {
+                .filename = path_out.path(),
+            };
+        case open_file_modal:
+            ls_expects(path_out.view().empty());
+            return OpenFileModal {};
+        case save_file_modal:
+            ls_expects(path_out.view().empty());
+            return SaveFileModal {};
+
+        case save_file_error:
+            return SaveFileError {
+                .filename = path_out.path(),
+            };
+        case open_file_error:
+            return OpenFileError {
+                .filename = path_out.path(),
+            };
+    };
+    std::terminate();
+}
+
+[[nodiscard]] inline auto to_exp_file_action_result(ls_ui_status_t status,
+                                                    uint8_t next_step_enum,
+                                                    const WrappedPath& path_out)
+    -> FileActionResult {
+    return FileActionResult {
+        .status = status,
+        .next_step = to_exp_next_step(next_step_enum, path_out),
+    };
+}
+
+[[nodiscard]] inline auto from_exp(const ModalResult& modal_result)
+    -> std::pair<ModalResultEnum, std::filesystem::path> {
+    if (std::holds_alternative<SaveCurrentYes>(modal_result)) {
+        return {ModalResultEnum::save_current_yes, {}};
+    }
+    if (std::holds_alternative<SaveCurrentNo>(modal_result)) {
+        return {ModalResultEnum::save_current_no, {}};
+    }
+    if (std::holds_alternative<SaveCurrentCancel>(modal_result)) {
+        return {ModalResultEnum::save_current_cancel, {}};
+    }
+
+    if (const auto data = std::get_if<OpenFileOpen>(&modal_result)) {
+        return {ModalResultEnum::open_file_open, data->filename};
+    }
+    if (std::holds_alternative<OpenFileCancel>(modal_result)) {
+        return {ModalResultEnum::open_file_cancel, {}};
+    }
+
+    if (const auto data = std::get_if<OpenFileOpen>(&modal_result)) {
+        return {ModalResultEnum::save_file_save, data->filename};
+    }
+    if (std::holds_alternative<SaveFileCancel>(modal_result)) {
+        return {ModalResultEnum::save_file_cancel, {}};
+    }
+    std::terminate();
+}
+
 }  // namespace detail
 
 auto combine_wheel_event(const MouseWheelEvent& first, const MouseWheelEvent& second)
@@ -798,6 +1082,35 @@ auto CircuitInterface::do_action(const UserActionEvent& event) -> ls_ui_status_t
 auto CircuitInterface::load(ExampleCircuitType type) -> ls_ui_status_t {
     return ls_circuit_load(get(), detail::to_underlying(type));
 };
+
+auto CircuitInterface::file_action(FileAction action) -> FileActionResult {
+    auto next_step_enum = uint8_t {};
+    auto path_out = WrappedPath {};
+    const auto status = ls_circuit_file_action(get(), detail::to_underlying(action),
+                                               &next_step_enum, path_out.get());
+
+    return detail::to_exp_file_action_result(status, next_step_enum, path_out);
+}
+
+auto CircuitInterface::submit_modal_result(const ModalResult& result)
+    -> FileActionResult {
+    const auto [modal_result_enum, path] = detail::from_exp(result);
+    const auto modal_result = ls_modal_result_t {
+        .modal_result_enum = detail::to_underlying(modal_result_enum),
+        .path =
+            ls_path_view_t {
+                .data = path.native().data(),
+                .size = path.native().size(),
+            },
+    };
+
+    auto next_step_enum = uint8_t {};
+    auto path_out = WrappedPath {};
+    const auto status = ls_circuit_submit_modal_result(get(), &modal_result,
+                                                       &next_step_enum, path_out.get());
+
+    return detail::to_exp_file_action_result(status, next_step_enum, path_out);
+}
 
 auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel_ratio,
                                      void* pixel_data, intptr_t stride) -> void {

@@ -7,12 +7,18 @@
 #include <blend2d/blend2d.h>
 #include <gsl/gsl>
 
+#include <filesystem>
+
 //
 // C Interface
 //
 
 struct ls_string_t {
     std::string value {};
+};
+
+struct ls_path_t {
+    std::filesystem::path value {};
 };
 
 struct ls_circuit_t {
@@ -404,6 +410,13 @@ namespace {
     };
 };
 
+// [[nodiscard]] auto to_c(const FileAction& status) -> ls_history_status_t {
+//     return ls_history_status_t {
+//         .undo_available = status.undo_available,
+//         .redo_available = status.redo_available,
+//     };
+// };
+
 }  // namespace
 }  // namespace logicsim
 
@@ -431,6 +444,34 @@ auto ls_string_size(const ls_string_t* obj) noexcept -> size_t {
     });
 }
 
+/////////////////////
+
+auto ls_path_construct() noexcept -> ls_path_t* {
+    return ls_translate_exception([]() {
+        return new ls_path_t {};  // NOLINT(bugprone-unhandled-exception-at-new)
+    });
+}
+
+auto ls_path_destruct(ls_path_t* obj) noexcept -> void {
+    delete obj;
+}
+
+auto ls_path_data(const ls_path_t* obj) noexcept -> const ls_path_char_t* {
+    return ls_translate_exception([&]() {
+        Expects(obj);
+        return obj->value.native().data();
+    });
+}
+
+auto ls_path_size(const ls_path_t* obj) noexcept -> size_t {
+    return ls_translate_exception([&]() {
+        Expects(obj);
+        return obj->value.native().size();
+    });
+}
+
+//////////////////
+
 auto ls_circuit_construct() noexcept -> ls_circuit_t* {
     return ls_translate_exception([]() {
         return new ls_circuit_t;  // NOLINT(bugprone-unhandled-exception-at-new)
@@ -439,6 +480,73 @@ auto ls_circuit_construct() noexcept -> ls_circuit_t* {
 
 auto ls_circuit_destruct(ls_circuit_t* obj) noexcept -> void {
     delete obj;
+}
+
+namespace {
+
+[[nodiscard]] auto to_file_action(logicsim::exporting::FileAction action)
+    -> logicsim::circuit_ui_model::FileAction {
+    using namespace logicsim::circuit_ui_model;
+
+    switch (action) {
+        using enum logicsim::exporting::FileAction;
+
+        case new_file:
+            return FileAction::new_file;
+        case open_file:
+            return FileAction::open_file;
+        case save_file:
+            return FileAction::save_file;
+        case save_as_file:
+            return FileAction::save_as_file;
+
+        case load_example_0:
+            return FileAction::load_example_0;
+        case load_example_1:
+            return FileAction::load_example_1;
+        case load_example_2:
+            return FileAction::load_example_2;
+        case load_example_3:
+            return FileAction::load_example_3;
+    };
+    std::terminate();
+}
+
+[[nodiscard]] auto to_file_action(uint8_t action)
+    -> logicsim::circuit_ui_model::FileAction {
+    using namespace logicsim;
+
+    return to_file_action(to_enum<exporting::FileAction>(action));
+}
+
+}  // namespace
+
+auto ls_circuit_file_action(ls_circuit_t* obj, uint8_t file_action_enum,
+                            uint8_t* next_step_enum, ls_path_t* path_out) noexcept
+    -> ls_ui_status_t {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+
+        const auto result = obj->model.file_action(to_file_action(file_action_enum));
+
+        static_cast<void>(next_step_enum);
+        static_cast<void>(path_out);
+        // return to_c(obj->model.file_action(to_file_action(file_action_enum)));
+
+        return to_c(result.status);
+    });
+}
+
+auto ls_circuit_submit_modal_result(ls_circuit_t* obj, const ls_modal_result_t* result,
+                                    uint8_t* next_step_enum, ls_path_t* path_out) noexcept
+    -> ls_ui_status_t {
+    static_cast<void>(obj);
+    static_cast<void>(result);
+    static_cast<void>(next_step_enum);
+    static_cast<void>(path_out);
+
+    return {};
 }
 
 auto ls_circuit_load(ls_circuit_t* obj, uint8_t example_circuit_enum) noexcept
