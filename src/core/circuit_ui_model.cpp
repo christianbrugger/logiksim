@@ -4,6 +4,7 @@
 #include "core/circuit_example.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_logic_status.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_wheel_logic.h"
+#include "core/format/std_type.h"
 #include "core/geometry/rect.h"
 #include "core/geometry/scene.h"
 #include "core/load_save_file.h"
@@ -56,6 +57,55 @@ auto SaveInformation::format() const -> std::string {
         serialized_circuit.transform([](const std::string& v) { return v.size(); }));
 }
 
+auto SaveCurrentModal::format() const -> std::string {
+    return fmt::format("SaveCurrentModal{{{}}}", filename);
+}
+
+auto OpenFileModal::format() const -> std::string {
+    return "OpenFileModal{}";
+}
+
+auto SaveFileModal::format() const -> std::string {
+    return "SaveFileModal{}";
+}
+
+auto SaveCurrentYes::format() const -> std::string {
+    return "SaveCurrentYes{}";
+}
+
+auto SaveCurrentNo::format() const -> std::string {
+    return "SaveCurrentNo{}";
+}
+
+auto SaveCurrentCancel::format() const -> std::string {
+    return "SaveCurrentCancel{}";
+}
+
+auto OpenFileOpen::format() const -> std::string {
+    return fmt::format("OpenFileOpen{{{}}}", filename);
+}
+
+auto OpenFileCancel::format() const -> std::string {
+    return "OpenFileCancel{}";
+}
+
+auto SaveFileSave::format() const -> std::string {
+    return fmt::format("SaveFileSave{{{}}}", filename);
+}
+
+auto SaveFileCancel::format() const -> std::string {
+    return "SaveFileCancel{}";
+}
+
+auto ModalState::format() const -> std::string {
+    return fmt::format(
+        "ModalState{{\n"
+        "  request = {},\n"
+        "  action = {},\n"
+        "}}",
+        request, action);
+}
+
 }  // namespace circuit_ui_model
 
 template <>
@@ -95,9 +145,9 @@ auto format(circuit_ui_model::UserAction action) -> std::string {
 }
 
 template <>
-auto format(circuit_ui_model::FileRequest request) -> std::string {
-    switch (request) {
-        using enum circuit_ui_model::FileRequest;
+auto format(circuit_ui_model::FileAction action) -> std::string {
+    switch (action) {
+        using enum circuit_ui_model::FileAction;
 
         case new_file:
             return "new_file";
@@ -326,12 +376,13 @@ auto CircuitUIModel::do_action(UserAction action,
     return status;
 }
 
+namespace circuit_ui_model {
+
 namespace {
 
-[[nodiscard]] auto requires_save_current_prompt(circuit_ui_model::FileRequest request)
-    -> bool {
+[[nodiscard]] auto requires_save_current_prompt(FileAction request) -> bool {
     switch (request) {
-        using enum circuit_ui_model::FileRequest;
+        using enum FileAction;
 
         case new_file:
         case open_file:
@@ -350,31 +401,108 @@ namespace {
 
 }  // namespace
 
-auto CircuitUIModel::file_request(FileRequest request)
+}  // namespace circuit_ui_model
+
+auto CircuitUIModel::file_action(FileAction action)
     -> std::pair<UIStatus, std::optional<ModalRequest>> {
     Expects(class_invariant_holds());
     using namespace circuit_ui_model;
     auto status = UIStatus {};
 
+    if (modal_) {
+        throw std::runtime_error {"Cannot be called during modal request"};
+    }
+
     status |= finalize_editing();
 
-    auto steps = std::vector<ModalRequest> {};
+    auto request = std::optional<ModalRequest> {};
 
-    if (requires_save_current_prompt(request)) {
+    if (requires_save_current_prompt(action)) {
         const auto is_dirty =
             serialize_circuit(circuit_store_.layout(), config_.simulation) !=
             save_information_.serialized_circuit;
 
         if (is_dirty) {
-            steps.emplace_back(SaveCurrentModal {
+            request = SaveCurrentModal {
                 .filename = get_filename(save_information_.name_or_path),
-            });
+            };
         }
+    }
+
+    if (!request) {
+        if (action == FileAction::open_file) {
+            request = OpenFileModal {};
+        }
+        if (action == FileAction::save_file &&
+            !std::holds_alternative<SavedPath>(save_information_.name_or_path)) {
+            request = SaveFileModal {};
+        }
+        if (action == FileAction::save_as_file) {
+            request = SaveFileModal {};
+        }
+    }
+
+    if (!request) {
+        status |= non_modal_action(action);
+    }
+
+    if (request) {
+        modal_ = ModalState {
+            .request = request.value(),
+            .action = action,
+        };
     }
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return {status, std::nullopt};
+    return {status, request};
+}
+
+auto CircuitUIModel::non_modal_action(FileAction action) -> UIStatus {
+    Expects(class_invariant_holds());
+    Expects(!modal_);
+
+    using namespace circuit_ui_model;
+    auto status = UIStatus {};
+
+    switch (action) {
+        using enum FileAction;
+
+        case new_file: {
+            const auto default_view_point = ViewConfig {}.view_point();
+            const auto default_simulation_config = SimulationConfig {};
+
+            status |= set_circuit_state(*this, defaults::selection_state);
+            status |= set_editable_circuit(EditableCircuit {}, default_view_point,
+                                           default_simulation_config);
+            status |= set_save_information(SaveInformation {
+                .name_or_path = UnsavedName {"Circuit"},
+                .serialized_circuit =
+                    serialize_circuit(circuit_store_.layout(), config_.simulation),
+            });
+            break;
+        }
+        case load_example_0:
+            status |= load_circuit_example(0);
+            break;
+        case load_example_1:
+            status |= load_circuit_example(1);
+            break;
+        case load_example_2:
+            status |= load_circuit_example(2);
+            break;
+        case load_example_3:
+            status |= load_circuit_example(3);
+            break;
+
+        // modal actions do nothing here
+        case open_file:
+        case save_file:
+        case save_as_file:
+            break;
+    };
+
+    return status;
 }
 
 auto CircuitUIModel::submit_modal_result(const ModalResult& result)
@@ -383,11 +511,69 @@ auto CircuitUIModel::submit_modal_result(const ModalResult& result)
     using namespace circuit_ui_model;
     auto status = UIStatus {};
 
-    static_cast<void>(result);  // TODO implement
+    if (!modal_) {
+        throw std::runtime_error {"Cannot submit result without request"};
+    }
+    const auto action = modal_.value().action;
+    const auto& last_request = modal_.value().request;
+    auto next_request = std::optional<ModalRequest> {};
+
+    if (std::holds_alternative<SaveCurrentModal>(last_request)) {
+        if (std::holds_alternative<SaveCurrentYes>(result)) {
+            if (std::holds_alternative<SavedPath>(save_information_.name_or_path)) {
+                // TODO save circuit
+                if (action == FileAction::open_file) {
+                    next_request = OpenFileModal {};
+                }
+            } else {
+                next_request = SaveFileModal {};
+            }
+        } else if (std::holds_alternative<SaveCurrentNo>(result)) {
+            if (action == FileAction::open_file) {
+                next_request = OpenFileModal {};
+            }
+        } else if (std::holds_alternative<SaveCurrentCancel>(result)) {
+            // nothing
+        } else {
+            throw UnexpectedModalResultException {last_request, result};
+        }
+    } else if (std::holds_alternative<OpenFileModal>(last_request)) {
+        if (std::holds_alternative<OpenFileOpen>(result)) {
+            // TODO: open circuit
+        } else if (std::holds_alternative<OpenFileCancel>(result)) {
+            // nothing
+        } else {
+            throw UnexpectedModalResultException {last_request, result};
+        }
+    } else if (std::holds_alternative<SaveFileModal>(last_request)) {
+        if (std::holds_alternative<SaveFileSave>(result)) {
+            // TODO: save circuit
+            if (action == FileAction::open_file) {
+                next_request = OpenFileModal {};
+            }
+        } else if (std::holds_alternative<SaveFileSave>(result)) {
+            // nothing
+        } else {
+            throw UnexpectedModalResultException {last_request, result};
+        }
+    }
+
+    if (!next_request) {
+        status |= non_modal_action(action);
+    }
+
+    if (next_request) {
+        modal_ = ModalState {
+            .request = next_request.value(),
+            .action = action,
+        };
+    } else {
+        modal_ = std::nullopt;
+    }
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    return {status, std::nullopt};
+    return {status, next_request};
 }
 
 auto CircuitUIModel::finalize_and_is_dirty() -> std::pair<UIStatus, bool> {

@@ -16,6 +16,7 @@
 
 #include <gsl/gsl>
 
+#include <coroutine>
 #include <filesystem>
 #include <optional>
 
@@ -36,7 +37,6 @@ class EditableCircuit;
 class LoadError;
 
 namespace circuit_ui_model {
-
 /**
  * @brief: Statistics of the Circuit Widget
  */
@@ -105,7 +105,9 @@ struct SaveInformation {
     [[nodiscard]] auto operator==(const SaveInformation&) const -> bool = default;
 };
 
-enum class FileRequest : uint8_t {
+static_assert(std::regular<SaveInformation>);
+
+enum class FileAction : uint8_t {
     new_file,
     open_file,
     save_file,
@@ -119,35 +121,79 @@ enum class FileRequest : uint8_t {
 
 struct SaveCurrentModal {
     std::filesystem::path filename;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SaveCurrentModal&) const -> bool = default;
 };
 
-struct OpenFileModal {};
+struct OpenFileModal {
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const OpenFileModal&) const -> bool = default;
+};
 
-struct SaveFileModal {};
+struct SaveFileModal {
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SaveFileModal&) const -> bool = default;
+};
 
 using ModalRequest = std::variant<SaveCurrentModal, OpenFileModal, SaveFileModal>;
 
-struct SaveCurrentYes {};
+static_assert(std::regular<ModalRequest>);
 
-struct SaveCurrentNo {};
-
-struct SaveCurrentCancel {};
-
-struct OpenCircuitOpen {
-    std::filesystem::path filename;
+struct SaveCurrentYes {
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SaveCurrentYes&) const -> bool = default;
 };
 
-struct OpenCircuitCancel {};
-
-struct SaveCircuitSave {
-    std::filesystem::path filename;
+struct SaveCurrentNo {
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SaveCurrentNo&) const -> bool = default;
 };
 
-struct SaveCircuitCancel {};
+struct SaveCurrentCancel {
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SaveCurrentCancel&) const -> bool = default;
+};
+
+struct OpenFileOpen {
+    std::filesystem::path filename;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const OpenFileOpen&) const -> bool = default;
+};
+
+struct OpenFileCancel {
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const OpenFileCancel&) const -> bool = default;
+};
+
+struct SaveFileSave {
+    std::filesystem::path filename;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SaveFileSave&) const -> bool = default;
+};
+
+struct SaveFileCancel {
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SaveFileCancel&) const -> bool = default;
+};
 
 using ModalResult = std::variant<SaveCurrentYes, SaveCurrentNo, SaveCurrentCancel,  //
-                                 OpenCircuitOpen, OpenCircuitCancel,                //
-                                 SaveCircuitSave, SaveCircuitCancel>;
+                                 OpenFileOpen, OpenFileCancel,                      //
+                                 SaveFileSave, SaveFileCancel>;
+
+static_assert(std::regular<ModalResult>);
+
+struct ModalState {
+    ModalRequest request;
+    FileAction action;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const ModalState&) const -> bool = default;
+};
+
+static_assert(std::regular<ModalState>);
 
 }  // namespace circuit_ui_model
 
@@ -155,7 +201,7 @@ template <>
 [[nodiscard]] auto format(circuit_ui_model::UserAction action) -> std::string;
 
 template <>
-[[nodiscard]] auto format(circuit_ui_model::FileRequest request) -> std::string;
+[[nodiscard]] auto format(circuit_ui_model::FileAction action) -> std::string;
 
 }  // namespace logicsim
 
@@ -172,7 +218,41 @@ struct fmt::formatter<logicsim::circuit_ui_model::NameOrPath> {
     }
 };
 
+template <>
+struct fmt::formatter<logicsim::circuit_ui_model::ModalRequest> {
+    constexpr static auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::circuit_ui_model::ModalRequest& obj,
+                       fmt::format_context& ctx) {
+        const auto str = std::visit([](auto&& v) { return v.format(); }, obj);
+        return fmt::format_to(ctx.out(), "{}", str);
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::circuit_ui_model::ModalResult> {
+    constexpr static auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::circuit_ui_model::ModalResult& obj,
+                       fmt::format_context& ctx) {
+        const auto str = std::visit([](auto&& v) { return v.format(); }, obj);
+        return fmt::format_to(ctx.out(), "{}", str);
+    }
+};
+
 namespace logicsim {
+
+struct UnexpectedModalResultException : std::runtime_error {
+    constexpr explicit UnexpectedModalResultException(
+        const circuit_ui_model::ModalRequest& request,
+        const circuit_ui_model::ModalResult& result)
+        : std::runtime_error {
+              fmt::format("Unexpected result {} to request {}.", result, request)} {};
+};
 
 /**
  * @brief: Circuit UI model that hold the circuit and coordinates
@@ -194,7 +274,7 @@ class CircuitUIModel {
     using SavedPath = circuit_ui_model::SavedPath;
     using SaveInformation = circuit_ui_model::SaveInformation;
 
-    using FileRequest = circuit_ui_model::FileRequest;
+    using FileAction = circuit_ui_model::FileAction;
     using ModalRequest = circuit_ui_model::ModalRequest;
     using ModalResult = circuit_ui_model::ModalResult;
 
@@ -211,10 +291,12 @@ class CircuitUIModel {
     [[nodiscard]] auto do_action(UserAction action,
                                  std::optional<point_device_fine_t> position) -> UIStatus;
     // load & save
-    [[nodiscard]] auto file_request(FileRequest request)
+    [[nodiscard]] auto file_action(FileAction action)
         -> std::pair<UIStatus, std::optional<ModalRequest>>;
     [[nodiscard]] auto submit_modal_result(const ModalResult& result)
         -> std::pair<UIStatus, std::optional<ModalRequest>>;
+
+    [[nodiscard]] auto non_modal_action(FileAction action) -> UIStatus;  // TODO: private
     [[nodiscard]] auto finalize_and_is_dirty()
         -> std::pair<UIStatus, bool>;                                 // TODO: private
     [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;  // TODO: remove
@@ -279,6 +361,7 @@ class CircuitUIModel {
     CircuitUIConfig config_ {};
     // call set_save_information
     SaveInformation save_information_ {};
+    std::optional<circuit_ui_model::ModalState> modal_ {};
 
     circuit_ui_model::CircuitStore circuit_store_ {};
     circuit_ui_model::CircuitRenderer circuit_renderer_ {};
