@@ -350,10 +350,8 @@ class CircuitUIModel {
     [[nodiscard]] auto submit_modal_result(const ModalResult& result) -> FileActionResult;
 
     [[nodiscard]] auto non_modal_action(FileAction action) -> UIStatus;  // TODO: private
-    [[nodiscard]] auto finalize_and_is_dirty()
-        -> std::pair<UIStatus, bool>;                                 // TODO: remove
-    [[nodiscard]] auto load_new_circuit() -> UIStatus;                // TODO: private
-    [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;  // TODO: private
+    [[nodiscard]] auto load_new_circuit() -> UIStatus;                   // TODO: private
+    [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;     // TODO: private
     // render
     auto render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio) -> void;
 

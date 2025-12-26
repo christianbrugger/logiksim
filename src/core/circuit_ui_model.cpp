@@ -701,20 +701,6 @@ auto CircuitUIModel::open_file(const std::filesystem::path& filename, bool& succ
     return status;
 }
 
-auto CircuitUIModel::finalize_and_is_dirty() -> std::pair<UIStatus, bool> {
-    Expects(class_invariant_holds());
-    const auto status = finalize_editing();
-
-    // TODO: remove this / move logic to file_request
-    const auto is_dirty =
-        serialize_circuit(circuit_store_.layout(), config_.simulation) !=
-        save_information_.serialized_circuit;
-
-    Ensures(class_invariant_holds());
-    Ensures(expensive_invariant_holds());
-    return {status, is_dirty};
-}
-
 auto CircuitUIModel::render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio)
     -> void {
     Expects(class_invariant_holds());

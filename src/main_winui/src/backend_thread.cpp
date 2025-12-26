@@ -145,13 +145,12 @@ auto render_circuit(RenderBufferSource& render_source,
 [[nodiscard]] auto handle_file_request(FileRequestEvent request,
                                        exporting::CircuitInterface& circuit)
     -> ls_ui_status_t {
-    const auto [status, is_dirty] = circuit.finalize_and_is_dirty();
-
     static_cast<void>(request);
+    static_cast<void>(circuit);
 
-    std::print("Is dirty = {}\n", is_dirty);
+    std::print("handle_file_reques\n");
 
-    return status;
+    return ls_ui_status_t {};
 }
 
 [[nodiscard]] auto submit_backend_task(const BackendTask& task,
