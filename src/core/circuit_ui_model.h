@@ -99,7 +99,7 @@ using NameOrPath = std::variant<UnsavedName, SavedPath>;
 
 struct SaveInformation {
     NameOrPath name_or_path {};
-    std::optional<std::string> serialized_circuit {};
+    std::optional<std::string> serialized {};
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const SaveInformation&) const -> bool = default;
@@ -217,6 +217,11 @@ struct ModalState {
     ModalRequest request;
     FileAction action;
 
+#ifdef _DEBUG
+    // set at the start of modal action to guarantee that circuit is not changed
+    std::string serialized_;
+#endif
+
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const ModalState&) const -> bool = default;
 };
@@ -318,6 +323,7 @@ struct UnexpectedModalResultException : std::runtime_error {
  *     + timer_run_simulation_ is only active when in simulation state
  *     + setting dialog count is zero if not in editing state
  *     + layout contains only normal display state items if no editing is active
+ *     + while modal is the set circuit does not change
  */
 class CircuitUIModel {
    public:

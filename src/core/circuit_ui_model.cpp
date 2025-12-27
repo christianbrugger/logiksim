@@ -54,7 +54,7 @@ auto SaveInformation::format() const -> std::string {
         "  serialized_circuit = {},\n"
         "}}",
         name_or_path,
-        serialized_circuit.transform([](const std::string& v) { return v.size(); }));
+        serialized.transform([](const std::string& v) { return v.size(); }));
 }
 
 auto SaveCurrentModal::format() const -> std::string {
@@ -186,6 +186,15 @@ auto format(circuit_ui_model::FileAction action) -> std::string {
     std::terminate();
 }
 
+namespace {
+
+[[nodiscard]] auto serialize(const circuit_ui_model::CircuitStore& circuit_store,
+                             const CircuitUIConfig& config) -> std::string {
+    return serialize_circuit(circuit_store.layout(), config.simulation);
+}
+
+}  // namespace
+
 CircuitUIModel::CircuitUIModel() {
     circuit_store_.set_simulation_config(config_.simulation);
     circuit_store_.set_circuit_state(config_.state);
@@ -194,8 +203,7 @@ CircuitUIModel::CircuitUIModel() {
         config_.state, editable_circuit_pointer(circuit_store_)));
     save_information_ = SaveInformation {
         .name_or_path = UnsavedName {"Circuit"},
-        .serialized_circuit =
-            serialize_circuit(circuit_store_.layout(), config_.simulation),
+        .serialized = serialize(circuit_store_, config_),
     };
 
     Ensures(class_invariant_holds());
@@ -328,8 +336,7 @@ auto CircuitUIModel::do_action(UserAction action,
             status |= set_editable_circuit(EditableCircuit {});
             status |= set_save_information(SaveInformation {
                 .name_or_path = UnsavedName {"Circuit"},
-                .serialized_circuit =
-                    serialize_circuit(circuit_store_.layout(), config_.simulation),
+                .serialized = serialize(circuit_store_, config_),
             });
             break;
         }
@@ -445,8 +452,7 @@ auto CircuitUIModel::file_action(FileAction action) -> FileActionResult {
 
     if (requires_save_current_prompt(action)) {
         const auto is_modifed =
-            serialize_circuit(circuit_store_.layout(), config_.simulation) !=
-            save_information_.serialized_circuit;
+            serialize(circuit_store_, config_) != save_information_.serialized;
 
         if (is_modifed) {
             next_step = SaveCurrentModal {
@@ -483,6 +489,9 @@ auto CircuitUIModel::file_action(FileAction action) -> FileActionResult {
         modal_ = ModalState {
             .request = *request,
             .action = action,
+#ifdef _DEBUG
+            .serialized_ = serialize(circuit_store_, config_),
+#endif
         };
     }
 
@@ -602,6 +611,9 @@ auto CircuitUIModel::submit_modal_result(const ModalResult& result) -> FileActio
         modal_ = ModalState {
             .request = *request,
             .action = action,
+#ifdef _DEBUG
+            .serialized_ = std::move(modal_->serialized_),
+#endif
         };
     } else {
         modal_ = std::nullopt;
@@ -624,8 +636,7 @@ auto CircuitUIModel::load_new_circuit() -> UIStatus {
                                    default_simulation_config);
     status |= set_save_information(SaveInformation {
         .name_or_path = UnsavedName {"Circuit"},
-        .serialized_circuit =
-            serialize_circuit(circuit_store_.layout(), config_.simulation),
+        .serialized = serialize(circuit_store_, config_),
     });
 
     Ensures(class_invariant_holds());
@@ -646,8 +657,7 @@ auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
                                    default_simulation_config);
     status |= set_save_information(SaveInformation {
         .name_or_path = UnsavedName {std::format("Example {}", number)},
-        .serialized_circuit =
-            serialize_circuit(circuit_store_.layout(), config_.simulation),
+        .serialized = serialize(circuit_store_, config_),
     });
 
     Ensures(class_invariant_holds());
@@ -688,8 +698,7 @@ auto CircuitUIModel::open_file(const std::filesystem::path& filename, bool& succ
                                  load_result->view_point, load_result->simulation_config);
         status |= set_save_information(SaveInformation {
             .name_or_path = SavedPath {filename},
-            .serialized_circuit =
-                serialize_circuit(circuit_store_.layout(), config_.simulation),
+            .serialized = serialize(circuit_store_, config_),
         });
     } else {
         status |= set_editable_circuit(EditableCircuit {std::move(orig_layout)});
@@ -1077,6 +1086,9 @@ auto CircuitUIModel::expensive_invariant_holds() const -> bool {
     // editable circuit (expensive so only assert)
     assert(!is_editing_state(config_.state) ||
            is_valid(circuit_store_.editable_circuit()));
+
+    // modal immutability (expensive so only assert)
+    assert(!modal_ || modal_->serialized_ == serialize(circuit_store_, config_));
 
     return true;
 }
