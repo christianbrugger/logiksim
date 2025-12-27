@@ -154,11 +154,11 @@ TEST(CircuitUIModelModal, SaveFromEmptySave) {
     std::filesystem::remove(TEST_FILE_SAVE);
     EXPECT_FALSE(std::filesystem::is_regular_file(TEST_FILE_SAVE));
 
-    // {
-    //     const auto result = model.file_action(FileAction::save_file);
-    //     EXPECT_TRUE(!result.next_step);
-    //     EXPECT_TRUE(model.layout() == load_layout_file(TEST_FILE_SAVE));
-    // }
+    {
+        const auto result = model.file_action(FileAction::save_file);
+        EXPECT_TRUE(!result.next_step);
+        EXPECT_TRUE(model.layout() == load_layout_file(TEST_FILE_SAVE));
+    }
 }
 
 TEST(CircuitUIModelModal, SaveFromEmptySaveCancel) {
@@ -173,6 +173,12 @@ TEST(CircuitUIModelModal, SaveFromEmptySaveCancel) {
     {
         const auto result = model.submit_modal_result(SaveFileCancel {});
         EXPECT_TRUE(!result.next_step);
+    }
+
+    {
+        const auto result = model.file_action(FileAction::save_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        EXPECT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 
@@ -193,6 +199,93 @@ TEST(CircuitUIModelModal, SaveFromEmptySaveError) {
         const auto error = std::get<ErrorMessage>(result.next_step.value());
         const auto open_error = std::get<SaveFileError>(error);
         EXPECT_EQ(open_error.filename, TEST_FILE_FOLDER);
+    }
+
+    {
+        const auto result = model.file_action(FileAction::save_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        EXPECT_TRUE(std::holds_alternative<SaveFileModal>(request));
+    }
+}
+
+TEST(CircuitUIModelModal, SaveAsFromEmptySave) {
+    auto model = CircuitUIModel {};
+
+    std::filesystem::create_directory(TEST_FILE_FOLDER);
+    EXPECT_TRUE(std::filesystem::is_directory(TEST_FILE_FOLDER));
+
+    {
+        const auto result = model.file_action(FileAction::save_as_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        EXPECT_TRUE(std::holds_alternative<SaveFileModal>(request));
+    }
+
+    {
+        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE});
+        EXPECT_TRUE(!result.next_step);
+        EXPECT_TRUE(model.layout() == load_layout_file(TEST_FILE_SAVE));
+    }
+
+    std::filesystem::remove(TEST_FILE_SAVE);
+    EXPECT_FALSE(std::filesystem::is_regular_file(TEST_FILE_SAVE));
+
+    {
+        const auto result = model.file_action(FileAction::save_file);
+        EXPECT_TRUE(!result.next_step);
+        EXPECT_TRUE(model.layout() == load_layout_file(TEST_FILE_SAVE));
+    }
+
+    {
+        const auto result = model.file_action(FileAction::save_as_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        EXPECT_TRUE(std::holds_alternative<SaveFileModal>(request));
+    }
+}
+
+TEST(CircuitUIModelModal, SaveAsFromEmptySaveCancel) {
+    auto model = CircuitUIModel {};
+
+    {
+        const auto result = model.file_action(FileAction::save_as_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        EXPECT_TRUE(std::holds_alternative<SaveFileModal>(request));
+    }
+
+    {
+        const auto result = model.submit_modal_result(SaveFileCancel {});
+        EXPECT_TRUE(!result.next_step);
+    }
+
+    {
+        const auto result = model.file_action(FileAction::save_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        EXPECT_TRUE(std::holds_alternative<SaveFileModal>(request));
+    }
+}
+
+TEST(CircuitUIModelModal, SaveAsFromEmptySaveError) {
+    auto model = CircuitUIModel {};
+
+    std::filesystem::create_directory(TEST_FILE_FOLDER);
+    EXPECT_TRUE(std::filesystem::is_directory(TEST_FILE_FOLDER));
+
+    {
+        const auto result = model.file_action(FileAction::save_as_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        EXPECT_TRUE(std::holds_alternative<SaveFileModal>(request));
+    }
+
+    {
+        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER});
+        const auto error = std::get<ErrorMessage>(result.next_step.value());
+        const auto open_error = std::get<SaveFileError>(error);
+        EXPECT_EQ(open_error.filename, TEST_FILE_FOLDER);
+    }
+
+    {
+        const auto result = model.file_action(FileAction::save_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        EXPECT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 

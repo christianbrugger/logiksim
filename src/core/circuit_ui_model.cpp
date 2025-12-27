@@ -129,8 +129,9 @@ auto CircuitAction::format() const -> std::string {
 }
 
 ModalState::ModalState(ModalRequest request, FileAction action,
-                       const circuit_ui_model::CircuitStore& circuit_store,
-                       const CircuitUIConfig& config)
+                       const circuit_ui_model::CircuitStore& circuit_store
+                       [[maybe_unused]],
+                       const CircuitUIConfig& config [[maybe_unused]])
     : request {std::move(request)},
       action {action}
 #ifdef _DEBUG
@@ -752,12 +753,19 @@ auto CircuitUIModel::save_to_file(const std::filesystem::path& filename, bool& s
     auto status = UIStatus {};
 
     status |= finalize_editing();
-    success = save_circuit_to_file(circuit_store_.layout(), filename,
-                                   circuit_renderer_.view_config().view_point(),
-                                   config_.simulation);
+    const auto result = save_circuit_to_file(circuit_store_.layout(), filename,
+                                             circuit_renderer_.view_config().view_point(),
+                                             config_.simulation);
+    if (result) {
+        status |= set_save_information(SaveInformation {
+            .name_or_path = SavedPath {filename},
+            .serialized = serialize(circuit_store_, config_),
+        });
+    }
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+    success = result;
     return status;
 }
 
@@ -784,10 +792,10 @@ auto CircuitUIModel::open_from_file(const std::filesystem::path& filename, bool&
     } else {
         status |= set_editable_circuit(EditableCircuit {std::move(orig_layout)});
     }
-    success = load_result.has_value();
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+    success = load_result.has_value();
     return status;
 }
 
@@ -1189,7 +1197,9 @@ auto CircuitUIModel::expensive_invariant_holds() const -> bool {
            is_valid(circuit_store_.editable_circuit()));
 
     // modal immutability (expensive so only assert)
+#ifdef _DEBUG
     assert(!modal_ || modal_->serialized_ == serialize(circuit_store_, config_));
+#endif
 
     return true;
 }
