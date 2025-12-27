@@ -17,7 +17,12 @@ namespace {
 
 // constexpr auto inline simulation_interval = 20ms;
 
+[[nodiscard]] auto serialize(const circuit_ui_model::CircuitStore& circuit_store,
+                             const CircuitUIConfig& config) -> std::string {
+    return serialize_circuit(circuit_store.layout(), config.simulation);
 }
+
+}  // namespace
 
 namespace circuit_ui_model {
 
@@ -114,13 +119,25 @@ auto FileActionResult::format() const -> std::string {
         status, next_step);
 }
 
-auto SetCircuitAction::format() const -> std::string {
+auto CircuitAction::format() const -> std::string {
     return fmt::format(
-        "ModalState{{\n"
+        "CircuitAction{{\n"
         "  action = {},\n"
         "  filename = {},\n"
         "}}",
         action, filename);
+}
+
+ModalState::ModalState(ModalRequest request, FileAction action,
+                       const circuit_ui_model::CircuitStore& circuit_store,
+                       const CircuitUIConfig& config)
+    : request {std::move(request)},
+      action {action}
+#ifdef _DEBUG
+      ,
+      serialized_ {serialize(circuit_store, config)}
+#endif
+{
 }
 
 auto ModalState::format() const -> std::string {
@@ -192,15 +209,6 @@ auto format(circuit_ui_model::FileAction action) -> std::string {
     };
     std::terminate();
 }
-
-namespace {
-
-[[nodiscard]] auto serialize(const circuit_ui_model::CircuitStore& circuit_store,
-                             const CircuitUIConfig& config) -> std::string {
-    return serialize_circuit(circuit_store.layout(), config.simulation);
-}
-
-}  // namespace
 
 CircuitUIModel::CircuitUIModel() {
     circuit_store_.set_simulation_config(config_.simulation);
@@ -417,15 +425,15 @@ namespace {
 
         case new_file:
         case open_file:
-            return true;
-        case save_file:
-        case save_as_file:
-            return false;
         case load_example_simple:
         case load_example_elements_and_wires:
         case load_example_elements:
         case load_example_wires:
             return true;
+
+        case save_file:
+        case save_as_file:
+            return false;
     };
     std::terminate();
 }
@@ -460,7 +468,7 @@ auto CircuitUIModel::file_action(FileAction action) -> FileActionResult {
     status |= finalize_editing();
 
     auto next_step = std::optional<NextActionStep> {};
-    auto final_action = std::optional<SetCircuitAction> {};
+    auto current_action = std::optional<CircuitAction> {};
 
     if (requires_save_current_prompt(action)) {
         const auto is_modifed =
@@ -473,124 +481,16 @@ auto CircuitUIModel::file_action(FileAction action) -> FileActionResult {
         }
     }
 
-    if (!next_step) {
-        [&] {
-            switch (action) {
-                case FileAction::open_file: {
-                    next_step = OpenFileModal {};
-                    return;
-                }
-                case FileAction::save_file: {
-                    if (const auto p =
-                            std::get_if<SavedPath>(&save_information_.name_or_path)) {
-                        final_action = SetCircuitAction {
-                            .action = action,
-                            .filename = p->path,
-                        };
-                    } else {
-                        next_step = SaveFileModal {};
-                    }
-                    return;
-                }
-                case FileAction::save_as_file: {
-                    next_step = SaveFileModal {};
-                    return;
-                }
-
-                case FileAction::new_file:
-                case FileAction::load_example_simple:
-                case FileAction::load_example_elements_and_wires:
-                case FileAction::load_example_elements:
-                case FileAction::load_example_wires: {
-                    final_action = SetCircuitAction {
-                        .action = action,
-                        .filename = std::nullopt,
-                    };
-                    return;
-                }
-            };
-            std::terminate();
-        }();
-    }
-
+    next_modal_action(action, next_step, current_action);
     if (const auto request = get_if_modal_request(next_step)) {
-        modal_ = ModalState {
-            .request = *request,
-            .action = action,
-#ifdef _DEBUG
-            .serialized_ = serialize(circuit_store_, config_),
-#endif
-        };
+        modal_ = ModalState {*request, action, circuit_store_, config_};
     }
-
-    if (final_action) {
-        status |= final_modal_action(final_action.value(), next_step);
-    }
+    status |= do_modal_action(current_action, next_step);
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
     Ensures(modal_.has_value() == is_modal_request(next_step));
     return {status, next_step};
-}
-
-auto CircuitUIModel::final_modal_action(
-    const circuit_ui_model::SetCircuitAction& action,
-    std::optional<circuit_ui_model::NextActionStep>& next_step) -> UIStatus {
-    Expects(class_invariant_holds());
-    Expects(!modal_);
-    Expects(!next_step);
-
-    using namespace circuit_ui_model;
-    auto status = UIStatus {};
-
-    [&] {
-        switch (action.action) {
-            using enum FileAction;
-
-            case new_file:
-                Expects(!action.filename);
-                status |= load_new_circuit();
-                return;
-
-            case open_file: {
-                Expects(action.filename);
-                auto success = bool {};
-                status |= this->open_file(action.filename.value(), success);
-                if (!success) {
-                    next_step = OpenFileError {.filename = action.filename.value()};
-                }
-
-                return;
-            }
-
-            case save_file:
-            case save_as_file:
-                // should never be called, as they do not set a new circuit
-                std::terminate();
-
-            case load_example_simple:
-                Expects(!action.filename);
-                status |= load_circuit_example(1);
-                return;
-            case load_example_elements_and_wires:
-                Expects(!action.filename);
-                status |= load_circuit_example(2);
-                return;
-            case load_example_elements:
-                Expects(!action.filename);
-                status |= load_circuit_example(3);
-                return;
-            case load_example_wires:
-                Expects(!action.filename);
-                status |= load_circuit_example(4);
-                return;
-        };
-        std::terminate();
-    }();
-
-    Ensures(class_invariant_holds());
-    Ensures(expensive_invariant_holds());
-    return status;
 }
 
 auto CircuitUIModel::submit_modal_result(const ModalResult& result) -> FileActionResult {
@@ -605,101 +505,194 @@ auto CircuitUIModel::submit_modal_result(const ModalResult& result) -> FileActio
     const auto action = modal_.value().action;
     const auto last_request = modal_.value().request;
     auto next_step = std::optional<NextActionStep> {};
-    auto final_action = std::optional<SetCircuitAction> {};
+    auto current_action = std::optional<CircuitAction> {};
 
-    // save current
     if (std::holds_alternative<SaveCurrentModal>(last_request)) {
         if (std::holds_alternative<SaveCurrentYes>(result)) {
-            if (const auto saved_path =
-                    std::get_if<SavedPath>(&save_information_.name_or_path)) {
-                auto success = bool {};
-                status |= this->save_file(saved_path->path, success);
-
-                if (!success) {
-                    next_step = SaveFileError {.filename = saved_path->path};
-                } else if (action == FileAction::open_file) {
-                    next_step = OpenFileModal {};
-                } else {
-                    final_action = SetCircuitAction {
-                        .action = action,
-                        .filename = std::nullopt,
-                    };
-                }
-            } else {
-                next_step = SaveFileModal {};
-            }
+            next_modal_action(FileAction::save_file, next_step, current_action);
+            status |= do_modal_action(current_action, next_step);
+            next_modal_action(action, next_step, current_action);
         } else if (std::holds_alternative<SaveCurrentNo>(result)) {
-            if (action == FileAction::open_file) {
-                next_step = OpenFileModal {};
-            }
+            next_modal_action(action, next_step, current_action);
         } else if (std::holds_alternative<SaveCurrentCancel>(result)) {
             // nothing
         } else {
             throw UnexpectedModalResultException {last_request, result};
         }
-    }
-
-    // open file
-    else if (std::holds_alternative<OpenFileModal>(last_request)) {
+    } else if (std::holds_alternative<OpenFileModal>(last_request)) {
         if (const auto data = std::get_if<OpenFileOpen>(&result)) {
-            final_action = SetCircuitAction {
+            current_action = CircuitAction {
                 .action = action,
                 .filename = data->filename,
             };
         } else if (std::holds_alternative<OpenFileCancel>(result)) {
-            // nothing
+            //  nothing
         } else {
             throw UnexpectedModalResultException {last_request, result};
         }
-    }
-
-    // save file
-    else if (std::holds_alternative<SaveFileModal>(last_request)) {
+    } else if (std::holds_alternative<SaveFileModal>(last_request)) {
         if (const auto data = std::get_if<SaveFileSave>(&result)) {
-            auto success = bool {};
-            status |= this->save_file(data->filename, success);
-
-            if (!success) {
-                next_step = SaveFileError {.filename = data->filename};
-            } else if (action == FileAction::open_file) {
-                next_step = OpenFileModal {};
-            } else {
-                final_action = SetCircuitAction {
-                    .action = action,
-                    .filename = std::nullopt,
-                };
+            current_action = CircuitAction {
+                .action = FileAction::save_file,
+                .filename = data->filename,
+            };
+            if (requires_save_current_prompt(action)) {
+                status |= do_modal_action(current_action, next_step);
+                next_modal_action(action, next_step, current_action);
             }
         } else if (std::holds_alternative<SaveFileCancel>(result)) {
             // nothing
         } else {
             throw UnexpectedModalResultException {last_request, result};
         }
-    }
-
-    else {
+    } else {
         std::terminate();
     }
 
     if (const auto request = get_if_modal_request(next_step)) {
-        modal_ = ModalState {
-            .request = *request,
-            .action = action,
-#ifdef _DEBUG
-            .serialized_ = std::move(modal_->serialized_),
-#endif
-        };
+        modal_.value().request = *request;
     } else {
         modal_ = std::nullopt;
     }
-
-    if (final_action) {
-        status |= final_modal_action(final_action.value(), next_step);
-    }
+    status |= do_modal_action(current_action, next_step);
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
     Ensures(modal_.has_value() == is_modal_request(next_step));
     return {status, next_step};
+}
+
+auto CircuitUIModel::next_modal_action(
+    circuit_ui_model::FileAction action,
+    std::optional<circuit_ui_model::NextActionStep>& next_step,
+    std::optional<circuit_ui_model::CircuitAction>& current_action) -> void {
+    Expects(class_invariant_holds());
+    Expects(!current_action);
+    using namespace circuit_ui_model;
+
+    [&] {
+        if (next_step) {
+            return;
+        }
+
+        switch (action) {
+            case FileAction::open_file: {
+                next_step = OpenFileModal {};
+                return;
+            }
+            case FileAction::save_file: {
+                if (const auto p =
+                        std::get_if<SavedPath>(&save_information_.name_or_path)) {
+                    current_action = CircuitAction {
+                        .action = action,
+                        .filename = p->path,
+                    };
+                } else {
+                    next_step = SaveFileModal {};
+                }
+                return;
+            }
+            case FileAction::save_as_file: {
+                next_step = SaveFileModal {};
+                return;
+            }
+
+            case FileAction::new_file:
+            case FileAction::load_example_simple:
+            case FileAction::load_example_elements_and_wires:
+            case FileAction::load_example_elements:
+            case FileAction::load_example_wires: {
+                current_action = CircuitAction {
+                    .action = action,
+                    .filename = std::nullopt,
+                };
+                return;
+            }
+        };
+        std::terminate();
+    }();
+
+    Ensures(bool {next_step} ^ bool {current_action});
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+}
+
+namespace {
+
+[[nodiscard]] auto is_error_message(
+    const std::optional<circuit_ui_model::NextActionStep>& value) -> bool {
+    return value && std::holds_alternative<circuit_ui_model::ErrorMessage>(*value);
+}
+
+}  // namespace
+
+auto CircuitUIModel::do_modal_action(
+    std::optional<circuit_ui_model::CircuitAction>& current_action,
+    std::optional<circuit_ui_model::NextActionStep>& next_step) -> UIStatus {
+    using namespace circuit_ui_model;
+    Expects(class_invariant_holds());
+    Expects(!current_action || is_error_message(next_step));
+    auto status = UIStatus {};
+
+    [&] {
+        if (!current_action) {
+            return;
+        }
+        if (is_error_message(next_step)) {
+            return;
+        }
+        Expects(!next_step);
+
+        switch (current_action.value().action) {
+            using enum FileAction;
+
+            case new_file:
+                status |= load_new_circuit();
+                return;
+
+            case open_file: {
+                const auto& filename = current_action.value().filename.value();
+                auto success = bool {};
+                status |= this->open_file(filename, success);
+                if (!success) {
+                    next_step = OpenFileError {.filename = filename};
+                }
+                return;
+            }
+
+            case save_file:
+            case save_as_file: {
+                const auto& filename = current_action.value().filename.value();
+                auto success = bool {};
+                status |= this->save_file(filename, success);
+                if (!success) {
+                    next_step = SaveFileError {.filename = filename};
+                }
+                return;
+            }
+
+            case load_example_simple:
+                status |= load_circuit_example(1);
+                return;
+            case load_example_elements_and_wires:
+                status |= load_circuit_example(2);
+                return;
+            case load_example_elements:
+                status |= load_circuit_example(3);
+                return;
+            case load_example_wires:
+                status |= load_circuit_example(4);
+                return;
+        };
+        std::terminate();
+    }();
+
+    current_action = std::nullopt;
+
+    Ensures(!current_action);
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    return status;
 }
 
 auto CircuitUIModel::load_new_circuit() -> UIStatus {

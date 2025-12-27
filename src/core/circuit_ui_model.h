@@ -208,24 +208,30 @@ struct FileActionResult {
 
 static_assert(std::regular<FileActionResult>);
 
-struct SetCircuitAction {
-    FileAction action;
-    // only used for FileAction::open_file
-    std::optional<std::filesystem::path> filename;
+struct CircuitAction {
+    FileAction action {};
+
+    // only used for some actions (open_file, save_file, save_as_file)
+    std::optional<std::filesystem::path> filename {};
 
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const SetCircuitAction&) const -> bool = default;
+    [[nodiscard]] auto operator==(const CircuitAction&) const -> bool = default;
 };
 
-static_assert(std::regular<SetCircuitAction>);
+static_assert(std::regular<CircuitAction>);
 
 struct ModalState {
-    ModalRequest request;
-    FileAction action;
+    explicit ModalState() = default;
+    explicit ModalState(ModalRequest request, FileAction action,
+                        const circuit_ui_model::CircuitStore& circuit_store,
+                        const CircuitUIConfig& config);
+
+    ModalRequest request {};
+    FileAction action {};
 
 #ifdef _DEBUG
     // set at the start of modal action to guarantee that circuit is not changed
-    std::string serialized_;
+    std::string serialized_ {};
 #endif
 
     [[nodiscard]] auto format() const -> std::string;
@@ -410,9 +416,14 @@ class CircuitUIModel {
     [[nodiscard]] auto finalize_editing() -> UIStatus;
     [[nodiscard]] auto close_all_setting_dialogs() -> UIStatus;
 
-    [[nodiscard]] auto final_modal_action(
-        const circuit_ui_model::SetCircuitAction& action,
+    [[nodiscard]] auto do_modal_action(
+        std::optional<circuit_ui_model::CircuitAction>& current_action,
         std::optional<circuit_ui_model::NextActionStep>& next_step) -> UIStatus;
+    auto next_modal_action(circuit_ui_model::FileAction action,
+                           std::optional<circuit_ui_model::NextActionStep>& next_step,
+                           std::optional<circuit_ui_model::CircuitAction>& current_action)
+        -> void;
+
     [[nodiscard]] auto load_new_circuit() -> UIStatus;
     [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;
     [[nodiscard]] auto save_file(const std::filesystem::path& filename, bool& success)
