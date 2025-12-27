@@ -298,6 +298,11 @@ auto CircuitUIModel::config() const -> const CircuitUIConfig& {
     return config_;
 }
 
+auto CircuitUIModel::view_config() const -> const ViewConfig& {
+    Expects(class_invariant_holds());
+    return circuit_renderer_.view_config();
+}
+
 auto CircuitUIModel::history_status() const -> HistoryStatus {
     Expects(class_invariant_holds());
 
@@ -341,6 +346,11 @@ auto CircuitUIModel::statistics() const -> Statistics {
     };
 
     return result;
+}
+
+auto CircuitUIModel::layout() const -> const Layout& {
+    Expects(class_invariant_holds());
+    return circuit_store_.layout();
 }
 
 auto CircuitUIModel::do_action(UserAction action,
@@ -631,7 +641,7 @@ auto CircuitUIModel::do_modal_action(
     std::optional<circuit_ui_model::NextActionStep>& next_step) -> UIStatus {
     using namespace circuit_ui_model;
     Expects(class_invariant_holds());
-    Expects(!current_action || is_error_message(next_step));
+    Expects(!current_action || !next_step || is_error_message(next_step));
     auto status = UIStatus {};
 
     [&] {
@@ -653,7 +663,7 @@ auto CircuitUIModel::do_modal_action(
             case open_file: {
                 const auto& filename = current_action.value().filename.value();
                 auto success = bool {};
-                status |= this->open_file(filename, success);
+                status |= this->open_from_file(filename, success);
                 if (!success) {
                     next_step = OpenFileError {.filename = filename};
                 }
@@ -664,7 +674,7 @@ auto CircuitUIModel::do_modal_action(
             case save_as_file: {
                 const auto& filename = current_action.value().filename.value();
                 auto success = bool {};
-                status |= this->save_file(filename, success);
+                status |= this->save_to_file(filename, success);
                 if (!success) {
                     next_step = SaveFileError {.filename = filename};
                 }
@@ -736,7 +746,7 @@ auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
     return status;
 }
 
-auto CircuitUIModel::save_file(const std::filesystem::path& filename, bool& success)
+auto CircuitUIModel::save_to_file(const std::filesystem::path& filename, bool& success)
     -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
@@ -751,7 +761,7 @@ auto CircuitUIModel::save_file(const std::filesystem::path& filename, bool& succ
     return status;
 }
 
-auto CircuitUIModel::open_file(const std::filesystem::path& filename, bool& success)
+auto CircuitUIModel::open_from_file(const std::filesystem::path& filename, bool& success)
     -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};

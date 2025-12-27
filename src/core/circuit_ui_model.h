@@ -318,7 +318,7 @@ struct fmt::formatter<logicsim::circuit_ui_model::NextActionStep> {
 namespace logicsim {
 
 struct UnexpectedModalResultException : std::runtime_error {
-    constexpr explicit UnexpectedModalResultException(
+    inline explicit UnexpectedModalResultException(
         const circuit_ui_model::ModalRequest& request,
         const circuit_ui_model::ModalResult& result)
         : std::runtime_error {
@@ -356,9 +356,11 @@ class CircuitUIModel {
 
     // read methods
     [[nodiscard]] auto config() const -> const CircuitUIConfig&;
+    [[nodiscard]] auto view_config() const -> const ViewConfig&;
     [[nodiscard]] auto history_status() const -> HistoryStatus;
     [[nodiscard]] auto allocation_info() const -> CircuitWidgetAllocInfo;
     [[nodiscard]] auto statistics() const -> Statistics;
+    [[nodiscard]] auto layout() const -> const Layout&;
 
     // render
     auto render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio) -> void;
@@ -426,10 +428,10 @@ class CircuitUIModel {
 
     [[nodiscard]] auto load_new_circuit() -> UIStatus;
     [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;
-    [[nodiscard]] auto save_file(const std::filesystem::path& filename, bool& success)
+    [[nodiscard]] auto save_to_file(const std::filesystem::path& filename, bool& success)
         -> UIStatus;
-    [[nodiscard]] auto open_file(const std::filesystem::path& filename, bool& success)
-        -> UIStatus;
+    [[nodiscard]] auto open_from_file(const std::filesystem::path& filename,
+                                      bool& success) -> UIStatus;
 
     auto undo() -> void;
     auto redo() -> void;
@@ -470,7 +472,6 @@ class CircuitUIModel {
 
 [[nodiscard]] auto set_circuit_state(CircuitUIModel& model, CircuitWidgetState value)
     -> UIStatus;
-auto stop_simulation(CircuitUIModel& model) -> void;
 
 //
 // RenderConfig
@@ -479,28 +480,12 @@ auto stop_simulation(CircuitUIModel& model) -> void;
 [[nodiscard]] auto set_render_config(CircuitUIModel& model, WidgetRenderConfig value)
     -> UIStatus;
 
-// auto set_do_benchmark(CircuitUIModel& model, bool value) -> void;
-// auto set_show_circuit(CircuitUIModel& model, bool value) -> void;
-// auto set_show_collision_index(CircuitUIModel& model, bool value) -> void;
-// auto set_show_connection_index(CircuitUIModel& model, bool value) -> void;
-// auto set_show_selection_index(CircuitUIModel& model, bool value) -> void;
-//
-// auto set_thread_count(CircuitUIModel& model, ThreadCount new_count) -> void;
-// auto set_wire_render_style(CircuitUIModel& model, WireRenderStyle style) -> void;
-// auto set_direct_rendering(CircuitUIModel& model, bool use_store) -> void;
-// auto set_jit_rendering(CircuitUIModel& model, bool enable_jit) -> void;
-// auto set_show_render_borders(CircuitUIModel& model, bool value) -> void;
-// auto set_show_mouse_position(CircuitUIModel& model, bool value) -> void;
-
 //
 // SimulationConfig
 //
 
 [[nodiscard]] auto set_simulation_config(CircuitUIModel& model, SimulationConfig value)
     -> UIStatus;
-
-// auto set_simulation_time_rate(CircuitUIModel& model, time_rate_t new_rate) -> void;
-// auto set_use_wire_delay(CircuitUIModel& model, bool value) -> void;
 
 }  // namespace logicsim
 

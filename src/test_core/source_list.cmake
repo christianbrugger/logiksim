@@ -67,6 +67,7 @@ set(LS_TEST_SOURCES
     vocabulary/segment_test.cpp
     vocabulary/time_test.cpp
 
+    circuit_ui_model_test.cpp
     copy_paste_clipboard_test.cpp
     file_test.cpp
     layout_test.cpp
