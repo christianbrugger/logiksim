@@ -128,12 +128,12 @@ auto CircuitAction::format() const -> std::string {
         action, filename);
 }
 
-ModalState::ModalState(ModalRequest request, FileAction action,
+ModalState::ModalState(ModalRequest request_, FileAction action_,
                        const circuit_ui_model::CircuitStore& circuit_store
                        [[maybe_unused]],
                        const CircuitUIConfig& config [[maybe_unused]])
-    : request {std::move(request)},
-      action {action}
+    : request {std::move(request_)},
+      action {action_}
 #ifdef _DEBUG
       ,
       serialized_ {serialize(circuit_store, config)}

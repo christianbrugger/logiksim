@@ -689,7 +689,6 @@ TEST(CircuitUIModelModal, NewFromModifiedNewNo) {
 
     {
         const auto result = model.submit_modal_result(SaveCurrentNo {});
-        const auto request = std::get<ModalRequest>(result.next_step.value());
         ASSERT_TRUE(!result.next_step);
         ASSERT_TRUE(model.layout().empty());
     }
@@ -717,7 +716,6 @@ TEST(CircuitUIModelModal, NewFromModifiedNewCancel) {
 
     {
         const auto result = model.submit_modal_result(SaveCurrentCancel {});
-        const auto request = std::get<ModalRequest>(result.next_step.value());
         ASSERT_TRUE(!result.next_step);
         ASSERT_TRUE(model.layout() == layout_0);
     }
