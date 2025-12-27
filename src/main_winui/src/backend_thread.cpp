@@ -179,9 +179,6 @@ auto render_circuit(RenderBufferSource& render_source,
     if (const auto* item = std::get_if<UserActionEvent>(&task)) {
         return circuit.do_action(*item);
     }
-    if (const auto* item = std::get_if<ExampleCircuitType>(&task)) {
-        return circuit.load(*item);
-    }
     if (const auto* item = std::get_if<CircuitUIConfigEvent>(&task)) {
         return handle_circuit_ui_config_event(*item, circuit);
     }

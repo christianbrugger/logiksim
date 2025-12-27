@@ -719,19 +719,19 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
     if (sender == ExampleSimpleCommand()) {
-        backend_tasks_.push(logicsim::exporting::ExampleCircuitType::simple);
+        backend_tasks_.push(FileRequestEvent::load_example_simple);
         return;
     }
     if (sender == ExampleWiresCommand()) {
-        backend_tasks_.push(logicsim::exporting::ExampleCircuitType::wires);
+        backend_tasks_.push(FileRequestEvent::load_example_wires);
         return;
     }
     if (sender == ExampleElementsCommand()) {
-        backend_tasks_.push(logicsim::exporting::ExampleCircuitType::elements);
+        backend_tasks_.push(FileRequestEvent::load_example_elements);
         return;
     }
     if (sender == ExampleElementsWiresCommand()) {
-        backend_tasks_.push(logicsim::exporting::ExampleCircuitType::elements_wires);
+        backend_tasks_.push(FileRequestEvent::load_example_elements_and_wires);
         return;
     }
 

@@ -314,8 +314,6 @@ namespace {
     switch (style) {
         using enum exporting::UserAction;
 
-        case clear_circuit:
-            return circuit_ui_model::UserAction::clear_circuit;
         case reload_circuit:
             return circuit_ui_model::UserAction::reload_circuit;
 
@@ -631,17 +629,6 @@ auto ls_circuit_submit_modal_result(ls_circuit_t* obj,
         path_out->value = path;
 
         return to_c(result.status);
-    });
-}
-
-auto ls_circuit_load(ls_circuit_t* obj, uint8_t example_circuit_enum) noexcept
-    -> ls_ui_status_t {
-    return ls_translate_exception([&]() {
-        using namespace logicsim;
-        Expects(obj);
-
-        const auto number = int {example_circuit_enum};
-        return to_c(obj->model.load_circuit_example(number));
     });
 }
 

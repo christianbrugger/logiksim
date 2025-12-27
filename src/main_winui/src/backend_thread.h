@@ -96,20 +96,25 @@ enum class FileRequestEvent {
     open_file,
     save_file,
     save_as_file,
+
+    load_example_simple,
+    load_example_elements_and_wires,
+    load_example_elements,
+    load_example_wires,
+
     exit_application,
 };
 
-using BackendTask = std::variant<   //
-    SwapChainParams,                //
-    exporting::MousePressEvent,     //
-    exporting::MouseMoveEvent,      //
-    exporting::MouseReleaseEvent,   //
-    exporting::MouseWheelEvent,     //
-    exporting::VirtualKey,          //
-    exporting::UserActionEvent,     //
-    exporting::ExampleCircuitType,  //
-    CircuitUIConfigEvent,           //
-    FileRequestEvent                    //
+using BackendTask = std::variant<  //
+    SwapChainParams,               //
+    exporting::MousePressEvent,    //
+    exporting::MouseMoveEvent,     //
+    exporting::MouseReleaseEvent,  //
+    exporting::MouseWheelEvent,    //
+    exporting::VirtualKey,         //
+    exporting::UserActionEvent,    //
+    CircuitUIConfigEvent,          //
+    FileRequestEvent               //
     >;
 
 using BackendTaskQueue = ::logicsim::ConcurrentBlockingQueue<BackendTask>;

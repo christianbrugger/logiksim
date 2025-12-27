@@ -57,11 +57,6 @@ static_assert(std::regular<Statistics>);
  */
 enum class UserAction : uint8_t {
     /**
-     * @brief: Clears the circuit.
-     */
-    clear_circuit,  // TODO: remove
-
-    /**
      * @brief: Reloads the circuit and frees memory. Mostly for debugging purposes.
      */
     reload_circuit,
@@ -213,6 +208,17 @@ struct FileActionResult {
 
 static_assert(std::regular<FileActionResult>);
 
+struct SetCircuitAction {
+    FileAction action;
+    // only used for FileAction::open_file
+    std::optional<std::filesystem::path> filename;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SetCircuitAction&) const -> bool = default;
+};
+
+static_assert(std::regular<SetCircuitAction>);
+
 struct ModalState {
     ModalRequest request;
     FileAction action;
@@ -342,24 +348,31 @@ class CircuitUIModel {
    public:
     [[nodiscard]] explicit CircuitUIModel();
 
-    // setter & getters
-    [[nodiscard]] auto set_config(const CircuitUIConfig& config) -> UIStatus;
+    // read methods
     [[nodiscard]] auto config() const -> const CircuitUIConfig&;
     [[nodiscard]] auto history_status() const -> HistoryStatus;
     [[nodiscard]] auto allocation_info() const -> CircuitWidgetAllocInfo;
     [[nodiscard]] auto statistics() const -> Statistics;
 
-    [[nodiscard]] auto do_action(UserAction action,
-                                 std::optional<point_device_fine_t> position) -> UIStatus;
+    // render
+    auto render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio) -> void;
+
     // load & save
+    /**
+     * Change ciruit itself (save, open, close).
+     *
+     * If this method is returning a ModalRequest the circuit-ui is in a modal
+     * state. In this state no modifications are allowed to the model and most
+     * methods throw exceptions (mouse & key events, config changes).
+     *
+     * Rendering is allowed as well as all read operations.
+     */
     [[nodiscard]] auto file_action(FileAction action) -> FileActionResult;
     [[nodiscard]] auto submit_modal_result(const ModalResult& result) -> FileActionResult;
 
-    [[nodiscard]] auto non_modal_action(FileAction action) -> UIStatus;  // TODO: private
-    [[nodiscard]] auto load_new_circuit() -> UIStatus;                   // TODO: private
-    [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;     // TODO: private
-    // render
-    auto render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio) -> void;
+    [[nodiscard]] auto set_config(const CircuitUIConfig& config) -> UIStatus;
+    [[nodiscard]] auto do_action(UserAction action,
+                                 std::optional<point_device_fine_t> position) -> UIStatus;
 
     [[nodiscard]] auto mouse_press(const MousePressEvent& event) -> UIStatus;
     [[nodiscard]] auto mouse_move(const MouseMoveEvent& event) -> UIStatus;
@@ -397,6 +410,11 @@ class CircuitUIModel {
     [[nodiscard]] auto finalize_editing() -> UIStatus;
     [[nodiscard]] auto close_all_setting_dialogs() -> UIStatus;
 
+    [[nodiscard]] auto final_modal_action(
+        const circuit_ui_model::SetCircuitAction& action,
+        std::optional<circuit_ui_model::NextActionStep>& next_step) -> UIStatus;
+    [[nodiscard]] auto load_new_circuit() -> UIStatus;
+    [[nodiscard]] auto load_circuit_example(int number) -> UIStatus;
     [[nodiscard]] auto save_file(const std::filesystem::path& filename, bool& success)
         -> UIStatus;
     [[nodiscard]] auto open_file(const std::filesystem::path& filename, bool& success)

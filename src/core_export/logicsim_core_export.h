@@ -239,11 +239,6 @@ LS_NODISCARD LS_CORE_API ls_ui_status_t
 ls_circuit_submit_modal_result(ls_circuit_t* obj, const ls_modal_result_t* modal_result,
                                uint8_t* next_step_enum, ls_path_t* path_out) LS_NOEXCEPT;
 
-// TODO: remove
-// circuit::load
-LS_NODISCARD LS_CORE_API ls_ui_status_t
-ls_circuit_load(ls_circuit_t* obj, uint8_t example_circuit_enum) LS_NOEXCEPT;
-
 /**
  * @brief: Render the layout to the given buffer.
  *
@@ -529,20 +524,19 @@ struct CircuitUIConfig {
 };
 
 enum class UserAction : uint8_t {
-    clear_circuit = 0,
-    reload_circuit = 1,
+    reload_circuit = 0,
 
-    undo = 2,
-    redo = 3,
-    select_all = 4,
-    copy_selected = 5,
-    paste_from_clipboard = 6,
-    cut_selected = 7,
-    delete_selected = 8,
+    undo = 1,
+    redo = 2,
+    select_all = 3,
+    copy_selected = 4,
+    paste_from_clipboard = 5,
+    cut_selected = 6,
+    delete_selected = 7,
 
-    zoom_in = 9,
-    zoom_out = 10,
-    reset_view = 11,
+    zoom_in = 8,
+    zoom_out = 9,
+    reset_view = 10,
 };
 
 enum class FileAction : uint8_t {
@@ -667,14 +661,6 @@ struct FileActionResult {
 static_assert(std::regular<FileActionResult>);
 
 ///////////////////////////////////////////
-
-// TODO: delete
-enum class ExampleCircuitType : uint8_t {
-    simple = 1,
-    elements_wires = 2,
-    elements = 3,
-    wires = 4,
-};
 
 enum class VirtualKey : uint8_t {
     Enter = 0,
@@ -807,7 +793,7 @@ struct MouseWheelEvent {
 };
 
 struct UserActionEvent {
-    UserAction action {UserAction::clear_circuit};
+    UserAction action {UserAction::reload_circuit};
     std::optional<ls_point_device_fine_t> position {};
 
     [[nodiscard]] auto operator==(const UserActionEvent&) const -> bool = default;
@@ -837,8 +823,6 @@ class CircuitInterface {
     [[nodiscard]] inline auto allocation_info() const -> std::string;
 
     [[nodiscard]] inline auto do_action(const UserActionEvent& event) -> ls_ui_status_t;
-    [[nodiscard]] inline auto load(ExampleCircuitType type)
-        -> ls_ui_status_t;  // TODO remove
     [[nodiscard]] inline auto file_action(FileAction action) -> FileActionResult;
     [[nodiscard]] inline auto submit_modal_result(const ModalResult& result)
         -> FileActionResult;
@@ -1078,10 +1062,6 @@ auto CircuitInterface::do_action(const UserActionEvent& event) -> ls_ui_status_t
     return ls_circuit_do_action(get(), detail::to_underlying(event.action),
                                 event.position ? &event.position.value() : nullptr);
 }
-
-auto CircuitInterface::load(ExampleCircuitType type) -> ls_ui_status_t {
-    return ls_circuit_load(get(), detail::to_underlying(type));
-};
 
 auto CircuitInterface::file_action(FileAction action) -> FileActionResult {
     auto next_step_enum = uint8_t {};
