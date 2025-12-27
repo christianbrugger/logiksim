@@ -317,9 +317,11 @@ TEST(CircuitUIModelModal, NewFileFromOpen) {
 
     // new file
 
-    const auto result = model.file_action(FileAction::new_file);
-    ASSERT_TRUE(!result.next_step);
-    ASSERT_TRUE(model.layout().empty());
+    {
+        const auto result = model.file_action(FileAction::new_file);
+        ASSERT_TRUE(!result.next_step);
+        ASSERT_TRUE(model.layout().empty());
+    }
 
     {
         const auto result = model.file_action(FileAction::save_file);
@@ -346,10 +348,12 @@ TEST(CircuitUIModelModal, ExampleFromOpen) {
     }
 
     // example circuit
-    const auto result = model.file_action(FileAction::load_example_simple);
-    ASSERT_TRUE(!result.next_step);
-    ASSERT_TRUE(!model.layout().empty());
-    ASSERT_TRUE(model.layout() != test_layout());
+    {
+        const auto result = model.file_action(FileAction::load_example_simple);
+        ASSERT_TRUE(!result.next_step);
+        ASSERT_TRUE(!model.layout().empty());
+        ASSERT_TRUE(model.layout() != test_layout());
+    }
 
     {
         const auto result = model.file_action(FileAction::save_file);
