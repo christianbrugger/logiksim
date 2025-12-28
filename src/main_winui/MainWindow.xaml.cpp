@@ -7,6 +7,7 @@
 
 #include "main_winui/src/ls_key_tracker.h"
 #include "main_winui/src/ls_timer.h"
+#include "main_winui/src/ls_vocabulary.h"
 #include "main_winui/src/ls_xaml_utils.h"
 
 #include <chrono>
@@ -109,6 +110,23 @@ auto BackendGuiActions::config_update(logicsim::exporting::CircuitUIConfig confi
     });
 }
 
+namespace {
+
+template <typename T>
+auto get_with_shutdown(std::future<T>& future) {
+    Expects(future.valid());
+    try {
+        return future.get();
+    } catch (const std::future_error& exc) {
+        if (exc.code() == std::future_errc::broken_promise) {
+            throw logicsim::ShutdownException {"Broken promise"};
+        }
+        throw;
+    }
+}
+
+}  // namespace
+
 auto BackendGuiActions::show_dialog_blocking(
     logicsim::exporting::ModalRequest request) const -> logicsim::exporting::ModalResult {
     auto promise = std::promise<logicsim::exporting::ModalResult> {};
@@ -117,11 +135,12 @@ auto BackendGuiActions::show_dialog_blocking(
     queue_.TryEnqueue([window_weak = window_weak_, request_value = std::move(request),
                        promise_value = std::move(promise)]() mutable {
         if (const auto window = window_weak.get()) {
-            auto result = window->show_dialog_blocking(std::move(request_value));
-            promise_value.set_value(std::move(result));
+            window->show_dialog_blocking(std::move(request_value),
+                                         std::move(promise_value));
         }
     });
-    return future.get();
+
+    return (get_with_shutdown(future));
 }
 
 auto BackendGuiActions::show_dialog_blocking(
@@ -132,12 +151,12 @@ auto BackendGuiActions::show_dialog_blocking(
     queue_.TryEnqueue([window_weak = window_weak_, message_value = std::move(message),
                        promise_value = std::move(promise)]() mutable {
         if (const auto window = window_weak.get()) {
-            window->show_dialog_blocking(std::move(message_value));
-            promise_value.set_value();
+            window->show_dialog_blocking(std::move(message_value),
+                                         std::move(promise_value));
         }
     });
 
-    return future.get();
+    return (get_with_shutdown(future));
 }
 
 [[nodiscard]] auto lookup_icons() -> IconSources {
@@ -340,10 +359,12 @@ void MainWindow::CanvasPanel_KeyDown(IInspectable const&,
 
 auto MainWindow::register_swap_chain(
     const winrt::Microsoft::Graphics::Canvas::CanvasSwapChain& swap_chain) -> void {
+    Expects(DispatcherQueue().HasThreadAccess());
     CanvasPanel().SwapChain(swap_chain);
 }
 
 auto MainWindow::config_update(logicsim::exporting::CircuitUIConfig config__) -> void {
+    Expects(DispatcherQueue().HasThreadAccess());
     using namespace logicsim::exporting;
 
     // last_config_ needs to be set first, as notify handlers fire immediately.
@@ -408,30 +429,89 @@ auto MainWindow::config_update(logicsim::exporting::CircuitUIConfig config__) ->
     }();
 }
 
-auto MainWindow::show_dialog_blocking(logicsim::exporting::ModalRequest request)
-    -> logicsim::exporting::ModalResult {
-    return std::visit([&](auto&& value) { return this->show_dialog_blocking(value); },
-                      std::move(request));
+auto MainWindow::show_dialog_blocking(logicsim::exporting::ModalRequest request,
+                                      std::promise<ModalResult> promise)
+    -> Windows::Foundation::IAsyncAction {
+    Expects(DispatcherQueue().HasThreadAccess());
+
+    co_await std::visit(
+        [&](auto&& value) -> Windows::Foundation::IAsyncAction {
+            co_await this->show_dialog_blocking(std::move(value), std::move(promise));
+        },
+        std::move(request));
 }
 
-auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveCurrentModal request)
-    -> logicsim::exporting::ModalResult {
-    static_cast<void>(request);
-    return logicsim::exporting::SaveCurrentNo {};
+auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveCurrentModal request,
+                                      std::promise<ModalResult> promise)
+
+    -> Windows::Foundation::IAsyncAction {
+    Expects(DispatcherQueue().HasThreadAccess());
+
+    try {
+        auto dialog = Controls::ContentDialog {};
+        dialog.XamlRoot(this->Content().XamlRoot());
+
+        dialog.Style(Application::Current()
+                         .Resources()
+                         .Lookup(box_value(L"DefaultContentDialogStyle"))
+                         .as<Style>());
+
+        dialog.Title(box_value(L"Save your work?"));
+        dialog.PrimaryButtonText(L"Save");
+        dialog.SecondaryButtonText(L"Don't Save");
+        dialog.CloseButtonText(L"Cancel");
+        dialog.DefaultButton(Controls::ContentDialogButton::Primary);
+        //// dialog.Content(Controls::ContentDialogContent {});
+
+        co_await dialog.ShowAsync();
+
+        static_cast<void>(request);
+        promise.set_value(logicsim::exporting::SaveCurrentNo {});
+    } catch (...) {
+        promise.set_exception(std::current_exception());
+    }
+    co_return;
 }
 
-auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveFileModal)
-    -> logicsim::exporting::ModalResult {
-    return logicsim::exporting::SaveFileCancel {};
+auto MainWindow::show_dialog_blocking(logicsim::exporting::OpenFileModal request,
+                                      std::promise<ModalResult> promise)
+    -> Windows::Foundation::IAsyncAction {
+    Expects(DispatcherQueue().HasThreadAccess());
+
+    try {
+        promise.set_value(logicsim::exporting::OpenFileCancel {});
+    } catch (...) {
+        promise.set_exception(std::current_exception());
+    }
+    co_return;
 }
 
-auto MainWindow::show_dialog_blocking(logicsim::exporting::OpenFileModal)
-    -> logicsim::exporting::ModalResult {
-    return logicsim::exporting::OpenFileCancel {};
+auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveFileModal request,
+                                      std::promise<ModalResult> promise)
+    -> Windows::Foundation::IAsyncAction {
+    Expects(DispatcherQueue().HasThreadAccess());
+
+    try {
+        promise.set_value(logicsim::exporting::SaveFileCancel {});
+    } catch (...) {
+        promise.set_exception(std::current_exception());
+    }
+    co_return;
 }
 
-auto MainWindow::show_dialog_blocking(logicsim::exporting::ErrorMessage message) -> void {
-    static_cast<void>(message);
+auto MainWindow::show_dialog_blocking(logicsim::exporting::ErrorMessage message,
+                                      std::promise<void> promise)
+    -> Windows::Foundation::IAsyncAction {
+    Expects(DispatcherQueue().HasThreadAccess());
+
+    try {
+        static_cast<void>(message);
+
+        promise.set_value();
+    } catch (...) {
+        promise.set_exception(std::current_exception());
+    }
+    co_return;
 }
 
 auto MainWindow::update_render_size() -> void {

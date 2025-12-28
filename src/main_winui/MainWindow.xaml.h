@@ -7,6 +7,7 @@
 #include "main_winui/src/render_buffer.h"
 #include "main_winui/src/render_thread.h"
 
+#include <future>
 #include <thread>
 
 namespace winrt::main_winui::implementation {
@@ -64,15 +65,23 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     auto config_update(logicsim::exporting::CircuitUIConfig config) -> void;
 
-    [[nodiscard]] auto show_dialog_blocking(logicsim::exporting::ModalRequest request)
-        -> logicsim::exporting::ModalResult;
-    [[nodiscard]] auto show_dialog_blocking(logicsim::exporting::SaveCurrentModal request)
-        -> logicsim::exporting::ModalResult;
-    [[nodiscard]] auto show_dialog_blocking(logicsim::exporting::SaveFileModal request)
-        -> logicsim::exporting::ModalResult;
-    [[nodiscard]] auto show_dialog_blocking(logicsim::exporting::OpenFileModal request)
-        -> logicsim::exporting::ModalResult;
-    auto show_dialog_blocking(logicsim::exporting::ErrorMessage message) -> void;
+    using ModalResult = logicsim::exporting::ModalResult;
+
+    auto show_dialog_blocking(logicsim::exporting::ModalRequest request,
+                              std::promise<ModalResult> promise)
+        -> Windows::Foundation::IAsyncAction;
+    auto show_dialog_blocking(logicsim::exporting::SaveCurrentModal request,
+                              std::promise<ModalResult> promise)
+        -> Windows::Foundation::IAsyncAction;
+    auto show_dialog_blocking(logicsim::exporting::OpenFileModal request,
+                              std::promise<ModalResult> promise)
+        -> Windows::Foundation::IAsyncAction;
+    auto show_dialog_blocking(logicsim::exporting::SaveFileModal request,
+                              std::promise<ModalResult> promise)
+        -> Windows::Foundation::IAsyncAction;
+    auto show_dialog_blocking(logicsim::exporting::ErrorMessage message,
+                              std::promise<void> promise)
+        -> Windows::Foundation::IAsyncAction;
 
     // UI Command
 

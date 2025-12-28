@@ -5,6 +5,9 @@
 #include "main_winui/src/ls_event_counter.h"
 #include "main_winui/src/ls_xaml_utils.h"
 
+#include <exception>
+#include <print>
+
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;
 
@@ -219,10 +222,16 @@ auto render_thread_main(std::stop_token token, std::unique_ptr<IRenderGuiActions
 
     } catch (const winrt::hresult_error& exc [[maybe_unused]]) {
         OutputDebugStringW(L"\n!!! CRASH EXCEPTION RENDER-THREAD !!!! {}\n\n");
+        std::print("\n!!! CRASH EXCEPTION BACKEND-THREAD !!!! \n\n");
+        std::terminate();
     } catch (const std::exception& exc [[maybe_unused]]) {
         OutputDebugStringW(L"\n!!! CRASH EXCEPTION RENDER-THREAD !!!! {}\n\n");
+        std::print("\n!!! CRASH EXCEPTION BACKEND-THREAD !!!! {}\n\n", exc.what());
+        std::terminate();
     } catch (...) {
         OutputDebugStringW(L"\n!!! CRASH EXCEPTION RENDER-THREAD !!!! {}\n\n");
+        std::print("\n!!! CRASH EXCEPTION BACKEND-THREAD !!!! \n\n");
+        std::terminate();
     }
 }
 

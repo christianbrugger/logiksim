@@ -5,11 +5,7 @@
 
 #include "core_export/logicsim_core_export.h"
 
-#include <gsl/gsl>
-
-#include <windows.h>
-#include <winrt/Microsoft.Graphics.Canvas.h>
-#include <winrt/Microsoft.UI.Input.h>
+#include <winrt/base.h>
 
 #include <memory>
 #include <optional>
@@ -44,6 +40,7 @@ class IBackendGuiActions {
     virtual auto change_title(winrt::hstring title) const -> void = 0;
     virtual auto config_update(logicsim::exporting::CircuitUIConfig config) const
         -> void = 0;
+
     [[nodiscard]] virtual auto show_dialog_blocking(exporting::ModalRequest request) const
         -> exporting::ModalResult = 0;
     virtual auto show_dialog_blocking(exporting::ErrorMessage message) const -> void = 0;
