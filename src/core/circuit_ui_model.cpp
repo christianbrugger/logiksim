@@ -103,11 +103,16 @@ auto SaveFileCancel::format() const -> std::string {
 }
 
 auto SaveFileError::format() const -> std::string {
-    return "SaveFileError{}";
+    return fmt::format("SaveFileError{{{}}}", filename);
 }
 
 auto OpenFileError::format() const -> std::string {
-    return "OpenFileError{}";
+    return fmt::format(
+        "OpenFileError{{\n"
+        "  filename = {},\n"
+        "  message = {},\n"
+        "}}",
+        filename, message);
 }
 
 auto FileActionResult::format() const -> std::string {
@@ -352,6 +357,15 @@ auto CircuitUIModel::statistics() const -> Statistics {
 auto CircuitUIModel::layout() const -> const Layout& {
     Expects(class_invariant_holds());
     return circuit_store_.layout();
+}
+
+auto CircuitUIModel::display_filename() const -> std::filesystem::path {
+    Expects(class_invariant_holds());
+
+    return std::visit(
+        overload([](const UnsavedName& name) { return name.name; },
+                 [](const SavedPath& path) { return path.path.filename(); }),
+        save_information_.name_or_path);
 }
 
 auto CircuitUIModel::do_action(UserAction action,
@@ -635,6 +649,24 @@ namespace {
     return value && std::holds_alternative<circuit_ui_model::ErrorMessage>(*value);
 }
 
+[[nodiscard]] auto load_error_to_message(const LoadError& error,
+                                         const std::filesystem::path& filename)
+    -> std::string {
+    // Version Errors ask the users to update LogikSim to a specific version.
+    // Those are the only ones a user can act upon. Log the rest.
+    const auto suffix = error.type() == LoadErrorType::json_version_error  //
+                            ? fmt::format("\n\n{}", error)
+                            : "";
+    const auto message = fmt::format("Failed to load \"{}\".{}", filename, suffix);
+
+    print("WARNING: Failed to open:", filename);
+    print("         Load error type:", error.type());
+    print("         Message:", error.format());
+    print();
+
+    return message;
+}
+
 }  // namespace
 
 auto CircuitUIModel::do_modal_action(
@@ -663,10 +695,13 @@ auto CircuitUIModel::do_modal_action(
 
             case open_file: {
                 const auto& filename = current_action.value().filename.value();
-                auto success = bool {};
-                status |= this->open_from_file(filename, success);
-                if (!success) {
-                    next_step = OpenFileError {.filename = filename};
+                auto load_error = std::optional<LoadError> {};
+                status |= this->open_from_file(filename, load_error);
+                if (load_error) {
+                    next_step = OpenFileError {
+                        .filename = filename,
+                        .message = load_error_to_message(load_error.value(), filename),
+                    };
                 }
                 return;
             }
@@ -769,8 +804,8 @@ auto CircuitUIModel::save_to_file(const std::filesystem::path& filename, bool& s
     return status;
 }
 
-auto CircuitUIModel::open_from_file(const std::filesystem::path& filename, bool& success)
-    -> UIStatus {
+auto CircuitUIModel::open_from_file(const std::filesystem::path& filename,
+                                    std::optional<LoadError>& load_error) -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
 
@@ -795,7 +830,11 @@ auto CircuitUIModel::open_from_file(const std::filesystem::path& filename, bool&
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
-    success = load_result.has_value();
+    if (load_result) {
+        load_error = std::nullopt;
+    } else {
+        load_error = std::move(load_result).error();
+    }
     return status;
 }
 

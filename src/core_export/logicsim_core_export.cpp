@@ -526,32 +526,33 @@ namespace {
 
 [[nodiscard]] auto to_c(
     const std::optional<logicsim::circuit_ui_model::NextActionStep>& next_step)
-    -> std::pair<logicsim::exporting::detail::NextStepEnum, std::filesystem::path> {
+    -> std::tuple<logicsim::exporting::detail::NextStepEnum, std::filesystem::path,
+                  std::string> {
     using namespace logicsim::circuit_ui_model;
     using enum logicsim::exporting::detail::NextStepEnum;
 
     if (!next_step.has_value()) {
-        return {no_next_step, {}};
+        return {no_next_step, {}, {}};
     }
 
     if (const auto request = std::get_if<ModalRequest>(&next_step.value())) {
         if (const auto data = std::get_if<SaveCurrentModal>(request)) {
-            return {save_current_modal, data->filename};
+            return {save_current_modal, data->filename, {}};
         }
         if (std::holds_alternative<OpenFileModal>(*request)) {
-            return {open_file_modal, {}};
+            return {open_file_modal, {}, {}};
         }
         if (std::holds_alternative<SaveFileModal>(*request)) {
-            return {save_file_modal, {}};
+            return {save_file_modal, {}, {}};
         }
     }
 
     if (const auto error = std::get_if<ErrorMessage>(&next_step.value())) {
         if (const auto data = std::get_if<SaveFileError>(error)) {
-            return {save_file_error, data->filename};
+            return {save_file_error, data->filename, {}};
         }
         if (const auto data = std::get_if<OpenFileError>(error)) {
-            return {open_file_error, data->filename};
+            return {open_file_error, data->filename, data->message};
         }
     }
 
@@ -590,20 +591,22 @@ namespace {
 }  // namespace
 
 auto ls_circuit_file_action(ls_circuit_t* obj, uint8_t file_action_enum,
-                            uint8_t* next_step_enum, ls_path_t* path_out) noexcept
-    -> ls_ui_status_t {
+                            uint8_t* next_step_enum, ls_path_t* path_out,
+                            ls_string_t* message_out) noexcept -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
         Expects(next_step_enum);
         Expects(path_out);
+        Expects(message_out);
 
         const auto result = obj->model.file_action(to_file_action(file_action_enum));
 
         // next step
-        const auto [ns_enum, path] = to_c(result.next_step);
+        auto [ns_enum, path, message] = to_c(result.next_step);
         *next_step_enum = std::to_underlying(ns_enum);
-        path_out->value = path;
+        path_out->value = std::move(path);
+        message_out->value = std::move(message);
 
         return to_c(result.status);
     });
@@ -611,22 +614,24 @@ auto ls_circuit_file_action(ls_circuit_t* obj, uint8_t file_action_enum,
 
 auto ls_circuit_submit_modal_result(ls_circuit_t* obj,
                                     const ls_modal_result_t* modal_result,
-                                    uint8_t* next_step_enum, ls_path_t* path_out) noexcept
-    -> ls_ui_status_t {
+                                    uint8_t* next_step_enum, ls_path_t* path_out,
+                                    ls_string_t* message_out) noexcept -> ls_ui_status_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
         Expects(modal_result);
         Expects(next_step_enum);
         Expects(path_out);
+        Expects(message_out);
 
         const auto result =
             obj->model.submit_modal_result(to_modal_result(*modal_result));
 
         // next step
-        const auto [ns_enum, path] = to_c(result.next_step);
+        auto [ns_enum, path, message] = to_c(result.next_step);
         *next_step_enum = std::to_underlying(ns_enum);
-        path_out->value = path;
+        path_out->value = std::move(path);
+        message_out->value = std::move(message);
 
         return to_c(result.status);
     });
@@ -844,6 +849,17 @@ auto ls_circuit_get_allocation_info(const ls_circuit_t* obj, ls_string_t* string
         Expects(string);
 
         string->value = obj->model.allocation_info().format();
+    });
+}
+
+auto ls_circuit_display_filename(const ls_circuit_t* obj, ls_path_t* filename) noexcept
+    -> void {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+        Expects(filename);
+
+        filename->value = obj->model.display_filename();
     });
 }
 

@@ -189,6 +189,7 @@ struct SaveFileError {
 
 struct OpenFileError {
     std::filesystem::path filename;
+    std::string message;
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const OpenFileError&) const -> bool = default;
@@ -361,6 +362,7 @@ class CircuitUIModel {
     [[nodiscard]] auto allocation_info() const -> CircuitWidgetAllocInfo;
     [[nodiscard]] auto statistics() const -> Statistics;
     [[nodiscard]] auto layout() const -> const Layout&;
+    [[nodiscard]] auto display_filename() const -> std::filesystem::path;
 
     // render
     auto render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio) -> void;
@@ -431,7 +433,7 @@ class CircuitUIModel {
     [[nodiscard]] auto save_to_file(const std::filesystem::path& filename, bool& success)
         -> UIStatus;
     [[nodiscard]] auto open_from_file(const std::filesystem::path& filename,
-                                      bool& success) -> UIStatus;
+                                      std::optional<LoadError>& load_error) -> UIStatus;
 
     auto undo() -> void;
     auto redo() -> void;

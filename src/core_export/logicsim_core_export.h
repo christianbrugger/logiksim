@@ -208,6 +208,10 @@ ls_circuit_history_status(const ls_circuit_t* obj) LS_NOEXCEPT;
 LS_CORE_API void ls_circuit_get_allocation_info(const ls_circuit_t* obj,
                                                 ls_string_t* string) LS_NOEXCEPT;
 
+// circuit::display_filename()
+LS_CORE_API void ls_circuit_display_filename(const ls_circuit_t* obj,
+                                             ls_path_t* filename) LS_NOEXCEPT;
+
 typedef struct ls_point_device_fine_t {
     double x;
     double y;
@@ -222,9 +226,9 @@ ls_circuit_do_action(ls_circuit_t* obj, uint8_t action_enum,
                      const ls_point_device_fine_t* optional_position) LS_NOEXCEPT;
 
 // circuit::file_action(FileAction action) -> FileActionResult;
-LS_NODISCARD LS_CORE_API ls_ui_status_t
-ls_circuit_file_action(ls_circuit_t* obj, uint8_t file_action_enum,
-                       uint8_t* next_step_enum, ls_path_t* path_out) LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_ui_status_t ls_circuit_file_action(
+    ls_circuit_t* obj, uint8_t file_action_enum, uint8_t* next_step_enum,
+    ls_path_t* path_out, ls_string_t* message_out) LS_NOEXCEPT;
 
 typedef struct ls_modal_result_t {
     uint8_t modal_result_enum;
@@ -235,9 +239,9 @@ typedef struct ls_modal_result_t {
 } ls_modal_result_t;
 
 // circuit::submit_modal_result(const ModalResult& result) -> FileActionResult;
-LS_NODISCARD LS_CORE_API ls_ui_status_t
-ls_circuit_submit_modal_result(ls_circuit_t* obj, const ls_modal_result_t* modal_result,
-                               uint8_t* next_step_enum, ls_path_t* path_out) LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_ui_status_t ls_circuit_submit_modal_result(
+    ls_circuit_t* obj, const ls_modal_result_t* modal_result, uint8_t* next_step_enum,
+    ls_path_t* path_out, ls_string_t* message_out) LS_NOEXCEPT;
 
 /**
  * @brief: Render the layout to the given buffer.
@@ -645,6 +649,7 @@ struct SaveFileError {
 
 struct OpenFileError {
     std::filesystem::path filename;
+    std::string message;  // utf-8
     [[nodiscard]] auto operator==(const OpenFileError&) const -> bool = default;
 };
 
@@ -821,6 +826,7 @@ class CircuitInterface {
     [[nodiscard]] inline auto statistics() const -> ls_ui_statistics_t;
     [[nodiscard]] inline auto history_status() const -> ls_history_status_t;
     [[nodiscard]] inline auto allocation_info() const -> std::string;
+    [[nodiscard]] inline auto display_filename() const -> std::filesystem::path;
 
     [[nodiscard]] inline auto do_action(const UserActionEvent& event) -> ls_ui_status_t;
     [[nodiscard]] inline auto file_action(FileAction action) -> FileActionResult;
@@ -936,7 +942,8 @@ namespace detail {
 }
 
 [[nodiscard]] inline auto to_exp_next_step(uint8_t next_step_enum,
-                                           const WrappedPath& path_out)
+                                           const WrappedPath& path_out,
+                                           const WrappedString& message_out)
     -> std::optional<NextActionStep> {
     //
     switch (static_cast<NextStepEnum>(next_step_enum)) {
@@ -944,26 +951,33 @@ namespace detail {
 
         case no_next_step:
             ls_expects(path_out.view().empty());
+            ls_expects(message_out.view().empty());
             return std::nullopt;
 
         case save_current_modal:
+            ls_expects(message_out.view().empty());
             return SaveCurrentModal {
                 .filename = path_out.path(),
             };
         case open_file_modal:
             ls_expects(path_out.view().empty());
+            ls_expects(message_out.view().empty());
             return OpenFileModal {};
         case save_file_modal:
             ls_expects(path_out.view().empty());
+            ls_expects(message_out.view().empty());
             return SaveFileModal {};
 
         case save_file_error:
+            ls_expects(message_out.view().empty());
             return SaveFileError {
                 .filename = path_out.path(),
             };
         case open_file_error:
             return OpenFileError {
                 .filename = path_out.path(),
+                .message = message_out.string(),
+
             };
     };
     std::terminate();
@@ -971,11 +985,12 @@ namespace detail {
 
 [[nodiscard]] inline auto to_exp_file_action_result(ls_ui_status_t status,
                                                     uint8_t next_step_enum,
-                                                    const WrappedPath& path_out)
+                                                    const WrappedPath& path_out,
+                                                    const WrappedString& message_out)
     -> FileActionResult {
     return FileActionResult {
         .status = status,
-        .next_step = to_exp_next_step(next_step_enum, path_out),
+        .next_step = to_exp_next_step(next_step_enum, path_out, message_out),
     };
 }
 
@@ -1058,6 +1073,12 @@ auto CircuitInterface::allocation_info() const -> std::string {
     return data.string();
 }
 
+auto CircuitInterface::display_filename() const -> std::filesystem::path {
+    auto data = WrappedPath {};
+    ls_circuit_display_filename(get(), data.get());
+    return data.path();
+}
+
 auto CircuitInterface::do_action(const UserActionEvent& event) -> ls_ui_status_t {
     return ls_circuit_do_action(get(), detail::to_underlying(event.action),
                                 event.position ? &event.position.value() : nullptr);
@@ -1066,10 +1087,13 @@ auto CircuitInterface::do_action(const UserActionEvent& event) -> ls_ui_status_t
 auto CircuitInterface::file_action(FileAction action) -> FileActionResult {
     auto next_step_enum = uint8_t {};
     auto path_out = WrappedPath {};
-    const auto status = ls_circuit_file_action(get(), detail::to_underlying(action),
-                                               &next_step_enum, path_out.get());
+    auto message_out = WrappedString {};
+    const auto status =
+        ls_circuit_file_action(get(), detail::to_underlying(action), &next_step_enum,
+                               path_out.get(), message_out.get());
 
-    return detail::to_exp_file_action_result(status, next_step_enum, path_out);
+    return detail::to_exp_file_action_result(status, next_step_enum, path_out,
+                                             message_out);
 }
 
 auto CircuitInterface::submit_modal_result(const ModalResult& result)
@@ -1086,10 +1110,12 @@ auto CircuitInterface::submit_modal_result(const ModalResult& result)
 
     auto next_step_enum = uint8_t {};
     auto path_out = WrappedPath {};
-    const auto status = ls_circuit_submit_modal_result(get(), &modal_result,
-                                                       &next_step_enum, path_out.get());
+    auto message_out = WrappedString {};
+    const auto status = ls_circuit_submit_modal_result(
+        get(), &modal_result, &next_step_enum, path_out.get(), message_out.get());
 
-    return detail::to_exp_file_action_result(status, next_step_enum, path_out);
+    return detail::to_exp_file_action_result(status, next_step_enum, path_out,
+                                             message_out);
 }
 
 auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel_ratio,

@@ -58,15 +58,6 @@ auto load_layout_file(const std::filesystem::path& filename) -> Layout {
     return result.value().editable_circuit.extract_layout();
 }
 
-// TEST(CircuitUIModelModal, ModalDialog) {
-//     auto model = CircuitUIModel {};
-//     auto status = UIStatus {};
-//
-//     status |= insert_button(model, point_t {10, 10});
-//     status |= insert_button(model, point_t {0, 0});
-//     print(model.layout());
-// }
-
 //
 // From new file
 //
@@ -190,6 +181,7 @@ TEST(CircuitUIModelModal, SaveFromEmptySaveCancel) {
 TEST(CircuitUIModelModal, SaveFromEmptySaveError) {
     auto model = CircuitUIModel {};
 
+    std::filesystem::remove(TEST_FILE_FOLDER);
     std::filesystem::create_directory(TEST_FILE_FOLDER);
     ASSERT_TRUE(std::filesystem::is_directory(TEST_FILE_FOLDER));
 
@@ -216,6 +208,7 @@ TEST(CircuitUIModelModal, SaveFromEmptySaveError) {
 TEST(CircuitUIModelModal, SaveAsFromEmptySave) {
     auto model = CircuitUIModel {};
 
+    std::filesystem::remove(TEST_FILE_FOLDER);
     std::filesystem::create_directory(TEST_FILE_FOLDER);
     ASSERT_TRUE(std::filesystem::is_directory(TEST_FILE_FOLDER));
 
@@ -271,6 +264,7 @@ TEST(CircuitUIModelModal, SaveAsFromEmptySaveCancel) {
 TEST(CircuitUIModelModal, SaveAsFromEmptySaveError) {
     auto model = CircuitUIModel {};
 
+    std::filesystem::remove(TEST_FILE_FOLDER);
     std::filesystem::create_directory(TEST_FILE_FOLDER);
     ASSERT_TRUE(std::filesystem::is_directory(TEST_FILE_FOLDER));
 
@@ -770,6 +764,58 @@ TEST(CircuitUIModelModal, ExampleFromModifiedNewYes) {
     }
 }
 
+TEST(CircuitUIModelModal, OpenFromModifiedNewYesFail) {
+    auto model = CircuitUIModel {};
+
+    auto status = UIStatus {};
+    status |= insert_button(model, point_t {5, 5});
+    const auto layout_0 = model.layout();
+
+    std::filesystem::remove(TEST_FILE_FOLDER);
+    std::filesystem::create_directory(TEST_FILE_FOLDER);
+    ASSERT_TRUE(std::filesystem::is_directory(TEST_FILE_FOLDER));
+
+    // open
+    {
+        const auto result = model.file_action(FileAction::open_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        const auto modal = std::get<SaveCurrentModal>(request);
+        ASSERT_TRUE(modal.filename == "Circuit");
+    }
+    {
+        const auto result = model.submit_modal_result(SaveCurrentYes {});
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
+    }
+    {
+        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER});
+        const auto message = std::get<ErrorMessage>(result.next_step.value());
+        const auto error = std::get<SaveFileError>(message);
+        ASSERT_TRUE(error.filename == TEST_FILE_FOLDER);
+        ASSERT_TRUE(model.layout() == layout_0);
+    }
+
+    // try new file
+    {
+        const auto result = model.file_action(FileAction::new_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        const auto modal = std::get<SaveCurrentModal>(request);
+        ASSERT_TRUE(modal.filename == "Circuit");
+    }
+    {
+        const auto result = model.submit_modal_result(SaveCurrentYes {});
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
+    }
+    {
+        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER});
+        const auto message = std::get<ErrorMessage>(result.next_step.value());
+        const auto error = std::get<SaveFileError>(message);
+        ASSERT_TRUE(error.filename == TEST_FILE_FOLDER);
+        ASSERT_TRUE(model.layout() == layout_0);
+    }
+}
+
 //
 // Modified open
 //
@@ -833,6 +879,68 @@ TEST(CircuitUIModelModal, OpenFromModifiedOpenYes) {
         const auto result = model.file_action(FileAction::save_file);
         ASSERT_TRUE(!result.next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_SAVE));
+    }
+}
+
+TEST(CircuitUIModelModal, OpenFromModifiedOpenYesFail) {
+    auto model = CircuitUIModel {};
+
+    // initial open
+
+    std::filesystem::remove(TEST_FILE_FOLDER);
+    save_test_file(TEST_FILE_FOLDER);
+
+    {
+        const auto result = model.file_action(FileAction::open_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
+    }
+    {
+        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_FOLDER));
+        ASSERT_TRUE(!result.next_step);
+        ASSERT_EQ(model.layout(), test_layout());
+    }
+
+    std::filesystem::remove(TEST_FILE_FOLDER);
+    std::filesystem::create_directory(TEST_FILE_FOLDER);
+    ASSERT_TRUE(std::filesystem::is_directory(TEST_FILE_FOLDER));
+
+    // modify
+
+    auto status = UIStatus {};
+    status |= insert_button(model, point_t {5, 5});
+    const auto layout_0 = model.layout();
+
+    // open again
+
+    {
+        const auto result = model.file_action(FileAction::open_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        const auto modal = std::get<SaveCurrentModal>(request);
+        ASSERT_TRUE(modal.filename == TEST_FILE_FOLDER);
+    }
+
+    {
+        const auto result = model.submit_modal_result(SaveCurrentYes {});
+        const auto message = std::get<ErrorMessage>(result.next_step.value());
+        const auto error = std::get<SaveFileError>(message);
+        ASSERT_TRUE(error.filename == TEST_FILE_FOLDER);
+    }
+
+    // try new file
+
+    {
+        const auto result = model.file_action(FileAction::new_file);
+        const auto request = std::get<ModalRequest>(result.next_step.value());
+        const auto modal = std::get<SaveCurrentModal>(request);
+        ASSERT_TRUE(modal.filename == TEST_FILE_FOLDER);
+    }
+
+    {
+        const auto result = model.submit_modal_result(SaveCurrentYes {});
+        const auto message = std::get<ErrorMessage>(result.next_step.value());
+        const auto error = std::get<SaveFileError>(message);
+        ASSERT_TRUE(error.filename == TEST_FILE_FOLDER);
     }
 }
 
