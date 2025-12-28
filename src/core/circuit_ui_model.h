@@ -6,17 +6,16 @@
 #include "core/component/circuit_ui_model/dialog_manager.h"
 #include "core/component/circuit_ui_model/mouse_logic/editing_logic_manager.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_drag_logic.h"
+#include "core/format/std_type.h"
 #include "core/vocabulary/circuit_ui_config.h"
 #include "core/vocabulary/device_pixel_ratio.h"
 #include "core/vocabulary/history_status.h"
 #include "core/vocabulary/mouse_event.h"
-#include "core/vocabulary/render_mode.h"
 #include "core/vocabulary/ui_status.h"
 #include "core/vocabulary/view_config.h"
 
 #include <gsl/gsl>
 
-#include <coroutine>
 #include <filesystem>
 #include <optional>
 
@@ -122,12 +121,12 @@ struct SaveCurrentModal {
 };
 
 struct OpenFileModal {
-    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] static auto format() -> std::string;
     [[nodiscard]] auto operator==(const OpenFileModal&) const -> bool = default;
 };
 
 struct SaveFileModal {
-    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] static auto format() -> std::string;
     [[nodiscard]] auto operator==(const SaveFileModal&) const -> bool = default;
 };
 
@@ -136,17 +135,17 @@ using ModalRequest = std::variant<SaveCurrentModal, OpenFileModal, SaveFileModal
 static_assert(std::regular<ModalRequest>);
 
 struct SaveCurrentYes {
-    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] static auto format() -> std::string;
     [[nodiscard]] auto operator==(const SaveCurrentYes&) const -> bool = default;
 };
 
 struct SaveCurrentNo {
-    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] static auto format() -> std::string;
     [[nodiscard]] auto operator==(const SaveCurrentNo&) const -> bool = default;
 };
 
 struct SaveCurrentCancel {
-    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] static auto format() -> std::string;
     [[nodiscard]] auto operator==(const SaveCurrentCancel&) const -> bool = default;
 };
 
@@ -158,7 +157,7 @@ struct OpenFileOpen {
 };
 
 struct OpenFileCancel {
-    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] static auto format() -> std::string;
     [[nodiscard]] auto operator==(const OpenFileCancel&) const -> bool = default;
 };
 
@@ -170,11 +169,12 @@ struct SaveFileSave {
 };
 
 struct SaveFileCancel {
-    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] static auto format() -> std::string;
     [[nodiscard]] auto operator==(const SaveFileCancel&) const -> bool = default;
 };
 
-using ModalResult = std::variant<SaveCurrentYes, SaveCurrentNo, SaveCurrentCancel,  //
+using ModalResult = std::variant<std::monostate,                                    //
+                                 SaveCurrentYes, SaveCurrentNo, SaveCurrentCancel,  //
                                  OpenFileOpen, OpenFileCancel,                      //
                                  SaveFileSave, SaveFileCancel>;
 
@@ -199,15 +199,7 @@ using ErrorMessage = std::variant<SaveFileError, OpenFileError>;
 
 using NextActionStep = std::variant<ErrorMessage, ModalRequest>;
 
-struct FileActionResult {
-    UIStatus status;
-    std::optional<NextActionStep> next_step;
-
-    [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const FileActionResult&) const -> bool = default;
-};
-
-static_assert(std::regular<FileActionResult>);
+static_assert(std::regular<NextActionStep>);
 
 struct CircuitAction {
     FileAction action {};
@@ -285,7 +277,7 @@ struct fmt::formatter<logicsim::circuit_ui_model::ModalResult> {
 
     static auto format(const logicsim::circuit_ui_model::ModalResult& obj,
                        fmt::format_context& ctx) {
-        const auto str = std::visit([](auto&& v) { return v.format(); }, obj);
+        const auto str = std::visit([](auto&& v) { return fmt::format("{}", v); }, obj);
         return fmt::format_to(ctx.out(), "{}", str);
     }
 };
@@ -319,9 +311,8 @@ struct fmt::formatter<logicsim::circuit_ui_model::NextActionStep> {
 namespace logicsim {
 
 struct UnexpectedModalResultException : std::runtime_error {
-    inline explicit UnexpectedModalResultException(
-        const circuit_ui_model::ModalRequest& request,
-        const circuit_ui_model::ModalResult& result)
+    explicit UnexpectedModalResultException(const circuit_ui_model::ModalRequest& request,
+                                            const circuit_ui_model::ModalResult& result)
         : std::runtime_error {
               fmt::format("Unexpected result {} to request {}.", result, request)} {};
 };
@@ -350,7 +341,7 @@ class CircuitUIModel {
     using FileAction = circuit_ui_model::FileAction;
     using ModalRequest = circuit_ui_model::ModalRequest;
     using ModalResult = circuit_ui_model::ModalResult;
-    using FileActionResult = circuit_ui_model::FileActionResult;
+    using NextActionStep = circuit_ui_model::NextActionStep;
 
    public:
     [[nodiscard]] explicit CircuitUIModel();
@@ -377,8 +368,11 @@ class CircuitUIModel {
      *
      * Rendering is allowed as well as all read operations.
      */
-    [[nodiscard]] auto file_action(FileAction action) -> FileActionResult;
-    [[nodiscard]] auto submit_modal_result(const ModalResult& result) -> FileActionResult;
+    [[nodiscard]] auto file_action(FileAction action,
+                                   std::optional<NextActionStep>& next_step) -> UIStatus;
+    [[nodiscard]] auto submit_modal_result(const ModalResult& result,
+                                           std::optional<NextActionStep>& next_step)
+        -> UIStatus;
 
     [[nodiscard]] auto set_config(const CircuitUIConfig& config) -> UIStatus;
     [[nodiscard]] auto do_action(UserAction action,

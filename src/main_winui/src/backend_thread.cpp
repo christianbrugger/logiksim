@@ -2,6 +2,7 @@
 
 #include "main_winui/src/backend_thread.h"
 
+#include "main_winui/src/ls_overload.h"
 #include "main_winui/src/ls_timer.h"
 
 #include <memory>
@@ -142,23 +143,66 @@ auto render_circuit(RenderBufferSource& render_source,
     return ls_ui_status_t {};
 }
 
-[[nodiscard]] auto handle_file_request(FileRequestEvent request,
-                                       exporting::CircuitInterface& circuit)
-    -> ls_ui_status_t {
-    static_cast<void>(request);
-    static_cast<void>(circuit);
+[[nodiscard]] auto to_file_action(FileRequestEvent event) -> exporting::FileAction {
+    using namespace exporting;
+    using enum FileRequestEvent;
 
-    const auto res = circuit.file_action(exporting::FileAction::load_example_simple);
+    switch (event) {
+        case new_file:
+            return FileAction::new_file;
+        case open_file:
+            return FileAction::open_file;
+        case save_file:
+            return FileAction::save_file;
+        case save_as_file:
+            return FileAction::save_as_file;
 
-    std::print("handle_file_reques = {}\n", res.next_step.has_value());
+        case load_example_simple:
+            return FileAction::load_example_simple;
+        case load_example_elements_wires:
+            return FileAction::load_example_elements_wires;
+        case load_example_elements:
+            return FileAction::load_example_elements;
+        case load_example_wires:
+            return FileAction::load_example_wires;
 
-    return res.status;
+        case exit_application:
+            return FileAction::new_file;
+    };
+
+    std::terminate();
+}
+
+[[nodiscard]] auto handle_file_request(FileRequestEvent event,
+                                       exporting::CircuitInterface& circuit,
+                                       IBackendGuiActions& actions) -> ls_ui_status_t {
+    using namespace exporting;
+
+    auto status = ls_ui_status_t {};
+    auto next_step = std::optional<NextActionStep> {};
+
+    status |= circuit.file_action(to_file_action(event), next_step);
+
+    while (next_step.has_value()) {
+        std::visit(overload(
+                       [&](const ModalRequest& request) {
+                           const auto response = actions.show_dialog_blocking(request);
+                           status |= circuit.submit_modal_result(response, next_step);
+                       },
+                       [&](const ErrorMessage& message) {
+                           actions.show_dialog_blocking(message);
+                           next_step = std::nullopt;
+                       }),
+                   next_step.value());
+    }
+
+    return status;
 }
 
 [[nodiscard]] auto submit_backend_task(const BackendTask& task,
                                        RenderBufferSource& render_source,
-                                       exporting::CircuitInterface& circuit)
-    -> ls_ui_status_t {
+                                       exporting::CircuitInterface& circuit,
+                                       IBackendGuiActions& actions) -> ls_ui_status_t {
     using namespace exporting;
 
     if (const auto* item = std::get_if<MousePressEvent>(&task)) {
@@ -183,7 +227,7 @@ auto render_circuit(RenderBufferSource& render_source,
         return handle_circuit_ui_config_event(*item, circuit);
     }
     if (const auto* item = std::get_if<FileRequestEvent>(&task)) {
-        return handle_file_request(*item, circuit);
+        return handle_file_request(*item, circuit, actions);
     }
 
     if (const auto* item = std::get_if<SwapChainParams>(&task)) {
@@ -200,10 +244,13 @@ auto render_circuit(RenderBufferSource& render_source,
 auto process_backend_task(const BackendTask& task, RenderBufferSource& render_source,
                           exporting::CircuitInterface& circuit,
                           IBackendGuiActions& actions) -> void {
-    const auto status = submit_backend_task(task, render_source, circuit);
+    const auto status = submit_backend_task(task, render_source, circuit, actions);
 
     if (status.config_changed) {
         actions.config_update(circuit.config());
+    }
+    if (status.filename_changed) {
+        actions.change_title(winrt::hstring {circuit.display_filename().native()});
     }
     if (status.repaint_required) {
         render_circuit(render_source, circuit);
@@ -303,6 +350,7 @@ auto backend_thread_main(std::stop_token token,
             static_cast<void>(status);
         }
         actions->config_update(circuit.config());
+        actions->change_title(winrt::hstring {circuit.display_filename().native()});
 
         try {
             main_forwarded_tasks(token, tasks, render_source, circuit, *actions);

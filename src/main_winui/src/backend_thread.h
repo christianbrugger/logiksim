@@ -44,6 +44,9 @@ class IBackendGuiActions {
     virtual auto change_title(winrt::hstring title) const -> void = 0;
     virtual auto config_update(logicsim::exporting::CircuitUIConfig config) const
         -> void = 0;
+    [[nodiscard]] virtual auto show_dialog_blocking(exporting::ModalRequest request) const
+        -> exporting::ModalResult = 0;
+    virtual auto show_dialog_blocking(exporting::ErrorMessage message) const -> void = 0;
 };
 
 //
@@ -98,7 +101,7 @@ enum class FileRequestEvent {
     save_as_file,
 
     load_example_simple,
-    load_example_elements_and_wires,
+    load_example_elements_wires,
     load_example_elements,
     load_example_wires,
 

@@ -4,7 +4,6 @@
 #include "core/circuit_example.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_logic_status.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_wheel_logic.h"
-#include "core/format/std_type.h"
 #include "core/geometry/rect.h"
 #include "core/geometry/scene.h"
 #include "core/load_save_file.h"
@@ -66,23 +65,23 @@ auto SaveCurrentModal::format() const -> std::string {
     return fmt::format("SaveCurrentModal{{{}}}", filename);
 }
 
-auto OpenFileModal::format() const -> std::string {
+auto OpenFileModal::format() -> std::string {
     return "OpenFileModal{}";
 }
 
-auto SaveFileModal::format() const -> std::string {
+auto SaveFileModal::format() -> std::string {
     return "SaveFileModal{}";
 }
 
-auto SaveCurrentYes::format() const -> std::string {
+auto SaveCurrentYes::format() -> std::string {
     return "SaveCurrentYes{}";
 }
 
-auto SaveCurrentNo::format() const -> std::string {
+auto SaveCurrentNo::format() -> std::string {
     return "SaveCurrentNo{}";
 }
 
-auto SaveCurrentCancel::format() const -> std::string {
+auto SaveCurrentCancel::format() -> std::string {
     return "SaveCurrentCancel{}";
 }
 
@@ -90,7 +89,7 @@ auto OpenFileOpen::format() const -> std::string {
     return fmt::format("OpenFileOpen{{{}}}", filename);
 }
 
-auto OpenFileCancel::format() const -> std::string {
+auto OpenFileCancel::format() -> std::string {
     return "OpenFileCancel{}";
 }
 
@@ -98,7 +97,7 @@ auto SaveFileSave::format() const -> std::string {
     return fmt::format("SaveFileSave{{{}}}", filename);
 }
 
-auto SaveFileCancel::format() const -> std::string {
+auto SaveFileCancel::format() -> std::string {
     return "SaveFileCancel{}";
 }
 
@@ -113,15 +112,6 @@ auto OpenFileError::format() const -> std::string {
         "  message = {},\n"
         "}}",
         filename, message);
-}
-
-auto FileActionResult::format() const -> std::string {
-    return fmt::format(
-        "FileActionResult{{\n"
-        "  request = {},\n"
-        "  next_step = {},\n"
-        "}}",
-        status, next_step);
 }
 
 auto CircuitAction::format() const -> std::string {
@@ -481,7 +471,8 @@ namespace {
 
 }  // namespace circuit_ui_model
 
-auto CircuitUIModel::file_action(FileAction action) -> FileActionResult {
+auto CircuitUIModel::file_action(FileAction action,
+                                 std::optional<NextActionStep>& next_step_) -> UIStatus {
     Expects(class_invariant_holds());
     using namespace circuit_ui_model;
     auto status = UIStatus {};
@@ -515,10 +506,13 @@ auto CircuitUIModel::file_action(FileAction action) -> FileActionResult {
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
     Ensures(modal_.has_value() == is_modal_request(next_step));
-    return {status, next_step};
+    next_step_ = next_step;
+    return status;
 }
 
-auto CircuitUIModel::submit_modal_result(const ModalResult& result) -> FileActionResult {
+auto CircuitUIModel::submit_modal_result(const ModalResult& result,
+                                         std::optional<NextActionStep>& next_step_)
+    -> UIStatus {
     Expects(class_invariant_holds());
     using namespace circuit_ui_model;
     auto status = UIStatus {};
@@ -584,7 +578,8 @@ auto CircuitUIModel::submit_modal_result(const ModalResult& result) -> FileActio
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
     Ensures(modal_.has_value() == is_modal_request(next_step));
-    return {status, next_step};
+    next_step_ = next_step;
+    return status;
 }
 
 auto CircuitUIModel::next_modal_action(

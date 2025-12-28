@@ -46,6 +46,21 @@ struct fmt::formatter<std::optional<T>, Char> {
 };
 
 //
+// std::monostate
+//
+
+template <typename Char>
+struct fmt::formatter<std::monostate, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(std::monostate obj [[maybe_unused]], fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "std::monostate");
+    }
+};
+
+//
 // std::reference_wrapper
 //
 

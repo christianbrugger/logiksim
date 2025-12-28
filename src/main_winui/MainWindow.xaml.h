@@ -64,6 +64,16 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     auto config_update(logicsim::exporting::CircuitUIConfig config) -> void;
 
+    [[nodiscard]] auto show_dialog_blocking(logicsim::exporting::ModalRequest request)
+        -> logicsim::exporting::ModalResult;
+    [[nodiscard]] auto show_dialog_blocking(logicsim::exporting::SaveCurrentModal request)
+        -> logicsim::exporting::ModalResult;
+    [[nodiscard]] auto show_dialog_blocking(logicsim::exporting::SaveFileModal request)
+        -> logicsim::exporting::ModalResult;
+    [[nodiscard]] auto show_dialog_blocking(logicsim::exporting::OpenFileModal request)
+        -> logicsim::exporting::ModalResult;
+    auto show_dialog_blocking(logicsim::exporting::ErrorMessage message) -> void;
+
     // UI Command
 
     void XamlUICommand_ExecuteRequested(

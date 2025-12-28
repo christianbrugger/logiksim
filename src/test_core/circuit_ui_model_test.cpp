@@ -63,87 +63,103 @@ auto load_layout_file(const std::filesystem::path& filename) -> Layout {
 //
 
 TEST(CircuitUIModelModal, NewFileFromEmpty) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
-    const auto result = model.file_action(FileAction::new_file);
-    ASSERT_TRUE(!result.next_step);
+    auto next_step = std::optional<NextActionStep> {};
+    status |= model.file_action(FileAction::new_file, next_step);
+    ASSERT_TRUE(!next_step);
     ASSERT_TRUE(model.layout().empty());
 }
 
 TEST(CircuitUIModelModal, ExampleFromEmpty) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
-    const auto result = model.file_action(FileAction::load_example_simple);
-    ASSERT_TRUE(!result.next_step);
+    auto next_step = std::optional<NextActionStep> {};
+    status |= model.file_action(FileAction::load_example_simple, next_step);
+    ASSERT_TRUE(!next_step);
     ASSERT_TRUE(!model.layout().empty());
 }
 
 TEST(CircuitUIModelModal, OpenFromEmptyOpen) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     save_test_file();
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen {TEST_FILE_OPEN}, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 }
 
 TEST(CircuitUIModelModal, OpenFromEmptyCancel) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(OpenFileCancel {});
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileCancel {}, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), Layout {});
     }
 }
 
 TEST(CircuitUIModelModal, OpenFromEmptyError) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     const auto file =
         std::filesystem::path {"example_circuits/errors/error_version_unknown.ls2"};
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(OpenFileOpen {file});
-        const auto error = std::get<ErrorMessage>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen {file}, next_step);
+        const auto error = std::get<ErrorMessage>(next_step.value());
         const auto open_error = std::get<OpenFileError>(error);
         ASSERT_EQ(open_error.filename, file);
     }
 }
 
 TEST(CircuitUIModelModal, SaveFromEmptySave) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE});
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE}, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_SAVE));
     }
 
@@ -151,34 +167,40 @@ TEST(CircuitUIModelModal, SaveFromEmptySave) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_SAVE));
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_SAVE));
     }
 }
 
 TEST(CircuitUIModelModal, SaveFromEmptySaveCancel) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(SaveFileCancel {});
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileCancel {}, next_step);
+        ASSERT_TRUE(!next_step);
     }
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 
 TEST(CircuitUIModelModal, SaveFromEmptySaveError) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     std::filesystem::remove(TEST_FILE_FOLDER);
@@ -186,26 +208,30 @@ TEST(CircuitUIModelModal, SaveFromEmptySaveError) {
     ASSERT_TRUE(std::filesystem::is_directory(TEST_FILE_FOLDER));
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER});
-        const auto error = std::get<ErrorMessage>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER}, next_step);
+        const auto error = std::get<ErrorMessage>(next_step.value());
         const auto open_error = std::get<SaveFileError>(error);
         ASSERT_EQ(open_error.filename, TEST_FILE_FOLDER);
     }
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 
 TEST(CircuitUIModelModal, SaveAsFromEmptySave) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     std::filesystem::remove(TEST_FILE_FOLDER);
@@ -213,14 +239,16 @@ TEST(CircuitUIModelModal, SaveAsFromEmptySave) {
     ASSERT_TRUE(std::filesystem::is_directory(TEST_FILE_FOLDER));
 
     {
-        const auto result = model.file_action(FileAction::save_as_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_as_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE});
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE}, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_SAVE));
     }
 
@@ -228,40 +256,47 @@ TEST(CircuitUIModelModal, SaveAsFromEmptySave) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_SAVE));
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_SAVE));
     }
 
     {
-        const auto result = model.file_action(FileAction::save_as_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_as_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 
 TEST(CircuitUIModelModal, SaveAsFromEmptySaveCancel) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     {
-        const auto result = model.file_action(FileAction::save_as_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_as_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(SaveFileCancel {});
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileCancel {}, next_step);
+        ASSERT_TRUE(!next_step);
     }
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 
 TEST(CircuitUIModelModal, SaveAsFromEmptySaveError) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     std::filesystem::remove(TEST_FILE_FOLDER);
@@ -269,21 +304,24 @@ TEST(CircuitUIModelModal, SaveAsFromEmptySaveError) {
     ASSERT_TRUE(std::filesystem::is_directory(TEST_FILE_FOLDER));
 
     {
-        const auto result = model.file_action(FileAction::save_as_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_as_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER});
-        const auto error = std::get<ErrorMessage>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER}, next_step);
+        const auto error = std::get<ErrorMessage>(next_step.value());
         const auto open_error = std::get<SaveFileError>(error);
         ASSERT_EQ(open_error.filename, TEST_FILE_FOLDER);
     }
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
@@ -293,83 +331,96 @@ TEST(CircuitUIModelModal, SaveAsFromEmptySaveError) {
 //
 
 TEST(CircuitUIModelModal, NewFileFromOpen) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     // open initial file
     save_test_file();
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
     // new file
 
     {
-        const auto result = model.file_action(FileAction::new_file);
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::new_file, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout().empty());
     }
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 
 TEST(CircuitUIModelModal, ExampleFromOpen) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     // open initial file
     save_test_file();
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
     // example circuit
     {
-        const auto result = model.file_action(FileAction::load_example_simple);
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::load_example_simple, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(!model.layout().empty());
         ASSERT_TRUE(model.layout() != test_layout());
     }
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 
 TEST(CircuitUIModelModal, OpenFromOpenError) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     // open initial file
     save_test_file();
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
@@ -379,13 +430,15 @@ TEST(CircuitUIModelModal, OpenFromOpenError) {
         std::filesystem::path {"example_circuits/errors/error_version_unknown.ls2"};
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(OpenFileOpen {file});
-        const auto error = std::get<ErrorMessage>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen {file}, next_step);
+        const auto error = std::get<ErrorMessage>(next_step.value());
         const auto open_error = std::get<OpenFileError>(error);
         ASSERT_EQ(open_error.filename, file);
     }
@@ -399,25 +452,29 @@ TEST(CircuitUIModelModal, OpenFromOpenError) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_OPEN));
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_OPEN));
     }
 }
 
 TEST(CircuitUIModelModal, SaveFromOpen) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     save_test_file();
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
@@ -425,25 +482,29 @@ TEST(CircuitUIModelModal, SaveFromOpen) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_OPEN));
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_OPEN));
     }
 }
 
 TEST(CircuitUIModelModal, SaveFromOpenError) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     save_test_file();
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
@@ -454,26 +515,30 @@ TEST(CircuitUIModelModal, SaveFromOpenError) {
     ASSERT_TRUE(std::filesystem::is_directory(TEST_FILE_OPEN));
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto error = std::get<ErrorMessage>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto error = std::get<ErrorMessage>(next_step.value());
         const auto open_error = std::get<SaveFileError>(error);
         ASSERT_EQ(open_error.filename, TEST_FILE_OPEN);
     }
 }
 
 TEST(CircuitUIModelModal, SaveAsFromOpenSave) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     save_test_file();
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
@@ -481,14 +546,16 @@ TEST(CircuitUIModelModal, SaveAsFromOpenSave) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_OPEN));
 
     {
-        const auto result = model.file_action(FileAction::save_as_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_as_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE});
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE}, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_SAVE));
     }
 
@@ -496,18 +563,21 @@ TEST(CircuitUIModelModal, SaveAsFromOpenSave) {
 }
 
 TEST(CircuitUIModelModal, SaveAsFromOpenCancel) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     save_test_file();
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
@@ -517,14 +587,16 @@ TEST(CircuitUIModelModal, SaveAsFromOpenCancel) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_SAVE));
 
     {
-        const auto result = model.file_action(FileAction::save_as_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_as_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(SaveFileCancel {});
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileCancel {}, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
@@ -532,25 +604,29 @@ TEST(CircuitUIModelModal, SaveAsFromOpenCancel) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_SAVE));
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_OPEN));
     }
 }
 
 TEST(CircuitUIModelModal, SaveAsFromOpenSaveError) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     save_test_file();
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
@@ -558,14 +634,16 @@ TEST(CircuitUIModelModal, SaveAsFromOpenSaveError) {
     ASSERT_TRUE(std::filesystem::is_directory(TEST_FILE_FOLDER));
 
     {
-        const auto result = model.file_action(FileAction::save_as_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_as_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
     {
-        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER});
-        const auto error = std::get<ErrorMessage>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER}, next_step);
+        const auto error = std::get<ErrorMessage>(next_step.value());
         const auto open_error = std::get<SaveFileError>(error);
         ASSERT_EQ(open_error.filename, TEST_FILE_FOLDER);
     }
@@ -574,8 +652,9 @@ TEST(CircuitUIModelModal, SaveAsFromOpenSaveError) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_OPEN));
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_OPEN));
     }
 }
@@ -585,25 +664,25 @@ TEST(CircuitUIModelModal, SaveAsFromOpenSaveError) {
 //
 
 TEST(CircuitUIModelModal, OpenFromModifiedNewYes) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
-    auto status = UIStatus {};
     status |= insert_button(model, point_t {5, 5});
-
     const auto layout_0 = model.layout();
-
     save_test_file();
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
         ASSERT_TRUE(modal.filename == "Circuit");
     }
 
     {
-        const auto result = model.submit_modal_result(SaveCurrentYes {});
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveCurrentYes {}, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
@@ -611,16 +690,18 @@ TEST(CircuitUIModelModal, OpenFromModifiedNewYes) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_SAVE));
 
     {
-        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE});
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE}, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
         ASSERT_TRUE(layout_0 == load_layout_file(TEST_FILE_SAVE));
         ASSERT_TRUE(layout_0 == model.layout());
     }
 
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
@@ -628,29 +709,32 @@ TEST(CircuitUIModelModal, OpenFromModifiedNewYes) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_OPEN));
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_OPEN));
     }
 }
 
 TEST(CircuitUIModelModal, NewFromModifiedNewYes) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
-    auto status = UIStatus {};
     status |= insert_button(model, point_t {5, 5});
     const auto layout_0 = model.layout();
 
     {
-        const auto result = model.file_action(FileAction::new_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::new_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
         ASSERT_TRUE(modal.filename == "Circuit");
     }
 
     {
-        const auto result = model.submit_modal_result(SaveCurrentYes {});
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveCurrentYes {}, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
@@ -658,90 +742,100 @@ TEST(CircuitUIModelModal, NewFromModifiedNewYes) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_SAVE));
 
     {
-        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE});
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE}, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(layout_0 == load_layout_file(TEST_FILE_SAVE));
         ASSERT_TRUE(model.layout().empty());
     }
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 
 TEST(CircuitUIModelModal, NewFromModifiedNewNo) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
-    auto status = UIStatus {};
     status |= insert_button(model, point_t {5, 5});
     const auto layout_0 = model.layout();
 
     {
-        const auto result = model.file_action(FileAction::new_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::new_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
         ASSERT_TRUE(modal.filename == "Circuit");
     }
 
     {
-        const auto result = model.submit_modal_result(SaveCurrentNo {});
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveCurrentNo {}, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout().empty());
     }
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 
 TEST(CircuitUIModelModal, NewFromModifiedNewCancel) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
-    auto status = UIStatus {};
     status |= insert_button(model, point_t {5, 5});
     const auto layout_0 = model.layout();
 
     {
-        const auto result = model.file_action(FileAction::new_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::new_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
         ASSERT_TRUE(modal.filename == "Circuit");
     }
 
     {
-        const auto result = model.submit_modal_result(SaveCurrentCancel {});
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveCurrentCancel {}, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == layout_0);
     }
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 
 TEST(CircuitUIModelModal, ExampleFromModifiedNewYes) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
-    auto status = UIStatus {};
     status |= insert_button(model, point_t {5, 5});
     const auto layout_0 = model.layout();
 
     {
-        const auto result = model.file_action(FileAction::load_example_simple);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::load_example_simple, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
         ASSERT_TRUE(modal.filename == "Circuit");
     }
 
     {
-        const auto result = model.submit_modal_result(SaveCurrentYes {});
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveCurrentYes {}, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 
@@ -749,8 +843,9 @@ TEST(CircuitUIModelModal, ExampleFromModifiedNewYes) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_SAVE));
 
     {
-        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE});
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileSave {TEST_FILE_SAVE}, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(layout_0 == load_layout_file(TEST_FILE_SAVE));
 
         ASSERT_TRUE(!model.layout().empty());
@@ -758,16 +853,17 @@ TEST(CircuitUIModelModal, ExampleFromModifiedNewYes) {
     }
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
 }
 
 TEST(CircuitUIModelModal, OpenFromModifiedNewYesFail) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
-    auto status = UIStatus {};
     status |= insert_button(model, point_t {5, 5});
     const auto layout_0 = model.layout();
 
@@ -777,19 +873,22 @@ TEST(CircuitUIModelModal, OpenFromModifiedNewYesFail) {
 
     // open
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
         ASSERT_TRUE(modal.filename == "Circuit");
     }
     {
-        const auto result = model.submit_modal_result(SaveCurrentYes {});
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveCurrentYes {}, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER});
-        const auto message = std::get<ErrorMessage>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER}, next_step);
+        const auto message = std::get<ErrorMessage>(next_step.value());
         const auto error = std::get<SaveFileError>(message);
         ASSERT_TRUE(error.filename == TEST_FILE_FOLDER);
         ASSERT_TRUE(model.layout() == layout_0);
@@ -797,19 +896,22 @@ TEST(CircuitUIModelModal, OpenFromModifiedNewYesFail) {
 
     // try new file
     {
-        const auto result = model.file_action(FileAction::new_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::new_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
         ASSERT_TRUE(modal.filename == "Circuit");
     }
     {
-        const auto result = model.submit_modal_result(SaveCurrentYes {});
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveCurrentYes {}, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<SaveFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER});
-        const auto message = std::get<ErrorMessage>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveFileSave {TEST_FILE_FOLDER}, next_step);
+        const auto message = std::get<ErrorMessage>(next_step.value());
         const auto error = std::get<SaveFileError>(message);
         ASSERT_TRUE(error.filename == TEST_FILE_FOLDER);
         ASSERT_TRUE(model.layout() == layout_0);
@@ -821,6 +923,7 @@ TEST(CircuitUIModelModal, OpenFromModifiedNewYesFail) {
 //
 
 TEST(CircuitUIModelModal, OpenFromModifiedOpenYes) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     // initial open
@@ -828,13 +931,15 @@ TEST(CircuitUIModelModal, OpenFromModifiedOpenYes) {
     save_test_file();
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_OPEN), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
@@ -843,7 +948,6 @@ TEST(CircuitUIModelModal, OpenFromModifiedOpenYes) {
 
     // modify
 
-    auto status = UIStatus {};
     status |= insert_button(model, point_t {5, 5});
     const auto layout_0 = model.layout();
 
@@ -852,23 +956,26 @@ TEST(CircuitUIModelModal, OpenFromModifiedOpenYes) {
     save_test_file(TEST_FILE_SAVE);
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
         ASSERT_TRUE(modal.filename == TEST_FILE_OPEN);
     }
 
     {
-        const auto result = model.submit_modal_result(SaveCurrentYes {});
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveCurrentYes {}, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
         ASSERT_TRUE(layout_0 == load_layout_file(TEST_FILE_OPEN));
         ASSERT_TRUE(layout_0 == model.layout());
     }
 
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_SAVE));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_SAVE), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
@@ -876,13 +983,15 @@ TEST(CircuitUIModelModal, OpenFromModifiedOpenYes) {
     ASSERT_FALSE(std::filesystem::is_regular_file(TEST_FILE_SAVE));
 
     {
-        const auto result = model.file_action(FileAction::save_file);
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::save_file, next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_TRUE(model.layout() == load_layout_file(TEST_FILE_SAVE));
     }
 }
 
 TEST(CircuitUIModelModal, OpenFromModifiedOpenYesFail) {
+    auto status = UIStatus {};
     auto model = CircuitUIModel {};
 
     // initial open
@@ -891,13 +1000,15 @@ TEST(CircuitUIModelModal, OpenFromModifiedOpenYesFail) {
     save_test_file(TEST_FILE_FOLDER);
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         ASSERT_TRUE(std::holds_alternative<OpenFileModal>(request));
     }
     {
-        const auto result = model.submit_modal_result(OpenFileOpen(TEST_FILE_FOLDER));
-        ASSERT_TRUE(!result.next_step);
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(OpenFileOpen(TEST_FILE_FOLDER), next_step);
+        ASSERT_TRUE(!next_step);
         ASSERT_EQ(model.layout(), test_layout());
     }
 
@@ -907,22 +1018,23 @@ TEST(CircuitUIModelModal, OpenFromModifiedOpenYesFail) {
 
     // modify
 
-    auto status = UIStatus {};
     status |= insert_button(model, point_t {5, 5});
     const auto layout_0 = model.layout();
 
     // open again
 
     {
-        const auto result = model.file_action(FileAction::open_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::open_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
         ASSERT_TRUE(modal.filename == TEST_FILE_FOLDER);
     }
 
     {
-        const auto result = model.submit_modal_result(SaveCurrentYes {});
-        const auto message = std::get<ErrorMessage>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveCurrentYes {}, next_step);
+        const auto message = std::get<ErrorMessage>(next_step.value());
         const auto error = std::get<SaveFileError>(message);
         ASSERT_TRUE(error.filename == TEST_FILE_FOLDER);
     }
@@ -930,15 +1042,17 @@ TEST(CircuitUIModelModal, OpenFromModifiedOpenYesFail) {
     // try new file
 
     {
-        const auto result = model.file_action(FileAction::new_file);
-        const auto request = std::get<ModalRequest>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.file_action(FileAction::new_file, next_step);
+        const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
         ASSERT_TRUE(modal.filename == TEST_FILE_FOLDER);
     }
 
     {
-        const auto result = model.submit_modal_result(SaveCurrentYes {});
-        const auto message = std::get<ErrorMessage>(result.next_step.value());
+        auto next_step = std::optional<NextActionStep> {};
+        status |= model.submit_modal_result(SaveCurrentYes {}, next_step);
+        const auto message = std::get<ErrorMessage>(next_step.value());
         const auto error = std::get<SaveFileError>(message);
         ASSERT_TRUE(error.filename == TEST_FILE_FOLDER);
     }

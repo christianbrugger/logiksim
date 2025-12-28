@@ -574,8 +574,10 @@ enum class NextStepEnum : uint8_t {
 
 // ModalResult - variant
 enum class ModalResultEnum : uint8_t {
-    save_current_yes = 0,
-    save_current_no = 1,
+    monostate = 0,
+
+    save_current_yes = 1,
+    save_current_no = 2,
     save_current_cancel = 3,
 
     open_file_open = 4,
@@ -636,7 +638,8 @@ struct SaveFileCancel {
     [[nodiscard]] auto operator==(const SaveFileCancel&) const -> bool = default;
 };
 
-using ModalResult = std::variant<SaveCurrentYes, SaveCurrentNo, SaveCurrentCancel,  //
+using ModalResult = std::variant<std::monostate,                                    //
+                                 SaveCurrentYes, SaveCurrentNo, SaveCurrentCancel,  //
                                  OpenFileOpen, OpenFileCancel,                      //
                                  SaveFileSave, SaveFileCancel>;
 
@@ -657,13 +660,7 @@ using ErrorMessage = std::variant<SaveFileError, OpenFileError>;
 
 using NextActionStep = std::variant<ErrorMessage, ModalRequest>;
 
-struct FileActionResult {
-    ls_ui_status_t status;
-    std::optional<NextActionStep> next_step;
-    [[nodiscard]] auto operator==(const FileActionResult&) const -> bool = default;
-};
-
-static_assert(std::regular<FileActionResult>);
+static_assert(std::regular<NextActionStep>);
 
 ///////////////////////////////////////////
 
@@ -829,9 +826,12 @@ class CircuitInterface {
     [[nodiscard]] inline auto display_filename() const -> std::filesystem::path;
 
     [[nodiscard]] inline auto do_action(const UserActionEvent& event) -> ls_ui_status_t;
-    [[nodiscard]] inline auto file_action(FileAction action) -> FileActionResult;
-    [[nodiscard]] inline auto submit_modal_result(const ModalResult& result)
-        -> FileActionResult;
+    [[nodiscard]] inline auto file_action(FileAction action,
+                                          std::optional<NextActionStep>& next_step)
+        -> ls_ui_status_t;
+    [[nodiscard]] inline auto submit_modal_result(
+        const ModalResult& result, std::optional<NextActionStep>& next_step)
+        -> ls_ui_status_t;
 
     inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
                               void* pixel_data, intptr_t stride) -> void;
@@ -983,19 +983,11 @@ namespace detail {
     std::terminate();
 }
 
-[[nodiscard]] inline auto to_exp_file_action_result(ls_ui_status_t status,
-                                                    uint8_t next_step_enum,
-                                                    const WrappedPath& path_out,
-                                                    const WrappedString& message_out)
-    -> FileActionResult {
-    return FileActionResult {
-        .status = status,
-        .next_step = to_exp_next_step(next_step_enum, path_out, message_out),
-    };
-}
-
 [[nodiscard]] inline auto from_exp(const ModalResult& modal_result)
     -> std::pair<ModalResultEnum, std::filesystem::path> {
+    if (std::holds_alternative<std::monostate>(modal_result)) {
+        return {ModalResultEnum::monostate, {}};
+    }
     if (std::holds_alternative<SaveCurrentYes>(modal_result)) {
         return {ModalResultEnum::save_current_yes, {}};
     }
@@ -1084,7 +1076,9 @@ auto CircuitInterface::do_action(const UserActionEvent& event) -> ls_ui_status_t
                                 event.position ? &event.position.value() : nullptr);
 }
 
-auto CircuitInterface::file_action(FileAction action) -> FileActionResult {
+auto CircuitInterface::file_action(FileAction action,
+                                   std::optional<NextActionStep>& next_step)
+    -> ls_ui_status_t {
     auto next_step_enum = uint8_t {};
     auto path_out = WrappedPath {};
     auto message_out = WrappedString {};
@@ -1092,13 +1086,15 @@ auto CircuitInterface::file_action(FileAction action) -> FileActionResult {
         ls_circuit_file_action(get(), detail::to_underlying(action), &next_step_enum,
                                path_out.get(), message_out.get());
 
-    return detail::to_exp_file_action_result(status, next_step_enum, path_out,
-                                             message_out);
+    next_step = detail::to_exp_next_step(next_step_enum, path_out, message_out);
+    return status;
 }
 
-auto CircuitInterface::submit_modal_result(const ModalResult& result)
-    -> FileActionResult {
+auto CircuitInterface::submit_modal_result(const ModalResult& result,
+                                           std::optional<NextActionStep>& next_step)
+    -> ls_ui_status_t {
     const auto [modal_result_enum, path] = detail::from_exp(result);
+
     const auto modal_result = ls_modal_result_t {
         .modal_result_enum = detail::to_underlying(modal_result_enum),
         .path =
@@ -1114,8 +1110,8 @@ auto CircuitInterface::submit_modal_result(const ModalResult& result)
     const auto status = ls_circuit_submit_modal_result(
         get(), &modal_result, &next_step_enum, path_out.get(), message_out.get());
 
-    return detail::to_exp_file_action_result(status, next_step_enum, path_out,
-                                             message_out);
+    next_step = detail::to_exp_next_step(next_step_enum, path_out, message_out);
+    return status;
 }
 
 auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel_ratio,

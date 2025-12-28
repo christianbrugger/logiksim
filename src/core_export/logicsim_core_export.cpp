@@ -567,6 +567,9 @@ namespace {
     switch (to_enum<exporting::detail::ModalResultEnum>(result.modal_result_enum)) {
         using enum exporting::detail::ModalResultEnum;
 
+        case monostate:
+            return std::monostate {};
+
         case save_current_yes:
             return SaveCurrentYes {};
         case save_current_no:
@@ -600,15 +603,17 @@ auto ls_circuit_file_action(ls_circuit_t* obj, uint8_t file_action_enum,
         Expects(path_out);
         Expects(message_out);
 
-        const auto result = obj->model.file_action(to_file_action(file_action_enum));
+        auto next_step = std::optional<circuit_ui_model::NextActionStep> {};
+        const auto status =
+            obj->model.file_action(to_file_action(file_action_enum), next_step);
 
         // next step
-        auto [ns_enum, path, message] = to_c(result.next_step);
+        auto [ns_enum, path, message] = to_c(next_step);
         *next_step_enum = std::to_underlying(ns_enum);
         path_out->value = std::move(path);
         message_out->value = std::move(message);
 
-        return to_c(result.status);
+        return to_c(status);
     });
 }
 
@@ -624,16 +629,17 @@ auto ls_circuit_submit_modal_result(ls_circuit_t* obj,
         Expects(path_out);
         Expects(message_out);
 
-        const auto result =
-            obj->model.submit_modal_result(to_modal_result(*modal_result));
+        auto next_step = std::optional<circuit_ui_model::NextActionStep> {};
+        const auto status =
+            obj->model.submit_modal_result(to_modal_result(*modal_result), next_step);
 
         // next step
-        auto [ns_enum, path, message] = to_c(result.next_step);
+        auto [ns_enum, path, message] = to_c(next_step);
         *next_step_enum = std::to_underlying(ns_enum);
         path_out->value = std::move(path);
         message_out->value = std::move(message);
 
-        return to_c(result.status);
+        return to_c(status);
     });
 }
 

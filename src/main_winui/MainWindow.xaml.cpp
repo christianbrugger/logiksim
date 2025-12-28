@@ -9,11 +9,12 @@
 #include "main_winui/src/ls_timer.h"
 #include "main_winui/src/ls_xaml_utils.h"
 
-#include <Windows.UI.ViewManagement.h>
 #include <chrono>
 #include <exception>
+#include <future>
 #include <iostream>
 #include <print>
+#include <variant>
 
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;
@@ -74,6 +75,11 @@ class BackendGuiActions : public logicsim::IBackendGuiActions {
     auto config_update(logicsim::exporting::CircuitUIConfig config) const
         -> void override;
 
+    [[nodiscard]] auto show_dialog_blocking(logicsim::exporting::ModalRequest request)
+        const -> logicsim::exporting::ModalResult override;
+    auto show_dialog_blocking(logicsim::exporting::ErrorMessage message) const
+        -> void override;
+
    private:
     weak_ref<MainWindow> window_weak_;
     Microsoft::UI::Dispatching::DispatcherQueue queue_;
@@ -101,6 +107,37 @@ auto BackendGuiActions::config_update(logicsim::exporting::CircuitUIConfig confi
             window->config_update(std::move(config_value));
         }
     });
+}
+
+auto BackendGuiActions::show_dialog_blocking(
+    logicsim::exporting::ModalRequest request) const -> logicsim::exporting::ModalResult {
+    auto promise = std::promise<logicsim::exporting::ModalResult> {};
+    auto future = promise.get_future();
+
+    queue_.TryEnqueue([window_weak = window_weak_, request_value = std::move(request),
+                       promise_value = std::move(promise)]() mutable {
+        if (const auto window = window_weak.get()) {
+            auto result = window->show_dialog_blocking(std::move(request_value));
+            promise_value.set_value(std::move(result));
+        }
+    });
+    return future.get();
+}
+
+auto BackendGuiActions::show_dialog_blocking(
+    logicsim::exporting::ErrorMessage message) const -> void {
+    auto promise = std::promise<void> {};
+    auto future = promise.get_future();
+
+    queue_.TryEnqueue([window_weak = window_weak_, message_value = std::move(message),
+                       promise_value = std::move(promise)]() mutable {
+        if (const auto window = window_weak.get()) {
+            window->show_dialog_blocking(std::move(message_value));
+            promise_value.set_value();
+        }
+    });
+
+    return future.get();
 }
 
 [[nodiscard]] auto lookup_icons() -> IconSources {
@@ -371,6 +408,32 @@ auto MainWindow::config_update(logicsim::exporting::CircuitUIConfig config__) ->
     }();
 }
 
+auto MainWindow::show_dialog_blocking(logicsim::exporting::ModalRequest request)
+    -> logicsim::exporting::ModalResult {
+    return std::visit([&](auto&& value) { return this->show_dialog_blocking(value); },
+                      std::move(request));
+}
+
+auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveCurrentModal request)
+    -> logicsim::exporting::ModalResult {
+    static_cast<void>(request);
+    return logicsim::exporting::SaveCurrentNo {};
+}
+
+auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveFileModal)
+    -> logicsim::exporting::ModalResult {
+    return logicsim::exporting::SaveFileCancel {};
+}
+
+auto MainWindow::show_dialog_blocking(logicsim::exporting::OpenFileModal)
+    -> logicsim::exporting::ModalResult {
+    return logicsim::exporting::OpenFileCancel {};
+}
+
+auto MainWindow::show_dialog_blocking(logicsim::exporting::ErrorMessage message) -> void {
+    static_cast<void>(message);
+}
+
 auto MainWindow::update_render_size() -> void {
     const auto panel = CanvasPanel();
     if (!panel) {
@@ -410,10 +473,8 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     //
 
     if (sender == NewCommand()) {
-        set_modal(true);
+        // set_modal(true);
         backend_tasks_.push(FileRequestEvent::new_file);
-        // backend_tasks_.push(UserActionEvent {.action = UserAction::clear_circuit});
-        // backend_tasks_.push(UserActionEvent {.action = UserAction::reset_view});
         return;
     }
     if (sender == OpenCommand()) {
@@ -731,7 +792,7 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
     if (sender == ExampleElementsWiresCommand()) {
-        backend_tasks_.push(FileRequestEvent::load_example_elements_and_wires);
+        backend_tasks_.push(FileRequestEvent::load_example_elements_wires);
         return;
     }
 
