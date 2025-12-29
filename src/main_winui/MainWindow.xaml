@@ -8,6 +8,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
     mc:Ignorable="d"
+    
+    Closed="Window_Closed"
     >
 
     <Window.SystemBackdrop>
@@ -232,11 +234,11 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- <TitleBar x:Name="MainTitleBar">
-                    <TitleBar.IconSource>
+                <TitleBar x:Name="MainTitleBar">
+                    <!--  <TitleBar.IconSource>
                         <ImageIconSource ImageSource="ms-appx:///resources/icons/derivative/app_icon.svg"/>
-                    </TitleBar.IconSource>
-                </TitleBar> -->
+                    </TitleBar.IconSource>-->
+                </TitleBar>
 
                 <MenuBar Grid.Row="1">
                     <MenuBarItem Title="File">

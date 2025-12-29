@@ -210,9 +210,9 @@ auto MainWindow::InitializeComponent() -> void {
     MainWindowT<MainWindow>::InitializeComponent();
 
     // title bar
-    // ExtendsContentIntoTitleBar(true);
-    // SetTitleBar(MainTitleBar());
-    change_title(L"LogikSim");
+    ExtendsContentIntoTitleBar(true);
+    SetTitleBar(MainTitleBar());
+    change_title(L"");
     AppWindow().TitleBar().PreferredTheme(
         Microsoft::UI::Windowing::TitleBarTheme::UseDefaultAppMode);
     AppWindow().SetIcon(L"resources/icons/derivative/app_icon_256.ico");
@@ -229,9 +229,6 @@ auto MainWindow::InitializeComponent() -> void {
     auto presenter = Microsoft::UI::Windowing::OverlappedPresenter::Create();
     presenter.PreferredMinimumWidth(400);
     presenter.PreferredMinimumHeight(200);
-    // presenter.IsMaximizable(false);
-    // presenter.IsMinimizable(false);
-    //  presenter.IsResizable(false);
     AppWindow().SetPresenter(presenter);
 
     // custom icons
@@ -263,12 +260,14 @@ auto MainWindow::set_modal(bool value) -> void {
     }
     is_modal_ = value;
 
-    // ContentControl().IsEnabled(!value);
+    ContentControl().IsEnabled(!value);
+
+    // gray out icons
     if (value) {
         set_simulation_icons(*this, icon_sources_, std::nullopt);
+    } else {
+        set_simulation_icons(*this, icon_sources_, last_config_);
     }
-
-    logicsim::set_is_app_closable(CanvasPanel(), !value);
 
     auto presenter = AppWindow().Presenter().as<OverlappedPresenter>();
     if (presenter) {
@@ -276,29 +275,12 @@ auto MainWindow::set_modal(bool value) -> void {
         presenter.IsMinimizable(!value);
         presenter.IsResizable(!value);
     }
+}
 
-    // Workaround, as 'presenter.IsMaximizable' does not prevent maximize on double
-    // click on the app title bar.
-    // See: https://github.com/microsoft/microsoft-ui-xaml/issues/9427
-    if (value && !token_appwindow_changed_) {
-        token_appwindow_changed_ =
-            AppWindow().Changed([weak = get_weak(), state = presenter.State()](
-                                    Microsoft::UI::Windowing::AppWindow const&,
-                                    AppWindowChangedEventArgs const&) mutable {
-                if (auto self = weak.get()) {
-                    auto presenter =
-                        self->AppWindow().Presenter().as<OverlappedPresenter>();
-                    using enum OverlappedPresenterState;
-                    if (presenter && state == Restored &&
-                        presenter.State() == Maximized) {
-                        presenter.Restore();
-                    }
-                }
-            });
-    }
-    if (!value && token_appwindow_changed_) {
-        AppWindow().Changed(token_appwindow_changed_);
-        token_appwindow_changed_ = {};
+void MainWindow::Window_Closed(IInspectable const&, WindowEventArgs const& args) {
+    if (is_modal_) {
+        // prevent close during modal dialog.
+        args.Handled(true);
     }
 }
 
@@ -408,8 +390,15 @@ void MainWindow::CanvasPanel_KeyDown(IInspectable const&,
 
 auto MainWindow::change_title(const hstring& value) -> void {
     Expects(DispatcherQueue().HasThreadAccess());
-    Title(value);
-    // MainTitleBar().Title(value);
+
+    const auto app_title = L"LogikSim";
+    MainTitleBar().Title(value);
+
+    if (value.empty()) {
+        Title(app_title);
+    } else {
+        Title(value + L" - " + app_title);
+    }
 }
 
 auto MainWindow::register_swap_chain(
@@ -613,23 +602,42 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     //
 
     if (sender == NewCommand()) {
-        // set_modal(true);
+        if (is_modal_) {
+            return;
+        }
+        set_modal(true);
         backend_tasks_.push(FileRequestEvent::new_file);
         return;
     }
     if (sender == OpenCommand()) {
+        if (is_modal_) {
+            return;
+        }
+        set_modal(true);
         backend_tasks_.push(FileRequestEvent::open_file);
         return;
     }
     if (sender == SaveCommand()) {
+        if (is_modal_) {
+            return;
+        }
+        set_modal(true);
         backend_tasks_.push(FileRequestEvent::save_file);
         return;
     }
     if (sender == SaveAsCommand()) {
+        if (is_modal_) {
+            return;
+        }
+        set_modal(true);
         backend_tasks_.push(FileRequestEvent::save_as_file);
         return;
     }
     if (sender == ExitCommand()) {
+        if (is_modal_) {
+            return;
+        }
+        set_modal(true);
         backend_tasks_.push(FileRequestEvent::exit_application);
         return;
     }
@@ -741,7 +749,6 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     //
 
     if (sender == StartSimulationCommand()) {
-        set_modal(true);
         backend_tasks_.push(CircuitUIConfigEvent {
             .state =
                 {
@@ -751,7 +758,6 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
     if (sender == StopSimulationCommand()) {
-        set_modal(false);
         backend_tasks_.push(CircuitUIConfigEvent {
             .state =
                 {

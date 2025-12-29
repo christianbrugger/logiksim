@@ -34,6 +34,11 @@ struct MainWindow : MainWindowT<MainWindow> {
     [[nodiscard]] auto is_model() const -> bool;
     auto set_modal(bool value) -> void;
 
+    // Window
+
+    auto Window_Closed(Windows::Foundation::IInspectable const& sender,
+                       Microsoft::UI::Xaml::WindowEventArgs const& args) -> void;
+
     // Page
 
     auto Page_ActualThemeChanged(Microsoft::UI::Xaml::FrameworkElement const& sender,
@@ -100,7 +105,6 @@ struct MainWindow : MainWindowT<MainWindow> {
 
    private:
     bool is_modal_ {};
-    winrt::event_token token_appwindow_changed_ {};
 
     IconSources icon_sources_ {};
     std::jthread backend_thread_ {};
