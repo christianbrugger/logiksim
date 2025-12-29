@@ -10,6 +10,8 @@
 #include "main_winui/src/ls_vocabulary.h"
 #include "main_winui/src/ls_xaml_utils.h"
 
+#include <winrt/Microsoft.Windows.Storage.Pickers.h>
+
 #include <chrono>
 #include <exception>
 #include <future>
@@ -491,6 +493,8 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveCurrentModal requ
     -> Windows::Foundation::IAsyncAction {
     Expects(DispatcherQueue().HasThreadAccess());
 
+    const auto lifetime [[maybe_unused]] = get_strong();
+
     try {
         auto dialog = Controls::ContentDialog {};
         dialog.XamlRoot(this->Content().XamlRoot());
@@ -526,8 +530,29 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::OpenFileModal request
                                       std::promise<ModalResult> promise)
     -> Windows::Foundation::IAsyncAction {
     Expects(DispatcherQueue().HasThreadAccess());
+    using namespace Microsoft::Windows::Storage::Pickers;
+    // using namespace Windows::Storage::Pickers;
+
+    const auto lifetime [[maybe_unused]] = get_strong();
 
     try {
+        const auto window_id = AppWindow().Id();
+        // auto hwnd = logicsim::try_get_hwnd(MainGrid());
+        // Expects(hwnd);
+
+        auto picker = FileOpenPicker {window_id};
+        // <--- need to give window_id
+        // <--- crashes with error: REGDB_E_CLASSNOTREG Class not registered
+
+        // picker.as<IInitializeWithWindow>()->Initialize(hwnd);
+
+        picker.SuggestedStartLocation(PickerLocationId::DocumentsLibrary);
+        picker.ViewMode(PickerViewMode::List);
+        picker.FileTypeFilter().Append(L"*");
+
+        // Show the picker dialog window
+        auto file = co_await picker.PickSingleFileAsync();
+
         promise.set_value(logicsim::exporting::OpenFileCancel {});
     } catch (...) {
         promise.set_exception(std::current_exception());
@@ -539,6 +564,8 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveFileModal request
                                       std::promise<ModalResult> promise)
     -> Windows::Foundation::IAsyncAction {
     Expects(DispatcherQueue().HasThreadAccess());
+
+    const auto lifetime [[maybe_unused]] = get_strong();
 
     try {
         promise.set_value(logicsim::exporting::SaveFileCancel {});
@@ -552,6 +579,8 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::ErrorMessage message,
                                       std::promise<void> promise)
     -> Windows::Foundation::IAsyncAction {
     Expects(DispatcherQueue().HasThreadAccess());
+
+    const auto lifetime [[maybe_unused]] = get_strong();
 
     try {
         static_cast<void>(message);

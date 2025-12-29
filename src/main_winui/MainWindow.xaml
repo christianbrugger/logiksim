@@ -226,7 +226,7 @@
                 </XamlUICommand>
             </Page.Resources>
 
-            <Grid>
+            <Grid x:Name="MainGrid">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>

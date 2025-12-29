@@ -37,11 +37,16 @@
     <!-- <EnableMsixTooling>true</EnableMsixTooling> -->
     <!-- -->
     <!-- modified start -->
+    <!--
+    <AppxPackage>true</AppxPackage>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    -->
     <AppxPackage>false</AppxPackage>
     <EnableMsixTooling>false</EnableMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
     <OutputType>WinExe</OutputType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <WindowsAppSdkUndockedRegFreeWinRTInitialize>true</WindowsAppSdkUndockedRegFreeWinRTInitialize>
     <!-- modified end -->
     <!-- -->
   </PropertyGroup>

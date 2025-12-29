@@ -47,7 +47,7 @@ auto attach_console() -> void {
 /// </summary>
 /// <param name="e">Details about the launch request and process.</param>
 void App::OnLaunched([[maybe_unused]] LaunchActivatedEventArgs const& e) {
-    // attach_console();
+    attach_console();
 
     window = make<MainWindow>();
     window.Activate();
