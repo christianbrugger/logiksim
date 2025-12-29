@@ -60,6 +60,8 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     // Public Methods
 
+    auto change_title(const hstring& title) -> void;
+
     auto register_swap_chain(
         const Microsoft::Graphics::Canvas::CanvasSwapChain& swap_chain) -> void;
 
@@ -98,6 +100,8 @@ struct MainWindow : MainWindowT<MainWindow> {
 
    private:
     bool is_modal_ {};
+    winrt::event_token token_appwindow_changed_ {};
+
     IconSources icon_sources_ {};
     std::jthread backend_thread_ {};
     std::jthread render_thread_ {};

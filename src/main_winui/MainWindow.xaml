@@ -7,7 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    >
 
     <Window.SystemBackdrop>
         <MicaBackdrop/>
@@ -227,10 +228,17 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <MenuBar>
+                <!-- <TitleBar x:Name="MainTitleBar">
+                    <TitleBar.IconSource>
+                        <ImageIconSource ImageSource="ms-appx:///resources/icons/derivative/app_icon.svg"/>
+                    </TitleBar.IconSource>
+                </TitleBar> -->
+
+                <MenuBar Grid.Row="1">
                     <MenuBarItem Title="File">
                         <MenuFlyoutItem Command="{StaticResource NewCommand}"/>
                         <MenuFlyoutItem Command="{StaticResource OpenCommand}"/>
@@ -317,14 +325,14 @@
                     </MenuBarItem>
                 </MenuBar>
 
-                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right">
                         <AppBarButton Command="{StaticResource StartSimulationCommand}"/>
                         <AppBarButton Command="{StaticResource StopSimulationCommand}"/>
                     </CommandBar>
                 </StackPanel>
 
-                <Grid Grid.Row="2">
+                <Grid Grid.Row="3">
                     <canvas:CanvasSwapChainPanel
                     x:Name="CanvasPanel"
                     IsTabStop="True"

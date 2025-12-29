@@ -207,11 +207,14 @@ auto format(circuit_ui_model::FileAction action) -> std::string {
 }
 
 CircuitUIModel::CircuitUIModel() {
-    circuit_store_.set_simulation_config(config_.simulation);
-    circuit_store_.set_circuit_state(config_.state);
-    circuit_renderer_.set_render_config(config_.render);
+    // initial configs
+    config_.state = EditingState {DefaultMouseAction::selection};
     static_cast<void>(editing_logic_manager_.set_circuit_state(
         config_.state, editable_circuit_pointer(circuit_store_)));
+    circuit_store_.set_circuit_state(config_.state);
+    circuit_store_.set_simulation_config(config_.simulation);
+    circuit_renderer_.set_render_config(config_.render);
+    // initial circuit
     save_information_ = SaveInformation {
         .name_or_path = UnsavedName {"Circuit"},
         .serialized = serialize(circuit_store_, config_),

@@ -1040,7 +1040,7 @@ auto combine_wheel_event(const MouseWheelEvent& first, const MouseWheelEvent& se
     const auto second_c = detail::from_exp(second);
 
     if (const auto result = ls_combine_wheel_event(&first_c, &second_c);
-        result.is_valid) {
+        result.is_valid != 0) {
         return detail::to_exp(result.value);
     }
     return std::nullopt;

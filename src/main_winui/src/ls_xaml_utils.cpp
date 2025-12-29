@@ -185,6 +185,28 @@ auto is_pressed_kind(winrt::Microsoft::UI::Input::PointerUpdateKind kind) -> boo
     std::terminate();
 }
 
+auto try_get_hwnd(const winrt::Microsoft::UI::Xaml::FrameworkElement& element) -> HWND {
+    if (!element) {
+        return HWND {};
+    }
+    if (!element.IsLoaded()) {
+        return HWND {};
+    }
+
+    const auto xaml_root = element.XamlRoot();
+    if (!xaml_root) {
+        return HWND {};
+    }
+
+    const auto island_env = xaml_root.ContentIslandEnvironment();
+    if (!island_env) {
+        return HWND {};
+    }
+
+    const auto window_id = island_env.AppWindowId();
+    return winrt::Microsoft::UI::GetWindowFromWindowId(window_id);
+}
+
 auto get_cursor_position(const winrt::Microsoft::UI::Xaml::FrameworkElement& element)
     -> std::optional<winrt::Windows::Foundation::Point> {
     if (!element) {
@@ -232,6 +254,22 @@ auto get_cursor_position(const winrt::Microsoft::UI::Xaml::FrameworkElement& ele
     // nullptr = transform to root of the XAML tree
     auto transform = element.TransformToVisual(nullptr);
     return transform.Inverse().TransformPoint(point_root);
+}
+
+auto set_is_app_closable(const winrt::Microsoft::UI::Xaml::FrameworkElement& element,
+                         bool value) -> void {
+    const auto hwnd = try_get_hwnd(element);
+    if (!hwnd) {
+        return;
+    }
+
+    const auto hMenu = GetSystemMenu(hwnd, FALSE);
+    if (!hMenu) {
+        return;
+    }
+
+    UINT flag = MF_BYCOMMAND | (value ? MF_ENABLED : (MF_DISABLED | MF_GRAYED));
+    EnableMenuItem(hMenu, SC_CLOSE, flag);
 }
 
 }  // namespace logicsim

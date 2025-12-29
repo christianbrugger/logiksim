@@ -47,8 +47,14 @@ constexpr static auto LS_IDENTITY_DPI = 96.0;
 [[nodiscard]] auto is_pressed_kind(winrt::Microsoft::UI::Input::PointerUpdateKind kind)
     -> bool;
 
+[[nodiscard]] auto try_get_hwnd(
+    const winrt::Microsoft::UI::Xaml::FrameworkElement& element) -> HWND;
+
 [[nodiscard]] auto get_cursor_position(
     const winrt::Microsoft::UI::Xaml::FrameworkElement& element)
     -> std::optional<winrt::Windows::Foundation::Point>;
+
+[[nodiscard]] auto set_is_app_closable(
+    const winrt::Microsoft::UI::Xaml::FrameworkElement& element, bool value) -> void;
 
 }  // namespace logicsim

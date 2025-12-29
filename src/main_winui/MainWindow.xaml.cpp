@@ -94,9 +94,9 @@ BackendGuiActions::BackendGuiActions(MainWindow& window)
 }
 
 auto BackendGuiActions::change_title(hstring title) const -> void {
-    queue_.TryEnqueue([window_weak = window_weak_, title_value = hstring {title}]() {
+    queue_.TryEnqueue([window_weak = window_weak_, title_value = std::move(title)]() {
         if (const auto window = window_weak.get()) {
-            window->Title(title_value);
+            window->change_title(title_value);
         }
     });
 }
@@ -209,11 +209,13 @@ auto clear_simulation_icons(MainWindow& w) -> void {
 auto MainWindow::InitializeComponent() -> void {
     MainWindowT<MainWindow>::InitializeComponent();
 
-    icon_sources_ = lookup_icons();
-    set_simulation_icons(*this, icon_sources_, last_config_);
-
-    // title
-    Title(L"LogikSim");
+    // title bar
+    // ExtendsContentIntoTitleBar(true);
+    // SetTitleBar(MainTitleBar());
+    change_title(L"LogikSim");
+    AppWindow().TitleBar().PreferredTheme(
+        Microsoft::UI::Windowing::TitleBarTheme::UseDefaultAppMode);
+    AppWindow().SetIcon(L"resources/icons/derivative/app_icon_256.ico");
 
     // size
     // TODO: handle positon
@@ -222,6 +224,19 @@ auto MainWindow::InitializeComponent() -> void {
         winrt::Windows::Graphics::SizeInt32 {.Width = 500, .Height = 450});
     // AppWindow().MoveAndResize(winrt::Windows::Graphics::RectInt32 {2400, 300, 500,
     // 450});
+
+    // test
+    auto presenter = Microsoft::UI::Windowing::OverlappedPresenter::Create();
+    presenter.PreferredMinimumWidth(400);
+    presenter.PreferredMinimumHeight(200);
+    // presenter.IsMaximizable(false);
+    // presenter.IsMinimizable(false);
+    //  presenter.IsResizable(false);
+    AppWindow().SetPresenter(presenter);
+
+    // custom icons
+    icon_sources_ = lookup_icons();
+    set_simulation_icons(*this, icon_sources_, last_config_);
 
     // create threads
     auto buffer_parts = logicsim::create_render_buffer_parts();
@@ -242,14 +257,48 @@ auto MainWindow::is_model() const -> bool {
 }
 
 auto MainWindow::set_modal(bool value) -> void {
+    using namespace Microsoft::UI::Windowing;
     if (is_modal_ == value) {
         return;
     }
     is_modal_ = value;
 
-    ContentControl().IsEnabled(!value);
+    // ContentControl().IsEnabled(!value);
     if (value) {
         set_simulation_icons(*this, icon_sources_, std::nullopt);
+    }
+
+    logicsim::set_is_app_closable(CanvasPanel(), !value);
+
+    auto presenter = AppWindow().Presenter().as<OverlappedPresenter>();
+    if (presenter) {
+        presenter.IsMaximizable(!value);
+        presenter.IsMinimizable(!value);
+        presenter.IsResizable(!value);
+    }
+
+    // Workaround, as 'presenter.IsMaximizable' does not prevent maximize on double
+    // click on the app title bar.
+    // See: https://github.com/microsoft/microsoft-ui-xaml/issues/9427
+    if (value && !token_appwindow_changed_) {
+        token_appwindow_changed_ =
+            AppWindow().Changed([weak = get_weak(), state = presenter.State()](
+                                    Microsoft::UI::Windowing::AppWindow const&,
+                                    AppWindowChangedEventArgs const&) mutable {
+                if (auto self = weak.get()) {
+                    auto presenter =
+                        self->AppWindow().Presenter().as<OverlappedPresenter>();
+                    using enum OverlappedPresenterState;
+                    if (presenter && state == Restored &&
+                        presenter.State() == Maximized) {
+                        presenter.Restore();
+                    }
+                }
+            });
+    }
+    if (!value && token_appwindow_changed_) {
+        AppWindow().Changed(token_appwindow_changed_);
+        token_appwindow_changed_ = {};
     }
 }
 
@@ -355,6 +404,12 @@ void MainWindow::CanvasPanel_KeyDown(IInspectable const&,
         backend_tasks_.push(exporting::VirtualKey::Escape);
         args.Handled(true);
     }
+}
+
+auto MainWindow::change_title(const hstring& value) -> void {
+    Expects(DispatcherQueue().HasThreadAccess());
+    Title(value);
+    // MainTitleBar().Title(value);
 }
 
 auto MainWindow::register_swap_chain(
@@ -463,7 +518,12 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveCurrentModal requ
         dialog.DefaultButton(Controls::ContentDialogButton::Primary);
         //// dialog.Content(Controls::ContentDialogContent {});
 
-        co_await dialog.ShowAsync();
+        {
+            set_modal(true);
+            auto _ = gsl::final_action([&] { set_modal(false); });
+
+            co_await dialog.ShowAsync();
+        }
 
         static_cast<void>(request);
         promise.set_value(logicsim::exporting::SaveCurrentNo {});
@@ -681,6 +741,7 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     //
 
     if (sender == StartSimulationCommand()) {
+        set_modal(true);
         backend_tasks_.push(CircuitUIConfigEvent {
             .state =
                 {
@@ -690,6 +751,7 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
     if (sender == StopSimulationCommand()) {
+        set_modal(false);
         backend_tasks_.push(CircuitUIConfigEvent {
             .state =
                 {
