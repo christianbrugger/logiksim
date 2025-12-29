@@ -30,7 +30,7 @@ namespace {
 template <typename Func>
 [[nodiscard]] auto ls_translate_exception(Func&& func) noexcept {
     try {
-        return std::invoke(func);
+        return std::invoke(std::forward<Func>(func));
     } catch (const std::exception& exc) {
         // for now just terminate, later we forward them
         static_cast<void>(exc);
@@ -55,11 +55,11 @@ namespace {
 
 [[nodiscard]] auto to_c(UIStatus status) -> ls_ui_status_t {
     return ls_ui_status_t {
-        .repaint_required = status.require_repaint,
-        .config_changed = status.config_changed,
-        .history_changed = status.history_changed,
-        .dialogs_changed = status.dialogs_changed,
-        .filename_changed = status.filename_changed,
+        .repaint_required = ls_bool_t {status.require_repaint},
+        .config_changed = ls_bool_t {status.config_changed},
+        .history_changed = ls_bool_t {status.history_changed},
+        .dialogs_changed = ls_bool_t {status.dialogs_changed},
+        .filename_changed = ls_bool_t {status.filename_changed},
     };
 }
 
@@ -148,23 +148,23 @@ namespace {
             ls_simulation_config_t {
                 .simulation_time_rate_ns =
                     config.simulation.simulation_time_rate.rate_per_second.count_ns(),
-                .use_wire_delay = config.simulation.use_wire_delay,
+                .use_wire_delay = ls_bool_t {config.simulation.use_wire_delay},
             },
         .render =
             ls_render_config_t {
                 .thread_count_enum = to_underlying(config.render.thread_count),
                 .wire_render_style_enum = to_underlying(config.render.wire_render_style),
 
-                .do_benchmark = config.render.do_benchmark,
-                .show_circuit = config.render.show_circuit,
-                .show_collision_index = config.render.show_collision_index,
-                .show_connection_index = config.render.show_connection_index,
-                .show_selection_index = config.render.show_selection_index,
+                .do_benchmark = ls_bool_t {config.render.do_benchmark},
+                .show_circuit = ls_bool_t {config.render.show_circuit},
+                .show_collision_index = ls_bool_t {config.render.show_collision_index},
+                .show_connection_index = ls_bool_t {config.render.show_connection_index},
+                .show_selection_index = ls_bool_t {config.render.show_selection_index},
 
-                .show_render_borders = config.render.show_render_borders,
-                .show_mouse_position = config.render.show_mouse_position,
-                .direct_rendering = config.render.direct_rendering,
-                .jit_rendering = config.render.jit_rendering,
+                .show_render_borders = ls_bool_t {config.render.show_render_borders},
+                .show_mouse_position = ls_bool_t {config.render.show_mouse_position},
+                .direct_rendering = ls_bool_t {config.render.direct_rendering},
+                .jit_rendering = ls_bool_t {config.render.jit_rendering},
             },
         .state = to_c(config.state),
     };
@@ -284,7 +284,7 @@ namespace {
                 .simulation_time_rate =
                     time_rate_t {std::chrono::duration<int64_t, std::nano> {
                         config.simulation.simulation_time_rate_ns}},
-                .use_wire_delay = config.simulation.use_wire_delay,
+                .use_wire_delay = config.simulation.use_wire_delay != 0,
             },
         .render =
             WidgetRenderConfig {
@@ -292,16 +292,16 @@ namespace {
                 .wire_render_style =
                     to_wire_render_style(config.render.wire_render_style_enum),
 
-                .do_benchmark = config.render.do_benchmark,
-                .show_circuit = config.render.show_circuit,
-                .show_collision_index = config.render.show_collision_index,
-                .show_connection_index = config.render.show_connection_index,
-                .show_selection_index = config.render.show_selection_index,
+                .do_benchmark = config.render.do_benchmark != 0,
+                .show_circuit = config.render.show_circuit != 0,
+                .show_collision_index = config.render.show_collision_index != 0,
+                .show_connection_index = config.render.show_connection_index != 0,
+                .show_selection_index = config.render.show_selection_index != 0,
 
-                .show_render_borders = config.render.show_render_borders,
-                .show_mouse_position = config.render.show_mouse_position,
-                .direct_rendering = config.render.direct_rendering,
-                .jit_rendering = config.render.jit_rendering,
+                .show_render_borders = config.render.show_render_borders != 0,
+                .show_mouse_position = config.render.show_mouse_position != 0,
+                .direct_rendering = config.render.direct_rendering != 0,
+                .jit_rendering = config.render.jit_rendering != 0,
             },
         .state = from_c(config.state),
     };
@@ -392,9 +392,9 @@ namespace {
 
 [[nodiscard]] auto to_c(const std::optional<double>& value) -> ls_optional_double_t {
     if (value) {
-        return ls_optional_double_t {.value = *value, .is_valid = true};
+        return ls_optional_double_t {.value = *value, .is_valid = ls_bool_t {true}};
     }
-    return ls_optional_double_t {.value = 0, .is_valid = false};
+    return ls_optional_double_t {.value = 0, .is_valid = ls_bool_t {false}};
 }
 
 [[nodiscard]] auto to_c(const circuit_ui_model::Statistics& statistics)
@@ -410,8 +410,8 @@ namespace {
 
 [[nodiscard]] auto to_c(const HistoryStatus& status) -> ls_history_status_t {
     return ls_history_status_t {
-        .undo_available = status.undo_available,
-        .redo_available = status.redo_available,
+        .undo_available = ls_bool_t {status.undo_available},
+        .redo_available = ls_bool_t {status.redo_available},
     };
 };
 
@@ -809,12 +809,12 @@ auto ls_circuit_config(const ls_circuit_t* obj) noexcept -> ls_ui_config_t {
     });
 }
 
-auto ls_circuit_is_render_do_benchmark(const ls_circuit_t* obj) noexcept -> bool {
+auto ls_circuit_is_render_do_benchmark(const ls_circuit_t* obj) noexcept -> ls_bool_t {
     return ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
 
-        return obj->model.config().render.do_benchmark;
+        return ls_bool_t {obj->model.config().render.do_benchmark};
     });
 }
 
@@ -849,7 +849,7 @@ auto ls_circuit_history_status(const ls_circuit_t* obj) noexcept -> ls_history_s
 
 auto ls_circuit_get_allocation_info(const ls_circuit_t* obj, ls_string_t* string) noexcept
     -> void {
-    return ls_translate_exception([&]() {
+    ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
         Expects(string);
@@ -860,7 +860,7 @@ auto ls_circuit_get_allocation_info(const ls_circuit_t* obj, ls_string_t* string
 
 auto ls_circuit_display_filename(const ls_circuit_t* obj, ls_path_t* filename) noexcept
     -> void {
-    return ls_translate_exception([&]() {
+    ls_translate_exception([&]() {
         using namespace logicsim;
         Expects(obj);
         Expects(filename);
@@ -897,7 +897,7 @@ auto ls_circuit_mouse_press(ls_circuit_t* obj,
             .position = to_point_device_fine(event->position),
             .modifiers = to_keyboard_modifiers(event->keyboard_modifiers_bitset),
             .button = to_mouse_button(event->button_enum),
-            .double_click = event->double_click,
+            .double_click = event->double_click != 0,
         }));
     });
 }
@@ -955,10 +955,13 @@ auto ls_combine_wheel_event(const ls_mouse_wheel_event_t* first,
                                                     to_mouse_wheel_event(*second))) {
             return ls_combine_wheel_event_result_t {
                 .value = to_c(*result),
-                .is_valid = true,
+                .is_valid = ls_bool_t {true},
             };
         }
-        return ls_combine_wheel_event_result_t {.value = {}, .is_valid = false};
+        return ls_combine_wheel_event_result_t {
+            .value = {},
+            .is_valid = ls_bool_t {false},
+        };
     });
 }
 

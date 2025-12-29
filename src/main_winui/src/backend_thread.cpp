@@ -93,7 +93,7 @@ auto render_circuit(RenderBufferSource& render_source,
 
 [[nodiscard]] auto handle_circuit_ui_config_event(const CircuitUIConfigEvent& event,
                                                   exporting::CircuitInterface& circuit)
-    -> ls_ui_status_t {
+    -> UIStatus {
     const auto config = circuit.config();
     const auto new_config = exporting::CircuitUIConfig {
         .simulation =
@@ -142,7 +142,7 @@ auto render_circuit(RenderBufferSource& render_source,
     if (new_config != config) {
         return circuit.set_config(new_config);
     }
-    return ls_ui_status_t {};
+    return UIStatus {};
 }
 
 [[nodiscard]] auto to_file_action(FileRequestEvent event) -> exporting::FileAction {
@@ -177,10 +177,10 @@ auto render_circuit(RenderBufferSource& render_source,
 
 [[nodiscard]] auto handle_file_request(FileRequestEvent event,
                                        exporting::CircuitInterface& circuit,
-                                       IBackendGuiActions& actions) -> ls_ui_status_t {
+                                       IBackendGuiActions& actions) -> UIStatus {
     using namespace exporting;
 
-    auto status = ls_ui_status_t {};
+    auto status = UIStatus {};
     auto next_step = std::optional<NextActionStep> {};
 
     status |= circuit.file_action(to_file_action(event), next_step);
@@ -204,7 +204,7 @@ auto render_circuit(RenderBufferSource& render_source,
 [[nodiscard]] auto submit_backend_task(const BackendTask& task,
                                        RenderBufferSource& render_source,
                                        exporting::CircuitInterface& circuit,
-                                       IBackendGuiActions& actions) -> ls_ui_status_t {
+                                       IBackendGuiActions& actions) -> UIStatus {
     using namespace exporting;
 
     if (const auto* item = std::get_if<MousePressEvent>(&task)) {
@@ -235,12 +235,12 @@ auto render_circuit(RenderBufferSource& render_source,
     if (const auto* item = std::get_if<SwapChainParams>(&task)) {
         if (render_source.params() != *item) {
             render_source.update_params(*item);
-            return ls_ui_status_t {.repaint_required = true};
+            return UIStatus {.repaint_required = true};
         }
-        return ls_ui_status_t {};
+        return UIStatus {};
     }
 
-    return ls_ui_status_t {};
+    return UIStatus {};
 }
 
 auto process_backend_task(const BackendTask& task, RenderBufferSource& render_source,

@@ -473,6 +473,7 @@ namespace {
 
 auto CircuitUIModel::file_action(FileAction action,
                                  std::optional<NextActionStep>& next_step_) -> UIStatus {
+    print("file_action", action);
     Expects(class_invariant_holds());
     using namespace circuit_ui_model;
     auto status = UIStatus {};
@@ -513,6 +514,7 @@ auto CircuitUIModel::file_action(FileAction action,
 auto CircuitUIModel::submit_modal_result(const ModalResult& result,
                                          std::optional<NextActionStep>& next_step_)
     -> UIStatus {
+    print("submit_modal_result", result);
     Expects(class_invariant_holds());
     using namespace circuit_ui_model;
     auto status = UIStatus {};

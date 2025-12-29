@@ -17,7 +17,6 @@
 #include <string_view>
 #include <variant>
 #else
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #endif
@@ -64,9 +63,11 @@ extern "C" {
 // NOLINTBEGIN(modernize-use-using)
 // NOLINTBEGIN(modernize-use-trailing-return-type)
 
+typedef uint8_t ls_bool_t;
+
 typedef struct ls_optional_double_t {
     double value;
-    bool is_valid;
+    ls_bool_t is_valid;
 #ifdef __cplusplus
     [[nodiscard]] auto operator==(const ls_optional_double_t&) const -> bool = default;
 #endif
@@ -104,11 +105,11 @@ typedef struct ls_path_view_t {
 } ls_path_view_t;
 
 typedef struct ls_ui_status_t {
-    bool repaint_required;
-    bool config_changed;
-    bool history_changed;
-    bool dialogs_changed;
-    bool filename_changed;
+    ls_bool_t repaint_required;
+    ls_bool_t config_changed;
+    ls_bool_t history_changed;
+    ls_bool_t dialogs_changed;
+    ls_bool_t filename_changed;
 #ifdef __cplusplus
     [[nodiscard]] auto operator==(const ls_ui_status_t&) const -> bool = default;
 #endif
@@ -124,7 +125,7 @@ LS_CORE_API void ls_circuit_destruct(ls_circuit_t* obj) LS_NOEXCEPT;
 
 typedef struct ls_simulation_config_t {
     int64_t simulation_time_rate_ns;
-    bool use_wire_delay;
+    ls_bool_t use_wire_delay;
 #ifdef __cplusplus
     [[nodiscard]] auto operator==(const ls_simulation_config_t&) const -> bool = default;
 #endif
@@ -134,16 +135,16 @@ typedef struct ls_render_config_t {
     uint8_t thread_count_enum;
     uint8_t wire_render_style_enum;
     //
-    bool do_benchmark;
-    bool show_circuit;
-    bool show_collision_index;
-    bool show_connection_index;
-    bool show_selection_index;
+    ls_bool_t do_benchmark;
+    ls_bool_t show_circuit;
+    ls_bool_t show_collision_index;
+    ls_bool_t show_connection_index;
+    ls_bool_t show_selection_index;
     //
-    bool show_render_borders;
-    bool show_mouse_position;
-    bool direct_rendering;
-    bool jit_rendering;
+    ls_bool_t show_render_borders;
+    ls_bool_t show_mouse_position;
+    ls_bool_t direct_rendering;
+    ls_bool_t jit_rendering;
 #ifdef __cplusplus
     [[nodiscard]] auto operator==(const ls_render_config_t&) const -> bool = default;
 #endif
@@ -170,8 +171,8 @@ typedef struct ls_ui_config_t {
 LS_NODISCARD LS_CORE_API ls_ui_config_t ls_circuit_config(const ls_circuit_t* obj)
     LS_NOEXCEPT;
 
-LS_NODISCARD LS_CORE_API bool ls_circuit_is_render_do_benchmark(const ls_circuit_t* obj)
-    LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_bool_t
+ls_circuit_is_render_do_benchmark(const ls_circuit_t* obj) LS_NOEXCEPT;
 
 // circuit::set_config
 LS_NODISCARD LS_CORE_API ls_ui_status_t
@@ -193,8 +194,8 @@ LS_NODISCARD LS_CORE_API ls_ui_statistics_t ls_circuit_statistics(const ls_circu
     LS_NOEXCEPT;
 
 typedef struct ls_history_status_t {
-    bool undo_available;
-    bool redo_available;
+    ls_bool_t undo_available;
+    ls_bool_t redo_available;
 #ifdef __cplusplus
     [[nodiscard]] auto operator==(const ls_history_status_t&) const -> bool = default;
 #endif
@@ -264,7 +265,7 @@ typedef struct {
     ls_point_device_fine_t position;
     uint32_t keyboard_modifiers_bitset;
     uint8_t button_enum;
-    bool double_click;
+    ls_bool_t double_click;
 } ls_mouse_press_event_t;
 
 // circuit::mouse_press
@@ -301,7 +302,7 @@ LS_NODISCARD LS_CORE_API ls_ui_status_t ls_circuit_mouse_wheel(
 
 typedef struct {
     ls_mouse_wheel_event_t value;
-    bool is_valid;
+    ls_bool_t is_valid;
 } ls_combine_wheel_event_result_t;
 
 // combine_wheel_event
@@ -324,9 +325,18 @@ ls_circuit_key_press(ls_circuit_t* obj, uint8_t key_enum) LS_NOEXCEPT;
 
 #ifdef __cplusplus
 
-[[nodiscard]] inline auto operator|(ls_ui_status_t a, ls_ui_status_t b)
-    -> ls_ui_status_t {
-    return ls_ui_status_t {
+struct UIStatus {
+    bool repaint_required;
+    bool config_changed;
+    bool history_changed;
+    bool dialogs_changed;
+    bool filename_changed;
+
+    [[nodiscard]] auto operator==(const UIStatus&) const -> bool = default;
+};
+
+[[nodiscard]] inline auto operator|(UIStatus a, UIStatus b) -> UIStatus {
+    return UIStatus {
         .repaint_required = a.repaint_required || b.repaint_required,
         .config_changed = a.config_changed || b.config_changed,
         .history_changed = a.history_changed || b.history_changed,
@@ -335,7 +345,7 @@ ls_circuit_key_press(ls_circuit_t* obj, uint8_t key_enum) LS_NOEXCEPT;
     };
 };
 
-inline auto operator|=(ls_ui_status_t& a, ls_ui_status_t b) -> ls_ui_status_t& {
+inline auto operator|=(UIStatus& a, UIStatus b) -> UIStatus& {
     a = a | b;
     return a;
 };
@@ -817,7 +827,7 @@ struct LSCircuitDeleter {
 
 class CircuitInterface {
    public:
-    [[nodiscard]] inline auto set_config(const CircuitUIConfig& config) -> ls_ui_status_t;
+    [[nodiscard]] inline auto set_config(const CircuitUIConfig& config) -> UIStatus;
     [[nodiscard]] inline auto config() const -> CircuitUIConfig;
     [[nodiscard]] inline auto is_render_do_benchmark() const -> bool;
     [[nodiscard]] inline auto statistics() const -> ls_ui_statistics_t;
@@ -825,23 +835,21 @@ class CircuitInterface {
     [[nodiscard]] inline auto allocation_info() const -> std::string;
     [[nodiscard]] inline auto display_filename() const -> std::filesystem::path;
 
-    [[nodiscard]] inline auto do_action(const UserActionEvent& event) -> ls_ui_status_t;
+    [[nodiscard]] inline auto do_action(const UserActionEvent& event) -> UIStatus;
     [[nodiscard]] inline auto file_action(FileAction action,
                                           std::optional<NextActionStep>& next_step)
-        -> ls_ui_status_t;
+        -> UIStatus;
     [[nodiscard]] inline auto submit_modal_result(
-        const ModalResult& result, std::optional<NextActionStep>& next_step)
-        -> ls_ui_status_t;
+        const ModalResult& result, std::optional<NextActionStep>& next_step) -> UIStatus;
 
     inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
                               void* pixel_data, intptr_t stride) -> void;
 
-    [[nodiscard]] inline auto mouse_press(const MousePressEvent& event) -> ls_ui_status_t;
-    [[nodiscard]] inline auto mouse_move(const MouseMoveEvent& event) -> ls_ui_status_t;
-    [[nodiscard]] inline auto mouse_release(const MouseReleaseEvent& event)
-        -> ls_ui_status_t;
-    [[nodiscard]] inline auto mouse_wheel(const MouseWheelEvent& event) -> ls_ui_status_t;
-    [[nodiscard]] inline auto key_press(VirtualKey key) -> ls_ui_status_t;
+    [[nodiscard]] inline auto mouse_press(const MousePressEvent& event) -> UIStatus;
+    [[nodiscard]] inline auto mouse_move(const MouseMoveEvent& event) -> UIStatus;
+    [[nodiscard]] inline auto mouse_release(const MouseReleaseEvent& event) -> UIStatus;
+    [[nodiscard]] inline auto mouse_wheel(const MouseWheelEvent& event) -> UIStatus;
+    [[nodiscard]] inline auto key_press(VirtualKey key) -> UIStatus;
 
    private:
     [[nodiscard]] inline auto get() const -> const ls_circuit_t*;
@@ -856,6 +864,16 @@ class CircuitInterface {
 //
 
 namespace detail {
+
+[[nodiscard]] inline auto to_exp(const ls_ui_status_t& status) -> UIStatus {
+    return UIStatus {
+        .repaint_required = status.repaint_required != 0,
+        .config_changed = status.config_changed != 0,
+        .history_changed = status.history_changed != 0,
+        .dialogs_changed = status.dialogs_changed != 0,
+        .filename_changed = status.filename_changed != 0,
+    };
+}
 
 [[nodiscard]] inline auto from_exp(const MouseWheelEvent& event)
     -> ls_mouse_wheel_event_t {
@@ -880,23 +898,23 @@ namespace detail {
             ls_simulation_config_t {
                 .simulation_time_rate_ns =
                     config.simulation.simulation_time_rate.rate_per_second.count(),
-                .use_wire_delay = config.simulation.use_wire_delay,
+                .use_wire_delay = ls_bool_t {config.simulation.use_wire_delay},
             },
         .render =
             ls_render_config_t {
                 .thread_count_enum = to_underlying(config.render.thread_count),
                 .wire_render_style_enum = to_underlying(config.render.wire_render_style),
 
-                .do_benchmark = config.render.do_benchmark,
-                .show_circuit = config.render.show_circuit,
-                .show_collision_index = config.render.show_collision_index,
-                .show_connection_index = config.render.show_connection_index,
-                .show_selection_index = config.render.show_selection_index,
+                .do_benchmark = ls_bool_t {config.render.do_benchmark},
+                .show_circuit = ls_bool_t {config.render.show_circuit},
+                .show_collision_index = ls_bool_t {config.render.show_collision_index},
+                .show_connection_index = ls_bool_t {config.render.show_connection_index},
+                .show_selection_index = ls_bool_t {config.render.show_selection_index},
 
-                .show_render_borders = config.render.show_render_borders,
-                .show_mouse_position = config.render.show_mouse_position,
-                .direct_rendering = config.render.direct_rendering,
-                .jit_rendering = config.render.jit_rendering,
+                .show_render_borders = ls_bool_t {config.render.show_render_borders},
+                .show_mouse_position = ls_bool_t {config.render.show_mouse_position},
+                .direct_rendering = ls_bool_t {config.render.direct_rendering},
+                .jit_rendering = ls_bool_t {config.render.jit_rendering},
             },
         .state =
             ls_circuit_state_t {
@@ -913,7 +931,7 @@ namespace detail {
             SimulationConfig {
                 .simulation_time_rate = time_rate_t {time_rate_t::value_type {
                     config.simulation.simulation_time_rate_ns}},
-                .use_wire_delay = config.simulation.use_wire_delay,
+                .use_wire_delay = config.simulation.use_wire_delay != 0,
             },
         .render =
             WidgetRenderConfig {
@@ -921,16 +939,16 @@ namespace detail {
                 .wire_render_style =
                     static_cast<WireRenderStyle>(config.render.wire_render_style_enum),
 
-                .do_benchmark = config.render.do_benchmark,
-                .show_circuit = config.render.show_circuit,
-                .show_collision_index = config.render.show_collision_index,
-                .show_connection_index = config.render.show_connection_index,
-                .show_selection_index = config.render.show_selection_index,
+                .do_benchmark = config.render.do_benchmark != 0,
+                .show_circuit = config.render.show_circuit != 0,
+                .show_collision_index = config.render.show_collision_index != 0,
+                .show_connection_index = config.render.show_connection_index != 0,
+                .show_selection_index = config.render.show_selection_index != 0,
 
-                .show_render_borders = config.render.show_render_borders,
-                .show_mouse_position = config.render.show_mouse_position,
-                .direct_rendering = config.render.direct_rendering,
-                .jit_rendering = config.render.jit_rendering,
+                .show_render_borders = config.render.show_render_borders != 0,
+                .show_mouse_position = config.render.show_mouse_position != 0,
+                .direct_rendering = config.render.direct_rendering != 0,
+                .jit_rendering = config.render.jit_rendering != 0,
             },
         .state =
             CircuitWidgetState {
@@ -1038,9 +1056,9 @@ auto CircuitInterface::get() -> ls_circuit_t* {
     return obj_.get();
 }
 
-auto CircuitInterface::set_config(const CircuitUIConfig& config) -> ls_ui_status_t {
+auto CircuitInterface::set_config(const CircuitUIConfig& config) -> UIStatus {
     const auto config_c = detail::from_exp(config);
-    return ls_circuit_set_config(get(), &config_c);
+    return detail::to_exp(ls_circuit_set_config(get(), &config_c));
 }
 
 auto CircuitInterface::config() const -> CircuitUIConfig {
@@ -1048,7 +1066,7 @@ auto CircuitInterface::config() const -> CircuitUIConfig {
 }
 
 auto CircuitInterface::is_render_do_benchmark() const -> bool {
-    return ls_circuit_is_render_do_benchmark(get());
+    return ls_circuit_is_render_do_benchmark(get()) != 0;
 }
 
 auto CircuitInterface::statistics() const -> ls_ui_statistics_t {
@@ -1071,14 +1089,14 @@ auto CircuitInterface::display_filename() const -> std::filesystem::path {
     return data.path();
 }
 
-auto CircuitInterface::do_action(const UserActionEvent& event) -> ls_ui_status_t {
-    return ls_circuit_do_action(get(), detail::to_underlying(event.action),
-                                event.position ? &event.position.value() : nullptr);
+auto CircuitInterface::do_action(const UserActionEvent& event) -> UIStatus {
+    return detail::to_exp(
+        ls_circuit_do_action(get(), detail::to_underlying(event.action),
+                             event.position ? &event.position.value() : nullptr));
 }
 
 auto CircuitInterface::file_action(FileAction action,
-                                   std::optional<NextActionStep>& next_step)
-    -> ls_ui_status_t {
+                                   std::optional<NextActionStep>& next_step) -> UIStatus {
     auto next_step_enum = uint8_t {};
     auto path_out = WrappedPath {};
     auto message_out = WrappedString {};
@@ -1087,12 +1105,12 @@ auto CircuitInterface::file_action(FileAction action,
                                path_out.get(), message_out.get());
 
     next_step = detail::to_exp_next_step(next_step_enum, path_out, message_out);
-    return status;
+    return detail::to_exp(status);
 }
 
 auto CircuitInterface::submit_modal_result(const ModalResult& result,
                                            std::optional<NextActionStep>& next_step)
-    -> ls_ui_status_t {
+    -> UIStatus {
     const auto [modal_result_enum, path] = detail::from_exp(result);
 
     const auto modal_result = ls_modal_result_t {
@@ -1111,7 +1129,7 @@ auto CircuitInterface::submit_modal_result(const ModalResult& result,
         get(), &modal_result, &next_step_enum, path_out.get(), message_out.get());
 
     next_step = detail::to_exp_next_step(next_step_enum, path_out, message_out);
-    return status;
+    return detail::to_exp(status);
 }
 
 auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel_ratio,
@@ -1119,39 +1137,39 @@ auto CircuitInterface::render_layout(int32_t width, int32_t height, double pixel
     ls_circuit_render_layout(get(), width, height, pixel_ratio, pixel_data, stride);
 }
 
-auto CircuitInterface::mouse_press(const MousePressEvent& event) -> ls_ui_status_t {
+auto CircuitInterface::mouse_press(const MousePressEvent& event) -> UIStatus {
     const auto event_c = ls_mouse_press_event_t {
         .position = event.position,
         .keyboard_modifiers_bitset = event.modifiers.value(),
         .button_enum = detail::to_underlying(event.button),
-        .double_click = event.double_click,
+        .double_click = ls_bool_t {event.double_click},
     };
-    return ls_circuit_mouse_press(get(), &event_c);
+    return detail::to_exp(ls_circuit_mouse_press(get(), &event_c));
 };
 
-auto CircuitInterface::mouse_move(const MouseMoveEvent& event) -> ls_ui_status_t {
+auto CircuitInterface::mouse_move(const MouseMoveEvent& event) -> UIStatus {
     const auto event_c = ls_mouse_move_event_t {
         .position = event.position,
         .buttons_bitset = event.buttons.value(),
     };
-    return ls_circuit_mouse_move(get(), &event_c);
+    return detail::to_exp(ls_circuit_mouse_move(get(), &event_c));
 };
 
-auto CircuitInterface::mouse_release(const MouseReleaseEvent& event) -> ls_ui_status_t {
+auto CircuitInterface::mouse_release(const MouseReleaseEvent& event) -> UIStatus {
     const auto event_c = ls_mouse_release_event_t {
         .position = event.position,
         .button_enum = detail::to_underlying(event.button),
     };
-    return ls_circuit_mouse_release(get(), &event_c);
+    return detail::to_exp(ls_circuit_mouse_release(get(), &event_c));
 };
 
-auto CircuitInterface::mouse_wheel(const MouseWheelEvent& event) -> ls_ui_status_t {
+auto CircuitInterface::mouse_wheel(const MouseWheelEvent& event) -> UIStatus {
     const auto event_c = detail::from_exp(event);
-    return ls_circuit_mouse_wheel(get(), &event_c);
+    return detail::to_exp(ls_circuit_mouse_wheel(get(), &event_c));
 };
 
-auto CircuitInterface::key_press(VirtualKey key) -> ls_ui_status_t {
-    return ls_circuit_key_press(get(), detail::to_underlying(key));
+auto CircuitInterface::key_press(VirtualKey key) -> UIStatus {
+    return detail::to_exp(ls_circuit_key_press(get(), detail::to_underlying(key)));
 };
 
 }  // namespace logicsim::exporting
