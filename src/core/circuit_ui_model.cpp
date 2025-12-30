@@ -81,8 +81,8 @@ auto OpenFileModal::format() -> std::string {
     return "OpenFileModal{}";
 }
 
-auto SaveFileModal::format() -> std::string {
-    return "SaveFileModal{}";
+auto SaveFileModal::format() const -> std::string {
+    return fmt::format("SaveFileModal{{{}}}", filename);
 }
 
 auto SaveCurrentYes::format() -> std::string {
@@ -629,12 +629,18 @@ auto CircuitUIModel::next_modal_action(
                         .filename = p->path,
                     };
                 } else {
-                    next_step = SaveFileModal {};
+                    next_step = SaveFileModal {
+                        .filename =
+                            get_filename_with_extension(save_information_.name_or_path),
+                    };
                 }
                 return;
             }
             case FileAction::save_as_file: {
-                next_step = SaveFileModal {};
+                next_step = SaveFileModal {
+                    .filename =
+                        get_filename_with_extension(save_information_.name_or_path),
+                };
                 return;
             }
             case FileAction::exit_application: {

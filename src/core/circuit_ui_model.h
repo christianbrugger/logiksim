@@ -131,7 +131,9 @@ struct OpenFileModal {
 };
 
 struct SaveFileModal {
-    [[nodiscard]] static auto format() -> std::string;
+    std::filesystem::path filename;
+
+    [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const SaveFileModal&) const -> bool = default;
 };
 

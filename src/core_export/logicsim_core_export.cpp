@@ -544,8 +544,8 @@ namespace {
         if (std::holds_alternative<OpenFileModal>(*request)) {
             return {open_file_modal, {}, {}};
         }
-        if (std::holds_alternative<SaveFileModal>(*request)) {
-            return {save_file_modal, {}, {}};
+        if (const auto data = std::get_if<SaveFileModal>(request)) {
+            return {save_file_modal, data->filename, {}};
         }
     }
 

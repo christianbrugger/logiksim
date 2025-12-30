@@ -615,6 +615,7 @@ struct OpenFileModal {
 };
 
 struct SaveFileModal {
+    std::filesystem::path filename;
     [[nodiscard]] auto operator==(const SaveFileModal&) const -> bool = default;
 };
 
@@ -990,9 +991,8 @@ namespace detail {
             ls_expects(message_out.view().empty());
             return OpenFileModal {};
         case save_file_modal:
-            ls_expects(path_out.view().empty());
             ls_expects(message_out.view().empty());
-            return SaveFileModal {};
+            return SaveFileModal {.filename = path_out.path()};
 
         case save_file_error:
             ls_expects(message_out.view().empty());

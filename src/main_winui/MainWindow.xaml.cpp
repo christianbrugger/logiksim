@@ -600,7 +600,7 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::OpenFileModal request
 
         picker.SuggestedStartLocation(PickerLocationId::DocumentsLibrary);
         picker.ViewMode(PickerViewMode::List);
-        picker.FileTypeFilter().Append(L"*");  // TODO: configure & pass from model
+        picker.FileTypeFilter().Append(L".ls2");
 
         const auto result = co_await picker.PickSingleFileAsync();
 
@@ -636,9 +636,17 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveFileModal request
         picker.SuggestedStartLocation(PickerLocationId::DocumentsLibrary);
         picker.FileTypeChoices().Insert(L"Circuit Files",
                                         single_threaded_vector<hstring>({L".ls2"}));
-        picker.DefaultFileExtension(L".ls2");  // TODO: pass from model
-        picker.SuggestedFileName(L"Circuit");  // TODO: pass from model
-        picker.SuggestedFolder(L"");           // TODO: pass from model
+        picker.DefaultFileExtension(L".ls2");
+
+        picker.SuggestedFileName(request.filename.has_filename()
+                                     ? request.filename.filename().native()
+                                     : L"Circuit");
+        auto folder_name = [&] {
+            auto v = std::filesystem::path {request.filename};
+            v.remove_filename();
+            return v;
+        }();
+        picker.SuggestedFolder(folder_name.native());
 
         const auto result = co_await picker.PickSaveFileAsync();
 
