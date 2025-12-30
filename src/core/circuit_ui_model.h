@@ -89,7 +89,11 @@ struct SavedPath {
 
 using NameOrPath = std::variant<UnsavedName, SavedPath>;
 
-[[nodiscard]] auto get_filename(const NameOrPath& name_or_path) -> std::filesystem::path;
+[[nodiscard]] auto get_filename_no_extension(const NameOrPath& name_or_path)
+    -> std::filesystem::path;
+
+[[nodiscard]] auto get_filename_with_extension(const NameOrPath& name_or_path)
+    -> std::filesystem::path;
 
 struct SaveInformation {
     NameOrPath name_or_path {};

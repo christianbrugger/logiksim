@@ -44,6 +44,7 @@ class IBackendGuiActions {
     [[nodiscard]] virtual auto show_dialog_blocking(exporting::ModalRequest request) const
         -> exporting::ModalResult = 0;
     virtual auto show_dialog_blocking(exporting::ErrorMessage message) const -> void = 0;
+    virtual auto end_modal_state() const -> void = 0;
 };
 
 //

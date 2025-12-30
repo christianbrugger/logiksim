@@ -45,9 +45,21 @@ auto SavedPath::format() const -> std::string {
     return fmt::format("SavedPath{{{}}}", path);
 }
 
-auto get_filename(const NameOrPath& name_or_path) -> std::filesystem::path {
+auto get_filename_no_extension(const NameOrPath& name_or_path) -> std::filesystem::path {
     return std::visit(overload([&](const UnsavedName& arg) { return arg.name; },
                                [&](const SavedPath& arg) { return arg.path.filename(); }),
+                      name_or_path);
+}
+
+auto get_filename_with_extension(const NameOrPath& name_or_path)
+    -> std::filesystem::path {
+    return std::visit(overload(
+                          [&](const UnsavedName& arg) {
+                              auto res = arg.name;
+                              res.replace_extension(".ls2");
+                              return res;
+                          },
+                          [&](const SavedPath& arg) { return arg.path.filename(); }),
                       name_or_path);
 }
 
@@ -355,10 +367,7 @@ auto CircuitUIModel::layout() const -> const Layout& {
 auto CircuitUIModel::display_filename() const -> std::filesystem::path {
     Expects(class_invariant_holds());
 
-    return std::visit(
-        overload([](const UnsavedName& name) { return name.name; },
-                 [](const SavedPath& path) { return path.path.filename(); }),
-        save_information_.name_or_path);
+    return get_filename_no_extension(save_information_.name_or_path);
 }
 
 auto CircuitUIModel::do_action(UserAction action,
@@ -496,7 +505,7 @@ auto CircuitUIModel::file_action(FileAction action,
 
         if (is_modifed) {
             next_step = SaveCurrentModal {
-                .filename = get_filename(save_information_.name_or_path),
+                .filename = get_filename_with_extension(save_information_.name_or_path),
             };
         }
     }
@@ -652,19 +661,18 @@ namespace {
 [[nodiscard]] auto load_error_to_message(const LoadError& error,
                                          const std::filesystem::path& filename)
     -> std::string {
-    // Version Errors ask the users to update LogikSim to a specific version.
-    // Those are the only ones a user can act upon. Log the rest.
-    const auto suffix = error.type() == LoadErrorType::json_version_error  //
-                            ? fmt::format("\n\n{}", error)
-                            : "";
-    const auto message = fmt::format("Failed to load \"{}\".{}", filename, suffix);
-
+    // log full error
     print("WARNING: Failed to open:", filename);
     print("         Load error type:", error.type());
     print("         Message:", error.format());
     print();
 
-    return message;
+    // Version Errors ask the users to update LogikSim to a specific version.
+    // Those are the only ones a user can act upon. Log the rest.
+    if (error.type() == LoadErrorType::json_version_error) {
+        return error.format();
+    }
+    return "This is not a valid circuit file, or its format is not currently supported.";
 }
 
 }  // namespace

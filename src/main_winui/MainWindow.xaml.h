@@ -38,11 +38,6 @@ struct MainWindow : MainWindowT<MainWindow> {
     auto Window_Closed(Windows::Foundation::IInspectable const& sender,
                        Microsoft::UI::Xaml::WindowEventArgs const& args) -> void;
 
-    auto PickSingleFileButton_Click(
-        winrt::Windows::Foundation::IInspectable const& sender,
-        winrt::Microsoft::UI::Xaml::RoutedEventArgs const& e)
-        -> Windows::Foundation::IAsyncAction;
-
     // Page
 
     auto Page_ActualThemeChanged(Microsoft::UI::Xaml::FrameworkElement const& sender,

@@ -328,10 +328,6 @@
                 </MenuBar>
 
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-
-                    <Button x:Name="PickSingleFileButton" Content="Pick a single file" Click="PickSingleFileButton_Click"/>
-                    <TextBlock x:Name="PickedSingleFileTextBlock" Text="No file picked"/>
-
                     <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right">
                         <AppBarButton Command="{StaticResource StartSimulationCommand}"/>
                         <AppBarButton Command="{StaticResource StopSimulationCommand}"/>

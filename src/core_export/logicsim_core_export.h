@@ -1023,7 +1023,7 @@ namespace detail {
         return {ModalResultEnum::open_file_cancel, {}};
     }
 
-    if (const auto data = std::get_if<OpenFileOpen>(&modal_result)) {
+    if (const auto data = std::get_if<SaveFileSave>(&modal_result)) {
         return {ModalResultEnum::save_file_save, data->filename};
     }
     if (std::holds_alternative<SaveFileCancel>(modal_result)) {

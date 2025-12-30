@@ -198,6 +198,8 @@ auto render_circuit(RenderBufferSource& render_source,
                    next_step.value());
     }
 
+    actions.end_modal_state();
+
     return status;
 }
 

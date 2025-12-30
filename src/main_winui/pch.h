@@ -35,8 +35,11 @@
 //
 
 #include <winrt/Microsoft.Graphics.Canvas.h>
+#include <winrt/Microsoft.UI.Content.h>
+#include <winrt/Microsoft.UI.Interop.h>
 #include <winrt/Microsoft.UI.Input.h>
 #include <winrt/Microsoft.UI.Windowing.h>
+#include <winrt/Microsoft.Windows.Storage.Pickers.h>
 #include <concurrent_queue.h>
 
 #include <gsl/gsl>

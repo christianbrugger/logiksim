@@ -6,17 +6,18 @@
 #endif
 
 #include "main_winui/src/ls_key_tracker.h"
+#include "main_winui/src/ls_overload.h"
 #include "main_winui/src/ls_timer.h"
 #include "main_winui/src/ls_vocabulary.h"
 #include "main_winui/src/ls_xaml_utils.h"
 
-#include <winrt/Microsoft.Windows.Storage.Pickers.h>
-
 #include <chrono>
 #include <exception>
+#include <filesystem>
 #include <future>
 #include <iostream>
 #include <print>
+#include <string>
 #include <variant>
 
 using namespace winrt;
@@ -82,6 +83,7 @@ class BackendGuiActions : public logicsim::IBackendGuiActions {
         const -> logicsim::exporting::ModalResult override;
     auto show_dialog_blocking(logicsim::exporting::ErrorMessage message) const
         -> void override;
+    auto end_modal_state() const -> void override;
 
    private:
     weak_ref<MainWindow> window_weak_;
@@ -118,6 +120,7 @@ template <typename T>
 auto get_with_shutdown(std::future<T>& future) {
     Expects(future.valid());
     try {
+        // TODO: handle thread shutdown while waiting on future
         return future.get();
     } catch (const std::future_error& exc) {
         if (exc.code() == std::future_errc::broken_promise) {
@@ -159,6 +162,14 @@ auto BackendGuiActions::show_dialog_blocking(
     });
 
     return (get_with_shutdown(future));
+}
+
+auto BackendGuiActions::end_modal_state() const -> void {
+    queue_.TryEnqueue([window_weak = window_weak_]() mutable {
+        if (const auto window = window_weak.get()) {
+            window->set_modal(false);
+        }
+    });
 }
 
 [[nodiscard]] auto lookup_icons() -> IconSources {
@@ -256,7 +267,9 @@ auto MainWindow::is_model() const -> bool {
 }
 
 auto MainWindow::set_modal(bool value) -> void {
+    Expects(DispatcherQueue().HasThreadAccess());
     using namespace Microsoft::UI::Windowing;
+
     if (is_modal_ == value) {
         return;
     }
@@ -283,40 +296,6 @@ void MainWindow::Window_Closed(IInspectable const&, WindowEventArgs const& args)
     if (is_modal_) {
         // prevent close during modal dialog.
         args.Handled(true);
-    }
-}
-
-auto MainWindow::PickSingleFileButton_Click(IInspectable const& sender,
-                                            RoutedEventArgs const&)
-    -> Windows::Foundation::IAsyncAction {
-    using namespace Microsoft::Windows::Storage::Pickers;
-
-    if (auto button = sender.as<Controls::Button>()) {
-        // disable the button to avoid double-clicking
-        button.IsEnabled(false);
-        const auto id = AppWindow().Id();
-
-        // auto picker =
-        // FileOpenPicker(button.XamlRoot().ContentIslandEnvironment().AppWindowId());
-        auto picker = FileOpenPicker {nullptr};
-        try {
-            picker = FileOpenPicker(id);
-        } catch (...) {
-            std::terminate();
-        }
-
-        picker.CommitButtonText(L"Pick File");
-        picker.SuggestedStartLocation(PickerLocationId::DocumentsLibrary);
-        picker.ViewMode(PickerViewMode::List);
-
-        // Show the picker dialog window
-        auto file = co_await picker.PickSingleFileAsync();
-
-        PickedSingleFileTextBlock().Text(file != nullptr ? L"Picked: " + file.Path()
-                                                         : L"No file selected.");
-
-        // re-enable the button
-        button.IsEnabled(true);
     }
 }
 
@@ -532,28 +511,23 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveCurrentModal requ
 
     try {
         auto dialog = Controls::ContentDialog {};
-        dialog.XamlRoot(this->Content().XamlRoot());
+        dialog.XamlRoot(Content().XamlRoot());
 
         dialog.Style(Application::Current()
                          .Resources()
                          .Lookup(box_value(L"DefaultContentDialogStyle"))
                          .as<Style>());
 
-        dialog.Title(box_value(L"Save your work?"));
+        dialog.Title(box_value(L"LogikSim"));
         dialog.PrimaryButtonText(L"Save");
-        dialog.SecondaryButtonText(L"Don't Save");
+        dialog.SecondaryButtonText(L"Don't save");
         dialog.CloseButtonText(L"Cancel");
+        dialog.Content(
+            box_value(L"Do you want to save changes to " + request.filename.native()));
         dialog.DefaultButton(Controls::ContentDialogButton::Primary);
-        //// dialog.Content(Controls::ContentDialogContent {});
 
-        {
-            set_modal(true);
-            auto _ = gsl::final_action([&] { set_modal(false); });
+        co_await dialog.ShowAsync();
 
-            co_await dialog.ShowAsync();
-        }
-
-        static_cast<void>(request);
         promise.set_value(logicsim::exporting::SaveCurrentNo {});
     } catch (...) {
         promise.set_exception(std::current_exception());
@@ -564,31 +538,26 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveCurrentModal requ
 auto MainWindow::show_dialog_blocking(logicsim::exporting::OpenFileModal request,
                                       std::promise<ModalResult> promise)
     -> Windows::Foundation::IAsyncAction {
-    Expects(DispatcherQueue().HasThreadAccess());
     using namespace Microsoft::Windows::Storage::Pickers;
-    // using namespace Windows::Storage::Pickers;
+    Expects(DispatcherQueue().HasThreadAccess());
 
     const auto lifetime [[maybe_unused]] = get_strong();
 
     try {
         const auto window_id = AppWindow().Id();
-        // auto hwnd = logicsim::try_get_hwnd(MainGrid());
-        // Expects(hwnd);
-
         auto picker = FileOpenPicker {window_id};
-        // <--- need to give window_id
-        // <--- crashes with error: REGDB_E_CLASSNOTREG Class not registered
-
-        // picker.as<IInitializeWithWindow>()->Initialize(hwnd);
 
         picker.SuggestedStartLocation(PickerLocationId::DocumentsLibrary);
         picker.ViewMode(PickerViewMode::List);
-        picker.FileTypeFilter().Append(L"*");
+        picker.FileTypeFilter().Append(L"*");  // TODO: configure & pass from model
 
-        // Show the picker dialog window
-        auto file = co_await picker.PickSingleFileAsync();
-
-        promise.set_value(logicsim::exporting::OpenFileCancel {});
+        if (const auto result = co_await picker.PickSingleFileAsync()) {
+            promise.set_value(logicsim::exporting::OpenFileOpen {
+                .filename = std::filesystem::path {std::wstring {result.Path()}},
+            });
+        } else {
+            promise.set_value(logicsim::exporting::OpenFileCancel {});
+        }
     } catch (...) {
         promise.set_exception(std::current_exception());
     }
@@ -598,15 +567,36 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::OpenFileModal request
 auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveFileModal request,
                                       std::promise<ModalResult> promise)
     -> Windows::Foundation::IAsyncAction {
+    using namespace Microsoft::Windows::Storage::Pickers;
+    using namespace Windows::Foundation::Collections;
     Expects(DispatcherQueue().HasThreadAccess());
 
     const auto lifetime [[maybe_unused]] = get_strong();
 
     try {
-        promise.set_value(logicsim::exporting::SaveFileCancel {});
-    } catch (...) {
+        const auto window_id = AppWindow().Id();
+        auto picker = FileSavePicker {window_id};
+
+        picker.SuggestedStartLocation(PickerLocationId::DocumentsLibrary);
+        picker.FileTypeChoices().Insert(L"Circuit Files",
+                                        single_threaded_vector<hstring>({L".ls2"}));
+        picker.DefaultFileExtension(L".ls2");  // TODO: pass from model
+        picker.SuggestedFileName(L"Circuit");  // TODO: pass from model
+        picker.SuggestedFolder(L"");           // TODO: pass from model
+
+        if (const auto result = co_await picker.PickSaveFileAsync()) {
+            promise.set_value(logicsim::exporting::SaveFileSave {
+                .filename = std::filesystem::path {std::wstring {result.Path()}},
+            });
+        } else {
+            promise.set_value(logicsim::exporting::SaveFileCancel {});
+        }
+    }
+
+    catch (...) {
         promise.set_exception(std::current_exception());
     }
+
     co_return;
 }
 
@@ -618,7 +608,45 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::ErrorMessage message,
     const auto lifetime [[maybe_unused]] = get_strong();
 
     try {
-        static_cast<void>(message);
+        auto dialog = Controls::ContentDialog {};
+        dialog.XamlRoot(Content().XamlRoot());
+
+        dialog.Style(Application::Current()
+                         .Resources()
+                         .Lookup(box_value(L"DefaultContentDialogStyle"))
+                         .as<Style>());
+
+        const auto title =
+            std::visit(logicsim::overload(
+                           [](const logicsim::exporting::SaveFileError&) -> hstring {
+                               return L"LogikSim cannot save this file.";
+                           },
+                           [](const logicsim::exporting::OpenFileError&) -> hstring {
+                               return L"LogikSim cannot open this file.";
+                           }),
+                       message);
+
+        const auto content = std::visit(
+            logicsim::overload(
+                [](const logicsim::exporting::SaveFileError& error) -> hstring {
+                    return hstring {error.filename.native()};
+                },
+                [](const logicsim::exporting::OpenFileError& error) -> hstring {
+                    if (error.message.empty()) {
+                        return hstring {error.filename.native()};
+                    }
+                    return error.filename.native() + L"\n\n" + to_hstring(error.message);
+                }),
+            message);
+
+        dialog.Title(box_value(title));
+        dialog.PrimaryButtonText(L"OK");
+        dialog.IsSecondaryButtonEnabled(false);
+        dialog.CloseButtonText(L"Cancel");
+        dialog.Content(box_value(content));
+        dialog.DefaultButton(Controls::ContentDialogButton::Primary);
+
+        co_await dialog.ShowAsync();
 
         promise.set_value();
     } catch (...) {
