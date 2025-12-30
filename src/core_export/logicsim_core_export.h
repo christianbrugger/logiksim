@@ -558,11 +558,12 @@ enum class FileAction : uint8_t {
     open_file = 1,
     save_file = 2,
     save_as_file = 3,
+    exit_application = 4,
 
-    load_example_simple = 4,
-    load_example_elements_wires = 5,
-    load_example_elements = 6,
-    load_example_wires = 7,
+    load_example_simple = 5,
+    load_example_elements_wires = 6,
+    load_example_elements = 7,
+    load_example_wires = 8,
 };
 
 namespace detail {
@@ -580,6 +581,9 @@ enum class NextStepEnum : uint8_t {
     // ErrorMessage - variant
     save_file_error = 4,
     open_file_error = 5,
+
+    // ExitApplication
+    exit_application = 6,
 };
 
 // ModalResult - variant
@@ -668,7 +672,11 @@ struct OpenFileError {
 
 using ErrorMessage = std::variant<SaveFileError, OpenFileError>;
 
-using NextActionStep = std::variant<ErrorMessage, ModalRequest>;
+struct ExitApplication {
+    [[nodiscard]] auto operator==(const ExitApplication&) const -> bool = default;
+};
+
+using NextActionStep = std::variant<ErrorMessage, ModalRequest, ExitApplication>;
 
 static_assert(std::regular<NextActionStep>);
 
@@ -997,6 +1005,8 @@ namespace detail {
                 .message = message_out.string(),
 
             };
+        case exit_application:
+            return ExitApplication {};
     };
     std::terminate();
 }

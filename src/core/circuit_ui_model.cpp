@@ -126,6 +126,10 @@ auto OpenFileError::format() const -> std::string {
         filename, message);
 }
 
+auto ExitApplication::format() -> std::string {
+    return "ExitApplication{}";
+}
+
 auto CircuitAction::format() const -> std::string {
     return fmt::format(
         "CircuitAction{{\n"
@@ -206,6 +210,8 @@ auto format(circuit_ui_model::FileAction action) -> std::string {
             return "save_file";
         case save_as_file:
             return "save_as_file";
+        case exit_application:
+            return "exit_application";
         case load_example_simple:
             return "load_example_simple";
         case load_example_elements_and_wires:
@@ -452,6 +458,7 @@ namespace {
 
         case new_file:
         case open_file:
+        case exit_application:
         case load_example_simple:
         case load_example_elements_and_wires:
         case load_example_elements:
@@ -630,6 +637,10 @@ auto CircuitUIModel::next_modal_action(
                 next_step = SaveFileModal {};
                 return;
             }
+            case FileAction::exit_application: {
+                next_step = ExitApplication {};
+                return;
+            }
 
             case FileAction::new_file:
             case FileAction::load_example_simple:
@@ -724,6 +735,9 @@ auto CircuitUIModel::do_modal_action(
                 }
                 return;
             }
+
+            case exit_application:
+                return;
 
             case load_example_simple:
                 status |= load_circuit_example(1);

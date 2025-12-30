@@ -84,6 +84,7 @@ class BackendGuiActions : public logicsim::IBackendGuiActions {
     auto show_dialog_blocking(logicsim::exporting::ErrorMessage message) const
         -> void override;
     auto end_modal_state() const -> void override;
+    auto exit_application_no_dialog() const -> void override;
 
    private:
     weak_ref<MainWindow> window_weak_;
@@ -167,7 +168,15 @@ auto BackendGuiActions::show_dialog_blocking(
 auto BackendGuiActions::end_modal_state() const -> void {
     queue_.TryEnqueue([window_weak = window_weak_]() mutable {
         if (const auto window = window_weak.get()) {
-            window->set_modal(false);
+            window->end_modal_state();
+        }
+    });
+}
+
+auto BackendGuiActions::exit_application_no_dialog() const -> void {
+    queue_.TryEnqueue([window_weak = window_weak_]() mutable {
+        if (const auto window = window_weak.get()) {
+            window->exit_application_no_dialog();
         }
     });
 }
@@ -262,10 +271,6 @@ auto MainWindow::InitializeComponent() -> void {
     backend_tasks_ = std::move(task_parts.source);
 }
 
-auto MainWindow::is_model() const -> bool {
-    return is_modal_;
-}
-
 auto MainWindow::set_modal(bool value) -> void {
     Expects(DispatcherQueue().HasThreadAccess());
     using namespace Microsoft::UI::Windowing;
@@ -293,10 +298,18 @@ auto MainWindow::set_modal(bool value) -> void {
 }
 
 void MainWindow::Window_Closed(IInspectable const&, WindowEventArgs const& args) {
-    if (is_modal_) {
-        // prevent close during modal dialog.
-        args.Handled(true);
+    // Only if destroyed is set we are destroying the window.
+    // This is initiated by the backend.
+    if (is_destroyed_) {
+        return;
     }
+    args.Handled(true);
+
+    if (is_modal_) {
+        // ignore any close requests while modal dialog is active.
+        return;
+    }
+    ExitCommand().Execute(nullptr);
 }
 
 auto MainWindow::Page_ActualThemeChanged(FrameworkElement const&, IInspectable const&)
@@ -405,6 +418,9 @@ void MainWindow::CanvasPanel_KeyDown(IInspectable const&,
 
 auto MainWindow::change_title(const hstring& value) -> void {
     Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        return;
+    }
 
     const auto app_title = L"LogikSim";
 
@@ -420,12 +436,19 @@ auto MainWindow::change_title(const hstring& value) -> void {
 auto MainWindow::register_swap_chain(
     const winrt::Microsoft::Graphics::Canvas::CanvasSwapChain& swap_chain) -> void {
     Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        return;
+    }
+
     CanvasPanel().SwapChain(swap_chain);
 }
 
 auto MainWindow::config_update(logicsim::exporting::CircuitUIConfig config__) -> void {
-    Expects(DispatcherQueue().HasThreadAccess());
     using namespace logicsim::exporting;
+    Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        return;
+    }
 
     // last_config_ needs to be set first, as notify handlers fire immediately.
     const auto last_config = std::exchange(last_config_, std::move(config__));
@@ -493,6 +516,9 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::ModalRequest request,
                                       std::promise<ModalResult> promise)
     -> Windows::Foundation::IAsyncAction {
     Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        co_return;
+    }
 
     co_await std::visit(
         [&](auto&& value) -> Windows::Foundation::IAsyncAction {
@@ -501,16 +527,38 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::ModalRequest request,
         std::move(request));
 }
 
+namespace {
+
+[[nodiscard]] auto to_modal_result(Controls::ContentDialogResult result)
+    -> logicsim::exporting::ModalResult {
+    using namespace winrt::Microsoft::UI::Xaml::Controls;
+
+    switch (result) {
+        case ContentDialogResult::None:
+            return logicsim::exporting::SaveCurrentCancel {};
+        case ContentDialogResult::Primary:
+            return logicsim::exporting::SaveCurrentYes {};
+        case ContentDialogResult::Secondary:
+            return logicsim::exporting::SaveCurrentNo {};
+    };
+    std::terminate();
+};
+
+}  // namespace
+
 auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveCurrentModal request,
                                       std::promise<ModalResult> promise)
-
     -> Windows::Foundation::IAsyncAction {
+    using namespace winrt::Microsoft::UI::Xaml::Controls;
     Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        co_return;
+    }
 
     const auto lifetime [[maybe_unused]] = get_strong();
 
     try {
-        auto dialog = Controls::ContentDialog {};
+        auto dialog = ContentDialog {};
         dialog.XamlRoot(Content().XamlRoot());
 
         dialog.Style(Application::Current()
@@ -524,11 +572,11 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveCurrentModal requ
         dialog.CloseButtonText(L"Cancel");
         dialog.Content(
             box_value(L"Do you want to save changes to " + request.filename.native()));
-        dialog.DefaultButton(Controls::ContentDialogButton::Primary);
+        dialog.DefaultButton(ContentDialogButton::Primary);
 
-        co_await dialog.ShowAsync();
+        const auto result = co_await dialog.ShowAsync();
 
-        promise.set_value(logicsim::exporting::SaveCurrentNo {});
+        promise.set_value(to_modal_result(result));
     } catch (...) {
         promise.set_exception(std::current_exception());
     }
@@ -538,8 +586,11 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveCurrentModal requ
 auto MainWindow::show_dialog_blocking(logicsim::exporting::OpenFileModal request,
                                       std::promise<ModalResult> promise)
     -> Windows::Foundation::IAsyncAction {
-    using namespace Microsoft::Windows::Storage::Pickers;
+    using namespace winrt::Microsoft::Windows::Storage::Pickers;
     Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        co_return;
+    }
 
     const auto lifetime [[maybe_unused]] = get_strong();
 
@@ -551,7 +602,9 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::OpenFileModal request
         picker.ViewMode(PickerViewMode::List);
         picker.FileTypeFilter().Append(L"*");  // TODO: configure & pass from model
 
-        if (const auto result = co_await picker.PickSingleFileAsync()) {
+        const auto result = co_await picker.PickSingleFileAsync();
+
+        if (result) {
             promise.set_value(logicsim::exporting::OpenFileOpen {
                 .filename = std::filesystem::path {std::wstring {result.Path()}},
             });
@@ -570,6 +623,9 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveFileModal request
     using namespace Microsoft::Windows::Storage::Pickers;
     using namespace Windows::Foundation::Collections;
     Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        co_return;
+    }
 
     const auto lifetime [[maybe_unused]] = get_strong();
 
@@ -584,7 +640,9 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveFileModal request
         picker.SuggestedFileName(L"Circuit");  // TODO: pass from model
         picker.SuggestedFolder(L"");           // TODO: pass from model
 
-        if (const auto result = co_await picker.PickSaveFileAsync()) {
+        const auto result = co_await picker.PickSaveFileAsync();
+
+        if (result) {
             promise.set_value(logicsim::exporting::SaveFileSave {
                 .filename = std::filesystem::path {std::wstring {result.Path()}},
             });
@@ -603,12 +661,16 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveFileModal request
 auto MainWindow::show_dialog_blocking(logicsim::exporting::ErrorMessage message,
                                       std::promise<void> promise)
     -> Windows::Foundation::IAsyncAction {
+    using namespace winrt::Microsoft::UI::Xaml::Controls;
     Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        co_return;
+    }
 
     const auto lifetime [[maybe_unused]] = get_strong();
 
     try {
-        auto dialog = Controls::ContentDialog {};
+        auto dialog = ContentDialog {};
         dialog.XamlRoot(Content().XamlRoot());
 
         dialog.Style(Application::Current()
@@ -644,7 +706,7 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::ErrorMessage message,
         dialog.IsSecondaryButtonEnabled(false);
         dialog.CloseButtonText(L"Cancel");
         dialog.Content(box_value(content));
-        dialog.DefaultButton(Controls::ContentDialogButton::Primary);
+        dialog.DefaultButton(ContentDialogButton::Primary);
 
         co_await dialog.ShowAsync();
 
@@ -653,6 +715,25 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::ErrorMessage message,
         promise.set_exception(std::current_exception());
     }
     co_return;
+}
+
+auto MainWindow::end_modal_state() -> void {
+    Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        return;
+    }
+
+    set_modal(false);
+}
+
+auto MainWindow::exit_application_no_dialog() -> void {
+    Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        return;
+    }
+
+    is_destroyed_ = true;
+    this->Close();
 }
 
 auto MainWindow::update_render_size() -> void {
@@ -698,7 +779,7 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
             return;
         }
         set_modal(true);
-        backend_tasks_.push(FileRequestEvent::new_file);
+        backend_tasks_.push(FileAction::new_file);
         return;
     }
     if (sender == OpenCommand()) {
@@ -706,7 +787,7 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
             return;
         }
         set_modal(true);
-        backend_tasks_.push(FileRequestEvent::open_file);
+        backend_tasks_.push(FileAction::open_file);
         return;
     }
     if (sender == SaveCommand()) {
@@ -714,7 +795,7 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
             return;
         }
         set_modal(true);
-        backend_tasks_.push(FileRequestEvent::save_file);
+        backend_tasks_.push(FileAction::save_file);
         return;
     }
     if (sender == SaveAsCommand()) {
@@ -722,7 +803,7 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
             return;
         }
         set_modal(true);
-        backend_tasks_.push(FileRequestEvent::save_as_file);
+        backend_tasks_.push(FileAction::save_as_file);
         return;
     }
     if (sender == ExitCommand()) {
@@ -730,7 +811,7 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
             return;
         }
         set_modal(true);
-        backend_tasks_.push(FileRequestEvent::exit_application);
+        backend_tasks_.push(FileAction::exit_application);
         return;
     }
 
@@ -1020,19 +1101,19 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
     if (sender == ExampleSimpleCommand()) {
-        backend_tasks_.push(FileRequestEvent::load_example_simple);
+        backend_tasks_.push(FileAction::load_example_simple);
         return;
     }
     if (sender == ExampleWiresCommand()) {
-        backend_tasks_.push(FileRequestEvent::load_example_wires);
+        backend_tasks_.push(FileAction::load_example_wires);
         return;
     }
     if (sender == ExampleElementsCommand()) {
-        backend_tasks_.push(FileRequestEvent::load_example_elements);
+        backend_tasks_.push(FileAction::load_example_elements);
         return;
     }
     if (sender == ExampleElementsWiresCommand()) {
-        backend_tasks_.push(FileRequestEvent::load_example_elements_wires);
+        backend_tasks_.push(FileAction::load_example_elements_wires);
         return;
     }
 

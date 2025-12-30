@@ -4,6 +4,7 @@
 
 #include "main_winui/src/ls_overload.h"
 #include "main_winui/src/ls_timer.h"
+#include "main_winui/src/ls_vocabulary.h"
 
 #include <gsl/gsl>
 
@@ -145,37 +146,7 @@ auto render_circuit(RenderBufferSource& render_source,
     return UIStatus {};
 }
 
-[[nodiscard]] auto to_file_action(FileRequestEvent event) -> exporting::FileAction {
-    using namespace exporting;
-    using enum FileRequestEvent;
-
-    switch (event) {
-        case new_file:
-            return FileAction::new_file;
-        case open_file:
-            return FileAction::open_file;
-        case save_file:
-            return FileAction::save_file;
-        case save_as_file:
-            return FileAction::save_as_file;
-
-        case load_example_simple:
-            return FileAction::load_example_simple;
-        case load_example_elements_wires:
-            return FileAction::load_example_elements_wires;
-        case load_example_elements:
-            return FileAction::load_example_elements;
-        case load_example_wires:
-            return FileAction::load_example_wires;
-
-        case exit_application:
-            return FileAction::new_file;
-    };
-
-    std::terminate();
-}
-
-[[nodiscard]] auto handle_file_request(FileRequestEvent event,
+[[nodiscard]] auto handle_file_request(exporting::FileAction file_action,
                                        exporting::CircuitInterface& circuit,
                                        IBackendGuiActions& actions) -> UIStatus {
     using namespace exporting;
@@ -183,7 +154,7 @@ auto render_circuit(RenderBufferSource& render_source,
     auto status = UIStatus {};
     auto next_step = std::optional<NextActionStep> {};
 
-    status |= circuit.file_action(to_file_action(event), next_step);
+    status |= circuit.file_action(file_action, next_step);
 
     while (next_step.has_value()) {
         std::visit(overload(
@@ -194,6 +165,11 @@ auto render_circuit(RenderBufferSource& render_source,
                        [&](const ErrorMessage& message) {
                            actions.show_dialog_blocking(message);
                            next_step = std::nullopt;
+                       },
+                       [&](const ExitApplication&) {
+                           actions.exit_application_no_dialog();
+                           // shutdown backend immediately
+                           throw ShutdownException {"FileRequestEvent::exit_application"};
                        }),
                    next_step.value());
     }
@@ -230,7 +206,7 @@ auto render_circuit(RenderBufferSource& render_source,
     if (const auto* item = std::get_if<CircuitUIConfigEvent>(&task)) {
         return handle_circuit_ui_config_event(*item, circuit);
     }
-    if (const auto* item = std::get_if<FileRequestEvent>(&task)) {
+    if (const auto* item = std::get_if<FileAction>(&task)) {
         return handle_file_request(*item, circuit, actions);
     }
 

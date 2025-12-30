@@ -30,9 +30,6 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     auto InitializeComponent() -> void;
 
-    [[nodiscard]] auto is_model() const -> bool;
-    auto set_modal(bool value) -> void;
-
     // Window
 
     auto Window_Closed(Windows::Foundation::IInspectable const& sender,
@@ -62,7 +59,7 @@ struct MainWindow : MainWindowT<MainWindow> {
     void CanvasPanel_KeyDown(IInspectable const&,
                              Microsoft::UI::Xaml::Input::KeyRoutedEventArgs const& args);
 
-    // Public Methods
+    // Backend Methods
 
     auto change_title(const hstring& title) -> void;
 
@@ -89,6 +86,10 @@ struct MainWindow : MainWindowT<MainWindow> {
                               std::promise<void> promise)
         -> Windows::Foundation::IAsyncAction;
 
+    auto end_modal_state() -> void;
+
+    auto exit_application_no_dialog() -> void;
+
     // UI Command
 
     void XamlUICommand_ExecuteRequested(
@@ -100,10 +101,12 @@ struct MainWindow : MainWindowT<MainWindow> {
         Microsoft::UI::Xaml::Input::CanExecuteRequestedEventArgs const& args);
 
    private:
+    auto set_modal(bool value) -> void;
     auto update_render_size() -> void;
 
    private:
     bool is_modal_ {};
+    bool is_destroyed_ {};
 
     IconSources icon_sources_ {};
     std::jthread backend_thread_ {};

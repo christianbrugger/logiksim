@@ -676,7 +676,7 @@ TEST(CircuitUIModelModal, OpenFromModifiedNewYes) {
         status |= model.file_action(FileAction::open_file, next_step);
         const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
-        ASSERT_TRUE(modal.filename == "Circuit");
+        ASSERT_TRUE(modal.filename == "Circuit.ls2");
     }
 
     {
@@ -728,7 +728,7 @@ TEST(CircuitUIModelModal, NewFromModifiedNewYes) {
         status |= model.file_action(FileAction::new_file, next_step);
         const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
-        ASSERT_TRUE(modal.filename == "Circuit");
+        ASSERT_TRUE(modal.filename == "Circuit.ls2");
     }
 
     {
@@ -769,7 +769,7 @@ TEST(CircuitUIModelModal, NewFromModifiedNewNo) {
         status |= model.file_action(FileAction::new_file, next_step);
         const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
-        ASSERT_TRUE(modal.filename == "Circuit");
+        ASSERT_TRUE(modal.filename == "Circuit.ls2");
     }
 
     {
@@ -799,7 +799,7 @@ TEST(CircuitUIModelModal, NewFromModifiedNewCancel) {
         status |= model.file_action(FileAction::new_file, next_step);
         const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
-        ASSERT_TRUE(modal.filename == "Circuit");
+        ASSERT_TRUE(modal.filename == "Circuit.ls2");
     }
 
     {
@@ -829,7 +829,7 @@ TEST(CircuitUIModelModal, ExampleFromModifiedNewYes) {
         status |= model.file_action(FileAction::load_example_simple, next_step);
         const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
-        ASSERT_TRUE(modal.filename == "Circuit");
+        ASSERT_TRUE(modal.filename == "Circuit.ls2");
     }
 
     {
@@ -877,7 +877,7 @@ TEST(CircuitUIModelModal, OpenFromModifiedNewYesFail) {
         status |= model.file_action(FileAction::open_file, next_step);
         const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
-        ASSERT_TRUE(modal.filename == "Circuit");
+        ASSERT_TRUE(modal.filename == "Circuit.ls2");
     }
     {
         auto next_step = std::optional<NextActionStep> {};
@@ -900,7 +900,7 @@ TEST(CircuitUIModelModal, OpenFromModifiedNewYesFail) {
         status |= model.file_action(FileAction::new_file, next_step);
         const auto request = std::get<ModalRequest>(next_step.value());
         const auto modal = std::get<SaveCurrentModal>(request);
-        ASSERT_TRUE(modal.filename == "Circuit");
+        ASSERT_TRUE(modal.filename == "Circuit.ls2");
     }
     {
         auto next_step = std::optional<NextActionStep> {};

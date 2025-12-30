@@ -45,6 +45,7 @@ class IBackendGuiActions {
         -> exporting::ModalResult = 0;
     virtual auto show_dialog_blocking(exporting::ErrorMessage message) const -> void = 0;
     virtual auto end_modal_state() const -> void = 0;
+    virtual auto exit_application_no_dialog() const -> void = 0;
 };
 
 //
@@ -92,20 +93,6 @@ struct CircuitUIConfigEvent {
     [[nodiscard]] auto operator==(const CircuitUIConfigEvent&) const -> bool = default;
 };
 
-enum class FileRequestEvent {
-    new_file,
-    open_file,
-    save_file,
-    save_as_file,
-
-    load_example_simple,
-    load_example_elements_wires,
-    load_example_elements,
-    load_example_wires,
-
-    exit_application,
-};
-
 using BackendTask = std::variant<  //
     SwapChainParams,               //
     exporting::MousePressEvent,    //
@@ -114,8 +101,8 @@ using BackendTask = std::variant<  //
     exporting::MouseWheelEvent,    //
     exporting::VirtualKey,         //
     exporting::UserActionEvent,    //
-    CircuitUIConfigEvent,          //
-    FileRequestEvent               //
+    exporting::FileAction,         //
+    CircuitUIConfigEvent           //
     >;
 
 using BackendTaskQueue = ::logicsim::ConcurrentBlockingQueue<BackendTask>;

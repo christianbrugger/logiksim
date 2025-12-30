@@ -504,6 +504,8 @@ namespace {
             return FileAction::save_file;
         case save_as_file:
             return FileAction::save_as_file;
+        case exit_application:
+            return FileAction::exit_application;
 
         case load_example_simple:
             return FileAction::load_example_simple;
@@ -554,6 +556,10 @@ namespace {
         if (const auto data = std::get_if<OpenFileError>(error)) {
             return {open_file_error, data->filename, data->message};
         }
+    }
+
+    if (std::holds_alternative<ExitApplication>(next_step.value())) {
+        return {exit_application, {}, {}};
     }
 
     std::terminate();

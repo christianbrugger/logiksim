@@ -110,6 +110,7 @@ enum class FileAction : uint8_t {
     open_file,
     save_file,
     save_as_file,
+    exit_application,
 
     load_example_simple,
     load_example_elements_and_wires,
@@ -201,7 +202,12 @@ struct OpenFileError {
 
 using ErrorMessage = std::variant<SaveFileError, OpenFileError>;
 
-using NextActionStep = std::variant<ErrorMessage, ModalRequest>;
+struct ExitApplication {
+    [[nodiscard]] static auto format() -> std::string;
+    [[nodiscard]] auto operator==(const ExitApplication&) const -> bool = default;
+};
+
+using NextActionStep = std::variant<ErrorMessage, ModalRequest, ExitApplication>;
 
 static_assert(std::regular<NextActionStep>);
 
