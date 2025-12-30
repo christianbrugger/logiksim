@@ -1,7 +1,6 @@
 #pragma once
 
 #include "MainWindow.g.h"
-#include "main_winui/LayeredFontIcon.h"
 #include "main_winui/src/backend_thread.h"
 #include "main_winui/src/ls_key_tracker.h"
 #include "main_winui/src/render_buffer.h"
@@ -38,6 +37,11 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     auto Window_Closed(Windows::Foundation::IInspectable const& sender,
                        Microsoft::UI::Xaml::WindowEventArgs const& args) -> void;
+
+    auto PickSingleFileButton_Click(
+        winrt::Windows::Foundation::IInspectable const& sender,
+        winrt::Microsoft::UI::Xaml::RoutedEventArgs const& e)
+        -> Windows::Foundation::IAsyncAction;
 
     // Page
 

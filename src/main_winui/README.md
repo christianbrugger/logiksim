@@ -40,10 +40,18 @@ Make the following changes to the `main_winui.vcxproj`:
 <Project ...>
   <PropertyGroup Label="Globals">
     ...
+    <!-- <AppxPackage>true</AppxPackage> -->
+    ...
+    <!-- <EnableMsixTooling>true</EnableMsixTooling> -->
+    ...
+    <!-- modified start -->
     <AppxPackage>false</AppxPackage>
+    <EnableMsixTooling>false</EnableMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
-	<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-	<OutputType>WinExe</OutputType>
+    <OutputType>WinExe</OutputType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <WindowsAppSdkUndockedRegFreeWinRTInitialize>true</WindowsAppSdkUndockedRegFreeWinRTInitialize>
+    <!-- modified end -->
   </PropertyGroup>
   ...
 </Project>

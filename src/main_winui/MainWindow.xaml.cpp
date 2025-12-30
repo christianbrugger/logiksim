@@ -286,6 +286,40 @@ void MainWindow::Window_Closed(IInspectable const&, WindowEventArgs const& args)
     }
 }
 
+auto MainWindow::PickSingleFileButton_Click(IInspectable const& sender,
+                                            RoutedEventArgs const&)
+    -> Windows::Foundation::IAsyncAction {
+    using namespace Microsoft::Windows::Storage::Pickers;
+
+    if (auto button = sender.as<Controls::Button>()) {
+        // disable the button to avoid double-clicking
+        button.IsEnabled(false);
+        const auto id = AppWindow().Id();
+
+        // auto picker =
+        // FileOpenPicker(button.XamlRoot().ContentIslandEnvironment().AppWindowId());
+        auto picker = FileOpenPicker {nullptr};
+        try {
+            picker = FileOpenPicker(id);
+        } catch (...) {
+            std::terminate();
+        }
+
+        picker.CommitButtonText(L"Pick File");
+        picker.SuggestedStartLocation(PickerLocationId::DocumentsLibrary);
+        picker.ViewMode(PickerViewMode::List);
+
+        // Show the picker dialog window
+        auto file = co_await picker.PickSingleFileAsync();
+
+        PickedSingleFileTextBlock().Text(file != nullptr ? L"Picked: " + file.Path()
+                                                         : L"No file selected.");
+
+        // re-enable the button
+        button.IsEnabled(true);
+    }
+}
+
 auto MainWindow::Page_ActualThemeChanged(FrameworkElement const&, IInspectable const&)
     -> void {
     // Icons need to be cleared first as otherwise they are not updated, if the same
@@ -394,11 +428,12 @@ auto MainWindow::change_title(const hstring& value) -> void {
     Expects(DispatcherQueue().HasThreadAccess());
 
     const auto app_title = L"LogikSim";
-    MainTitleBar().Title(value);
 
     if (value.empty()) {
+        MainTitleBar().Title(app_title);
         Title(app_title);
     } else {
+        MainTitleBar().Title(value);
         Title(value + L" - " + app_title);
     }
 }
