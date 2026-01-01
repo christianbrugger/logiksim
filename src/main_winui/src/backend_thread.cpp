@@ -179,6 +179,24 @@ auto render_circuit(RenderBufferSource& render_source,
     return status;
 }
 
+[[nodiscard]] auto handle_nonmodal_open_request(const OpenFileNonModalEvent& event,
+                                                exporting::CircuitInterface& circuit,
+                                                IBackendGuiActions& actions) -> UIStatus {
+    using namespace exporting;
+
+    auto status = UIStatus {};
+    auto message = std::optional<ErrorMessage> {};
+
+    status |= circuit.nonmodal_open(event.filename, message);
+
+    if (message) {
+        actions.show_dialog_blocking(message.value());
+    }
+    actions.end_modal_state();
+
+    return status;
+}
+
 [[nodiscard]] auto submit_backend_task(const BackendTask& task,
                                        RenderBufferSource& render_source,
                                        exporting::CircuitInterface& circuit,
@@ -208,6 +226,9 @@ auto render_circuit(RenderBufferSource& render_source,
     }
     if (const auto* item = std::get_if<FileAction>(&task)) {
         return handle_file_request(*item, circuit, actions);
+    }
+    if (const auto* item = std::get_if<OpenFileNonModalEvent>(&task)) {
+        return handle_nonmodal_open_request(*item, circuit, actions);
     }
 
     if (const auto* item = std::get_if<SwapChainParams>(&task)) {

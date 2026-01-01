@@ -23,10 +23,7 @@ struct IconSources {
 };
 
 struct MainWindow : MainWindowT<MainWindow> {
-    MainWindow() {
-        // Xaml objects should not call InitializeComponent during construction.
-        // See https://github.com/microsoft/cppwinrt/tree/master/nuget#initializecomponent
-    }
+    MainWindow(std::optional<std::filesystem::path> path = {});
 
     auto InitializeComponent() -> void;
 
@@ -103,8 +100,10 @@ struct MainWindow : MainWindowT<MainWindow> {
    private:
     auto set_modal(bool value) -> void;
     auto update_render_size() -> void;
+    auto update_icons_and_button_states() -> void;
 
    private:
+    std::optional<std::filesystem::path> command_line_file_ {};
     bool is_modal_ {};
     bool is_destroyed_ {};
 

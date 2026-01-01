@@ -228,6 +228,12 @@ auto clear_simulation_icons(MainWindow& w) -> void {
 
 }  // namespace
 
+MainWindow::MainWindow(std::optional<std::filesystem::path> path__)
+    : command_line_file_ {std::move(path__)} {
+    // Xaml objects should not call InitializeComponent during construction.
+    // See https://github.com/microsoft/cppwinrt/tree/master/nuget#initializecomponent
+}
+
 auto MainWindow::InitializeComponent() -> void {
     MainWindowT<MainWindow>::InitializeComponent();
 
@@ -269,6 +275,14 @@ auto MainWindow::InitializeComponent() -> void {
 
     render_buffer_control_ = std::move(buffer_parts.control);
     backend_tasks_ = std::move(task_parts.source);
+
+    // open command line file
+    if (command_line_file_) {
+        set_modal(true);
+        backend_tasks_.push(logicsim::OpenFileNonModalEvent {
+            .filename = std::exchange(command_line_file_, std::nullopt).value(),
+        });
+    }
 }
 
 auto MainWindow::set_modal(bool value) -> void {
@@ -280,15 +294,11 @@ auto MainWindow::set_modal(bool value) -> void {
     }
     is_modal_ = value;
 
-    ContentControl().IsEnabled(!value);
-
     // gray out icons
-    if (value) {
-        set_simulation_icons(*this, icon_sources_, std::nullopt);
-    } else {
-        set_simulation_icons(*this, icon_sources_, last_config_);
-    }
-
+    update_icons_and_button_states();
+    // disable main window
+    ContentControl().IsEnabled(!value);
+    // disable resize
     auto presenter = AppWindow().Presenter().as<OverlappedPresenter>();
     if (presenter) {
         presenter.IsMaximizable(!value);
@@ -423,14 +433,10 @@ auto MainWindow::change_title(const hstring& value) -> void {
     }
 
     const auto app_title = L"LogikSim";
+    const auto title = value.empty() ? app_title : value + L" - " + app_title;
 
-    if (value.empty()) {
-        MainTitleBar().Title(app_title);
-        Title(app_title);
-    } else {
-        MainTitleBar().Title(value);
-        Title(value + L" - " + app_title);
-    }
+    MainTitleBar().Title(title);
+    Title(title);
 }
 
 auto MainWindow::register_swap_chain(
@@ -458,10 +464,7 @@ auto MainWindow::config_update(logicsim::exporting::CircuitUIConfig config__) ->
     if (!last_config.has_value() ||
         ((last_config->state.type == CircuitStateType::Simulation) !=
          (new_config.state.type == CircuitStateType::Simulation))) {
-        set_simulation_icons(*this, icon_sources_, last_config_);
-
-        StartSimulationCommand().NotifyCanExecuteChanged();
-        StopSimulationCommand().NotifyCanExecuteChanged();
+        update_icons_and_button_states();
     }
 
     // Toggles
@@ -574,6 +577,7 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveCurrentModal requ
             box_value(L"Do you want to save changes to " + request.filename.native()));
         dialog.DefaultButton(ContentDialogButton::Primary);
 
+        set_modal(true);
         const auto result = co_await dialog.ShowAsync();
 
         promise.set_value(to_modal_result(result));
@@ -716,6 +720,7 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::ErrorMessage message,
         dialog.Content(box_value(content));
         dialog.DefaultButton(ContentDialogButton::Primary);
 
+        set_modal(true);
         co_await dialog.ShowAsync();
 
         promise.set_value();
@@ -1218,17 +1223,27 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
 void MainWindow::XamlUICommand_CanExecuteRequest(
     Input::XamlUICommand const& sender, Input::CanExecuteRequestedEventArgs const& args) {
     if (sender == StartSimulationCommand()) {
-        args.CanExecute(last_config_.has_value() &&
+        args.CanExecute(!is_modal_ && last_config_.has_value() &&
                         last_config_->state.type !=
                             logicsim::exporting::CircuitStateType::Simulation);
         return;
     }
     if (sender == StopSimulationCommand()) {
-        args.CanExecute(last_config_.has_value() &&
+        args.CanExecute(!is_modal_ && last_config_.has_value() &&
                         last_config_->state.type ==
                             logicsim::exporting::CircuitStateType::Simulation);
         return;
     }
+}
+
+auto MainWindow::update_icons_and_button_states() -> void {
+    if (is_modal_) {
+        set_simulation_icons(*this, icon_sources_, std::nullopt);
+    } else {
+        set_simulation_icons(*this, icon_sources_, last_config_);
+    }
+    StartSimulationCommand().NotifyCanExecuteChanged();
+    StopSimulationCommand().NotifyCanExecuteChanged();
 }
 
 }  // namespace winrt::main_winui::implementation

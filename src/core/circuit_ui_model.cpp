@@ -376,6 +376,12 @@ auto CircuitUIModel::display_filename() const -> std::filesystem::path {
     return get_filename_no_extension(save_information_.name_or_path);
 }
 
+auto CircuitUIModel::calculate_is_modified() const -> bool {
+    Expects(class_invariant_holds());
+
+    return serialize(circuit_store_, config_) != save_information_.serialized;
+}
+
 auto CircuitUIModel::do_action(UserAction action,
                                std::optional<point_device_fine_t> position) -> UIStatus {
     Expects(class_invariant_holds());
@@ -507,8 +513,7 @@ auto CircuitUIModel::file_action(FileAction action,
     auto current_action = std::optional<CircuitAction> {};
 
     if (requires_save_current_prompt(action)) {
-        const auto is_modifed =
-            serialize(circuit_store_, config_) != save_information_.serialized;
+        const auto is_modifed = calculate_is_modified();
 
         if (is_modifed) {
             next_step = SaveCurrentModal {
@@ -1291,6 +1296,49 @@ auto set_simulation_config(CircuitUIModel& model, SimulationConfig value) -> UIS
     auto config = model.config();
     config.simulation = value;
     return model.set_config(config);
+}
+
+auto nonmodal_open(CircuitUIModel& model, const std::filesystem::path& filename,
+                   std::optional<circuit_ui_model::ErrorMessage>& error_message)
+    -> UIStatus {
+    using namespace circuit_ui_model;
+
+    auto status = UIStatus {};
+    auto next_step = std::optional<NextActionStep> {};
+    auto message_out = std::optional<ErrorMessage> {};
+
+    status |= model.file_action(FileAction::open_file, next_step);
+
+    while (next_step.has_value()) {
+        std::visit(overload(
+                       [&](const ModalRequest& request) {
+                           const auto response = std::visit(
+                               overload(
+                                   [&](const SaveCurrentModal&) -> ModalResult {
+                                       return SaveCurrentCancel {};  // abort
+                                   },
+                                   [&](const OpenFileModal&) -> ModalResult {
+                                       return OpenFileOpen {.filename = filename};
+                                   },
+                                   [&](const SaveFileModal&) -> ModalResult {
+                                       std::terminate();  // unsupported
+                                   }),
+                               request);
+                           status |= model.submit_modal_result(response, next_step);
+                       },
+                       [&](const ErrorMessage& message) {
+                           Expects(!message_out);
+                           message_out = message;
+                           next_step = std::nullopt;
+                       },
+                       [&](const ExitApplication&) {
+                           std::terminate();  // unsupported
+                       }),
+                   next_step.value());
+    }
+
+    error_message = message_out;
+    return status;
 }
 
 }  // namespace logicsim

@@ -6,6 +6,12 @@
 
 #include <gsl/gsl>
 
+#include <processenv.h>
+
+#include <filesystem>
+#include <optional>
+#include <string>
+
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;
 
@@ -40,6 +46,32 @@ auto attach_console() -> void {
     freopen_s((FILE**)stderr, "CONOUT$", "w", stderr);
 }
 
+[[nodiscard]] auto get_command_line_argument(int index) -> std::optional<std::wstring> {
+    Expects(index >= 0);
+
+    int argc = 0;
+    PWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    auto _ = gsl::final_action([&] { LocalFree(argv); });
+
+    if (argv && argc > index) {
+        return std::wstring {argv[index]};
+    }
+    return std::nullopt;
+}
+
+[[nodiscard]] auto get_command_line_path() -> std::optional<std::filesystem::path> {
+    const auto index = 1;
+
+    if (const auto arg = get_command_line_argument(index)) {
+        const auto path = std::filesystem::path {arg.value()};
+        if (std::filesystem::is_regular_file(path)) {
+            return path;
+        }
+    }
+
+    return std::nullopt;
+}
+
 }  // namespace
 
 /// <summary>
@@ -49,7 +81,7 @@ auto attach_console() -> void {
 void App::OnLaunched([[maybe_unused]] LaunchActivatedEventArgs const& e) {
     attach_console();
 
-    window = make<MainWindow>();
+    window = make<MainWindow>(get_command_line_path());
     window.Activate();
 }
 

@@ -93,6 +93,12 @@ struct CircuitUIConfigEvent {
     [[nodiscard]] auto operator==(const CircuitUIConfigEvent&) const -> bool = default;
 };
 
+struct OpenFileNonModalEvent {
+    std::filesystem::path filename {};
+
+    [[nodiscard]] auto operator==(const OpenFileNonModalEvent&) const -> bool = default;
+};
+
 using BackendTask = std::variant<  //
     SwapChainParams,               //
     exporting::MousePressEvent,    //
@@ -102,7 +108,8 @@ using BackendTask = std::variant<  //
     exporting::VirtualKey,         //
     exporting::UserActionEvent,    //
     exporting::FileAction,         //
-    CircuitUIConfigEvent           //
+    CircuitUIConfigEvent,          //
+    OpenFileNonModalEvent          //
     >;
 
 using BackendTaskQueue = ::logicsim::ConcurrentBlockingQueue<BackendTask>;

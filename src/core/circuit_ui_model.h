@@ -366,6 +366,7 @@ class CircuitUIModel {
     [[nodiscard]] auto statistics() const -> Statistics;
     [[nodiscard]] auto layout() const -> const Layout&;
     [[nodiscard]] auto display_filename() const -> std::filesystem::path;
+    [[nodiscard]] auto calculate_is_modified() const -> bool;
 
     // render
     auto render(BLImage& bl_image, device_pixel_ratio_t device_pixel_ratio) -> void;
@@ -475,25 +476,22 @@ class CircuitUIModel {
 };
 
 //
-// CircuitWidgetState
+// Free methods
 //
 
 [[nodiscard]] auto set_circuit_state(CircuitUIModel& model, CircuitWidgetState value)
     -> UIStatus;
-
-//
-// RenderConfig
-//
-
 [[nodiscard]] auto set_render_config(CircuitUIModel& model, WidgetRenderConfig value)
     -> UIStatus;
-
-//
-// SimulationConfig
-//
-
 [[nodiscard]] auto set_simulation_config(CircuitUIModel& model, SimulationConfig value)
     -> UIStatus;
+
+/*
+ * Open file without dialogs. Does nothing if the circuit is modified.
+ */
+[[nodiscard]] auto nonmodal_open(
+    CircuitUIModel& model, const std::filesystem::path& filename,
+    std::optional<circuit_ui_model::ErrorMessage>& error_message) -> UIStatus;
 
 }  // namespace logicsim
 
