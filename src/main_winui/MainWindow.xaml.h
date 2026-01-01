@@ -37,6 +37,14 @@ struct MainWindow : MainWindowT<MainWindow> {
     auto Page_ActualThemeChanged(Microsoft::UI::Xaml::FrameworkElement const& sender,
                                  Windows::Foundation::IInspectable const& args) -> void;
 
+    // Grid
+
+    auto MainGrid_DragOver(IInspectable const&,
+                           Microsoft::UI::Xaml::DragEventArgs const& args) -> void;
+
+    auto MainGrid_Drop(IInspectable, Microsoft::UI::Xaml::DragEventArgs args)
+        -> Windows::Foundation::IAsyncAction;
+
     // CanvasPanel
 
     auto CanvasPanel_SizeChanged(IInspectable const&,

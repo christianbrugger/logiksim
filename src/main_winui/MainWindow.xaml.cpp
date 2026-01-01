@@ -11,6 +11,9 @@
 #include "main_winui/src/ls_vocabulary.h"
 #include "main_winui/src/ls_xaml_utils.h"
 
+#include <winrt/Windows.ApplicationModel.DataTransfer.h>
+#include <winrt/Windows.Storage.h>
+
 #include <chrono>
 #include <exception>
 #include <filesystem>
@@ -328,6 +331,40 @@ auto MainWindow::Page_ActualThemeChanged(FrameworkElement const&, IInspectable c
     // icon source is set, although now with a different theme color.
     clear_simulation_icons(*this);
     set_simulation_icons(*this, icon_sources_, last_config_);
+}
+
+auto MainWindow::MainGrid_DragOver(IInspectable const&, DragEventArgs const& args)
+    -> void {
+    using namespace winrt::Windows::ApplicationModel::DataTransfer;
+
+    if (is_modal_) {
+        return;
+    }
+
+    if (args.DataView().Contains(StandardDataFormats::StorageItems())) {
+        args.AcceptedOperation(DataPackageOperation::Copy);
+    }
+}
+
+auto MainWindow::MainGrid_Drop(IInspectable, DragEventArgs args)
+    -> Windows::Foundation::IAsyncAction {
+    using namespace winrt::Windows::ApplicationModel::DataTransfer;
+
+    if (is_modal_) {
+        co_return;
+    }
+
+    if (args.DataView().Contains(StandardDataFormats::StorageItems())) {
+        const auto items = co_await args.DataView().GetStorageItemsAsync();
+
+        if (items.Size() == 1 &&
+            items.GetAt(0).IsOfType(winrt::Windows::Storage::StorageItemTypes::File)) {
+            const auto path = items.GetAt(0).Path();
+            set_modal(true);
+            backend_tasks_.push(logicsim::OpenFileEvent {
+                .filename = std::filesystem::path {std::wstring {path}}});
+        }
+    }
 }
 
 auto MainWindow::CanvasPanel_SizeChanged(IInspectable const&, SizeChangedEventArgs const&)
