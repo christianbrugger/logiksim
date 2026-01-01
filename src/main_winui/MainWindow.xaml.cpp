@@ -337,12 +337,11 @@ auto MainWindow::MainGrid_DragOver(IInspectable const&, DragEventArgs const& arg
     -> void {
     using namespace winrt::Windows::ApplicationModel::DataTransfer;
 
-    if (is_modal_) {
-        return;
-    }
-
-    if (args.DataView().Contains(StandardDataFormats::StorageItems())) {
+    if (!is_modal_ && args.DataView().Contains(StandardDataFormats::StorageItems())) {
         args.AcceptedOperation(DataPackageOperation::Copy);
+        args.DragUIOverride().Caption(L"Open Circuit");
+    } else {
+        args.AcceptedOperation(DataPackageOperation::None);
     }
 }
 
@@ -354,15 +353,18 @@ auto MainWindow::MainGrid_Drop(IInspectable, DragEventArgs args)
         co_return;
     }
 
+    const auto lifetime [[maybe_unused]] = get_strong();
+
     if (args.DataView().Contains(StandardDataFormats::StorageItems())) {
         const auto items = co_await args.DataView().GetStorageItemsAsync();
 
-        if (items.Size() == 1 &&
-            items.GetAt(0).IsOfType(winrt::Windows::Storage::StorageItemTypes::File)) {
-            const auto path = items.GetAt(0).Path();
-            set_modal(true);
-            backend_tasks_.push(logicsim::OpenFileEvent {
-                .filename = std::filesystem::path {std::wstring {path}}});
+        for (const auto item : items) {
+            if (item.IsOfType(winrt::Windows::Storage::StorageItemTypes::File)) {
+                set_modal(true);
+                backend_tasks_.push(logicsim::OpenFileEvent {
+                    .filename = std::filesystem::path {std::wstring {item.Path()}}});
+                break;
+            }
         }
     }
 }
