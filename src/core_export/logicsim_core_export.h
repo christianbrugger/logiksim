@@ -244,10 +244,6 @@ LS_NODISCARD LS_CORE_API ls_ui_status_t ls_circuit_submit_modal_result(
     ls_circuit_t* obj, const ls_modal_result_t* modal_result, uint8_t* next_step_enum,
     ls_path_t* path_out, ls_string_t* message_out) LS_NOEXCEPT;
 
-LS_NODISCARD LS_CORE_API ls_ui_status_t ls_circuit_nonmodal_open(
-    ls_circuit_t* obj, ls_path_view_t open_filename, uint8_t* error_message_enum,
-    ls_path_t* path_out, ls_string_t* message_out) LS_NOEXCEPT;
-
 /**
  * @brief: Render the layout to the given buffer.
  *
@@ -590,15 +586,6 @@ enum class NextStepEnum : uint8_t {
     exit_application = 6,
 };
 
-enum class ErrorMessageEnum : uint8_t {
-    // nullopt
-    no_error_message = 0,
-
-    // ErrorMessage - variant
-    save_file_error = 1,
-    open_file_error = 2,
-};
-
 // ModalResult - variant
 enum class ModalResultEnum : uint8_t {
     monostate = 0,
@@ -863,9 +850,6 @@ class CircuitInterface {
         -> UIStatus;
     [[nodiscard]] inline auto submit_modal_result(
         const ModalResult& result, std::optional<NextActionStep>& next_step) -> UIStatus;
-    [[nodiscard]] inline auto nonmodal_open(const std::filesystem::path& filename,
-                                            std::optional<ErrorMessage>& error_message)
-        -> UIStatus;
 
     inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
                               void* pixel_data, intptr_t stride) -> void;
@@ -982,33 +966,6 @@ namespace detail {
                     config.state.editing_default_mouse_action_enum),
             },
     };
-}
-
-[[nodiscard]] inline auto to_exp_error_message(uint8_t error_message_enum,
-                                               const WrappedPath& path_out,
-                                               const WrappedString& message_out)
-    -> std::optional<ErrorMessage> {
-    switch (static_cast<ErrorMessageEnum>(error_message_enum)) {
-        using enum ErrorMessageEnum;
-
-        case no_error_message:
-            ls_expects(path_out.view().empty());
-            ls_expects(message_out.view().empty());
-            return std::nullopt;
-
-        case save_file_error:
-            ls_expects(message_out.view().empty());
-            return SaveFileError {
-                .filename = path_out.path(),
-            };
-        case open_file_error:
-            return OpenFileError {
-                .filename = path_out.path(),
-                .message = message_out.string(),
-
-            };
-    };
-    std::terminate();
 }
 
 [[nodiscard]] inline auto to_exp_next_step(uint8_t next_step_enum,
@@ -1181,25 +1138,6 @@ auto CircuitInterface::submit_modal_result(const ModalResult& result,
         get(), &modal_result, &next_step_enum, path_out.get(), message_out.get());
 
     next_step = detail::to_exp_next_step(next_step_enum, path_out, message_out);
-    return detail::to_exp(status);
-}
-
-inline auto CircuitInterface::nonmodal_open(const std::filesystem::path& filename,
-                                            std::optional<ErrorMessage>& error_message)
-    -> UIStatus {
-    const auto path_view = ls_path_view_t {
-        .data = filename.native().data(),
-        .size = filename.native().size(),
-    };
-
-    auto error_message_enum = uint8_t {};
-    auto path_out = WrappedPath {};
-    auto message_out = WrappedString {};
-    const auto status = ls_circuit_nonmodal_open(get(), path_view, &error_message_enum,
-                                                 path_out.get(), message_out.get());
-
-    error_message =
-        detail::to_exp_error_message(error_message_enum, path_out, message_out);
     return detail::to_exp(status);
 }
 

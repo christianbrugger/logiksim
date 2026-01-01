@@ -179,19 +179,39 @@ auto render_circuit(RenderBufferSource& render_source,
     return status;
 }
 
-[[nodiscard]] auto handle_nonmodal_open_request(const OpenFileNonModalEvent& event,
-                                                exporting::CircuitInterface& circuit,
-                                                IBackendGuiActions& actions) -> UIStatus {
+[[nodiscard]] auto handle_open_request(OpenFileEvent event,
+                                       exporting::CircuitInterface& circuit,
+                                       IBackendGuiActions& actions) -> UIStatus {
     using namespace exporting;
 
     auto status = UIStatus {};
-    auto message = std::optional<ErrorMessage> {};
+    auto next_step = std::optional<NextActionStep> {};
 
-    status |= circuit.nonmodal_open(event.filename, message);
+    status |= circuit.file_action(FileAction::open_file, next_step);
 
-    if (message) {
-        actions.show_dialog_blocking(message.value());
+    while (next_step.has_value()) {
+        std::visit(overload(
+                       [&](const ModalRequest& request) {
+                           const auto response = [&] -> ModalResult {
+                               if (std::holds_alternative<OpenFileModal>(request)) {
+                                   return OpenFileOpen {.filename = event.filename};
+                               }
+                               return actions.show_dialog_blocking(request);
+                           }();
+                           status |= circuit.submit_modal_result(response, next_step);
+                       },
+                       [&](const ErrorMessage& message) {
+                           actions.show_dialog_blocking(message);
+                           next_step = std::nullopt;
+                       },
+                       [&](const ExitApplication&) {
+                           actions.exit_application_no_dialog();
+                           // shutdown backend immediately
+                           throw ShutdownException {"FileRequestEvent::exit_application"};
+                       }),
+                   next_step.value());
     }
+
     actions.end_modal_state();
 
     return status;
@@ -227,8 +247,8 @@ auto render_circuit(RenderBufferSource& render_source,
     if (const auto* item = std::get_if<FileAction>(&task)) {
         return handle_file_request(*item, circuit, actions);
     }
-    if (const auto* item = std::get_if<OpenFileNonModalEvent>(&task)) {
-        return handle_nonmodal_open_request(*item, circuit, actions);
+    if (const auto* item = std::get_if<OpenFileEvent>(&task)) {
+        return handle_open_request(*item, circuit, actions);
     }
 
     if (const auto* item = std::get_if<SwapChainParams>(&task)) {

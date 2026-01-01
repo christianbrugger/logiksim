@@ -1298,47 +1298,4 @@ auto set_simulation_config(CircuitUIModel& model, SimulationConfig value) -> UIS
     return model.set_config(config);
 }
 
-auto nonmodal_open(CircuitUIModel& model, const std::filesystem::path& filename,
-                   std::optional<circuit_ui_model::ErrorMessage>& error_message)
-    -> UIStatus {
-    using namespace circuit_ui_model;
-
-    auto status = UIStatus {};
-    auto next_step = std::optional<NextActionStep> {};
-    auto message_out = std::optional<ErrorMessage> {};
-
-    status |= model.file_action(FileAction::open_file, next_step);
-
-    while (next_step.has_value()) {
-        std::visit(overload(
-                       [&](const ModalRequest& request) {
-                           const auto response = std::visit(
-                               overload(
-                                   [&](const SaveCurrentModal&) -> ModalResult {
-                                       return SaveCurrentCancel {};  // abort
-                                   },
-                                   [&](const OpenFileModal&) -> ModalResult {
-                                       return OpenFileOpen {.filename = filename};
-                                   },
-                                   [&](const SaveFileModal&) -> ModalResult {
-                                       std::terminate();  // unsupported
-                                   }),
-                               request);
-                           status |= model.submit_modal_result(response, next_step);
-                       },
-                       [&](const ErrorMessage& message) {
-                           Expects(!message_out);
-                           message_out = message;
-                           next_step = std::nullopt;
-                       },
-                       [&](const ExitApplication&) {
-                           std::terminate();  // unsupported
-                       }),
-                   next_step.value());
-    }
-
-    error_message = message_out;
-    return status;
-}
-
 }  // namespace logicsim

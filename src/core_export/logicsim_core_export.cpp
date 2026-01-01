@@ -527,27 +527,6 @@ namespace {
 }
 
 [[nodiscard]] auto to_c(
-    const std::optional<logicsim::circuit_ui_model::ErrorMessage>& error_message)
-    -> std::tuple<logicsim::exporting::detail::ErrorMessageEnum, std::filesystem::path,
-                  std::string> {
-    using namespace logicsim::circuit_ui_model;
-    using enum logicsim::exporting::detail::ErrorMessageEnum;
-
-    if (!error_message.has_value()) {
-        return {no_error_message, {}, {}};
-    }
-
-    if (const auto data = std::get_if<SaveFileError>(&*error_message)) {
-        return {save_file_error, data->filename, {}};
-    }
-    if (const auto data = std::get_if<OpenFileError>(&*error_message)) {
-        return {open_file_error, data->filename, data->message};
-    }
-
-    std::terminate();
-}
-
-[[nodiscard]] auto to_c(
     const std::optional<logicsim::circuit_ui_model::NextActionStep>& next_step)
     -> std::tuple<logicsim::exporting::detail::NextStepEnum, std::filesystem::path,
                   std::string> {
@@ -663,30 +642,6 @@ auto ls_circuit_submit_modal_result(ls_circuit_t* obj,
         // next step
         auto [ns_enum, path, message] = to_c(next_step);
         *next_step_enum = std::to_underlying(ns_enum);
-        path_out->value = std::move(path);
-        message_out->value = std::move(message);
-
-        return to_c(status);
-    });
-}
-
-auto ls_circuit_nonmodal_open(ls_circuit_t* obj, ls_path_view_t open_filename,
-                              uint8_t* error_message_enum, ls_path_t* path_out,
-                              ls_string_t* message_out) noexcept -> ls_ui_status_t {
-    return ls_translate_exception([&]() {
-        using namespace logicsim;
-        Expects(obj);
-        Expects(error_message_enum);
-        Expects(path_out);
-        Expects(message_out);
-
-        auto error_message = std::optional<circuit_ui_model::ErrorMessage> {};
-        const auto status =
-            nonmodal_open(obj->model, from_c(open_filename), error_message);
-
-        // error message
-        auto [em_enum, path, message] = to_c(error_message);
-        *error_message_enum = std::to_underlying(em_enum);
         path_out->value = std::move(path);
         message_out->value = std::move(message);
 

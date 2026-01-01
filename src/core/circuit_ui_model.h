@@ -486,13 +486,6 @@ class CircuitUIModel {
 [[nodiscard]] auto set_simulation_config(CircuitUIModel& model, SimulationConfig value)
     -> UIStatus;
 
-/*
- * Open file without dialogs. Does nothing if the circuit is modified.
- */
-[[nodiscard]] auto nonmodal_open(
-    CircuitUIModel& model, const std::filesystem::path& filename,
-    std::optional<circuit_ui_model::ErrorMessage>& error_message) -> UIStatus;
-
 }  // namespace logicsim
 
 #endif

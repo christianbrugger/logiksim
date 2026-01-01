@@ -279,7 +279,7 @@ auto MainWindow::InitializeComponent() -> void {
     // open command line file
     if (command_line_file_) {
         set_modal(true);
-        backend_tasks_.push(logicsim::OpenFileNonModalEvent {
+        backend_tasks_.push(logicsim::OpenFileEvent {
             .filename = std::exchange(command_line_file_, std::nullopt).value(),
         });
     }
