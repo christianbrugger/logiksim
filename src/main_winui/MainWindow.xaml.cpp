@@ -339,7 +339,7 @@ auto MainWindow::MainGrid_DragOver(IInspectable const&, DragEventArgs const& arg
 
     if (!is_modal_ && args.DataView().Contains(StandardDataFormats::StorageItems())) {
         args.AcceptedOperation(DataPackageOperation::Copy);
-        args.DragUIOverride().Caption(L"Open file");
+        args.DragUIOverride().Caption(L"Open File");
     } else {
         args.AcceptedOperation(DataPackageOperation::None);
     }
@@ -500,6 +500,7 @@ auto MainWindow::config_update(logicsim::exporting::CircuitUIConfig config__) ->
     }
 
     // Toggles
+
     WireDelayFlyout().IsChecked(new_config.simulation.use_wire_delay);
     BenchmarkFlyout().IsChecked(new_config.render.do_benchmark);
     DebugInfoDialogFlyout().IsChecked(false);

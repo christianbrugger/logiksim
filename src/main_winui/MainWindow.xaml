@@ -218,12 +218,6 @@
                 <XamlUICommand x:Key="Render4ThreadsCommand" x:Name="Render4ThreadsCommand" Label='4 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
                 <XamlUICommand x:Key="Render8ThreadsCommand" x:Name="Render8ThreadsCommand" Label='8 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
 
-                <!-- Help -->
-                <XamlUICommand x:Key="AboutCommand" x:Name="AboutCommand" Label="About" ExecuteRequested="XamlUICommand_ExecuteRequested">
-                    <XamlUICommand.IconSource>
-                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE946;" />
-                    </XamlUICommand.IconSource>
-                </XamlUICommand>
             </Page.Resources>
 
             <Grid 
@@ -240,100 +234,117 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TitleBar x:Name="MainTitleBar">
+                <TitleBar x:Name="MainTitleBar" Grid.Row="0" Height="30">
                     <!--  <TitleBar.IconSource>
                         <ImageIconSource ImageSource="ms-appx:///resources/icons/derivative/app_icon.svg"/>
                     </TitleBar.IconSource>-->
                 </TitleBar>
 
-                <MenuBar Grid.Row="1">
-                    <MenuBarItem Title="File">
-                        <MenuFlyoutItem Command="{StaticResource NewCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource OpenCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SaveCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SaveAsCommand}"/>
-                        <MenuFlyoutSeparator/>
-                        <MenuFlyoutItem Command="{StaticResource ExitCommand}"/>
-                    </MenuBarItem>
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                    <MenuBarItem Title="Edit">
-                        <MenuFlyoutItem Command="{StaticResource UndoCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource RedoCommand}"/>
-                        <MenuFlyoutSeparator/>
-                        <MenuFlyoutItem Command="{StaticResource CutCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource CopyCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource PasteCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource DeleteCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource SelectAllCommand}"/>
-                    </MenuBarItem>
+                    <MenuBar Grid.Column="0">
+                        <MenuBarItem Title="File" Height="32" Margin="4,0">
+                            <MenuFlyoutItem Command="{StaticResource NewCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource OpenCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource SaveCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource SaveAsCommand}"/>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutItem Command="{StaticResource ExitCommand}"/>
+                        </MenuBarItem>
 
-                    <MenuBarItem Title="View">
-                        <MenuFlyoutItem Command="{StaticResource ZoomInCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource ZoomOutCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource ResetZoomCommand}"/>
-                        <MenuFlyoutSeparator/>
-                        <MenuFlyoutSubItem Text="Wire Style">
-                            <RadioMenuFlyoutItem x:Name="WireStyleRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleRedCommand}"/>
-                            <RadioMenuFlyoutItem x:Name="WireStyleBoldFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldCommand}"/>
-                            <RadioMenuFlyoutItem x:Name="WireStyleBoldRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldRedCommand}"/>
-                        </MenuFlyoutSubItem>
-                    </MenuBarItem>
+                        <MenuBarItem Title="Edit" Height="32" Margin="4,0">
+                            <MenuFlyoutItem Command="{StaticResource UndoCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource RedoCommand}"/>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutItem Command="{StaticResource CutCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource CopyCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource PasteCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource DeleteCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource SelectAllCommand}"/>
+                        </MenuBarItem>
 
-                    <MenuBarItem Title="Simulation">
-                        <MenuFlyoutItem Command="{StaticResource StartSimulationCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource StopSimulationCommand}"/>
-                        <MenuFlyoutSeparator/>
-                        <ToggleMenuFlyoutItem x:Name="WireDelayFlyout" Command="{StaticResource WireDelayCommand}"/>
-                        <MenuFlyoutSeparator/>
-                        <MenuFlyoutSubItem Text="Simulation Speed">
-                            <MenuFlyoutSubItem.Icon>
-                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xEC4A;" />
-                            </MenuFlyoutSubItem.Icon>
-                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed0nsCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed1usCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed10usCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed100usCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed1msCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed10msCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed100msCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed1sCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource SimulationSpeed10sCommand}"/>
-                        </MenuFlyoutSubItem>
-                    </MenuBarItem>
+                        <MenuBarItem Title="View" Height="32" Margin="4,0">
+                            <MenuFlyoutItem Command="{StaticResource ZoomInCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource ZoomOutCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource ResetZoomCommand}"/>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutSubItem Text="Wire Style">
+                                <RadioMenuFlyoutItem x:Name="WireStyleRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleRedCommand}"/>
+                                <RadioMenuFlyoutItem x:Name="WireStyleBoldFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldCommand}"/>
+                                <RadioMenuFlyoutItem x:Name="WireStyleBoldRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldRedCommand}"/>
+                            </MenuFlyoutSubItem>
+                        </MenuBarItem>
 
-                    <MenuBarItem Title="Debug">
-                        <ToggleMenuFlyoutItem x:Name="BenchmarkFlyout" Command="{StaticResource BenchmarkCommand}"/>
-                        <ToggleMenuFlyoutItem x:Name="DebugInfoDialogFlyout" Command="{StaticResource DebugInfoDialogCommand}"/>
-                        <MenuFlyoutSeparator/>
-                        <ToggleMenuFlyoutItem x:Name="ShowCircuitFlyout" Command="{StaticResource ShowCircuitCommand}"/>
-                        <ToggleMenuFlyoutItem x:Name="ShowCollisionIndexFlyout" Command="{StaticResource ShowCollisionIndexCommand}"/>
-                        <ToggleMenuFlyoutItem x:Name="ShowConnectionIndexFlyout" Command="{StaticResource ShowConnectionIndexCommand}"/>
-                        <ToggleMenuFlyoutItem x:Name="ShowSelectionIndexFlyout" Command="{StaticResource ShowSelectionIndexCommand}"/>
-                        <MenuFlyoutSeparator/>
-                        <MenuFlyoutItem Command="{StaticResource ReloadCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource ExampleSimpleCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource ExampleWiresCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource ExampleElementsCommand}"/>
-                        <MenuFlyoutItem Command="{StaticResource ExampleElementsWiresCommand}"/>
-                        <MenuFlyoutSeparator/>
-                        <ToggleMenuFlyoutItem x:Name="ShowRenderBordersFlyout" Command="{StaticResource ShowRenderBordersCommand}"/>
-                        <ToggleMenuFlyoutItem x:Name="ShowMousePositionFlyout" Command="{StaticResource ShowMousePositionCommand}"/>
-                        <ToggleMenuFlyoutItem x:Name="EnterNonInteractiveModeFlyout" Command="{StaticResource EnterNonInteractiveModeCommand}"/>
-                        <MenuFlyoutSeparator/>
-                        <ToggleMenuFlyoutItem x:Name="JitRenderingFlyout" Command="{StaticResource JitRenderingCommand}"/>
-                        <MenuFlyoutSeparator/>
-                        <RadioMenuFlyoutItem x:Name="ThreadSyncFlyout" GroupName="RenderThreads" Command="{StaticResource RenderSynchronousCommand}"/>
-                        <RadioMenuFlyoutItem x:Name="Thread2Flyout" GroupName="RenderThreads" Command="{StaticResource Render2ThreadsCommand}"/>
-                        <RadioMenuFlyoutItem x:Name="Thread4Flyout" GroupName="RenderThreads" Command="{StaticResource Render4ThreadsCommand}"/>
-                        <RadioMenuFlyoutItem x:Name="Thread8Flyout" GroupName="RenderThreads" Command="{StaticResource Render8ThreadsCommand}"/>
-                    </MenuBarItem>
+                        <MenuBarItem Title="Simulation" Height="32" Margin="4,0" Visibility="Visible">
+                            <MenuFlyoutItem Command="{StaticResource StartSimulationCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource StopSimulationCommand}"/>
+                            <MenuFlyoutSeparator/>
+                            <ToggleMenuFlyoutItem x:Name="WireDelayFlyout" Command="{StaticResource WireDelayCommand}"/>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutSubItem Text="Simulation Speed">
+                                <MenuFlyoutSubItem.Icon>
+                                    <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xEC4A;" />
+                                </MenuFlyoutSubItem.Icon>
+                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed0nsCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed1usCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed10usCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed100usCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed1msCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed10msCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed100msCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed1sCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed10sCommand}"/>
+                            </MenuFlyoutSubItem>
+                        </MenuBarItem>
 
-                    <MenuBarItem Title="Help">
-                        <MenuFlyoutItem Command="{StaticResource AboutCommand}"/>
-                    </MenuBarItem>
-                </MenuBar>
+                        <MenuBarItem Title="Debug" Height="32" Margin="4,0" Visibility="Collapsed">
+                            <ToggleMenuFlyoutItem x:Name="BenchmarkFlyout" Command="{StaticResource BenchmarkCommand}"/>
+                            <ToggleMenuFlyoutItem x:Name="DebugInfoDialogFlyout" Command="{StaticResource DebugInfoDialogCommand}"/>
+                            <MenuFlyoutSeparator/>
+                            <ToggleMenuFlyoutItem x:Name="ShowCircuitFlyout" Command="{StaticResource ShowCircuitCommand}"/>
+                            <ToggleMenuFlyoutItem x:Name="ShowCollisionIndexFlyout" Command="{StaticResource ShowCollisionIndexCommand}"/>
+                            <ToggleMenuFlyoutItem x:Name="ShowConnectionIndexFlyout" Command="{StaticResource ShowConnectionIndexCommand}"/>
+                            <ToggleMenuFlyoutItem x:Name="ShowSelectionIndexFlyout" Command="{StaticResource ShowSelectionIndexCommand}"/>
+                            <MenuFlyoutSeparator/>
+                            <MenuFlyoutItem Command="{StaticResource ReloadCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource ExampleSimpleCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource ExampleWiresCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource ExampleElementsCommand}"/>
+                            <MenuFlyoutItem Command="{StaticResource ExampleElementsWiresCommand}"/>
+                            <MenuFlyoutSeparator/>
+                            <ToggleMenuFlyoutItem x:Name="ShowRenderBordersFlyout" Command="{StaticResource ShowRenderBordersCommand}"/>
+                            <ToggleMenuFlyoutItem x:Name="ShowMousePositionFlyout" Command="{StaticResource ShowMousePositionCommand}"/>
+                            <ToggleMenuFlyoutItem x:Name="EnterNonInteractiveModeFlyout" Command="{StaticResource EnterNonInteractiveModeCommand}"/>
+                            <MenuFlyoutSeparator/>
+                            <ToggleMenuFlyoutItem x:Name="JitRenderingFlyout" Command="{StaticResource JitRenderingCommand}"/>
+                            <MenuFlyoutSeparator/>
+                            <RadioMenuFlyoutItem x:Name="ThreadSyncFlyout" GroupName="RenderThreads" Command="{StaticResource RenderSynchronousCommand}"/>
+                            <RadioMenuFlyoutItem x:Name="Thread2Flyout" GroupName="RenderThreads" Command="{StaticResource Render2ThreadsCommand}"/>
+                            <RadioMenuFlyoutItem x:Name="Thread4Flyout" GroupName="RenderThreads" Command="{StaticResource Render4ThreadsCommand}"/>
+                            <RadioMenuFlyoutItem x:Name="Thread8Flyout" GroupName="RenderThreads" Command="{StaticResource Render8ThreadsCommand}"/>
+                        </MenuBarItem>
+                    </MenuBar>
 
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <CommandBar Grid.Column="1" IsOpen="False"  DefaultLabelPosition="Collapsed" Padding="0" Margin="0,-4,0,-4">
+                        <AppBarSeparator Height="24" Padding="2,0"/>
+                        <AppBarButton Command="{StaticResource SaveCommand}" IsCompact="True" Width="36" Height="44" Margin="2,0"/>
+
+                        <AppBarSeparator Height="24" Padding="2,0" Visibility="Collapsed"/>
+                        <AppBarButton Icon="Share" Label="Like" Width="36" Height="44" Margin="2,0" Visibility="Collapsed"/>
+
+                        <AppBarSeparator Height="24" Padding="2,0"/>
+                        <AppBarButton Command="{StaticResource UndoCommand}" Width="36" Height="44" Margin="2,0"/>
+                        <AppBarButton Command="{StaticResource RedoCommand}" Width="36" Height="44" Margin="2,0"/>
+                    </CommandBar>
+                </Grid>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Visible">
                     <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right">
                         <AppBarButton Command="{StaticResource StartSimulationCommand}"/>
                         <AppBarButton Command="{StaticResource StopSimulationCommand}"/>
