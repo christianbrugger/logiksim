@@ -422,7 +422,14 @@ auto CircuitUIModel::do_action(UserAction action,
         }
 
         case select_all: {
-            // this->select_all();
+            if (is_editing_state(config_.state)) {
+                status |= finalize_editing();
+                status |= set_circuit_state(*this, defaults::selection_state);
+
+                visible_selection_select_all(circuit_store_.editable_circuit());
+                circuit_store_.editable_circuit().finish_undo_group();
+                status.require_repaint = true;
+            }
             break;
         }
         case copy_selected: {
@@ -439,7 +446,22 @@ auto CircuitUIModel::do_action(UserAction action,
             break;
         }
         case delete_selected: {
-            // this->delete_selected();
+            if (!is_editing_state(config_.state)) {
+                break;
+            }
+            status |= finalize_editing();
+
+            if (!circuit_store_.editable_circuit().visible_selection_empty()) {
+                const auto t = Timer {};
+                visible_selection_delete_all(circuit_store_.editable_circuit());
+                print("Deleted", visible_selection_format(circuit_store_), "in", t);
+
+                circuit_store_.editable_circuit().finish_undo_group();
+                status.require_repaint = true;
+
+                // items with open settings dialogs might have been deleted
+                // on_setting_dialog_cleanup_request();
+            }
             break;
         }
 
