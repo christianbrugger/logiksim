@@ -442,8 +442,6 @@ class CircuitUIModel {
     [[nodiscard]] auto open_from_file(const std::filesystem::path& filename,
                                       std::optional<LoadError>& load_error) -> UIStatus;
 
-    auto undo() -> void;
-    auto redo() -> void;
     auto update_history_status() -> void;
     auto select_all() -> void;
     auto delete_selected() -> void;

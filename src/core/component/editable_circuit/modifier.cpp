@@ -109,22 +109,24 @@ auto Modifier::disable_history() -> void {
     Ensures(debug_class_invariant_holds(*this));
 }
 
-auto Modifier::undo_group() -> void {
-    editing::undo_group(circuit_data_);
+auto Modifier::undo_group() -> bool {
+    const auto result = editing::undo_group(circuit_data_);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
     }
     Ensures(debug_class_invariant_holds(*this));
+    return result;
 }
 
-auto Modifier::redo_group() -> void {
-    editing::redo_group(circuit_data_);
+auto Modifier::redo_group() -> bool {
+    const auto result = editing::redo_group(circuit_data_);
 
     if constexpr (DEBUG_PRINT_CIRCUIT_HISTORY) {
         print(circuit_data_.history);
     }
     Ensures(debug_class_invariant_holds(*this));
+    return result;
 }
 
 auto Modifier::clear_undo_history() -> void {

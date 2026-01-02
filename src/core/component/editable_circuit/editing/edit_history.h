@@ -19,8 +19,8 @@ namespace editing {
 auto enable_history(History& history) -> void;
 auto disable_history(History& history) -> void;
 
-auto undo_group(CircuitData& circuit) -> void;
-auto redo_group(CircuitData& circuit) -> void;
+auto undo_group(CircuitData& circuit) -> bool;
+auto redo_group(CircuitData& circuit) -> bool;
 
 auto clear_undo_history(CircuitData& circuit) -> void;
 auto clear_redo_history(CircuitData& circuit) -> void;

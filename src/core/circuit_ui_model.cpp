@@ -404,14 +404,23 @@ auto CircuitUIModel::do_action(UserAction action,
             break;
         }
 
-        case undo: {
-            // this->undo();
-            break;
-        }
+        case undo:
         case redo: {
-            // this->redo();
+            if (is_editing_state(config_.state)) {
+                status |= finalize_editing();
+                status |= close_all_setting_dialogs();
+                status |= set_circuit_state(*this, defaults::selection_state);
+
+                if (action == UserAction::undo
+                        ? circuit_store_.editable_circuit().undo_group()
+                        : circuit_store_.editable_circuit().redo_group()) {
+                    status.require_repaint = true;
+                    status.history_changed = true;
+                }
+            }
             break;
         }
+
         case select_all: {
             // this->select_all();
             break;

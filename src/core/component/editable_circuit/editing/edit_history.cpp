@@ -400,7 +400,7 @@ auto _replay_one_group(CircuitData& circuit, HistoryStack& stack) -> void {
 
 enum class ReplayStack { undo, redo };
 
-auto _replay_stack(CircuitData& circuit, ReplayStack kind) -> void {
+auto _replay_stack(CircuitData& circuit, ReplayStack kind) -> bool {
     if (circuit.history.state != HistoryState::track_undo_new) [[unlikely]] {
         throw std::runtime_error("history is in wrong state");
     }
@@ -412,7 +412,7 @@ auto _replay_stack(CircuitData& circuit, ReplayStack kind) -> void {
     auto& replay_stack = kind == ReplayStack::undo ? circuit.history.undo_stack
                                                    : circuit.history.redo_stack;
     if (replay_stack.empty()) {
-        return;
+        return false;
     }
 
     {
@@ -430,17 +430,18 @@ auto _replay_stack(CircuitData& circuit, ReplayStack kind) -> void {
     Ensures(!has_ungrouped_entries(circuit.history.undo_stack));
     Ensures(!has_ungrouped_entries(circuit.history.redo_stack));
     Ensures(circuit.history.state == HistoryState::track_undo_new);
+    return true;
 }
 
 }  // namespace
 
-auto undo_group(CircuitData& circuit) -> void {
+auto undo_group(CircuitData& circuit) -> bool {
     finish_undo_group(circuit.history);
-    _replay_stack(circuit, ReplayStack::undo);
+    return _replay_stack(circuit, ReplayStack::undo);
 }
 
-auto redo_group(CircuitData& circuit) -> void {
-    _replay_stack(circuit, ReplayStack::redo);
+auto redo_group(CircuitData& circuit) -> bool {
+    return _replay_stack(circuit, ReplayStack::redo);
 }
 
 auto clear_undo_history(CircuitData& circuit) -> void {

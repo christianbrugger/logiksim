@@ -51,12 +51,12 @@ auto EditableCircuit::disable_history() -> void {
     modifier_.disable_history();
 }
 
-auto EditableCircuit::undo_group() -> void {
-    modifier_.undo_group();
+auto EditableCircuit::undo_group() -> bool {
+    return modifier_.undo_group();
 }
 
-auto EditableCircuit::redo_group() -> void {
-    modifier_.redo_group();
+auto EditableCircuit::redo_group() -> bool {
+    return modifier_.redo_group();
 }
 
 auto EditableCircuit::clear_undo_history() -> void {

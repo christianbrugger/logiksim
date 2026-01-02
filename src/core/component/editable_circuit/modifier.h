@@ -80,8 +80,8 @@ class Modifier {
     auto enable_history() -> void;
     auto disable_history() -> void;
 
-    auto undo_group() -> void;
-    auto redo_group() -> void;
+    auto undo_group() -> bool;
+    auto redo_group() -> bool;
 
     auto clear_undo_history() -> void;
     auto clear_redo_history() -> void;
