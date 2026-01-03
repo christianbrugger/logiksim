@@ -23,6 +23,9 @@
             <!-- Icons: https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-fluent-icons-font -->
 
             <Page.Resources>
+
+
+
                 <!-- File -->
                 <XamlUICommand x:Key="NewCommand" x:Name="NewCommand" Label="New" ExecuteRequested="XamlUICommand_ExecuteRequested">
                     <XamlUICommand.IconSource>
@@ -249,7 +252,7 @@
                     </Grid.ColumnDefinitions>
 
                     <MenuBar Grid.Column="0">
-                        <MenuBarItem Title="File" Height="32" Margin="4,0">
+                        <MenuBarItem Title="File">
                             <MenuFlyoutItem Command="{StaticResource NewCommand}"/>
                             <MenuFlyoutItem Command="{StaticResource OpenCommand}"/>
                             <MenuFlyoutItem Command="{StaticResource SaveCommand}"/>
@@ -258,7 +261,7 @@
                             <MenuFlyoutItem Command="{StaticResource ExitCommand}"/>
                         </MenuBarItem>
 
-                        <MenuBarItem Title="Edit" Height="32" Margin="4,0">
+                        <MenuBarItem Title="Edit">
                             <MenuFlyoutItem Command="{StaticResource UndoCommand}"/>
                             <MenuFlyoutItem Command="{StaticResource RedoCommand}"/>
                             <MenuFlyoutSeparator/>
@@ -269,7 +272,7 @@
                             <MenuFlyoutItem Command="{StaticResource SelectAllCommand}"/>
                         </MenuBarItem>
 
-                        <MenuBarItem Title="View" Height="32" Margin="4,0">
+                        <MenuBarItem Title="View">
                             <MenuFlyoutItem Command="{StaticResource ZoomInCommand}"/>
                             <MenuFlyoutItem Command="{StaticResource ZoomOutCommand}"/>
                             <MenuFlyoutItem Command="{StaticResource ResetZoomCommand}"/>
@@ -281,7 +284,7 @@
                             </MenuFlyoutSubItem>
                         </MenuBarItem>
 
-                        <MenuBarItem Title="Simulation" Height="32" Margin="4,0" Visibility="Visible">
+                        <MenuBarItem Title="Simulation" Visibility="Collapsed">
                             <MenuFlyoutItem Command="{StaticResource StartSimulationCommand}"/>
                             <MenuFlyoutItem Command="{StaticResource StopSimulationCommand}"/>
                             <MenuFlyoutSeparator/>
@@ -303,7 +306,7 @@
                             </MenuFlyoutSubItem>
                         </MenuBarItem>
 
-                        <MenuBarItem Title="Debug" Height="32" Margin="4,0" Visibility="Collapsed">
+                        <MenuBarItem Title="Debug" Visibility="Collapsed">
                             <ToggleMenuFlyoutItem x:Name="BenchmarkFlyout" Command="{StaticResource BenchmarkCommand}"/>
                             <ToggleMenuFlyoutItem x:Name="DebugInfoDialogFlyout" Command="{StaticResource DebugInfoDialogCommand}"/>
                             <MenuFlyoutSeparator/>
@@ -331,20 +334,104 @@
                         </MenuBarItem>
                     </MenuBar>
 
-                    <CommandBar Grid.Column="1" IsOpen="False"  DefaultLabelPosition="Collapsed" Padding="0" Margin="0,-4,0,-4">
-                        <AppBarSeparator Height="24" Padding="2,0"/>
-                        <AppBarButton Command="{StaticResource SaveCommand}" IsCompact="True" Width="36" Height="44" Margin="2,0"/>
+                    <StackPanel Orientation="Horizontal" Grid.Column="1">
+                        <!-- https://github.com/microsoft/microsoft-ui-xaml/blob/main/src/controls/dev/InfoBar/InfoBar.xaml -->
+                        <!-- https://github.com/microsoft/microsoft-ui-xaml/blob/5788dee271452753d5b2c70179f976c3e96a45c7/src/controls/dev/InfoBar/InfoBar.xaml#L133 -->
+                        <StackPanel.Resources>
+                            <ResourceDictionary>
+                                <ResourceDictionary.ThemeDictionaries>
+                                    <ResourceDictionary x:Key="Default">
+                                        <StaticResource x:Key="ButtonBackground" ResourceKey="AppBarButtonBackground" />
+                                        <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="AppBarButtonBackgroundPointerOver" />
+                                        <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="AppBarButtonBackgroundPressed" />
+                                        <StaticResource x:Key="ButtonBackgroundDisabled" ResourceKey="AppBarButtonBackgroundDisabled" />
+                                        <StaticResource x:Key="ButtonForeground" ResourceKey="AppBarButtonForeground" />
+                                        <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="AppBarButtonForegroundPointerOver" />
+                                        <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="AppBarButtonForegroundPressed" />
+                                        <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="AppBarButtonForegroundDisabled" />
+                                        <StaticResource x:Key="ButtonBorderBrush" ResourceKey="AppBarButtonBorderBrush" />
+                                        <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="AppBarButtonBorderBrushPointerOver" />
+                                        <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="AppBarButtonBorderBrushPressed" />
+                                        <StaticResource x:Key="ButtonBorderBrushDisabled" ResourceKey="AppBarButtonBorderBrushDisabled" />
+                                    </ResourceDictionary>
+                                    <ResourceDictionary x:Key="HighContrast">
+                                        <StaticResource x:Key="ButtonBackground" ResourceKey="AppBarButtonBackground" />
+                                        <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="AppBarButtonBackgroundPointerOver" />
+                                        <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="AppBarButtonBackgroundPressed" />
+                                        <StaticResource x:Key="ButtonBackgroundDisabled" ResourceKey="AppBarButtonBackgroundDisabled" />
+                                        <StaticResource x:Key="ButtonForeground" ResourceKey="AppBarButtonForeground" />
+                                        <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="AppBarButtonForegroundPointerOver" />
+                                        <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="AppBarButtonForegroundPressed" />
+                                        <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="AppBarButtonForegroundDisabled" />
+                                        <StaticResource x:Key="ButtonBorderBrush" ResourceKey="AppBarButtonBorderBrush" />
+                                        <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="AppBarButtonBorderBrushPointerOver" />
+                                        <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="AppBarButtonBorderBrushPressed" />
+                                        <StaticResource x:Key="ButtonBorderBrushDisabled" ResourceKey="AppBarButtonBorderBrushDisabled" />
+                                    </ResourceDictionary>
+                                    <ResourceDictionary x:Key="Light">
+                                        <StaticResource x:Key="ButtonBackground" ResourceKey="AppBarButtonBackground" />
+                                        <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="AppBarButtonBackgroundPointerOver" />
+                                        <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="AppBarButtonBackgroundPressed" />
+                                        <StaticResource x:Key="ButtonBackgroundDisabled" ResourceKey="AppBarButtonBackgroundDisabled" />
+                                        <StaticResource x:Key="ButtonForeground" ResourceKey="AppBarButtonForeground" />
+                                        <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="AppBarButtonForegroundPointerOver" />
+                                        <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="AppBarButtonForegroundPressed" />
+                                        <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="AppBarButtonForegroundDisabled" />
+                                        <StaticResource x:Key="ButtonBorderBrush" ResourceKey="AppBarButtonBorderBrush" />
+                                        <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="AppBarButtonBorderBrushPointerOver" />
+                                        <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="AppBarButtonBorderBrushPressed" />
+                                        <StaticResource x:Key="ButtonBorderBrushDisabled" ResourceKey="AppBarButtonBorderBrushDisabled" />
+                                    </ResourceDictionary>
+                                </ResourceDictionary.ThemeDictionaries>
 
-                        <AppBarSeparator Height="24" Padding="2,0" Visibility="Collapsed"/>
-                        <AppBarButton Icon="Share" Label="Like" Width="36" Height="44" Margin="2,0" Visibility="Collapsed"/>
+                                <Style x:Key="AppBarLikeButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                                    <Setter Property="Background" Value="{ThemeResource AppBarButtonBackground}" />
+                                    <Setter Property="Foreground" Value="{ThemeResource AppBarButtonForeground}" />
+                                    <Setter Property="BorderBrush" Value="{ThemeResource AppBarButtonBorderBrush}" />
+                                    <Setter Property="CornerRadius" Value="{ThemeResource ControlCornerRadius}" />
+                                    <Setter Property="VerticalAlignment" Value="Stretch" />
+                                    <Setter Property="Margin" Value="{ThemeResource MenuBarItemMargin}" />
 
-                        <AppBarSeparator Height="24" Padding="2,0"/>
-                        <AppBarButton Command="{StaticResource UndoCommand}" Width="36" Height="44" Margin="2,0"/>
-                        <AppBarButton Command="{StaticResource RedoCommand}" Width="36" Height="44" Margin="2,0"/>
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="MinWidth" Value="32" />
+                                </Style>
+                            </ResourceDictionary>
+
+                        </StackPanel.Resources>
+
+                        <AppBarSeparator/>
+                        <Button Style="{StaticResource AppBarLikeButtonStyle}">
+                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE74E;" FontSize="16"/>
+                        </Button>
+
+                        <AppBarSeparator/>
+                        <Button Style="{StaticResource AppBarLikeButtonStyle}">
+                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE72D;" FontSize="16"/>
+                        </Button>
+
+                        <AppBarSeparator/>
+                        <Button Style="{StaticResource AppBarLikeButtonStyle}">
+                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A7;" FontSize="16"/>
+                        </Button>
+                        <Button Style="{StaticResource AppBarLikeButtonStyle}">
+                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A6;" FontSize="16"/>
+                        </Button>
+                    </StackPanel>
+
+                    <CommandBar Grid.Column="2" IsOpen="False" DefaultLabelPosition="Collapsed" Visibility="Collapsed">
+                        <AppBarSeparator/>
+                        <AppBarButton Command="{StaticResource SaveCommand}"/>
+
+                        <AppBarSeparator Visibility="Collapsed"/>
+                        <AppBarButton Icon="Share" Label="Like" Visibility="Collapsed"/>
+
+                        <AppBarSeparator/>
+                        <AppBarButton Command="{StaticResource UndoCommand}"/>
+                        <AppBarButton Command="{StaticResource RedoCommand}"/>
                     </CommandBar>
                 </Grid>
 
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Visible">
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
                     <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right">
                         <AppBarButton Command="{StaticResource StartSimulationCommand}"/>
                         <AppBarButton Command="{StaticResource StopSimulationCommand}"/>
