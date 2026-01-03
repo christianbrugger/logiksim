@@ -28,6 +28,14 @@
             <FontIconSource x:Key="FontSimulationStopDisabled" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" 
                             Glyph="&#xE978;" Foreground="{ThemeResource TextFillColorDisabled}" />
 
+
+            <Style x:Key="LS_TopButtonStyle" TargetType="Button" BasedOn="{StaticResource SubtleButtonStyle}">
+                <Setter Property="VerticalAlignment" Value="Stretch" />
+                <Setter Property="Margin" Value="{ThemeResource MenuBarItemMargin}" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="MinWidth" Value="32" />
+            </Style>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

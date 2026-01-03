@@ -288,7 +288,9 @@
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <MenuBar Grid.Column="0">
@@ -376,114 +378,36 @@
                         </MenuBarItem>
                     </MenuBar>
 
-
-                    <Grid Grid.Column="1">
-                        <!-- https://github.com/microsoft/microsoft-ui-xaml/blob/main/src/controls/dev/InfoBar/InfoBar.xaml -->
-                        <!-- https://github.com/microsoft/microsoft-ui-xaml/blob/5788dee271452753d5b2c70179f976c3e96a45c7/src/controls/dev/InfoBar/InfoBar.xaml#L133 -->
-                        <Grid.Resources>
-                            <ResourceDictionary>
-                                <ResourceDictionary.ThemeDictionaries>
-                                    <ResourceDictionary x:Key="Default">
-                                        <StaticResource x:Key="ButtonBackground" ResourceKey="AppBarButtonBackground" />
-                                        <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="AppBarButtonBackgroundPointerOver" />
-                                        <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="AppBarButtonBackgroundPressed" />
-                                        <StaticResource x:Key="ButtonBackgroundDisabled" ResourceKey="AppBarButtonBackgroundDisabled" />
-                                        <StaticResource x:Key="ButtonForeground" ResourceKey="AppBarButtonForeground" />
-                                        <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="AppBarButtonForegroundPointerOver" />
-                                        <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="AppBarButtonForegroundPressed" />
-                                        <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="AppBarButtonForegroundDisabled" />
-                                        <StaticResource x:Key="ButtonBorderBrush" ResourceKey="AppBarButtonBorderBrush" />
-                                        <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="AppBarButtonBorderBrushPointerOver" />
-                                        <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="AppBarButtonBorderBrushPressed" />
-                                        <StaticResource x:Key="ButtonBorderBrushDisabled" ResourceKey="AppBarButtonBorderBrushDisabled" />
-                                    </ResourceDictionary>
-                                    <ResourceDictionary x:Key="HighContrast">
-                                        <StaticResource x:Key="ButtonBackground" ResourceKey="AppBarButtonBackground" />
-                                        <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="AppBarButtonBackgroundPointerOver" />
-                                        <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="AppBarButtonBackgroundPressed" />
-                                        <StaticResource x:Key="ButtonBackgroundDisabled" ResourceKey="AppBarButtonBackgroundDisabled" />
-                                        <StaticResource x:Key="ButtonForeground" ResourceKey="AppBarButtonForeground" />
-                                        <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="AppBarButtonForegroundPointerOver" />
-                                        <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="AppBarButtonForegroundPressed" />
-                                        <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="AppBarButtonForegroundDisabled" />
-                                        <StaticResource x:Key="ButtonBorderBrush" ResourceKey="AppBarButtonBorderBrush" />
-                                        <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="AppBarButtonBorderBrushPointerOver" />
-                                        <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="AppBarButtonBorderBrushPressed" />
-                                        <StaticResource x:Key="ButtonBorderBrushDisabled" ResourceKey="AppBarButtonBorderBrushDisabled" />
-                                    </ResourceDictionary>
-                                    <ResourceDictionary x:Key="Light">
-                                        <StaticResource x:Key="ButtonBackground" ResourceKey="AppBarButtonBackground" />
-                                        <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="AppBarButtonBackgroundPointerOver" />
-                                        <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="AppBarButtonBackgroundPressed" />
-                                        <StaticResource x:Key="ButtonBackgroundDisabled" ResourceKey="AppBarButtonBackgroundDisabled" />
-                                        <StaticResource x:Key="ButtonForeground" ResourceKey="AppBarButtonForeground" />
-                                        <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="AppBarButtonForegroundPointerOver" />
-                                        <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="AppBarButtonForegroundPressed" />
-                                        <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="AppBarButtonForegroundDisabled" />
-                                        <StaticResource x:Key="ButtonBorderBrush" ResourceKey="AppBarButtonBorderBrush" />
-                                        <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="AppBarButtonBorderBrushPointerOver" />
-                                        <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="AppBarButtonBorderBrushPressed" />
-                                        <StaticResource x:Key="ButtonBorderBrushDisabled" ResourceKey="AppBarButtonBorderBrushDisabled" />
-                                    </ResourceDictionary>
-                                </ResourceDictionary.ThemeDictionaries>
-
-                                <Style x:Key="AppBarLikeButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
-                                    <Setter Property="Background" Value="{ThemeResource AppBarButtonBackground}" />
-                                    <Setter Property="Foreground" Value="{ThemeResource AppBarButtonForeground}" />
-                                    <Setter Property="BorderBrush" Value="{ThemeResource AppBarButtonBorderBrush}" />
-                                    <Setter Property="CornerRadius" Value="{ThemeResource ControlCornerRadius}" />
-                                    <Setter Property="VerticalAlignment" Value="Stretch" />
-                                    <Setter Property="Margin" Value="{ThemeResource MenuBarItemMargin}" />
-
-                                    <Setter Property="Padding" Value="0" />
-                                    <Setter Property="MinWidth" Value="32" />
-                                </Style>
-                            </ResourceDictionary>
-
-                        </Grid.Resources>
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Orientation="Horizontal" Grid.Column="0">
-
-
-                            <AppBarSeparator/>
-                            <Button Style="{StaticResource AppBarLikeButtonStyle}" 
+                    <StackPanel Orientation="Horizontal" Grid.Column="1">
+                        <AppBarSeparator/>
+                        <Button Style="{StaticResource LS_TopButtonStyle}" 
                                     Command="{StaticResource SaveCommand}"
                                     ToolTipService.ToolTip="Save (Ctrl+S)">
-                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE74E;" FontSize="16"/>
-                            </Button>
+                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE74E;" FontSize="16"/>
+                        </Button>
 
-                            <!--
-                            <AppBarSeparator Visibility="Collapsed"/>
-                            <Button Style="{StaticResource AppBarLikeButtonStyle}" Visibility="Collapsed">
-                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE72D;" FontSize="16"/>
-                            </Button>
-                            -->
+                        <AppBarSeparator/>
+                        <Button Style="{StaticResource LS_TopButtonStyle}">
+                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE72D;" FontSize="16"/>
+                        </Button>
 
-                            <AppBarSeparator/>
-                            <Button Style="{StaticResource AppBarLikeButtonStyle}" 
+                        <AppBarSeparator/>
+                        <Button Style="{StaticResource LS_TopButtonStyle}" 
                                     Command="{StaticResource UndoCommand}"
                                 ToolTipService.ToolTip="Undo (Ctrl+Z)">
-                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A7;" FontSize="16"/>
-                            </Button>
-                            <Button Style="{StaticResource AppBarLikeButtonStyle}" 
+                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A7;" FontSize="16"/>
+                        </Button>
+                        <Button Style="{StaticResource LS_TopButtonStyle}" 
                                     Command="{StaticResource RedoCommand}"
                                     ToolTipService.ToolTip="Redo (Ctrl+Y)">
-                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A6;" FontSize="16"/>
-                            </Button>
-                        </StackPanel>
-
-
-                        <Button Grid.Column="2" Style="{StaticResource AppBarLikeButtonStyle}"
-                                ToolTipService.ToolTip="Open settings">
-                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE713;" FontSize="16"/>
+                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A6;" FontSize="16"/>
                         </Button>
-                    </Grid>
+                    </StackPanel>
+
+                    <Button Grid.Column="3" Style="{StaticResource LS_TopButtonStyle}"
+                                ToolTipService.ToolTip="Open settings">
+                        <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE713;" FontSize="16"/>
+                    </Button>
                 </Grid>
 
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
