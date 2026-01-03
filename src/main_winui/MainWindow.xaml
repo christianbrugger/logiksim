@@ -21,15 +21,11 @@
         <Page ActualThemeChanged="Page_ActualThemeChanged">
 
             <!-- Icons: https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-fluent-icons-font -->
-
             <Page.Resources>
-
-
-
                 <!-- File -->
                 <XamlUICommand x:Key="NewCommand" x:Name="NewCommand" Label="New" ExecuteRequested="XamlUICommand_ExecuteRequested">
                     <XamlUICommand.IconSource>
-                        <SymbolIconSource Symbol="Document" />
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE8A5;" />
                     </XamlUICommand.IconSource>
                     <XamlUICommand.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="N"/>
@@ -45,7 +41,7 @@
                 </XamlUICommand>
                 <XamlUICommand x:Key="SaveCommand" x:Name="SaveCommand" Label="Save" ExecuteRequested="XamlUICommand_ExecuteRequested">
                     <XamlUICommand.IconSource>
-                        <SymbolIconSource Symbol="Save" />
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE74E;" />
                     </XamlUICommand.IconSource>
                     <XamlUICommand.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="S"/>
@@ -63,20 +59,66 @@
                     <XamlUICommand.IconSource>
                         <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE8BB;" />
                     </XamlUICommand.IconSource>
-                    <XamlUICommand.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="Control,Shift" Key="Q"/>
-                    </XamlUICommand.KeyboardAccelerators>
                 </XamlUICommand>
 
                 <!-- Edit -->
-                <StandardUICommand x:Key="UndoCommand" x:Name="UndoCommand" Kind="Undo" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-                <StandardUICommand x:Key="RedoCommand" x:Name="RedoCommand" Kind="Redo" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <StandardUICommand x:Key="UndoCommand" x:Name="UndoCommand" Label="Undo" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A7;" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Z"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </StandardUICommand>
+                <StandardUICommand x:Key="RedoCommand" x:Name="RedoCommand" Label="Redo" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A6;" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Y"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </StandardUICommand>
 
-                <StandardUICommand x:Key="CutCommand" x:Name="CutCommand" Kind="Cut" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-                <StandardUICommand x:Key="CopyCommand" x:Name="CopyCommand" Kind="Copy" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-                <StandardUICommand x:Key="PasteCommand" x:Name="PasteCommand" Kind="Paste" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-                <StandardUICommand x:Key="DeleteCommand" x:Name="DeleteCommand" Kind="Delete" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
-                <StandardUICommand x:Key="SelectAllCommand" x:Name="SelectAllCommand" Kind="SelectAll" ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <StandardUICommand x:Key="CutCommand" x:Name="CutCommand" Label="Cut" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE8C6;" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="X"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </StandardUICommand>
+                <StandardUICommand x:Key="CopyCommand" x:Name="CopyCommand" Label="Copy" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE8C8;" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="C"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </StandardUICommand>
+                <StandardUICommand x:Key="PasteCommand" x:Name="PasteCommand" Label="Paste" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE77F;" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="V"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </StandardUICommand>
+                <StandardUICommand x:Key="DeleteCommand" x:Name="DeleteCommand" Label="Delete" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE74D;" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Delete"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </StandardUICommand>
+                <StandardUICommand x:Key="SelectAllCommand" x:Name="SelectAllCommand" Label="Select All" ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE8B3;" />
+                    </XamlUICommand.IconSource>
+                    <XamlUICommand.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="A"/>
+                    </XamlUICommand.KeyboardAccelerators>
+                </StandardUICommand>
 
                 <!-- View -->
                 <XamlUICommand x:Key="ZoomInCommand" x:Name="ZoomInCommand" Label="Zoom In" ExecuteRequested="XamlUICommand_ExecuteRequested">
@@ -246,9 +288,7 @@
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <MenuBar Grid.Column="0">
@@ -262,9 +302,11 @@
                         </MenuBarItem>
 
                         <MenuBarItem Title="Edit">
+                            <!--
                             <MenuFlyoutItem Command="{StaticResource UndoCommand}"/>
                             <MenuFlyoutItem Command="{StaticResource RedoCommand}"/>
                             <MenuFlyoutSeparator/>
+                            -->
                             <MenuFlyoutItem Command="{StaticResource CutCommand}"/>
                             <MenuFlyoutItem Command="{StaticResource CopyCommand}"/>
                             <MenuFlyoutItem Command="{StaticResource PasteCommand}"/>
@@ -334,10 +376,11 @@
                         </MenuBarItem>
                     </MenuBar>
 
-                    <StackPanel Orientation="Horizontal" Grid.Column="1">
+
+                    <Grid Grid.Column="1">
                         <!-- https://github.com/microsoft/microsoft-ui-xaml/blob/main/src/controls/dev/InfoBar/InfoBar.xaml -->
                         <!-- https://github.com/microsoft/microsoft-ui-xaml/blob/5788dee271452753d5b2c70179f976c3e96a45c7/src/controls/dev/InfoBar/InfoBar.xaml#L133 -->
-                        <StackPanel.Resources>
+                        <Grid.Resources>
                             <ResourceDictionary>
                                 <ResourceDictionary.ThemeDictionaries>
                                     <ResourceDictionary x:Key="Default">
@@ -397,38 +440,50 @@
                                 </Style>
                             </ResourceDictionary>
 
-                        </StackPanel.Resources>
+                        </Grid.Resources>
 
-                        <AppBarSeparator/>
-                        <Button Style="{StaticResource AppBarLikeButtonStyle}">
-                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE74E;" FontSize="16"/>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Horizontal" Grid.Column="0">
+
+
+                            <AppBarSeparator/>
+                            <Button Style="{StaticResource AppBarLikeButtonStyle}" 
+                                    Command="{StaticResource SaveCommand}"
+                                    ToolTipService.ToolTip="Save (Ctrl+S)">
+                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE74E;" FontSize="16"/>
+                            </Button>
+
+                            <!--
+                            <AppBarSeparator Visibility="Collapsed"/>
+                            <Button Style="{StaticResource AppBarLikeButtonStyle}" Visibility="Collapsed">
+                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE72D;" FontSize="16"/>
+                            </Button>
+                            -->
+
+                            <AppBarSeparator/>
+                            <Button Style="{StaticResource AppBarLikeButtonStyle}" 
+                                    Command="{StaticResource UndoCommand}"
+                                ToolTipService.ToolTip="Undo (Ctrl+Z)">
+                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A7;" FontSize="16"/>
+                            </Button>
+                            <Button Style="{StaticResource AppBarLikeButtonStyle}" 
+                                    Command="{StaticResource RedoCommand}"
+                                    ToolTipService.ToolTip="Redo (Ctrl+Y)">
+                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A6;" FontSize="16"/>
+                            </Button>
+                        </StackPanel>
+
+
+                        <Button Grid.Column="2" Style="{StaticResource AppBarLikeButtonStyle}"
+                                ToolTipService.ToolTip="Open settings">
+                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE713;" FontSize="16"/>
                         </Button>
-
-                        <AppBarSeparator/>
-                        <Button Style="{StaticResource AppBarLikeButtonStyle}">
-                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE72D;" FontSize="16"/>
-                        </Button>
-
-                        <AppBarSeparator/>
-                        <Button Style="{StaticResource AppBarLikeButtonStyle}">
-                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A7;" FontSize="16"/>
-                        </Button>
-                        <Button Style="{StaticResource AppBarLikeButtonStyle}">
-                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A6;" FontSize="16"/>
-                        </Button>
-                    </StackPanel>
-
-                    <CommandBar Grid.Column="2" IsOpen="False" DefaultLabelPosition="Collapsed" Visibility="Collapsed">
-                        <AppBarSeparator/>
-                        <AppBarButton Command="{StaticResource SaveCommand}"/>
-
-                        <AppBarSeparator Visibility="Collapsed"/>
-                        <AppBarButton Icon="Share" Label="Like" Visibility="Collapsed"/>
-
-                        <AppBarSeparator/>
-                        <AppBarButton Command="{StaticResource UndoCommand}"/>
-                        <AppBarButton Command="{StaticResource RedoCommand}"/>
-                    </CommandBar>
+                    </Grid>
                 </Grid>
 
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
