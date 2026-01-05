@@ -89,6 +89,9 @@ class BackendGuiActions : public logicsim::IBackendGuiActions {
     auto end_modal_state() const -> void override;
     auto exit_application_no_dialog() const -> void override;
 
+    auto get_clipboard_text_blocking() const -> std::optional<std::string> override;
+    auto set_clipboard_text_blocking(std::string_view text) const -> bool override;
+
    private:
     weak_ref<MainWindow> window_weak_;
     Microsoft::UI::Dispatching::DispatcherQueue queue_;
@@ -138,14 +141,16 @@ auto get_with_shutdown(std::future<T>& future) {
 
 auto BackendGuiActions::show_dialog_blocking(
     logicsim::exporting::ModalRequest request) const -> logicsim::exporting::ModalResult {
+    using namespace winrt::Windows::Foundation;
+
     auto promise = std::promise<logicsim::exporting::ModalResult> {};
     auto future = promise.get_future();
 
     queue_.TryEnqueue([window_weak = window_weak_, request_value = std::move(request),
-                       promise_value = std::move(promise)]() mutable {
+                       promise_value = std::move(promise)]() mutable -> IAsyncAction {
         if (const auto window = window_weak.get()) {
-            window->show_dialog_blocking(std::move(request_value),
-                                         std::move(promise_value));
+            co_await window->show_dialog_blocking(std::move(request_value),
+                                                  std::move(promise_value));
         }
     });
 
@@ -154,14 +159,16 @@ auto BackendGuiActions::show_dialog_blocking(
 
 auto BackendGuiActions::show_dialog_blocking(
     logicsim::exporting::ErrorMessage message) const -> void {
+    using namespace winrt::Windows::Foundation;
+
     auto promise = std::promise<void> {};
     auto future = promise.get_future();
 
     queue_.TryEnqueue([window_weak = window_weak_, message_value = std::move(message),
-                       promise_value = std::move(promise)]() mutable {
+                       promise_value = std::move(promise)]() mutable -> IAsyncAction {
         if (const auto window = window_weak.get()) {
-            window->show_dialog_blocking(std::move(message_value),
-                                         std::move(promise_value));
+            co_await window->show_dialog_blocking(std::move(message_value),
+                                                  std::move(promise_value));
         }
     });
 
@@ -182,6 +189,40 @@ auto BackendGuiActions::exit_application_no_dialog() const -> void {
             window->exit_application_no_dialog();
         }
     });
+}
+
+auto BackendGuiActions::get_clipboard_text_blocking() const
+    -> std::optional<std::string> {
+    using namespace winrt::Windows::Foundation;
+
+    auto promise = std::promise<std::optional<hstring>> {};
+    auto future = promise.get_future();
+
+    queue_.TryEnqueue([window_weak = window_weak_,
+                       promise_value = std::move(promise)]() mutable -> IAsyncAction {
+        if (const auto window = window_weak.get()) {
+            co_await window->get_clipboard_text_blocking(std::move(promise_value));
+        }
+    });
+
+    return get_with_shutdown(future).transform(winrt::to_string);
+}
+
+auto BackendGuiActions::set_clipboard_text_blocking(std::string_view text) const -> bool {
+    using namespace winrt::Windows::Foundation;
+
+    auto promise = std::promise<bool> {};
+    auto future = promise.get_future();
+
+    queue_.TryEnqueue([window_weak = window_weak_, htext_value = to_hstring(text),
+                       promise_value = std::move(promise)]() mutable -> IAsyncAction {
+        if (const auto window = window_weak.get()) {
+            co_await window->set_clipboard_text_blocking(std::move(htext_value),
+                                                         std::move(promise_value));
+        }
+    });
+
+    return get_with_shutdown(future);
 }
 
 [[nodiscard]] auto lookup_icons() -> IconSources {
@@ -763,6 +804,52 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::ErrorMessage message,
     co_return;
 }
 
+auto MainWindow::get_clipboard_text_blocking(std::promise<std::optional<hstring>> promise)
+    -> Windows::Foundation::IAsyncAction {
+    using namespace winrt::Windows::ApplicationModel::DataTransfer;
+
+    Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        co_return;
+    }
+
+    const auto lifetime [[maybe_unused]] = get_strong();
+
+    try {
+        const auto package = Clipboard::GetContent();
+        auto text = co_await package.GetTextAsync();
+
+        promise.set_value(std::move(text));
+    } catch (...) {
+        promise.set_exception(std::current_exception());
+    }
+    co_return;
+}
+
+auto MainWindow::set_clipboard_text_blocking(hstring text, std::promise<bool> promise)
+    -> Windows::Foundation::IAsyncAction {
+    using namespace winrt::Windows::ApplicationModel::DataTransfer;
+
+    Expects(DispatcherQueue().HasThreadAccess());
+    if (is_destroyed_) {
+        co_return;
+    }
+
+    const auto lifetime [[maybe_unused]] = get_strong();
+
+    try {
+        auto package = DataPackage {};
+        package.SetText(text);
+        Clipboard::SetContent(package);
+        Clipboard::Flush();
+
+        promise.set_value(true);
+    } catch (...) {
+        promise.set_exception(std::current_exception());
+    }
+    co_return;
+}
+
 auto MainWindow::end_modal_state() -> void {
     Expects(DispatcherQueue().HasThreadAccess());
     if (is_destroyed_) {
@@ -810,10 +897,13 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     using namespace logicsim;
     using namespace logicsim::exporting;
 
-    const auto get_position = [&] -> std::optional<ls_point_device_fine_t> {
+    const auto try_get_position = [&] -> std::optional<ls_point_device_fine_t> {
         return logicsim::get_cursor_position(CanvasPanel()).transform([](auto val) {
             return logicsim::to_device_position(val);
         });
+    };
+    const auto get_position_or_zero = [&] -> ls_point_device_fine_t {
+        return try_get_position().value_or(ls_point_device_fine_t {0, 0});
     };
 
     //
@@ -878,24 +968,24 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
     if (sender == CutCommand()) {
-        // backend_tasks_.push(UserActionEvent {
-        //     .action = UserAction::cut_selected,
-        //     .position = get_position(),
-        // });
+        backend_tasks_.push(ClipboardEvent {
+            .action = ClipboardAction::cut,
+            .position = get_position_or_zero(),
+        });
         return;
     }
     if (sender == CopyCommand()) {
-        // backend_tasks_.push(UserActionEvent {
-        //     .action = UserAction::copy_selected,
-        //     .position = get_position(),
-        // });
+        backend_tasks_.push(ClipboardEvent {
+            .action = ClipboardAction::copy,
+            .position = get_position_or_zero(),
+        });
         return;
     }
     if (sender == PasteCommand()) {
-        // backend_tasks_.push(UserActionEvent {
-        //     .action = UserAction::paste_from_clipboard,
-        //     .position = get_position(),
-        // });
+        backend_tasks_.push(ClipboardEvent {
+            .action = ClipboardAction::paste,
+            .position = get_position_or_zero(),
+        });
         return;
     }
     if (sender == DeleteCommand()) {
@@ -918,14 +1008,14 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     if (sender == ZoomInCommand()) {
         backend_tasks_.push(UserActionEvent {
             .action = UserAction::zoom_in,
-            .position = get_position(),
+            .position = try_get_position(),
         });
         return;
     }
     if (sender == ZoomOutCommand()) {
         backend_tasks_.push(UserActionEvent {
             .action = UserAction::zoom_out,
-            .position = get_position(),
+            .position = try_get_position(),
         });
         return;
     }

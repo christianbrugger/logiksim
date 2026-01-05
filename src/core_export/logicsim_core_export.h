@@ -81,6 +81,16 @@ LS_CORE_API void ls_string_destruct(ls_string_t* obj) LS_NOEXCEPT;
 LS_CORE_API const char* ls_string_data(const ls_string_t* obj) LS_NOEXCEPT;
 LS_CORE_API size_t ls_string_size(const ls_string_t* obj) LS_NOEXCEPT;
 
+// pass std::string to logicsim side
+// non owning view that does not transfer ownership
+typedef struct ls_string_view_t {
+    const char* data;
+    size_t size;
+#ifdef __cplusplus
+    [[nodiscard]] auto operator==(const ls_string_view_t&) const -> bool = default;
+#endif
+} ls_string_view_t;
+
 // wraps std::filesystem::path on logicsim side
 // this is required so ownership can be transferred from logicsim to export
 #ifdef _WIN32
@@ -243,6 +253,13 @@ typedef struct ls_modal_result_t {
 LS_NODISCARD LS_CORE_API ls_ui_status_t ls_circuit_submit_modal_result(
     ls_circuit_t* obj, const ls_modal_result_t* modal_result, uint8_t* next_step_enum,
     ls_path_t* path_out, ls_string_t* message_out) LS_NOEXCEPT;
+
+LS_NODISCARD LS_CORE_API ls_ui_status_t
+ls_circuit_copy_selected(ls_circuit_t* obj, ls_point_device_fine_t position,
+                         ls_string_t* text_out) LS_NOEXCEPT;
+LS_NODISCARD LS_CORE_API ls_ui_status_t ls_circuit_paste_and_select(
+    ls_circuit_t* obj, ls_string_view_t text, ls_point_device_fine_t position,
+    ls_bool_t* success_out) LS_NOEXCEPT;
 
 /**
  * @brief: Render the layout to the given buffer.
@@ -847,6 +864,11 @@ class CircuitInterface {
         -> UIStatus;
     [[nodiscard]] inline auto submit_modal_result(
         const ModalResult& result, std::optional<NextActionStep>& next_step) -> UIStatus;
+    [[nodiscard]] inline auto copy_selected(ls_point_device_fine_t position,
+                                            std::string& text_out) -> UIStatus;
+    [[nodiscard]] inline auto paste_and_select(std::string_view text,
+                                               ls_point_device_fine_t position,
+                                               bool& success_out) -> UIStatus;
 
     inline auto render_layout(int32_t width, int32_t height, double pixel_ratio,
                               void* pixel_data, intptr_t stride) -> void;
@@ -1135,6 +1157,31 @@ auto CircuitInterface::submit_modal_result(const ModalResult& result,
         get(), &modal_result, &next_step_enum, path_out.get(), message_out.get());
 
     next_step = detail::to_exp_next_step(next_step_enum, path_out, message_out);
+    return detail::to_exp(status);
+}
+
+auto CircuitInterface::copy_selected(ls_point_device_fine_t position,
+                                     std::string& text_out) -> UIStatus {
+    auto text = WrappedString {};
+
+    const auto status = ls_circuit_copy_selected(get(), position, text.get());
+
+    text_out = text.view();
+    return detail::to_exp(status);
+}
+
+auto CircuitInterface::paste_and_select(std::string_view text,
+                                        ls_point_device_fine_t position,
+                                        bool& success_out) -> UIStatus {
+    const auto text_view = ls_string_view_t {
+        .data = text.data(),
+        .size = text.size(),
+    };
+
+    auto success = ls_bool_t {};
+    const auto status = ls_circuit_paste_and_select(get(), text_view, position, &success);
+
+    success_out = success != 0;
     return detail::to_exp(status);
 }
 

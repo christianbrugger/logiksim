@@ -387,10 +387,10 @@ class CircuitUIModel {
     [[nodiscard]] auto set_config(const CircuitUIConfig& config) -> UIStatus;
     [[nodiscard]] auto do_action(UserAction action,
                                  std::optional<point_device_fine_t> position) -> UIStatus;
-    [[nodiscard]] auto copy_selected(point_device_fine_t position,
-                                     std::optional<std::string>& text_out) -> UIStatus;
+    [[nodiscard]] auto copy_selected(point_device_fine_t position, std::string& text_out)
+        -> UIStatus;
     [[nodiscard]] auto paste_and_select(std::string_view text,
-                                        point_device_fine_t position, bool& success)
+                                        point_device_fine_t position, bool& success_out)
         -> UIStatus;
 
     [[nodiscard]] auto mouse_press(const MousePressEvent& event) -> UIStatus;

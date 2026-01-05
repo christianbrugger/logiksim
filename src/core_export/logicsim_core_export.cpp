@@ -46,6 +46,11 @@ template <typename Func>
 namespace logicsim {
 namespace {
 
+[[nodiscard]] auto from_c(ls_string_view_t view) -> std::string_view {
+    Expects(view.data != nullptr);
+    return std::string_view {view.data, view.size};
+}
+
 [[nodiscard]] auto from_c(ls_path_view_t view) -> std::filesystem::path {
     Expects(view.data != nullptr);
 
@@ -341,6 +346,11 @@ namespace {
         .x = point.x,
         .y = point.y,
     };
+}
+
+[[nodiscard]] auto to_point_device_fine(const ls_point_device_fine_t& point)
+    -> logicsim::point_device_fine_t {
+    return logicsim::point_device_fine_t {point.x, point.y};
 }
 
 [[nodiscard]] auto to_c(const angle_delta_t& delta) -> ls_angle_delta_t {
@@ -643,6 +653,39 @@ auto ls_circuit_submit_modal_result(ls_circuit_t* obj,
     });
 }
 
+auto ls_circuit_copy_selected(ls_circuit_t* obj, ls_point_device_fine_t position,
+                              ls_string_t* text_out) noexcept -> ls_ui_status_t {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+        Expects(text_out);
+
+        auto text = std::string {};
+        const auto status =
+            obj->model.copy_selected(to_point_device_fine(position), text);
+
+        text_out->value = std::move(text);
+        return to_c(status);
+    });
+}
+
+auto ls_circuit_paste_and_select(ls_circuit_t* obj, ls_string_view_t text,
+                                 ls_point_device_fine_t position,
+                                 ls_bool_t* success_out) noexcept -> ls_ui_status_t {
+    return ls_translate_exception([&]() {
+        using namespace logicsim;
+        Expects(obj);
+        Expects(success_out);
+
+        auto success = bool {};
+        const auto status = obj->model.paste_and_select(
+            from_c(text), to_point_device_fine(position), success);
+
+        *success_out = success;
+        return to_c(status);
+    });
+}
+
 namespace {
 
 auto create_bl_image(int w, int h, void* pixel_data, intptr_t stride) -> BLImage {
@@ -776,11 +819,6 @@ namespace {
     return modifiers_result;
 }
 
-[[nodiscard]] auto to_point_device_fine(const ls_point_device_fine_t& point)
-    -> logicsim::point_device_fine_t {
-    return logicsim::point_device_fine_t {point.x, point.y};
-}
-
 [[nodiscard]] auto to_angle_delta(const ls_angle_delta_t& angle_delta)
     -> logicsim::angle_delta_t {
     return logicsim::angle_delta_t {
@@ -791,7 +829,9 @@ namespace {
 
 [[nodiscard]] auto to_mouse_wheel_event(const ls_mouse_wheel_event_t& event)
     -> logicsim::MouseWheelEvent {
-    return logicsim::MouseWheelEvent {
+    using namespace logicsim;
+
+    return MouseWheelEvent {
         .position = to_point_device_fine(event.position),
         .angle_delta = to_angle_delta(event.angle_delta),
         .modifiers = to_keyboard_modifiers(event.keyboard_modifiers_bitset),

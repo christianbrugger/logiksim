@@ -467,11 +467,11 @@ auto CircuitUIModel::do_action(UserAction action,
     return status;
 }
 
-auto CircuitUIModel::copy_selected(point_device_fine_t position,
-                                   std::optional<std::string>& text_out) -> UIStatus {
+auto CircuitUIModel::copy_selected(point_device_fine_t position, std::string& text_out)
+    -> UIStatus {
     Expects(class_invariant_holds());
     auto status = UIStatus {};
-    auto result = std::optional<std::string> {};
+    auto result = std::string {};
 
     if (is_selection_state(config_.state)) {
         status |= finalize_editing();

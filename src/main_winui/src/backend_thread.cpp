@@ -217,49 +217,92 @@ auto render_circuit(RenderBufferSource& render_source,
     return status;
 }
 
+[[nodiscard]] auto handle_swap_chain_params(const SwapChainParams& params,
+                                            RenderBufferSource& render_source)
+    -> UIStatus {
+    if (render_source.params() != params) {
+        render_source.update_params(params);
+        return UIStatus {.repaint_required = true};
+    }
+    return UIStatus {};
+}
+
+[[nodiscard]] auto handle_clipboard_event(const ClipboardEvent& event,
+                                          exporting::CircuitInterface& circuit,
+                                          IBackendGuiActions& actions) -> UIStatus {
+    switch (event.action) {
+        case ClipboardAction::copy: {
+            auto status = UIStatus {};
+
+            auto text_out = std::string {};
+            status |= circuit.copy_selected(event.position, text_out);
+
+            if (!text_out.empty()) {
+                actions.set_clipboard_text_blocking(text_out);
+            }
+
+            return status;
+        }
+
+        case ClipboardAction::paste: {
+            auto status = UIStatus {};
+
+            if (const auto text = actions.get_clipboard_text_blocking();
+                text && !text->empty()) {
+                auto success = bool {};
+                status |= circuit.paste_and_select(text.value(), event.position, success);
+            }
+            return status;
+        }
+
+        case ClipboardAction::cut: {
+            auto status = UIStatus {};
+
+            auto text_out = std::string {};
+            status |= circuit.copy_selected(event.position, text_out);
+
+            if (!text_out.empty() && actions.set_clipboard_text_blocking(text_out)) {
+                status |= circuit.do_action(exporting::UserActionEvent {
+                    .action = exporting::UserAction::delete_selected});
+            }
+
+            return status;
+        }
+    }
+
+    std::terminate();
+}
+
 [[nodiscard]] auto submit_backend_task(const BackendTask& task,
                                        RenderBufferSource& render_source,
                                        exporting::CircuitInterface& circuit,
                                        IBackendGuiActions& actions) -> UIStatus {
     using namespace exporting;
 
-    if (const auto* item = std::get_if<MousePressEvent>(&task)) {
-        return circuit.mouse_press(*item);
-    }
-    if (const auto* item = std::get_if<MouseMoveEvent>(&task)) {
-        return circuit.mouse_move(*item);
-    }
-    if (const auto* item = std::get_if<MouseReleaseEvent>(&task)) {
-        return circuit.mouse_release(*item);
-    }
-    if (const auto* item = std::get_if<MouseWheelEvent>(&task)) {
-        return circuit.mouse_wheel(*item);
-    }
-    if (const auto* item = std::get_if<VirtualKey>(&task)) {
-        return circuit.key_press(*item);
-    }
-    if (const auto* item = std::get_if<UserActionEvent>(&task)) {
-        return circuit.do_action(*item);
-    }
-    if (const auto* item = std::get_if<CircuitUIConfigEvent>(&task)) {
-        return handle_circuit_ui_config_event(*item, circuit);
-    }
-    if (const auto* item = std::get_if<FileAction>(&task)) {
-        return handle_file_request(*item, circuit, actions);
-    }
-    if (const auto* item = std::get_if<OpenFileEvent>(&task)) {
-        return handle_open_request(*item, circuit, actions);
-    }
-
-    if (const auto* item = std::get_if<SwapChainParams>(&task)) {
-        if (render_source.params() != *item) {
-            render_source.update_params(*item);
-            return UIStatus {.repaint_required = true};
-        }
-        return UIStatus {};
-    }
-
-    return UIStatus {};
+    return std::visit(
+        overload(
+            [&](const MousePressEvent& item) { return circuit.mouse_press(item); },
+            [&](const MouseMoveEvent& item) { return circuit.mouse_move(item); },
+            [&](const MouseReleaseEvent& item) { return circuit.mouse_release(item); },
+            [&](const MouseWheelEvent& item) { return circuit.mouse_wheel(item); },
+            [&](const VirtualKey& item) { return circuit.key_press(item); },
+            [&](const UserActionEvent& item) { return circuit.do_action(item); },
+            [&](const CircuitUIConfigEvent& item) {
+                return handle_circuit_ui_config_event(item, circuit);
+            },
+            [&](const FileAction& item) {
+                return handle_file_request(item, circuit, actions);
+            },
+            [&](const OpenFileEvent& item) {
+                return handle_open_request(item, circuit, actions);
+            },
+            [&](const SwapChainParams& item) {
+                return handle_swap_chain_params(item, render_source);
+            },
+            [&](const ClipboardEvent& item) {
+                return handle_clipboard_event(item, circuit, actions);
+            }),
+        task);
 }
 
 auto process_backend_task(const BackendTask& task, RenderBufferSource& render_source,

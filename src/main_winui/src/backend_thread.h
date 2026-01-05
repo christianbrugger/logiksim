@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <thread>
 #include <variant>
 
@@ -46,6 +47,9 @@ class IBackendGuiActions {
     virtual auto show_dialog_blocking(exporting::ErrorMessage message) const -> void = 0;
     virtual auto end_modal_state() const -> void = 0;
     virtual auto exit_application_no_dialog() const -> void = 0;
+
+    virtual auto get_clipboard_text_blocking() const -> std::optional<std::string> = 0;
+    virtual auto set_clipboard_text_blocking(std::string_view text) const -> bool = 0;
 };
 
 //
@@ -99,6 +103,19 @@ struct OpenFileEvent {
     [[nodiscard]] auto operator==(const OpenFileEvent&) const -> bool = default;
 };
 
+enum class ClipboardAction {
+    copy,
+    paste,
+    cut,
+};
+
+struct ClipboardEvent {
+    ClipboardAction action {ClipboardAction::copy};
+    ls_point_device_fine_t position {};
+
+    [[nodiscard]] auto operator==(const ClipboardEvent&) const -> bool = default;
+};
+
 using BackendTask = std::variant<  //
     SwapChainParams,               //
     exporting::MousePressEvent,    //
@@ -109,7 +126,8 @@ using BackendTask = std::variant<  //
     exporting::UserActionEvent,    //
     exporting::FileAction,         //
     CircuitUIConfigEvent,          //
-    OpenFileEvent          //
+    OpenFileEvent,                 //
+    ClipboardEvent                 //
     >;
 
 using BackendTaskQueue = ::logicsim::ConcurrentBlockingQueue<BackendTask>;

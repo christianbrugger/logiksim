@@ -91,6 +91,12 @@ struct MainWindow : MainWindowT<MainWindow> {
                               std::promise<void> promise)
         -> Windows::Foundation::IAsyncAction;
 
+    auto get_clipboard_text_blocking(std::promise<std::optional<hstring>> promise)
+        -> Windows::Foundation::IAsyncAction;
+
+    auto set_clipboard_text_blocking(hstring text, std::promise<bool> promise)
+        -> Windows::Foundation::IAsyncAction;
+
     auto end_modal_state() -> void;
 
     auto exit_application_no_dialog() -> void;
