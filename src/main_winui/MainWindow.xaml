@@ -19,7 +19,6 @@
 
     <ContentControl x:Name="ContentControl" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
         <Page ActualThemeChanged="Page_ActualThemeChanged">
-
             <!-- Icons: https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-fluent-icons-font -->
             <Page.Resources>
                 <!-- File -->
@@ -274,166 +273,247 @@
                 >
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TitleBar x:Name="MainTitleBar" Grid.Row="0" Height="30">
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup>
+                        <VisualState>
+                            <VisualState.StateTriggers>
+                                <AdaptiveTrigger MinWindowWidth="800"/>
+                            </VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter Target="SettingMainStack.Orientation" Value="Horizontal"/>
+                                <Setter Target="SettingSecondPanel.Margin" Value="56,0,0,0"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+
+                <TitleBar x:Name="MainTitleBar" Grid.Row="0" IsBackButtonEnabled="True" IsBackButtonVisible="True">
                     <!--  <TitleBar.IconSource>
                         <ImageIconSource ImageSource="ms-appx:///resources/icons/derivative/app_icon.svg"/>
                     </TitleBar.IconSource>-->
                 </TitleBar>
 
-                <Grid Grid.Row="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <!-- make title bar effectively 30 instead of 32 pixels by -2 top margin -->
+                <Grid Grid.Row="1" Visibility="Collapsed" Margin="0,-2,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                    <MenuBar Grid.Column="0">
-                        <MenuBarItem Title="File">
-                            <MenuFlyoutItem Command="{StaticResource NewCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource OpenCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource SaveCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource SaveAsCommand}"/>
-                            <MenuFlyoutSeparator/>
-                            <MenuFlyoutItem Command="{StaticResource ExitCommand}"/>
-                        </MenuBarItem>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                        <MenuBarItem Title="Edit">
-                            <!--
+                        <MenuBar Grid.Column="0">
+                            <MenuBarItem Title="File">
+                                <MenuFlyoutItem Command="{StaticResource NewCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource OpenCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource SaveCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource SaveAsCommand}"/>
+                                <MenuFlyoutSeparator/>
+                                <MenuFlyoutItem Command="{StaticResource ExitCommand}"/>
+                            </MenuBarItem>
+
+                            <MenuBarItem Title="Edit">
+                                <!--
                             <MenuFlyoutItem Command="{StaticResource UndoCommand}"/>
                             <MenuFlyoutItem Command="{StaticResource RedoCommand}"/>
                             <MenuFlyoutSeparator/>
                             -->
-                            <MenuFlyoutItem Command="{StaticResource CutCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource CopyCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource PasteCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource DeleteCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource SelectAllCommand}"/>
-                        </MenuBarItem>
+                                <MenuFlyoutItem Command="{StaticResource CutCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource CopyCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource PasteCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource DeleteCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource SelectAllCommand}"/>
+                            </MenuBarItem>
 
-                        <MenuBarItem Title="View">
-                            <MenuFlyoutItem Command="{StaticResource ZoomInCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource ZoomOutCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource ResetZoomCommand}"/>
-                            <MenuFlyoutSeparator/>
-                            <MenuFlyoutSubItem Text="Wire Style">
-                                <RadioMenuFlyoutItem x:Name="WireStyleRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleRedCommand}"/>
-                                <RadioMenuFlyoutItem x:Name="WireStyleBoldFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldCommand}"/>
-                                <RadioMenuFlyoutItem x:Name="WireStyleBoldRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldRedCommand}"/>
-                            </MenuFlyoutSubItem>
-                        </MenuBarItem>
+                            <MenuBarItem Title="View">
+                                <MenuFlyoutItem Command="{StaticResource ZoomInCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource ZoomOutCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource ResetZoomCommand}"/>
+                                <MenuFlyoutSeparator/>
+                                <MenuFlyoutSubItem Text="Wire Style">
+                                    <RadioMenuFlyoutItem x:Name="WireStyleRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleRedCommand}"/>
+                                    <RadioMenuFlyoutItem x:Name="WireStyleBoldFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldCommand}"/>
+                                    <RadioMenuFlyoutItem x:Name="WireStyleBoldRedFlyout" GroupName="WireStyles" Command="{StaticResource WireStyleBoldRedCommand}"/>
+                                </MenuFlyoutSubItem>
+                            </MenuBarItem>
 
-                        <MenuBarItem Title="Simulation" Visibility="Collapsed">
-                            <MenuFlyoutItem Command="{StaticResource StartSimulationCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource StopSimulationCommand}"/>
-                            <MenuFlyoutSeparator/>
-                            <ToggleMenuFlyoutItem x:Name="WireDelayFlyout" Command="{StaticResource WireDelayCommand}"/>
-                            <MenuFlyoutSeparator/>
-                            <MenuFlyoutSubItem Text="Simulation Speed">
-                                <MenuFlyoutSubItem.Icon>
-                                    <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xEC4A;" />
-                                </MenuFlyoutSubItem.Icon>
-                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed0nsCommand}"/>
-                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed1usCommand}"/>
-                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed10usCommand}"/>
-                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed100usCommand}"/>
-                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed1msCommand}"/>
-                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed10msCommand}"/>
-                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed100msCommand}"/>
-                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed1sCommand}"/>
-                                <MenuFlyoutItem Command="{StaticResource SimulationSpeed10sCommand}"/>
-                            </MenuFlyoutSubItem>
-                        </MenuBarItem>
+                            <MenuBarItem Title="Simulation" Visibility="Visible">
+                                <MenuFlyoutItem Command="{StaticResource StartSimulationCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource StopSimulationCommand}"/>
+                                <MenuFlyoutSeparator/>
+                                <ToggleMenuFlyoutItem x:Name="WireDelayFlyout" Command="{StaticResource WireDelayCommand}"/>
+                                <MenuFlyoutSeparator/>
+                                <MenuFlyoutSubItem Text="Simulation Speed">
+                                    <MenuFlyoutSubItem.Icon>
+                                        <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xEC4A;" />
+                                    </MenuFlyoutSubItem.Icon>
+                                    <MenuFlyoutItem Command="{StaticResource SimulationSpeed0nsCommand}"/>
+                                    <MenuFlyoutItem Command="{StaticResource SimulationSpeed1usCommand}"/>
+                                    <MenuFlyoutItem Command="{StaticResource SimulationSpeed10usCommand}"/>
+                                    <MenuFlyoutItem Command="{StaticResource SimulationSpeed100usCommand}"/>
+                                    <MenuFlyoutItem Command="{StaticResource SimulationSpeed1msCommand}"/>
+                                    <MenuFlyoutItem Command="{StaticResource SimulationSpeed10msCommand}"/>
+                                    <MenuFlyoutItem Command="{StaticResource SimulationSpeed100msCommand}"/>
+                                    <MenuFlyoutItem Command="{StaticResource SimulationSpeed1sCommand}"/>
+                                    <MenuFlyoutItem Command="{StaticResource SimulationSpeed10sCommand}"/>
+                                </MenuFlyoutSubItem>
+                            </MenuBarItem>
 
-                        <MenuBarItem Title="Debug" Visibility="Collapsed">
-                            <ToggleMenuFlyoutItem x:Name="BenchmarkFlyout" Command="{StaticResource BenchmarkCommand}"/>
-                            <ToggleMenuFlyoutItem x:Name="DebugInfoDialogFlyout" Command="{StaticResource DebugInfoDialogCommand}"/>
-                            <MenuFlyoutSeparator/>
-                            <ToggleMenuFlyoutItem x:Name="ShowCircuitFlyout" Command="{StaticResource ShowCircuitCommand}"/>
-                            <ToggleMenuFlyoutItem x:Name="ShowCollisionIndexFlyout" Command="{StaticResource ShowCollisionIndexCommand}"/>
-                            <ToggleMenuFlyoutItem x:Name="ShowConnectionIndexFlyout" Command="{StaticResource ShowConnectionIndexCommand}"/>
-                            <ToggleMenuFlyoutItem x:Name="ShowSelectionIndexFlyout" Command="{StaticResource ShowSelectionIndexCommand}"/>
-                            <MenuFlyoutSeparator/>
-                            <MenuFlyoutItem Command="{StaticResource ReloadCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource ExampleSimpleCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource ExampleWiresCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource ExampleElementsCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource ExampleElementsWiresCommand}"/>
-                            <MenuFlyoutSeparator/>
-                            <ToggleMenuFlyoutItem x:Name="ShowRenderBordersFlyout" Command="{StaticResource ShowRenderBordersCommand}"/>
-                            <ToggleMenuFlyoutItem x:Name="ShowMousePositionFlyout" Command="{StaticResource ShowMousePositionCommand}"/>
-                            <ToggleMenuFlyoutItem x:Name="EnterNonInteractiveModeFlyout" Command="{StaticResource EnterNonInteractiveModeCommand}"/>
-                            <MenuFlyoutSeparator/>
-                            <ToggleMenuFlyoutItem x:Name="JitRenderingFlyout" Command="{StaticResource JitRenderingCommand}"/>
-                            <MenuFlyoutSeparator/>
-                            <RadioMenuFlyoutItem x:Name="ThreadSyncFlyout" GroupName="RenderThreads" Command="{StaticResource RenderSynchronousCommand}"/>
-                            <RadioMenuFlyoutItem x:Name="Thread2Flyout" GroupName="RenderThreads" Command="{StaticResource Render2ThreadsCommand}"/>
-                            <RadioMenuFlyoutItem x:Name="Thread4Flyout" GroupName="RenderThreads" Command="{StaticResource Render4ThreadsCommand}"/>
-                            <RadioMenuFlyoutItem x:Name="Thread8Flyout" GroupName="RenderThreads" Command="{StaticResource Render8ThreadsCommand}"/>
-                        </MenuBarItem>
-                    </MenuBar>
+                            <MenuBarItem Title="Debug" Visibility="Visible">
+                                <ToggleMenuFlyoutItem x:Name="BenchmarkFlyout" Command="{StaticResource BenchmarkCommand}"/>
+                                <ToggleMenuFlyoutItem x:Name="DebugInfoDialogFlyout" Command="{StaticResource DebugInfoDialogCommand}"/>
+                                <MenuFlyoutSeparator/>
+                                <ToggleMenuFlyoutItem x:Name="ShowCircuitFlyout" Command="{StaticResource ShowCircuitCommand}"/>
+                                <ToggleMenuFlyoutItem x:Name="ShowCollisionIndexFlyout" Command="{StaticResource ShowCollisionIndexCommand}"/>
+                                <ToggleMenuFlyoutItem x:Name="ShowConnectionIndexFlyout" Command="{StaticResource ShowConnectionIndexCommand}"/>
+                                <ToggleMenuFlyoutItem x:Name="ShowSelectionIndexFlyout" Command="{StaticResource ShowSelectionIndexCommand}"/>
+                                <MenuFlyoutSeparator/>
+                                <MenuFlyoutItem Command="{StaticResource ReloadCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource ExampleSimpleCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource ExampleWiresCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource ExampleElementsCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource ExampleElementsWiresCommand}"/>
+                                <MenuFlyoutSeparator/>
+                                <ToggleMenuFlyoutItem x:Name="ShowRenderBordersFlyout" Command="{StaticResource ShowRenderBordersCommand}"/>
+                                <ToggleMenuFlyoutItem x:Name="ShowMousePositionFlyout" Command="{StaticResource ShowMousePositionCommand}"/>
+                                <ToggleMenuFlyoutItem x:Name="EnterNonInteractiveModeFlyout" Command="{StaticResource EnterNonInteractiveModeCommand}"/>
+                                <MenuFlyoutSeparator/>
+                                <ToggleMenuFlyoutItem x:Name="JitRenderingFlyout" Command="{StaticResource JitRenderingCommand}"/>
+                                <MenuFlyoutSeparator/>
+                                <RadioMenuFlyoutItem x:Name="ThreadSyncFlyout" GroupName="RenderThreads" Command="{StaticResource RenderSynchronousCommand}"/>
+                                <RadioMenuFlyoutItem x:Name="Thread2Flyout" GroupName="RenderThreads" Command="{StaticResource Render2ThreadsCommand}"/>
+                                <RadioMenuFlyoutItem x:Name="Thread4Flyout" GroupName="RenderThreads" Command="{StaticResource Render4ThreadsCommand}"/>
+                                <RadioMenuFlyoutItem x:Name="Thread8Flyout" GroupName="RenderThreads" Command="{StaticResource Render8ThreadsCommand}"/>
+                            </MenuBarItem>
+                        </MenuBar>
 
-                    <StackPanel Orientation="Horizontal" Grid.Column="1">
-                        <AppBarSeparator/>
-                        <Button Style="{StaticResource LS_TopButtonStyle}" 
+                        <StackPanel Orientation="Horizontal" Grid.Column="1">
+                            <AppBarSeparator/>
+                            <Button Style="{StaticResource LS_TopButtonStyle}" 
                                     Command="{StaticResource SaveCommand}"
                                     ToolTipService.ToolTip="Save (Ctrl+S)">
-                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE74E;" FontSize="16"/>
-                        </Button>
+                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE74E;" FontSize="16"/>
+                            </Button>
 
+                            <!--
                         <AppBarSeparator/>
                         <Button Style="{StaticResource LS_TopButtonStyle}">
                             <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE72D;" FontSize="16"/>
                         </Button>
+                        -->
 
-                        <AppBarSeparator/>
-                        <Button Style="{StaticResource LS_TopButtonStyle}" 
+                            <AppBarSeparator/>
+                            <Button Style="{StaticResource LS_TopButtonStyle}" 
                                     Command="{StaticResource UndoCommand}"
                                 ToolTipService.ToolTip="Undo (Ctrl+Z)">
-                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A7;" FontSize="16"/>
-                        </Button>
-                        <Button Style="{StaticResource LS_TopButtonStyle}" 
+                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A7;" FontSize="16"/>
+                            </Button>
+                            <Button Style="{StaticResource LS_TopButtonStyle}" 
                                     Command="{StaticResource RedoCommand}"
                                     ToolTipService.ToolTip="Redo (Ctrl+Y)">
-                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A6;" FontSize="16"/>
+                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE7A6;" FontSize="16"/>
+                            </Button>
+                        </StackPanel>
+
+                        <Button Grid.Column="3" Style="{StaticResource LS_TopButtonStyle}"
+                                ToolTipService.ToolTip="Open settings">
+                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE713;" FontSize="16"/>
                         </Button>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
+                        <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right">
+                            <AppBarButton Command="{StaticResource StartSimulationCommand}"/>
+                            <AppBarButton Command="{StaticResource StopSimulationCommand}"/>
+                        </CommandBar>
                     </StackPanel>
 
-                    <Button Grid.Column="3" Style="{StaticResource LS_TopButtonStyle}"
-                                ToolTipService.ToolTip="Open settings">
-                        <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE713;" FontSize="16"/>
-                    </Button>
+                    <Grid Grid.Row="2">
+                        <canvas:CanvasSwapChainPanel
+                            x:Name="CanvasPanel"
+                            IsTabStop="True"
+                    
+                            SizeChanged="CanvasPanel_SizeChanged"
+                            Loaded="CanvasPanel_Loaded"
+                    
+                            PointerMoved="CanvasPanel_PointerEvent"
+                            PointerPressed="CanvasPanel_PointerEvent"
+                            PointerReleased="CanvasPanel_PointerEvent"
+                            PointerCanceled="CanvasPanel_PointerEvent"
+                            PointerCaptureLost="CanvasPanel_PointerEvent"
+                    
+                            PointerWheelChanged="CanvasPanel_PointerWheelChanged"
+                            KeyDown="CanvasPanel_KeyDown">
+                        </canvas:CanvasSwapChainPanel>
+                    </Grid>
                 </Grid>
 
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
-                    <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right">
-                        <AppBarButton Command="{StaticResource StartSimulationCommand}"/>
-                        <AppBarButton Command="{StaticResource StopSimulationCommand}"/>
-                    </CommandBar>
-                </StackPanel>
+                <Grid Grid.Row="1" Visibility="Visible">
+                    <ScrollView>
 
-                <Grid Grid.Row="3">
-                    <canvas:CanvasSwapChainPanel
-                    x:Name="CanvasPanel"
-                    IsTabStop="True"
-                    
-                    SizeChanged="CanvasPanel_SizeChanged"
-                    Loaded="CanvasPanel_Loaded"
-                    
-                    PointerMoved="CanvasPanel_PointerEvent"
-                    PointerPressed="CanvasPanel_PointerEvent"
-                    PointerReleased="CanvasPanel_PointerEvent"
-                    PointerCanceled="CanvasPanel_PointerEvent"
-                    PointerCaptureLost="CanvasPanel_PointerEvent"
-                    
-                    PointerWheelChanged="CanvasPanel_PointerWheelChanged"
-                    KeyDown="CanvasPanel_KeyDown">
-                    </canvas:CanvasSwapChainPanel>
+                        <Grid Margin="0,28,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Text="Settings" Margin="52,0,0,0" Style="{StaticResource TitleLargeTextBlockStyle}"/>
+                            <StackPanel x:Name="SettingMainStack" Grid.Row="1" Margin="52,24">
+
+                                <StackPanel MinWidth="600">
+                                    <StackPanel.Resources>
+                                        <Style TargetType="Expander">
+                                            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        </Style>
+                                    </StackPanel.Resources>
+
+                                    <TextBlock Text="Appearance" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
+                                    <Expander IsExpanded="True">
+                                        <Expander.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <FontIcon FontFamily="FluentSystemIcons-Regular" Glyph="&#xF592;" FontSize="25" Margin="0,0,10,0" />
+                                                <TextBlock Text="App theme"/>
+                                            </StackPanel>
+                                        </Expander.Header>
+                                        <Expander.Content>
+                                            <RadioButtons SelectedIndex="2" Margin="40,0,0,0">
+                                                <x:String>Light</x:String>
+                                                <x:String>Dark</x:String>
+                                                <x:String>Use system setting</x:String>
+                                            </RadioButtons>
+                                        </Expander.Content>
+                                    </Expander>
+                                </StackPanel>
+
+                                <StackPanel x:Name="SettingSecondPanel" Margin="0,20,0,0">
+                                    <TextBlock Text="About LogikSim" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="12,0,0,6"/>
+                                    <TextBlock Text="LogikSim Version 2.4.0" IsTextSelectionEnabled="True" Margin="12,0,0,0"/>
+                                    <TextBlock Text="Author: Christian Brugger" IsTextSelectionEnabled="True" Margin="12,0,0,0"/>
+                                    <TextBlock Text="Contact: christian@rangetable.com" IsTextSelectionEnabled="True" Margin="12,0,0,0"/>
+                                    <TextBlock Text="© 2026 Apache License." Margin="12,0,0,30"/>
+
+                                    <HyperlinkButton Content="Homepage" NavigateUri="https://github.com/christianbrugger/logiksim" />
+                                    <HyperlinkButton Content="License Terms" NavigateUri="https://github.com/christianbrugger/logiksim/blob/master/LICENSE" />
+                                    <HyperlinkButton Content="Third-Party Software Acknowledgements" NavigateUri="https://github.com/christianbrugger/logiksim/tree/master#third-party" />
+
+                                    <Button Margin="12,20,0,0" Click="Button_Click">Report Issue</Button>
+                                    <Button Margin="12,20,0,0" Click="Button_Click_1">Sent Email</Button>
+                                </StackPanel>
+
+                            </StackPanel>
+                        </Grid>
+                    </ScrollView>
                 </Grid>
             </Grid>
         </Page>

@@ -131,6 +131,12 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     logicsim::KeyTracker key_tracker_ {};
     std::optional<logicsim::exporting::CircuitUIConfig> last_config_ {};
+
+   public:
+    void Button_Click(winrt::Windows::Foundation::IInspectable const& sender,
+                      winrt::Microsoft::UI::Xaml::RoutedEventArgs const& e);
+    void Button_Click_1(winrt::Windows::Foundation::IInspectable const& sender,
+                        winrt::Microsoft::UI::Xaml::RoutedEventArgs const& e);
 };
 
 }  // namespace winrt::main_winui::implementation

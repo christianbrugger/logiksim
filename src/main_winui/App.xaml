@@ -16,6 +16,10 @@
                 ms-appx:///resources/fonts/lucide_0.562.0_300_nogap.ttf#Lucide
             </FontFamily>
 
+            <FontFamily x:Key="FluentSystemIcons-Regular">
+                ms-appx:///resources/fonts/FluentSystemIcons-Regular.ttf#FluentSystemIcons-Regular
+            </FontFamily>
+
             <SolidColorBrush x:Key="BushStartSimulation" Color="#11920D"/>
             <SolidColorBrush x:Key="BushStopSimulation" Color="#C70F21"/>
 

@@ -12,7 +12,9 @@
 #include "main_winui/src/ls_xaml_utils.h"
 
 #include <winrt/Windows.ApplicationModel.DataTransfer.h>
+#include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Storage.h>
+#include <winrt/Windows.System.h>
 
 #include <chrono>
 #include <exception>
@@ -154,7 +156,7 @@ auto BackendGuiActions::show_dialog_blocking(
         }
     });
 
-    return (get_with_shutdown(future));
+    return get_with_shutdown(future);
 }
 
 auto BackendGuiActions::show_dialog_blocking(
@@ -172,7 +174,7 @@ auto BackendGuiActions::show_dialog_blocking(
         }
     });
 
-    return (get_with_shutdown(future));
+    return get_with_shutdown(future);
 }
 
 auto BackendGuiActions::end_modal_state() const -> void {
@@ -352,17 +354,19 @@ auto MainWindow::set_modal(bool value) -> void {
 }
 
 void MainWindow::Window_Closed(IInspectable const&, WindowEventArgs const& args) {
-    // Only if destroyed is set we are destroying the window.
-    // This is initiated by the backend.
+    // This is set by the backend
     if (is_destroyed_) {
         return;
     }
+    // Deny all other close events, so app stays open.
     args.Handled(true);
 
     if (is_modal_) {
-        // ignore any close requests while modal dialog is active.
+        // While model dialog is active, treat our UI as non-closable
+        // User instead needs to interact with the dialog.
         return;
     }
+    // This asks the backend to close the application
     ExitCommand().Execute(nullptr);
 }
 
@@ -1398,3 +1402,17 @@ auto MainWindow::update_icons_and_button_states() -> void {
 }
 
 }  // namespace winrt::main_winui::implementation
+
+void winrt::main_winui::implementation::MainWindow::Button_Click(
+    winrt::Windows::Foundation::IInspectable const&,
+    winrt::Microsoft::UI::Xaml::RoutedEventArgs const&) {
+    winrt::Windows::System::Launcher::LaunchUriAsync(winrt::Windows::Foundation::Uri {
+        L"https://github.com/christianbrugger/logiksim/issues"});
+}
+
+void winrt::main_winui::implementation::MainWindow::Button_Click_1(
+    winrt::Windows::Foundation::IInspectable const&,
+    winrt::Microsoft::UI::Xaml::RoutedEventArgs const&) {
+    winrt::Windows::System::Launcher::LaunchUriAsync(
+        winrt::Windows::Foundation::Uri {L"mailto:christian@rangetable.com"});
+}
