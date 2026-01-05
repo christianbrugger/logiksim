@@ -392,14 +392,23 @@ auto MainWindow::MainGrid_Drop(IInspectable, DragEventArgs args)
 
     const auto lifetime [[maybe_unused]] = get_strong();
 
-    if (args.DataView().Contains(StandardDataFormats::StorageItems())) {
-        const auto items = co_await args.DataView().GetStorageItemsAsync();
+    try {
+        if (args.DataView().Contains(StandardDataFormats::StorageItems())) {
+            const auto items = co_await args.DataView().GetStorageItemsAsync();
 
-        if (!is_modal_ && items.Size() != 0) {
-            set_modal(true);
-            backend_tasks_.push(logicsim::OpenFileEvent {
-                .filename = std::wstring {items.GetAt(0).Path()}});
+            if (!is_modal_ && items.Size() != 0) {
+                const auto path_hstring = items.GetAt(0).Path();
+
+                if (!path_hstring.empty()) {
+                    set_modal(true);
+                    backend_tasks_.push(logicsim::OpenFileEvent {
+                        .filename = std::wstring {path_hstring}});
+                }
+            }
         }
+    } catch (const hresult_error& exc) {
+        std::print("WARNING: hresult_error during MainGrid_Drop: {}\n",
+                   to_string(exc.message()));
     }
 }
 
@@ -816,13 +825,20 @@ auto MainWindow::get_clipboard_text_blocking(std::promise<std::optional<hstring>
     const auto lifetime [[maybe_unused]] = get_strong();
 
     try {
-        const auto package = Clipboard::GetContent();
+        try {
+            const auto package = Clipboard::GetContent();
 
-        if (package.Contains(StandardDataFormats::Text())) {
-            promise.set_value(co_await package.GetTextAsync());
-        } else {
+            if (package.Contains(StandardDataFormats::Text())) {
+                promise.set_value(co_await package.GetTextAsync());
+            } else {
+                promise.set_value(std::nullopt);
+            }
+        } catch (const hresult_error& exc) {
+            std::print("WARNING: hresult_error reading clipboard: {}\n",
+                       to_string(exc.message()));
             promise.set_value(std::nullopt);
         }
+
     } catch (...) {
         promise.set_exception(std::current_exception());
     }
@@ -844,14 +860,21 @@ auto MainWindow::set_clipboard_text_blocking(hstring text, std::promise<bool> pr
         auto package = DataPackage {};
         package.SetText(text);
 
-        const auto success =
-            Clipboard::SetContentWithOptions(package, ClipboardContentOptions {});
-        Clipboard::Flush();
+        try {
+            const auto success =
+                Clipboard::SetContentWithOptions(package, ClipboardContentOptions {});
+            Clipboard::Flush();
+            promise.set_value(success);
+        } catch (const hresult_error& exc) {
+            std::print("WARNING: hresult_error writing clipboard: {}\n",
+                       to_string(exc.message()));
+            promise.set_value(false);
+        }
 
-        promise.set_value(success);
     } catch (...) {
         promise.set_exception(std::current_exception());
     }
+
     co_return;
 }
 
