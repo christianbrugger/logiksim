@@ -97,26 +97,14 @@ auto to_grid(point_device_t position, const ViewConfig &config)
     return to_grid(point_device_fine_t {position}, config);
 }
 
-auto to_closest_grid_position(point_device_fine_t position, size_device_t widget_size,
-                              const ViewConfig &config) -> point_t {
-    if (const auto grid = to_grid(position, config)) {
-        return grid.value();
-    }
+auto to_closest_grid_position(point_device_fine_t position, const ViewConfig &config)
+    -> point_t {
+    const auto grid_fine = to_grid_fine(position, config);
 
-    const auto w = widget_size.width;
-    const auto h = widget_size.height;
-
-    if (const auto grid = to_grid(point_device_t(w / 2, h / 2), config)) {
-        return grid.value();
-    }
-    if (const auto grid = to_grid(point_device_t(0, 0), config)) {
-        return grid.value();
-    }
-    if (const auto grid = to_grid(point_device_t(w, h), config)) {
-        return grid.value();
-    }
-
-    return point_t {0, 0};
+    return point_t {
+        grid_t {clamp_to<grid_t::value_type>(round_fast(double {grid_fine.x}))},
+        grid_t {clamp_to<grid_t::value_type>(round_fast(double {grid_fine.y}))},
+    };
 }
 
 // to Qt widget / device coordinates

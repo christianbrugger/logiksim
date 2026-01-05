@@ -543,14 +543,11 @@ enum class UserAction : uint8_t {
     undo = 1,
     redo = 2,
     select_all = 3,
-    copy_selected = 4,
-    paste_from_clipboard = 5,
-    cut_selected = 6,
-    delete_selected = 7,
+    delete_selected = 4,
 
-    zoom_in = 8,
-    zoom_out = 9,
-    reset_view = 10,
+    zoom_in = 5,
+    zoom_out = 6,
+    reset_view = 7,
 };
 
 enum class FileAction : uint8_t {

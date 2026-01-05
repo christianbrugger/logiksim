@@ -43,7 +43,6 @@ struct size_device_t;
     -> std::optional<point_t>;
 
 [[nodiscard]] auto to_closest_grid_position(point_device_fine_t position,
-                                            size_device_t widget_size,
                                             const ViewConfig& config) -> point_t;
 
 // to device coordinates used in the GUI / Qt

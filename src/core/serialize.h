@@ -16,6 +16,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace logicsim {
 
@@ -84,7 +85,7 @@ static_assert(std::copyable<LoadLayoutResult>);
 /**
  * @brief: Load layout form json data that is optionall gzipped and base64 encoded.
  */
-[[nodiscard]] auto load_layout(const std::string& binary)
+[[nodiscard]] auto load_layout(std::string_view binary)
     -> tl::expected<serialize::LoadLayoutResult, LoadError>;
 
 }  // namespace logicsim

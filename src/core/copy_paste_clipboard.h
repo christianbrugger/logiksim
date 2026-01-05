@@ -9,6 +9,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace logicsim {
 
@@ -68,7 +69,7 @@ struct PasteClipboardResult {
 /**
  * @brief: Parses the clipboard data for insertable elements.
  */
-[[nodiscard]] auto parse_clipboard_text(const std::string& text)
+[[nodiscard]] auto parse_clipboard_text(std::string_view text)
     -> tl::expected<serialize::LoadLayoutResult, LoadError>;
 
 /**

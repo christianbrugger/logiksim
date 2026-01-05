@@ -48,7 +48,7 @@ auto PasteClipboardResult::format() const -> std::string {
         is_colliding, cross_points);
 }
 
-auto parse_clipboard_text(const std::string& text)
+auto parse_clipboard_text(std::string_view text)
     -> tl::expected<serialize::LoadLayoutResult, LoadError> {
     return load_layout(text);
 }

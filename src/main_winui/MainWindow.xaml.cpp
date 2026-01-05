@@ -878,24 +878,24 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
         return;
     }
     if (sender == CutCommand()) {
-        backend_tasks_.push(UserActionEvent {
-            .action = UserAction::cut_selected,
-            .position = get_position(),
-        });
+        // backend_tasks_.push(UserActionEvent {
+        //     .action = UserAction::cut_selected,
+        //     .position = get_position(),
+        // });
         return;
     }
     if (sender == CopyCommand()) {
-        backend_tasks_.push(UserActionEvent {
-            .action = UserAction::copy_selected,
-            .position = get_position(),
-        });
+        // backend_tasks_.push(UserActionEvent {
+        //     .action = UserAction::copy_selected,
+        //     .position = get_position(),
+        // });
         return;
     }
     if (sender == PasteCommand()) {
-        backend_tasks_.push(UserActionEvent {
-            .action = UserAction::paste_from_clipboard,
-            .position = get_position(),
-        });
+        // backend_tasks_.push(UserActionEvent {
+        //     .action = UserAction::paste_from_clipboard,
+        //     .position = get_position(),
+        // });
         return;
     }
     if (sender == DeleteCommand()) {

@@ -426,7 +426,7 @@ namespace serialize {
 
 namespace {
 
-auto unserialize_base64_gzip_json(const std::string& binary)
+auto unserialize_base64_gzip_json(std::string_view binary)
     -> tl::expected<SerializedLayout, LoadError> {
     if (const auto format = guess_save_format(binary); format.has_value()) {
         switch (*format) {
@@ -516,7 +516,7 @@ auto LoadLayoutResult::save_position() const -> point_t {
 
 }  // namespace serialize
 
-auto load_layout(const std::string& binary)
+auto load_layout(std::string_view binary)
     -> tl::expected<serialize::LoadLayoutResult, LoadError> {
     return serialize::unserialize_base64_gzip_json(binary).transform(
         [](serialize::SerializedLayout&& data) {

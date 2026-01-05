@@ -63,9 +63,6 @@ enum class UserAction : uint8_t {
     undo,
     redo,
     select_all,
-    copy_selected,
-    paste_from_clipboard,
-    cut_selected,
     delete_selected,
 
     zoom_in,
@@ -390,6 +387,11 @@ class CircuitUIModel {
     [[nodiscard]] auto set_config(const CircuitUIConfig& config) -> UIStatus;
     [[nodiscard]] auto do_action(UserAction action,
                                  std::optional<point_device_fine_t> position) -> UIStatus;
+    [[nodiscard]] auto copy_selected(point_device_fine_t position,
+                                     std::optional<std::string>& text_out) -> UIStatus;
+    [[nodiscard]] auto paste_and_select(std::string_view text,
+                                        point_device_fine_t position, bool& success)
+        -> UIStatus;
 
     [[nodiscard]] auto mouse_press(const MousePressEvent& event) -> UIStatus;
     [[nodiscard]] auto mouse_move(const MouseMoveEvent& event) -> UIStatus;

@@ -4,6 +4,7 @@
 #include "core/circuit_example.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_logic_status.h"
 #include "core/component/circuit_ui_model/mouse_logic/mouse_wheel_logic.h"
+#include "core/copy_paste_clipboard.h"
 #include "core/geometry/rect.h"
 #include "core/geometry/scene.h"
 #include "core/load_save_file.h"
@@ -16,8 +17,8 @@ namespace {
 
 // constexpr auto inline simulation_interval = 20ms;
 
-[[nodiscard]] auto serialize(const circuit_ui_model::CircuitStore& circuit_store,
-                             const CircuitUIConfig& config) -> std::string {
+[[nodiscard]] auto do_serialize(const circuit_ui_model::CircuitStore& circuit_store,
+                                const CircuitUIConfig& config) -> std::string {
     return serialize_circuit(circuit_store.layout(), config.simulation);
 }
 
@@ -147,7 +148,7 @@ ModalState::ModalState(ModalRequest request_, FileAction action_,
       action {action_}
 #ifdef _DEBUG
       ,
-      serialized_ {serialize(circuit_store, config)}
+      serialized_ {do_serialize(circuit_store, config)}
 #endif
 {
 }
@@ -177,12 +178,6 @@ auto format(circuit_ui_model::UserAction action) -> std::string {
             return "redo";
         case select_all:
             return "select_all";
-        case copy_selected:
-            return "copy_selected";
-        case paste_from_clipboard:
-            return "paste_from_clipboard";
-        case cut_selected:
-            return "cut_selected";
         case delete_selected:
             return "delete_selected";
 
@@ -235,7 +230,7 @@ CircuitUIModel::CircuitUIModel() {
     // initial circuit
     save_information_ = SaveInformation {
         .name_or_path = UnsavedName {"Circuit"},
-        .serialized = serialize(circuit_store_, config_),
+        .serialized = do_serialize(circuit_store_, config_),
     };
 
     Ensures(class_invariant_holds());
@@ -379,7 +374,7 @@ auto CircuitUIModel::display_filename() const -> std::filesystem::path {
 auto CircuitUIModel::calculate_is_modified() const -> bool {
     Expects(class_invariant_holds());
 
-    return serialize(circuit_store_, config_) != save_information_.serialized;
+    return do_serialize(circuit_store_, config_) != save_information_.serialized;
 }
 
 auto CircuitUIModel::do_action(UserAction action,
@@ -432,19 +427,6 @@ auto CircuitUIModel::do_action(UserAction action,
             }
             break;
         }
-        case copy_selected: {
-            // this->copy_selected();
-            break;
-        }
-        case paste_from_clipboard: {
-            // this->paste_clipboard();
-            break;
-        }
-        case cut_selected: {
-            // this->copy_selected();
-            // this->delete_selected();
-            break;
-        }
         case delete_selected: {
             if (!is_editing_state(config_.state)) {
                 break;
@@ -482,6 +464,79 @@ auto CircuitUIModel::do_action(UserAction action,
 
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
+    return status;
+}
+
+auto CircuitUIModel::copy_selected(point_device_fine_t position,
+                                   std::optional<std::string>& text_out) -> UIStatus {
+    Expects(class_invariant_holds());
+    auto status = UIStatus {};
+    auto result = std::optional<std::string> {};
+
+    if (is_selection_state(config_.state)) {
+        status |= finalize_editing();
+        status |= log_mouse_position("copy_position", position);
+
+        const auto t = Timer {};
+
+        const auto copy_position =
+            to_closest_grid_position(position, circuit_renderer_.view_config());
+        if (auto text = visible_selection_to_clipboard_text(
+                circuit_store_.editable_circuit(), copy_position);
+            !text.empty()) {
+            result = std::move(text);
+            print("Copied", visible_selection_format(circuit_store_), "in", t);
+        }
+    }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    text_out = std::move(result);
+    return status;
+}
+
+auto CircuitUIModel::paste_and_select(std::string_view text, point_device_fine_t position,
+                                      bool& success_out) -> UIStatus {
+    Expects(class_invariant_holds());
+    auto status = UIStatus {};
+    auto is_success = bool {};
+
+    if (is_editing_state(config_.state)) {
+        const auto t = Timer {};
+
+        auto load_result = parse_clipboard_text(text);
+        if (!load_result) {
+            print("WARNING: Unable to paste clipboard data.");
+            print(load_result.error().type());
+            print(load_result.error().format());
+            print();
+        } else {
+            status |= finalize_editing();
+            status |= set_circuit_state(*this, defaults::selection_state);
+            status |= log_mouse_position("paste_position", position);
+
+            const auto paste_position =
+                to_closest_grid_position(position, circuit_renderer_.view_config());
+            auto paste_result = insert_clipboard_data(
+                circuit_store_.editable_circuit(), load_result.value(), paste_position);
+
+            if (paste_result.is_colliding) {
+                editing_logic_manager_.setup_colliding_move(
+                    circuit_store_.editable_circuit(),
+                    std::move(paste_result.cross_points));
+            } else {
+                circuit_store_.editable_circuit().finish_undo_group();
+            }
+            print("Pasted", visible_selection_format(circuit_store_), "in", t);
+
+            status.require_repaint = true;
+            is_success = true;
+        }
+    }
+
+    Ensures(class_invariant_holds());
+    Ensures(expensive_invariant_holds());
+    success_out = is_success;
     return status;
 }
 
@@ -562,7 +617,7 @@ auto CircuitUIModel::file_action(FileAction action,
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
     Ensures(modal_.has_value() == is_modal_request(next_step));
-    next_step_ = next_step;
+    next_step_ = std::move(next_step);
     return status;
 }
 
@@ -635,7 +690,7 @@ auto CircuitUIModel::submit_modal_result(const ModalResult& result,
     Ensures(class_invariant_holds());
     Ensures(expensive_invariant_holds());
     Ensures(modal_.has_value() == is_modal_request(next_step));
-    next_step_ = next_step;
+    next_step_ = std::move(next_step);
     return status;
 }
 
@@ -725,7 +780,8 @@ namespace {
     if (error.type() == LoadErrorType::json_version_error) {
         return error.format();
     }
-    return "This is not a valid circuit file, or its format is not currently supported.";
+    return "This is not a valid circuit file, or its format is not currently "
+           "supported.";
 }
 
 }  // namespace
@@ -817,7 +873,7 @@ auto CircuitUIModel::load_new_circuit() -> UIStatus {
                                    default_simulation_config);
     status |= set_save_information(SaveInformation {
         .name_or_path = UnsavedName {"Circuit"},
-        .serialized = serialize(circuit_store_, config_),
+        .serialized = do_serialize(circuit_store_, config_),
     });
 
     Ensures(class_invariant_holds());
@@ -838,7 +894,7 @@ auto CircuitUIModel::load_circuit_example(int number) -> UIStatus {
                                    default_simulation_config);
     status |= set_save_information(SaveInformation {
         .name_or_path = UnsavedName {std::format("Example {}", number)},
-        .serialized = serialize(circuit_store_, config_),
+        .serialized = do_serialize(circuit_store_, config_),
     });
 
     Ensures(class_invariant_holds());
@@ -858,7 +914,7 @@ auto CircuitUIModel::save_to_file(const std::filesystem::path& filename, bool& s
     if (result) {
         status |= set_save_information(SaveInformation {
             .name_or_path = SavedPath {filename},
-            .serialized = serialize(circuit_store_, config_),
+            .serialized = do_serialize(circuit_store_, config_),
         });
     }
 
@@ -886,7 +942,7 @@ auto CircuitUIModel::open_from_file(const std::filesystem::path& filename,
                                  load_result->view_point, load_result->simulation_config);
         status |= set_save_information(SaveInformation {
             .name_or_path = SavedPath {filename},
-            .serialized = serialize(circuit_store_, config_),
+            .serialized = do_serialize(circuit_store_, config_),
         });
     } else {
         status |= set_editable_circuit(EditableCircuit {std::move(orig_layout)});
@@ -1301,7 +1357,7 @@ auto CircuitUIModel::expensive_invariant_holds() const -> bool {
 
     // modal immutability (expensive so only assert)
 #ifdef _DEBUG
-    assert(!modal_ || modal_->serialized_ == serialize(circuit_store_, config_));
+    assert(!modal_ || modal_->serialized_ == do_serialize(circuit_store_, config_));
 #endif
 
     return true;

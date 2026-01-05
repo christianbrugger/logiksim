@@ -323,12 +323,6 @@ namespace {
             return circuit_ui_model::UserAction::redo;
         case select_all:
             return circuit_ui_model::UserAction::select_all;
-        case copy_selected:
-            return circuit_ui_model::UserAction::copy_selected;
-        case paste_from_clipboard:
-            return circuit_ui_model::UserAction::paste_from_clipboard;
-        case cut_selected:
-            return circuit_ui_model::UserAction::cut_selected;
         case delete_selected:
             return circuit_ui_model::UserAction::delete_selected;
 

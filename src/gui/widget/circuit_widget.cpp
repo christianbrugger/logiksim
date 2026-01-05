@@ -844,8 +844,8 @@ auto CircuitWidget::copy_paste_position() -> point_t {
     Expects(class_invariant_holds());
 
     const auto position = get_mouse_position(*this);
-    const auto result = to_closest_grid_position(to(position), to(get_size_device(*this)),
-                                                 circuit_renderer_.view_config());
+    const auto result =
+        to_closest_grid_position(to(position), circuit_renderer_.view_config());
 
     log_mouse_position("copy_paste_position", position);
 
