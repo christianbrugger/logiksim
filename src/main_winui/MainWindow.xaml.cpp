@@ -817,9 +817,12 @@ auto MainWindow::get_clipboard_text_blocking(std::promise<std::optional<hstring>
 
     try {
         const auto package = Clipboard::GetContent();
-        auto text = co_await package.GetTextAsync();
 
-        promise.set_value(std::move(text));
+        if (package.Contains(StandardDataFormats::Text())) {
+            promise.set_value(co_await package.GetTextAsync());
+        } else {
+            promise.set_value(std::nullopt);
+        }
     } catch (...) {
         promise.set_exception(std::current_exception());
     }
@@ -840,10 +843,12 @@ auto MainWindow::set_clipboard_text_blocking(hstring text, std::promise<bool> pr
     try {
         auto package = DataPackage {};
         package.SetText(text);
-        Clipboard::SetContent(package);
+
+        const auto success =
+            Clipboard::SetContentWithOptions(package, ClipboardContentOptions {});
         Clipboard::Flush();
 
-        promise.set_value(true);
+        promise.set_value(success);
     } catch (...) {
         promise.set_exception(std::current_exception());
     }
