@@ -295,9 +295,8 @@ auto MainWindow::InitializeComponent() -> void {
     // TODO: handle positon
     // TODO: display scaling
     AppWindow().ResizeClient(
-        winrt::Windows::Graphics::SizeInt32 {.Width = 500, .Height = 450});
-    // AppWindow().MoveAndResize(winrt::Windows::Graphics::RectInt32 {2400, 300, 500,
-    // 450});
+        // winrt::Windows::Graphics::SizeInt32 {.Width = 500, .Height = 450});
+        winrt::Windows::Graphics::SizeInt32 {.Width = 1000, .Height = 600});
 
     // test
     auto presenter = Microsoft::UI::Windowing::OverlappedPresenter::Create();
