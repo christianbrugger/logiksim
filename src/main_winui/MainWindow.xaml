@@ -16,7 +16,6 @@
         <MicaBackdrop/>
     </Window.SystemBackdrop>
 
-
     <ContentControl x:Name="ContentControl" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
         <Page ActualThemeChanged="Page_ActualThemeChanged">
             <!-- Icons: https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-fluent-icons-font -->
@@ -277,43 +276,41 @@
                 </Grid.RowDefinitions>
 
                 <VisualStateManager.VisualStateGroups>
+                    <!-- For setting dialog - responsive layout -->
                     <VisualStateGroup>
-
                         <VisualState>
                             <VisualState.StateTriggers>
                                 <AdaptiveTrigger MinWindowWidth="0"/>
                             </VisualState.StateTriggers>
                             <VisualState.Setters>
-                                <Setter Target="SettingFirstPanel.MaxHeight" Value="100"/>
+                                <Setter Target="SettingFirstPanel.(RelativePanel.AlignTopWithPanel)" Value="True"/>
+                                <Setter Target="SettingFirstPanel.(RelativePanel.AlignLeftWithPanel)" Value="True"/>
+                                <Setter Target="SettingFirstPanel.(RelativePanel.AlignRightWithPanel)" Value="True"/>
+                                <Setter Target="SettingSecondPanel.(RelativePanel.AlignLeftWithPanel)" Value="True"/>
+                                <Setter Target="SettingSecondPanel.(RelativePanel.Below)" Value="SettingFirstPanel"/>
+                                <Setter Target="SettingSecondPanel.(RelativePanel.Margin)" Value="0,32,0,0"/>
                             </VisualState.Setters>
                         </VisualState>
-
                         <VisualState>
                             <VisualState.StateTriggers>
                                 <AdaptiveTrigger MinWindowWidth="800"/>
                             </VisualState.StateTriggers>
                             <VisualState.Setters>
-                                <Setter Target="SettingFirstPanel.MaxWidth" Value="100"/>
+                                <Setter Target="SettingFirstPanel.(RelativePanel.LeftOf)" Value="SettingSecondPanel"/>
+                                <Setter Target="SettingFirstPanel.(RelativePanel.AlignLeftWithPanel)" Value="True"/>
+                                <Setter Target="SettingSecondPanel.(RelativePanel.AlignRightWithPanel)" Value="True"/>
+                                <Setter Target="SettingSecondPanel.(RelativePanel.Margin)" Value="56,0,0,0"/>
                             </VisualState.Setters>
-
-                            <!--
-                            <VisualState.StateTriggers>
-                            <AdaptiveTrigger MinWindowWidth="800"/>
-                            </VisualState.StateTriggers>
-                            <VisualState.Setters>
-                                <Setter Target="SettingMainStack.Orientation" Value="Horizontal"/>
-                                <Setter Target="SettingSecondPanel.Margin" Value="56,0,0,0"/>
-                            </VisualState.Setters
-                            -->
-                            <!-- 20 x 56 px -->
                         </VisualState>
                     </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>
 
                 <TitleBar x:Name="MainTitleBar" Grid.Row="0" IsBackButtonEnabled="True" IsBackButtonVisible="True">
-                    <!--  <TitleBar.IconSource>
+                    <!--
+                    <TitleBar.IconSource>
                         <ImageIconSource ImageSource="ms-appx:///resources/icons/derivative/app_icon.svg"/>
-                    </TitleBar.IconSource>-->
+                    </TitleBar.IconSource>
+                    -->
                 </TitleBar>
 
                 <!-- make title bar effectively 30 instead of 32 pixels by -2 top margin -->
@@ -344,10 +341,10 @@
 
                             <MenuBarItem Title="Edit">
                                 <!--
-                            <MenuFlyoutItem Command="{StaticResource UndoCommand}"/>
-                            <MenuFlyoutItem Command="{StaticResource RedoCommand}"/>
-                            <MenuFlyoutSeparator/>
-                            -->
+                                <MenuFlyoutItem Command="{StaticResource UndoCommand}"/>
+                                <MenuFlyoutItem Command="{StaticResource RedoCommand}"/>
+                                <MenuFlyoutSeparator/>
+                                -->
                                 <MenuFlyoutItem Command="{StaticResource CutCommand}"/>
                                 <MenuFlyoutItem Command="{StaticResource CopyCommand}"/>
                                 <MenuFlyoutItem Command="{StaticResource PasteCommand}"/>
@@ -426,11 +423,11 @@
                             </Button>
 
                             <!--
-                        <AppBarSeparator/>
-                        <Button Style="{StaticResource LS_TopButtonStyle}">
-                            <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE72D;" FontSize="16"/>
-                        </Button>
-                        -->
+                            <AppBarSeparator/>
+                            <Button Style="{StaticResource LS_TopButtonStyle}">
+                                <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE72D;" FontSize="16"/>
+                            </Button>
+                            -->
 
                             <AppBarSeparator/>
                             <Button Style="{StaticResource LS_TopButtonStyle}" 
@@ -490,7 +487,7 @@
                             <TextBlock Text="Settings" Margin="52,0,0,0" Style="{StaticResource TitleLargeTextBlockStyle}"/>
                             <RelativePanel x:Name="SettingMainStack" Grid.Row="1" Margin="52,24">
 
-                                <StackPanel x:Name="SettingFirstPanel" RelativePanel.LeftOf="SettingSecondPanel" RelativePanel.AlignLeftWithPanel="True">
+                                <StackPanel x:Name="SettingFirstPanel">
                                     <StackPanel.Resources>
                                         <Style TargetType="Expander">
                                             <Setter Property="HorizontalAlignment" Value="Stretch"/>
@@ -516,19 +513,19 @@
                                     </Expander>
                                 </StackPanel>
 
-                                <StackPanel x:Name="SettingSecondPanel" RelativePanel.AlignRightWithPanel="True" Margin="56,0,0,0">
-                                    <TextBlock Text="About LogikSim" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="12,0,0,6"/>
-                                    <TextBlock Text="LogikSim Version 2.4.0" IsTextSelectionEnabled="True" Margin="12,0,0,0"/>
-                                    <TextBlock Text="Author: Christian Brugger" IsTextSelectionEnabled="True" Margin="12,0,0,0"/>
-                                    <TextBlock Text="Contact: christian@rangetable.com" IsTextSelectionEnabled="True" Margin="12,0,0,0"/>
-                                    <TextBlock Text="© 2026 Apache License." Margin="12,0,0,30"/>
+                                <StackPanel x:Name="SettingSecondPanel">
+                                    <TextBlock Text="About LogikSim" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
+                                    <TextBlock Text="LogikSim Version 2.4.0" IsTextSelectionEnabled="True"/>
+                                    <TextBlock Text="Author: Christian Brugger" IsTextSelectionEnabled="True"/>
+                                    <TextBlock Text="Contact: christian@rangetable.com" IsTextSelectionEnabled="True"/>
+                                    <TextBlock Text="© 2026 Apache License." Margin="0,0,0,24"/>
 
-                                    <HyperlinkButton Content="Homepage" NavigateUri="https://github.com/christianbrugger/logiksim" />
-                                    <HyperlinkButton Content="License Terms" NavigateUri="https://github.com/christianbrugger/logiksim/blob/master/LICENSE" />
-                                    <HyperlinkButton Content="Third-Party Software Acknowledgements" NavigateUri="https://github.com/christianbrugger/logiksim/tree/master#third-party" />
+                                    <HyperlinkButton Margin="-12,0,0,0" Content="Homepage" NavigateUri="https://github.com/christianbrugger/logiksim" />
+                                    <HyperlinkButton Margin="-12,0,0,0" Content="License Terms" NavigateUri="https://github.com/christianbrugger/logiksim/blob/master/LICENSE" />
+                                    <HyperlinkButton Margin="-12,0,0,0" Content="Third-Party Software Acknowledgements" NavigateUri="https://github.com/christianbrugger/logiksim/tree/master#third-party" />
 
-                                    <Button Margin="12,20,0,0" Click="Button_Click">Report Issue</Button>
-                                    <Button Margin="12,20,0,0" Click="Button_Click_1">Sent Email</Button>
+                                    <Button Margin="0,20,0,0" Click="Button_Click">Report Issue</Button>
+                                    <Button Margin="0,20,0,0" Click="Button_Click_1">Sent Email</Button>
                                 </StackPanel>
 
                             </RelativePanel>
