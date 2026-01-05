@@ -476,61 +476,65 @@
                 </Grid>
 
                 <Grid Grid.Row="1" Visibility="Visible">
-                    <ScrollView>
+                    <ScrollViewer>
+                        <!-- Stack panel is needed as otherwise Grid with MaxWidth bugs out -->
+                        <!-- Source: https://github.com/microsoft/microsoft-ui-xaml/issues/8773#issuecomment-2050269958 -->
+                        <StackPanel HorizontalAlignment="Stretch">
 
-                        <Grid Margin="0,28,0,0" MaxWidth="1200">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                            <Grid Margin="0,28,0,0" MaxWidth="1200">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                            <TextBlock Text="Settings" Margin="52,0,0,0" Style="{StaticResource TitleLargeTextBlockStyle}"/>
-                            <RelativePanel x:Name="SettingMainStack" Grid.Row="1" Margin="52,24">
+                                <TextBlock Text="Settings" Margin="52,0,0,0" Style="{StaticResource TitleLargeTextBlockStyle}"/>
+                                <RelativePanel x:Name="SettingMainStack" Grid.Row="1" Margin="52,24">
 
-                                <StackPanel x:Name="SettingFirstPanel">
-                                    <StackPanel.Resources>
-                                        <Style TargetType="Expander">
-                                            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                        </Style>
-                                    </StackPanel.Resources>
+                                    <StackPanel x:Name="SettingFirstPanel">
+                                        <StackPanel.Resources>
+                                            <Style TargetType="Expander">
+                                                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            </Style>
+                                        </StackPanel.Resources>
 
-                                    <TextBlock Text="Appearance" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
-                                    <Expander IsExpanded="True">
-                                        <Expander.Header>
-                                            <StackPanel Orientation="Horizontal">
-                                                <FontIcon FontFamily="FluentSystemIcons-Regular" Glyph="&#xF592;" FontSize="25" Margin="0,0,10,0" />
-                                                <TextBlock Text="App theme"/>
-                                            </StackPanel>
-                                        </Expander.Header>
-                                        <Expander.Content>
-                                            <RadioButtons SelectedIndex="2" Margin="40,0,0,0">
-                                                <x:String>Light</x:String>
-                                                <x:String>Dark</x:String>
-                                                <x:String>Use system setting</x:String>
-                                            </RadioButtons>
-                                        </Expander.Content>
-                                    </Expander>
-                                </StackPanel>
+                                        <TextBlock Text="Appearance" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
+                                        <Expander IsExpanded="True">
+                                            <Expander.Header>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <FontIcon FontFamily="FluentSystemIcons-Regular" Glyph="&#xF592;" FontSize="25" Margin="0,0,10,0" />
+                                                    <TextBlock Text="App theme"/>
+                                                </StackPanel>
+                                            </Expander.Header>
+                                            <Expander.Content>
+                                                <RadioButtons SelectedIndex="2" Margin="40,0,0,0">
+                                                    <x:String>Light</x:String>
+                                                    <x:String>Dark</x:String>
+                                                    <x:String>Use system setting</x:String>
+                                                </RadioButtons>
+                                            </Expander.Content>
+                                        </Expander>
+                                    </StackPanel>
 
-                                <StackPanel x:Name="SettingSecondPanel">
-                                    <TextBlock Text="About LogikSim" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
-                                    <TextBlock Text="LogikSim Version 2.4.0" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Text="Author: Christian Brugger" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Text="Contact: christian@rangetable.com" IsTextSelectionEnabled="True"/>
-                                    <TextBlock Text="© 2026 Apache License." Margin="0,0,0,24"/>
+                                    <StackPanel x:Name="SettingSecondPanel">
+                                        <TextBlock Text="About LogikSim" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,0,0,6"/>
+                                        <TextBlock Text="LogikSim Version 2.4.0" IsTextSelectionEnabled="True"/>
+                                        <TextBlock Text="Author: Christian Brugger" IsTextSelectionEnabled="True"/>
+                                        <TextBlock Text="Contact: christian@rangetable.com" IsTextSelectionEnabled="True"/>
+                                        <TextBlock Text="© 2026 Apache License." Margin="0,0,0,24"/>
 
-                                    <HyperlinkButton Margin="-12,0,0,0" Content="Homepage" NavigateUri="https://github.com/christianbrugger/logiksim" />
-                                    <HyperlinkButton Margin="-12,0,0,0" Content="License Terms" NavigateUri="https://github.com/christianbrugger/logiksim/blob/master/LICENSE" />
-                                    <HyperlinkButton Margin="-12,0,0,0" Content="Third-Party Software Acknowledgements" NavigateUri="https://github.com/christianbrugger/logiksim/tree/master#third-party" />
+                                        <HyperlinkButton Margin="-12,0,0,0" Content="Homepage" NavigateUri="https://github.com/christianbrugger/logiksim" />
+                                        <HyperlinkButton Margin="-12,0,0,0" Content="License Terms" NavigateUri="https://github.com/christianbrugger/logiksim/blob/master/LICENSE" />
+                                        <HyperlinkButton Margin="-12,0,0,0" Content="Third-Party Software Acknowledgements" NavigateUri="https://github.com/christianbrugger/logiksim/tree/master#third-party" />
 
-                                    <Button Margin="0,20,0,0" Click="Button_Click">Report Issue</Button>
-                                    <Button Margin="0,20,0,0" Click="Button_Click_1">Sent Email</Button>
-                                </StackPanel>
+                                        <Button Margin="0,20,0,0" Click="Button_Click">Report Issue</Button>
+                                        <Button Margin="0,20,0,0" Click="Button_Click_1">Sent Email</Button>
+                                    </StackPanel>
 
-                            </RelativePanel>
-                        </Grid>
-                    </ScrollView>
+                                </RelativePanel>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
             </Grid>
         </Page>
