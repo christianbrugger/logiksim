@@ -29,20 +29,25 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     // Window
 
-    auto Window_Closed(Windows::Foundation::IInspectable const& sender,
+    auto Window_Closed(IInspectable const& sender,
                        Microsoft::UI::Xaml::WindowEventArgs const& args) -> void;
 
     // Page
 
     auto Page_ActualThemeChanged(Microsoft::UI::Xaml::FrameworkElement const& sender,
-                                 Windows::Foundation::IInspectable const& args) -> void;
+                                 IInspectable const& args) -> void;
+
+    // TitleBar
+
+    void MainTitleBar_BackRequested(Microsoft::UI::Xaml::Controls::TitleBar const& sender,
+                                    IInspectable const& args);
 
     // Grid
 
-    auto MainGrid_DragOver(IInspectable const&,
+    auto RootGrid_DragOver(IInspectable const&,
                            Microsoft::UI::Xaml::DragEventArgs const& args) -> void;
 
-    auto MainGrid_Drop(IInspectable, Microsoft::UI::Xaml::DragEventArgs args)
+    auto RootGrid_Drop(IInspectable, Microsoft::UI::Xaml::DragEventArgs args)
         -> Windows::Foundation::IAsyncAction;
 
     // CanvasPanel
@@ -115,6 +120,7 @@ struct MainWindow : MainWindowT<MainWindow> {
     auto set_modal(bool value) -> void;
     auto update_render_size() -> void;
     auto update_icons_and_button_states() -> void;
+    auto is_setting_page_shown(bool value) -> void;
 
    private:
     std::optional<std::filesystem::path> command_line_file_ {};

@@ -339,6 +339,8 @@ auto MainWindow::set_modal(bool value) -> void {
     }
     is_modal_ = value;
 
+    // hide settings page
+    is_setting_page_shown(false);
     // gray out icons
     update_icons_and_button_states();
     // disable main window
@@ -349,6 +351,18 @@ auto MainWindow::set_modal(bool value) -> void {
         presenter.IsMaximizable(!value);
         presenter.IsMinimizable(!value);
         presenter.IsResizable(!value);
+    }
+}
+
+auto MainWindow::is_setting_page_shown(bool value) -> void {
+    if (value) {
+        AppGrid().Visibility(Visibility::Collapsed);
+        SettingGrid().Visibility(Visibility::Visible);
+        MainTitleBar().IsBackButtonVisible(true);
+    } else {
+        MainTitleBar().IsBackButtonVisible(false);
+        SettingGrid().Visibility(Visibility::Collapsed);
+        AppGrid().Visibility(Visibility::Visible);
     }
 }
 
@@ -377,7 +391,12 @@ auto MainWindow::Page_ActualThemeChanged(FrameworkElement const&, IInspectable c
     set_simulation_icons(*this, icon_sources_, last_config_);
 }
 
-auto MainWindow::MainGrid_DragOver(IInspectable const&, DragEventArgs const& args)
+void MainWindow::MainTitleBar_BackRequested(Controls::TitleBar const&,
+                                            IInspectable const&) {
+    is_setting_page_shown(false);
+}
+
+auto MainWindow::RootGrid_DragOver(IInspectable const&, DragEventArgs const& args)
     -> void {
     using namespace winrt::Windows::ApplicationModel::DataTransfer;
 
@@ -389,7 +408,7 @@ auto MainWindow::MainGrid_DragOver(IInspectable const&, DragEventArgs const& arg
     }
 }
 
-auto MainWindow::MainGrid_Drop(IInspectable, DragEventArgs args)
+auto MainWindow::RootGrid_Drop(IInspectable, DragEventArgs args)
     -> Windows::Foundation::IAsyncAction {
     using namespace winrt::Windows::ApplicationModel::DataTransfer;
 
@@ -410,7 +429,7 @@ auto MainWindow::MainGrid_Drop(IInspectable, DragEventArgs args)
             }
         }
     } catch (const hresult_error& exc) {
-        std::print("WARNING: hresult_error during MainGrid_Drop: {}\n",
+        std::print("WARNING: hresult_error during RootGrid_Drop: {}\n",
                    to_string(exc.message()));
     }
 }
@@ -1369,6 +1388,13 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
                         .thread_count = ThreadCount::eight,
                     },
             });
+            return;
+        }
+    }
+
+    {
+        if (sender == OpenSettingsCommand()) {
+            is_setting_page_shown(true);
             return;
         }
     }

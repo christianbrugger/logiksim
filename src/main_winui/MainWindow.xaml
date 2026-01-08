@@ -261,14 +261,21 @@
                 <XamlUICommand x:Key="Render4ThreadsCommand" x:Name="Render4ThreadsCommand" Label='4 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
                 <XamlUICommand x:Key="Render8ThreadsCommand" x:Name="Render8ThreadsCommand" Label='8 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
 
+
+                <XamlUICommand x:Key="OpenSettingsCommand" x:Name="OpenSettingsCommand" Label='Open settings' ExecuteRequested="XamlUICommand_ExecuteRequested">
+                    <XamlUICommand.IconSource>
+                        <FontIconSource FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE713;"/>
+                    </XamlUICommand.IconSource>
+                </XamlUICommand>
+
             </Page.Resources>
 
             <Grid 
-                x:Name="MainGrid"
+                x:Name="RootGrid"
                 AllowDrop="True"
                 Background="Transparent"
-                DragOver="MainGrid_DragOver"
-                Drop="MainGrid_Drop"
+                DragOver="RootGrid_DragOver"
+                Drop="RootGrid_Drop"
                 >
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -305,7 +312,7 @@
                     </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>
 
-                <TitleBar x:Name="MainTitleBar" Grid.Row="0" IsBackButtonEnabled="True" IsBackButtonVisible="True">
+                <TitleBar x:Name="MainTitleBar" Grid.Row="0" BackRequested="MainTitleBar_BackRequested">
                     <!--
                     <TitleBar.IconSource>
                         <ImageIconSource ImageSource="ms-appx:///resources/icons/derivative/app_icon.svg"/>
@@ -314,7 +321,7 @@
                 </TitleBar>
 
                 <!-- make title bar effectively 30 instead of 32 pixels by -2 top margin -->
-                <Grid Grid.Row="1" Visibility="Collapsed" Margin="0,-2,0,0">
+                <Grid x:Name="AppGrid" Grid.Row="1" Visibility="Visible" Margin="0,-2,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -442,7 +449,9 @@
                             </Button>
                         </StackPanel>
 
-                        <Button Grid.Column="3" Style="{StaticResource LS_TopButtonStyle}"
+                        <Button Grid.Column="3" 
+                                Style="{StaticResource LS_TopButtonStyle}"
+                                Command="{StaticResource OpenSettingsCommand}"
                                 ToolTipService.ToolTip="Open settings">
                             <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE713;" FontSize="16"/>
                         </Button>
@@ -475,10 +484,11 @@
                     </Grid>
                 </Grid>
 
-                <Grid Grid.Row="1" Visibility="Visible">
+                <Grid x:Name="SettingGrid" Grid.Row="1" Visibility="Collapsed">
                     <ScrollViewer>
                         <!-- Stack panel is needed as otherwise Grid with MaxWidth bugs out -->
                         <!-- Source: https://github.com/microsoft/microsoft-ui-xaml/issues/8773#issuecomment-2050269958 -->
+                        <!-- Source: https://github.com/microsoft/microsoft-ui-xaml/issues/4619 -->
                         <StackPanel HorizontalAlignment="Stretch">
 
                             <Grid Margin="0,28,0,0" MaxWidth="1200">
