@@ -30,8 +30,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - { preset: "win-msvc-fuzz-addr-debug"     , os: "windows-2022" }
-          # - { preset: "win-msvc-fuzz-relwithdeb"     , os: "windows-2022" }
+          # - { preset: "win-msvc-fuzz-addr-debug"     , os: "windows-2025" }
+          # - { preset: "win-msvc-fuzz-relwithdeb"     , os: "windows-2025" }
 
           - { preset: "linux-clang-fuzz-addr-debug"  , os: "ubuntu-24.04" }
           - { preset: "linux-clang-fuzz-relwithdeb"  , os: "ubuntu-24.04" }
