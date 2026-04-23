@@ -16,30 +16,26 @@ Download the Installer from here:
 
 Make sure to install the following components:
 
-* **MSVC** - Build Tools for x64/x86 build tools (Latest)
-* **C++ CMake** tools for Windows
-* **C++ Clang** tools for Windows (17.0.3 - x64/x86)
-* **Windows 11 SDK** (10.0.26100.6901)
+* **Desktop development with C++**
 
-![image-20251207154135599](./.images/image-20251207154135599.png)
+  * **MSVC** - Build Tools for x64/x86 build tools (Latest)
 
-*tested with Visual Studio Community 18.0.2*
+  * **C++ CMake** tools for Windows
+  * MSVC **AddressSanitizer**
+  * **Windows 11 SDK** (10.0.26100.7705)
 
-### CMake 3.30+
+  * **C++ Clang** tools for Windows (20.1.8 - x64/x86)
 
-Manually install CMake from:
+* **WinUI application development**
 
-https://cmake.org/download/
+  * **C++ WinUI app development** tools
+  * **Universal Windows Platform** tools
+  * **C++ Universal Windows Platform** tools (Latest)
+  * **Windows 11 SDK** (10.0.26100.7705)
 
-Add it to the `PATH` and make sure it is available in the terminal via:
+![image-20260423212623552](./.images/image-20260423212623552.png)
 
-```
-cmake --version
-```
-
-In Visual Studio to use the external Cmake executable set it up under `Tools -> Options`:
-
-![image-20241021165358753](.images/image-20241021165358753.png)
+*tested with Visual Studio Community 18.5.1*
 
 
 
@@ -53,7 +49,7 @@ https://www.python.org/downloads/
 
 Make sure `python` is available in the PATH.
 
-*tested with Python 3.12.4*
+*tested with Python 3.13.5*
 
 ### Git
 
@@ -63,7 +59,7 @@ https://git-scm.com/download/win/
 
 Make sure `git` is avaiable in the PATH.
 
-*tested with 2.45.2*
+*tested with 2.50.1*
 
 ### Qt 6.4+
 
@@ -83,21 +79,21 @@ Recommended for debugging:
 
 Anything else can be disabled
 
-![image-20251209090928222](./.images/image-20251209090928222.png)
+![image-20260423213129376](./.images/image-20260423213129376.png)
 
-*tested with Qt 6.10.1*
+*tested with Qt 6.11.0*
 
 Add a system wide environment variable:
 
 ```
 CMAKE_PREFIX_PATH
-C:\Qt\6.10.1\msvc2022_64\lib\cmake
+C:\Qt\6.11.0\msvc2022_64\lib\cmake
 ```
 
 Add this to `PATH`:
 
 ```
-C:\Qt\6.10.1\msvc2022_64\bin
+C:\Qt\6.11.0\msvc2022_64\bin
 ```
 
 
@@ -122,21 +118,9 @@ Re-run the script in case a different tag / branch / commit is checked out.
 
 
 
-## Build Scripts
-
-If you installed MSVC and Qt in the standard locations and want to make a release build you can use the script
-
- `scripts/build_win_release.bat`
-
-The result will be in the `logiksim/_build_win_release` folders.
-
-
-
 ## Build Steps
 
-Alternatively for custom builds you can follow the build steps here.
-
-#### Environment Variables
+### Environment Variables
 
 Add Qt to `PATH` and `CMAKE_PREFIX_PATH`. Replace the version as needed, e.g `6.10.1`:
 
@@ -145,11 +129,9 @@ set PATH=C:/Qt/6.x.x/msvc2022_64/bin;%PATH%
 set CMAKE_PREFIX_PATH=C:/Qt/6.x.x/msvc2022_64/lib/cmake
 ```
 
-Activate the MSVC Compiler. This will make `cmake`, `ninja`, `clang-cl` avaiable:
+### Terminal
 
-```cmd
-CALL "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat"
-```
+Open [`Windows Terminal`](https://apps.microsoft.com/detail/9n0dx20hk701) and open a `Developer PowerShell for VS 18`. This will make `cmake`, `ninja` and`clang-cl` avaiable:
 
 ### Prepare Build Folder
 
@@ -162,23 +144,23 @@ cd build
 
 #### Configure
 
-Open `Developer Command Prompt for VS 2026`
+Open `Developer Command Prompt for VS 18`
 
 For **debug** builds use:
 
 ```cmd
-cmake --preset windows-clang-debug
+cmake --preset win-clang-debug
 
-cd build\windows-clang-debug
+cd build\win-clang-debug
 ninja
 ```
 
 For **release** builds use:
 
 ```cmd
-cmake --preset windows-clang-release
+cmake --preset win-clang-release
 
-cd build\windows-clang-release
+cd build\win-clang-release
 ninja
 ```
 
@@ -201,26 +183,32 @@ A complete build from scratch should take about 3-5 minutes depending on the mac
 This should build all the binaries you can run the GUI with:
 
 ```cmd
-simulation_srp_gui
+./ls_gui
 ```
 
 Run the tests with
 
 ```
-simulation_srp_test
+./ls_test_core
+./ls_test_gui
 ```
 
 Run the benchmark with
 
 ```
-simulation_srp_benchmark
+./ls_benchmark
 ```
 
 Run the non-gui experimental main (used for testing out new features directly)
 
 ```
-simulation_srp_main
+./ls_cli
 ```
 
 
 
+# WinUI GUI
+
+The WinUI GUI is in development and need to build inside Visual Studio 18 by opening the project in `src/main_winui/main_winui.sln`.
+
+First the NuGet packages should be installed, after which both the debug and release build can be started.

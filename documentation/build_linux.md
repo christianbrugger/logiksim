@@ -2,7 +2,7 @@
 
 Any modern linux distrubtion that supports Qt 6 should work. Both X11 and Wayland is supported.
 
-*tested with Ubuntu 24.04*
+*tested with Ubuntu 25.04*
 
 ## Build Dependencies
 
@@ -12,13 +12,13 @@ External tools needed for building, not included in this repository.
 
 Both **Clang** and **GCC** are supported. 
 
-#### Clang 18
+#### Clang 20
 
 ```bash
-sudo apt install clang-18
+sudo apt install clang-20
 ```
 
-*tested with clang++ 18.1.3*
+*tested with clang++ 20.1.2*
 
 On olders versions manual installation is necessary:
 
@@ -26,22 +26,22 @@ On olders versions manual installation is necessary:
 wget https://apt.llvm.org/llvm.sh
 chmod +x llvm.sh
 
-sudo ./llvm.sh 18
+sudo ./llvm.sh 20
 ```
 
-This installs `apt-get install -y clang-18 lldb-18 lld-18 clangd-18`
+This installs `sudo apt-get install -y clang-20 lldb-20 lld-20 clangd-20`
 
 Uninstallation:
 
 https://ubuntuhandbook.org/index.php/2023/09/how-to-install-clang-17-or-16-in-ubuntu-22-04-20-04/
 
-#### GCC 13
+#### GCC 15
 
 ```bash
-sudo apt install g++-13
+sudo apt install g++-15
 ```
 
-*tested with g++ 13.2.0*
+*tested with g++ 15.0.1*
 
 ### Python 3.11 (optional)
 
@@ -51,14 +51,14 @@ This is optional, only used for some scripts, not the main build.
 sudo apt install python3
 ```
 
-*tested with Python 3.12.3*
+*tested with Python 3.13.3*
 
 Manual installation on older Ubuntu versions:
 
 ```shell
 sudo add-apt-repository ppa:deadsnakes/ppa
 
-sudo apt install python3.11
+sudo apt install python3.13
 ```
 
 ### Git
@@ -69,7 +69,7 @@ Needed to checkout the sub-modules.
 sudo apt install git
 ```
 
-*tested with 2.43.0*
+*tested with 2.48.1*
 
 ### Ninja
 
@@ -79,9 +79,9 @@ The main build system.
 sudo apt install ninja-build
 ```
 
-*tested with ninja 1.11.1*
+*tested with ninja 1.12.1*
 
-### CMake 3.25+
+### CMake 3.30+
 
 The main build sytem.
 
@@ -89,7 +89,7 @@ The main build sytem.
 sudo apt install cmake
 ```
 
-*version 3.28.3*
+*version 3.31.6*
 
 Manual installation is best done through the pip package
 
@@ -136,7 +136,7 @@ Anything else can be disabled
 
 ![image-20240817152501261](.images/image-20240817152501261.png)
 
-*tested with Qt 6.7.2*
+*tested with Qt 6.8.3*
 
 #### Package manager
 
@@ -153,7 +153,7 @@ Also internal modules are required
 sudo apt install qt6-base-private-dev
 ```
 
-*tested with Qt 6.4.2*
+*tested with Qt 6.8.3*
 
 ## External Libraries
 
@@ -177,19 +177,11 @@ Note, if you intend to use the memory or thread sanitizer you need to checkout t
 python3 external/checkout.py --libc++
 ```
 
-## Build Scripts
-
-If you installed the compilers and Qt in the standard locations and want to make a release build you can use the script `scripts/build_linux_clang_release.bat`
-
-The result will be in the `logiksim/_build_linux_clang_release` folders.
-
 ## Build Steps
 
-Alternatively for custom builds you can follow the build steps here.
+#### Environment Variables (optional)
 
-#### Environment Variables
-
-If you have installed Qt from the Installer or build from source add Qt to `CMAKE_PREFIX_PATH`. Replace the version as needed, e.g `6.7.1`:
+If you have installed Qt from the Installer or build from source add Qt to `CMAKE_PREFIX_PATH`. Replace the version as needed, e.g `6.8.1`:
 
 ```bash
 export CMAKE_PREFIX_PATH=~/Qt/6.x.x/gcc_64/lib/cmake
@@ -213,7 +205,7 @@ First configure with cmake.
 For **debug** builds use:
 
 ```bash
-cmake --profile linux-clang-debug
+cmake --preset linux-clang-debug
 
 cd build/linux-clang-debug
 ninja
@@ -222,7 +214,7 @@ ninja
 For **release** builds use:
 
 ```bash
-cmake --profile linux-clang-release
+cmake --preset linux-clang-release
 
 cd build/linux-clang-release
 ninja
@@ -240,30 +232,31 @@ ninja
 
 This will build all dependencies from source (except Qt) and then build LogikSim.
 
-A complete build from scratch should take about 3-5 minutes depending on the machine.
+A complete build from scratch should take about 2-5 minutes.
 
 #### Execution
 
 This should build all the binaries you can run the GUI with:
 
 ```bash
-./simulation_srp_gui
+./ls_gui
 ```
 
 Run the tests with
 
 ```bash
-./simulation_srp_test
+./ls_test_core
+./ls_test_gui
 ```
 
 Run the benchmark with
 
 ```bash
-./simulation_srp_benchmark
+./ls_benchmark
 ```
 
 Run the non-gui experimental main (used for testing out new features directly)
 
 ```bash
-./simulation_srp_main
+./ls_cli
 ```
