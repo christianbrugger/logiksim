@@ -45,6 +45,7 @@ add_subdirectory(
 )
 
 # flux
+set(FMT_MODULE OFF)
 add_subdirectory(
     ${PROJECT_SOURCE_DIR}/external/flux
     ${CMAKE_BINARY_DIR}/external/flux
