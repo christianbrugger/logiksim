@@ -32,6 +32,19 @@ struct glz::meta<logicsim::ThreadCount> {
 
 namespace logicsim {
 
+// Indentation width was removed from glz::opts
+// See: https://github.com/stephenberry/glaze/pull/2229
+struct opts_settings_t : glz::opts {
+    uint8_t indentation_width = 3;  // default before change
+};
+
+constexpr auto opts_settings = [] {
+    auto val = opts_settings_t {};
+    val.prettify = true;
+    val.indentation_width = 4;
+    return val;
+}();
+
 auto GuiDebugSettings::format() const -> std::string {
     return fmt::format(
         "GuiSettings{{\n"
@@ -61,7 +74,7 @@ auto GuiSettings::format() const -> std::string {
 auto is_valid(const GuiSettings& settings) -> void;
 
 auto serialize_gui_settings(const GuiSettings& settings) -> std::string {
-    return glz::ex::write<glz::opts {.prettify = 1, .indentation_width = 4}>(settings);
+    return glz::ex::write<opts_settings>(settings);
 }
 
 auto load_gui_settings(const std::string& text) -> tl::expected<GuiSettings, LoadError> {
