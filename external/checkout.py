@@ -78,6 +78,7 @@ SUB_MODULES = {
         "libs/bimap",
         "libs/bind",
         "libs/chrono",
+        "libs/compat",
         "libs/concept_check",
         "libs/config",
         "libs/container",
