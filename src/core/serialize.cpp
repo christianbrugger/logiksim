@@ -34,7 +34,7 @@
 #include "core/vocabulary/placed_logicitem.h"
 #include "core/vocabulary/save_format.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

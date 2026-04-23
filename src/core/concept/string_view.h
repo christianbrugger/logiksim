@@ -1,8 +1,9 @@
 #ifndef LOGICSIM_FORMAT_CONCEPT_STRING_VIEW_H
 #define LOGICSIM_FORMAT_CONCEPT_STRING_VIEW_H
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
+#include <string>
 #include <string_view>
 
 namespace logicsim {

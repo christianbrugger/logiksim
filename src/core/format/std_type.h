@@ -3,7 +3,7 @@
 
 #include "core/algorithm/path_conversion.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <filesystem>
 #include <functional>

@@ -1,6 +1,6 @@
 #include "core/vocabulary/part_copy_definition.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

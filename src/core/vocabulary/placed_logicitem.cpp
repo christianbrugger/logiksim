@@ -2,7 +2,7 @@
 
 #include "core/allocated_size/trait.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

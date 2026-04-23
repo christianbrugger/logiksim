@@ -9,7 +9,7 @@
 #include "core/tree_normalization.h"
 #include "core/vocabulary/endpoints.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <stdexcept>

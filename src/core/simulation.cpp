@@ -16,7 +16,7 @@
 #include "core/vocabulary/connection_ids.h"
 #include "core/vocabulary/internal_state.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <gsl/gsl>
 
 #include <algorithm>

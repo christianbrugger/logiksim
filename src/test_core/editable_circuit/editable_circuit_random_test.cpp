@@ -21,7 +21,7 @@
 #include <gtest/gtest.h>
 
 #include <blend2d/blend2d.h>
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <stdexcept>
 

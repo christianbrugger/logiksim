@@ -3,7 +3,7 @@
 
 #include "core/format/enum.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <cstdint>
 #include <optional>

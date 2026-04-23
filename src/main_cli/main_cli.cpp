@@ -13,7 +13,7 @@
 #include "core/timer.h"
 #include "core/vocabulary/widget_render_config.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <gsl/gsl>
 
 #include <exception>

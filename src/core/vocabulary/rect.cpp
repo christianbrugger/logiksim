@@ -1,6 +1,6 @@
 #include "core/vocabulary/rect.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

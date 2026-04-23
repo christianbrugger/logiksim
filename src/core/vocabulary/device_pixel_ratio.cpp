@@ -1,6 +1,6 @@
 #include "core/vocabulary/device_pixel_ratio.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

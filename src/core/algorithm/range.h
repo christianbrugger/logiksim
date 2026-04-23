@@ -6,7 +6,7 @@
 #include "core/format/struct.h"
 #include "core/type_trait/safe_difference_type.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <gsl/gsl>
 
 #include <iterator>

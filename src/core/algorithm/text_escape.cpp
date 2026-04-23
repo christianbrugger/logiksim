@@ -1,6 +1,6 @@
 #include "core/algorithm/text_escape.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <gsl/gsl>
 
 #include <cstdint>

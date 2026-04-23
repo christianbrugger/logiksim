@@ -2,7 +2,7 @@
 
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <gsl/gsl>
 #include <zlib.h>
 

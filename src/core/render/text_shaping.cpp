@@ -10,7 +10,7 @@
 #include "core/render/bl_box.h"
 
 #include <blend2d/blend2d.h>
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <gsl/gsl>
 #include <hb.h>
 #include <range/v3/algorithm/max_element.hpp>

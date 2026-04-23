@@ -1,6 +1,6 @@
 #include "core/component/simulation/history_entry.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <stdexcept>
 

@@ -1,8 +1,6 @@
 #include "core/serialize_gui_setting.h"
 
-#include "core/logging.h"
-
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <glaze/exceptions/json_exceptions.hpp>
 #include <glaze/glaze.hpp>
 #include <glaze/glaze_exceptions.hpp>

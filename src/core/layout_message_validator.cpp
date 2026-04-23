@@ -5,7 +5,7 @@
 #include "core/layout_message_generation.h"
 #include "core/logging.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <gsl/gsl>
 
 namespace logicsim {

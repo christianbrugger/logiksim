@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_FORMAT_POINTER_H
 #define LOGICSIM_FORMAT_POINTER_H
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <string>
 #include <type_traits>

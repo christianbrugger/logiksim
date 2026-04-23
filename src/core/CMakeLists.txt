@@ -228,7 +228,6 @@ if (LS_ENABLE_PCH)
         <boost/geometry.hpp>
         <boost/random/mersenne_twister.hpp>
         <boost/random/uniform_int_distribution.hpp>
-        <fmt/core.h>
         <fmt/format.h>
         <folly/small_vector.h>
         <gcem.hpp>

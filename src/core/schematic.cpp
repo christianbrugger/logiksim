@@ -8,7 +8,7 @@
 #include "core/geometry/connection_count.h"
 #include "core/iterator_adaptor/transform_view.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <cassert>

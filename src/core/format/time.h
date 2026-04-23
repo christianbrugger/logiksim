@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_FORMAT_TIME_H
 #define LOGICSIM_FORMAT_TIME_H
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <chrono>
 

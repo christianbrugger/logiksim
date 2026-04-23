@@ -3,7 +3,7 @@
 #include "core/allocated_size/std_optional.h"
 #include "core/allocated_size/std_string.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

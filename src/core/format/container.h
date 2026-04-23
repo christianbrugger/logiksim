@@ -5,7 +5,7 @@
 #include "core/concept/member_format_function.h"
 #include "core/concept/string_view.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <concepts>
 #include <stdexcept>

@@ -11,7 +11,7 @@
 #include "core/vocabulary/layout_calculation_data.h"
 #include "core/vocabulary/rect_fine.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

@@ -4,7 +4,7 @@
 #include "core/format/container.h"
 #include "core/format/std_type.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <fmt/os.h>
 
 #include <array>

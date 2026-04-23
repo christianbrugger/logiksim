@@ -2,7 +2,7 @@
 
 #include "core/format/blend2d_type.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

@@ -5,7 +5,7 @@
 #include "core/format/container.h"
 #include "core/vocabulary/display_state.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <vector>

@@ -7,7 +7,7 @@
 #include "core/logging.h"
 #include "core/vocabulary/grid.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <range/v3/algorithm/adjacent_remove_if.hpp>
 #include <range/v3/view/sliding.hpp>
 

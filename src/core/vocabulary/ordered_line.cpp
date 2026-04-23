@@ -1,6 +1,6 @@
 #include "core/vocabulary/ordered_line.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

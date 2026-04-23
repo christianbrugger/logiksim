@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_FORMAT_ESCAPE_ASCII_H
 #define LOGICSIM_FORMAT_ESCAPE_ASCII_H
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <iterator>
 #include <string>

@@ -4,7 +4,7 @@
 #include "core/algorithm/to_underlying.h"
 
 #include <blend2d/blend2d.h>
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <stdexcept>
 

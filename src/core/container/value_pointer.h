@@ -3,7 +3,7 @@
 
 #include "core/type_trait/is_equality_comparable.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <compare>
 #include <concepts>

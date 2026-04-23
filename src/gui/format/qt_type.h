@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_FORMAT_QT_TYPE_H
 #define LOGICSIM_FORMAT_QT_TYPE_H
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <QPoint>
 #include <QRect>

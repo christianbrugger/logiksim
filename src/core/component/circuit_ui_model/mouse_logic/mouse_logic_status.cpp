@@ -2,7 +2,7 @@
 
 #include "core/vocabulary/ui_status.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

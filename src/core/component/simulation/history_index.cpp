@@ -1,6 +1,6 @@
 #include "core/component/simulation/history_index.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

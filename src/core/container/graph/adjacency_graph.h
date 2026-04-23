@@ -11,7 +11,7 @@
 #include "core/vocabulary/point.h"
 
 #include <boost/container/static_vector.hpp>
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <gsl/gsl>
 
 #include <algorithm>

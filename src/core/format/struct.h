@@ -3,7 +3,7 @@
 
 #include "core/concept/member_format_function.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 /**
  * Add fmt formatting to structs and classes that provide `format()` member function.

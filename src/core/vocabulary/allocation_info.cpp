@@ -2,7 +2,7 @@
 
 #include "core/algorithm/indent.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

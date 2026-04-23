@@ -10,7 +10,7 @@
 #include "core/logging.h"
 #include "core/tree_normalization.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

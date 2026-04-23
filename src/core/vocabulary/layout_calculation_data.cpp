@@ -3,7 +3,7 @@
 #include "core/vocabulary/logicitem_definition.h"
 #include "core/vocabulary/placed_logicitem.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

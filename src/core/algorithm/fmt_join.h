@@ -4,7 +4,7 @@
 #include "core/iterator_adaptor/transform_view.h"
 
 #include <boost/algorithm/string/join.hpp>
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <functional>
 #include <string_view>
@@ -20,9 +20,9 @@ template <typename T, class Proj = std::identity>
         std::end(container);
     }
 [[nodiscard]] constexpr auto fmt_join(std::string_view sep, T &&obj,
-                                      std::string_view fmt = "{}", Proj proj = {}) {
-    auto format_func = [&fmt, proj](auto &&item) {
-        return fmt::format(fmt::runtime(fmt),
+                                      std::string_view elem_fmt = "{}", Proj proj = {}) {
+    auto format_func = [&elem_fmt, proj](auto &&item) {
+        return fmt::format(fmt::runtime(elem_fmt),
                            std::invoke(proj, std::forward<decltype(item)>(item)));
     };
 

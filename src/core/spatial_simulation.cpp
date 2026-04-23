@@ -5,7 +5,7 @@
 #include "core/schematic_generation.h"
 #include "core/vocabulary/allocation_info.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <gsl/gsl>
 
 namespace logicsim {

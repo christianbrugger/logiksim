@@ -6,7 +6,7 @@
 #include "core/vocabulary/point.h"
 #include "core/vocabulary/save_format.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

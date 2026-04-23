@@ -1,6 +1,6 @@
 #include "core/vocabulary/logicitem_id.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

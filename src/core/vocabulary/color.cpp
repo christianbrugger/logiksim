@@ -1,7 +1,7 @@
 #include "core/vocabulary/color.h"
 
 #include <blend2d/blend2d.h>
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

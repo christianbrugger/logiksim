@@ -1,6 +1,6 @@
 #include "core/vocabulary/point_fine.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

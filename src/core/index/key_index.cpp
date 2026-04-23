@@ -4,7 +4,7 @@
 #include "core/layout_message.h"
 #include "core/layout_message_generation.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

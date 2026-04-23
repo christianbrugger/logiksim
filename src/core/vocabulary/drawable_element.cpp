@@ -1,6 +1,6 @@
 #include "core/vocabulary/drawable_element.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

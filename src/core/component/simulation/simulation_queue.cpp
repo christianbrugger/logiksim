@@ -4,7 +4,7 @@
 #include "core/allocated_size/std_vector.h"
 #include "core/component/simulation/simulation_event_group.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <stdexcept>
 

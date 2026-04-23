@@ -8,7 +8,7 @@
 #include "core/vocabulary/placed_decoration.h"
 #include "core/vocabulary/placed_logicitem.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

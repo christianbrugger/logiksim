@@ -11,7 +11,7 @@
  *
  */
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <concepts>
 #include <string>

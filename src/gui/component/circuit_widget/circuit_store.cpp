@@ -7,7 +7,7 @@
 #include "core/vocabulary/allocation_info.h"
 #include "core/vocabulary/insertion_mode.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

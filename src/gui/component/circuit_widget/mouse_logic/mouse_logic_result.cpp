@@ -1,6 +1,6 @@
 #include "gui/component/circuit_widget/mouse_logic/mouse_logic_result.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

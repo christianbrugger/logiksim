@@ -8,7 +8,7 @@
 #include "core/vocabulary/ordered_line.h"
 #include "core/vocabulary/point.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <algorithm>
 

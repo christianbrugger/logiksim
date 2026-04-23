@@ -1,6 +1,6 @@
 #include "core/vocabulary/internal_state_index.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 

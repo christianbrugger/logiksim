@@ -1,6 +1,6 @@
 #include "core/vocabulary/endpoints.h"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 namespace logicsim {
 
