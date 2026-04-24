@@ -272,6 +272,22 @@ auto clear_simulation_icons(MainWindow& w) -> void {
     set_simulation_icons(w, IconSources {}, std::nullopt);
 }
 
+auto update_backend_theme(ElementTheme actual_theme,
+                          logicsim::BackendTaskSource& backend_tasks) -> void {
+    using namespace logicsim;
+    using namespace logicsim::exporting;
+
+    if (actual_theme == ElementTheme::Dark) {
+        backend_tasks.push(CircuitUIConfigEvent {
+            .render = {.theme = ThemeStyle::dark},
+        });
+    } else {
+        backend_tasks.push(CircuitUIConfigEvent {
+            .render = {.theme = ThemeStyle::light},
+        });
+    }
+}
+
 }  // namespace
 
 MainWindow::MainWindow(std::optional<std::filesystem::path> path__)
@@ -367,7 +383,7 @@ auto MainWindow::set_setting_page_shown(bool value) -> void {
     }
 }
 
-void MainWindow::Window_Closed(IInspectable const&, WindowEventArgs const& args) {
+auto MainWindow::Window_Closed(IInspectable const&, WindowEventArgs const& args) -> void {
     // This is set by the backend
     if (is_destroyed_) {
         return;
@@ -387,13 +403,13 @@ void MainWindow::Window_Closed(IInspectable const&, WindowEventArgs const& args)
 auto MainWindow::Page_ActualThemeChanged(FrameworkElement const&, IInspectable const&)
     -> void {
     // Icons need to be cleared first as otherwise they are not updated, if the same
-    // icon source is set, although now with a different theme color.
+    // icon source is set.
     clear_simulation_icons(*this);
     set_simulation_icons(*this, icon_sources_, last_config_);
 }
 
-void MainWindow::MainTitleBar_BackRequested(Controls::TitleBar const&,
-                                            IInspectable const&) {
+auto MainWindow::MainTitleBar_BackRequested(Controls::TitleBar const&,
+                                            IInspectable const&) -> void {
     set_setting_page_shown(false);
 }
 
@@ -448,6 +464,9 @@ auto MainWindow::CanvasPanel_Loaded(IInspectable const&, RoutedEventArgs const&)
     const auto xaml_root = panel.XamlRoot();
     Expects(xaml_root);
 
+    // Set backend theme
+    update_backend_theme(CanvasPanel().ActualTheme(), backend_tasks_);
+
     // Set intial focus
     panel.Focus(FocusState::Programmatic);
 
@@ -463,6 +482,11 @@ auto MainWindow::CanvasPanel_Loaded(IInspectable const&, RoutedEventArgs const&)
                 self->update_render_size();
             }
         });
+}
+
+auto MainWindow::CanvasPanel_ActualThemeChanged(FrameworkElement const&,
+                                                IInspectable const&) -> void {
+    update_backend_theme(CanvasPanel().ActualTheme(), backend_tasks_);
 }
 
 auto MainWindow::CanvasPanel_PointerEvent(IInspectable const& sender,
@@ -509,8 +533,8 @@ auto MainWindow::CanvasPanel_PointerWheelChanged(
     args.Handled(true);
 }
 
-void MainWindow::CanvasPanel_KeyDown(IInspectable const&,
-                                     Input::KeyRoutedEventArgs const& args) {
+auto MainWindow::CanvasPanel_KeyDown(IInspectable const&,
+                                     Input::KeyRoutedEventArgs const& args) -> void {
     using namespace winrt::Windows;
     using namespace logicsim;
 
@@ -622,15 +646,15 @@ auto MainWindow::config_update(logicsim::exporting::CircuitUIConfig config__) ->
     [&] {
         switch (new_config.render.theme_request) {
             case ThemeStyleRequest::system_default:
-                std::print("default\n");
+                ContentControl().RequestedTheme(ElementTheme::Default);
                 ThemeRadio_SystemDefault().IsChecked(true);
                 return;
             case ThemeStyleRequest::light:
-                std::print("light\n");
+                ContentControl().RequestedTheme(ElementTheme::Light);
                 ThemeRadio_Light().IsChecked(true);
                 return;
             case ThemeStyleRequest::dark:
-                std::print("dark\n");
+                ContentControl().RequestedTheme(ElementTheme::Dark);
                 ThemeRadio_Dark().IsChecked(true);
                 return;
         };
@@ -962,8 +986,9 @@ auto MainWindow::update_render_size() -> void {
     backend_tasks_.push(params);
 }
 
-void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& sender,
-                                                Input::ExecuteRequestedEventArgs const&) {
+auto MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& sender,
+                                                Input::ExecuteRequestedEventArgs const&)
+    -> void {
     using namespace logicsim;
     using namespace logicsim::exporting;
 
@@ -1440,8 +1465,9 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     }
 }
 
-void MainWindow::XamlUICommand_CanExecuteRequest(
-    Input::XamlUICommand const& sender, Input::CanExecuteRequestedEventArgs const& args) {
+auto MainWindow::XamlUICommand_CanExecuteRequest(
+    Input::XamlUICommand const& sender, Input::CanExecuteRequestedEventArgs const& args)
+    -> void {
     if (sender == StartSimulationCommand()) {
         args.CanExecute(!is_modal_ && last_config_.has_value() &&
                         last_config_->state.type !=
@@ -1466,12 +1492,12 @@ auto MainWindow::update_icons_and_button_states() -> void {
     StopSimulationCommand().NotifyCanExecuteChanged();
 }
 
-void MainWindow::IssueButton_Click(IInspectable const&, RoutedEventArgs const&) {
+auto MainWindow::IssueButton_Click(IInspectable const&, RoutedEventArgs const&) -> void {
     winrt::Windows::System::Launcher::LaunchUriAsync(winrt::Windows::Foundation::Uri {
         L"https://github.com/christianbrugger/logiksim/issues"});
 }
 
-void MainWindow::EmailButton_Click(IInspectable const&, RoutedEventArgs const&) {
+auto MainWindow::EmailButton_Click(IInspectable const&, RoutedEventArgs const&) -> void {
     winrt::Windows::System::Launcher::LaunchUriAsync(
         winrt::Windows::Foundation::Uri {L"mailto:christian@rangetable.com"});
 }

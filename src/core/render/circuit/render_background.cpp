@@ -89,11 +89,24 @@ auto draw_background_patterns(Context& ctx) {
         }
     }
 }
+
+[[nodiscard]] auto get_background_color(ThemeStyle theme) {
+    switch (theme) {
+        using enum ThemeStyle;
+
+        case light:
+            return defaults::color_white;
+        case dark:
+            return defaults::color_black;
+    }
+    std::terminate();
+}
+
 }  // namespace
 
 auto render_background(Context& ctx) -> void {
     ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_COPY);
-    ctx.bl_ctx.fill_all(defaults::color_white);
+    ctx.bl_ctx.fill_all(get_background_color(ctx.settings.theme));
 
     draw_background_patterns(ctx);
     draw_grid_space_limit(ctx);

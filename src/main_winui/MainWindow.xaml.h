@@ -39,8 +39,8 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     // TitleBar
 
-    void MainTitleBar_BackRequested(Microsoft::UI::Xaml::Controls::TitleBar const& sender,
-                                    IInspectable const& args);
+    auto MainTitleBar_BackRequested(Microsoft::UI::Xaml::Controls::TitleBar const& sender,
+                                    IInspectable const& args) -> void;
 
     // Grid
 
@@ -57,6 +57,10 @@ struct MainWindow : MainWindowT<MainWindow> {
         -> void;
     auto CanvasPanel_Loaded(IInspectable const&,
                             Microsoft::UI::Xaml::RoutedEventArgs const&) -> void;
+
+    auto CanvasPanel_ActualThemeChanged(
+        Microsoft::UI::Xaml::FrameworkElement const& sender, IInspectable const& args)
+        -> void;
 
     auto CanvasPanel_PointerEvent(
         IInspectable const& sender,
@@ -108,20 +112,20 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     // UI Command
 
-    void XamlUICommand_ExecuteRequested(
+    auto XamlUICommand_ExecuteRequested(
         Microsoft::UI::Xaml::Input::XamlUICommand const& sender,
-        Microsoft::UI::Xaml::Input::ExecuteRequestedEventArgs const&);
+        Microsoft::UI::Xaml::Input::ExecuteRequestedEventArgs const&) -> void;
 
-    void XamlUICommand_CanExecuteRequest(
+    auto XamlUICommand_CanExecuteRequest(
         Microsoft::UI::Xaml::Input::XamlUICommand const& sender,
-        Microsoft::UI::Xaml::Input::CanExecuteRequestedEventArgs const& args);
+        Microsoft::UI::Xaml::Input::CanExecuteRequestedEventArgs const& args) -> void;
 
     // Settings
 
-    void IssueButton_Click(Windows::Foundation::IInspectable const& sender,
-                           Microsoft::UI::Xaml::RoutedEventArgs const& e);
-    void EmailButton_Click(Windows::Foundation::IInspectable const& sender,
-                           Microsoft::UI::Xaml::RoutedEventArgs const& e);
+    auto IssueButton_Click(Windows::Foundation::IInspectable const& sender,
+                           Microsoft::UI::Xaml::RoutedEventArgs const& e) -> void;
+    auto EmailButton_Click(Windows::Foundation::IInspectable const& sender,
+                           Microsoft::UI::Xaml::RoutedEventArgs const& e) -> void;
 
    private:
     auto set_modal(bool value) -> void;

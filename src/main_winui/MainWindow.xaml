@@ -474,6 +474,7 @@
                     
                             SizeChanged="CanvasPanel_SizeChanged"
                             Loaded="CanvasPanel_Loaded"
+                            ActualThemeChanged="CanvasPanel_ActualThemeChanged"
                     
                             PointerMoved="CanvasPanel_PointerEvent"
                             PointerPressed="CanvasPanel_PointerEvent"

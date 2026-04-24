@@ -2,6 +2,7 @@
 #define LOGICSIM_VOCABULARY_CONTEXT_RENDER_SETTINGS_H
 
 #include "core/format/struct.h"
+#include "core/vocabulary/theme_style.h"
 #include "core/vocabulary/thread_count.h"
 #include "core/vocabulary/view_config.h"
 #include "core/vocabulary/wire_render_style.h"
@@ -29,6 +30,11 @@ struct ContextRenderSettings {
      *         during simulation.
      */
     WireRenderStyle wire_render_style {WireRenderStyle::red};
+
+    /**
+     * @brief: Theme style in wich the circuit is drawn.
+     */
+    ThemeStyle theme {ThemeStyle::light};
 
     /**
      * @brief: If true the JIT is used for Blend2D, if available.

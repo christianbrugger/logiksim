@@ -8,8 +8,12 @@ auto ContextRenderSettings::format() const -> std::string {
         "  view_config = {},\n"
         "  background_grid_min_distance_device = {},\n"
         "  thread_count = {},\n"
+        "  wire_render_style = {},\n"
+        "  theme = {},\n"
+        "  jit_rendering = {},\n"
         "}}",
-        view_config, background_grid_min_distance_device, thread_count);
+        view_config, background_grid_min_distance_device, thread_count, wire_render_style,
+        theme, jit_rendering);
 }
 
 auto create_context_render_settings(BLSizeI size_px) -> ContextRenderSettings {
