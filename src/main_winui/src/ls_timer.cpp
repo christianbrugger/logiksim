@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "ls_timer.h"
+#include "main_winui/src/ls_timer.h"
 
 #include <format>
 #include <iostream>

@@ -67,6 +67,8 @@ struct SimulationConfigEvent {
 struct WidgetRenderConfigEvent {
     std::optional<exporting::ThreadCount> thread_count {};
     std::optional<exporting::WireRenderStyle> wire_render_style {};
+    std::optional<exporting::ThemeStyleRequest> theme_request {};
+    std::optional<exporting::ThemeStyle> theme {};
 
     std::optional<bool> do_benchmark {};
     std::optional<bool> show_circuit {};

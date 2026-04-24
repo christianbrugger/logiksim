@@ -340,7 +340,7 @@ auto MainWindow::set_modal(bool value) -> void {
     is_modal_ = value;
 
     // hide settings page
-    is_setting_page_shown(false);
+    set_setting_page_shown(false);
     // gray out icons
     update_icons_and_button_states();
     // disable main window
@@ -354,7 +354,8 @@ auto MainWindow::set_modal(bool value) -> void {
     }
 }
 
-auto MainWindow::is_setting_page_shown(bool value) -> void {
+auto MainWindow::set_setting_page_shown(bool value) -> void {
+    // change UI state
     if (value) {
         AppGrid().Visibility(Visibility::Collapsed);
         SettingGrid().Visibility(Visibility::Visible);
@@ -393,7 +394,7 @@ auto MainWindow::Page_ActualThemeChanged(FrameworkElement const&, IInspectable c
 
 void MainWindow::MainTitleBar_BackRequested(Controls::TitleBar const&,
                                             IInspectable const&) {
-    is_setting_page_shown(false);
+    set_setting_page_shown(false);
 }
 
 auto MainWindow::RootGrid_DragOver(IInspectable const&, DragEventArgs const& args)
@@ -618,6 +619,23 @@ auto MainWindow::config_update(logicsim::exporting::CircuitUIConfig config__) ->
         };
         std::terminate();
     }();
+    [&] {
+        switch (new_config.render.theme_request) {
+            case ThemeStyleRequest::system_default:
+                std::print("default\n");
+                ThemeRadio_SystemDefault().IsChecked(true);
+                return;
+            case ThemeStyleRequest::light:
+                std::print("light\n");
+                ThemeRadio_Light().IsChecked(true);
+                return;
+            case ThemeStyleRequest::dark:
+                std::print("dark\n");
+                ThemeRadio_Dark().IsChecked(true);
+                return;
+        };
+        std::terminate();
+    }();
 }
 
 auto MainWindow::show_dialog_blocking(logicsim::exporting::ModalRequest request,
@@ -711,6 +729,7 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::OpenFileModal request
         picker.ViewMode(PickerViewMode::List);
         picker.FileTypeFilter().Append(L".ls2");
 
+        set_modal(true);
         const auto result = co_await picker.PickSingleFileAsync();
 
         if (result) {
@@ -757,6 +776,7 @@ auto MainWindow::show_dialog_blocking(logicsim::exporting::SaveFileModal request
         }();
         picker.SuggestedFolder(folder_name.native());
 
+        set_modal(true);
         const auto result = co_await picker.PickSaveFileAsync();
 
         if (result) {
@@ -1393,8 +1413,28 @@ void MainWindow::XamlUICommand_ExecuteRequested(Input::XamlUICommand const& send
     }
 
     {
+        if (sender == LightStyleRequestCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .render = {.theme_request = ThemeStyleRequest::light},
+            });
+        }
+
+        if (sender == DarkStyleRequestCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .render = {.theme_request = ThemeStyleRequest::dark},
+            });
+        }
+
+        if (sender == SystemDefaultStyleRequestCommand()) {
+            backend_tasks_.push(CircuitUIConfigEvent {
+                .render = {.theme_request = ThemeStyleRequest::system_default},
+            });
+        }
+    }
+
+    {
         if (sender == OpenSettingsCommand()) {
-            is_setting_page_shown(true);
+            set_setting_page_shown(true);
             return;
         }
     }
@@ -1426,18 +1466,14 @@ auto MainWindow::update_icons_and_button_states() -> void {
     StopSimulationCommand().NotifyCanExecuteChanged();
 }
 
-}  // namespace winrt::main_winui::implementation
-
-void winrt::main_winui::implementation::MainWindow::Button_Click(
-    winrt::Windows::Foundation::IInspectable const&,
-    winrt::Microsoft::UI::Xaml::RoutedEventArgs const&) {
+void MainWindow::IssueButton_Click(IInspectable const&, RoutedEventArgs const&) {
     winrt::Windows::System::Launcher::LaunchUriAsync(winrt::Windows::Foundation::Uri {
         L"https://github.com/christianbrugger/logiksim/issues"});
 }
 
-void winrt::main_winui::implementation::MainWindow::Button_Click_1(
-    winrt::Windows::Foundation::IInspectable const&,
-    winrt::Microsoft::UI::Xaml::RoutedEventArgs const&) {
+void MainWindow::EmailButton_Click(IInspectable const&, RoutedEventArgs const&) {
     winrt::Windows::System::Launcher::LaunchUriAsync(
         winrt::Windows::Foundation::Uri {L"mailto:christian@rangetable.com"});
 }
+
+}  // namespace winrt::main_winui::implementation

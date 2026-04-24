@@ -350,6 +350,7 @@ set(LS_CORE_SOURCES
     vocabulary/size_device.cpp
     vocabulary/text_alignment.cpp
     vocabulary/text_truncated.cpp
+    vocabulary/theme_style.cpp
     vocabulary/thread_count.cpp
     vocabulary/time.cpp
     vocabulary/time_literal.cpp

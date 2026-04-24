@@ -261,6 +261,9 @@
                 <XamlUICommand x:Key="Render4ThreadsCommand" x:Name="Render4ThreadsCommand" Label='4 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
                 <XamlUICommand x:Key="Render8ThreadsCommand" x:Name="Render8ThreadsCommand" Label='8 Render Threads' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
 
+                <XamlUICommand x:Key="LightStyleRequestCommand" x:Name="LightStyleRequestCommand" Label='Light' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="DarkStyleRequestCommand" x:Name="DarkStyleRequestCommand" Label='Dark' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
+                <XamlUICommand x:Key="SystemDefaultStyleRequestCommand" x:Name="SystemDefaultStyleRequestCommand" Label='Use system setting' ExecuteRequested="XamlUICommand_ExecuteRequested"/>
 
                 <XamlUICommand x:Key="OpenSettingsCommand" x:Name="OpenSettingsCommand" Label='Open settings' ExecuteRequested="XamlUICommand_ExecuteRequested">
                     <XamlUICommand.IconSource>
@@ -512,15 +515,15 @@
                                         <Expander IsExpanded="True">
                                             <Expander.Header>
                                                 <StackPanel Orientation="Horizontal">
-                                                    <FontIcon FontFamily="FluentSystemIcons-Regular" Glyph="&#xF592;" FontSize="25" Margin="0,0,10,0" />
+                                                    <FontIcon FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Glyph="&#xE790;" FontSize="25" Margin="0,0,10,0" />
                                                     <TextBlock Text="App theme"/>
                                                 </StackPanel>
                                             </Expander.Header>
                                             <Expander.Content>
-                                                <RadioButtons SelectedIndex="2" Margin="40,0,0,0">
-                                                    <x:String>Light</x:String>
-                                                    <x:String>Dark</x:String>
-                                                    <x:String>Use system setting</x:String>
+                                                <RadioButtons x:Name="ThemeRadio" Margin="40,0,0,0">
+                                                    <RadioButton x:Name="ThemeRadio_Light" Command="{StaticResource LightStyleRequestCommand}" />
+                                                    <RadioButton x:Name="ThemeRadio_Dark" Command="{StaticResource DarkStyleRequestCommand}" />
+                                                    <RadioButton x:Name="ThemeRadio_SystemDefault" Command="{StaticResource SystemDefaultStyleRequestCommand}" />
                                                 </RadioButtons>
                                             </Expander.Content>
                                         </Expander>
@@ -537,8 +540,8 @@
                                         <HyperlinkButton Margin="-12,0,0,0" Content="License Terms" NavigateUri="https://github.com/christianbrugger/logiksim/blob/master/LICENSE" />
                                         <HyperlinkButton Margin="-12,0,0,0" Content="Third-Party Software Acknowledgements" NavigateUri="https://github.com/christianbrugger/logiksim/tree/master#third-party" />
 
-                                        <Button Margin="0,20,0,0" Click="Button_Click">Report Issue</Button>
-                                        <Button Margin="0,20,0,0" Click="Button_Click_1">Sent Email</Button>
+                                        <Button Margin="0,20,0,0" Click="IssueButton_Click">Report Issue</Button>
+                                        <Button Margin="0,20,0,0" Click="EmailButton_Click">Sent Email</Button>
                                     </StackPanel>
 
                                 </RelativePanel>

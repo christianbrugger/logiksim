@@ -110,6 +110,9 @@ auto render_circuit(RenderBufferSource& render_source,
                     event.render.thread_count.value_or(config.render.thread_count),
                 .wire_render_style = event.render.wire_render_style.value_or(
                     config.render.wire_render_style),
+                .theme_request =
+                    event.render.theme_request.value_or(config.render.theme_request),
+                .theme = event.render.theme.value_or(config.render.theme),
                 //
                 .do_benchmark =
                     event.render.do_benchmark.value_or(config.render.do_benchmark),

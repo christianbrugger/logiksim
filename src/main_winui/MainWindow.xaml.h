@@ -116,11 +116,18 @@ struct MainWindow : MainWindowT<MainWindow> {
         Microsoft::UI::Xaml::Input::XamlUICommand const& sender,
         Microsoft::UI::Xaml::Input::CanExecuteRequestedEventArgs const& args);
 
+    // Settings
+
+    void IssueButton_Click(Windows::Foundation::IInspectable const& sender,
+                           Microsoft::UI::Xaml::RoutedEventArgs const& e);
+    void EmailButton_Click(Windows::Foundation::IInspectable const& sender,
+                           Microsoft::UI::Xaml::RoutedEventArgs const& e);
+
    private:
     auto set_modal(bool value) -> void;
     auto update_render_size() -> void;
     auto update_icons_and_button_states() -> void;
-    auto is_setting_page_shown(bool value) -> void;
+    auto set_setting_page_shown(bool value) -> void;
 
    private:
     std::optional<std::filesystem::path> command_line_file_ {};
@@ -137,12 +144,6 @@ struct MainWindow : MainWindowT<MainWindow> {
 
     logicsim::KeyTracker key_tracker_ {};
     std::optional<logicsim::exporting::CircuitUIConfig> last_config_ {};
-
-   public:
-    void Button_Click(winrt::Windows::Foundation::IInspectable const& sender,
-                      winrt::Microsoft::UI::Xaml::RoutedEventArgs const& e);
-    void Button_Click_1(winrt::Windows::Foundation::IInspectable const& sender,
-                        winrt::Microsoft::UI::Xaml::RoutedEventArgs const& e);
 };
 
 }  // namespace winrt::main_winui::implementation

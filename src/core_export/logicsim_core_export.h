@@ -144,6 +144,8 @@ typedef struct ls_simulation_config_t {
 typedef struct ls_render_config_t {
     uint8_t thread_count_enum;
     uint8_t wire_render_style_enum;
+    uint8_t theme_request_enum;
+    uint8_t theme_enum;
     //
     ls_bool_t do_benchmark;
     ls_bool_t show_circuit;
@@ -466,6 +468,17 @@ enum class WireRenderStyle : uint8_t {
     bold_red = 2,
 };
 
+enum class ThemeStyleRequest : uint8_t {
+    system_default = 0,
+    light = 1,
+    dark = 2,
+};
+
+enum class ThemeStyle : uint8_t {
+    light = 0,
+    dark = 1,
+};
+
 enum class CircuitStateType : uint8_t {
     NonInteractive = 0,
     Simulation = 1,
@@ -524,6 +537,8 @@ struct SimulationConfig {
 struct WidgetRenderConfig {
     ThreadCount thread_count;
     WireRenderStyle wire_render_style;
+    ThemeStyleRequest theme_request;
+    ThemeStyle theme;
 
     bool do_benchmark;
     bool show_circuit;
@@ -932,6 +947,8 @@ namespace detail {
             ls_render_config_t {
                 .thread_count_enum = to_underlying(config.render.thread_count),
                 .wire_render_style_enum = to_underlying(config.render.wire_render_style),
+                .theme_request_enum = to_underlying(config.render.theme_request),
+                .theme_enum = to_underlying(config.render.theme),
 
                 .do_benchmark = ls_bool_t {config.render.do_benchmark},
                 .show_circuit = ls_bool_t {config.render.show_circuit},
@@ -966,6 +983,9 @@ namespace detail {
                 .thread_count = static_cast<ThreadCount>(config.render.thread_count_enum),
                 .wire_render_style =
                     static_cast<WireRenderStyle>(config.render.wire_render_style_enum),
+                .theme_request =
+                    static_cast<ThemeStyleRequest>(config.render.theme_request_enum),
+                .theme = static_cast<ThemeStyle>(config.render.theme_enum),
 
                 .do_benchmark = config.render.do_benchmark != 0,
                 .show_circuit = config.render.show_circuit != 0,

@@ -159,6 +159,8 @@ namespace {
             ls_render_config_t {
                 .thread_count_enum = to_underlying(config.render.thread_count),
                 .wire_render_style_enum = to_underlying(config.render.wire_render_style),
+                .theme_request_enum = to_underlying(config.render.theme_request),
+                .theme_enum = to_underlying(config.render.theme),
 
                 .do_benchmark = ls_bool_t {config.render.do_benchmark},
                 .show_circuit = ls_bool_t {config.render.show_circuit},
@@ -205,6 +207,37 @@ namespace {
             return WireRenderStyle::bold;
         case bold_red:
             return WireRenderStyle::bold_red;
+    };
+    std::terminate();
+}
+
+[[nodiscard]] auto to_theme_style_request(const uint8_t theme_style_enum)
+    -> ThemeStyleRequest {
+    const auto style = to_enum<exporting::ThemeStyleRequest>(theme_style_enum);
+
+    switch (style) {
+        using enum exporting::ThemeStyleRequest;
+
+        case system_default:
+            return ThemeStyleRequest::system_default;
+        case light:
+            return ThemeStyleRequest::light;
+        case dark:
+            return ThemeStyleRequest::dark;
+    };
+    std::terminate();
+}
+
+[[nodiscard]] auto to_theme_style(const uint8_t theme_style_enum) -> ThemeStyle {
+    const auto style = to_enum<exporting::ThemeStyle>(theme_style_enum);
+
+    switch (style) {
+        using enum exporting::ThemeStyle;
+
+        case light:
+            return ThemeStyle::light;
+        case dark:
+            return ThemeStyle::dark;
     };
     std::terminate();
 }
@@ -296,6 +329,8 @@ namespace {
                 .thread_count = to_thread_count(config.render.thread_count_enum),
                 .wire_render_style =
                     to_wire_render_style(config.render.wire_render_style_enum),
+                .theme_request = to_theme_style_request(config.render.theme_request_enum),
+                .theme = to_theme_style(config.render.theme_enum),
 
                 .do_benchmark = config.render.do_benchmark != 0,
                 .show_circuit = config.render.show_circuit != 0,
