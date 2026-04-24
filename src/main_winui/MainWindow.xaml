@@ -315,7 +315,7 @@
                     </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>
 
-                <TitleBar x:Name="MainTitleBar" Grid.Row="0" BackRequested="MainTitleBar_BackRequested">
+                <TitleBar x:Name="MainTitleBar" Grid.Row="0" BackRequested="MainTitleBar_BackRequested" ActualThemeChanged="MainTitleBar_ActualThemeChanged">
                     <!--
                     <TitleBar.IconSource>
                         <ImageIconSource ImageSource="ms-appx:///resources/icons/derivative/app_icon.svg"/>

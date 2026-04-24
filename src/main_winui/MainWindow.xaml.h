@@ -42,6 +42,10 @@ struct MainWindow : MainWindowT<MainWindow> {
     auto MainTitleBar_BackRequested(Microsoft::UI::Xaml::Controls::TitleBar const& sender,
                                     IInspectable const& args) -> void;
 
+    auto MainTitleBar_ActualThemeChanged(
+        Microsoft::UI::Xaml::FrameworkElement const& sender, IInspectable const& args)
+        -> void;
+
     // Grid
 
     auto RootGrid_DragOver(IInspectable const&,

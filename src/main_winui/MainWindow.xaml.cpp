@@ -413,6 +413,16 @@ auto MainWindow::MainTitleBar_BackRequested(Controls::TitleBar const&,
     set_setting_page_shown(false);
 }
 
+auto MainWindow::MainTitleBar_ActualThemeChanged(FrameworkElement const&,
+                                                 IInspectable const&) -> void {
+    // update color of the system title bar buttons (close, minimize, maximize)
+    // strangely they are not updated automatically when themes change on title bar
+    AppWindow().TitleBar().PreferredTheme(
+        MainTitleBar().ActualTheme() == ElementTheme::Dark
+            ? Microsoft::UI::Windowing::TitleBarTheme::Dark
+            : Microsoft::UI::Windowing::TitleBarTheme::Light);
+}
+
 auto MainWindow::RootGrid_DragOver(IInspectable const&, DragEventArgs const& args)
     -> void {
     using namespace winrt::Windows::ApplicationModel::DataTransfer;
@@ -1501,5 +1511,4 @@ auto MainWindow::EmailButton_Click(IInspectable const&, RoutedEventArgs const&) 
     winrt::Windows::System::Launcher::LaunchUriAsync(
         winrt::Windows::Foundation::Uri {L"mailto:christian@rangetable.com"});
 }
-
 }  // namespace winrt::main_winui::implementation
