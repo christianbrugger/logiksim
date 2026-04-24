@@ -3,6 +3,7 @@
 
 #include "core/format/enum.h"
 
+#include <array>
 #include <string>
 
 namespace logicsim {
@@ -18,6 +19,11 @@ enum class ThemeStyle : uint8_t {
 template <>
 [[nodiscard]] auto format(ThemeStyle style) -> std::string;
 
+constexpr inline auto all_theme_styles = std::array {
+    ThemeStyle::light,  //
+    ThemeStyle::dark,   //
+};
+
 /**
  * @brief: User request for the selected theme style.
  */
@@ -29,6 +35,12 @@ enum class ThemeStyleRequest : uint8_t {
 
 template <>
 [[nodiscard]] auto format(ThemeStyleRequest style) -> std::string;
+
+constexpr inline auto all_theme_style_requests = std::array {
+    ThemeStyleRequest::system_default,  //
+    ThemeStyleRequest::light,           //
+    ThemeStyleRequest::dark,            //
+};
 
 }  // namespace logicsim
 

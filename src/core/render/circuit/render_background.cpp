@@ -12,10 +12,15 @@ namespace logicsim {
 
 namespace {
 
+[[nodiscard]] auto invert(color_t color, ThemeStyle theme) -> color_t {
+    static_assert(all_theme_styles.size() == 2);
+    return theme == ThemeStyle::dark ? invert(color) : color;
+}
+
 auto draw_grid_space_limit(Context& ctx) {
-    constexpr auto stroke_color = defaults::color_gray;
     constexpr auto stroke_width = grid_fine_t {5.0};
 
+    const auto stroke_color = invert(defaults::color_gray, ctx.settings.theme);
     const auto stroke_width_px = std::max(5.0, to_context(stroke_width, ctx));
 
     const auto p0 = to_context(point_t {grid_t::min(), grid_t::min()}, ctx);
@@ -68,14 +73,15 @@ auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int d
 }
 
 auto draw_background_patterns(Context& ctx) {
-    auto scene_rect = get_scene_rect_fine(ctx.view_config());
+    const auto scene_rect = get_scene_rect_fine(ctx.view_config());
+    const auto theme = ctx.settings.theme;
 
-    constexpr static auto grid_definition = {
-        std::tuple {1, monochrome(0xF0), 1},    //
-        std::tuple {8, monochrome(0xE4), 1},    //
-        std::tuple {64, monochrome(0xE4), 2},   //
-        std::tuple {512, monochrome(0xD8), 2},  //
-        std::tuple {4096, monochrome(0xC0), 2},
+    const auto grid_definition = {
+        std::tuple {1, invert(monochrome(0xF0), theme), 1},    //
+        std::tuple {8, invert(monochrome(0xE4), theme), 1},    //
+        std::tuple {64, invert(monochrome(0xE4), theme), 2},   //
+        std::tuple {512, invert(monochrome(0xD8), theme), 2},  //
+        std::tuple {4096, invert(monochrome(0xC0), theme), 2},
     };
 
     for (auto&& [delta, color, width] : grid_definition) {
@@ -90,23 +96,12 @@ auto draw_background_patterns(Context& ctx) {
     }
 }
 
-[[nodiscard]] auto get_background_color(ThemeStyle theme) {
-    switch (theme) {
-        using enum ThemeStyle;
-
-        case light:
-            return defaults::color_white;
-        case dark:
-            return defaults::color_black;
-    }
-    std::terminate();
-}
-
 }  // namespace
 
 auto render_background(Context& ctx) -> void {
+    const auto background_color = invert(defaults::color_white, ctx.settings.theme);
     ctx.bl_ctx.set_comp_op(BL_COMP_OP_SRC_COPY);
-    ctx.bl_ctx.fill_all(get_background_color(ctx.settings.theme));
+    ctx.bl_ctx.fill_all(background_color);
 
     draw_background_patterns(ctx);
     draw_grid_space_limit(ctx);

@@ -83,6 +83,13 @@ constexpr auto monochrome(uint8_t value) -> color_t {
     return color_t {value, value, value, 255};
 }
 
+/*
+ * @brief: invert colors, keep alpha
+ */
+constexpr auto invert(color_t color) -> color_t {
+    return color_t {color.value ^ uint32_t {0x00FFFFFF}};
+}
+
 constexpr auto is_rgb(color_t value) -> bool {
     return value.a() == 255;
 }
