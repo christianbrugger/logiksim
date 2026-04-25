@@ -6,6 +6,7 @@
 #include "core/layout.h"
 #include "core/render/bl_box.h"
 #include "core/render/circuit/alpha_values.h"
+#include "core/render/color_transform.h"
 #include "core/render/context.h"
 #include "core/render/context_guard.h"
 #include "core/render/primitive/point.h"

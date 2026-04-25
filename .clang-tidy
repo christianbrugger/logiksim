@@ -34,6 +34,7 @@ google-runtime-operator,
 -readability-qualified-auto,
 -cppcoreguidelines-avoid-magic-numbers,
 -readability-magic-numbers,
+-readability-math-missing-parentheses,
 -readability-uppercase-literal-suffix,
 
 -readability-redundant-member-init,

@@ -236,6 +236,7 @@ set(LS_CORE_SOURCES
     render/bl_box.cpp
     render/bl_error_check.cpp
     render/bl_glyph_placement.cpp
+    render/color_transform.cpp
     render/context.cpp
     render/context_cache.cpp
     render/context_guard.cpp
