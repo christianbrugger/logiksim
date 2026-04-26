@@ -1,7 +1,13 @@
 #ifndef LOGICSIM_CORE_RENDER_COLOR_TRANSFORM_H
 #define LOGICSIM_CORE_RENDER_COLOR_TRANSFORM_H
 
+#include "core/format/struct.h"
+#include "core/logging.h"
+
 #include <gcem.hpp>
+
+#include <cmath>
+#include <numbers>
 
 /*
  * @brief: Define oklab color transformations.
@@ -48,7 +54,7 @@ struct Lrgb {
  * @brief: Oklab color space
  */
 struct Oklab {
-    float l;
+    float l;  // lightness
     float a;
     float b;
 
@@ -58,10 +64,30 @@ struct Oklab {
 
 [[nodiscard]] constexpr auto is_close(const Oklab& x, const Oklab& y) -> bool;
 
+/*
+ * @brief: Oklch color space
+ */
+struct Oklch {
+    float l;  // lightness
+    float c;  // chroma
+    float h;  // hue in degree
+
+    [[nodiscard]] constexpr auto operator==(const Oklch&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+[[nodiscard]] constexpr auto is_close(const Oklch& x, const Oklch& y) -> bool;
+
 [[nodiscard]] constexpr auto to_lrgb(Rgb c) -> Lrgb;
 [[nodiscard]] constexpr auto to_rgb(Lrgb c) -> Rgb;
+
 [[nodiscard]] constexpr auto to_oklab(Lrgb c) -> Oklab;
 [[nodiscard]] constexpr auto to_lrgb(Oklab c) -> Lrgb;
+
+[[nodiscard]] constexpr auto to_oklch(Oklab c) -> Oklch;
+[[nodiscard]] constexpr auto to_oklab(Oklch c) -> Oklab;
+
+[[nodiscard]] constexpr auto to_dark_mode(Rgb rgb) -> Rgb;
 
 //
 // Implementation
@@ -104,6 +130,41 @@ namespace details::ct {
     return std::sqrtf(x);
 }
 
+[[nodiscard]] constexpr auto hypotf(float x, float y) -> float {
+    if (std::is_constant_evaluated()) {
+        return gcem::hypot(x, y);
+    }
+    return std::hypotf(x, y);
+}
+
+[[nodiscard]] constexpr auto sinf(float x) -> float {
+    if (std::is_constant_evaluated()) {
+        return gcem::sin(x);
+    }
+    return std::sinf(x);
+}
+
+[[nodiscard]] constexpr auto cosf(float x) -> float {
+    if (std::is_constant_evaluated()) {
+        return gcem::cos(x);
+    }
+    return std::cosf(x);
+}
+
+[[nodiscard]] constexpr auto atan2f(float y, float x) -> float {
+    if (std::is_constant_evaluated()) {
+        return gcem::atan2(y, x);
+    }
+    return std::atan2f(y, x);
+}
+
+[[nodiscard]] constexpr auto fmodf(float x, float y) -> float {
+    if (std::is_constant_evaluated()) {
+        return gcem::fmod(x, y);
+    }
+    return std::fmodf(x, y);
+}
+
 [[nodiscard]] constexpr auto clamp(float x, float min, float max) -> float {
     if (x < min) {
         return min;
@@ -140,6 +201,25 @@ constexpr auto is_close(const Oklab& x, const Oklab& y) -> bool {
     return details::ct::abs(x.l - y.l) < tol &&  //
            details::ct::abs(x.a - y.a) < tol &&  //
            details::ct::abs(x.b - y.b) < tol;
+}
+
+constexpr auto is_close(const Oklch& x, const Oklch& y) -> bool {
+    constexpr auto tol_lc = 1e-6f;
+    constexpr auto tol_h = 360.f * 1e-6f;
+
+    if (details::ct::abs(x.l - y.l) >= tol_lc) {
+        return false;
+    }
+    if (details::ct::abs(x.c - y.c) >= tol_lc) {
+        return false;
+    }
+    if (details::ct::abs(x.c) < tol_lc &&  //
+        details::ct::abs(y.c) < tol_lc) {
+        return true;
+    }
+
+    const auto diff = details::ct::abs(details::ct::fmodf(x.h - y.h, 360.f));
+    return (diff < tol_h) || (360.f - diff < tol_h);
 }
 
 namespace details::ct {
@@ -226,6 +306,40 @@ constexpr auto to_lrgb(Oklab c) -> Lrgb {
     };
 }
 
+constexpr auto to_oklch(Oklab c) -> Oklch {
+    constexpr auto rad_to_deg = static_cast<float>(180. / std::numbers::pi);
+    const auto chroma = details::ct::hypotf(c.a, c.b);
+
+    const auto hue = [&] {
+        if (chroma < 1.0e-6) {
+            return 0.f;
+        }
+
+        auto hue = details::ct::atan2f(c.b, c.a) * rad_to_deg;
+        if (hue < 0.f) {
+            hue += 360.f;
+        }
+        return hue;
+    }();
+
+    return Oklch {
+        .l = c.l,
+        .c = chroma,
+        .h = hue,
+    };
+}
+
+constexpr auto to_oklab(Oklch lch) -> Oklab {
+    constexpr auto deg_to_rad = static_cast<float>(std::numbers::pi / 180.);
+
+    const auto chroma = std::max(0.f, lch.c);
+    return Oklab {
+        .l = lch.l,
+        .a = chroma * details::ct::cosf(lch.h * deg_to_rad),
+        .b = chroma * details::ct::sinf(lch.h * deg_to_rad),
+    };
+}
+
 namespace details::ct {
 
 /*
@@ -237,7 +351,8 @@ namespace details::ct {
  * Max saturation will be when one of r, g or b goes below zero.
  */
 [[nodiscard]] constexpr auto compute_max_saturation(float a, float b) -> float {
-    // Select different coefficients depending on which component goes below zero first
+    // Select different coefficients depending on which component goes below zero
+    // first
     float k0 = {};
     float k1 = {};
     float k2 = {};
@@ -283,9 +398,9 @@ namespace details::ct {
     const auto S = k0 + k1 * a + k2 * b + k3 * a * a + k4 * a * b;
 
     // Do one step Halley's method to get closer
-    // this gives an error less than 10e6, except for some blue hues where the dS/dh is
-    // close to infinite this should be sufficient for most applications, otherwise do
-    // two/three steps
+    // this gives an error less than 10e6, except for some blue hues where the dS/dh
+    // is close to infinite this should be sufficient for most applications, otherwise
+    // do two/three steps
 
     const auto k_l = +0.3963377774f * a + 0.2158037573f * b;
     const auto k_m = -0.1055613458f * a - 0.0638541728f * b;
@@ -330,7 +445,8 @@ struct LC {
     // First, find the maximum saturation (saturation S = C/L)
     const auto S_cusp = compute_max_saturation(a, b);
 
-    // Convert to linear sRGB to find the first point where at least one of r,g or b >= 1:
+    // Convert to linear sRGB to find the first point where at least one of r,g or b
+    // >= 1:
     const Lrgb rgb_at_max = to_lrgb(Oklab {
         .l = 1,
         .a = S_cusp * a,
@@ -384,8 +500,8 @@ struct LC {
             float m_dt = dL + dC * k_m;
             float s_dt = dL + dC * k_s;
 
-            // If higher accuracy is required, 2 or 3 iterations of the following block
-            // can be used:
+            // If higher accuracy is required, 2 or 3 iterations of the following
+            // block can be used:
             {
                 float L = L0 * (1.f - t) + t * L1;
                 float C = t * C1;
@@ -477,7 +593,98 @@ struct LC {
     };
 }
 
+constexpr auto is_representable(Oklab lab) -> bool {
+    print("-", lab, to_rgb(to_lrgb(lab)));
+    const auto lrgb = to_lrgb(lab);
+    return lrgb.r >= 0.f && lrgb.g >= 0.f && lrgb.b >= 0.f &&  //
+           lrgb.r <= 1.f && lrgb.g <= 1.f && lrgb.b <= 1.f;
+}
+
+constexpr auto max_circle_angle_down(float l_radius, float a, float b) -> float {
+    constexpr auto eps = 1e-5f;
+
+    print("l_radius =", l_radius);
+    if (l_radius < eps || l_radius > (1.f - eps)) {
+        return 0.f;
+    };
+
+    const auto c = details::ct::hypotf(a, b);
+
+    const auto [a_, b_] = [&] {
+        if (c < eps) {
+            return std::pair {1.f, 0.f};
+        }
+        return std::pair {a / c, b / c};
+    }();
+
+    const auto cusp = find_cusp(a_, b_);
+    const auto alpha_rad = std::atanf(cusp.C / (1.f - cusp.L));
+
+    const auto is_rep = [&](float beta_) -> bool {
+        const auto c1_ = l_radius * std::sin(beta_);
+        const auto l1_ = l_radius * std::cos(beta_);
+        Expects(c1_ >= 0);
+        const auto a1_ = c1_ * a_;
+        const auto b1_ = c1_ * b_;
+        return is_representable(Oklab {.l = 1.f - l1_, .a = a1_, .b = b1_});
+    };
+
+    if (is_rep(alpha_rad)) {
+        return alpha_rad;
+    }
+
+    auto low = 0.f;
+    auto high = alpha_rad;
+
+    for (auto i = 0; i < 20; ++i) {
+        const auto mid = (low + high) / 2.f;
+
+        if (is_rep(mid)) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    }
+
+    return low;
+}
+
+constexpr auto get_angle_down(Oklab lab) -> float {
+    constexpr auto eps = 1e-5f;
+
+    if (lab.l < eps || lab.l > (1.f - eps)) {
+        return 0.f;
+    };
+
+    const auto c = details::ct::hypotf(lab.a, lab.b);
+    return std::atanf(c / (1.f - lab.l));
+}
+
 }  // namespace details::ct
+
+constexpr auto to_dark_mode(Rgb rgb) -> Rgb {
+    constexpr auto rad_to_deg = static_cast<float>(180. / std::numbers::pi);
+
+    const auto lab = to_oklab(to_lrgb(rgb));
+    const auto lch = to_oklch(lab);
+    print(rgb);
+    print(lab);
+    print(lch);
+
+    // distance to white
+    const auto d = std::hypot(lab.l - 1.f, lab.a, lab.b);
+
+    const auto alpha = details::ct::get_angle_down(lab);
+    const auto alpha_max = details::ct::max_circle_angle_down(d, lab.a, lab.b);
+    const auto alpha_per =
+        details::ct::clamp(alpha / std::max(1e-5f, alpha_max), 0.f, 1.f);
+    print("alpha     =", alpha * rad_to_deg);
+    print("alpha_max =", alpha_max * rad_to_deg);
+    print("alpha %   =", alpha_per);
+
+    print("---");
+    return rgb;
+}
 
 //
 // Static testing
@@ -500,11 +707,20 @@ constexpr static inline auto test_oklab = Oklab {
     .a = -0.205411749f,
     .b = 0.112996876f,
 };
+constexpr static inline auto test_oklch = Oklch {
+    .l = 0.8750742411,
+    .c = 0.2344403564,
+    .h = 151.184834817,
+};
 
 static_assert(is_close(to_lrgb(test_rgb), test_lrgb));
 static_assert(is_close(to_rgb(test_lrgb), test_rgb));
+
 static_assert(is_close(to_oklab(test_lrgb), test_oklab));
 static_assert(is_close(to_lrgb(test_oklab), test_lrgb));
+
+static_assert(is_close(to_oklch(test_oklab), test_oklch));
+static_assert(is_close(to_oklab(test_oklch), test_oklab));
 
 // constexpr static auto abc = details::ct::gamut_clip_preserve_chroma(Lrgb(1.5, 0.5,
 // 0.5));

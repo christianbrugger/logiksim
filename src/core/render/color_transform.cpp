@@ -1,5 +1,7 @@
 #include "core/render/color_transform.h"
 
+#include <fmt/format.h>
+
 namespace logicsim {
 
 auto Rgb::format() const -> std::string {
@@ -12,6 +14,10 @@ auto Lrgb::format() const -> std::string {
 
 auto Oklab::format() const -> std::string {
     return fmt::format("Oklab({}, {}, {})", l, a, b);
+}
+
+auto Oklch::format() const -> std::string {
+    return fmt::format("Oklch({}, {}, {})", l, c, h);
 }
 
 }  // namespace logicsim
