@@ -96,8 +96,8 @@ auto diff_images(BLImageData diff, BLImageData orig) {
     auto pd_orig = reinterpret_cast<BLRgba32*>(orig.pixel_data);
     const auto stride = gsl::narrow<std::size_t>(diff.stride) / sizeof(BLRgba32);
 
-    for (auto y : range(gsl::narrow<std::size_t>(data.size.h))) {
-        for (auto x : range(gsl::narrow<std::size_t>(data.size.w))) {
+    for (auto y : range(gsl::narrow<std::size_t>(diff.size.h))) {
+        for (auto x : range(gsl::narrow<std::size_t>(diff.size.w))) {
             auto& p_diff = pd_diff[x + y * stride];
             auto& p_orig = pd_orig[x + y * stride];
 

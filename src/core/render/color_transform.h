@@ -7,6 +7,7 @@
 #include <gcem.hpp>
 
 #include <cmath>
+#include <limits>
 #include <numbers>
 
 /*
@@ -490,6 +491,8 @@ struct LC {
  */
 [[nodiscard]] constexpr auto find_gamut_intersection(float a, float b, float L1, float C1,
                                                      float L0) -> float {
+    constexpr auto flt_max = std::numeric_limits<float>::max();
+
     // Find the cusp of the gamut triangle
     const auto cusp = find_cusp(a, b);
 
@@ -567,9 +570,9 @@ struct LC {
                 float u_b = b1 / (b1 * b1 - 0.5f * b_ * b2);
                 float t_b = -b_ * u_b;
 
-                t_r = u_r >= 0.f ? t_r : FLT_MAX;
-                t_g = u_g >= 0.f ? t_g : FLT_MAX;
-                t_b = u_b >= 0.f ? t_b : FLT_MAX;
+                t_r = u_r >= 0.f ? t_r : flt_max;
+                t_g = u_g >= 0.f ? t_g : flt_max;
+                t_b = u_b >= 0.f ? t_b : flt_max;
 
                 t += std::min({t_r, t_g, t_b});
             }
@@ -642,28 +645,29 @@ constexpr auto max_circle_angle_down(float l_radius, float a, float b) -> float 
 
     const auto c = details::ct::hypotf(a, b);
 
-    const auto [a_, b_] = [&]() constexpr {
+    const auto [a0, b0] = [&]() constexpr {
         if (c < eps) {
             return std::pair {1.f, 0.f};
         }
         return std::pair {a / c, b / c};
     }();
 
-    const auto cusp = find_cusp(a_, b_);
+    const auto cusp = find_cusp(a0, b0);
     Expects(cusp.L > eps);
     Expects(cusp.C > eps);
     const auto alpha_rad = details::ct::atanf(cusp.C / (1.f - cusp.L));
 
-    const auto is_rep = [&](float beta_) constexpr -> bool {
+    // pass a__ and b__ as parameters, not captures, to make lambda constexpr
+    const auto is_rep = [&](float a0_, float b0_, float beta_) constexpr -> bool {
         const auto c1_ = l_radius * details::ct::sinf(beta_);
         const auto l1_ = 1.f - l_radius * details::ct::cosf(beta_);
         Expects(c1_ >= 0);
-        const auto a1_ = c1_ * a_;
-        const auto b1_ = c1_ * b_;
+        const auto a1_ = c1_ * a0_;
+        const auto b1_ = c1_ * b0_;
         return is_representable(Oklab {.l = l1_, .a = a1_, .b = b1_});
     };
 
-    if (is_rep(alpha_rad)) {
+    if (is_rep(a0, b0, alpha_rad)) {
         return alpha_rad;
     }
 
@@ -673,7 +677,7 @@ constexpr auto max_circle_angle_down(float l_radius, float a, float b) -> float 
     for (auto i = 0; i < 20; ++i) {
         const auto mid = (low + high) / 2.f;
 
-        if (is_rep(mid)) {
+        if (is_rep(a0, b0, mid)) {
             low = mid;
         } else {
             high = mid;
@@ -693,28 +697,29 @@ constexpr auto max_circle_angle_up(float l_radius, float a, float b) -> float {
 
     const auto c = details::ct::hypotf(a, b);
 
-    const auto [a_, b_] = [&]() constexpr {
+    const auto [a0, b0] = [&]() constexpr {
         if (c < eps) {
             return std::pair {1.f, 0.f};
         }
         return std::pair {a / c, b / c};
     }();
 
-    const auto cusp = find_cusp(a_, b_);
+    const auto cusp = find_cusp(a0, b0);
     Expects(cusp.L > eps);
     Expects(cusp.C > eps);
     const auto alpha_rad = details::ct::atanf(cusp.C / std::max(eps, cusp.L - l_dark));
 
-    const auto is_rep = [&](float beta_) constexpr -> bool {
+    // pass a__ and b__ as parameters, not captures, to make lambda constexpr
+    auto is_rep = [&](float a0_, float b0_, float beta_) constexpr -> bool {
         const auto c1_ = l_radius * details::ct::sinf(beta_);
         const auto l1_ = l_dark + l_radius * details::ct::cosf(beta_);
         Expects(c1_ >= 0);
-        const auto a1_ = c1_ * a_;
-        const auto b1_ = c1_ * b_;
+        const auto a1_ = c1_ * a0_;
+        const auto b1_ = c1_ * b0_;
         return is_representable(Oklab {.l = l1_, .a = a1_, .b = b1_});
     };
 
-    if (is_rep(alpha_rad)) {
+    if (is_rep(a0, b0, alpha_rad)) {
         return alpha_rad;
     }
 
@@ -724,7 +729,7 @@ constexpr auto max_circle_angle_up(float l_radius, float a, float b) -> float {
     for (auto i = 0; i < 20; ++i) {
         const auto mid = (low + high) / 2.f;
 
-        if (is_rep(mid)) {
+        if (is_rep(a0, b0, mid)) {
             low = mid;
         } else {
             high = mid;
@@ -853,8 +858,6 @@ static_assert(is_close(to_oklab(test_oklch), test_oklab));
 
 // constexpr static auto abc = details::ct::gamut_clip_preserve_chroma(Lrgb(1.5, 0.5,
 // 0.5));
-
-// constexpr static inline auto abc = details::ct::max_circle_angle_down(0.5, 0.1, 0.2);
 // constexpr static inline auto ab1 = to_dark_mode(test_rgb);
 // constexpr static inline auto ab2 = to_light_mode(test_rgb);
 
