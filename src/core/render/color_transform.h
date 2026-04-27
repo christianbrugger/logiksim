@@ -85,9 +85,10 @@ struct Oklch {
 [[nodiscard]] constexpr auto to_lrgb(Oklab c) -> Lrgb;
 
 [[nodiscard]] constexpr auto to_oklch(Oklab c) -> Oklch;
-[[nodiscard]] constexpr auto to_oklab(Oklch c) -> Oklab;
+[[nodiscard]] constexpr auto to_oklab(Oklch lch) -> Oklab;
 
 [[nodiscard]] constexpr auto to_dark_mode(Rgb rgb) -> Rgb;
+[[nodiscard]] constexpr auto to_light_mode(Rgb rgb) -> Rgb;
 
 //
 // Implementation
@@ -137,6 +138,16 @@ namespace details::ct {
     return std::hypotf(x, y);
 }
 
+[[nodiscard]] constexpr auto hypotf(float x, float y, float z) -> float {
+    if (std::is_constant_evaluated()) {
+        const auto dx = double {x};
+        const auto dy = double {y};
+        const auto dz = double {z};
+        return static_cast<float>(gcem::sqrt(dx * dx + dy * dy + dz * dz));
+    }
+    return std::hypot(x, y, z);
+}
+
 [[nodiscard]] constexpr auto sinf(float x) -> float {
     if (std::is_constant_evaluated()) {
         return gcem::sin(x);
@@ -149,6 +160,13 @@ namespace details::ct {
         return gcem::cos(x);
     }
     return std::cosf(x);
+}
+
+[[nodiscard]] constexpr auto atanf(float x) -> float {
+    if (std::is_constant_evaluated()) {
+        return gcem::atan(x);
+    }
+    return std::atanf(x);
 }
 
 [[nodiscard]] constexpr auto atan2f(float y, float x) -> float {
@@ -594,7 +612,6 @@ struct LC {
 }
 
 constexpr auto is_representable(Oklab lab) -> bool {
-    print("-", lab, to_rgb(to_lrgb(lab)));
     const auto lrgb = to_lrgb(lab);
     return lrgb.r >= 0.f && lrgb.g >= 0.f && lrgb.b >= 0.f &&  //
            lrgb.r <= 1.f && lrgb.g <= 1.f && lrgb.b <= 1.f;
@@ -619,14 +636,13 @@ namespace details::ct {
 constexpr auto max_circle_angle_down(float l_radius, float a, float b) -> float {
     constexpr auto eps = 1e-5f;
 
-    print("l_radius =", l_radius);
     if (l_radius < eps || l_radius > (1.f - eps)) {
         return 0.f;
     };
 
     const auto c = details::ct::hypotf(a, b);
 
-    const auto [a_, b_] = [&] {
+    const auto [a_, b_] = [&]() constexpr {
         if (c < eps) {
             return std::pair {1.f, 0.f};
         }
@@ -636,11 +652,11 @@ constexpr auto max_circle_angle_down(float l_radius, float a, float b) -> float 
     const auto cusp = find_cusp(a_, b_);
     Expects(cusp.L > eps);
     Expects(cusp.C > eps);
-    const auto alpha_rad = std::atanf(cusp.C / (1.f - cusp.L));
+    const auto alpha_rad = details::ct::atanf(cusp.C / (1.f - cusp.L));
 
-    const auto is_rep = [&](float beta_) -> bool {
-        const auto c1_ = l_radius * std::sin(beta_);
-        const auto l1_ = 1.f - l_radius * std::cos(beta_);
+    const auto is_rep = [&](float beta_) constexpr -> bool {
+        const auto c1_ = l_radius * details::ct::sinf(beta_);
+        const auto l1_ = 1.f - l_radius * details::ct::cosf(beta_);
         Expects(c1_ >= 0);
         const auto a1_ = c1_ * a_;
         const auto b1_ = c1_ * b_;
@@ -671,14 +687,13 @@ constexpr auto max_circle_angle_up(float l_radius, float a, float b) -> float {
     constexpr auto eps = 1e-5f;
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
-    print("l_radius =", l_radius);
     if (l_radius < eps || l_radius + l_dark > (1.f - eps)) {
         return 0.f;
     };
 
     const auto c = details::ct::hypotf(a, b);
 
-    const auto [a_, b_] = [&] {
+    const auto [a_, b_] = [&]() constexpr {
         if (c < eps) {
             return std::pair {1.f, 0.f};
         }
@@ -688,11 +703,11 @@ constexpr auto max_circle_angle_up(float l_radius, float a, float b) -> float {
     const auto cusp = find_cusp(a_, b_);
     Expects(cusp.L > eps);
     Expects(cusp.C > eps);
-    const auto alpha_rad = std::atanf(cusp.C / std::max(eps, cusp.L - l_dark));
+    const auto alpha_rad = details::ct::atanf(cusp.C / std::max(eps, cusp.L - l_dark));
 
-    const auto is_rep = [&](float beta_) -> bool {
-        const auto c1_ = l_radius * std::sin(beta_);
-        const auto l1_ = l_dark + l_radius * std::cos(beta_);
+    const auto is_rep = [&](float beta_) constexpr -> bool {
+        const auto c1_ = l_radius * details::ct::sinf(beta_);
+        const auto l1_ = l_dark + l_radius * details::ct::cosf(beta_);
         Expects(c1_ >= 0);
         const auto a1_ = c1_ * a_;
         const auto b1_ = c1_ * b_;
@@ -727,7 +742,7 @@ constexpr auto get_angle_down(Oklab lab) -> float {
     };
 
     const auto c = details::ct::hypotf(lab.a, lab.b);
-    return std::atanf(c / (1.f - lab.l));
+    return details::ct::atanf(c / (1.f - lab.l));
 }
 
 constexpr auto get_angle_up(Oklab lab) -> float {
@@ -739,7 +754,7 @@ constexpr auto get_angle_up(Oklab lab) -> float {
     };
 
     const auto c = details::ct::hypotf(lab.a, lab.b);
-    return std::atanf(c / (lab.l - l_dark));
+    return details::ct::atanf(c / (lab.l - l_dark));
 }
 
 }  // namespace details::ct
@@ -751,7 +766,7 @@ constexpr auto to_dark_mode(Rgb rgb) -> Rgb {
     const auto lch = to_oklch(lab);
 
     // distance and angles
-    const auto r_light = std::hypot(lab.l - 1.f, lab.a, lab.b);
+    const auto r_light = details::ct::hypotf(lab.l - 1.f, lab.a, lab.b);
     const auto r_dark = r_light * (1.f - l_dark);
 
     const auto b_light_max = details::ct::max_circle_angle_down(r_light, lab.a, lab.b);
@@ -765,8 +780,36 @@ constexpr auto to_dark_mode(Rgb rgb) -> Rgb {
     const auto b_dark_ratio = b_light_ratio;
     const auto b_dark = b_dark_max * b_dark_ratio;
     const auto lch1 = Oklch {
-        .l = l_dark + r_dark * std::cos(b_dark),
-        .c = r_dark * std::sin(b_dark),
+        .l = l_dark + r_dark * details::ct::cosf(b_dark),
+        .c = r_dark * details::ct::sinf(b_dark),
+        .h = lch.h,
+    };
+    return to_rgb(to_lrgb(to_oklab(lch1)));
+}
+
+constexpr auto to_light_mode(Rgb rgb) -> Rgb {
+    constexpr auto l_dark = defaults::dark_mode_oklab.l;
+
+    const auto lab = to_oklab(to_lrgb(rgb));
+    const auto lch = to_oklch(lab);
+
+    // distance and angles
+    const auto r_dark = details::ct::hypotf(lab.l - l_dark, lab.a, lab.b);
+    const auto r_light = r_dark / (1.f - l_dark);
+
+    const auto b_dark_max = details::ct::max_circle_angle_up(r_dark, lab.a, lab.b);
+    const auto b_light_max = details::ct::max_circle_angle_down(r_light, lab.a, lab.b);
+
+    const auto b_dark = details::ct::get_angle_up(lab);
+    const auto b_dark_ratio =
+        details::ct::clamp(b_dark / std::max(1e-5f, b_dark_max), 0.f, 1.f);
+
+    // derive
+    const auto b_light_ratio = b_dark_ratio;
+    const auto b_light = b_light_max * b_light_ratio;
+    const auto lch1 = Oklch {
+        .l = 1.f - r_light * details::ct::cosf(b_light),
+        .c = r_light * details::ct::sinf(b_light),
         .h = lch.h,
     };
     return to_rgb(to_lrgb(to_oklab(lch1)));
@@ -794,9 +837,9 @@ constexpr static inline auto test_oklab = Oklab {
     .b = 0.112996876f,
 };
 constexpr static inline auto test_oklch = Oklch {
-    .l = 0.8750742411,
-    .c = 0.2344403564,
-    .h = 151.184834817,
+    .l = 0.8750742411f,
+    .c = 0.2344403564f,
+    .h = 151.184834817f,
 };
 
 static_assert(is_close(to_lrgb(test_rgb), test_lrgb));
@@ -810,6 +853,10 @@ static_assert(is_close(to_oklab(test_oklch), test_oklab));
 
 // constexpr static auto abc = details::ct::gamut_clip_preserve_chroma(Lrgb(1.5, 0.5,
 // 0.5));
+
+// constexpr static inline auto abc = details::ct::max_circle_angle_down(0.5, 0.1, 0.2);
+// constexpr static inline auto ab1 = to_dark_mode(test_rgb);
+// constexpr static inline auto ab2 = to_light_mode(test_rgb);
 
 }  // namespace details::ct
 
