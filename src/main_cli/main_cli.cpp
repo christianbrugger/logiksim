@@ -52,10 +52,10 @@ auto image_to_darklight(BLImageData data) -> void {
     auto t = Timer {};
 
     auto pixel_data = reinterpret_cast<BLRgba32*>(data.pixel_data);
-    const auto stride = data.stride / sizeof(BLRgba32);
+    const auto stride = gsl::narrow<std::size_t>(data.stride) / sizeof(BLRgba32);
 
-    for (auto y : range(data.size.h)) {
-        for (auto x : range(data.size.w)) {
+    for (auto y : range(gsl::narrow<std::size_t>(data.size.h))) {
+        for (auto x : range(gsl::narrow<std::size_t>(data.size.w))) {
             auto& pixel = pixel_data[x + y * stride];
 
             const auto rgb = Rgb {
@@ -94,10 +94,10 @@ auto diff_images(BLImageData diff, BLImageData orig) {
 
     auto pd_diff = reinterpret_cast<BLRgba32*>(diff.pixel_data);
     auto pd_orig = reinterpret_cast<BLRgba32*>(orig.pixel_data);
-    const auto stride = diff.stride / sizeof(BLRgba32);
+    const auto stride = gsl::narrow<std::size_t>(diff.stride) / sizeof(BLRgba32);
 
-    for (auto y : range(diff.size.h)) {
-        for (auto x : range(diff.size.w)) {
+    for (auto y : range(gsl::narrow<std::size_t>(data.size.h))) {
+        for (auto x : range(gsl::narrow<std::size_t>(data.size.w))) {
             auto& p_diff = pd_diff[x + y * stride];
             auto& p_orig = pd_orig[x + y * stride];
 
