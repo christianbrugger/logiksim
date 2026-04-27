@@ -112,7 +112,10 @@ auto diff_images(BLImageData diff, BLImageData orig) {
 
 auto image_transform() -> void {
     auto img = BLImage {};
-    check(img.read_from_file("light_input.png"));
+    if (img.read_from_file("light_input.png") != BL_SUCCESS) {
+        print("Unable to read file.");
+        return;
+    }
     check(img.convert(BL_FORMAT_PRGB32));
     print(img.width());
 
