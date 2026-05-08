@@ -652,12 +652,15 @@ constexpr auto max_circle_angle_down(float l_radius, float a, float b) -> float 
         return std::pair {a / c, b / c};
     }();
 
+    /*
     const auto cusp = find_cusp(a0, b0);
     Expects(cusp.L > eps);
     Expects(cusp.C > eps);
     const auto alpha_rad = details::ct::atanf(cusp.C / (1.f - cusp.L));
+    */
+    const auto alpha_rad = static_cast<float>(std::numbers::pi / 2.);
 
-    // pass a__ and b__ as parameters, not captures, to make lambda constexpr
+    // Note, pass a__ and b__ as parameters, not captures, to make lambda constexpr
     const auto is_rep = [&](float a0_, float b0_, float beta_) constexpr -> bool {
         const auto c1_ = l_radius * details::ct::sinf(beta_);
         const auto l1_ = 1.f - l_radius * details::ct::cosf(beta_);
@@ -667,9 +670,11 @@ constexpr auto max_circle_angle_down(float l_radius, float a, float b) -> float 
         return is_representable(Oklab {.l = l1_, .a = a1_, .b = b1_});
     };
 
+    /*
     if (is_rep(a0, b0, alpha_rad)) {
         return alpha_rad;
     }
+    */
 
     auto low = 0.f;
     auto high = alpha_rad;
@@ -688,6 +693,7 @@ constexpr auto max_circle_angle_down(float l_radius, float a, float b) -> float 
 }
 
 constexpr auto max_circle_angle_up(float l_radius, float a, float b) -> float {
+    constexpr auto deg_to_rad = static_cast<float>(std::numbers::pi / 180.);
     constexpr auto eps = 1e-5f;
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
@@ -707,7 +713,7 @@ constexpr auto max_circle_angle_up(float l_radius, float a, float b) -> float {
     const auto cusp = find_cusp(a0, b0);
     Expects(cusp.L > eps);
     Expects(cusp.C > eps);
-    const auto alpha_rad = details::ct::atanf(cusp.C / std::max(eps, cusp.L - l_dark));
+    const auto alpha_cups = details::ct::atanf(cusp.C / std::max(eps, cusp.L - l_dark));
 
     // pass a__ and b__ as parameters, not captures, to make lambda constexpr
     auto is_rep = [&](float a0_, float b0_, float beta_) constexpr -> bool {
@@ -718,6 +724,16 @@ constexpr auto max_circle_angle_up(float l_radius, float a, float b) -> float {
         const auto b1_ = c1_ * b0_;
         return is_representable(Oklab {.l = l1_, .a = a1_, .b = b1_});
     };
+
+    // Using slope along alpha_cups would cut a lot of colors below the cups point,
+    // To make the search curve cut the real gamut curve earlier an additional angle
+    // must be added.
+    constexpr auto slope_angle_adjust = 10.f * deg_to_rad;
+    // Angles too close to 90 degrees create ambiguity for colors close to dark point.
+    // To make the colors invertable, the slope needs to be limited to a value
+    // smaller then 90 degrees.
+    constexpr auto slope_angle_max = 80.f * deg_to_rad;
+    const auto alpha_rad = std::min(alpha_cups + slope_angle_adjust, slope_angle_max);
 
     if (is_rep(a0, b0, alpha_rad)) {
         return alpha_rad;
@@ -855,11 +871,6 @@ static_assert(is_close(to_lrgb(test_oklab), test_lrgb));
 
 static_assert(is_close(to_oklch(test_oklab), test_oklch));
 static_assert(is_close(to_oklab(test_oklch), test_oklab));
-
-// constexpr static auto abc = details::ct::gamut_clip_preserve_chroma(Lrgb(1.5, 0.5,
-// 0.5));
-// constexpr static inline auto ab1 = to_dark_mode(test_rgb);
-// constexpr static inline auto ab2 = to_light_mode(test_rgb);
 
 }  // namespace details::ct
 
