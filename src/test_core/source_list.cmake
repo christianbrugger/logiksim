@@ -47,6 +47,8 @@ set(LS_TEST_SOURCES
 
     random/generator_test.cpp
 
+    render/color_transform.cpp
+
     vocabulary/color_test.cpp
     vocabulary/connection_count_test.cpp
     vocabulary/connection_id_test.cpp

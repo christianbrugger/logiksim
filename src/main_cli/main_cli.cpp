@@ -77,6 +77,10 @@ auto image_to_darklight(BLImageData data) -> void {
     return std::clamp(128 + 1 * (a - b), uint32_t {0}, uint32_t {255});
 }
 
+auto get_norm(BLRgba32 a, BLRgba32 b) {
+    return std::hypot(1. * a.r() - b.r(), 1. * a.g() - b.g(), 1. * a.b() - b.b());
+};
+
 auto diff_images(BLImageData diff, BLImageData orig) {
     Expects(diff.format == BL_FORMAT_PRGB32);
     Expects(diff.flags == BL_FORMAT_NO_FLAGS);
@@ -96,18 +100,81 @@ auto diff_images(BLImageData diff, BLImageData orig) {
     auto pd_orig = reinterpret_cast<BLRgba32*>(orig.pixel_data);
     const auto stride = gsl::narrow<std::size_t>(diff.stride) / sizeof(BLRgba32);
 
+    auto n_max = double {};
+    auto x_max = std::size_t {};
+    auto y_max = std::size_t {};
+
     for (auto y : range(gsl::narrow<std::size_t>(diff.size.h))) {
         for (auto x : range(gsl::narrow<std::size_t>(diff.size.w))) {
             auto& p_diff = pd_diff[x + y * stride];
             auto& p_orig = pd_orig[x + y * stride];
+
+            const auto n = get_norm(p_diff, p_orig);
+            if (n > n_max) {
+                n_max = std::max(n_max, n);
+                x_max = x;
+                y_max = y;
+            }
 
             p_diff.setR(get_diff(p_diff.r(), p_orig.r()));
             p_diff.setG(get_diff(p_diff.g(), p_orig.g()));
             p_diff.setB(get_diff(p_diff.b(), p_orig.b()));
         }
     }
+    print("n_max =", n_max, "x", x_max, "y", y_max);
 
     print(t.delta_ms() / (diff.size.h * diff.size.w) * 1000., "us");
+}
+
+auto single_pixel(BLImageData img) -> void {
+    // const auto x = int {1948};
+    // const auto y = int {3774};
+
+    const auto x = int {1965};
+    const auto y = int {3758};
+
+    // const auto x = int {948};
+    // const auto y = int {774};
+
+    Expects(img.format == BL_FORMAT_PRGB32);
+    Expects(img.flags == BL_FORMAT_NO_FLAGS);
+    Expects(img.pixel_data != nullptr);
+
+    Expects(x < img.size.w);
+    Expects(y < img.size.h);
+
+    auto t = Timer {};
+
+    auto pd = reinterpret_cast<BLRgba32*>(img.pixel_data);
+    const auto stride = gsl::narrow<std::size_t>(img.stride) / sizeof(BLRgba32);
+
+    auto& p = pd[x + y * stride];
+
+    print("x", x, "y", y);
+    print(p.r(), p.g(), p.b());
+
+    const auto rgb = Rgb {
+        .r = static_cast<float>(p.r()),
+        .g = static_cast<float>(p.g()),
+        .b = static_cast<float>(p.b()),
+    };
+    print("-> rgb  ", rgb);
+
+    const auto res = to_dark_mode(rgb);
+    const auto dark = Rgb {
+        .r = std::clamp(std::round(res.r), 0.f, 255.f),
+        .g = std::clamp(std::round(res.g), 0.f, 255.f),
+        .b = std::clamp(std::round(res.b), 0.f, 255.f),
+    };
+    print("-> dark ", dark);
+
+    const auto res2 = to_light_mode(dark);
+    const auto light = Rgb {
+        .r = std::clamp(std::round(res2.r), 0.f, 255.f),
+        .g = std::clamp(std::round(res2.g), 0.f, 255.f),
+        .b = std::clamp(std::round(res2.b), 0.f, 255.f),
+    };
+    print("-> light", light);
 }
 
 auto image_transform() -> void {
@@ -121,6 +188,9 @@ auto image_transform() -> void {
 
     auto data = BLImageData {};
     img.make_mutable(&data);
+
+    single_pixel(data);
+    return;
 
     image_to_darklight<true>(data);
     img.write_to_file("output_dark.png");
