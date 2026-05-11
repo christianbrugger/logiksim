@@ -1,6 +1,8 @@
 
 #include "core/render/color_transform.h"
 
+#include "core/timer.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -100,6 +102,36 @@ TEST(RenderColorTransform, abnorm2) {
     EXPECT_DOUBLE_EQ(ab.c(), 0.5385164807134505);
     EXPECT_DOUBLE_EQ(ab.a_norm(), 0.9284766908852592);
     EXPECT_DOUBLE_EQ(ab.b_norm(), 0.37139067635410367);
+}
+
+TEST(RenderColorTransform, MaxChroma) {
+    // print(oklab_max_chroma_slow(Oklh {.l = 0.6985, .h = 330.88}));
+    // print(oklab_max_saturation_point_very_slow(330.88));
+
+    {
+        auto t = Timer {};
+
+        const auto num = 100;
+        auto total = 0.;
+        for (auto i = 0; i < num; ++i) {
+            total += oklab_max_chroma_slow(Oklh {.l = 0.5, .h = 1. * i}).c;
+        }
+
+        Expects(total > 10.);
+        print("Max chroma:", t.delta_seconds() / num * 1000 * 1000, "us");
+    }
+    {
+        auto t = Timer {};
+
+        const auto num = 100;
+        auto total = 0.;
+        for (auto i = 0; i < num; ++i) {
+            total += oklab_max_saturation_point_very_slow(1. * i).c;
+        }
+
+        Expects(total > 10.);
+        print("Max saturation:", t.delta_seconds() / num * 1000 * 1000, "us");
+    }
 }
 
 /*

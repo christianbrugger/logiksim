@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_CORE_RENDER_COLOR_TRANSFORM_H
 #define LOGICSIM_CORE_RENDER_COLOR_TRANSFORM_H
 
+#include "core/algorithm/golden_minimize.h"
 #include "core/format/struct.h"
 #include "core/logging.h"
 
@@ -74,6 +75,17 @@ struct Oklch {
     double h;  // hue in degree
 
     [[nodiscard]] constexpr auto operator==(const Oklch&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+/*
+ * @brief: Oklh
+ */
+struct Oklh {
+    double l;  // lightness
+    double h;  // hue in degree
+
+    [[nodiscard]] constexpr auto operator==(const Oklh&) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -179,6 +191,20 @@ namespace details::ct {
         return gcem::fmod(x, y);
     }
     return std::fmod(x, y);
+}
+
+[[nodiscard]] constexpr auto log(double x) -> double {
+    if (std::is_constant_evaluated()) {
+        return gcem::log(x);
+    }
+    return std::log(x);
+}
+
+[[nodiscard]] constexpr auto ceil(double x) -> double {
+    if (std::is_constant_evaluated()) {
+        return gcem::ceil(x);
+    }
+    return std::ceil(x);
 }
 
 [[nodiscard]] constexpr auto clamp(double x, double min, double max) -> double {
@@ -462,7 +488,7 @@ namespace details::ct {
 class ab_norm_t {
    public:
     constexpr explicit ab_norm_t(Oklab lab) noexcept {
-        constexpr auto eps = 1e-5;
+        constexpr auto eps = 1e-7;
 
         const auto c = details::ct::hypot(lab.a, lab.b);
 
@@ -493,6 +519,69 @@ class ab_norm_t {
     double a_norm_;
     double b_norm_;
 };
+
+}  // namespace details::ct
+
+/*
+ * @brief: Calculate max chroma for a given luminance and hue
+ *
+ * Straight forward implementation for verification. Takes about 1 us per call.
+ */
+
+[[nodiscard]] constexpr auto oklab_max_chroma_slow(Oklh lh) -> Oklch {
+    constexpr auto eps = 1e-7;
+    constexpr auto iter_count = std::numeric_limits<double>::digits;  // 53
+
+    // black and white have no chroma
+    if (lh.l < eps || lh.l > 1. - eps) {
+        return Oklch {.l = lh.l, .c = 0, .h = lh.h};
+    }
+
+    const auto is_rep = [&](double c_) constexpr -> bool {
+        const auto lrgb = to_lrgb(to_oklab(Oklch {.l = lh.l, .c = c_, .h = lh.h}));
+        return lrgb.r >= 0 && lrgb.g >= 0 && lrgb.b >= 0 &&  //
+               lrgb.r <= 1 && lrgb.g <= 1 && lrgb.b <= 1;
+    };
+
+    // chroma never exeeds 0.4 for sRGB
+    auto c_low = 0.;
+    auto c_high = 0.4;
+
+    Expects(is_rep(c_low));
+    Expects(!is_rep(c_high));
+
+    for (auto i = 0; i < iter_count; ++i) {
+        const auto c_mid = (c_low + c_high) / 2.;
+
+        if (is_rep(c_mid)) {
+            c_low = c_mid;
+        } else {
+            c_high = c_mid;
+        }
+    }
+
+    Ensures(is_rep(c_low));
+
+    return Oklch {.l = lh.l, .c = c_low, .h = lh.h};
+}
+
+/*
+ * @brief: Find maximum saturation point.
+ *
+ * Luminance and chroma, where chroma is largest for given hue.
+ *
+ * Straight forward implementation for verification. Takes about 1 us per call.
+ */
+[[nodiscard]] constexpr auto oklab_max_saturation_point_very_slow(double hue) -> Oklch {
+    const auto f_max_chroma = [&](double l) constexpr {
+        return -oklab_max_chroma_slow(Oklh {.l = l, .h = hue}).c;
+    };
+
+    const auto [l_found, c_found] = golden_minimize(f_max_chroma, 0., 1.);
+    return Oklch {.l = l_found, .c = -c_found, .h = hue};
+};
+
+namespace details::ct {
 
 /*
  * Finds the maximum saturation possible for a given hue that fits in sRGB

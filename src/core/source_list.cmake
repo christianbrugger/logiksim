@@ -5,12 +5,14 @@ set(LS_CORE_SOURCES
     algorithm/all_equal.cpp
     algorithm/checked_deref.cpp
     algorithm/compare_sorted.cpp
+    algorithm/constexpr_math.cpp
     algorithm/contains.cpp
     algorithm/copy_adjacent_if.cpp
     algorithm/create_array.cpp
     algorithm/depth_first_visitor.cpp
     algorithm/distance_fast.cpp
     algorithm/fmt_join.cpp
+    algorithm/golden_minimize.cpp
     algorithm/has_duplicates_quadratic.cpp
     algorithm/indent.cpp
     algorithm/make_unique.cpp

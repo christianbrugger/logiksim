@@ -20,4 +20,8 @@ auto Oklch::format() const -> std::string {
     return fmt::format("Oklch({}, {}, {})", l, c, h);
 }
 
+auto Oklh::format() const -> std::string {
+    return fmt::format("Oklh({}, {})", l, h);
+}
+
 }  // namespace logicsim
