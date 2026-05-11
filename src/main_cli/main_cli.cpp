@@ -65,9 +65,9 @@ auto image_to_darklight(BLImageData data) -> void {
             };
             const auto res = dark_mode ? to_dark_mode(rgb) : to_light_mode(rgb);
 
-            pixel.setR(static_cast<uint32_t>(std::clamp(std::round(res.r), 0.f, 255.f)));
-            pixel.setG(static_cast<uint32_t>(std::clamp(std::round(res.g), 0.f, 255.f)));
-            pixel.setB(static_cast<uint32_t>(std::clamp(std::round(res.b), 0.f, 255.f)));
+            pixel.setR(static_cast<uint32_t>(std::clamp(std::round(res.r), 0., 255.)));
+            pixel.setG(static_cast<uint32_t>(std::clamp(std::round(res.g), 0., 255.)));
+            pixel.setB(static_cast<uint32_t>(std::clamp(std::round(res.b), 0., 255.)));
         }
     }
     print(t.delta_ms() / (data.size.h * data.size.w) * 1000., "us");
@@ -162,17 +162,17 @@ auto single_pixel(BLImageData img) -> void {
 
     const auto res = to_dark_mode(rgb);
     const auto dark = Rgb {
-        .r = std::clamp(std::round(res.r), 0.f, 255.f),
-        .g = std::clamp(std::round(res.g), 0.f, 255.f),
-        .b = std::clamp(std::round(res.b), 0.f, 255.f),
+        .r = std::clamp(std::round(res.r), 0., 255.),
+        .g = std::clamp(std::round(res.g), 0., 255.),
+        .b = std::clamp(std::round(res.b), 0., 255.),
     };
     print("-> dark ", dark);
 
     const auto res2 = to_light_mode(dark);
     const auto light = Rgb {
-        .r = std::clamp(std::round(res2.r), 0.f, 255.f),
-        .g = std::clamp(std::round(res2.g), 0.f, 255.f),
-        .b = std::clamp(std::round(res2.b), 0.f, 255.f),
+        .r = std::clamp(std::round(res2.r), 0., 255.),
+        .g = std::clamp(std::round(res2.g), 0., 255.),
+        .b = std::clamp(std::round(res2.b), 0., 255.),
     };
     print("-> light", light);
 }
@@ -189,8 +189,8 @@ auto image_transform() -> void {
     auto data = BLImageData {};
     img.make_mutable(&data);
 
-    single_pixel(data);
-    return;
+    // single_pixel(data);
+    // return;
 
     image_to_darklight<true>(data);
     img.write_to_file("output_dark.png");
