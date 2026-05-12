@@ -23,6 +23,11 @@ constexpr inline static auto golden_minimize_count =
     golden_minimize_iter_count(std::numeric_limits<double>::digits);
 }
 
+/*
+ * @brief: Find minimum within (a, b).
+ *
+ * Function assumes there is exactly one minima inside a and b (not on borders).
+ */
 template <typename Func>
 [[nodiscard]] constexpr auto golden_minimize(
     Func func, double a, double b, int iter_count = defaults::golden_minimize_count)
@@ -32,8 +37,8 @@ template <typename Func>
     if (iter_count < 0) [[unlikely]] {
         throw std::runtime_error {"iter_count cannot be negative"};
     }
-    if (a > b) [[unlikely]] {
-        throw std::runtime_error {"a needs to be smaller or equal to b"};
+    if (a >= b) [[unlikely]] {
+        throw std::runtime_error {"a needs to be smaller then b"};
     }
 
     double x1 = b - inv_phi * (b - a);
@@ -41,19 +46,19 @@ template <typename Func>
     double f1 = func(x1);
     double f2 = func(x2);
 
-    for (int i = 0; i < iter_count; ++i) {
-        if (f1 > f2) {
-            a = x1;
-            x1 = x2;
-            f1 = f2;
-            x2 = a + inv_phi * (b - a);
-            f2 = func(x2);
-        } else {
+    for (int i = 2; i < iter_count; ++i) {
+        if (f1 < f2) {
             b = x2;
             x2 = x1;
             f2 = f1;
             x1 = b - inv_phi * (b - a);
             f1 = func(x1);
+        } else {
+            a = x1;
+            x1 = x2;
+            f1 = f2;
+            x2 = a + inv_phi * (b - a);
+            f2 = func(x2);
         }
     }
 

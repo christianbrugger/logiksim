@@ -2,6 +2,7 @@
 #define LOGICSIM_CORE_RENDER_COLOR_TRANSFORM_H
 
 #include "core/algorithm/golden_minimize.h"
+#include "core/editable_circuit.h"
 #include "core/format/struct.h"
 #include "core/logging.h"
 
@@ -844,7 +845,8 @@ struct LC {
     };
 }
 
-constexpr auto is_representable(Oklab lab) -> bool {
+// TODO: remove?
+constexpr auto is_representable_with_rounding(Oklab lab) -> bool {
     /*
     constexpr auto eps = 0.;  // 1e-3;
     constexpr auto low = 0. - eps;
@@ -862,6 +864,18 @@ constexpr auto is_representable(Oklab lab) -> bool {
 
     return rgb.r >= low && rgb.g >= low && rgb.b >= low &&  //
            rgb.r <= high && rgb.g <= high && rgb.b <= high;
+}
+
+constexpr auto is_representable_srgb(Lrgb lrgb) -> bool {
+    constexpr auto low = 0.;
+    constexpr auto high = 1.;
+
+    return lrgb.r >= low && lrgb.g >= low && lrgb.b >= low &&  //
+           lrgb.r <= high && lrgb.g <= high && lrgb.b <= high;
+}
+
+constexpr auto is_representable_srgb(Oklab lab) -> bool {
+    return is_representable_srgb(to_lrgb(lab));
 }
 
 }  // namespace details::ct
@@ -950,6 +964,172 @@ constexpr auto from_angle_up(double l_radius, ab_norm_t ab, double beta) -> Okla
     };
 }
 
+struct AngleColor {
+    double beta;
+    Lrgb color;
+
+    [[nodiscard]] constexpr auto operator==(const AngleColor&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+template <int k>
+constexpr auto max_circle_angle_down_component(
+    double l_radius, ab_norm_t ab, const std::tuple<AngleColor, AngleColor>& p)
+    -> double {
+    constexpr auto iter_count = std::numeric_limits<double>::digits;
+
+    // sort by angle
+    const auto [a, b] = [&]() constexpr -> std::pair<AngleColor, AngleColor> {
+        const auto [a_, b_] = p;
+        if (a_.beta <= b_.beta) {
+            return std::pair {a_, b_};
+        }
+        return std::pair {b_, a_};
+    }();
+    Ensures(a.beta <= b.beta);
+
+    const auto is_srgb = [](const Lrgb& c_) constexpr -> bool {  //
+        auto v_ = double {};
+
+        if constexpr (k == 0) {
+            v_ = c_.r;
+        } else if constexpr (k == 1) {
+            v_ = c_.g;
+        } else if constexpr (k == 2) {
+            v_ = c_.b;
+        } else {
+            static_assert(false);
+        }
+
+        return 0 <= v_ && v_ <= 1.;
+    };
+
+    // trivial cases
+    {
+        if (a.beta == b.beta) {
+            return a.beta;
+        }
+
+        const auto a_valid = is_srgb(a.color);
+        const auto b_valid = is_srgb(b.color);
+
+        // no sign change?
+        if (a_valid && b_valid) {
+            return std::max(a.beta, b.beta);
+        }
+        if (!a_valid && !b_valid) {
+            return std::min(a.beta, b.beta);
+        }
+    }
+
+    // bracket search
+    const auto is_srgb_angle = [&](double beta_) {
+        return is_srgb(to_lrgb(from_angle_down(l_radius, ab, beta_)));
+    };
+
+    auto low_srgb = is_srgb(a.color);
+    auto low = a.beta;
+    auto high = b.beta;
+    Expects(low < high);
+
+    for (auto i = 0; i < iter_count; ++i) {
+        const auto mid = (low + high) / 2.;
+
+        if (is_srgb_angle(mid) == low_srgb) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    };
+
+    return low_srgb ? low : high;
+}
+
+constexpr auto max_circle_angle_down_bracket(double l_radius, ab_norm_t ab,
+                                             const std::tuple<AngleColor, AngleColor>& p)
+    -> double {
+    auto beta = std::array {
+        max_circle_angle_down_component<0>(l_radius, ab, p),
+        max_circle_angle_down_component<1>(l_radius, ab, p),
+        max_circle_angle_down_component<2>(l_radius, ab, p),
+    };
+    std::ranges::sort(beta, std::ranges::greater {});
+
+    for (auto v : beta) {
+        print("----", v, to_lrgb(from_angle_down(l_radius, ab, v)),
+              is_representable_srgb(from_angle_down(l_radius, ab, v)));
+    }
+    return 0.;
+}
+
+/*
+ * @brief: Find maximum angle down with valid sRGB value.
+ *
+ * Angle down is convex for e.g. RGB(0, 0, 250). To find multiple roots where the
+ * circle intersects the sRGB surface, first brackets which contain them are searched.
+ * Then each bracked is solved for the exact transition point.
+ */
+constexpr auto max_circle_angle_down_slow(double l_radius, ab_norm_t ab) -> double {
+    constexpr auto eps = 1e-5;  // TODO: adjust ?
+
+    if (l_radius < eps || l_radius > (1. - eps)) {
+        return 0.;
+    };
+
+    constexpr auto beta_count = 90;
+    constexpr auto beta_max = std::numbers::pi / 2.;
+    static_assert(beta_count > 1);
+    constexpr auto beta_step = beta_max / (beta_count - 1);
+
+    const auto to_beta = [&](int i_) constexpr -> double { return beta_step * i_; };
+    const auto to_color = [&](double beta_) constexpr -> AngleColor {
+        return AngleColor {
+            .beta = beta_,
+            .color = to_lrgb(from_angle_down(l_radius, ab, beta_)),
+        };
+    };
+    const auto is_srgb = [](double v_) constexpr -> bool {  //
+        return 0 <= v_ && v_ <= 1.;
+    };
+    const auto is_bracket [[maybe_unused]] =
+        [&](const std::tuple<AngleColor, AngleColor>& p_) constexpr -> bool {
+        const auto a_ = std::get<0>(p_);
+        const auto b_ = std::get<1>(p_);
+
+        const auto flip_r = is_srgb(a_.color.r) != is_srgb(b_.color.r);
+        const auto flip_g = is_srgb(a_.color.g) != is_srgb(b_.color.g);
+        const auto flip_b = is_srgb(a_.color.b) != is_srgb(b_.color.b);
+
+        const auto valid_r = flip_r || (is_srgb(a_.color.r) && is_srgb(b_.color.r));
+        const auto valid_g = flip_g || (is_srgb(a_.color.g) && is_srgb(b_.color.g));
+        const auto valid_b = flip_b || (is_srgb(a_.color.b) && is_srgb(b_.color.b));
+
+        return (flip_r || flip_g || flip_b) && valid_r && valid_g && valid_b;
+    };
+
+    auto v = std::views::iota(0, beta_count) |  //
+             std::views::reverse |              //
+             std::views::transform(to_beta) |   //
+             std::views::transform(to_color) |  //
+             std::views::pairwise |             //
+             std::views::filter(is_bracket);
+
+    for (auto a : v) {
+        print(a);
+    }
+
+    if (v.empty()) {
+        // cicle is fully inside sRGB gammut
+        if (is_representable_srgb(to_color(beta_max).color)) {
+            return beta_max;
+        }
+        return 0.;
+    }
+
+    // TODO: iterate?
+    return max_circle_angle_down_bracket(l_radius, ab, v.front());
+}
+
 constexpr auto max_circle_angle_down(double l_radius, ab_norm_t ab) -> double {
     constexpr auto eps = 1e-5;
 
@@ -967,7 +1147,7 @@ constexpr auto max_circle_angle_down(double l_radius, ab_norm_t ab) -> double {
 
     // Note, pass a__ and b__ as parameters, not captures, to make lambda constexpr
     const auto is_rep = [&](ab_norm_t ab_, double beta_) constexpr -> bool {
-        return is_representable(from_angle_down(l_radius, ab_, beta_));
+        return is_representable_with_rounding(from_angle_down(l_radius, ab_, beta_));
     };
 
     /*
@@ -1010,7 +1190,7 @@ constexpr auto max_circle_angle_up(double l_radius, ab_norm_t ab) -> double {
 
     // pass a__ and b__ as parameters, not captures, to make lambda constexpr
     auto is_rep = [&](ab_norm_t ab_, double beta_) constexpr -> bool {
-        return is_representable(from_angle_up(l_radius, ab_, beta_));
+        return is_representable_with_rounding(from_angle_up(l_radius, ab_, beta_));
     };
 
     // Using slope along alpha_cups would cut a lot of colors below the cups point,

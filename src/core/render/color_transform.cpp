@@ -24,4 +24,12 @@ auto Oklh::format() const -> std::string {
     return fmt::format("Oklh({}, {})", l, h);
 }
 
+namespace details::ct {
+
+auto AngleColor::format() const -> std::string {
+    return fmt::format("({}, {})", beta, color);
+};
+
+}  // namespace details::ct
+
 }  // namespace logicsim

@@ -15,11 +15,6 @@ TEST(RenderColorTransform, oklab) {
     EXPECT_DOUBLE_EQ(lab.l, 0.44528036461367088);
     EXPECT_DOUBLE_EQ(lab.a, -0.031973493628807574);
     EXPECT_DOUBLE_EQ(lab.b, -0.30688751589479746);
-
-    const auto r = Rgb {.r = 0, .g = 255, .b = 128};
-    print(to_lrgb(r));
-    print(to_oklab(to_lrgb(r)));
-    print(to_oklch(to_oklab(to_lrgb(r))));
 }
 
 TEST(RenderColorTransform, oklch) {
@@ -34,7 +29,6 @@ TEST(RenderColorTransform, oklch) {
 TEST(RenderColorTransform, RoundtripLrgb) {
     const auto rgb = Rgb {.r = 0, .g = 0, .b = 250};
     const auto lrgb = to_lrgb(rgb);
-    print(lrgb);
     const auto res = to_rgb(lrgb);
 
     EXPECT_DOUBLE_EQ(res.r, rgb.r);
@@ -47,7 +41,6 @@ TEST(RenderColorTransform, RoundtripOklab) {
 
     const auto lrgb = Lrgb {.r = 0, .g = 0, .b = 0.956};
     const auto oklab = to_oklab(lrgb);
-    print(oklab);
     const auto res = to_lrgb(oklab);
 
     EXPECT_LT(std::abs(res.r - lrgb.r), eps);
@@ -104,10 +97,31 @@ TEST(RenderColorTransform, abnorm2) {
     EXPECT_DOUBLE_EQ(ab.b_norm(), 0.37139067635410367);
 }
 
-TEST(RenderColorTransform, MaxChroma) {
-    // print(oklab_max_chroma_slow(Oklh {.l = 0.6985, .h = 330.88}));
-    // print(oklab_max_saturation_point_very_slow(330.88));
+TEST(RenderColorTransform, MaxChromaEasy) {
+    // rgb values with one value being zero are on the sRGB boundary and most have
+    // max chroma values in lch
+    const auto rgb = Rgb {.r = 0, .g = 100, .b = 100};
+    const auto lch = to_oklch(to_oklab(to_lrgb(rgb)));
 
+    const auto max_lch = oklab_max_chroma_slow(Oklh {.l = lch.l, .h = lch.h});
+    EXPECT_DOUBLE_EQ(max_lch.c, lch.c);
+}
+
+// !!! TODO: DISABLED !!!
+TEST(DISABLED_RenderColorTransform, MaxChromaDifficult) {
+    // This RGB values is very tricky, as here the curve is convex in c, meaning
+    // for c = 0.261.. => VALID
+    // for c = 0.284.. => INVALID
+    // for c = 0.308.. => VALID = real value
+
+    const auto rgb = Rgb {.r = 0, .g = 0, .b = 250};
+    const auto lch = to_oklch(to_oklab(to_lrgb(rgb)));
+
+    const auto max_lch = oklab_max_chroma_slow(Oklh {.l = lch.l, .h = lch.h});
+    EXPECT_DOUBLE_EQ(max_lch.c, lch.c);
+}
+
+TEST(RenderColorTransform, MaxChromaBench) {
     {
         auto t = Timer {};
 
@@ -118,7 +132,7 @@ TEST(RenderColorTransform, MaxChroma) {
         }
 
         Expects(total > 10.);
-        print("Max chroma:", t.delta_seconds() / num * 1000 * 1000, "us");
+        print("Time chroma:", t.delta_seconds() / num * 1000 * 1000, "us");
     }
     {
         auto t = Timer {};
@@ -130,8 +144,26 @@ TEST(RenderColorTransform, MaxChroma) {
         }
 
         Expects(total > 10.);
-        print("Max saturation:", t.delta_seconds() / num * 1000 * 1000, "us");
+        print("Time saturation:", t.delta_seconds() / num * 1000 * 1000, "us");
     }
+}
+
+TEST(RenderColorTransform, MaxAngleDownSlow) {
+    // This RGB values is very tricky, as it is convex
+
+    const auto rgb = Rgb {.r = 0, .g = 0, .b = 250};
+    const auto lab = to_oklab(to_lrgb(rgb));
+
+    const auto r = details::ct::get_radius_down(lab);
+    const auto ab = details::ct::ab_norm_t(lab);
+    const auto angle_found = details::ct::max_circle_angle_down_slow(r, ab);
+
+    const auto angle_expected = details::ct::get_angle_down(lab);
+    print(angle_found);
+    print(angle_expected);
+
+    const auto angle_found2 = details::ct::max_circle_angle_down(r, ab);
+    print(angle_found2);
 }
 
 /*
