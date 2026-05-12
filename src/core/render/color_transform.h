@@ -108,6 +108,11 @@ struct Oklh {
 // Implementation
 //
 
+// TODO: collect all epsilons
+namespace defaults {
+constexpr inline static auto lrgb_is_valid_srgb_epsilon = 1e-14;
+}
+
 namespace details::ct {
 
 [[nodiscard]] constexpr auto abs(double x) -> double {
@@ -866,12 +871,17 @@ constexpr auto is_representable_with_rounding(Oklab lab) -> bool {
            rgb.r <= high && rgb.g <= high && rgb.b <= high;
 }
 
-constexpr auto is_representable_srgb(Lrgb lrgb) -> bool {
-    constexpr auto low = 0.;
-    constexpr auto high = 1.;
+constexpr auto is_lrgb_representable_srgb(double value) -> bool {
+    constexpr auto low = 0. - defaults::lrgb_is_valid_srgb_epsilon;
+    constexpr auto high = 1. + defaults::lrgb_is_valid_srgb_epsilon;
 
-    return lrgb.r >= low && lrgb.g >= low && lrgb.b >= low &&  //
-           lrgb.r <= high && lrgb.g <= high && lrgb.b <= high;
+    return value >= low && value <= high;
+}
+
+constexpr auto is_representable_srgb(Lrgb lrgb) -> bool {
+    return is_lrgb_representable_srgb(lrgb.r) &&  //
+           is_lrgb_representable_srgb(lrgb.g) &&  //
+           is_lrgb_representable_srgb(lrgb.b);
 }
 
 constexpr auto is_representable_srgb(Oklab lab) -> bool {
@@ -972,23 +982,28 @@ struct AngleColor {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-template <int k>
-constexpr auto max_circle_angle_down_component(
-    double l_radius, ab_norm_t ab, const std::tuple<AngleColor, AngleColor>& p)
-    -> double {
+using AngleColorBracket = std::tuple<AngleColor, AngleColor>;
+
+template <typename Func>
+concept FuncAngleToLrgb = std::invocable<Func, double> &&
+                          std::same_as<std::invoke_result_t<Func, double>, Lrgb>;
+
+template <int k, FuncAngleToLrgb Func>
+constexpr auto find_max_circle_angle_component(const AngleColorBracket& p,
+                                               Func angle_to_lrgb) -> double {
     constexpr auto iter_count = std::numeric_limits<double>::digits;
 
     // sort by angle
-    const auto [a, b] = [&]() constexpr -> std::pair<AngleColor, AngleColor> {
+    const auto [a, b] = [&]() constexpr -> AngleColorBracket {
         const auto [a_, b_] = p;
         if (a_.beta <= b_.beta) {
-            return std::pair {a_, b_};
+            return {a_, b_};
         }
-        return std::pair {b_, a_};
+        return {b_, a_};
     }();
     Ensures(a.beta <= b.beta);
 
-    const auto is_srgb = [](const Lrgb& c_) constexpr -> bool {  //
+    const auto is_srgb = [&](const Lrgb& c_) constexpr -> bool {  //
         auto v_ = double {};
 
         if constexpr (k == 0) {
@@ -1001,7 +1016,7 @@ constexpr auto max_circle_angle_down_component(
             static_assert(false);
         }
 
-        return 0 <= v_ && v_ <= 1.;
+        return is_lrgb_representable_srgb(v_);
     };
 
     // trivial cases
@@ -1024,7 +1039,7 @@ constexpr auto max_circle_angle_down_component(
 
     // bracket search
     const auto is_srgb_angle = [&](double beta_) {
-        return is_srgb(to_lrgb(from_angle_down(l_radius, ab, beta_)));
+        return is_srgb(angle_to_lrgb(beta_));
     };
 
     auto low_srgb = is_srgb(a.color);
@@ -1045,20 +1060,120 @@ constexpr auto max_circle_angle_down_component(
     return low_srgb ? low : high;
 }
 
-constexpr auto max_circle_angle_down_bracket(double l_radius, ab_norm_t ab,
-                                             const std::tuple<AngleColor, AngleColor>& p)
-    -> double {
-    auto beta = std::array {
-        max_circle_angle_down_component<0>(l_radius, ab, p),
-        max_circle_angle_down_component<1>(l_radius, ab, p),
-        max_circle_angle_down_component<2>(l_radius, ab, p),
+template <FuncAngleToLrgb Func>
+constexpr auto find_max_circle_angle_bracket(const std::tuple<AngleColor, AngleColor>& p,
+                                             Func angle_to_lrgb)
+    -> std::optional<double> {
+    auto betas = std::array {
+        find_max_circle_angle_component<0>(p, angle_to_lrgb),
+        find_max_circle_angle_component<1>(p, angle_to_lrgb),
+        find_max_circle_angle_component<2>(p, angle_to_lrgb),
     };
-    std::ranges::sort(beta, std::ranges::greater {});
+    std::ranges::sort(betas, std::ranges::greater {});
 
-    for (auto v : beta) {
-        print("----", v, to_lrgb(from_angle_down(l_radius, ab, v)),
-              is_representable_srgb(from_angle_down(l_radius, ab, v)));
+    if (!std::is_constant_evaluated()) {
+        for (auto v : betas) {
+            print("----", v, angle_to_lrgb(v), is_representable_srgb(angle_to_lrgb(v)));
+        }
     }
+
+    for (const auto beta : betas) {
+        if (is_representable_srgb(angle_to_lrgb(beta))) {
+            return beta;
+        }
+    }
+    return std::nullopt;
+}
+
+struct MaxAngleConfig {
+    int beta_count;
+    double beta_max;
+};
+
+constexpr auto to_beta_step(const MaxAngleConfig& config) -> double {
+    Expects(config.beta_max >= 0.);
+    Expects(config.beta_count > 1);
+    return config.beta_max / (config.beta_count - 1);
+}
+
+struct ValidMaxAngleConfig {
+   public:
+    [[nodiscard]] explicit constexpr ValidMaxAngleConfig(MaxAngleConfig config)
+        : beta_count_ {config.beta_count},
+          beta_max_ {config.beta_max},
+          beta_step_ {to_beta_step(config)} {}
+
+    [[nodiscard]] constexpr auto beta_count() const noexcept -> int {
+        return beta_count_;
+    }
+
+    [[nodiscard]] constexpr auto beta_max() const noexcept -> double {
+        return beta_max_;
+    }
+
+    [[nodiscard]] constexpr auto beta_step() const noexcept -> double {
+        return beta_step_;
+    }
+
+   private:
+    int beta_count_;
+    double beta_max_;
+    double beta_step_;
+};
+
+template <FuncAngleToLrgb Func>
+constexpr auto find_max_circle_angle(ValidMaxAngleConfig config, Func angle_to_lrgb)
+    -> double {
+    const auto to_beta = [&](int i_) constexpr -> double {  //
+        return config.beta_step() * i_;
+    };
+    const auto to_color = [&](double beta_) constexpr -> AngleColor {
+        return AngleColor {
+            .beta = beta_,
+            .color = angle_to_lrgb(beta_),
+        };
+    };
+    const auto is_bracket = [&](const AngleColorBracket& p_) constexpr -> bool {
+        constexpr auto is_srgb = is_lrgb_representable_srgb;
+
+        const auto a_ = std::get<0>(p_);
+        const auto b_ = std::get<1>(p_);
+
+        const auto flip_r = is_srgb(a_.color.r) != is_srgb(b_.color.r);
+        const auto flip_g = is_srgb(a_.color.g) != is_srgb(b_.color.g);
+        const auto flip_b = is_srgb(a_.color.b) != is_srgb(b_.color.b);
+
+        const auto valid_r = flip_r || (is_srgb(a_.color.r) && is_srgb(b_.color.r));
+        const auto valid_g = flip_g || (is_srgb(a_.color.g) && is_srgb(b_.color.g));
+        const auto valid_b = flip_b || (is_srgb(a_.color.b) && is_srgb(b_.color.b));
+
+        return (flip_r || flip_g || flip_b) && valid_r && valid_g && valid_b;
+    };
+
+    // cicle is fully inside sRGB gammut
+    if (is_representable_srgb(to_color(config.beta_max()).color)) {
+        return config.beta_max();
+    }
+
+    auto v = std::views::iota(0, config.beta_count()) |  //
+             std::views::reverse |                       //
+             std::views::transform(to_beta) |            //
+             std::views::transform(to_color) |           //
+             std::views::pairwise |                      //
+             std::views::filter(is_bracket);
+
+    if (!std::is_constant_evaluated()) {
+        for (auto a : v) {
+            print(a);
+        }
+    }
+
+    for (const auto& bracket : v) {
+        if (const auto beta = find_max_circle_angle_bracket(bracket, angle_to_lrgb)) {
+            return beta.value();
+        }
+    }
+
     return 0.;
 }
 
@@ -1076,58 +1191,38 @@ constexpr auto max_circle_angle_down_slow(double l_radius, ab_norm_t ab) -> doub
         return 0.;
     };
 
-    constexpr auto beta_count = 90;
-    constexpr auto beta_max = std::numbers::pi / 2.;
-    static_assert(beta_count > 1);
-    constexpr auto beta_step = beta_max / (beta_count - 1);
-
-    const auto to_beta = [&](int i_) constexpr -> double { return beta_step * i_; };
-    const auto to_color = [&](double beta_) constexpr -> AngleColor {
-        return AngleColor {
-            .beta = beta_,
-            .color = to_lrgb(from_angle_down(l_radius, ab, beta_)),
-        };
-    };
-    const auto is_srgb = [](double v_) constexpr -> bool {  //
-        return 0 <= v_ && v_ <= 1.;
-    };
-    const auto is_bracket [[maybe_unused]] =
-        [&](const std::tuple<AngleColor, AngleColor>& p_) constexpr -> bool {
-        const auto a_ = std::get<0>(p_);
-        const auto b_ = std::get<1>(p_);
-
-        const auto flip_r = is_srgb(a_.color.r) != is_srgb(b_.color.r);
-        const auto flip_g = is_srgb(a_.color.g) != is_srgb(b_.color.g);
-        const auto flip_b = is_srgb(a_.color.b) != is_srgb(b_.color.b);
-
-        const auto valid_r = flip_r || (is_srgb(a_.color.r) && is_srgb(b_.color.r));
-        const auto valid_g = flip_g || (is_srgb(a_.color.g) && is_srgb(b_.color.g));
-        const auto valid_b = flip_b || (is_srgb(a_.color.b) && is_srgb(b_.color.b));
-
-        return (flip_r || flip_g || flip_b) && valid_r && valid_g && valid_b;
+    const auto angle_to_lrgb = [&](double beta_) constexpr -> Lrgb {
+        return to_lrgb(from_angle_down(l_radius, ab, beta_));
     };
 
-    auto v = std::views::iota(0, beta_count) |  //
-             std::views::reverse |              //
-             std::views::transform(to_beta) |   //
-             std::views::transform(to_color) |  //
-             std::views::pairwise |             //
-             std::views::filter(is_bracket);
+    return find_max_circle_angle(ValidMaxAngleConfig {MaxAngleConfig {
+                                     .beta_count = 90,
+                                     .beta_max = std::numbers::pi / 2.,
+                                 }},
+                                 angle_to_lrgb);
+}
 
-    for (auto a : v) {
-        print(a);
-    }
+/*
+ * @brief: Find maximum angle up with valid sRGB value.
+ */
+constexpr auto max_circle_angle_up_slow(double l_radius, ab_norm_t ab) -> double {
+    constexpr auto deg_to_rad = std::numbers::pi / 180.;
+    constexpr auto eps = 1e-5;  // TODO: adjust ?
+    constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
-    if (v.empty()) {
-        // cicle is fully inside sRGB gammut
-        if (is_representable_srgb(to_color(beta_max).color)) {
-            return beta_max;
-        }
+    if (l_radius < eps || l_radius + l_dark > (1. - eps)) {
         return 0.;
-    }
+    };
 
-    // TODO: iterate?
-    return max_circle_angle_down_bracket(l_radius, ab, v.front());
+    const auto angle_to_lrgb = [&](double beta_) constexpr -> Lrgb {
+        return to_lrgb(from_angle_up(l_radius, ab, beta_));
+    };
+
+    return find_max_circle_angle(ValidMaxAngleConfig {MaxAngleConfig {
+                                     .beta_count = 80,
+                                     .beta_max = 80. * deg_to_rad,
+                                 }},
+                                 angle_to_lrgb);
 }
 
 constexpr auto max_circle_angle_down(double l_radius, ab_norm_t ab) -> double {
@@ -1318,6 +1413,9 @@ static_assert(is_close(to_lrgb(test_oklab), test_lrgb));
 
 static_assert(is_close(to_oklch(test_oklab), test_oklch));
 static_assert(is_close(to_oklab(test_oklch), test_oklab));
+
+static_assert(details::ct::max_circle_angle_down_slow(test_oklab.l,
+                                                      ab_norm_t {test_oklab}) >= 0.);
 
 }  // namespace details::ct
 

@@ -164,6 +164,18 @@ TEST(RenderColorTransform, MaxAngleDownSlow) {
 
     const auto angle_found2 = details::ct::max_circle_angle_down(r, ab);
     print(angle_found2);
+
+    print("==");
+
+    const auto ru = details::ct::get_radius_up(lab);
+    const auto b_found = details::ct::max_circle_angle_up_slow(ru, ab);
+    const auto b_expected = details::ct::get_angle_up(lab);
+    const auto b_found2 = details::ct::max_circle_angle_up(ru, ab);
+
+    print(lab);
+    print(b_found);
+    print(b_expected);
+    print(b_found2);
 }
 
 /*
