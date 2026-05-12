@@ -130,8 +130,11 @@ auto single_pixel(BLImageData img) -> void {
     // const auto x = int {1948};
     // const auto y = int {3774};
 
-    const auto x = int {1965};
-    const auto y = int {3758};
+    // const auto x = int {1965};
+    // const auto y = int {3758};
+
+    const auto x = int {2861};
+    const auto y = int {2996};
 
     // const auto x = int {948};
     // const auto y = int {774};
@@ -189,8 +192,8 @@ auto image_transform() -> void {
     auto data = BLImageData {};
     img.make_mutable(&data);
 
-    // single_pixel(data);
-    // return;
+    single_pixel(data);
+    return;
 
     image_to_darklight<true>(data);
     img.write_to_file("output_dark.png");

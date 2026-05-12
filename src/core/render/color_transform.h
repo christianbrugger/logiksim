@@ -1035,6 +1035,8 @@ constexpr auto find_max_circle_angle_component(const AngleColorBracket& p,
         if (!a_valid && !b_valid) {
             return std::min(a.beta, b.beta);
         }
+
+        Ensures(a_valid != b_valid);
     }
 
     // bracket search
@@ -1071,7 +1073,7 @@ constexpr auto find_max_circle_angle_bracket(const std::tuple<AngleColor, AngleC
     };
     std::ranges::sort(betas, std::ranges::greater {});
 
-    if (!std::is_constant_evaluated()) {
+    if (false && !std::is_constant_evaluated()) {
         for (auto v : betas) {
             print("----", v, angle_to_lrgb(v), is_representable_srgb(angle_to_lrgb(v)));
         }
@@ -1162,7 +1164,7 @@ constexpr auto find_max_circle_angle(ValidMaxAngleConfig config, Func angle_to_l
              std::views::pairwise |                      //
              std::views::filter(is_bracket);
 
-    if (!std::is_constant_evaluated()) {
+    if (false && !std::is_constant_evaluated()) {
         for (auto a : v) {
             print(a);
         }
@@ -1225,6 +1227,7 @@ constexpr auto max_circle_angle_up_slow(double l_radius, ab_norm_t ab) -> double
                                  angle_to_lrgb);
 }
 
+// TODO: remove
 constexpr auto max_circle_angle_down(double l_radius, ab_norm_t ab) -> double {
     constexpr auto eps = 1e-5;
 
@@ -1269,6 +1272,7 @@ constexpr auto max_circle_angle_down(double l_radius, ab_norm_t ab) -> double {
     return low;
 }
 
+// TODO: remove
 constexpr auto max_circle_angle_up(double l_radius, ab_norm_t ab) -> double {
     constexpr auto deg_to_rad = std::numbers::pi / 180.;
     constexpr auto eps = 1e-5;
@@ -1324,15 +1328,14 @@ constexpr auto to_dark_mode(Rgb rgb) -> Rgb {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
     const auto lab = to_oklab(to_lrgb(rgb));
-    const auto lch = to_oklch(lab);
     const auto ab = details::ct::ab_norm_t {lab};
 
     // distance and angles
     const auto r_light = details::ct::get_radius_down(lab);
     const auto r_dark = r_light * (1. - l_dark);
 
-    const auto b_light_max = details::ct::max_circle_angle_down(r_light, ab);
-    const auto b_dark_max = details::ct::max_circle_angle_up(r_dark, ab);
+    const auto b_light_max = details::ct::max_circle_angle_down_slow(r_light, ab);
+    const auto b_dark_max = details::ct::max_circle_angle_up_slow(r_dark, ab);
 
     const auto b_light = details::ct::get_angle_down(lab);
     const auto b_light_ratio =
@@ -1341,27 +1344,22 @@ constexpr auto to_dark_mode(Rgb rgb) -> Rgb {
     // derive
     const auto b_dark_ratio = b_light_ratio;
     const auto b_dark = b_dark_max * b_dark_ratio;
-    const auto lch1 = Oklch {
-        .l = l_dark + r_dark * details::ct::cos(b_dark),
-        .c = r_dark * details::ct::sin(b_dark),
-        .h = lch.h,
-    };
-    return to_rgb(to_lrgb(to_oklab(lch1)));
+    const auto lab1 = details::ct::from_angle_up(r_dark, ab, b_dark);
+    return to_rgb(to_lrgb(lab1));
 }
 
 constexpr auto to_light_mode(Rgb rgb) -> Rgb {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
     const auto lab = to_oklab(to_lrgb(rgb));
-    const auto lch = to_oklch(lab);
     const auto ab = details::ct::ab_norm_t {lab};
 
     // distance and angles
     const auto r_dark = details::ct::get_radius_up(lab);
     const auto r_light = r_dark / (1. - l_dark);
 
-    const auto b_dark_max = details::ct::max_circle_angle_up(r_dark, ab);
-    const auto b_light_max = details::ct::max_circle_angle_down(r_light, ab);
+    const auto b_dark_max = details::ct::max_circle_angle_up_slow(r_dark, ab);
+    const auto b_light_max = details::ct::max_circle_angle_down_slow(r_light, ab);
 
     const auto b_dark = details::ct::get_angle_up(lab);
     const auto b_dark_ratio =
@@ -1370,12 +1368,8 @@ constexpr auto to_light_mode(Rgb rgb) -> Rgb {
     // derive
     const auto b_light_ratio = b_dark_ratio;
     const auto b_light = b_light_max * b_light_ratio;
-    const auto lch1 = Oklch {
-        .l = 1. - r_light * details::ct::cos(b_light),
-        .c = r_light * details::ct::sin(b_light),
-        .h = lch.h,
-    };
-    return to_rgb(to_lrgb(to_oklab(lch1)));
+    const auto lab1 = details::ct::from_angle_down(r_light, ab, b_light);
+    return to_rgb(to_lrgb(lab1));
 }
 
 //
@@ -1414,6 +1408,7 @@ static_assert(is_close(to_lrgb(test_oklab), test_lrgb));
 static_assert(is_close(to_oklch(test_oklab), test_oklch));
 static_assert(is_close(to_oklab(test_oklch), test_oklab));
 
+// TODO: fix
 static_assert(details::ct::max_circle_angle_down_slow(test_oklab.l,
                                                       ab_norm_t {test_oklab}) >= 0.);
 

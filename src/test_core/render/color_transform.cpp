@@ -146,12 +146,47 @@ TEST(RenderColorTransform, MaxChromaBench) {
         Expects(total > 10.);
         print("Time saturation:", t.delta_seconds() / num * 1000 * 1000, "us");
     }
+
+    {
+        auto t = Timer {};
+
+        const auto num = 100;
+        auto total = 0.;
+        for (auto i = 0; i < num; ++i) {
+            const auto rgb = Rgb {.r = 0, .g = 0, .b = 2. * i};
+            const auto lab = to_oklab(to_lrgb(rgb));
+
+            const auto r = details::ct::get_radius_down(lab);
+            const auto ab = details::ct::ab_norm_t(lab);
+            total += details::ct::max_circle_angle_down_slow(r, ab);
+        }
+
+        Expects(total > 10.);
+        print("Time angle_down:", t.delta_seconds() / num * 1000 * 1000, "us");
+    }
+}
+
+TEST(RenderColorTransform, MaxAngleDownHard) {
+    // This RGB values is very tricky, as it is convex
+
+    const auto rgb = Rgb {.r = 0, .g = 0, .b = 250};
+    const auto lab = to_oklab(to_lrgb(rgb));
+
+    const auto r = details::ct::get_radius_down(lab);
+    const auto ab = details::ct::ab_norm_t(lab);
+    const auto angle_found = details::ct::max_circle_angle_down_slow(r, ab);
+
+    const auto angle_expected = details::ct::get_angle_down(lab);
+
+    EXPECT_LT(std::abs(angle_found - angle_expected), 1e-13);
 }
 
 TEST(RenderColorTransform, MaxAngleDownSlow) {
     // This RGB values is very tricky, as it is convex
 
-    const auto rgb = Rgb {.r = 0, .g = 0, .b = 250};
+    // Rgb(41, 95, 236)
+
+    const auto rgb = Rgb {.r = 41, .g = 95, .b = 236};
     const auto lab = to_oklab(to_lrgb(rgb));
 
     const auto r = details::ct::get_radius_down(lab);
