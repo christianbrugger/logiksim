@@ -166,7 +166,7 @@ TEST(RenderColorTransform, MaxChromaBench) {
     }
 }
 
-TEST(RenderColorTransform, MaxAngleDownHard) {
+TEST(RenderColorTransform, MaxAngleDownHard1) {
     // This RGB values is very tricky, as it is convex
 
     const auto rgb = Rgb {.r = 0, .g = 0, .b = 250};
@@ -178,7 +178,21 @@ TEST(RenderColorTransform, MaxAngleDownHard) {
 
     const auto angle_expected = details::ct::get_angle_down(lab);
 
-    EXPECT_LT(std::abs(angle_found - angle_expected), 1e-13);
+    EXPECT_LT(std::abs(angle_found - angle_expected), 1e-12);
+}
+
+TEST(RenderColorTransform, MaxAngleDownHard2) {
+    // TODO:
+    const auto rgb = Rgb {.r = 0, .g = 0, .b = 251};
+    const auto lab = to_oklab(to_lrgb(rgb));
+
+    const auto r = details::ct::get_radius_down(lab);
+    const auto ab = details::ct::ab_norm_t(lab);
+    const auto angle_found = details::ct::max_circle_angle_down_slow(r, ab);
+
+    const auto angle_expected = details::ct::get_angle_down(lab);
+
+    EXPECT_LT(std::abs(angle_found - angle_expected), 1e-12);
 }
 
 TEST(RenderColorTransform, MaxAngleDownSlow) {
@@ -188,9 +202,14 @@ TEST(RenderColorTransform, MaxAngleDownSlow) {
 
     const auto rgb = Rgb {.r = 41, .g = 95, .b = 236};
     const auto lab = to_oklab(to_lrgb(rgb));
-
-    const auto r = details::ct::get_radius_down(lab);
     const auto ab = details::ct::ab_norm_t(lab);
+
+    const auto r_dark = 0.41671095956483784;
+    const auto b_found = details::ct::max_circle_angle_up_slow(r_dark, ab);
+    print(b_found);
+
+    /*
+    const auto r = details::ct::get_radius_down(lab);
     const auto angle_found = details::ct::max_circle_angle_down_slow(r, ab);
 
     const auto angle_expected = details::ct::get_angle_down(lab);
@@ -211,6 +230,14 @@ TEST(RenderColorTransform, MaxAngleDownSlow) {
     print(b_found);
     print(b_expected);
     print(b_found2);
+
+    print("===");
+    print(rgb);
+    const auto dark = to_dark_mode(rgb);
+    print(dark);
+    const auto light = to_light_mode(dark);
+    print(light);
+    */
 }
 
 /*

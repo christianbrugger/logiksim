@@ -26,6 +26,10 @@ auto Oklh::format() const -> std::string {
 
 namespace details::ct {
 
+auto ab_norm_t::format() const -> std::string {
+    return fmt::format("ab_norm_t({}, {}, {})", c_, a_norm_, b_norm_);
+};
+
 auto AngleColor::format() const -> std::string {
     return fmt::format("({}, {})", beta, color);
 };

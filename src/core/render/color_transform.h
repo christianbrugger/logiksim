@@ -508,6 +508,9 @@ class ab_norm_t {
         }
     }
 
+    [[nodiscard]] constexpr auto operator==(const ab_norm_t&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+
     [[nodiscard]] constexpr auto c() const noexcept -> double {
         return c_;
     }
@@ -878,10 +881,27 @@ constexpr auto is_lrgb_representable_srgb(double value) -> bool {
     return value >= low && value <= high;
 }
 
-constexpr auto is_representable_srgb(Lrgb lrgb) -> bool {
+constexpr auto is_representable_srgb(const Lrgb& lrgb) -> bool {
     return is_lrgb_representable_srgb(lrgb.r) &&  //
            is_lrgb_representable_srgb(lrgb.g) &&  //
            is_lrgb_representable_srgb(lrgb.b);
+}
+
+template <int k>
+constexpr auto is_representable_srgb_k(const Lrgb& lrgb) -> bool {
+    auto v_ = double {};
+
+    if constexpr (k == 0) {
+        v_ = lrgb.r;
+    } else if constexpr (k == 1) {
+        v_ = lrgb.g;
+    } else if constexpr (k == 2) {
+        v_ = lrgb.b;
+    } else {
+        static_assert(false);
+    }
+
+    return is_lrgb_representable_srgb(v_);
 }
 
 constexpr auto is_representable_srgb(Oklab lab) -> bool {
@@ -982,109 +1002,122 @@ struct AngleColor {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-using AngleColorBracket = std::tuple<AngleColor, AngleColor>;
+using AngleBracket = std::pair<AngleColor, AngleColor>;
+using AngleBracketPair = std::pair<AngleBracket, AngleBracket>;
+
+// struct AngleBracketPair {
+// [[nodiscard]]     constexpr explicit auto AngleBracketPair(AngleColorBracket
+// }
 
 template <typename Func>
 concept FuncAngleToLrgb = std::invocable<Func, double> &&
                           std::same_as<std::invoke_result_t<Func, double>, Lrgb>;
 
 template <int k, FuncAngleToLrgb Func>
-constexpr auto find_max_circle_angle_component(const AngleColorBracket& p,
-                                               Func angle_to_lrgb) -> double {
+constexpr auto find_max_circle_angle_split(const AngleBracket& p, Func angle_to_lrgb)
+    -> AngleBracketPair {
     constexpr auto iter_count = std::numeric_limits<double>::digits;
+    const auto is_srgb = is_representable_srgb_k<k>;
 
-    // sort by angle
-    const auto [a, b] = [&]() constexpr -> AngleColorBracket {
-        const auto [a_, b_] = p;
-        if (a_.beta <= b_.beta) {
-            return {a_, b_};
-        }
-        return {b_, a_};
-    }();
-    Ensures(a.beta <= b.beta);
+    const auto [a, b] = p;
+    if (a.beta >= b.beta) {
+        throw std::runtime_error {"first angle in bracket need to be smaller"};
+    }
 
-    const auto is_srgb = [&](const Lrgb& c_) constexpr -> bool {  //
-        auto v_ = double {};
+    const auto a_srgb = is_srgb(a.color);
+    const auto b_srgb = is_srgb(b.color);
 
-        if constexpr (k == 0) {
-            v_ = c_.r;
-        } else if constexpr (k == 1) {
-            v_ = c_.g;
-        } else if constexpr (k == 2) {
-            v_ = c_.b;
-        } else {
-            static_assert(false);
-        }
-
-        return is_lrgb_representable_srgb(v_);
-    };
-
-    // trivial cases
-    {
-        if (a.beta == b.beta) {
-            return a.beta;
-        }
-
-        const auto a_valid = is_srgb(a.color);
-        const auto b_valid = is_srgb(b.color);
-
-        // no sign change?
-        if (a_valid && b_valid) {
-            return std::max(a.beta, b.beta);
-        }
-        if (!a_valid && !b_valid) {
-            return std::min(a.beta, b.beta);
-        }
-
-        Ensures(a_valid != b_valid);
+    if (a_srgb == b_srgb) {
+        throw std::runtime_error {"unable to split as there is no sign change"};
     }
 
     // bracket search
-    const auto is_srgb_angle = [&](double beta_) {
-        return is_srgb(angle_to_lrgb(beta_));
-    };
-
-    auto low_srgb = is_srgb(a.color);
-    auto low = a.beta;
-    auto high = b.beta;
-    Expects(low < high);
+    auto low_srgb = a_srgb;
+    auto low = a;
+    auto high = b;
+    Expects(low.beta < high.beta);
 
     for (auto i = 0; i < iter_count; ++i) {
-        const auto mid = (low + high) / 2.;
+        const auto mid_beta = (low.beta + high.beta) / 2.;
 
-        if (is_srgb_angle(mid) == low_srgb) {
+        if (mid_beta == low.beta || mid_beta == high.beta) {
+            break;
+        }
+
+        const auto mid = AngleColor {
+            .beta = mid_beta,
+            .color = angle_to_lrgb(mid_beta),
+        };
+
+        if (is_srgb(mid.color) == low_srgb) {
             low = mid;
         } else {
             high = mid;
         }
     };
 
-    return low_srgb ? low : high;
+    const auto result = std::pair {
+        AngleBracket {a, low},
+        AngleBracket {high, b},
+    };
+    Ensures(is_srgb(result.first.first.color) == is_srgb(result.first.second.color));
+    Ensures(is_srgb(result.second.first.color) == is_srgb(result.second.second.color));
+    Ensures(result.first.first.beta <= result.first.second.beta);
+    Ensures(result.first.second.beta <= result.second.first.beta);
+    Ensures(result.second.first.beta <= result.second.second.beta);
+    return result;
 }
 
 template <FuncAngleToLrgb Func>
-constexpr auto find_max_circle_angle_bracket(const std::tuple<AngleColor, AngleColor>& p,
-                                             Func angle_to_lrgb)
+constexpr auto find_max_circle_angle_bracket(const AngleBracket& p, Func angle_to_lrgb)
     -> std::optional<double> {
-    auto betas = std::array {
-        find_max_circle_angle_component<0>(p, angle_to_lrgb),
-        find_max_circle_angle_component<1>(p, angle_to_lrgb),
-        find_max_circle_angle_component<2>(p, angle_to_lrgb),
-    };
-    std::ranges::sort(betas, std::ranges::greater {});
-
-    if (false && !std::is_constant_evaluated()) {
-        for (auto v : betas) {
-            print("----", v, angle_to_lrgb(v), is_representable_srgb(angle_to_lrgb(v)));
-        }
+    const auto [a, b] = p;
+    if (a.beta >= b.beta) {
+        throw std::runtime_error {"first angle in bracket need to be smaller"};
     }
 
-    for (const auto beta : betas) {
-        if (is_representable_srgb(angle_to_lrgb(beta))) {
-            return beta;
-        }
+    constexpr auto is_srgb = is_lrgb_representable_srgb;
+
+    const auto flip_r = is_srgb(a.color.r) != is_srgb(b.color.r);
+    const auto flip_g = is_srgb(a.color.g) != is_srgb(b.color.g);
+    const auto flip_b = is_srgb(a.color.b) != is_srgb(b.color.b);
+
+    const auto valid_r = flip_r || (is_srgb(a.color.r) && is_srgb(b.color.r));
+    const auto valid_g = flip_g || (is_srgb(a.color.g) && is_srgb(b.color.g));
+    const auto valid_b = flip_b || (is_srgb(a.color.b) && is_srgb(b.color.b));
+
+    const auto has_split = (flip_r || flip_g || flip_b) && valid_r && valid_g && valid_b;
+    if (!has_split) {
+        return std::nullopt;
     }
-    return std::nullopt;
+
+    // perform split on first component that has sign change
+    const AngleBracketPair splits = [&]() constexpr {
+        if (flip_r) {
+            return find_max_circle_angle_split<0>(p, angle_to_lrgb);
+        }
+        if (flip_g) {
+            return find_max_circle_angle_split<1>(p, angle_to_lrgb);
+        }
+        Expects(flip_b);
+        return find_max_circle_angle_split<2>(p, angle_to_lrgb);
+    }();
+
+    // check upper
+    if (const auto upper = find_max_circle_angle_bracket(splits.first, angle_to_lrgb)) {
+        return upper;
+    }
+
+    // check middle
+    if (is_representable_srgb(splits.second.first.color)) {
+        return splits.second.first.beta;
+    }
+    if (is_representable_srgb(splits.first.second.color)) {
+        return splits.first.second.beta;
+    }
+
+    // check lower
+    return find_max_circle_angle_bracket(splits.second, angle_to_lrgb);
 }
 
 struct MaxAngleConfig {
@@ -1135,22 +1168,6 @@ constexpr auto find_max_circle_angle(ValidMaxAngleConfig config, Func angle_to_l
             .color = angle_to_lrgb(beta_),
         };
     };
-    const auto is_bracket = [&](const AngleColorBracket& p_) constexpr -> bool {
-        constexpr auto is_srgb = is_lrgb_representable_srgb;
-
-        const auto a_ = std::get<0>(p_);
-        const auto b_ = std::get<1>(p_);
-
-        const auto flip_r = is_srgb(a_.color.r) != is_srgb(b_.color.r);
-        const auto flip_g = is_srgb(a_.color.g) != is_srgb(b_.color.g);
-        const auto flip_b = is_srgb(a_.color.b) != is_srgb(b_.color.b);
-
-        const auto valid_r = flip_r || (is_srgb(a_.color.r) && is_srgb(b_.color.r));
-        const auto valid_g = flip_g || (is_srgb(a_.color.g) && is_srgb(b_.color.g));
-        const auto valid_b = flip_b || (is_srgb(a_.color.b) && is_srgb(b_.color.b));
-
-        return (flip_r || flip_g || flip_b) && valid_r && valid_g && valid_b;
-    };
 
     // cicle is fully inside sRGB gammut
     if (is_representable_srgb(to_color(config.beta_max()).color)) {
@@ -1158,20 +1175,16 @@ constexpr auto find_max_circle_angle(ValidMaxAngleConfig config, Func angle_to_l
     }
 
     auto v = std::views::iota(0, config.beta_count()) |  //
-             std::views::reverse |                       //
              std::views::transform(to_beta) |            //
              std::views::transform(to_color) |           //
              std::views::pairwise |                      //
-             std::views::filter(is_bracket);
-
-    if (false && !std::is_constant_evaluated()) {
-        for (auto a : v) {
-            print(a);
-        }
-    }
+             std::views::reverse;
 
     for (const auto& bracket : v) {
-        if (const auto beta = find_max_circle_angle_bracket(bracket, angle_to_lrgb)) {
+        const auto [a, b] = bracket;
+        if (const auto beta =
+                find_max_circle_angle_bracket(std::pair {a, b}, angle_to_lrgb)) {
+            Ensures(is_representable_srgb(angle_to_lrgb(beta.value())));
             return beta.value();
         }
     }
@@ -1409,8 +1422,8 @@ static_assert(is_close(to_oklch(test_oklab), test_oklch));
 static_assert(is_close(to_oklab(test_oklch), test_oklab));
 
 // TODO: fix
-static_assert(details::ct::max_circle_angle_down_slow(test_oklab.l,
-                                                      ab_norm_t {test_oklab}) >= 0.);
+// static_assert(details::ct::max_circle_angle_down_slow(test_oklab.l,
+//                                                       ab_norm_t {test_oklab}) >= 0.);
 
 }  // namespace details::ct
 

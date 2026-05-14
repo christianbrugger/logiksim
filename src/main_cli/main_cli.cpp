@@ -133,8 +133,11 @@ auto single_pixel(BLImageData img) -> void {
     // const auto x = int {1965};
     // const auto y = int {3758};
 
-    const auto x = int {2861};
-    const auto y = int {2996};
+    // const auto x = int {2861};
+    // const auto y = int {2996};
+
+    const auto x = int {1948};
+    const auto y = int {3774};
 
     // const auto x = int {948};
     // const auto y = int {774};
