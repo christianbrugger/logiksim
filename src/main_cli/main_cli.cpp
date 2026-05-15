@@ -19,7 +19,9 @@
 #include <gsl/gsl>
 
 #include <exception>
+#include <execution>
 #include <iostream>
+#include <ranges>
 
 namespace logicsim {
 
@@ -54,23 +56,32 @@ auto image_to_darklight(BLImageData data) -> void {
     auto pixel_data = reinterpret_cast<BLRgba32*>(data.pixel_data);
     const auto stride = gsl::narrow<std::size_t>(data.stride) / sizeof(BLRgba32);
 
-    for (auto y : range(gsl::narrow<std::size_t>(data.size.h))) {
-        for (auto x : range(gsl::narrow<std::size_t>(data.size.w))) {
+    const auto width = gsl::narrow<std::size_t>(data.size.w);
+    const auto height = gsl::narrow<std::size_t>(data.size.h);
+
+    const auto ys = std::views::iota(std::size_t {0}, height);
+
+    const auto process_row = [pixel_data, width, stride](std::size_t y) {
+        for (auto x : range(width)) {
             auto& pixel = pixel_data[x + y * stride];
 
-            const auto rgb = Rgb {
-                .r = static_cast<float>(pixel.r()),
-                .g = static_cast<float>(pixel.g()),
-                .b = static_cast<float>(pixel.b()),
+            const auto rgb = RgbI {
+                .r = static_cast<std::uint8_t>(pixel.r()),
+                .g = static_cast<std::uint8_t>(pixel.g()),
+                .b = static_cast<std::uint8_t>(pixel.b()),
             };
             const auto res = dark_mode ? to_dark_mode(rgb) : to_light_mode(rgb);
 
-            pixel.setR(static_cast<uint32_t>(std::clamp(std::round(res.r), 0., 255.)));
-            pixel.setG(static_cast<uint32_t>(std::clamp(std::round(res.g), 0., 255.)));
-            pixel.setB(static_cast<uint32_t>(std::clamp(std::round(res.b), 0., 255.)));
+            pixel.setR(static_cast<uint32_t>(res.r));
+            pixel.setG(static_cast<uint32_t>(res.g));
+            pixel.setB(static_cast<uint32_t>(res.b));
         }
-    }
-    print(t.delta_ms() / (data.size.h * data.size.w) * 1000., "us");
+    };
+
+    std::for_each(std::execution::par_unseq, ys.begin(), ys.end(), process_row);
+    print(t.delta_ms() / (data.size.h * data.size.w) * 1000. *
+              (std::thread::hardware_concurrency() / 2.),
+          "us");
 }
 
 [[nodiscard]] auto get_diff(uint32_t a, uint32_t b) -> uint32_t {
@@ -159,28 +170,49 @@ auto single_pixel(BLImageData img) -> void {
     print("x", x, "y", y);
     print(p.r(), p.g(), p.b());
 
-    const auto rgb = Rgb {
-        .r = static_cast<float>(p.r()),
-        .g = static_cast<float>(p.g()),
-        .b = static_cast<float>(p.b()),
+    // const auto rgb = Rgb {
+    //     .r = static_cast<float>(p.r()),
+    //     .g = static_cast<float>(p.g()),
+    //     .b = static_cast<float>(p.b()),
+    // };
+    const auto rgb = RgbI {
+        .r = static_cast<std::uint8_t>(p.r()),
+        .g = static_cast<std::uint8_t>(p.g()),
+        .b = static_cast<std::uint8_t>(p.b()),
     };
     print("-> rgb  ", rgb);
 
-    const auto res = to_dark_mode(rgb);
-    const auto dark = Rgb {
-        .r = std::clamp(std::round(res.r), 0., 255.),
-        .g = std::clamp(std::round(res.g), 0., 255.),
-        .b = std::clamp(std::round(res.b), 0., 255.),
-    };
+    const auto dark = to_dark_mode(rgb);
+    // const auto dark = Rgb {
+    //     .r = std::clamp(std::round(res.r), 0., 255.),
+    //     .g = std::clamp(std::round(res.g), 0., 255.),
+    //     .b = std::clamp(std::round(res.b), 0., 255.),
+    // };
     print("-> dark ", dark);
 
-    const auto res2 = to_light_mode(dark);
-    const auto light = Rgb {
-        .r = std::clamp(std::round(res2.r), 0., 255.),
-        .g = std::clamp(std::round(res2.g), 0., 255.),
-        .b = std::clamp(std::round(res2.b), 0., 255.),
-    };
+    const auto light = to_light_mode(dark);
+    // const auto light = Rgb {
+    //     .r = std::clamp(std::round(res2.r), 0., 255.),
+    //     .g = std::clamp(std::round(res2.g), 0., 255.),
+    //     .b = std::clamp(std::round(res2.b), 0., 255.),
+    // };
     print("-> light", light);
+
+    // print();
+    // print("-> dark (no round)", res);
+    // print("-> light (no round)", to_light_mode_raw(res));
+
+    // print();
+    // 93.46555336047882, 143.6292677993749, 255.00000000000114
+    // const auto a = Rgb {.r = 93, .g = 143, .b = 255};
+    // print(a, to_light_mode_raw(a));
+    // const auto b = Rgb {.r = 93, .g = 144, .b = 255};
+    // print(b, to_light_mode_raw(b));
+    // const auto c = Rgb {.r = 94, .g = 143, .b = 255};
+    // print(c, to_light_mode_raw(c));
+    // const auto d = Rgb {.r = 94, .g = 144, .b = 255};
+    // print(d, to_light_mode_raw(d));
+    // print();
 }
 
 auto image_transform() -> void {
@@ -195,8 +227,8 @@ auto image_transform() -> void {
     auto data = BLImageData {};
     img.make_mutable(&data);
 
-    single_pixel(data);
-    return;
+    // single_pixel(data);
+    // return;
 
     image_to_darklight<true>(data);
     img.write_to_file("output_dark.png");

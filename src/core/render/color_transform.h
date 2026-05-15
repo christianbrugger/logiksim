@@ -2,6 +2,7 @@
 #define LOGICSIM_CORE_RENDER_COLOR_TRANSFORM_H
 
 #include "core/algorithm/golden_minimize.h"
+#include "core/container/static_vector.h"
 #include "core/editable_circuit.h"
 #include "core/format/struct.h"
 #include "core/logging.h"
@@ -24,6 +25,20 @@ namespace logicsim {
 /*
  * @brief: rgb color space.
  *
+ * Values are within [0, 255]
+ */
+struct RgbI {
+    std::uint8_t r;
+    std::uint8_t g;
+    std::uint8_t b;
+
+    [[nodiscard]] constexpr auto operator==(const RgbI&) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+/*
+ * @brief: rgb color space.
+ *
  * sRGB values are within [0, 255], but outside are allowed as well.
  */
 struct Rgb {
@@ -32,6 +47,7 @@ struct Rgb {
     double b;
 
     [[nodiscard]] constexpr auto operator==(const Rgb&) const -> bool = default;
+    [[nodiscard]] constexpr auto operator<=>(const Rgb&) const = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -101,8 +117,8 @@ struct Oklh {
 [[nodiscard]] constexpr auto to_oklch(Oklab c) -> Oklch;
 [[nodiscard]] constexpr auto to_oklab(Oklch lch) -> Oklab;
 
-[[nodiscard]] constexpr auto to_dark_mode(Rgb rgb) -> Rgb;
-[[nodiscard]] constexpr auto to_light_mode(Rgb rgb) -> Rgb;
+[[nodiscard]] constexpr auto to_dark_mode_raw(Rgb rgb) -> Rgb;
+[[nodiscard]] constexpr auto to_light_mode_raw(Rgb rgb) -> Rgb;
 
 //
 // Implementation
@@ -1337,7 +1353,7 @@ constexpr auto max_circle_angle_up(double l_radius, ab_norm_t ab) -> double {
 
 }  // namespace details::ct
 
-constexpr auto to_dark_mode(Rgb rgb) -> Rgb {
+constexpr auto to_dark_mode_raw(Rgb rgb) -> Rgb {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
     const auto lab = to_oklab(to_lrgb(rgb));
@@ -1354,6 +1370,8 @@ constexpr auto to_dark_mode(Rgb rgb) -> Rgb {
     const auto b_light_ratio =
         details::ct::clamp(b_light / std::max(1e-5, b_light_max), 0., 1.);
 
+    // print(b_dark_max, b_light_max, b_light);
+
     // derive
     const auto b_dark_ratio = b_light_ratio;
     const auto b_dark = b_dark_max * b_dark_ratio;
@@ -1361,7 +1379,7 @@ constexpr auto to_dark_mode(Rgb rgb) -> Rgb {
     return to_rgb(to_lrgb(lab1));
 }
 
-constexpr auto to_light_mode(Rgb rgb) -> Rgb {
+constexpr auto to_light_mode_raw(Rgb rgb) -> Rgb {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
     const auto lab = to_oklab(to_lrgb(rgb));
@@ -1378,11 +1396,79 @@ constexpr auto to_light_mode(Rgb rgb) -> Rgb {
     const auto b_dark_ratio =
         details::ct::clamp(b_dark / std::max(1e-5, b_dark_max), 0., 1.);
 
+    // print(b_dark_max, b_light_max, b_dark);
+
     // derive
     const auto b_light_ratio = b_dark_ratio;
     const auto b_light = b_light_max * b_light_ratio;
     const auto lab1 = details::ct::from_angle_down(r_light, ab, b_light);
     return to_rgb(to_lrgb(lab1));
+}
+
+constexpr auto to_dark_mode(RgbI rgb) -> RgbI {
+    const auto light = Rgb {
+        .r = static_cast<double>(rgb.r),
+        .g = static_cast<double>(rgb.g),
+        .b = static_cast<double>(rgb.b),
+    };
+    const auto dark = to_dark_mode_raw(light);
+
+    const auto floor = [](double v_) constexpr -> double {
+        return cmath::clamp(cmath::floor(v_), 0., 255.);
+    };
+    const auto ceil = [](double v_) constexpr -> double {
+        return cmath::clamp(cmath::ceil(v_), 0., 255.);
+    };
+
+    // create all possible roundings
+    auto candidates = static_vector<Rgb, 8> {
+        Rgb {.r = ceil(dark.r), .g = ceil(dark.g), .b = ceil(dark.b)},
+        Rgb {.r = floor(dark.r), .g = ceil(dark.g), .b = ceil(dark.b)},
+        Rgb {.r = ceil(dark.r), .g = floor(dark.g), .b = ceil(dark.b)},
+        Rgb {.r = floor(dark.r), .g = floor(dark.g), .b = ceil(dark.b)},
+        Rgb {.r = ceil(dark.r), .g = ceil(dark.g), .b = floor(dark.b)},
+        Rgb {.r = floor(dark.r), .g = ceil(dark.g), .b = floor(dark.b)},
+        Rgb {.r = ceil(dark.r), .g = floor(dark.g), .b = floor(dark.b)},
+        Rgb {.r = floor(dark.r), .g = floor(dark.g), .b = floor(dark.b)},
+    };
+    // deplucicate
+    std::ranges::sort(candidates);
+    candidates.erase(std::ranges::unique(candidates).begin(), candidates.end());
+
+    const auto distance = [&](Rgb light_) constexpr -> double {
+        return cmath::hypot(light.r - std::clamp(light_.r, 0., 255.),
+                            light.g - std::clamp(light_.g, 0., 255.),
+                            light.b - std::clamp(light_.b, 0., 255.));
+    };
+
+    // find best candidate then when converted back is closest to light
+    Expects(!candidates.empty());
+    auto ab = candidates | std::views::transform(to_light_mode_raw);
+    auto m = std::ranges::min_element(ab, std::ranges::less {}, distance);
+    auto best = candidates.at(m - ab.begin());
+
+    return RgbI {
+        .r = static_cast<std::uint8_t>(best.r),
+        .g = static_cast<std::uint8_t>(best.g),
+        .b = static_cast<std::uint8_t>(best.b),
+    };
+}
+
+constexpr auto to_light_mode(RgbI rgb) -> RgbI {
+    const auto dark = Rgb {
+        .r = static_cast<double>(rgb.r),
+        .g = static_cast<double>(rgb.g),
+        .b = static_cast<double>(rgb.b),
+    };
+
+    // TODO: implement above logic
+
+    const auto light = to_light_mode_raw(dark);
+    return RgbI {
+        .r = static_cast<std::uint8_t>(std::clamp(std::round(light.r), 0., 255.)),
+        .g = static_cast<std::uint8_t>(std::clamp(std::round(light.g), 0., 255.)),
+        .b = static_cast<std::uint8_t>(std::clamp(std::round(light.b), 0., 255.)),
+    };
 }
 
 //

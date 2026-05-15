@@ -4,6 +4,10 @@
 
 namespace logicsim {
 
+auto RgbI::format() const -> std::string {
+    return fmt::format("Rgb({}, {}, {})", r, g, b);
+}
+
 auto Rgb::format() const -> std::string {
     return fmt::format("Rgb({}, {}, {})", r, g, b);
 }

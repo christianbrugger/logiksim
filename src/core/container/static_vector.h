@@ -64,6 +64,7 @@ class static_vector {
     constexpr auto clear() noexcept -> void;
     constexpr auto push_back(const value_type& value) -> void;
     constexpr auto pop_back() -> void;
+    constexpr auto erase(const_iterator first, const_iterator last) -> iterator;
 
     [[nodiscard]] constexpr auto front() -> reference;
     [[nodiscard]] constexpr auto front() const -> const_reference;
@@ -187,6 +188,22 @@ constexpr auto static_vector<Value, Capacity, SizeType>::pop_back() -> void {
         throw std::runtime_error("static_vector: pop from empty vector");
     }
     --size_;
+}
+
+template <typename Value, std::size_t Capacity, typename SizeType>
+constexpr auto static_vector<Value, Capacity, SizeType>::erase(const_iterator first,
+                                                               const_iterator last)
+    -> iterator {
+    Expects(first <= last);
+
+    const auto first_index = first - cbegin();
+    const auto diff = gsl::narrow<SizeType>(last - first);
+    Expects(diff <= size_);
+
+    std::ranges::copy(last, end(), begin() + first_index);
+    size_ -= diff;
+
+    return begin() + first_index;
 }
 
 //

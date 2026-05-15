@@ -100,6 +100,22 @@ namespace cmath {
     return std::log(x);
 }
 
+/*
+[[nodiscard]] constexpr auto isfinite(double x) -> bool {
+    if (std::is_constant_evaluated()) {
+        return gcem::isfinite(x);
+    }
+    return std::isfinite(x);
+}
+*/
+
+[[nodiscard]] constexpr auto floor(double x) -> double {
+    if (std::is_constant_evaluated()) {
+        return gcem::floor(x);
+    }
+    return std::floor(x);
+}
+
 [[nodiscard]] constexpr auto ceil(double x) -> double {
     if (std::is_constant_evaluated()) {
         return gcem::ceil(x);
