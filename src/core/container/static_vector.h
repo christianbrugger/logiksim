@@ -194,16 +194,27 @@ template <typename Value, std::size_t Capacity, typename SizeType>
 constexpr auto static_vector<Value, Capacity, SizeType>::erase(const_iterator first,
                                                                const_iterator last)
     -> iterator {
+    // Bound checking
+    Expects(first >= cbegin());
+    Expects(last <= cend());
     Expects(first <= last);
 
-    const auto first_index = first - cbegin();
+    // Get mutable iterators for std::move
+    const auto first_ = begin() + (first - cbegin());
+    const auto last_ = begin() + (last - cbegin());
+
+    if (first == last) {
+        return last_;
+    }
+
+    // check before move for exception safety
     const auto diff = gsl::narrow<SizeType>(last - first);
     Expects(diff <= size_);
 
-    std::ranges::copy(last, end(), begin() + first_index);
+    std::ranges::move(last_, end(), first_);
     size_ -= diff;
 
-    return begin() + first_index;
+    return first_;
 }
 
 //

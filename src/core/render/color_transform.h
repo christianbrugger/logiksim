@@ -3,7 +3,6 @@
 
 #include "core/algorithm/golden_minimize.h"
 #include "core/container/static_vector.h"
-#include "core/editable_circuit.h"
 #include "core/format/struct.h"
 #include "core/logging.h"
 
@@ -1405,47 +1404,57 @@ constexpr auto to_light_mode_raw(Rgb rgb) -> Rgb {
     return to_rgb(to_lrgb(lab1));
 }
 
-constexpr auto to_dark_mode(RgbI rgb) -> RgbI {
-    const auto light = Rgb {
+namespace details::ct {
+
+/*
+ * @brief: Convert to light / dark & find best rounding.
+ */
+template <bool to_dark>
+constexpr auto to_mode_rounding(RgbI rgb) -> RgbI {
+    const auto input = Rgb {
         .r = static_cast<double>(rgb.r),
         .g = static_cast<double>(rgb.g),
         .b = static_cast<double>(rgb.b),
     };
-    const auto dark = to_dark_mode_raw(light);
+    const auto raw = to_dark ? to_dark_mode_raw(input) : to_light_mode_raw(input);
 
+    // create all possible roundings
     const auto floor = [](double v_) constexpr -> double {
         return cmath::clamp(cmath::floor(v_), 0., 255.);
     };
     const auto ceil = [](double v_) constexpr -> double {
         return cmath::clamp(cmath::ceil(v_), 0., 255.);
     };
-
-    // create all possible roundings
     auto candidates = static_vector<Rgb, 8> {
-        Rgb {.r = ceil(dark.r), .g = ceil(dark.g), .b = ceil(dark.b)},
-        Rgb {.r = floor(dark.r), .g = ceil(dark.g), .b = ceil(dark.b)},
-        Rgb {.r = ceil(dark.r), .g = floor(dark.g), .b = ceil(dark.b)},
-        Rgb {.r = floor(dark.r), .g = floor(dark.g), .b = ceil(dark.b)},
-        Rgb {.r = ceil(dark.r), .g = ceil(dark.g), .b = floor(dark.b)},
-        Rgb {.r = floor(dark.r), .g = ceil(dark.g), .b = floor(dark.b)},
-        Rgb {.r = ceil(dark.r), .g = floor(dark.g), .b = floor(dark.b)},
-        Rgb {.r = floor(dark.r), .g = floor(dark.g), .b = floor(dark.b)},
+        Rgb {.r = ceil(raw.r), .g = ceil(raw.g), .b = ceil(raw.b)},
+        Rgb {.r = floor(raw.r), .g = ceil(raw.g), .b = ceil(raw.b)},
+        Rgb {.r = ceil(raw.r), .g = floor(raw.g), .b = ceil(raw.b)},
+        Rgb {.r = floor(raw.r), .g = floor(raw.g), .b = ceil(raw.b)},
+        Rgb {.r = ceil(raw.r), .g = ceil(raw.g), .b = floor(raw.b)},
+        Rgb {.r = floor(raw.r), .g = ceil(raw.g), .b = floor(raw.b)},
+        Rgb {.r = ceil(raw.r), .g = floor(raw.g), .b = floor(raw.b)},
+        Rgb {.r = floor(raw.r), .g = floor(raw.g), .b = floor(raw.b)},
     };
-    // deplucicate
+
+    // remove deplucicate (happens when clamped)
     std::ranges::sort(candidates);
     candidates.erase(std::ranges::unique(candidates).begin(), candidates.end());
 
-    const auto distance = [&](Rgb light_) constexpr -> double {
-        return cmath::hypot(light.r - std::clamp(light_.r, 0., 255.),
-                            light.g - std::clamp(light_.g, 0., 255.),
-                            light.b - std::clamp(light_.b, 0., 255.));
+    // calculate distance converting back each candidate
+    const auto distance = [&](Rgb c_) constexpr -> double {
+        const auto back_ = to_dark ? to_light_mode_raw(c_) : to_dark_mode_raw(c_);
+        return cmath::hypot(input.r - std::clamp(back_.r, 0., 255.),
+                            input.g - std::clamp(back_.g, 0., 255.),
+                            input.b - std::clamp(back_.b, 0., 255.));
     };
+    const auto distances = candidates |                       //
+                           std::views::transform(distance) |  //
+                           std::ranges::to<static_vector<double, 8>>();
 
-    // find best candidate then when converted back is closest to light
-    Expects(!candidates.empty());
-    auto ab = candidates | std::views::transform(to_light_mode_raw);
-    auto m = std::ranges::min_element(ab, std::ranges::less {}, distance);
-    auto best = candidates.at(m - ab.begin());
+    // select best candidate
+    Expects(!distances.empty());
+    const auto min_idx = std::ranges::min_element(distances) - distances.begin();
+    const auto best = candidates.at(min_idx);
 
     return RgbI {
         .r = static_cast<std::uint8_t>(best.r),
@@ -1454,21 +1463,14 @@ constexpr auto to_dark_mode(RgbI rgb) -> RgbI {
     };
 }
 
+}  // namespace details::ct
+
+constexpr auto to_dark_mode(RgbI rgb) -> RgbI {
+    return details::ct::to_mode_rounding<true>(rgb);
+}
+
 constexpr auto to_light_mode(RgbI rgb) -> RgbI {
-    const auto dark = Rgb {
-        .r = static_cast<double>(rgb.r),
-        .g = static_cast<double>(rgb.g),
-        .b = static_cast<double>(rgb.b),
-    };
-
-    // TODO: implement above logic
-
-    const auto light = to_light_mode_raw(dark);
-    return RgbI {
-        .r = static_cast<std::uint8_t>(std::clamp(std::round(light.r), 0., 255.)),
-        .g = static_cast<std::uint8_t>(std::clamp(std::round(light.g), 0., 255.)),
-        .b = static_cast<std::uint8_t>(std::clamp(std::round(light.b), 0., 255.)),
-    };
+    return details::ct::to_mode_rounding<false>(rgb);
 }
 
 //
