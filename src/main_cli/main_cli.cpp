@@ -89,7 +89,24 @@ auto image_to_darklight(BLImageData data) -> void {
 }
 
 auto get_norm(BLRgba32 a, BLRgba32 b) {
-    return std::hypot(1. * a.r() - b.r(), 1. * a.g() - b.g(), 1. * a.b() - b.b());
+    const auto rgb_a = Rgb {
+        .r = static_cast<double>(a.r()),
+        .g = static_cast<double>(a.g()),
+        .b = static_cast<double>(a.b()),
+    };
+
+    const auto rgb_b = Rgb {
+        .r = static_cast<double>(b.r()),
+        .g = static_cast<double>(b.g()),
+        .b = static_cast<double>(b.b()),
+    };
+
+    const auto lab_a = to_oklab(to_lrgb(rgb_a));
+    const auto lab_b = to_oklab(to_lrgb(rgb_b));
+
+    return std::hypot(lab_a.l - lab_b.l, lab_a.a - lab_b.a, lab_a.b - lab_b.b);
+
+    // return std::hypot(1. * a.r() - b.r(), 1. * a.g() - b.g(), 1. * a.b() - b.b());
 };
 
 auto diff_images(BLImageData diff, BLImageData orig) {
@@ -150,8 +167,14 @@ auto single_pixel(BLImageData img) -> void {
     // const auto x = int {1948};
     // const auto y = int {3774};
 
-    const auto x = int {3616};
-    const auto y = int {3698};
+    // const auto x = int {3616};
+    // const auto y = int {3698};
+
+    // const auto x = int {3442};
+    // const auto y = int {58};
+
+    const auto x = int {2095};
+    const auto y = int {3681};
 
     // const auto x = int {948};
     // const auto y = int {774};
@@ -230,8 +253,8 @@ auto image_transform() -> void {
     auto data = BLImageData {};
     img.make_mutable(&data);
 
-    single_pixel(data);
-    return;
+    // single_pixel(data);
+    // return;
 
     image_to_darklight<true>(data);
     img.write_to_file("output_dark.png");

@@ -1369,11 +1369,10 @@ constexpr auto to_dark_mode_raw(Rgb rgb) -> Rgb {
     const auto b_light_ratio =
         details::ct::clamp(b_light / std::max(1e-5, b_light_max), 0., 1.);
 
-    // print(b_dark_max, b_light_max, b_light);
-
     // derive
     const auto b_dark_ratio = b_light_ratio;
     const auto b_dark = b_dark_max * b_dark_ratio;
+    // print(b_dark_max, b_light_max, b_dark, b_light);
     const auto lab1 = details::ct::from_angle_up(r_dark, ab, b_dark);
     return to_rgb(to_lrgb(lab1));
 }
@@ -1395,11 +1394,10 @@ constexpr auto to_light_mode_raw(Rgb rgb) -> Rgb {
     const auto b_dark_ratio =
         details::ct::clamp(b_dark / std::max(1e-5, b_dark_max), 0., 1.);
 
-    // print(b_dark_max, b_light_max, b_dark);
-
     // derive
     const auto b_light_ratio = b_dark_ratio;
     const auto b_light = b_light_max * b_light_ratio;
+    // print(b_dark_max, b_light_max, b_dark, b_light);
     const auto lab1 = details::ct::from_angle_down(r_light, ab, b_light);
     return to_rgb(to_lrgb(lab1));
 }
@@ -1443,9 +1441,22 @@ constexpr auto to_mode_rounding(RgbI rgb) -> RgbI {
     // calculate distance converting back each candidate
     const auto distance = [&](Rgb c_) constexpr -> double {
         const auto back_ = to_dark ? to_light_mode_raw(c_) : to_dark_mode_raw(c_);
-        return cmath::hypot(input.r - std::clamp(back_.r, 0., 255.),
-                            input.g - std::clamp(back_.g, 0., 255.),
-                            input.b - std::clamp(back_.b, 0., 255.));
+        // TODO: write method
+        const auto back_c_ = Rgb {
+            .r = std::clamp(back_.r, 0., 255.),
+            .g = std::clamp(back_.g, 0., 255.),
+            .b = std::clamp(back_.b, 0., 255.),
+        };
+
+        const auto a_ = to_oklab(to_lrgb(input));
+        const auto b_ = to_oklab(to_lrgb(back_c_));
+
+        // TODO: write method
+        return cmath::hypot(a_.l - b_.l, a_.a - b_.a, a_.b - b_.b);
+
+        // return cmath::hypot(input.r - std::clamp(back_.r, 0., 255.),
+        //                     input.g - std::clamp(back_.g, 0., 255.),
+        //                     input.b - std::clamp(back_.b, 0., 255.));
     };
     const auto distances = candidates |                       //
                            std::views::transform(distance) |  //
