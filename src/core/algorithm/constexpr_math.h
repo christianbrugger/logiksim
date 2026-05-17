@@ -100,14 +100,21 @@ namespace cmath {
     return std::log(x);
 }
 
-/*
 [[nodiscard]] constexpr auto isfinite(double x) -> bool {
     if (std::is_constant_evaluated()) {
-        return gcem::isfinite(x);
+        constexpr auto inf = std::numeric_limits<double>::infinity();
+        const auto not_nan = x == x;
+        return not_nan && (x != inf) && (x != -inf);
     }
     return std::isfinite(x);
 }
-*/
+
+[[nodiscard]] constexpr auto round(double x) -> double {
+    if (std::is_constant_evaluated()) {
+        return gcem::round(x);
+    }
+    return std::round(x);
+}
 
 [[nodiscard]] constexpr auto floor(double x) -> double {
     if (std::is_constant_evaluated()) {

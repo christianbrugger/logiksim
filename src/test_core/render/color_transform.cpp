@@ -97,56 +97,7 @@ TEST(RenderColorTransform, abnorm2) {
     EXPECT_DOUBLE_EQ(ab.b_norm(), 0.37139067635410367);
 }
 
-TEST(RenderColorTransform, MaxChromaEasy) {
-    // rgb values with one value being zero are on the sRGB boundary and most have
-    // max chroma values in lch
-    const auto rgb = Rgb {.r = 0, .g = 100, .b = 100};
-    const auto lch = to_oklch(to_oklab(to_lrgb(rgb)));
-
-    const auto max_lch = oklab_max_chroma_slow(Oklh {.l = lch.l, .h = lch.h});
-    EXPECT_DOUBLE_EQ(max_lch.c, lch.c);
-}
-
-// !!! TODO: DISABLED !!!
-TEST(DISABLED_RenderColorTransform, MaxChromaDifficult) {
-    // This RGB values is very tricky, as here the curve is convex in c, meaning
-    // for c = 0.261.. => VALID
-    // for c = 0.284.. => INVALID
-    // for c = 0.308.. => VALID = real value
-
-    const auto rgb = Rgb {.r = 0, .g = 0, .b = 250};
-    const auto lch = to_oklch(to_oklab(to_lrgb(rgb)));
-
-    const auto max_lch = oklab_max_chroma_slow(Oklh {.l = lch.l, .h = lch.h});
-    EXPECT_DOUBLE_EQ(max_lch.c, lch.c);
-}
-
 TEST(RenderColorTransform, MaxChromaBench) {
-    {
-        auto t = Timer {};
-
-        const auto num = 100;
-        auto total = 0.;
-        for (auto i = 0; i < num; ++i) {
-            total += oklab_max_chroma_slow(Oklh {.l = 0.5, .h = 1. * i}).c;
-        }
-
-        Expects(total > 10.);
-        print("Time chroma:", t.delta_seconds() / num * 1000 * 1000, "us");
-    }
-    {
-        auto t = Timer {};
-
-        const auto num = 100;
-        auto total = 0.;
-        for (auto i = 0; i < num; ++i) {
-            total += oklab_max_saturation_point_very_slow(1. * i).c;
-        }
-
-        Expects(total > 10.);
-        print("Time saturation:", t.delta_seconds() / num * 1000 * 1000, "us");
-    }
-
     {
         auto t = Timer {};
 
