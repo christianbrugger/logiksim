@@ -1,6 +1,7 @@
 
 #include "core/render/color_transform.h"
 
+#include "core/logging.h"
 #include "core/timer.h"
 
 #include <gmock/gmock.h>

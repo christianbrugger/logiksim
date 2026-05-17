@@ -2,15 +2,13 @@
 #define LOGICSIM_CORE_RENDER_COLOR_TRANSFORM_H
 
 #include "core/algorithm/constexpr_math.h"
-#include "core/algorithm/golden_minimize.h"
 #include "core/container/static_vector.h"
 #include "core/format/struct.h"
-#include "core/logging.h"
-
-#include <gcem.hpp>
 
 #include <limits>
 #include <numbers>
+
+// TODO: test to_light of RGB(10, 10, 10)
 
 /*
  * @brief: Define oklab color transformations.
@@ -128,26 +126,34 @@ struct Oklh {
 //
 
 // TODO: collect all epsilons
-namespace defaults {
+namespace defaults::ct {
+// used for comparing two color values
+constexpr inline static auto is_close_epsilon = 1e-14;
+
+// precesion at which lrgb is still valid outside [0,1]
 constexpr inline static auto lrgb_is_valid_srgb_epsilon = 1e-14;
-}
+
+// band around [0/l_dark, 1] at which chroma is considered 0
+constexpr inline static auto luminance_zone_with_zero_chroma = 1e-5;
+
+}  // namespace defaults::ct
 
 constexpr auto is_close(const Rgb& x, const Rgb& y) -> bool {
-    constexpr auto tol = 255.0 * 1e-14;
+    constexpr auto tol = 255.0 * defaults::ct::is_close_epsilon;
     return cmath::abs(x.r - y.r) < tol &&  //
            cmath::abs(x.g - y.g) < tol &&  //
            cmath::abs(x.b - y.b) < tol;
 }
 
 constexpr auto is_close(const Lrgb& x, const Lrgb& y) -> bool {
-    constexpr auto tol = 1e-14;
+    constexpr auto tol = defaults::ct::is_close_epsilon;
     return cmath::abs(x.r - y.r) < tol &&  //
            cmath::abs(x.g - y.g) < tol &&  //
            cmath::abs(x.b - y.b) < tol;
 }
 
 constexpr auto is_close(const Oklab& x, const Oklab& y) -> bool {
-    constexpr auto tol = 1e-14;
+    constexpr auto tol = defaults::ct::is_close_epsilon;
     return cmath::abs(x.l - y.l) < tol &&  //
            cmath::abs(x.a - y.a) < tol &&  //
            cmath::abs(x.b - y.b) < tol;
@@ -162,8 +168,8 @@ constexpr auto distance(const Oklab& x, const Oklab& y) -> double {
 }
 
 constexpr auto is_close(const Oklch& x, const Oklch& y) -> bool {
-    constexpr auto tol_lc = 1e-14;
-    constexpr auto tol_h = 360. * 1e-14;
+    constexpr auto tol_lc = defaults::ct::is_close_epsilon;
+    constexpr auto tol_h = 360. * defaults::ct::is_close_epsilon;
 
     if (cmath::abs(x.l - y.l) >= tol_lc) {
         return false;
@@ -383,7 +389,7 @@ constexpr auto to_oklch(Oklab c) -> Oklch {
     const auto chroma = cmath::hypot(c.a, c.b);
 
     const auto hue = [&] {
-        if (chroma < 1.0e-6) {
+        if (chroma < 1.0e-6) {  // TODO:
             return 0.;
         }
 
@@ -420,7 +426,7 @@ namespace details::ct {
 class ab_norm_t {
    public:
     constexpr explicit ab_norm_t(Oklab lab) noexcept {
-        constexpr auto eps = 1e-7;
+        constexpr auto eps = 1e-7;  // TODO:
 
         const auto c = cmath::hypot(lab.a, lab.b);
 
@@ -455,286 +461,21 @@ class ab_norm_t {
     double b_norm_;
 };
 
-}  // namespace details::ct
-
-namespace details::ct {
-
-/*
- * Finds the maximum saturation possible for a given hue that fits in sRGB
- *
- * Saturation here is defined as S = C/L
- * a and b must be normalized so a^2 + b^2 == 1
- *
- * Max saturation will be when one of r, g or b goes below zero.
- */
-[[nodiscard]] constexpr auto compute_max_saturation(ab_norm_t ab) -> double {
-    const auto a = ab.a_norm();
-    const auto b = ab.b_norm();
-
-    // Select different coefficients depending on which component goes below zero
-    // first
-    double k0 = {};
-    double k1 = {};
-    double k2 = {};
-    double k3 = {};
-    double k4 = {};
-    double wl = {};
-    double wm = {};
-    double ws = {};
-
-    if (-1.88170328 * a - 0.80936493 * b > 1) {
-        // Red component
-        k0 = +1.19086277;
-        k1 = +1.76576728;
-        k2 = +0.59662641;
-        k3 = +0.75515197;
-        k4 = +0.56771245;
-        wl = +4.0767416621;
-        wm = -3.3077115913;
-        ws = +0.2309699292;
-    } else if (1.81444104 * a - 1.19445276 * b > 1) {
-        // Green component
-        k0 = +0.73956515;
-        k1 = -0.45954404;
-        k2 = +0.08285427;
-        k3 = +0.12541070;
-        k4 = +0.14503204;
-        wl = -1.2684380046;
-        wm = +2.6097574011;
-        ws = -0.3413193965;
-    } else {
-        // Blue component
-        k0 = +1.35733652;
-        k1 = -0.00915799;
-        k2 = -1.15130210;
-        k3 = -0.50559606;
-        k4 = +0.00692167;
-        wl = -0.0041960863;
-        wm = -0.7034186147;
-        ws = +1.7076147010;
-    }
-
-    // Approximate max saturation using a polynomial:
-    const auto S = k0 + k1 * a + k2 * b + k3 * a * a + k4 * a * b;
-
-    // Do one step Halley's method to get closer
-    // this gives an error less than 10e6, except for some blue hues where the dS/dh
-    // is close to infinite this should be sufficient for most applications, otherwise
-    // do two/three steps
-
-    const auto k_l = +0.3963377774 * a + 0.2158037573 * b;
-    const auto k_m = -0.1055613458 * a - 0.0638541728 * b;
-    const auto k_s = -0.0894841775 * a - 1.2914855480 * b;
-
-    {
-        const auto l_ = 1. + S * k_l;
-        const auto m_ = 1. + S * k_m;
-        const auto s_ = 1. + S * k_s;
-
-        const auto l = l_ * l_ * l_;
-        const auto m = m_ * m_ * m_;
-        const auto s = s_ * s_ * s_;
-
-        const auto l_dS = 3. * k_l * l_ * l_;
-        const auto m_dS = 3. * k_m * m_ * m_;
-        const auto s_dS = 3. * k_s * s_ * s_;
-
-        const auto l_dS2 = 6. * k_l * k_l * l_;
-        const auto m_dS2 = 6. * k_m * k_m * m_;
-        const auto s_dS2 = 6. * k_s * k_s * s_;
-
-        const auto f = wl * l + wm * m + ws * s;
-        const auto f1 = wl * l_dS + wm * m_dS + ws * s_dS;
-        const auto f2 = wl * l_dS2 + wm * m_dS2 + ws * s_dS2;
-
-        return S - f * f1 / (f1 * f1 - 0.5 * f * f2);
-    }
-}
-
-struct LC {
-    double L;
-    double C;
-};
-
-/*
- * @brief: finds L_cusp and C_cusp for a given hue
- *
- * a and b must be normalized so a^2 + b^2 == 1
- */
-
-[[nodiscard]] constexpr auto find_cusp(ab_norm_t ab) -> LC {
-    // First, find the maximum saturation (saturation S = C/L)
-    const auto S_cusp = compute_max_saturation(ab);
-
-    // Convert to linear sRGB to find the first point where at least one of r,g or b
-    // >= 1:
-    const Lrgb rgb_at_max = to_lrgb(Oklab {
-        .l = 1,
-        .a = S_cusp * ab.a_norm(),
-        .b = S_cusp * ab.b_norm(),
-    });
-    const auto L_cusp =
-        cmath::cbrt(1. / std::max({rgb_at_max.r, rgb_at_max.g, rgb_at_max.b}));
-    const auto C_cusp = L_cusp * S_cusp;
-
-    return LC {
-        .L = L_cusp,
-        .C = C_cusp,
-    };
-}
-
-/*
- * @brief: Finds intersection of the line defined by
- *
- * L = L0 * (1 - t) + t * L1;
- * C = t * C1;
- *
- * a and b must be normalized so a^2 + b^2 == 1
- */
-[[nodiscard]] constexpr auto find_gamut_intersection(ab_norm_t ab, double L1, double C1,
-                                                     double L0) -> double {
-    constexpr auto flt_max = std::numeric_limits<double>::max();
-    const auto a = ab.a_norm();
-    const auto b = ab.b_norm();
-
-    // Find the cusp of the gamut triangle
-    const auto cusp = find_cusp(ab);
-
-    // Find the intersection for upper and lower half seprately
-    double t = {};
-    if (((L1 - L0) * cusp.C - (cusp.L - L0) * C1) <= 0.) {
-        // Lower half
-
-        t = cusp.C * L0 / (C1 * cusp.L + cusp.C * (L0 - L1));
-    } else {
-        // Upper half
-
-        // First intersect with triangle
-        t = cusp.C * (L0 - 1.) / (C1 * (cusp.L - 1.) + cusp.C * (L0 - L1));
-
-        // Then one step Halley's method
-        {
-            double dL = L1 - L0;
-            double dC = C1;
-
-            double k_l = +0.3963377774 * a + 0.2158037573 * b;
-            double k_m = -0.1055613458 * a - 0.0638541728 * b;
-            double k_s = -0.0894841775 * a - 1.2914855480 * b;
-
-            double l_dt = dL + dC * k_l;
-            double m_dt = dL + dC * k_m;
-            double s_dt = dL + dC * k_s;
-
-            // If higher accuracy is required, 2 or 3 iterations of the following
-            // block can be used:
-            {
-                double L = L0 * (1. - t) + t * L1;
-                double C = t * C1;
-
-                double l_ = L + C * k_l;
-                double m_ = L + C * k_m;
-                double s_ = L + C * k_s;
-
-                double l = l_ * l_ * l_;
-                double m = m_ * m_ * m_;
-                double s = s_ * s_ * s_;
-
-                double ldt = 3 * l_dt * l_ * l_;
-                double mdt = 3 * m_dt * m_ * m_;
-                double sdt = 3 * s_dt * s_ * s_;
-
-                double ldt2 = 6 * l_dt * l_dt * l_;
-                double mdt2 = 6 * m_dt * m_dt * m_;
-                double sdt2 = 6 * s_dt * s_dt * s_;
-
-                double r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s - 1;
-                double r1 = 4.0767416621 * ldt - 3.3077115913 * mdt + 0.2309699292 * sdt;
-                double r2 =
-                    4.0767416621 * ldt2 - 3.3077115913 * mdt2 + 0.2309699292 * sdt2;
-
-                double u_r = r1 / (r1 * r1 - 0.5 * r * r2);
-                double t_r = -r * u_r;
-
-                double g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s - 1;
-                double g1 = -1.2684380046 * ldt + 2.6097574011 * mdt - 0.3413193965 * sdt;
-                double g2 =
-                    -1.2684380046 * ldt2 + 2.6097574011 * mdt2 - 0.3413193965 * sdt2;
-
-                double u_g = g1 / (g1 * g1 - 0. * g * g2);
-                double t_g = -g * u_g;
-
-                double b_ = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s - 1;
-                double b1 = -0.0041960863 * ldt - 0.7034186147 * mdt + 1.7076147010 * sdt;
-                double b2 =
-                    -0.0041960863 * ldt2 - 0.7034186147 * mdt2 + 1.7076147010 * sdt2;
-
-                double u_b = b1 / (b1 * b1 - 0.5 * b_ * b2);
-                double t_b = -b_ * u_b;
-
-                t_r = u_r >= 0. ? t_r : flt_max;
-                t_g = u_g >= 0. ? t_g : flt_max;
-                t_b = u_b >= 0. ? t_b : flt_max;
-
-                t += std::min({t_r, t_g, t_b});
-            }
-        }
-    }
-
-    return t;
-}
-
-[[nodiscard]] constexpr auto gamut_clip_preserve_chroma(Lrgb rgb) -> Lrgb {
-    if (rgb.r <= 1. && rgb.g <= 1. && rgb.b <= 1. &&  //
-        rgb.r >= 0. && rgb.g >= 0. && rgb.b >= 0.) {
-        return rgb;
-    }
-
-    const auto lab = to_oklab(rgb);
-
-    const auto L = lab.l;
-    const auto ab = ab_norm_t {lab};
-    const auto C = ab.c();
-    /*
-    const auto L = lab.l;
-    const auto eps = 0.00001;
-    const auto C = std::max(eps, cmath::sqrtf(lab.a * lab.a + lab.b * lab.b));
-    const auto a_ = lab.a / C;
-    const auto b_ = lab.b / C;
-    */
-
-    const auto L0 = cmath::clamp(L, 0., 1.);
-
-    const auto t = find_gamut_intersection(ab, L, C, L0);
-    const auto L_clipped = L0 * (1. - t) + t * L;
-    const auto C_clipped = t * C;
-
-    const auto res = to_lrgb(Oklab {
-        .l = L_clipped,
-        .a = C_clipped * ab.a_norm(),
-        .b = C_clipped * ab.b_norm(),
-    });
-    return Lrgb {
-        .r = cmath::clamp(res.r, 0., 1.),
-        .g = cmath::clamp(res.g, 0., 1.),
-        .b = cmath::clamp(res.b, 0., 1.),
-    };
-}
-
-constexpr auto is_lrgb_representable_srgb(double value) -> bool {
-    constexpr auto low = 0. - defaults::lrgb_is_valid_srgb_epsilon;
-    constexpr auto high = 1. + defaults::lrgb_is_valid_srgb_epsilon;
+[[nodiscard]] constexpr auto is_lrgb_representable_srgb(double value) -> bool {
+    constexpr auto low = 0. - defaults::ct::lrgb_is_valid_srgb_epsilon;
+    constexpr auto high = 1. + defaults::ct::lrgb_is_valid_srgb_epsilon;
 
     return value >= low && value <= high;
 }
 
-constexpr auto is_representable_srgb(const Lrgb& lrgb) -> bool {
+[[nodiscard]] constexpr auto is_representable_srgb(const Lrgb& lrgb) -> bool {
     return is_lrgb_representable_srgb(lrgb.r) &&  //
            is_lrgb_representable_srgb(lrgb.g) &&  //
            is_lrgb_representable_srgb(lrgb.b);
 }
 
 template <int k>
-constexpr auto is_representable_srgb_k(const Lrgb& lrgb) -> bool {
+[[nodiscard]] constexpr auto is_representable_srgb_k(const Lrgb& lrgb) -> bool {
     auto v_ = double {};
 
     if constexpr (k == 0) {
@@ -750,7 +491,7 @@ constexpr auto is_representable_srgb_k(const Lrgb& lrgb) -> bool {
     return is_lrgb_representable_srgb(v_);
 }
 
-constexpr auto is_representable_srgb(Oklab lab) -> bool {
+[[nodiscard]] constexpr auto is_representable_srgb(Oklab lab) -> bool {
     return is_representable_srgb(to_lrgb(lab));
 }
 
@@ -771,20 +512,28 @@ constexpr static auto dark_mode_oklab = to_oklab(to_lrgb(dark_mode_rgb));
 
 namespace details::ct {
 
-constexpr auto get_radius_down(Oklab lab) -> double {
-    constexpr auto eps = 1e-5;
+[[nodiscard]] constexpr auto is_angle_down_zero_chroma(double l) -> bool {
+    constexpr auto eps = defaults::ct::luminance_zone_with_zero_chroma;
 
-    if (lab.l > 1. - eps) {
+    return l < eps || l > (1. - eps);
+};
+
+[[nodiscard]] constexpr auto get_radius_down(Oklab lab) -> double {
+    const auto l_length = 1. - lab.l;
+
+    if (l_length <= 0.) {
         return 0.;
     };
 
-    return cmath::hypot(lab.l - 1., lab.a, lab.b);
+    if (is_angle_down_zero_chroma(lab.l)) {
+        return l_length;
+    };
+
+    return cmath::hypot(l_length, lab.a, lab.b);
 }
 
-constexpr auto get_angle_down(Oklab lab) -> double {
-    constexpr auto eps = 1e-5;
-
-    if (lab.l < eps || lab.l > (1. - eps)) {
+[[nodiscard]] constexpr auto get_angle_down(Oklab lab) -> double {
+    if (is_angle_down_zero_chroma(lab.l)) {
         return 0.;
     };
 
@@ -792,7 +541,8 @@ constexpr auto get_angle_down(Oklab lab) -> double {
     return cmath::atan(c / (1. - lab.l));
 }
 
-constexpr auto from_angle_down(double l_radius, ab_norm_t ab, double beta) -> Oklab {
+[[nodiscard]] constexpr auto from_angle_down(double l_radius, ab_norm_t ab, double beta)
+    -> Oklab {
     const auto c = l_radius * cmath::sin(beta);
     Expects(c >= 0);
 
@@ -803,23 +553,33 @@ constexpr auto from_angle_down(double l_radius, ab_norm_t ab, double beta) -> Ok
     };
 };
 
-constexpr auto get_radius_up(Oklab lab) -> double {
+[[nodiscard]] constexpr auto is_angle_up_zero_chroma(double l) -> bool {
+    constexpr auto l_dark = defaults::dark_mode_oklab.l;
+    constexpr auto eps = (1. - l_dark) * defaults::ct::luminance_zone_with_zero_chroma;
+
+    return l < l_dark + eps || l > (1. - eps);
+};
+
+[[nodiscard]] constexpr auto get_radius_up(Oklab lab) -> double {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
-    constexpr auto eps = 1e-5;
+    const auto l_length = lab.l - l_dark;
 
-    if (lab.l < l_dark + eps) {
+    if (l_length <= 0.) {
         return 0.;
     };
 
-    return cmath::hypot(lab.l - l_dark, lab.a, lab.b);
+    if (is_angle_up_zero_chroma(lab.l)) {
+        return l_length;
+    };
+
+    return cmath::hypot(l_length, lab.a, lab.b);
 }
 
-constexpr auto get_angle_up(Oklab lab) -> double {
-    constexpr auto eps = 1e-5;
+[[nodiscard]] constexpr auto get_angle_up(Oklab lab) -> double {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
-    if (lab.l < l_dark + eps || lab.l > (1. - eps)) {
+    if (is_angle_up_zero_chroma(lab.l)) {
         return 0.;
     };
 
@@ -827,7 +587,8 @@ constexpr auto get_angle_up(Oklab lab) -> double {
     return cmath::atan(c / (lab.l - l_dark));
 }
 
-constexpr auto from_angle_up(double l_radius, ab_norm_t ab, double beta) -> Oklab {
+[[nodiscard]] constexpr auto from_angle_up(double l_radius, ab_norm_t ab, double beta)
+    -> Oklab {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
     const auto c = l_radius * cmath::sin(beta);
@@ -860,7 +621,8 @@ concept FuncAngleToLrgb = std::invocable<Func, double> &&
                           std::same_as<std::invoke_result_t<Func, double>, Lrgb>;
 
 template <int k, FuncAngleToLrgb Func>
-constexpr auto find_max_circle_angle_split(const AngleBracket& p, Func angle_to_lrgb)
+[[nodiscard]] constexpr auto find_max_circle_angle_split(const AngleBracket& p,
+                                                         Func angle_to_lrgb)
     -> AngleBracketPair {
     constexpr auto iter_count = std::numeric_limits<double>::digits;
     const auto is_srgb = is_representable_srgb_k<k>;
@@ -915,7 +677,8 @@ constexpr auto find_max_circle_angle_split(const AngleBracket& p, Func angle_to_
 }
 
 template <FuncAngleToLrgb Func>
-constexpr auto find_max_circle_angle_bracket(const AngleBracket& p, Func angle_to_lrgb)
+[[nodiscard]] constexpr auto find_max_circle_angle_bracket(const AngleBracket& p,
+                                                           Func angle_to_lrgb)
     -> std::optional<double> {
     const auto [a, b] = p;
     if (a.beta >= b.beta) {
@@ -971,7 +734,7 @@ struct MaxAngleConfig {
     double beta_max;
 };
 
-constexpr auto to_beta_step(const MaxAngleConfig& config) -> double {
+[[nodiscard]] constexpr auto to_beta_step(const MaxAngleConfig& config) -> double {
     Expects(config.beta_max >= 0.);
     Expects(config.beta_count > 1);
     return config.beta_max / (config.beta_count - 1);
@@ -1003,8 +766,8 @@ struct ValidMaxAngleConfig {
 };
 
 template <FuncAngleToLrgb Func>
-constexpr auto find_max_circle_angle(ValidMaxAngleConfig config, Func angle_to_lrgb)
-    -> double {
+[[nodiscard]] constexpr auto find_max_circle_angle(ValidMaxAngleConfig config,
+                                                   Func angle_to_lrgb) -> double {
     const auto to_beta = [&](int i_) constexpr -> double {  //
         return config.beta_step() * i_;
     };
@@ -1045,12 +808,11 @@ constexpr auto find_max_circle_angle(ValidMaxAngleConfig config, Func angle_to_l
  * circle intersects the sRGB surface, first brackets which contain them are searched.
  * Then each bracked is solved for the exact transition point.
  */
-constexpr auto max_circle_angle_down_slow(double l_radius, ab_norm_t ab) -> double {
-    constexpr auto eps = 1e-5;  // TODO: adjust ?
-
-    if (l_radius < eps || l_radius > (1. - eps)) {
+[[nodiscard]] constexpr auto max_circle_angle_down_slow(double l_radius, ab_norm_t ab)
+    -> double {
+    if (is_angle_down_zero_chroma(1. - l_radius)) {
         return 0.;
-    };
+    }
 
     const auto angle_to_lrgb = [&](double beta_) constexpr -> Lrgb {
         return to_lrgb(from_angle_down(l_radius, ab, beta_));
@@ -1066,14 +828,14 @@ constexpr auto max_circle_angle_down_slow(double l_radius, ab_norm_t ab) -> doub
 /*
  * @brief: Find maximum angle up with valid sRGB value.
  */
-constexpr auto max_circle_angle_up_slow(double l_radius, ab_norm_t ab) -> double {
+[[nodiscard]] constexpr auto max_circle_angle_up_slow(double l_radius, ab_norm_t ab)
+    -> double {
     constexpr auto deg_to_rad = std::numbers::pi / 180.;
-    constexpr auto eps = 1e-5;  // TODO: adjust ?
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
-    if (l_radius < eps || l_radius + l_dark > (1. - eps)) {
+    if (is_angle_up_zero_chroma(l_dark + l_radius)) {
         return 0.;
-    };
+    }
 
     const auto angle_to_lrgb = [&](double beta_) constexpr -> Lrgb {
         return to_lrgb(from_angle_up(l_radius, ab, beta_));
@@ -1086,58 +848,53 @@ constexpr auto max_circle_angle_up_slow(double l_radius, ab_norm_t ab) -> double
                                  angle_to_lrgb);
 }
 
-}  // namespace details::ct
-
-constexpr auto to_dark_mode_raw(Rgb rgb) -> Rgb {
+[[nodiscard]] constexpr auto to_dark_mode_raw(Rgb rgb) -> Rgb {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
     const auto lab = to_oklab(to_lrgb(rgb));
-    const auto ab = details::ct::ab_norm_t {lab};
+    const auto ab = ab_norm_t {lab};
 
     // distance and angles
-    const auto r_light = details::ct::get_radius_down(lab);
+    const auto r_light = get_radius_down(lab);
     const auto r_dark = r_light * (1. - l_dark);
 
-    const auto b_light_max = details::ct::max_circle_angle_down_slow(r_light, ab);
-    const auto b_dark_max = details::ct::max_circle_angle_up_slow(r_dark, ab);
+    const auto b_light_max = max_circle_angle_down_slow(r_light, ab);
+    const auto b_dark_max = max_circle_angle_up_slow(r_dark, ab);
 
-    const auto b_light = details::ct::get_angle_down(lab);
+    const auto b_light = get_angle_down(lab);
     const auto b_light_ratio =
-        cmath::clamp(b_light / std::max(1e-5, b_light_max), 0., 1.);
+        cmath::clamp(b_light / std::max(1e-5, b_light_max), 0., 1.);  // TODO:
 
     // derive
     const auto b_dark_ratio = b_light_ratio;
     const auto b_dark = b_dark_max * b_dark_ratio;
-    // print(b_dark_max, b_light_max, b_dark, b_light);
-    const auto lab1 = details::ct::from_angle_up(r_dark, ab, b_dark);
+    const auto lab1 = from_angle_up(r_dark, ab, b_dark);
     return to_rgb(to_lrgb(lab1));
 }
 
-constexpr auto to_light_mode_raw(Rgb rgb) -> Rgb {
+[[nodiscard]] constexpr auto to_light_mode_raw(Rgb rgb) -> Rgb {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
     const auto lab = to_oklab(to_lrgb(rgb));
-    const auto ab = details::ct::ab_norm_t {lab};
+    const auto ab = ab_norm_t {lab};
 
     // distance and angles
-    const auto r_dark = details::ct::get_radius_up(lab);
+    const auto r_dark = get_radius_up(lab);
     const auto r_light = r_dark / (1. - l_dark);
 
-    const auto b_dark_max = details::ct::max_circle_angle_up_slow(r_dark, ab);
-    const auto b_light_max = details::ct::max_circle_angle_down_slow(r_light, ab);
+    const auto b_dark_max = max_circle_angle_up_slow(r_dark, ab);
+    const auto b_light_max = max_circle_angle_down_slow(r_light, ab);
 
-    const auto b_dark = details::ct::get_angle_up(lab);
-    const auto b_dark_ratio = cmath::clamp(b_dark / std::max(1e-5, b_dark_max), 0., 1.);
+    const auto b_dark = get_angle_up(lab);
+    const auto b_dark_ratio =
+        cmath::clamp(b_dark / std::max(1e-5, b_dark_max), 0., 1.);  // TODO:
 
     // derive
     const auto b_light_ratio = b_dark_ratio;
     const auto b_light = b_light_max * b_light_ratio;
-    // print(b_dark_max, b_light_max, b_dark, b_light);
-    const auto lab1 = details::ct::from_angle_down(r_light, ab, b_light);
+    const auto lab1 = from_angle_down(r_light, ab, b_light);
     return to_rgb(to_lrgb(lab1));
 }
-
-namespace details::ct {
 
 /*
  * @brief: Convert to light / dark & find best rounding.
@@ -1150,7 +907,8 @@ constexpr auto to_mode_rounding(RgbI rgb) -> RgbI {
         .b = static_cast<double>(rgb.b),
     };
     const auto input_oklab = to_oklab(to_lrgb(input));
-    const auto raw = to_dark ? to_dark_mode_raw(input) : to_light_mode_raw(input);
+    const auto raw = to_dark ? details::ct::to_dark_mode_raw(input)
+                             : details::ct::to_light_mode_raw(input);
 
     // create all possible roundings
     const auto floor = [](double v_) constexpr -> double {
@@ -1176,7 +934,8 @@ constexpr auto to_mode_rounding(RgbI rgb) -> RgbI {
 
     // calculate distance converting back each candidate
     const auto to_distance = [&](Rgb c_) constexpr -> double {
-        const auto back_ = to_dark ? to_light_mode_raw(c_) : to_dark_mode_raw(c_);
+        const auto back_ = to_dark ? details::ct::to_light_mode_raw(c_)
+                                   : details::ct::to_dark_mode_raw(c_);
         const auto back_srgb_ = Rgb {
             .r = std::clamp(back_.r, 0., 255.),
             .g = std::clamp(back_.g, 0., 255.),
