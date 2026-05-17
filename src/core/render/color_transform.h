@@ -19,6 +19,12 @@
 
 namespace logicsim {
 
+namespace defaults {
+
+constexpr static auto dark_mode_gray = std::uint8_t {0x12};
+
+}
+
 /*
  * @brief: rgb color space.
  *
@@ -125,7 +131,6 @@ struct Oklh {
 // Implementation
 //
 
-// TODO: collect all epsilons
 namespace defaults::ct {
 // used for comparing two color values
 constexpr inline static auto is_close_epsilon = 1e-14;
@@ -135,6 +140,33 @@ constexpr inline static auto lrgb_is_valid_srgb_epsilon = 1e-14;
 
 // band around [0/l_dark, 1] at which chroma is considered 0
 constexpr inline static auto luminance_zone_with_zero_chroma = 1e-5;
+
+// assume chroma to be zero below this value in calculations
+constexpr inline static auto min_valid_chroma = 1e-6;
+
+// minimum max circle up/down angle for calulations
+constexpr inline static auto min_max_chroma_angle_rad = 1e-6 * (std::numbers::pi / 2.);
+
+//
+// Affects colors
+//
+
+constexpr inline static auto beta_down_max_deg = 90;  // degree
+constexpr inline static auto beta_up_max_deg = 80;    // degree
+
+//
+// Affects computation times & accuary
+//
+
+// number of angles to test to search for sign changes
+constexpr inline static auto beta_down_count = 90;
+constexpr inline static auto beta_up_count = 80;
+// numer of steps to devide angle interval
+constexpr inline static auto beta_refinement_steps = std::numeric_limits<double>::digits;
+
+static_assert(std::is_same_v<decltype(beta_refinement_steps), const int>);
+static_assert(beta_refinement_steps >= 0);
+static_assert(beta_refinement_steps <= std::numeric_limits<double>::digits);
 
 }  // namespace defaults::ct
 
@@ -389,7 +421,7 @@ constexpr auto to_oklch(Oklab c) -> Oklch {
     const auto chroma = cmath::hypot(c.a, c.b);
 
     const auto hue = [&] {
-        if (chroma < 1.0e-6) {  // TODO:
+        if (chroma < defaults::ct::min_valid_chroma) {
             return 0.;
         }
 
@@ -426,12 +458,10 @@ namespace details::ct {
 class ab_norm_t {
    public:
     constexpr explicit ab_norm_t(Oklab lab) noexcept {
-        constexpr auto eps = 1e-7;  // TODO:
-
         const auto c = cmath::hypot(lab.a, lab.b);
 
         c_ = c;
-        if (!cmath::isfinite(c) || c < eps) {
+        if (!cmath::isfinite(c) || c < defaults::ct::min_valid_chroma) {
             a_norm_ = 1.;
             b_norm_ = 0.;
         } else {
@@ -499,8 +529,11 @@ template <int k>
 
 namespace defaults {
 
-constexpr static auto dark_mode_gray = uint8_t {0x12};
-
+constexpr static auto dark_mode_rgbi [[maybe_unused]] = RgbI {
+    .r = dark_mode_gray,
+    .g = dark_mode_gray,
+    .b = dark_mode_gray,
+};
 constexpr static auto dark_mode_rgb = Rgb {
     .r = dark_mode_gray,
     .g = dark_mode_gray,
@@ -624,7 +657,6 @@ template <int k, FuncAngleToLrgb Func>
 [[nodiscard]] constexpr auto find_max_circle_angle_split(const AngleBracket& p,
                                                          Func angle_to_lrgb)
     -> AngleBracketPair {
-    constexpr auto iter_count = std::numeric_limits<double>::digits;
     const auto is_srgb = is_representable_srgb_k<k>;
 
     const auto [a, b] = p;
@@ -645,7 +677,7 @@ template <int k, FuncAngleToLrgb Func>
     auto high = b;
     Expects(low.beta < high.beta);
 
-    for (auto i = 0; i < iter_count; ++i) {
+    for (auto i = 0; i < defaults::ct::beta_refinement_steps; ++i) {
         const auto mid_beta = (low.beta + high.beta) / 2.;
 
         if (mid_beta == low.beta || mid_beta == high.beta) {
@@ -731,20 +763,20 @@ template <FuncAngleToLrgb Func>
 
 struct MaxAngleConfig {
     int beta_count;
-    double beta_max;
+    double beta_max_rad;
 };
 
 [[nodiscard]] constexpr auto to_beta_step(const MaxAngleConfig& config) -> double {
-    Expects(config.beta_max >= 0.);
-    Expects(config.beta_count > 1);
-    return config.beta_max / (config.beta_count - 1);
+    Expects(config.beta_count >= 2);
+    Expects(config.beta_max_rad >= 0.);
+    return config.beta_max_rad / (config.beta_count - 1);
 }
 
 struct ValidMaxAngleConfig {
    public:
     [[nodiscard]] explicit constexpr ValidMaxAngleConfig(MaxAngleConfig config)
         : beta_count_ {config.beta_count},
-          beta_max_ {config.beta_max},
+          beta_max_ {config.beta_max_rad},
           beta_step_ {to_beta_step(config)} {}
 
     [[nodiscard]] constexpr auto beta_count() const noexcept -> int {
@@ -810,6 +842,8 @@ template <FuncAngleToLrgb Func>
  */
 [[nodiscard]] constexpr auto max_circle_angle_down_slow(double l_radius, ab_norm_t ab)
     -> double {
+    constexpr auto deg_to_rad = std::numbers::pi / 180.;
+
     if (is_angle_down_zero_chroma(1. - l_radius)) {
         return 0.;
     }
@@ -818,11 +852,11 @@ template <FuncAngleToLrgb Func>
         return to_lrgb(from_angle_down(l_radius, ab, beta_));
     };
 
-    return find_max_circle_angle(ValidMaxAngleConfig {MaxAngleConfig {
-                                     .beta_count = 90,
-                                     .beta_max = std::numbers::pi / 2.,
-                                 }},
-                                 angle_to_lrgb);
+    constexpr auto config = ValidMaxAngleConfig {MaxAngleConfig {
+        .beta_count = defaults::ct::beta_down_count,
+        .beta_max_rad = defaults::ct::beta_down_max_deg * deg_to_rad,
+    }};
+    return find_max_circle_angle(config, angle_to_lrgb);
 }
 
 /*
@@ -841,14 +875,14 @@ template <FuncAngleToLrgb Func>
         return to_lrgb(from_angle_up(l_radius, ab, beta_));
     };
 
-    return find_max_circle_angle(ValidMaxAngleConfig {MaxAngleConfig {
-                                     .beta_count = 80,
-                                     .beta_max = 80. * deg_to_rad,
-                                 }},
-                                 angle_to_lrgb);
+    constexpr auto config = ValidMaxAngleConfig {MaxAngleConfig {
+        .beta_count = defaults::ct::beta_up_count,
+        .beta_max_rad = defaults::ct::beta_up_max_deg * deg_to_rad,
+    }};
+    return find_max_circle_angle(config, angle_to_lrgb);
 }
 
-[[nodiscard]] constexpr auto to_dark_mode_raw(Rgb rgb) -> Rgb {
+[[nodiscard]] constexpr auto to_dark_mode_raw(Rgb rgb) -> Oklab {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
     const auto lab = to_oklab(to_lrgb(rgb));
@@ -862,17 +896,17 @@ template <FuncAngleToLrgb Func>
     const auto b_dark_max = max_circle_angle_up_slow(r_dark, ab);
 
     const auto b_light = get_angle_down(lab);
-    const auto b_light_ratio =
-        cmath::clamp(b_light / std::max(1e-5, b_light_max), 0., 1.);  // TODO:
+    const auto b_light_ratio_raw =
+        b_light / std::max(b_light_max, defaults::ct::min_max_chroma_angle_rad);
+    const auto b_light_ratio = cmath::clamp(b_light_ratio_raw, 0., 1.);
 
     // derive
     const auto b_dark_ratio = b_light_ratio;
     const auto b_dark = b_dark_max * b_dark_ratio;
-    const auto lab1 = from_angle_up(r_dark, ab, b_dark);
-    return to_rgb(to_lrgb(lab1));
+    return from_angle_up(r_dark, ab, b_dark);
 }
 
-[[nodiscard]] constexpr auto to_light_mode_raw(Rgb rgb) -> Rgb {
+[[nodiscard]] constexpr auto to_light_mode_raw(Rgb rgb) -> Oklab {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
 
     const auto lab = to_oklab(to_lrgb(rgb));
@@ -880,20 +914,20 @@ template <FuncAngleToLrgb Func>
 
     // distance and angles
     const auto r_dark = get_radius_up(lab);
-    const auto r_light = r_dark / (1. - l_dark);
+    const auto r_light = r_dark * (1. / (1. - l_dark));
 
     const auto b_dark_max = max_circle_angle_up_slow(r_dark, ab);
     const auto b_light_max = max_circle_angle_down_slow(r_light, ab);
 
     const auto b_dark = get_angle_up(lab);
-    const auto b_dark_ratio =
-        cmath::clamp(b_dark / std::max(1e-5, b_dark_max), 0., 1.);  // TODO:
+    const auto b_dark_ratio_raw =
+        b_dark / std::max(b_dark_max, defaults::ct::min_max_chroma_angle_rad);
+    const auto b_dark_ratio = cmath::clamp(b_dark_ratio_raw, 0., 1.);
 
     // derive
     const auto b_light_ratio = b_dark_ratio;
     const auto b_light = b_light_max * b_light_ratio;
-    const auto lab1 = from_angle_down(r_light, ab, b_light);
-    return to_rgb(to_lrgb(lab1));
+    return from_angle_down(r_light, ab, b_light);
 }
 
 /*
@@ -907,8 +941,9 @@ constexpr auto to_mode_rounding(RgbI rgb) -> RgbI {
         .b = static_cast<double>(rgb.b),
     };
     const auto input_oklab = to_oklab(to_lrgb(input));
-    const auto raw = to_dark ? details::ct::to_dark_mode_raw(input)
-                             : details::ct::to_light_mode_raw(input);
+    const auto raw_oklab = to_dark ? details::ct::to_dark_mode_raw(input)
+                                   : details::ct::to_light_mode_raw(input);
+    const auto raw = to_rgb(to_lrgb(raw_oklab));
 
     // create all possible roundings
     const auto floor = [](double v_) constexpr -> double {
@@ -936,13 +971,7 @@ constexpr auto to_mode_rounding(RgbI rgb) -> RgbI {
     const auto to_distance = [&](Rgb c_) constexpr -> double {
         const auto back_ = to_dark ? details::ct::to_light_mode_raw(c_)
                                    : details::ct::to_dark_mode_raw(c_);
-        const auto back_srgb_ = Rgb {
-            .r = std::clamp(back_.r, 0., 255.),
-            .g = std::clamp(back_.g, 0., 255.),
-            .b = std::clamp(back_.b, 0., 255.),
-        };
-        const auto back_oklab_ = to_oklab(to_lrgb(back_srgb_));
-        return distance(input_oklab, back_oklab_);
+        return distance(input_oklab, back_);
     };
     const auto distances = candidates |                          //
                            std::views::transform(to_distance) |  //
@@ -959,60 +988,15 @@ constexpr auto to_mode_rounding(RgbI rgb) -> RgbI {
 }  // namespace details::ct
 
 constexpr auto to_dark_mode(RgbI rgb) -> RgbI {
+    if (rgb == RgbI {.r = 255, .g = 255, .b = 255}) {
+        return defaults::dark_mode_rgbi;
+    }
     return details::ct::to_mode_rounding<true>(rgb);
 }
 
 constexpr auto to_light_mode(RgbI rgb) -> RgbI {
     return details::ct::to_mode_rounding<false>(rgb);
 }
-
-//
-// Static testing
-//
-
-namespace details::ct {
-
-constexpr static inline auto test_rgbi = RgbI {
-    .r = 0,
-    .g = 255,
-    .b = 128,
-};
-constexpr static inline auto test_rgb = Rgb {
-    .r = 0.,
-    .g = 255.,
-    .b = 128.,
-};
-constexpr static inline auto test_lrgb = Lrgb {
-    .r = 0.,
-    .g = 1.,
-    .b = 0.21586050011389926,
-};
-constexpr static inline auto test_oklab = Oklab {
-    .l = 0.8750742367323052,
-    .a = -0.2054117467195273,
-    .b = 0.11299691103557084,
-};
-constexpr static inline auto test_oklch = Oklch {
-    .l = 0.8750742367323052,
-    .c = 0.23444037108388127,
-    .h = 151.1848269852735,
-};
-
-static_assert(to_rgb(test_rgbi) == test_rgb);
-static_assert(to_rgbi(test_rgb) == test_rgbi);
-
-static_assert(is_close(to_lrgb(test_rgb), test_lrgb));
-static_assert(is_close(to_rgb(test_lrgb), test_rgb));
-
-static_assert(is_close(to_oklab(test_lrgb), test_oklab));
-static_assert(is_close(to_lrgb(test_oklab), test_lrgb));
-
-static_assert(is_close(to_oklch(test_oklab), test_oklch));
-static_assert(is_close(to_oklab(test_oklch), test_oklab));
-
-// static_assert(to_dark_mode(test_rgbi).r >= 0);
-
-}  // namespace details::ct
 
 }  // namespace logicsim
 

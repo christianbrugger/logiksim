@@ -45,7 +45,7 @@ auto check(BLResult result) -> void {
     }
 }
 
-template <bool dark_mode>
+template <bool to_dark>
 auto image_to_darklight(BLImageData data) -> void {
     Expects(data.format == BL_FORMAT_PRGB32);
     Expects(data.flags == BL_FORMAT_NO_FLAGS);
@@ -70,7 +70,7 @@ auto image_to_darklight(BLImageData data) -> void {
                 .g = static_cast<std::uint8_t>(pixel.g()),
                 .b = static_cast<std::uint8_t>(pixel.b()),
             };
-            const auto res = dark_mode ? to_dark_mode(rgb) : to_light_mode(rgb);
+            const auto res = to_dark ? to_dark_mode(rgb) : to_light_mode(rgb);
 
             pixel.setR(static_cast<uint32_t>(res.r));
             pixel.setG(static_cast<uint32_t>(res.g));

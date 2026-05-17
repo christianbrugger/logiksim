@@ -9,6 +9,58 @@
 
 namespace logicsim {
 
+//
+// Constexpr testing
+//
+
+namespace details::ct {
+
+constexpr static inline auto test_rgbi = RgbI {
+    .r = 0,
+    .g = 255,
+    .b = 128,
+};
+constexpr static inline auto test_rgb = Rgb {
+    .r = 0.,
+    .g = 255.,
+    .b = 128.,
+};
+constexpr static inline auto test_lrgb = Lrgb {
+    .r = 0.,
+    .g = 1.,
+    .b = 0.21586050011389926,
+};
+constexpr static inline auto test_oklab = Oklab {
+    .l = 0.8750742367323052,
+    .a = -0.2054117467195273,
+    .b = 0.11299691103557084,
+};
+constexpr static inline auto test_oklch = Oklch {
+    .l = 0.8750742367323052,
+    .c = 0.23444037108388127,
+    .h = 151.1848269852735,
+};
+
+static_assert(to_rgb(test_rgbi) == test_rgb);
+static_assert(to_rgbi(test_rgb) == test_rgbi);
+
+static_assert(is_close(to_lrgb(test_rgb), test_lrgb));
+static_assert(is_close(to_rgb(test_lrgb), test_rgb));
+
+static_assert(is_close(to_oklab(test_lrgb), test_oklab));
+static_assert(is_close(to_lrgb(test_oklab), test_lrgb));
+
+static_assert(is_close(to_oklch(test_oklab), test_oklch));
+static_assert(is_close(to_oklab(test_oklch), test_oklab));
+
+// static_assert(to_dark_mode(test_rgbi).r >= 0);
+
+}  // namespace details::ct
+
+//
+// Runtime tests
+//
+
 TEST(RenderColorTransform, oklab) {
     const auto rgb = Rgb {.r = 0, .g = 0, .b = 250};
     const auto lab = to_oklab(to_lrgb(rgb));
@@ -190,6 +242,24 @@ TEST(RenderColorTransform, MaxAngleDownSlow) {
     const auto light = to_light_mode(dark);
     print(light);
     */
+}
+
+TEST(RenderColorTransform, toDarkMax) {
+    const auto rgb = RgbI {.r = 255, .g = 255, .b = 255};
+    const auto dark = to_dark_mode(rgb);
+
+    EXPECT_EQ(dark, defaults::dark_mode_rgbi);
+}
+
+TEST(RenderColorTransform, toLightVeryDark) {
+    constexpr auto white = RgbI {.r = 255, .g = 255, .b = 255};
+
+    for (auto i = std::uint8_t {0}; i <= defaults::dark_mode_gray; ++i) {
+        const auto rgb = RgbI {.r = i, .g = i, .b = i};
+
+        const auto light = to_light_mode(rgb);
+        EXPECT_EQ(light, white);
+    }
 }
 
 /*
