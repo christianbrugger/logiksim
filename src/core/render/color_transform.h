@@ -8,8 +8,6 @@
 #include <limits>
 #include <numbers>
 
-// TODO: test to_light of RGB(10, 10, 10)
-
 /*
  * @brief: Define oklab color transformations.
  *
@@ -153,6 +151,7 @@ constexpr inline static auto min_max_chroma_angle_rad = 1e-6 * (std::numbers::pi
 
 constexpr inline static auto beta_down_max_deg = 90;  // degree
 constexpr inline static auto beta_up_max_deg = 80;    // degree
+constexpr inline static auto lightness_compression_exponential = 2.;
 
 //
 // Affects computation times & accuary
@@ -165,8 +164,8 @@ constexpr inline static auto beta_up_count = 80;
 constexpr inline static auto beta_refinement_steps = std::numeric_limits<double>::digits;
 
 static_assert(std::is_same_v<decltype(beta_refinement_steps), const int>);
-static_assert(beta_refinement_steps >= 0);
-static_assert(beta_refinement_steps <= std::numeric_limits<double>::digits);
+static_assert(beta_refinement_steps >= 2);
+static_assert(beta_refinement_steps <= std::numeric_limits<double>::digits);  // 53
 
 }  // namespace defaults::ct
 
@@ -884,13 +883,14 @@ template <FuncAngleToLrgb Func>
 
 [[nodiscard]] constexpr auto to_dark_mode_raw(Rgb rgb) -> Oklab {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
+    constexpr auto l_exp = defaults::ct::lightness_compression_exponential;
 
     const auto lab = to_oklab(to_lrgb(rgb));
     const auto ab = ab_norm_t {lab};
 
     // distance and angles
     const auto r_light = get_radius_down(lab);
-    const auto r_dark = r_light * (1. - l_dark);
+    const auto r_dark = cmath::pow(r_light, 1. / l_exp) * (1. - l_dark);
 
     const auto b_light_max = max_circle_angle_down_slow(r_light, ab);
     const auto b_dark_max = max_circle_angle_up_slow(r_dark, ab);
@@ -908,13 +908,14 @@ template <FuncAngleToLrgb Func>
 
 [[nodiscard]] constexpr auto to_light_mode_raw(Rgb rgb) -> Oklab {
     constexpr auto l_dark = defaults::dark_mode_oklab.l;
+    constexpr auto l_exp = defaults::ct::lightness_compression_exponential;
 
     const auto lab = to_oklab(to_lrgb(rgb));
     const auto ab = ab_norm_t {lab};
 
     // distance and angles
     const auto r_dark = get_radius_up(lab);
-    const auto r_light = r_dark * (1. / (1. - l_dark));
+    const auto r_light = cmath::pow(r_dark * (1. / (1. - l_dark)), l_exp);
 
     const auto b_dark_max = max_circle_angle_up_slow(r_dark, ab);
     const auto b_light_max = max_circle_angle_down_slow(r_light, ab);

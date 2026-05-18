@@ -88,6 +88,25 @@ auto image_to_darklight(BLImageData data) -> void {
     return std::clamp(128 + 1 * (a - b), uint32_t {0}, uint32_t {255});
 }
 
+[[nodiscard]] auto outside_dark_cone(const Oklab& lab) -> bool {
+    constexpr auto deg_to_rad = std::numbers::pi / 180.;
+
+    return (lab.l <= defaults::dark_mode_oklab.l +
+                         defaults::ct::luminance_zone_with_zero_chroma) ||
+           (details::ct::get_angle_up(lab) >= defaults::ct::beta_up_max_deg * deg_to_rad);
+}
+
+auto get_norm(Rgb rgb_a, Rgb rgb_b) {
+    const auto lab_a = to_oklab(to_lrgb(rgb_a));
+    const auto lab_b = to_oklab(to_lrgb(rgb_b));
+
+    // if (outside_dark_cone(lab_b)) {
+    //     return 0.;
+    // }
+
+    return distance(lab_a, lab_b);
+};
+
 auto get_norm(BLRgba32 a, BLRgba32 b) {
     const auto rgb_a = Rgb {
         .r = static_cast<double>(a.r()),
@@ -101,12 +120,7 @@ auto get_norm(BLRgba32 a, BLRgba32 b) {
         .b = static_cast<double>(b.b()),
     };
 
-    const auto lab_a = to_oklab(to_lrgb(rgb_a));
-    const auto lab_b = to_oklab(to_lrgb(rgb_b));
-
-    return std::hypot(lab_a.l - lab_b.l, lab_a.a - lab_b.a, lab_a.b - lab_b.b);
-
-    // return std::hypot(1. * a.r() - b.r(), 1. * a.g() - b.g(), 1. * a.b() - b.b());
+    return get_norm(rgb_a, rgb_b);
 };
 
 auto diff_images(BLImageData diff, BLImageData orig) {
@@ -241,6 +255,48 @@ auto single_pixel(BLImageData img) -> void {
     // print();
 }
 
+auto single_pixel_back(BLImageData img) -> void {
+    // const auto x = int {1193};
+    // const auto y = int {2867};
+
+    // const auto x = int {259};
+    // const auto y = int {3194};
+
+    const auto x = 1259;
+    const auto y = 2699;
+
+    Expects(img.format == BL_FORMAT_PRGB32);
+    Expects(img.flags == BL_FORMAT_NO_FLAGS);
+    Expects(img.pixel_data != nullptr);
+
+    Expects(x < img.size.w);
+    Expects(y < img.size.h);
+
+    auto t = Timer {};
+
+    auto pd = reinterpret_cast<BLRgba32*>(img.pixel_data);
+    const auto stride = gsl::narrow<std::size_t>(img.stride) / sizeof(BLRgba32);
+    auto& p = pd[x + y * stride];
+
+    print("x", x, "y", y);
+    print(p.r(), p.g(), p.b());
+
+    const auto rgb = RgbI {
+        .r = static_cast<std::uint8_t>(p.r()),
+        .g = static_cast<std::uint8_t>(p.g()),
+        .b = static_cast<std::uint8_t>(p.b()),
+    };
+    print("-> rgb  ", rgb);
+
+    const auto light = to_light_mode(rgb);
+    print("-> light", light);
+
+    const auto dark = to_dark_mode(light);
+    print("-> dark ", dark);
+
+    print("Norm =", get_norm(to_rgb(dark), to_rgb(rgb)));
+}
+
 auto image_transform() -> void {
     auto img = BLImage {};
     if (img.read_from_file("light_input.png") != BL_SUCCESS) {
@@ -254,6 +310,7 @@ auto image_transform() -> void {
     img.make_mutable(&data);
 
     // single_pixel(data);
+    // single_pixel_back(data);
     // return;
 
     image_to_darklight<true>(data);
